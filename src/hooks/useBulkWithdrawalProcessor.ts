@@ -88,6 +88,21 @@ export function useBulkWithdrawalProcessor(onSuccess: () => void) {
 
       console.log('✅ Saques processados em lote com sucesso');
 
+      // Registrar log administrativo (não bloqueante)
+      if (validAdminId) {
+        try {
+          await supabase.from('admin_logs').insert({
+            admin_id: validAdminId,
+            action: `withdrawals_bulk_${status}`,
+            target_type: 'withdrawal_request',
+            target_id: null,
+            details: { ids: requestIds, notes: notes || null }
+          });
+        } catch (logErr) {
+          console.warn('⚠️ Falha ao registrar log admin (bulk):', logErr);
+        }
+      }
+
       toast({
         title: 'Sucesso',
         description: `${requestIds.length} saque(s) ${status}(s) com sucesso`,

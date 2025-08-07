@@ -39,6 +39,21 @@ export function useWithdrawalProcessor(onSuccess: () => void) {
 
       console.log('✅ Saque atualizado no banco com sucesso');
 
+      // Registrar log administrativo (não bloqueante)
+      if (validAdminId) {
+        try {
+          await supabase.from('admin_logs').insert({
+            admin_id: validAdminId,
+            action: `withdrawal_${status}`,
+            target_type: 'withdrawal_request',
+            target_id: requestId,
+            details: { notes: notes[requestId] || null }
+          });
+        } catch (logErr) {
+          console.warn('⚠️ Falha ao registrar log admin:', logErr);
+        }
+      }
+
       // Se aprovado, tentar enviar email para o vendedor
       if (status === 'aprovado') {
         try {

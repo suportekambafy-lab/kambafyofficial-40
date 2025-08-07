@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { useWithdrawalRequests } from '@/hooks/useWithdrawalRequests';
 import { useWithdrawalProcessor } from '@/hooks/useWithdrawalProcessor';
 import { useBulkWithdrawalProcessor } from '@/hooks/useBulkWithdrawalProcessor';
 import { WithdrawalRequestCard } from '@/components/admin/WithdrawalRequestCard';
-
+import { SEO } from '@/components/SEO';
 export default function AdminWithdrawals() {
   const { admin } = useAdminAuth();
   const navigate = useNavigate();
@@ -48,8 +48,36 @@ export default function AdminWithdrawals() {
 
   const [bulkNotes, setBulkNotes] = useState('');
 
-  // Filtrar apenas solicitações pendentes para numeração
-  const pendingRequests = requests.filter(request => request.status === 'pendente');
+  // Filtros
+  const [statusFilter, setStatusFilter] = useState<'todos' | 'pendente' | 'aprovado' | 'rejeitado'>('todos');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [minAmount, setMinAmount] = useState<string>('');
+  const [maxAmount, setMaxAmount] = useState<string>('');
+
+  const filteredRequests = useMemo(() => {
+    return requests.filter((r) => {
+      const matchesStatus = statusFilter === 'todos' ? true : r.status === statusFilter;
+      const matchesSearch = searchTerm
+        ? (
+            r.id.includes(searchTerm) ||
+            r.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        : true;
+      const created = new Date(r.created_at);
+      const matchesStart = startDate ? created >= new Date(startDate) : true;
+      const matchesEnd = endDate ? created <= new Date(endDate + 'T23:59:59') : true;
+      const amount = Number(r.amount);
+      const matchesMin = minAmount ? amount >= Number(minAmount) : true;
+      const matchesMax = maxAmount ? amount <= Number(maxAmount) : true;
+      return matchesStatus && matchesSearch && matchesStart && matchesEnd && matchesMin && matchesMax;
+    });
+  }, [requests, statusFilter, searchTerm, startDate, endDate, minAmount, maxAmount]);
+
+  // Filtrar apenas solicitações pendentes para numeração (apenas do conjunto filtrado)
+  const pendingRequests = filteredRequests.filter(request => request.status === 'pendente');
 
   if (loading) {
     return (
@@ -64,6 +92,7 @@ export default function AdminWithdrawals() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <SEO title="Kambafy Admin – Saques" description="Aprovar ou rejeitar solicitações de saque dos vendedores" canonical="https://kambafy.com/admin/withdrawals" noIndex />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Button 
@@ -83,13 +112,66 @@ export default function AdminWithdrawals() {
             disabled={loading}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`${loading ? 'animate-spin' : ''} h-4 w-4`} />
             Atualizar
           </Button>
         </div>
 
-
-        {/* Controles de Seleção em Lote */}
+        {/* Filtros */}
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="ID, nome ou email"
+                className="w-full rounded-md border border-gray-300 px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="w-full rounded-md border border-gray-300 px-3 py-2"
+              >
+                <option value="todos">Todos</option>
+                <option value="pendente">Pendente</option>
+                <option value="aprovado">Aprovado</option>
+                <option value="rejeitado">Rejeitado</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Data inicial</label>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Data final</label>
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2" />
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Min (KZ)</label>
+                <input type="number" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2" />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max (KZ)</label>
+                <input type="number" value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2" />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+            <span>{filteredRequests.length} resultado(s)</span>
+            <button
+              onClick={() => { setStatusFilter('todos'); setSearchTerm(''); setStartDate(''); setEndDate(''); setMinAmount(''); setMaxAmount(''); }}
+              className="text-blue-600 hover:underline"
+            >
+              Limpar filtros
+            </button>
+          </div>
+        </div>
         {pendingRequests.length > 0 && (
           <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Gerenciamento em Lote</h3>
@@ -117,6 +199,12 @@ export default function AdminWithdrawals() {
               
               <span className="text-sm text-gray-600">
                 {selectedIds.size} de {pendingRequests.length} selecionados
+              </span>
+              <span className="ml-auto text-sm text-gray-600">
+                Total selecionado: {Array.from(selectedIds).reduce((sum, id) => {
+                  const r = filteredRequests.find(fr => fr.id === id);
+                  return sum + (r ? Number(r.amount) : 0);
+                }, 0).toLocaleString('pt-AO')} KZ
               </span>
             </div>
 
@@ -160,7 +248,7 @@ export default function AdminWithdrawals() {
         )}
 
         <div className="space-y-6">
-          {requests.map((request) => {
+          {filteredRequests.map((request) => {
             // Calcular o índice apenas para solicitações pendentes
             let pendingIndex = -1;
             if (request.status === 'pendente') {
@@ -192,12 +280,12 @@ export default function AdminWithdrawals() {
             );
           })}
           
-          {requests.length === 0 && !loading && (
+          {filteredRequests.length === 0 && !loading && (
             <Card className="shadow-lg border bg-white">
               <CardContent className="text-center py-16">
                 <DollarSign className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma solicitação encontrada</h3>
-                <p className="text-gray-600">Não há solicitações de saque no momento.</p>
+                <p className="text-gray-600">Ajuste os filtros ou tente novamente.</p>
                 <Button 
                   onClick={loadWithdrawalRequests}
                   className="mt-4"
