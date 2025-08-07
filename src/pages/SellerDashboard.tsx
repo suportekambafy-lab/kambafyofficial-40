@@ -93,7 +93,7 @@ function SellerDashboardContent() {
   };
 
   return (
-    <div className={`min-h-screen bg-background flex flex-col ${theme === 'dark' ? 'dark' : ''}`}>
+    <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
         <div className="flex flex-1">
           {/* Backdrop para mobile */}
           {isMobile && sidebarOpen && (

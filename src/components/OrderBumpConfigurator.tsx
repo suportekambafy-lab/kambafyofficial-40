@@ -496,7 +496,8 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
               <div className="bg-gradient-to-r from-orange-100 to-orange-50 dark:from-orange-950/20 dark:to-orange-900/10 p-4">
                 {/* Header com título e botão */}
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+                    <h3 className="text-base font-semibold text-foreground">
+
                     {settings.title}
                   </h3>
                   <Button

@@ -411,6 +411,16 @@ html {
   color: hsl(var(--foreground));
 }
 
+/* Correção de contraste no painel do vendedor */
+.dark .seller-dashboard .text-gray-900,
+.dark .seller-dashboard .text-gray-800,
+.dark .seller-dashboard .text-gray-700,
+.dark .seller-dashboard .text-gray-600,
+.dark .seller-dashboard .text-gray-500,
+.dark .seller-dashboard .text-black {
+  color: hsl(var(--foreground)) !important;
+}
+
 /* Loading states otimizados */
 .loading-shimmer {
   background: linear-gradient(
