@@ -1,0 +1,5 @@
+# Social media bots redirect to pre-render function
+/checkout/:productId  https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/checkout-prerender/:productId  200  Country=*  Conditions=User-Agent:facebookexternalhit/*,User-Agent:Twitterbot/*,User-Agent:WhatsApp/*,User-Agent:LinkedInBot/*,User-Agent:TelegramBot/*,User-Agent:Slackbot/*,User-Agent:SkypeUriPreview/*
+
+# Regular users get the SPA
+/checkout/:productId  /index.html  200

@@ -1,0 +1,274 @@
+import { useCallback, useRef, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { getAllPaymentMethods } from '@/utils/paymentMethods';
+
+export const useStreamingQuery = () => {
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
+
+  // 🔥 VERSÃO PARA TODAS AS VENDAS - Chunks maiores, todos os dados (vendas próprias + afiliado)
+  const loadOrdersWithStats = useCallback(async (
+    userId: string,
+    onStatsUpdate: (stats: any) => void,
+    onOrdersChunk: (orders: any[]) => void,
+    chunkSize = 100 // Chunks maiores para eficiência
+  ) => {
+    // Cancelar query anterior se existir
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+    
+    try {
+      const startTime = performance.now();
+
+      // Primeiro, buscar códigos de afiliação do usuário
+      const { data: affiliateCodes, error: affiliateError } = await supabase
+        .from('affiliates')
+        .select('affiliate_code')
+        .eq('affiliate_user_id', userId)
+        .eq('status', 'ativo');
+
+      if (affiliateError) throw affiliateError;
+
+      const userAffiliateCodes = affiliateCodes?.map(a => a.affiliate_code) || [];
+
+      // 📊 STATS RÁPIDOS - vendas próprias do usuário
+      const { data: ownSalesData, error: ownSalesError } = await supabase
+        .from('orders')
+        .select('status, payment_method, amount, affiliate_commission, seller_commission')
+        .eq('user_id', userId);
+
+      if (ownSalesError) throw ownSalesError;
+
+      // 📊 STATS RÁPIDOS - vendas como afiliado
+      let affiliateSalesData: any[] = [];
+      if (userAffiliateCodes.length > 0) {
+        const { data: affiliateData, error: affiliateDataError } = await supabase
+          .from('orders')
+          .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code')
+          .in('affiliate_code', userAffiliateCodes)
+          .not('affiliate_commission', 'is', null)
+          .eq('status', 'completed');
+
+        if (affiliateDataError) throw affiliateDataError;
+        affiliateSalesData = affiliateData || [];
+      }
+
+      const statsData = [...(ownSalesData || []), ...affiliateSalesData];
+
+      // Calcular stats - vendas próprias + comissões de afiliado
+      const stats = (statsData || []).reduce((acc, order) => {
+        const amount = parseFloat(order.amount) || 0;
+        const isAffiliateEarning = userAffiliateCodes.includes(order.affiliate_code);
+        
+        if (isAffiliateEarning) {
+          // Para vendas como afiliado, mostra apenas a comissão
+          const affiliateCommission = parseFloat(order.affiliate_commission?.toString() || '0');
+          acc.paid++;
+          acc.paidTotal += affiliateCommission;
+          acc.totalAffiliateCommissions += affiliateCommission;
+        } else {
+          // Para vendas próprias, mostra valor total ou comissão do vendedor
+          const sellerCommission = parseFloat(order.seller_commission?.toString() || '0') || amount;
+          
+          if (order.status === 'completed') {
+            acc.paid++;
+            acc.paidTotal += sellerCommission;
+            acc.totalSellerEarnings += sellerCommission;
+          } else if (order.status === 'pending') {
+            acc.pending++;
+            acc.pendingTotal += amount;
+          } else if (order.status === 'failed') {
+            acc.cancelled++;
+            acc.cancelledTotal += amount;
+          }
+        }
+
+        // Contar vendas por método de pagamento
+        if (order.payment_method) {
+          if (!acc[order.payment_method]) {
+            acc[order.payment_method] = 0;
+          }
+          acc[order.payment_method]++;
+        }
+
+        return acc;
+      }, {
+        paid: 0, pending: 0, cancelled: 0,
+        paidTotal: 0, pendingTotal: 0, cancelledTotal: 0,
+        totalAffiliateCommissions: 0,
+        totalSellerEarnings: 0,
+        // Inicializar contadores para todos os métodos de pagamento
+        ...getAllPaymentMethods().reduce((methodsAcc, method) => {
+          methodsAcc[method.id] = 0;
+          return methodsAcc;
+        }, {} as Record<string, number>)
+      });
+
+      setTotalCount(statsData?.length || 0);
+      onStatsUpdate(stats);
+
+      // 🔍 VERIFICAÇÃO DE RLS - Contar total sem RLS para debug
+      console.log(`🔍 Total de vendas encontradas (próprias + afiliado): ${statsData?.length || 0}`);
+      
+      setTotalCount(statsData?.length || 0);
+      onStatsUpdate(stats);
+
+      // 📋 CARREGANDO TODAS AS VENDAS progressivamente (próprias + afiliado)
+      console.log('📋 Iniciando carregamento de TODAS as vendas (próprias + afiliado)...');
+      let offset = 0;
+      let hasMore = true;
+      const allOrders: any[] = [];
+      let chunkNumber = 1;
+
+      // Carregar vendas próprias
+      while (hasMore) {
+        console.log(`📦 Carregando chunk ${chunkNumber} de vendas próprias (offset: ${offset}, size: ${chunkSize})`);
+        
+        const { data: ownOrders, error: ownOrdersError } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            order_id,
+            customer_name,
+            customer_email,
+            customer_phone,
+            amount,
+            currency,
+            status,
+            payment_method,
+            created_at,
+            product_id,
+            affiliate_code,
+            affiliate_commission,
+            seller_commission
+          `)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + chunkSize - 1);
+
+        if (ownOrdersError) throw ownOrdersError;
+        
+        if (!ownOrders || ownOrders.length === 0) {
+          console.log('🔚 Não há mais vendas próprias para carregar');
+          break;
+        }
+
+        console.log(`✅ Chunk ${chunkNumber} vendas próprias: ${ownOrders.length} vendas carregadas`);
+
+        // Buscar produtos para este chunk
+        const productIds = [...new Set(ownOrders.map(o => o.product_id))];
+        const { data: products } = await supabase
+          .from('products')
+          .select('id, name, cover, type')
+          .in('id', productIds);
+
+        // Combinar dados e marcar como venda própria
+        const productMap = new Map(products?.map(p => [p.id, p]) || []);
+        const ordersWithProducts = ownOrders.map(order => ({
+          ...order,
+          products: productMap.get(order.product_id) || null,
+          sale_type: 'own' // Marcar como venda própria
+        }));
+
+        allOrders.push(...ordersWithProducts);
+
+        // Verifica se há mais dados de forma mais robusta
+        if (ownOrders.length === chunkSize) {
+          hasMore = true;
+        } else {
+          // Fazer uma verificação extra para ter certeza
+          console.log(`🔍 Verificando se há mais vendas próprias além do offset ${offset + chunkSize}...`);
+          const { data: nextChunk } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .range(offset + chunkSize, offset + chunkSize);
+          
+          hasMore = nextChunk && nextChunk.length > 0;
+          console.log(`🔍 Verificação vendas próprias: ${hasMore ? 'Há mais dados' : 'Não há mais dados'}`);
+        }
+
+        offset += chunkSize;
+        chunkNumber++;
+
+        console.log(`📊 Total acumulado (próprias): ${allOrders.length} vendas | Continuar: ${hasMore}`);
+
+        // Pequeno delay para não travar UI
+        await new Promise(resolve => setTimeout(resolve, 5));
+      }
+
+      // Carregar vendas como afiliado se existirem códigos
+      if (userAffiliateCodes.length > 0) {
+        console.log('📋 Carregando vendas como afiliado...');
+        
+        const { data: affiliateOrders, error: affiliateOrdersError } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            order_id,
+            customer_name,
+            customer_email,
+            customer_phone,
+            amount,
+            currency,
+            status,
+            payment_method,
+            created_at,
+            product_id,
+            affiliate_code,
+            affiliate_commission,
+            seller_commission,
+            products (
+              id,
+              name,
+              cover,
+              type
+            )
+          `)
+          .in('affiliate_code', userAffiliateCodes)
+          .not('affiliate_commission', 'is', null)
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false });
+
+        if (affiliateOrdersError) throw affiliateOrdersError;
+
+        if (affiliateOrders && affiliateOrders.length > 0) {
+          console.log(`✅ Vendas como afiliado: ${affiliateOrders.length} vendas carregadas`);
+          
+          // Marcar como vendas de afiliado
+          const affiliateOrdersWithType = affiliateOrders.map(order => ({
+            ...order,
+            sale_type: 'affiliate' // Marcar como venda de afiliado
+          }));
+
+          allOrders.push(...affiliateOrdersWithType);
+        }
+      }
+
+      // Ordenar todas as vendas por data
+      allOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      onOrdersChunk([...allOrders]); // Envia TODOS os dados acumulados
+
+      console.log(`🎯 CARREGAMENTO COMPLETO: ${allOrders.length} vendas de ${totalCount} em ${(performance.now() - startTime).toFixed(0)}ms`);
+
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error('❌ Erro no carregamento:', error);
+        throw error;
+      }
+    }
+  }, []);
+
+  const cancelStream = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  }, []);
+
+  return { loadOrdersWithStats, cancelStream, totalCount };
+};

@@ -1,0 +1,98 @@
+
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Facebook, Webhook, Settings, Palette, Plus } from 'lucide-react';
+
+export interface IntegrationType {
+  id: string;
+  name: string;
+  description: string;
+  icon: ({ className }: { className?: string }) => React.ReactNode;
+  color: string;
+}
+
+interface IntegrationTypeSelectorProps {
+  selectedType: IntegrationType | null;
+  onTypeSelect: (type: IntegrationType) => void;
+}
+
+const integrationTypes: IntegrationType[] = [
+  {
+    id: 'facebook-pixel',
+    name: 'Facebook Pixel',
+    description: 'Configure Pixel ID e API de Conversões em um só lugar',
+    icon: ({ className }: { className?: string }) => <Facebook className={className} />,
+    color: 'text-blue-600'
+  },
+  {
+    id: 'webhook',
+    name: 'Webhook',
+    description: 'Selecione eventos personalizados e receba notificações em tempo real',
+    icon: ({ className }: { className?: string }) => <Webhook className={className} />,
+    color: 'text-orange-600'
+  },
+  {
+    id: 'order-bump',
+    name: 'Order Bump',
+    description: 'Configure produtos complementares para aumentar o valor médio do pedido',
+    icon: ({ className }: { className?: string }) => <Plus className={className} />,
+    color: 'text-purple-600'
+  },
+  {
+    id: 'custom-checkout',
+    name: 'Checkout Personalizado',
+    description: 'Personalize seu checkout com banners, countdown, avaliações e prova social',
+    icon: ({ className }: { className?: string }) => <Palette className={className} />,
+    color: 'text-green-600'
+  }
+];
+
+export function IntegrationTypeSelector({ selectedType, onTypeSelect }: IntegrationTypeSelectorProps) {
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-2">Escolha o Tipo de Integração</h2>
+        <p className="text-muted-foreground">
+          Selecione o tipo de integração que você deseja configurar
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {integrationTypes.map((type) => (
+          <Card
+            key={type.id}
+            className={`cursor-pointer transition-all hover:shadow-md ${
+              selectedType?.id === type.id
+                ? 'ring-2 ring-primary border-primary'
+                : 'border-border hover:border-primary/50'
+            }`}
+            onClick={() => onTypeSelect(type)}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className={`${type.color}`}>
+                  {type.icon({ className: "w-8 h-8" })}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold">{type.name}</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {type.description}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span className="text-xs text-muted-foreground">
+                      Disponível
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}

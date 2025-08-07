@@ -1,0 +1,60 @@
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /vendedor/
+Disallow: /*?*
+Disallow: /auth
+Disallow: /404
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /vendedor/
+Disallow: /*?*
+Disallow: /auth
+Disallow: /404
+
+User-agent: Twitterbot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /vendedor/
+
+User-agent: facebookexternalhit
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /vendedor/
+
+User-agent: *
+Allow: /
+Allow: /features
+Allow: /pricing
+Allow: /contact
+Allow: /help-center
+Allow: /how-it-works
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Disallow: /admin
+Disallow: /api/
+Disallow: /vendedor/
+Disallow: /*?*
+Disallow: /auth
+Disallow: /404
+Disallow: /user-settings
+Disallow: /financial
+Disallow: /sales
+Disallow: /products
+Disallow: /apps
+Disallow: /members
+Disallow: /checkout
+Disallow: /thank-you
+
+# Crawl-delay for general bots
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://kambafy.com/sitemap.xml

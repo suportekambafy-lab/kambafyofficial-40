@@ -1,0 +1,584 @@
+
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { VirtualizedTable } from "@/components/ui/virtualized-table";
+import { useStreamingQuery } from "@/hooks/useStreamingQuery";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HighlightedCard, HighlightedCardHeader, HighlightedCardTitle, HighlightedCardContent } from "@/components/ui/highlighted-card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  ShoppingCart, 
+  Search, 
+  RefreshCw,
+  CheckCircle,
+  Clock,
+  XCircle,
+  CreditCard,
+  Banknote,
+  Building,
+  Calendar,
+  Package,
+  User,
+  DollarSign
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useToast } from "@/hooks/use-toast";
+import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
+import professionalManImage from "@/assets/professional-man.jpg";
+import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods } from "@/utils/paymentMethods";
+
+interface Sale {
+  id: string;
+  order_id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  amount: string;
+  currency: string;
+  status: string;
+  payment_method: string;
+  created_at: string;
+  product_id: string;
+  affiliate_code?: string;
+  affiliate_commission?: number;
+  seller_commission?: number;
+  sale_type?: 'own' | 'affiliate';
+  products: {
+    id: string;
+    name: string;
+    cover: string;
+    type: string;
+  } | null;
+}
+
+interface SalesStats {
+  paid: number;
+  pending: number;
+  cancelled: number;
+  paidTotal: number;
+  pendingTotal: number;
+  cancelledTotal: number;
+  totalAffiliateCommissions: number;
+  totalSellerEarnings: number;
+  [key: string]: number; // Para os métodos de pagamento dinâmicos
+}
+
+export default function Sales() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [salesStats, setSalesStats] = useState<SalesStats>({
+    paid: 0,
+    pending: 0,
+    cancelled: 0,
+    paidTotal: 0,
+    pendingTotal: 0,
+    cancelledTotal: 0,
+    totalAffiliateCommissions: 0,
+    totalSellerEarnings: 0,
+    // Inicializar contadores para todos os métodos de pagamento
+    ...getAllPaymentMethods().reduce((acc, method) => {
+      acc[method.id] = 0;
+      return acc;
+    }, {} as Record<string, number>)
+  });
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("todos");
+  const [paymentFilter, setPaymentFilter] = useState("todos");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [showAllPaymentMethods, setShowAllPaymentMethods] = useState(false);
+
+  const { loadOrdersWithStats, totalCount } = useStreamingQuery();
+  const [dataComplete, setDataComplete] = useState(false);
+  const loadingRef = useRef(false); // Controle via ref para evitar loops
+
+  // 🔥 CARREGAMENTO FIXO - Sem dependência de loading state
+  const loadSales = useCallback(async () => {
+    if (!user) {
+      console.log('❌ Sem usuário, parando loading');
+      setLoading(false);
+      return;
+    }
+
+    if (loadingRef.current) {
+      console.log('⏳ Já está carregando via ref, ignorando');
+      return;
+    }
+
+    console.log('🚀 Iniciando carregamento de vendas para:', user.id);
+    loadingRef.current = true;
+
+    try {
+      setLoading(true);
+      setDataComplete(false);
+      
+      console.log('📞 Chamando loadOrdersWithStats...');
+      await loadOrdersWithStats(
+        user.id,
+        (stats) => {
+          console.log('📊 Stats recebidos:', stats);
+          setSalesStats(stats);
+        },
+        (orders) => {
+          console.log('📋 Orders recebidos:', orders.length);
+          setSales(orders);
+        }
+      );
+      
+      console.log('✅ Carregamento concluído com sucesso');
+      setDataComplete(true);
+      
+    } catch (error) {
+      console.error('💥 Erro no carregamento:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar vendas",
+        variant: "destructive"
+      });
+      setSales([]);
+    } finally {
+      console.log('🏁 Finalizando loading');
+      setLoading(false);
+      loadingRef.current = false; // Libera para próxima execução
+    }
+  }, [user, loadOrdersWithStats, toast]);
+
+  // Filtros otimizados
+  const filteredSales = useMemo(() => {
+    let filtered = [...sales];
+
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(sale =>
+        sale.customer_name.toLowerCase().includes(searchLower) ||
+        sale.customer_email.toLowerCase().includes(searchLower) ||
+        sale.order_id.toLowerCase().includes(searchLower) ||
+        sale.products?.name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (statusFilter !== "todos") {
+      filtered = filtered.filter(sale => sale.status === statusFilter);
+    }
+
+    if (paymentFilter !== "todos") {
+      filtered = filtered.filter(sale => sale.payment_method === paymentFilter);
+    }
+
+    return filtered;
+  }, [sales, searchTerm, statusFilter, paymentFilter]);
+
+  // Paginação
+  const paginatedSales = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredSales.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredSales, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
+
+  const displayedPaymentMethods = useMemo(() => {
+    return showAllPaymentMethods ? getAllPaymentMethods() : getAngolaPaymentMethods();
+  }, [showAllPaymentMethods]);
+
+  useEffect(() => {
+    if (user) {
+      loadSales();
+    }
+  }, [user, loadSales]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, paymentFilter]);
+
+  const getProductImage = (cover: string) => {
+    if (!cover) return professionalManImage;
+    if (cover.startsWith('data:')) {
+      return cover;
+    }
+    // Se a URL já inclui supabase ou http/https, usar diretamente
+    if (cover.includes('supabase') || cover.startsWith('http')) {
+      return cover;
+    }
+    // Caso contrário, assumir que é ID do Unsplash (compatibilidade)
+    return `https://images.unsplash.com/${cover}`;
+  };
+
+  const formatPrice = (amount: string, currency: string) => {
+    return `${parseFloat(amount).toLocaleString()} ${currency}`;
+  };
+
+  const getStatusBadge = (status: string, paymentMethod: string) => {
+    if (status === 'completed') {
+      const methodText = getPaymentMethodName(paymentMethod);
+      return (
+        <Badge variant="default" className="text-xs bg-green-100 text-green-800 border-green-200">
+          Pago via {methodText}
+        </Badge>
+      );
+    } else if (status === 'pending') {
+      return (
+        <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
+          Pendente
+        </Badge>
+      );
+    } else if (status === 'failed') {
+      return (
+        <Badge variant="destructive" className="text-xs">
+          Cancelada
+        </Badge>
+      );
+    }
+    
+    return (
+      <Badge variant="secondary" className="text-xs">
+        {status}
+      </Badge>
+    );
+  };
+
+  const formatCurrency = (amount: number) => {
+    return `${amount.toLocaleString()} KZ`;
+  };
+
+  return (
+    <OptimizedPageWrapper skeletonVariant="list">
+      {loading ? (
+        <div className="p-3 md:p-6 flex items-center justify-center min-h-96">
+          <LoadingSpinner text="Carregando vendas..." />
+        </div>
+      ) : (
+        <div className="p-3 md:p-6 space-y-4 md:space-y-6">
+      {/* Header com total de vendas */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Vendas</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
+            {totalCount > 0 ? `${totalCount} vendas registradas` : 'Gerencie e acompanhe suas vendas'}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={loadSales} className="text-xs md:text-sm text-foreground">
+          <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+          Atualizar
+        </Button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <HighlightedCard highlightColor="green">
+          <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <HighlightedCardTitle className="text-sm font-medium">
+              Vendas Pagas
+            </HighlightedCardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </HighlightedCardHeader>
+          <HighlightedCardContent>
+            <div className="text-2xl md:text-3xl font-bold text-green-600">
+              {formatCurrency(salesStats.paidTotal)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {salesStats.paid} vendas confirmadas e pagas
+            </p>
+          </HighlightedCardContent>
+        </HighlightedCard>
+
+        <HighlightedCard highlightColor="yellow">
+          <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <HighlightedCardTitle className="text-sm font-medium">
+              Vendas Pendentes
+            </HighlightedCardTitle>
+            <Clock className="h-4 w-4 text-yellow-600" />
+          </HighlightedCardHeader>
+          <HighlightedCardContent>
+            <div className="text-2xl md:text-3xl font-bold text-yellow-600">
+              {formatCurrency(salesStats.pendingTotal)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {salesStats.pending} aguardando confirmação
+            </p>
+          </HighlightedCardContent>
+        </HighlightedCard>
+
+        <HighlightedCard highlightColor="orange">
+          <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <HighlightedCardTitle className="text-sm font-medium">
+              Vendas Canceladas
+            </HighlightedCardTitle>
+            <XCircle className="h-4 w-4 text-red-600" />
+          </HighlightedCardHeader>
+          <HighlightedCardContent>
+            <div className="text-2xl md:text-3xl font-bold text-red-600">
+              {formatCurrency(salesStats.cancelledTotal)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {salesStats.cancelled} vendas não processadas
+            </p>
+          </HighlightedCardContent>
+        </HighlightedCard>
+      </div>
+
+      {/* Payment Method Cards */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-foreground">Métodos de Pagamento</h3>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="show-all-methods" className="text-sm text-foreground">
+              Mostrar todos os métodos
+            </Label>
+            <Switch 
+              id="show-all-methods"
+              checked={showAllPaymentMethods}
+              onCheckedChange={setShowAllPaymentMethods}
+            />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-3">
+          {displayedPaymentMethods.map((method) => (
+            <Card key={method.id}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+                <CardTitle className="text-xs font-medium text-muted-foreground truncate">
+                  {method.name}
+                </CardTitle>
+                <CreditCard className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+              </CardHeader>
+              <CardContent className="px-3 pb-3">
+                <div className="text-lg md:text-xl font-bold">
+                  {salesStats[method.id] || 0}
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
+                  Vendas
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Buscar por cliente, email, produto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 text-xs md:text-sm"
+              />
+            </div>
+            
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os status</SelectItem>
+                <SelectItem value="completed">Pagas</SelectItem>
+                <SelectItem value="pending">Pendentes</SelectItem>
+                <SelectItem value="failed">Canceladas</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os métodos</SelectItem>
+                {getAllPaymentMethods().map((method) => (
+                  <SelectItem key={method.id} value={method.id}>
+                    {method.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sales List */}
+      {filteredSales.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 md:py-16 px-4">
+            <div className="text-center space-y-3 md:space-y-4">
+              <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-muted rounded-full flex items-center justify-center">
+                <ShoppingCart className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="text-base md:text-lg font-semibold">
+                  {sales.length === 0 ? 'Nenhuma venda realizada' : 'Nenhuma venda encontrada'}
+                </h3>
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  {sales.length === 0 
+                    ? 'Suas vendas aparecerão aqui quando alguém comprar seus produtos'
+                    : 'Tente ajustar os filtros para encontrar o que procura'
+                  }
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            {paginatedSales.map((sale) => (
+              <Card key={sale.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                      <img
+                        src={getProductImage(sale.products?.cover || '')}
+                        alt={sale.products?.name || 'Produto'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 lg:gap-4">
+                        <div className="space-y-1">
+                          <h3 className="font-semibold text-sm md:text-base line-clamp-1">
+                            {sale.products?.name || 'Produto'}
+                          </h3>
+                          <p className="text-xs md:text-sm text-muted-foreground">
+                            Pedido #{sale.order_id}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+                            <User className="h-3 w-3 md:h-4 md:w-4" />
+                            <span>{sale.customer_name}</span>
+                            <span>•</span>
+                            <span>{sale.customer_email}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col lg:items-end gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              {sale.sale_type === 'affiliate' ? (
+                                <div>
+                                  <div className="font-bold text-base md:text-lg text-blue-600">
+                                    {formatCurrency(parseFloat(sale.affiliate_commission?.toString() || '0'))}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground line-through">
+                                    Total: {formatPrice(sale.amount, sale.currency)}
+                                  </div>
+                                </div>
+                              ) : sale.affiliate_code && sale.seller_commission ? (
+                                <div>
+                                  <div className="font-bold text-base md:text-lg text-green-600">
+                                    {formatCurrency(parseFloat(sale.seller_commission?.toString() || '0'))}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground line-through">
+                                    Total: {formatPrice(sale.amount, sale.currency)}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="font-bold text-base md:text-lg">
+                                  {formatPrice(sale.amount, sale.currency)}
+                                </div>
+                              )}
+                            </div>
+                            {getStatusBadge(sale.status, sale.payment_method)}
+                          </div>
+                          
+                          <div className="flex flex-wrap items-center gap-1">
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>{new Date(sale.created_at).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1">
+                            {sale.sale_type === 'affiliate' ? (
+                              <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                                <User className="h-3 w-3 mr-1" />
+                                Comissão Afiliado
+                              </Badge>
+                            ) : sale.affiliate_code ? (
+                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                <User className="h-3 w-3 mr-1" />
+                                Com Afiliado
+                              </Badge>
+                            ) : null}
+                            {sale.products?.type && (
+                              <Badge variant="outline" className="text-xs">
+                                <Package className="h-3 w-3 mr-1" />
+                                {sale.products.type}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <p className="text-sm text-muted-foreground">
+                    Página {currentPage} de {totalPages} ({filteredSales.length} vendas encontradas)
+                  </p>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage <= 1}
+                    >
+                      Anterior
+                    </Button>
+                    
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                        const pageNum = i + 1;
+                        const isActive = pageNum === currentPage;
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={isActive ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage >= totalPages}
+                    >
+                      Próxima
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+        )}
+      </div>
+      )}
+    </OptimizedPageWrapper>
+  );
+}

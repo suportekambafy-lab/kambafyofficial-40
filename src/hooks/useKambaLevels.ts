@@ -1,0 +1,112 @@
+
+import { useMemo } from 'react';
+
+export interface KambaLevel {
+  id: string;
+  name: string;
+  emoji: string;
+  threshold: number;
+  color: string;
+  rewards: string[];
+  badge: string;
+}
+
+export const KAMBA_LEVELS: KambaLevel[] = [
+  {
+    id: 'bronze',
+    name: 'Kamba Bronze',
+    emoji: '🟤',
+    threshold: 1000000,
+    color: '#8B5E3C',
+    badge: '/lovable-uploads/9a3eb8d5-f7fb-4d71-9fa3-24b656365590.png',
+    rewards: ['🎖 Selo no perfil', '📦 Placa física']
+  },
+  {
+    id: 'zinga',
+    name: 'Kamba Zinga',
+    emoji: '🟠',
+    threshold: 5000000,
+    color: '#F58634',
+    badge: '/lovable-uploads/ea32f463-fe2f-42a1-b0e2-3652f83cf956.png',
+    rewards: ['🎖 Selo no perfil', '📦 Placa física']
+  },
+  {
+    id: 'dikanza',
+    name: 'Kamba Dikanza',
+    emoji: '🟡',
+    threshold: 15000000,
+    color: '#FFCB05',
+    badge: '/lovable-uploads/da32c56d-6a01-423e-a683-7d131bf39e52.png',
+    rewards: ['🎖 Selo + Placa', '🎓 Acesso a mentorias', '🌐 Destaque no site']
+  },
+  {
+    id: 'wakanda',
+    name: 'Kamba Wakanda',
+    emoji: '⚫',
+    threshold: 50000000,
+    color: '#000000',
+    badge: '/lovable-uploads/4cbb6857-ffc5-435f-8067-c6d7686af2a9.png',
+    rewards: ['🎖 Selo + Placa', '🎁 Kit do Criador', '📩 Convite para eventos']
+  },
+  {
+    id: 'diamante',
+    name: 'Kamba Diamante',
+    emoji: '💎',
+    threshold: 100000000,
+    color: '#00CFFF',
+    badge: '/lovable-uploads/0a88b024-7c04-4e5f-9caa-240ca5244cae.png',
+    rewards: [
+      '🎖 Selo + Placa',
+      '✈️ Viagem para Dubai (voo + hotel)',
+      '🎬 Documentário oficial',
+      '👑 Acesso vitalício VIP',
+      '💸 Comissão reduzida para 5%'
+    ]
+  }
+];
+
+export const useKambaLevels = (totalRevenue: number) => {
+  return useMemo(() => {
+    // Encontrar nível atual
+    let currentLevel = KAMBA_LEVELS[0];
+    let currentLevelIndex = 0;
+    
+    for (let i = 0; i < KAMBA_LEVELS.length; i++) {
+      if (totalRevenue >= KAMBA_LEVELS[i].threshold) {
+        currentLevel = KAMBA_LEVELS[i];
+        currentLevelIndex = i;
+      } else {
+        break;
+      }
+    }
+
+    // Encontrar próximo nível
+    const nextLevel = currentLevelIndex < KAMBA_LEVELS.length - 1 
+      ? KAMBA_LEVELS[currentLevelIndex + 1] 
+      : null;
+
+    // Calcular progresso
+    let progress = 0;
+    if (nextLevel) {
+      const currentThreshold = currentLevel.threshold;
+      const nextThreshold = nextLevel.threshold;
+      const progressAmount = totalRevenue - currentThreshold;
+      const totalNeeded = nextThreshold - currentThreshold;
+      progress = Math.min((progressAmount / totalNeeded) * 100, 100);
+    } else {
+      // Se já está no nível máximo
+      progress = 100;
+    }
+
+    // Níveis conquistados
+    const achievedLevels = KAMBA_LEVELS.filter(level => totalRevenue >= level.threshold);
+
+    return {
+      currentLevel,
+      nextLevel,
+      progress: Math.max(0, progress),
+      achievedLevels,
+      allLevels: KAMBA_LEVELS
+    };
+  }, [totalRevenue]);
+};
