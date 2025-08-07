@@ -10,7 +10,8 @@ import { NotificationCenter } from '@/components/NotificationCenter';
 import { cn } from '@/lib/utils';
 import AdminDrawer from '@/components/admin/AdminDrawer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import { Skeleton } from '@/components/ui/skeleton';
+import { SEO } from '@/components/SEO';
 interface ModernAdminMetricCardProps {
   title: string;
   value: string;
@@ -169,13 +170,35 @@ export default function AdminDashboard() {
     try {
       console.log('Carregando estatísticas...');
       
-      // Carregar dados diretamente sem autenticação
-      const [usersResult, productsResult, ordersResult, withdrawalsResult] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact' }),
-        supabase.from('products').select('*', { count: 'exact' }),
-        supabase.from('orders').select('*', { count: 'exact' }),
-        supabase.from('withdrawal_requests').select('*', { count: 'exact' }).eq('status', 'pendente')
-      ]);
+      // Primeiro tenta carregar da tabela agregada admin_dashboard_stats
+      let usersResult: { count: number } = { count: 0 };
+      let productsResult: { count: number } = { count: 0 };
+      let ordersResult: { count: number } = { count: 0 };
+      let withdrawalsResult: { count: number } = { count: 0 };
+
+      const { data: dashboardRow, error: dashboardError } = await supabase
+        .from('admin_dashboard_stats')
+        .select('*')
+        .maybeSingle();
+
+      if (dashboardRow && !dashboardError) {
+        usersResult.count = Number(dashboardRow.total_users) || 0;
+        productsResult.count = Number(dashboardRow.total_products) || 0;
+        ordersResult.count = Number(dashboardRow.total_transactions) || 0;
+        withdrawalsResult.count = Number(dashboardRow.pending_withdrawals) || 0;
+      } else {
+        const [usersRes, productsRes, ordersRes, withdrawalsRes] = await Promise.all([
+          supabase.from('profiles').select('*', { count: 'exact' }),
+          supabase.from('products').select('*', { count: 'exact' }),
+          supabase.from('orders').select('*', { count: 'exact' }),
+          supabase.from('withdrawal_requests').select('*', { count: 'exact' }).eq('status', 'pendente')
+        ]);
+
+        usersResult.count = usersRes.count || 0;
+        productsResult.count = productsRes.count || 0;
+        ordersResult.count = ordersRes.count || 0;
+        withdrawalsResult.count = withdrawalsRes.count || 0;
+      }
 
       // Carregar dados por país
       const { data: profilesData } = await supabase
@@ -308,6 +331,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 transition-colors duration-300">
+      <SEO title="Kambafy Admin – Dashboard" description="Dashboard administrativo com métricas e relatórios" canonical="https://kambafy.com/admin" noIndex />
       {/* Modern Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
