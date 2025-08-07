@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BanProductModal from '@/components/BanProductModal';
+import { SEO } from '@/components/SEO';
 
 interface ProductWithProfile {
   id: string;
@@ -23,6 +24,7 @@ interface ProductWithProfile {
   cover: string | null;
   fantasy_name: string | null;
   sales: number | null;
+  ban_reason: string | null;
   created_at: string;
   revision_requested: boolean;
   revision_requested_at: string | null;
@@ -185,6 +187,20 @@ export default function AdminProducts() {
       }
 
       console.log('✅ Produto banido com sucesso via RPC');
+      // Registrar log administrativo (não bloqueante)
+      if (admin?.id) {
+        try {
+          await supabase.from('admin_logs').insert({
+            admin_id: admin.id,
+            action: 'product_ban',
+            target_type: 'product',
+            target_id: selectedProductForBan.id,
+            details: { reason }
+          });
+        } catch (logErr) {
+          console.warn('⚠️ Falha ao registrar log de banimento:', logErr);
+        }
+      }
       
       // Enviar email de notificação de banimento
       try {
@@ -258,6 +274,20 @@ export default function AdminProducts() {
       }
 
       console.log('✅ Produto aprovado com sucesso via RPC');
+      // Registrar log administrativo (não bloqueante)
+      if (admin?.id) {
+        try {
+          await supabase.from('admin_logs').insert({
+            admin_id: admin.id,
+            action: 'product_approve',
+            target_type: 'product',
+            target_id: productId,
+            details: { product_name: productData.name }
+          });
+        } catch (logErr) {
+          console.warn('⚠️ Falha ao registrar log de aprovação:', logErr);
+        }
+      }
       
       // Enviar email de notificação de aprovação
       try {
@@ -440,6 +470,7 @@ export default function AdminProducts() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Kambafy Admin – Produtos" description="Revisar, aprovar e banir produtos com justificativa" canonical="https://kambafy.com/admin/products" noIndex />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Button 
@@ -534,6 +565,12 @@ export default function AdminProducts() {
                     <span className="ml-1 text-slate-600">{product.sales || 0}</span>
                   </div>
                 </div>
+
+                {product.status === 'Banido' && product.ban_reason && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-2 text-xs text-red-800 mb-3">
+                    <span className="font-medium">Motivo do banimento:</span> {product.ban_reason}
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   {/* Botão para acessar conteúdo do produto */}

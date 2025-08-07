@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { SEO } from '@/components/SEO';
 import { 
   Shield, 
   CheckCircle, 
@@ -137,6 +138,21 @@ export default function AdminIdentityVerification() {
 
       if (error) throw error;
 
+      // Registrar log administrativo (não bloqueante)
+      if (admin?.id) {
+        try {
+          await supabase.from('admin_logs').insert({
+            admin_id: admin.id,
+            action: newStatus === 'aprovado' ? 'kyc_approve' : 'kyc_reject',
+            target_type: 'identity_verification',
+            target_id: id,
+            details: { reason: reason || null }
+          });
+        } catch (logErr) {
+          console.warn('⚠️ Falha ao registrar log de KYC:', logErr);
+        }
+      }
+
       toast.success(`Verificação ${newStatus === 'aprovado' ? 'aprovada' : 'rejeitada'} com sucesso`);
       setRejectionReason('');
       setSelectedVerification(null);
@@ -223,6 +239,7 @@ export default function AdminIdentityVerification() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <SEO title="Kambafy Admin – KYC" description="Aprovar ou reprovar verificações de identidade" canonical="https://kambafy.com/admin/identity" noIndex />
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
