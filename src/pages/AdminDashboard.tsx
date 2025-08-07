@@ -12,6 +12,10 @@ import AdminDrawer from '@/components/admin/AdminDrawer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SEO } from '@/components/SEO';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 interface ModernAdminMetricCardProps {
   title: string;
   value: string;
@@ -88,6 +92,34 @@ export default function AdminDashboard() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [usersByCountry, setUsersByCountry] = useState<Array<{country: string; count: number; flag: string}>>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>('todos');
+  const [orders, setOrders] = useState<any[]>([]);
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+
+  const revenueToDisplay = React.useMemo(() => {
+    const dataSource = orders || [];
+    const filtered = dataSource.filter((o) => {
+      const d = new Date(o.created_at);
+      if (dateRange.from && d < new Date(new Date(dateRange.from).setHours(0,0,0,0))) return false;
+      if (dateRange.to && d > new Date(new Date(dateRange.to).setHours(23,59,59,999))) return false;
+      return true;
+    });
+    const aggregated = filtered.reduce((acc: any[], order: any) => {
+      const month = new Date(order.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+      const amount = parseFloat(order.amount || '0');
+      const existing = acc.find((item) => item.month === month);
+      if (existing) {
+        existing.revenue += amount;
+        existing.commission += amount * 0.08;
+      } else {
+        acc.push({ month, revenue: amount, commission: amount * 0.08 });
+      }
+      return acc;
+    }, [] as any[]);
+    if (!dateRange.from && !dateRange.to) {
+      return companyFinancials?.monthlyRevenue || aggregated.slice(-6);
+    }
+    return aggregated;
+  }, [orders, dateRange, companyFinancials]);
 
   useEffect(() => {
     if (admin) {
@@ -257,6 +289,8 @@ export default function AdminDashboard() {
         .select('amount, created_at')
         .eq('status', 'completed');
 
+      setOrders(allOrders || []);
+
       const totalRevenue = allOrders?.reduce((sum, order) => sum + parseFloat(order.amount || '0'), 0) || 0;
       const companyCommission = totalRevenue * 0.08; // 8% de comissão
       const sellersEarnings = totalRevenue * 0.92; // 92% para vendedores
@@ -337,6 +371,15 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
+              <Button
+                onClick={() => setDrawerOpen(true)}
+                variant="outline"
+                size="icon"
+                className="hover:bg-accent"
+                aria-label="Abrir menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
               <div className="h-12 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Shield className="text-white h-6 w-6" />
               </div>
@@ -347,14 +390,6 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-4">
               <NotificationCenter />
-              <Button 
-                onClick={() => setDrawerOpen(true)}
-                variant="outline"
-                className="flex items-center gap-2 hover:bg-accent"
-              >
-                <Menu className="h-4 w-4" />
-                Menu
-              </Button>
               <Button 
                 onClick={handleSecureLogout}
                 variant="outline"
@@ -433,7 +468,7 @@ export default function AdminDashboard() {
           </div>
         )}
         {/* Modern Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
             <CardContent className="p-0">
               <div className="flex items-center justify-between mb-4">
@@ -485,41 +520,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
-            <CardContent className="p-0">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                    {stats?.pending_withdrawals?.toString() || '0'}
-                  </h3>
-                  <p className="text-gray-600 text-sm">Saques Pendentes</p>
-                </div>
-                <div className={`flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full ${
-                  stats?.pending_withdrawals ? "text-red-600 bg-red-50" : "text-green-600 bg-green-50"
-                }`}>
-                  <TrendingUp className={`w-3 h-3 ${!stats?.pending_withdrawals ? "" : "rotate-180"}`} />
-                  {stats?.pending_withdrawals ? "Ação necessária" : "Tudo em dia"}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
-            <CardContent className="p-0">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                    {`${(stats?.total_paid_out || 0).toLocaleString('pt-AO')} KZ`}
-                  </h3>
-                  <p className="text-gray-600 text-sm">Total Pago</p>
-                </div>
-                <div className="flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
-                  <TrendingUp className="w-3 h-3" />
-                  +15%
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Company Financials Section - Modern Style */}
@@ -594,11 +595,44 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="text-sm text-muted-foreground">
+                    {dateRange.from && dateRange.to
+                      ? `Período: ${format(dateRange.from, 'dd/MM/yyyy')} – ${format(dateRange.to, 'dd/MM/yyyy')}`
+                      : 'Filtrar por período'}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="justify-start">
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {dateRange.from && dateRange.to
+                            ? `${format(dateRange.from, 'dd/MM/yyyy')} – ${format(dateRange.to, 'dd/MM/yyyy')}`
+                            : 'Escolher data'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                          mode="range"
+                          selected={dateRange as any}
+                          onSelect={setDateRange as any}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {(dateRange.from || dateRange.to) && (
+                      <Button variant="ghost" size="sm" onClick={() => setDateRange({})}>
+                        Limpar
+                      </Button>
+                    )}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
-                    <h4 className="font-medium text-gray-700 mb-4">Receita Total por Mês (Últimos 6 meses)</h4>
+                    <h4 className="font-medium text-gray-700 mb-4">Receita Total por Mês</h4>
                     <div className="space-y-3">
-                      {companyFinancials.monthlyRevenue.map((month: any, index: number) => (
+                      {revenueToDisplay.map((month: any, index: number) => (
                         <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                           <span className="font-medium text-gray-700">{month.month}</span>
                           <span className="font-bold text-gray-900">{month.revenue.toLocaleString('pt-AO')} KZ</span>
@@ -609,7 +643,7 @@ export default function AdminDashboard() {
                   <div>
                     <h4 className="font-medium text-gray-700 mb-4">Comissão da Empresa por Mês</h4>
                     <div className="space-y-3">
-                      {companyFinancials.monthlyRevenue.map((month: any, index: number) => (
+                      {revenueToDisplay.map((month: any, index: number) => (
                         <div key={index} className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                           <span className="font-medium text-blue-700">{month.month}</span>
                           <span className="font-bold text-blue-900">{month.commission.toLocaleString('pt-AO')} KZ</span>
@@ -623,108 +657,6 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Modern Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <Card 
-            className="hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white border border-gray-200 hover:scale-[1.02]" 
-            onClick={() => navigate('/admin/withdrawals')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <TrendingUp className="h-6 w-6 text-white" />
-                </div>
-                {stats && stats.pending_withdrawals > 0 && (
-                  <div className="flex flex-col items-end">
-                    <span className="bg-red-100 text-red-600 text-xs font-medium px-2 py-1 rounded-full animate-pulse">
-                      {stats.pending_withdrawals} pendentes
-                    </span>
-                    <span className="text-xs text-orange-600 font-medium mt-1 animate-bounce">
-                      🔔 Novo!
-                    </span>
-                  </div>
-                )}
-              </div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">Gerenciar Saques</h3>
-              <p className="text-gray-600 mb-4 text-sm">Aprovar ou rejeitar solicitações de saque dos vendedores</p>
-              <Button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0 shadow-sm">
-                Ver Saques
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white border border-gray-200 hover:scale-[1.02]" 
-            onClick={() => navigate('/admin/products')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Package className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">Banir Produtos</h3>
-              <p className="text-gray-600 mb-4 text-sm">Gerenciar produtos e banir quando necessário</p>
-              <Button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 shadow-sm">
-                Ver Produtos
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white border border-gray-200 hover:scale-[1.02]" 
-            onClick={() => navigate('/admin/seller-reports')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">Relatórios de Vendedores</h3>
-              <p className="text-gray-600 mb-4 text-sm">Análise detalhada de performance e ranking dos vendedores</p>
-              <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-0 shadow-sm">
-                Ver Relatórios
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white border border-gray-200 hover:scale-[1.02]" 
-            onClick={() => navigate('/admin/identity')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">Verificação de Identidade</h3>
-              <p className="text-gray-600 mb-4 text-sm">Aprovar ou reprovar verificações de identidade dos vendedores</p>
-              <Button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 shadow-sm">
-                Gerenciar Identidades
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white border border-gray-200 hover:scale-[1.02]" 
-            onClick={() => navigate('/admin/logs')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">Logs de Segurança</h3>
-              <p className="text-gray-600 mb-4 text-sm">Ver histórico completo de ações administrativas e sessões</p>
-              <Button className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 border-0 shadow-sm">
-                Ver Logs
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
