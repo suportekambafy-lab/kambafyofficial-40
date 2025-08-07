@@ -69,10 +69,27 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
   const fetchProducts = async () => {
     try {
       setLoadingProducts(true);
+      // Garantir que listamos apenas produtos do mesmo vendedor do produto principal
+      const { data: ownerProduct, error: ownerError } = await supabase
+        .from('products')
+        .select('user_id')
+        .eq('id', productId)
+        .single();
+
+      if (ownerError) throw ownerError;
+      const sellerId = ownerProduct?.user_id;
+
+      if (!sellerId) {
+        console.warn('⚠️ Não foi possível obter o user_id do produto principal. Lista de extras vazia.');
+        setProducts([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('products')
         .select('id, name, type, status, price, cover')
         .eq('status', 'Ativo')
+        .eq('user_id', sellerId)
         .neq('id', productId)
         .order('created_at', { ascending: false });
 
