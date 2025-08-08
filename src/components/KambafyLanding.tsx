@@ -285,7 +285,7 @@ const FeaturesSection = () => {
           </AnimatedGroup>
           <AnimatedGroup preset="scale">
             <div className="relative">
-              <img src={professionalWoman} alt="Profissional jovem trabalhando" className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" />
+              <img src="/lovable-uploads/be22ac17-d2d9-4d84-8ffa-3ed3d91cfaed.png" alt="Profissional jovem trabalhando" className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" />
               <div className="absolute inset-0 bg-gradient-to-t from-checkout-green/20 to-transparent rounded-2xl"></div>
             </div>
           </AnimatedGroup>
