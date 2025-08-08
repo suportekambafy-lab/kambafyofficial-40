@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -64,6 +65,7 @@ export function ModernSidebar({
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isDark } = useSellerTheme();
   const [dashboardData, setDashboardData] = useState({
     totalRevenue: 0,
   });
@@ -236,7 +238,7 @@ export function ModernSidebar({
               className="flex items-center gap-3"
             >
               <img 
-                src="/lovable-uploads/3cce4fbf-9919-4f6f-8e4c-cdf61455198e.png" 
+                src={isDark ? "/lovable-uploads/2cc2ba28-7010-4a14-aa62-c8f5b5368638.png" : "/lovable-uploads/3cce4fbf-9919-4f6f-8e4c-cdf61455198e.png"}
                 alt="Kambafy" 
                 className="h-16 w-auto"
               />
