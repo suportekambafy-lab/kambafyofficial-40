@@ -1,5 +1,5 @@
-// Service Worker para PWA, cache e Web Push
-const CACHE_NAME = 'kambafy-v6';
+// Service Worker para PWA, cache e Web Push - v10 (SOM CORRIGIDO FINAL)
+const CACHE_NAME = 'kambafy-v10';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -85,24 +85,36 @@ self.addEventListener('push', (event) => {
   const title = payload.title || '';
   const body = payload.body || 'Você recebeu uma nova venda.';
   const url = payload.url || '/';
-  const isVenda = title.includes('Nova venda') || payload.tag === 'kambafy-sale';
+  const isVenda = title.includes('Nova Venda') || payload.tag === 'kambafy-sale' || payload.data?.isVenda;
 
   console.log('🔔 [SW] É venda?', isVenda);
   console.log('🔔 [SW] Título:', title);
   console.log('🔔 [SW] Tag:', payload.tag);
+  console.log('🔔 [SW] Data:', payload.data);
 
   event.waitUntil((async () => {
+    // Sempre mostrar a notificação
     await showNotification(title, {
       body,
       icon: '/kambafy-icon.png',
       badge: '/kambafy-icon.png',
       tag: payload.tag || 'kambafy-push',
-      data: { url, ts: Date.now(), ...payload.data }
+      data: { url, ts: Date.now(), ...payload.data },
+      silent: false
     });
     
-    console.log('🔊 [SW] Enviando comando para tocar som...');
-    await broadcastMessage({ type: 'PLAY_NOTIFICATION_SOUND' });
-    console.log('🔊 [SW] Comando de som enviado!');
+    // SÓ TOCAR SOM SE FOR VENDA
+    if (isVenda) {
+      console.log('🪙 [SW] É VENDA! Enviando comando para tocar som de moedas...');
+      await broadcastMessage({ 
+        type: 'PLAY_NOTIFICATION_SOUND',
+        isVenda: true,
+        sound: 'coins'
+      });
+      console.log('🪙 [SW] Comando de som de moedas enviado! 🪙💰');
+    } else {
+      console.log('🔇 [SW] Não é venda, sem som');
+    }
   })());
 });
 

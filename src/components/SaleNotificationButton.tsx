@@ -76,9 +76,28 @@ export const SaleNotificationButton: React.FC = () => {
       console.log('🔔 Nova permissão:', permission);
       if (permission === 'granted') {
         toast.success('Permissões de notificação concedidas!');
+        // Limpar subscriptions duplicadas após permitir
+        await cleanupDuplicateSubscriptions();
       } else {
         toast.error('Permissões negadas. Ative nas configurações do navegador.');
       }
+    }
+  };
+
+  const cleanupDuplicateSubscriptions = async () => {
+    try {
+      console.log('🧹 Limpando subscriptions duplicadas...');
+      const { data, error } = await supabase.functions.invoke('cleanup-push-subscriptions');
+      
+      if (error) {
+        console.error('❌ Erro na limpeza:', error);
+        toast.error('Erro ao limpar subscriptions duplicadas');
+      } else {
+        console.log('✅ Limpeza concluída:', data);
+        toast.success(`${data.message} (${data.removedCount || 0} removidas)`);
+      }
+    } catch (err) {
+      console.error('❌ Erro na limpeza:', err);
     }
   };
 
@@ -108,6 +127,15 @@ export const SaleNotificationButton: React.FC = () => {
           className="text-sm"
         >
           🔔 Permitir Notificações
+        </Button>
+      )}
+      {Notification.permission === 'granted' && (
+        <Button 
+          onClick={cleanupDuplicateSubscriptions} 
+          variant="ghost"
+          className="text-sm"
+        >
+          🧹 Limpar Duplicadas
         </Button>
       )}
     </div>
