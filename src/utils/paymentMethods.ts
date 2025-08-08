@@ -1,4 +1,6 @@
 
+import { getPaymentMethodImage } from './paymentMethodImages';
+
 export interface PaymentMethod {
   id: string;
   name: string;
@@ -16,7 +18,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "express",
     name: "Multicaixa Express",
-    image: "/lovable-uploads/e9a7b374-3f3c-4e2b-ad03-9cdefa7be8a8.png",
+    image: getPaymentMethodImage("express"),
     enabled: true,
     isAngola: true,
     countryFlag: "🇦🇴",
@@ -25,7 +27,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "reference",
     name: "Pagamento por referência",
-    image: "/lovable-uploads/d8b7629c-9a63-44ac-a6a8-dbb0d773d76b.png",
+    image: getPaymentMethodImage("reference"),
     enabled: true,
     isAngola: true,
     countryFlag: "🇦🇴",
@@ -34,7 +36,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "transfer",
     name: "Transferência Bancária",
-    image: "/lovable-uploads/809ca111-22ef-4df7-92fc-ebe47ba15021.png",
+    image: getPaymentMethodImage("transfer"),
     enabled: true,
     isAngola: true,
     countryFlag: "🇦🇴",
@@ -43,7 +45,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "emola",
     name: "e-Mola",
-    image: "/lovable-uploads/41a05a3b-6287-483c-80dc-f1cc201e0bc2.png",
+    image: getPaymentMethodImage("emola"),
     enabled: true,
     isMozambique: true,
     countryFlag: "🇲🇿",
@@ -52,7 +54,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "epesa",
     name: "e-Pesa",
-    image: "/lovable-uploads/9bef56a0-daf2-4e01-9a96-08d52cd17a67.png",
+    image: getPaymentMethodImage("epesa"),
     enabled: true,
     isMozambique: true,
     countryFlag: "🇲🇿",
@@ -61,7 +63,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "card",
     name: "Pagamento com cartão",
-    image: "/lovable-uploads/a84f5ef0-06c2-4e7f-b819-d484191f7d25.png",
+    image: getPaymentMethodImage("card"),
     enabled: false,
     isPortugal: true,
     countryFlag: "🇵🇹",
@@ -70,7 +72,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "klarna",
     name: "Klarna",
-    image: "/lovable-uploads/2635a306-a6ac-496f-8b84-f7a9ab0ee7eb.png",
+    image: getPaymentMethodImage("klarna"),
     enabled: false,
     isPortugal: true,
     countryFlag: "🇵🇹",
@@ -79,7 +81,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "multibanco",
     name: "Multibanco",
-    image: "/lovable-uploads/a3fbcc16-131c-48e4-8983-756aaa584af6.png",
+    image: getPaymentMethodImage("multibanco"),
     enabled: false,
     isPortugal: true,
     countryFlag: "🇵🇹",
@@ -88,7 +90,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "apple_pay",
     name: "Apple Pay",
-    image: "/lovable-uploads/d6c21712-0212-4bb9-8cc1-3de35e106b9d.png",
+    image: getPaymentMethodImage("apple_pay"),
     enabled: false,
     isPortugal: true,
     countryFlag: "🇵🇹",
