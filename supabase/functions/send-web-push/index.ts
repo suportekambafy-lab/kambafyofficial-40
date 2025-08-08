@@ -79,7 +79,7 @@ serve(async (req) => {
       title: title || 'Notificação',
       body: body || 'Você tem uma nova notificação',
       url: url || '/',
-      tag: tag || 'kambafy-push',
+      tag: tag || 'sale-push',
       data: data || {},
     });
 

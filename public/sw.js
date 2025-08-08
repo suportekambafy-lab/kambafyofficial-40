@@ -1,5 +1,5 @@
 // Service Worker para PWA, cache e Web Push - v11 (PWA NATIVO CORRIGIDO)
-const CACHE_NAME = 'kambafy-v11';
+const CACHE_NAME = 'vendas-app-v12';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -54,13 +54,13 @@ self.addEventListener('message', (event) => {
   const data = event.data || {};
   // Venda manual (fallback/teste)
   if (data.type === 'VENDA_REALIZADA') {
-    const title = 'Kambafy - Venda Realizada! 🎉';
+    const title = 'Nova Venda Realizada! 🎉';
     const body = `Sua comissão: ${data.valorComissao}\nProduto: ${data.produtoNome}`;
     showNotification(title, {
       body,
       icon: '/kambafy-icon.png',
       badge: '/kambafy-icon.png',
-      tag: 'kambafy-sale',
+      tag: 'sale-notification',
       data: { url: '/', ts: Date.now() }
     });
     broadcastMessage({ type: 'PLAY_NOTIFICATION_SOUND' });
@@ -85,7 +85,7 @@ self.addEventListener('push', (event) => {
   const title = payload.title || '';
   const body = payload.body || 'Você recebeu uma nova venda.';
   const url = payload.url || '/';
-  const isVenda = title.includes('Nova Venda') || payload.tag === 'kambafy-sale' || payload.data?.isVenda;
+  const isVenda = title.includes('Nova Venda') || payload.tag === 'sale-notification' || payload.data?.isVenda;
 
   console.log('🔔 [SW] É venda?', isVenda);
   console.log('🔔 [SW] Título:', title);
@@ -98,7 +98,7 @@ self.addEventListener('push', (event) => {
       body,
       icon: '/kambafy-icon.png',
       badge: '/kambafy-icon.png',
-      tag: payload.tag || 'kambafy-push',
+      tag: payload.tag || 'sale-push',
       data: { url, ts: Date.now(), ...payload.data },
       silent: true, // Silenciar notificação padrão para usar som customizado
       requireInteraction: false
