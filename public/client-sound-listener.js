@@ -242,7 +242,7 @@ window.solicitarPermissaoNotificacao = async function() {
     if (currentPermission === 'denied') {
       console.warn('🔔 [PERMISSÕES] ❌ Permissões foram NEGADAS pelo usuário');
       console.warn('🔔 [PERMISSÕES] 💡 Para ativar: vá em Configurações do Site > Notificações > Permitir');
-      alert('🔔 Notificações estão BLOQUEADAS!\n\n💡 Para receber alertas de venda:\n1. Clique no ícone 🔒 ao lado da URL\n2. Mude "Notificações" para "Permitir"\n3. Recarregue a página');
+      // Não mostrar alert invasivo, apenas log para desenvolvedores
       return 'denied';
     }
     
@@ -309,12 +309,14 @@ function verificarEInicializar() {
     const permission = Notification.permission;
     console.log('🔔 [PERMISSÕES] Status atual:', permission);
     
-    // Se ainda não foi solicitada ou negada, solicitar automaticamente após 1 segundo
-    if (permission === 'default' || permission === 'denied') {
+    // Se ainda não foi solicitada, solicitar automaticamente após 3 segundos (mais sutil)
+    if (permission === 'default') {
       setTimeout(() => {
         console.log('🔔 [PERMISSÕES] Solicitando permissão automaticamente...');
         window.solicitarPermissaoNotificacao();
-      }, 1000);
+      }, 3000); // Delay de 3s para ser menos invasivo
+    } else if (permission === 'denied') {
+      console.log('🔔 [PERMISSÕES] Permissões negadas - usuário deve ativar manualmente nas configurações do navegador');
     } else if (permission === 'granted') {
       console.log('✅ [PERMISSÕES] Notificações já permitidas!');
     }
