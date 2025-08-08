@@ -8,7 +8,7 @@ function playNotificationSound() {
     console.log('Client Sound Listener: Tentando tocar som de notificação');
     
     // Criar elemento de áudio
-    const audio = new Audio('/sounds/coins-shopify.mp3'); // Som de moedas estilo Shopify
+    const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'); // Som temporário - substitua pelo seu
     audio.volume = 1.0; // Volume máximo
     audio.preload = 'auto';
     
