@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.generate-vapid-keys]
 verify_jwt = false
+
+[functions.send-web-push]
+verify_jwt = true
