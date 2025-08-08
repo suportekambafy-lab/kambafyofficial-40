@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard } from "lucide-react";
 import { getAllPaymentMethods, PaymentMethod } from "@/utils/paymentMethods";
+import { PaymentMethodIcon } from "@/components/PaymentMethodIcon";
 
 interface PaymentMethodsSelectorProps {
   selectedMethods: PaymentMethod[];
@@ -62,13 +63,7 @@ export default function PaymentMethodsSelector({ selectedMethods, onMethodsChang
                       onCheckedChange={(checked) => handleMethodToggle(method.id, checked as boolean)}
                     />
                     <div className="flex items-center gap-3">
-                      {method.image && (
-                        <img
-                          src={method.image}
-                          alt={method.name}
-                          className="w-8 h-8 object-contain"
-                        />
-                      )}
+                      <PaymentMethodIcon methodId={method.id} className="w-8 h-8" />
                       <div>
                         <Label htmlFor={method.id} className="font-medium cursor-pointer text-sm">
                           {method.name}
