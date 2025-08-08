@@ -421,31 +421,6 @@ html {
   color: hsl(var(--foreground)) !important;
 }
 
-  /* PWA Safe Areas for iOS */
-.safe-area-inset-top {
-  padding-top: env(safe-area-inset-top);
-}
-
-.safe-area-inset-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.safe-area-inset-left {
-  padding-left: env(safe-area-inset-left);
-}
-
-.safe-area-inset-right {
-  padding-right: env(safe-area-inset-right);
-}
-
-/* PWA Viewport Settings */
-@supports (-webkit-touch-callout: none) {
-  .ios-pwa {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-}
-
 /* Loading states otimizados */
 .loading-shimmer {
   background: linear-gradient(
@@ -463,53 +438,6 @@ html {
   100% { background-position: 200% 0; }
 }
 
-/* PWA Responsive Design */
-@media screen and (max-width: 768px) {
-  .mobile-only {
-    display: block !important;
-  }
-  
-  .desktop-only {
-    display: none !important;
-  }
-  
-  /* Better touch targets for mobile */
-  button, a, input, select, textarea {
-    min-height: 44px;
-    font-size: 16px;
-  }
-  
-  /* Prevent zoom on form focus */
-  input, select, textarea {
-    font-size: 16px !important;
-  }
-}
-
-@media screen and (min-width: 769px) {
-  .mobile-only {
-    display: none !important;
-  }
-  
-  .desktop-only {
-    display: block !important;
-  }
-}
-
-/* PWA Install Button */
-.pwa-install-prompt {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-  z-index: 1000;
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: 0.75rem;
-  padding: 1rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-}
-
 /* Animações de entrada melhoradas */
 .animate-slide-up {
   animation: slide-up 0.4s ease-out forwards;
@@ -524,25 +452,4 @@ html {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* PWA Splash Screen Simulation */
-.pwa-splash {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: hsl(var(--primary));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  animation: fade-out 2s forwards;
-}
-
-@keyframes fade-out {
-  0% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; pointer-events: none; }
 }

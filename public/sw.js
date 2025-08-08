@@ -1,5 +1,5 @@
-// Service Worker para PWA, cache e Web Push - v10 (SOM CORRIGIDO FINAL)
-const CACHE_NAME = 'kambafy-v10';
+// Service Worker para PWA, cache e Web Push - v8 (SOM DE MOEDA CORRIGIDO)
+const CACHE_NAME = 'kambafy-v8';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -85,12 +85,11 @@ self.addEventListener('push', (event) => {
   const title = payload.title || '';
   const body = payload.body || 'Você recebeu uma nova venda.';
   const url = payload.url || '/';
-  const isVenda = title.includes('Nova Venda') || payload.tag === 'kambafy-sale' || payload.data?.isVenda;
+  const isVenda = title.includes('Nova venda') || payload.tag === 'kambafy-sale';
 
   console.log('🔔 [SW] É venda?', isVenda);
   console.log('🔔 [SW] Título:', title);
   console.log('🔔 [SW] Tag:', payload.tag);
-  console.log('🔔 [SW] Data:', payload.data);
 
   event.waitUntil((async () => {
     // Sempre mostrar a notificação
@@ -100,21 +99,18 @@ self.addEventListener('push', (event) => {
       badge: '/kambafy-icon.png',
       tag: payload.tag || 'kambafy-push',
       data: { url, ts: Date.now(), ...payload.data },
-      silent: false
+      // FORÇAR som customizado para vendas
+      sound: isVenda ? 'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3.mp3' : undefined,
+      silent: false // Garantir que não seja silenciosa
     });
     
-    // SÓ TOCAR SOM SE FOR VENDA
-    if (isVenda) {
-      console.log('🪙 [SW] É VENDA! Enviando comando para tocar som de moedas...');
-      await broadcastMessage({ 
-        type: 'PLAY_NOTIFICATION_SOUND',
-        isVenda: true,
-        sound: 'coins'
-      });
-      console.log('🪙 [SW] Comando de som de moedas enviado! 🪙💰');
-    } else {
-      console.log('🔇 [SW] Não é venda, sem som');
-    }
+    console.log('🔊 [SW] Enviando comando para tocar som...');
+    await broadcastMessage({ 
+      type: 'PLAY_NOTIFICATION_SOUND',
+      isVenda: isVenda,
+      sound: isVenda ? 'coins' : 'default'
+    });
+    console.log('🔊 [SW] Comando de som enviado!');
   })());
 });
 
