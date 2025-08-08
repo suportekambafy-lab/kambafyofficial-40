@@ -1,0 +1,6 @@
+// Esta pasta contém os arquivos de som para notificações
+// Para adicionar o som de moedas estilo Shopify:
+// 1. Baixe um arquivo de som de moedas (.mp3)
+// 2. Renomeie para: coins-shopify.mp3  
+// 3. Coloque nesta pasta (public/sounds/)
+// 4. O som tocará automaticamente nas notificações de venda
