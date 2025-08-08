@@ -15,8 +15,19 @@ export function MobileDashboardHeader({ goal, totalRevenue, progressPercentage }
   };
 
   return (
-    <div className="bg-checkout-green text-white p-4">
-      <div className="flex items-center justify-between">
+    <div 
+      className="relative bg-checkout-green text-white p-4 min-h-[200px] flex flex-col justify-between overflow-hidden"
+      style={{
+        backgroundImage: `url('/lovable-uploads/b66ebf1b-2f77-42cb-a432-686cfb890d29.png')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Overlay for better text readability */}
+      <div className="absolute inset-0 bg-black/30"></div>
+      
+      <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Menu className="w-6 h-6" />
         </div>
@@ -24,7 +35,7 @@ export function MobileDashboardHeader({ goal, totalRevenue, progressPercentage }
         {/* Meta section - right side */}
         <div className="flex flex-col items-end space-y-1">
           <div className="text-right">
-            <div className="text-xs text-white/80">Meta:</div>
+            <div className="text-xs text-white/90">Meta:</div>
             <div className="font-semibold text-sm">{formatPrice(goal)}</div>
           </div>
           <div className="flex flex-col items-end">
@@ -34,12 +45,15 @@ export function MobileDashboardHeader({ goal, totalRevenue, progressPercentage }
               variant="yellow"
               style={{'--progress-background': '#FDE047'} as React.CSSProperties}
             />
-            <span className="text-xs text-white/80 mt-1">
+            <span className="text-xs text-white/90 mt-1">
               {progressPercentage.toFixed(0)}%
             </span>
           </div>
         </div>
       </div>
+      
+      {/* Bottom space for the banner image visibility */}
+      <div className="relative z-10 h-16"></div>
     </div>
   );
 }
