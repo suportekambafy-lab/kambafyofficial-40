@@ -7,8 +7,8 @@ function playNotificationSound() {
   try {
     console.log('Client Sound Listener: Tentando tocar som de notificação');
     
-    // Criar elemento de áudio
-    const audio = new Audio('https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/audio/coins-shopify.mp3'); // Som do Supabase Storage
+    // Criar elemento de áudio - usando som de moedas do Supabase
+    const audio = new Audio('https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3.mp3'); // Som de moedas do Supabase Storage
     audio.volume = 1.0; // Volume máximo
     audio.preload = 'auto';
     
