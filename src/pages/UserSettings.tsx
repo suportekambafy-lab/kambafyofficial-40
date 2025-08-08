@@ -10,10 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Mail, Camera, Upload, X, Shield, ExternalLink } from "lucide-react";
+import { User, Mail, Camera, Upload, X, Shield, ExternalLink, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TwoFactorSettings } from "@/components/TwoFactorSettings";
 import { PasswordChange } from "@/components/PasswordChange";
+import { initPushForUser } from "@/utils/pushNotifications";
 
 export default function UserSettings() {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ export default function UserSettings() {
     full_name: "",
     bio: "",
     avatar_url: "",
+    push_notifications_enabled: false,
   });
 
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function UserSettings() {
           full_name: data.full_name || "",
           bio: data.bio || "",
           avatar_url: data.avatar_url || "",
+          push_notifications_enabled: data.push_notifications_enabled || false,
         });
       }
     } catch (error) {
@@ -80,6 +83,7 @@ export default function UserSettings() {
             full_name: updatedProfile.full_name,
             bio: updatedProfile.bio,
             avatar_url: updatedProfile.avatar_url,
+            push_notifications_enabled: updatedProfile.push_notifications_enabled,
           })
           .eq('user_id', user.id);
       } else {
@@ -90,6 +94,7 @@ export default function UserSettings() {
             full_name: updatedProfile.full_name,
             bio: updatedProfile.bio,
             avatar_url: updatedProfile.avatar_url,
+            push_notifications_enabled: updatedProfile.push_notifications_enabled,
           });
       }
 
@@ -275,6 +280,69 @@ export default function UserSettings() {
     }
   };
 
+  const handlePushNotificationToggle = async (enabled: boolean) => {
+    const updatedProfile = {
+      ...profile,
+      push_notifications_enabled: enabled
+    };
+    
+    setProfile(updatedProfile);
+
+    if (enabled) {
+      // Solicitar permissão quando ativar
+      try {
+        if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
+          const permission = await Notification.requestPermission();
+          
+          if (permission === 'granted') {
+            // Inicializar push notifications
+            if (user?.id) {
+              await initPushForUser(user.id);
+            }
+            
+            // Salvar no banco de dados
+            await updateProfile(updatedProfile);
+            
+            toast({
+              title: "Notificações ativadas!",
+              description: "Você receberá alertas de vendas em tempo real.",
+            });
+          } else {
+            // Permissão negada - reverter
+            setProfile({ ...profile, push_notifications_enabled: false });
+            toast({
+              title: "Permissão negada",
+              description: "Ative notificações nas configurações do navegador para receber alertas.",
+              variant: "destructive"
+            });
+          }
+        } else {
+          setProfile({ ...profile, push_notifications_enabled: false });
+          toast({
+            title: "Não suportado",
+            description: "Seu navegador não suporta notificações push.",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao configurar notificações:', error);
+        setProfile({ ...profile, push_notifications_enabled: false });
+        toast({
+          title: "Erro",
+          description: "Erro ao configurar notificações. Tente novamente.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // Apenas salvar no banco quando desativar
+      await updateProfile(updatedProfile);
+      toast({
+        title: "Notificações desativadas",
+        description: "Você não receberá mais alertas de vendas.",
+      });
+    }
+  };
+
   return (
     <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-6xl mx-auto">
       <div className="space-y-2">
@@ -444,6 +512,31 @@ export default function UserSettings() {
                   disabled 
                   className="text-sm md:text-base bg-muted"
                 />
+              </div>
+
+              {/* Push Notifications */}
+              <div className="space-y-4 p-4 border rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Bell className="h-4 w-4" />
+                      <Label className="text-sm md:text-base font-medium">Notificações de Vendas</Label>
+                    </div>
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      Receba alertas instantâneos quando uma venda for confirmada
+                    </p>
+                  </div>
+                  <Switch
+                    checked={profile.push_notifications_enabled}
+                    onCheckedChange={handlePushNotificationToggle}
+                  />
+                </div>
+                
+                {profile.push_notifications_enabled && (
+                  <div className="text-xs text-green-600 dark:text-green-400">
+                    ✓ Notificações ativadas - Você receberá alertas em tempo real
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -921,6 +921,7 @@ export type Database = {
           iban: string | null
           id: string
           is_creator: boolean | null
+          push_notifications_enabled: boolean | null
           updated_at: string
           user_id: string
         }
@@ -936,6 +937,7 @@ export type Database = {
           iban?: string | null
           id?: string
           is_creator?: boolean | null
+          push_notifications_enabled?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -951,6 +953,7 @@ export type Database = {
           iban?: string | null
           id?: string
           is_creator?: boolean | null
+          push_notifications_enabled?: boolean | null
           updated_at?: string
           user_id?: string
         }
