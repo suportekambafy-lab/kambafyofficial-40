@@ -1,8 +1,11 @@
 // Service Worker para PWA, cache e Web Push
-const CACHE_NAME = 'kambafy-v2';
+const CACHE_NAME = 'kambafy-v3';
 const urlsToCache = [
   '/',
-  '/manifest.json'
+  '/manifest.json',
+  '/kambafy-icon.png',
+  '/kambafy-logo.png',
+  '/sounds/notification.mp3'
 ];
 
 self.addEventListener('install', (event) => {

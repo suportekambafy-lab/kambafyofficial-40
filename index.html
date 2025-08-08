@@ -91,5 +91,20 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script src="/client-sound-listener.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js', {
+            scope: '/'
+          }).then((registration) => {
+            console.log('✅ SW registrado:', registration.scope);
+          }).catch((error) => {
+            console.log('❌ SW falhou:', error);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

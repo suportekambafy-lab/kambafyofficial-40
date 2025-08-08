@@ -1,15 +1,17 @@
 {
-  "id": "/auth",
+  "id": "com.kambafy.app",
   "name": "Kambafy - Plataforma de Vendas Digitais",
   "short_name": "Kambafy",
   "description": "Plataforma completa para criar, vender e gerenciar produtos digitais",
-  "start_url": "/auth?source=pwa",
+  "start_url": "/?utm_source=pwa",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "display_override": ["standalone", "fullscreen", "minimal-ui", "browser"],
   "background_color": "#ffffff",
   "theme_color": "#10b981",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/kambafy-icon.png",
@@ -25,5 +27,19 @@
     }
   ],
   "categories": ["business", "productivity", "finance"],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "screenshots": [
+    {
+      "src": "/kambafy-social-preview.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
 }
