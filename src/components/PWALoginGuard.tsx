@@ -11,9 +11,30 @@ const PWALoginGuard: React.FC<PWALoginGuardProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Função para detectar se está rodando como PWA
+  const isPWA = () => {
+    // Detectar modo standalone (PWA instalado)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    
+    // Detectar iOS PWA
+    const isIOSStandalone = (window.navigator as any).standalone === true;
+    
+    // Verificar se veio do manifest (source=pwa)
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromPWA = urlParams.get('source') === 'pwa';
+    
+    return isStandalone || isIOSStandalone || fromPWA;
+  };
+
   useEffect(() => {
     // Se ainda está carregando, não fazer nada
     if (loading) return;
+
+    // APENAS redirecionar se estiver rodando como PWA
+    if (!isPWA()) {
+      console.log('🌐 Rodando no navegador normal - não redirecionando para login');
+      return;
+    }
 
     // Páginas que não precisam de autenticação
     const publicPages = [
