@@ -249,7 +249,7 @@ export function ModernSidebar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              src="/lovable-uploads/0342efae-661f-4db4-8039-dff20d70a659.png"
+              src={isDark ? "/lovable-uploads/0342efae-661f-4db4-8039-dff20d70a659.png" : "/lovable-uploads/5eecc394-b0e2-4691-945e-036898f70758.png"}
               alt="Kambafy"
               className="w-8 h-8 rounded-lg mx-auto"
             />
