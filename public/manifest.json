@@ -1,9 +1,9 @@
 {
-  "id": "/",
+  "id": "/auth",
   "name": "Kambafy - Plataforma de Vendas Digitais",
   "short_name": "Kambafy",
   "description": "Plataforma completa para criar, vender e gerenciar produtos digitais",
-  "start_url": "/?source=pwa",
+  "start_url": "/auth?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "fullscreen", "minimal-ui"],

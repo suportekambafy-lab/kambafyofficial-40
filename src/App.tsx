@@ -14,6 +14,7 @@ import { OptimizedRoutes } from "./components/OptimizedRoutes";
 import { EnhancedErrorBoundary } from "./components/ui/enhanced-error-boundary";
 import { Suspense } from "react";
 import AuthContextWrapper from "./components/AuthContextWrapper";
+import PWALoginGuard from "./components/PWALoginGuard";
 
 
 // QueryClient otimizado para performance
@@ -56,9 +57,10 @@ const App = () => {
             <AdminAuthProvider>
               <NotificationProvider>
             <AuthContextWrapper>
-            <TooltipProvider>
-              <CustomToaster ref={toasterRef} />
-              <BrowserRouter>
+              <PWALoginGuard>
+                <TooltipProvider>
+                  <CustomToaster ref={toasterRef} />
+                  <BrowserRouter>
                 <SubdomainGuard>
                   <Suspense fallback={<div className="min-h-screen bg-background" />}>
                     <Routes>
@@ -100,6 +102,7 @@ const App = () => {
                 </SubdomainGuard>
                 </BrowserRouter>
               </TooltipProvider>
+              </PWALoginGuard>
             </AuthContextWrapper>
             </NotificationProvider>
           </AdminAuthProvider>
