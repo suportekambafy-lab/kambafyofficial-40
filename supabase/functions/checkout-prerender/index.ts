@@ -56,8 +56,14 @@ Deno.serve(async (req) => {
     
     <!-- SEO Meta Tags -->
     <title>${title}</title>
+    <meta name="title" content="${title}" />
     <meta name="description" content="${description}" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
+    
+    <!-- Schema.org itemprops -->
+    <meta itemprop="name" content="${title}" />
+    <meta itemprop="description" content="${description}" />
+    <meta itemprop="image" content="${image}" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="product" />
@@ -71,6 +77,7 @@ Deno.serve(async (req) => {
     <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="Kambafy" />
     <meta property="og:locale" content="pt_BR" />
+    <meta property="og:updated_time" content="${Date.now()}" />
     <meta property="fb:app_id" content="${fbAppId}" />
     
     <!-- Twitter -->

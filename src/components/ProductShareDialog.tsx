@@ -40,9 +40,12 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
   const previewLink = `https://hcbkqygdtzpxvctfdqbd.functions.supabase.co/checkout-prerender/${product.id}`;
   console.log('Generated checkout link:', checkoutLink);
   
+  // Cache-bust preview for WhatsApp to force re-scrape
+  const whatsappPreview = `${previewLink}?v=${Date.now()}`;
+  
   const shareLinks = {
     checkout: checkoutLink,
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(previewLink)}`,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(whatsappPreview)}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewLink)}`,
     telegram: `https://t.me/share/url?url=${encodeURIComponent(previewLink)}&text=${encodeURIComponent(product.name)}`
   };
