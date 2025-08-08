@@ -17,6 +17,7 @@
       const keywords = (product.seo_keywords && product.seo_keywords.length > 0)
         ? product.seo_keywords.join(', ')
         : `${product.name}, comprar ${product.name}, checkout, pagamento seguro${product.tags && product.tags.length ? ', ' + product.tags.join(', ') : ''}`;
+      const imageAlt = product.image_alt || product.name;
       
       // Atualizar title
       document.title = title;
@@ -39,11 +40,24 @@
       updateById('og-image', image);
       updateById('og-url', url);
       
+      // Ensure OG/Twitter image alt tags
+      const setMetaProp = (property, value) => {
+        let el = document.querySelector(`meta[property="${property}"]`);
+        if (!el) {
+          el = document.createElement('meta');
+          el.setAttribute('property', property);
+          document.head.appendChild(el);
+        }
+        el.setAttribute('content', value);
+      };
+      setMetaProp('og:image:alt', imageAlt);
+      
       // Twitter
       updateById('twitter-title', title);
       updateById('twitter-description', description);
       updateById('twitter-image', image);
       updateById('twitter-url', url);
+      setMetaProp('twitter:image:alt', imageAlt);
       
       // Canonical
       document.getElementById('canonical-url').href = url;

@@ -80,6 +80,7 @@ export const setProductSEO = (product: any) => {
   setMetaProperty('og:title', title);
   setMetaProperty('og:description', description);
   setMetaProperty('og:image', image);
+  setMetaProperty('og:image:alt', product.image_alt || product.name);
   setMetaProperty('og:url', url);
   setMetaProperty('og:type', 'product');
   setMetaProperty('og:site_name', 'Kambafy');
@@ -89,6 +90,7 @@ export const setProductSEO = (product: any) => {
   setMetaProperty('twitter:title', title);
   setMetaProperty('twitter:description', description);
   setMetaProperty('twitter:image', image);
+  setMetaProperty('twitter:image:alt', product.image_alt || product.name);
   
   // Canonical
   setCanonicalUrl(url);
