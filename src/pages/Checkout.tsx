@@ -43,7 +43,7 @@ const Checkout = () => {
   const { affiliateCode, hasAffiliate } = useAffiliateTracking();
 
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(false); // Inicia sem loading para ser instantâneo
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [processing, setProcessing] = useState(false);
   const [formData, setFormData] = useState({
@@ -157,7 +157,6 @@ const Checkout = () => {
       }
 
       try {
-        // Não definir loading=true para manter instantâneo
         console.log('Loading product with valid UUID:', productId);
         
         const { data: productData, error: productError } = await supabase
@@ -171,7 +170,7 @@ const Checkout = () => {
             )
           `)
           .eq('id', productId)
-          .single();
+          .maybeSingle();
 
         console.log('Product query result:', { productData, productError });
 
@@ -203,8 +202,9 @@ const Checkout = () => {
         console.error('Unexpected error loading product:', error);
         setError("Erro inesperado ao carregar produto");
         setProduct(null);
+      } finally {
+        setLoading(false);
       }
-      // Não definir loading=false para manter instantâneo
     };
 
     const loadCheckoutSettings = async () => {
