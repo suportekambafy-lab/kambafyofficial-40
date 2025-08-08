@@ -10,7 +10,7 @@ interface SEOProps {
 }
 
 export const DynamicSEO: React.FC<SEOProps> = ({
-  title = "Kambafy - Plataforma de Infoprodutos",
+  title = "Kambafy - Transforme seu conhecimento em renda",
   description = "Crie, venda e gerencie seus produtos digitais com checkout otimizado",
   image = "https://kambafy.com/lovable-uploads/d8006597-4c28-4313-b50d-96a944e49040.png",
   url = "https://kambafy.com",
