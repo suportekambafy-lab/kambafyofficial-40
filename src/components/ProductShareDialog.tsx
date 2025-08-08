@@ -36,8 +36,8 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
     : 'https://pay.kambafy.com';
     
   const checkoutLink = `${checkoutBaseUrl}/checkout/${product.id}`;
-  // Pre-rendered preview URL for social crawlers (OG/Twitter tags server-side)
-  const previewLink = `https://hcbkqygdtzpxvctfdqbd.functions.supabase.co/checkout-prerender/${product.id}`;
+  // Use the same checkout link for preview to maintain consistency
+  const previewLink = checkoutLink;
   console.log('Generated checkout link:', checkoutLink);
   
   // Cache-bust preview for WhatsApp to force re-scrape
@@ -76,7 +76,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Link com Preview (recomendado)</Label>
+              <Label>Link do Produto</Label>
               <div className="flex gap-2">
                 <Input 
                   value={previewLink} 
@@ -91,11 +91,8 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Use este link para redes sociais: mostra título, descrição e imagem. Usuários reais serão redirecionados ao checkout automaticamente.
+                Link para compartilhar o produto. Funciona em todas as redes sociais e aplicativos de mensagem.
               </p>
-              <div className="text-xs text-muted-foreground">
-                Link direto (sem preview): <span className="font-mono">{shareLinks.checkout}</span>
-              </div>
               <Button 
                 onClick={openCheckoutInNewTab}
                 className="w-full mt-2"
