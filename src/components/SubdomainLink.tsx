@@ -2,6 +2,7 @@
 import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useSubdomain } from '@/hooks/useSubdomain';
+import { CHECKOUT_PRERENDER_BASE } from '@/utils/checkoutPrerender';
 
 interface SubdomainLinkProps {
   to: string;
@@ -55,11 +56,29 @@ export function SubdomainLink({ to, children, className, onClick }: SubdomainLin
     );
   }
   
-  // Caso contrário, criar link externo para subdomínio correto
-  const targetUrl = getSubdomainUrl(targetSubdomain, to);
+  // Caso contrário, criar link externo para subdomínio correto (com prerender no checkout)
+  const isCheckout = to.startsWith('/checkout/');
+  let targetUrl = getSubdomainUrl(targetSubdomain, to);
+  if (targetSubdomain === 'pay' && isCheckout) {
+    const pathOnly = to.split('?')[0];
+    const productId = pathOnly.split('/').pop() || '';
+    if (productId) {
+      targetUrl = `${CHECKOUT_PRERENDER_BASE}/${productId}`;
+    }
+  }
+
+  const handleMouseEnter = () => {
+    if (targetSubdomain === 'pay' && isCheckout && typeof document !== 'undefined') {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = targetUrl;
+      link.as = 'document';
+      document.head.appendChild(link);
+    }
+  };
   
   return (
-    <a href={targetUrl} className={className} onClick={onClick}>
+    <a href={targetUrl} className={className} onClick={onClick} onMouseEnter={handleMouseEnter}>
       {children}
     </a>
   );
