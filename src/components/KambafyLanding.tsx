@@ -113,7 +113,7 @@ const Header = ({
                 <img 
                   src="/lovable-uploads/ab0dd35a-b655-486d-baa2-8a736777a4de.png" 
                   alt="Kambafy" 
-                  className="h-12 w-auto"
+                  className="h-16 w-auto"
                 />
               </Link>
               <div className="flex items-center space-x-2 lg:hidden">
