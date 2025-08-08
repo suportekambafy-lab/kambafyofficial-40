@@ -106,30 +106,32 @@ function playFallbackSound() {
 
 // MELHORADO: Inicialização e escuta de mensagens
 function inicializarClientSoundListener() {
-  console.log('Client Sound Listener: Inicializando sistema de notificações...');
+  console.log('🎧 [LISTENER] Inicializando sistema de notificações...');
   
   if ('serviceWorker' in navigator) {
     // Escutar mensagens do service worker
     navigator.serviceWorker.addEventListener('message', (event) => {
-      console.log('Client Sound Listener: Mensagem recebida do Service Worker:', event.data);
+      console.log('🎧 [LISTENER] Mensagem recebida do Service Worker:', event.data);
       
       if (event.data && (event.data.type === 'TOCAR_SOM_VENDA' || event.data.type === 'PLAY_NOTIFICATION_SOUND')) {
-        console.log('Client Sound Listener: Comando para tocar som recebido');
+        console.log('🎧 [LISTENER] ⚡ COMANDO PARA TOCAR SOM RECEBIDO!');
         playNotificationSound();
+      } else {
+        console.log('🎧 [LISTENER] Mensagem ignorada, tipo:', event.data?.type);
       }
     });
 
     // Aguardar service worker estar pronto
     navigator.serviceWorker.ready
       .then((registration) => {
-        console.log('Client Sound Listener: Service Worker está pronto', {
+        console.log('🎧 [LISTENER] Service Worker está pronto', {
           active: !!registration.active,
           controller: !!navigator.serviceWorker.controller,
           scope: registration.scope
         });
       })
       .catch((error) => {
-        console.error('Client Sound Listener: Erro ao aguardar service worker:', error);
+        console.error('🎧 [LISTENER] Erro ao aguardar service worker:', error);
       });
       
     // Verificar estado atual do service worker

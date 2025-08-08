@@ -69,16 +69,27 @@ self.addEventListener('message', (event) => {
 
 // Handler para Web Push
 self.addEventListener('push', (event) => {
+  console.log('🔔 [SW] Push notification recebida!', event);
+  
   let payload = {};
   try {
-    if (event.data) payload = event.data.json();
+    if (event.data) {
+      payload = event.data.json();
+      console.log('🔔 [SW] Payload da notificação:', payload);
+    }
   } catch (e) {
+    console.error('🔔 [SW] Erro ao parsear payload:', e);
     payload = { title: '', body: event.data?.text() || 'Nova notificação' };
   }
 
   const title = payload.title || '';
   const body = payload.body || 'Você recebeu uma nova venda.';
   const url = payload.url || '/';
+  const isVenda = title.includes('Nova venda') || payload.tag === 'kambafy-sale';
+
+  console.log('🔔 [SW] É venda?', isVenda);
+  console.log('🔔 [SW] Título:', title);
+  console.log('🔔 [SW] Tag:', payload.tag);
 
   event.waitUntil((async () => {
     await showNotification(title, {
@@ -88,7 +99,10 @@ self.addEventListener('push', (event) => {
       tag: payload.tag || 'kambafy-push',
       data: { url, ts: Date.now(), ...payload.data }
     });
+    
+    console.log('🔊 [SW] Enviando comando para tocar som...');
     await broadcastMessage({ type: 'PLAY_NOTIFICATION_SOUND' });
+    console.log('🔊 [SW] Comando de som enviado!');
   })());
 });
 
