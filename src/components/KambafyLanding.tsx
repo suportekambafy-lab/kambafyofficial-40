@@ -505,10 +505,11 @@ const KambafyLogo = ({
 }: {
   className?: string;
 }) => {
-  return <div className={cn('flex items-center space-x-2', className)}>
-      <div className="w-8 h-8 bg-checkout-green rounded-lg flex items-center justify-center">
-        <span className="text-white font-bold text-lg">K</span>
-      </div>
-      <span className="text-xl font-bold">Kambafy</span>
+  return <div className={cn('flex items-center', className)}>
+      <img 
+        src="/lovable-uploads/ec8e901b-3c53-446d-9214-59e3551ae425.png" 
+        alt="Kambafy" 
+        className="h-8 w-auto"
+      />
     </div>;
 };
