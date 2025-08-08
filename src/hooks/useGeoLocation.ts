@@ -103,33 +103,41 @@ export const useGeoLocation = () => {
 
   const detectCountryByIP = async () => {
     try {
+      console.log('🌍 Starting IP detection...');
       const response = await fetch('https://ipapi.co/json/');
-      const data = await response.json();
+      console.log('🌍 IP API response:', response.status);
       
-      console.log('IP Location data:', data);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('🌍 IP Location data:', data);
       
       const countryCode = data.country_code;
+      console.log('🌍 Detected country code:', countryCode);
+      
       const detectedCountry = supportedCountries[countryCode];
       
       if (detectedCountry) {
-        console.log(`Detected country: ${detectedCountry.name} (${countryCode})`);
+        console.log(`🌍 Found supported country: ${detectedCountry.name} (${countryCode})`);
         setUserCountry(detectedCountry);
         
         // Detectar idioma automaticamente baseado no país
         const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
         setDetectedLanguage(language);
-        console.log(`Auto-detected language: ${language} for country ${countryCode}`);
+        console.log(`🌍 Auto-detected language: ${language} for country ${countryCode}`);
         
         // Aplicar idioma automaticamente na aplicação
         applyLanguage(language);
       } else {
-        console.log(`Country ${countryCode} not supported, defaulting to Angola`);
+        console.log(`🌍 Country ${countryCode} not supported, defaulting to Angola`);
         setUserCountry(supportedCountries.AO);
         setDetectedLanguage('pt');
         applyLanguage('pt');
       }
     } catch (err) {
-      console.error('Error detecting country:', err);
+      console.error('🌍 Error detecting country:', err);
       setError('Erro ao detectar localização');
       setUserCountry(supportedCountries.AO);
       setDetectedLanguage('pt');
@@ -206,7 +214,12 @@ export const useGeoLocation = () => {
 
   useEffect(() => {
     const initializeGeoLocation = async () => {
-      console.log('🌍 Initializing geolocation...');
+      console.log('🌍 Initializing geolocation hook...');
+      
+      // Limpar localStorage para forçar detecção por IP
+      localStorage.removeItem('userCountry');
+      console.log('🌍 Cleared localStorage userCountry');
+      
       // Detect country by IP first (before fetching exchange rates for faster response)
       await detectCountryByIP();
       // Then fetch exchange rates in background
@@ -219,7 +232,7 @@ export const useGeoLocation = () => {
     const interval = setInterval(fetchExchangeRates, 30 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, []); // Remove dependency to avoid loops
 
   return {
     userCountry,
