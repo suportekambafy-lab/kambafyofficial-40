@@ -20,6 +20,7 @@ interface PurchaseConfirmationRequest {
   shareLink?: string;
   memberAreaId?: string;
   sellerId: string; // ID do vendedor
+  paymentMethod?: string; // Método de pagamento usado
   orderBump?: {
     bump_product_name: string;
     bump_product_price: string;
@@ -47,6 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
       shareLink,
       memberAreaId,
       sellerId,
+      paymentMethod,
       orderBump,
       baseProductPrice
     }: PurchaseConfirmationRequest = await req.json();
@@ -63,6 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
       shareLink,
       memberAreaId,
       sellerId,
+      paymentMethod,
       orderBump,
       baseProductPrice
     });
@@ -659,22 +662,28 @@ const handler = async (req: Request): Promise<Response> => {
     // Disparar Web Push para o vendedor (som de moeda para TODOS os métodos de pagamento)
     try {
       const title = 'Nova Venda Realizada!';
-      const totalFormatted = parseFloat(amount).toLocaleString('pt-BR', { 
-        style: 'currency', 
-        currency: currency === 'KZ' ? 'AOA' : currency 
-      });
+      
+      // Formatar valor corretamente para Kwanza
+      let totalFormatted;
+      if (currency === 'KZ') {
+        totalFormatted = `${parseFloat(amount).toLocaleString('pt-BR')} Kz`;
+      } else {
+        totalFormatted = parseFloat(amount).toLocaleString('pt-BR', { 
+          style: 'currency', 
+          currency: currency 
+        });
+      }
       
       // Determinar método de pagamento para exibição
-      let displayPaymentMethod = 'Pagamento Local';
-      if (productData?.last_payment_method) {
-        const paymentMethods = {
-          'express': 'Express',
-          'multibanco': 'Multibanco',
-          'stripe': 'Cartão',
-          'mbway': 'MB WAY'
-        };
-        displayPaymentMethod = paymentMethods[productData.last_payment_method] || productData.last_payment_method;
-      }
+      const paymentMethods = {
+        'express': 'Express',
+        'multibanco': 'Multibanco', 
+        'stripe': 'Cartão',
+        'mbway': 'MB WAY',
+        'local': 'Pagamento Local'
+      };
+      
+      const displayPaymentMethod = paymentMethods[paymentMethod] || paymentMethod || 'Express';
       
       const bodyMsg = `Sua comissão: ${totalFormatted} • ${displayPaymentMethod}`;
       
