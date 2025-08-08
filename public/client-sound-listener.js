@@ -226,40 +226,58 @@ window.testarNotificacaoKambafy = function(valor = '5.000 KZ', produto = 'Curso 
 
 // MELHORADA: Função para solicitar permissão de notificação
 window.solicitarPermissaoNotificacao = async function() {
-  console.log('Cliente: Solicitando permissão de notificação...');
+  console.log('🔔 [PERMISSÕES] Solicitando permissão de notificação...');
   
   if ('Notification' in window) {
     const currentPermission = Notification.permission;
-    console.log('Permissão atual:', currentPermission);
+    console.log('🔔 [PERMISSÕES] Status atual:', currentPermission);
+    
+    if (currentPermission === 'denied') {
+      console.warn('🔔 [PERMISSÕES] ❌ Permissões foram NEGADAS pelo usuário');
+      console.warn('🔔 [PERMISSÕES] 💡 Para ativar: vá em Configurações do Site > Notificações > Permitir');
+      alert('🔔 Notificações estão BLOQUEADAS!\n\n💡 Para receber alertas de venda:\n1. Clique no ícone 🔒 ao lado da URL\n2. Mude "Notificações" para "Permitir"\n3. Recarregue a página');
+      return 'denied';
+    }
     
     if (currentPermission === 'default') {
       try {
         const permission = await Notification.requestPermission();
-        console.log('Nova permissão de notificação:', permission);
+        console.log('🔔 [PERMISSÕES] Nova permissão:', permission);
         
         if (permission === 'granted') {
-          console.log('Notificações permitidas!');
+          console.log('✅ [PERMISSÕES] Notificações permitidas!');
+          
+          // Limpar subscriptions antigas duplicadas
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(async (registration) => {
+              console.log('🧹 [LIMPEZA] Limpando subscriptions duplicadas...');
+              const subscription = await registration.pushManager.getSubscription();
+              if (subscription) {
+                console.log('🧹 [LIMPEZA] Subscription atual encontrada');
+              }
+            });
+          }
           
           // Testar com uma notificação de boas-vindas
           setTimeout(() => {
-            console.log('Enviando notificação de teste...');
+            console.log('🔔 [TESTE] Enviando notificação de teste...');
             window.testarNotificacaoKambafy('1.250 KZ', 'E-book Teste');
           }, 1000);
         } else {
-          console.warn('Permissão de notificação negada');
+          console.warn('🔔 [PERMISSÕES] ❌ Permissão negada');
         }
         
         return permission;
       } catch (error) {
-        console.error('Erro ao solicitar permissão:', error);
+        console.error('🔔 [PERMISSÕES] ❌ Erro ao solicitar permissão:', error);
         return 'error';
       }
     } else {
-      console.log('Permissão já definida:', currentPermission);
+      console.log('🔔 [PERMISSÕES] ✅ Permissão já definida:', currentPermission);
       return currentPermission;
     }
   } else {
-    console.warn('Notificações não são suportadas neste navegador');
+    console.warn('🔔 [PERMISSÕES] ❌ Notificações não são suportadas neste navegador');
     return 'not-supported';
   }
 };
@@ -282,14 +300,16 @@ function verificarEInicializar() {
   
   if ('Notification' in window) {
     const permission = Notification.permission;
-    console.log('Status de notificação atual:', permission);
+    console.log('🔔 [PERMISSÕES] Status atual:', permission);
     
-    // Se ainda não foi solicitada permissão, solicitar após 3 segundos
-    if (permission === 'default') {
+    // Se ainda não foi solicitada ou negada, solicitar automaticamente após 1 segundo
+    if (permission === 'default' || permission === 'denied') {
       setTimeout(() => {
-        console.log('Solicitando permissão de notificação automaticamente...');
+        console.log('🔔 [PERMISSÕES] Solicitando permissão automaticamente...');
         window.solicitarPermissaoNotificacao();
-      }, 3000);
+      }, 1000);
+    } else if (permission === 'granted') {
+      console.log('✅ [PERMISSÕES] Notificações já permitidas!');
     }
   }
   
