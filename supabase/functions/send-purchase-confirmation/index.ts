@@ -655,6 +655,38 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    console.log('=== SENDING WEB PUSH NOTIFICATION FOR SALE ===');
+    // Disparar Web Push para o vendedor (som de moeda para TODOS os métodos de pagamento)
+    try {
+      const title = `💰 Nova venda: ${productName}`;
+      const totalFormatted = parseFloat(amount).toLocaleString('pt-BR', { 
+        style: 'currency', 
+        currency: currency === 'KZ' ? 'AOA' : currency 
+      });
+      const bodyMsg = `Cliente: ${customerName} • Valor: ${totalFormatted}`;
+      
+      console.log('🔔 Enviando push notification para:', sellerId);
+      console.log('🔔 Título:', title);
+      console.log('🔔 Mensagem:', bodyMsg);
+      
+      await supabase.functions.invoke('send-web-push', {
+        body: {
+          user_id: sellerId,
+          title,
+          body: bodyMsg,
+          url: `/sales?order_id=${orderId}`,
+          tag: 'kambafy-sale',
+          data: { order_id: orderId, product_id: productId, payment_method: 'various' }
+        },
+        headers: { 'x-service-call': 'true' }
+      });
+      
+      console.log('✅ Web push notification enviada com sucesso');
+    } catch (pushErr) {
+      console.error('❌ Erro ao enviar web push notification:', pushErr);
+      // Não falhar a função por causa da notificação
+    }
+
     console.log('=== PURCHASE CONFIRMATION COMPLETE ===');
 
     return new Response(JSON.stringify({ 
