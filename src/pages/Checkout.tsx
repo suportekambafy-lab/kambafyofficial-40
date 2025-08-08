@@ -191,7 +191,7 @@ const Checkout = () => {
           console.log('Product is inactive:', productId);
           setProduct(productData);
           setError("");
-        } else if (productData.status === 'Banido') {
+        } else if (productData?.status === 'Banido') {
           console.log('Product is banned:', productId);
           setProduct(productData);
           setError("");
