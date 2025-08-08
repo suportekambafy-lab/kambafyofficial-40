@@ -38,7 +38,8 @@ const Checkout = () => {
     formatPrice, 
     convertPrice,
     changeCountry, 
-    supportedCountries 
+    supportedCountries,
+    isReady: geoReady
   } = useGeoLocation();
   const { affiliateCode, hasAffiliate } = useAffiliateTracking();
 
@@ -96,8 +97,8 @@ const Checkout = () => {
   };
 
   const getDisplayPrice = (priceInKZ: number): string => {
-    // Se ainda está carregando a localização, não mostrar preço
-    if (geoLoading) return "...";
+    // Se ainda está carregando ou não está pronto (sem taxas reais), não mostrar preço
+    if (geoLoading || !geoReady) return "...";
     
     const displayPrice = formatPrice(priceInKZ);
     console.log(`Displaying ${priceInKZ} KZ as ${displayPrice}`);

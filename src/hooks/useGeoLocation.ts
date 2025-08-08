@@ -58,6 +58,7 @@ export const useGeoLocation = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detectedLanguage, setDetectedLanguage] = useState<string>('pt');
+  const [isReady, setIsReady] = useState(false); // Novo estado para indicar quando está pronto
 
   const fetchExchangeRates = async () => {
     try {
@@ -220,10 +221,13 @@ export const useGeoLocation = () => {
       localStorage.removeItem('userCountry');
       console.log('🌍 Cleared localStorage userCountry');
       
-      // Detect country by IP first (before fetching exchange rates for faster response)
+      // Detect country by IP first
       await detectCountryByIP();
-      // Then fetch exchange rates in background
+      // Then fetch exchange rates
       await fetchExchangeRates();
+      // Só agora marcar como pronto
+      setIsReady(true);
+      console.log('🌍 Geolocation fully ready with real exchange rates');
     };
     
     initializeGeoLocation();
@@ -244,6 +248,7 @@ export const useGeoLocation = () => {
     supportedCountries,
     detectCountryByIP,
     fetchExchangeRates,
-    detectedLanguage
+    detectedLanguage,
+    isReady
   };
 };
