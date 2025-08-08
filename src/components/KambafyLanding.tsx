@@ -110,7 +110,11 @@ const Header = ({
           <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
             <div className="flex w-full justify-between lg:w-auto">
               <Link to="/" aria-label="home" className="flex items-center space-x-2">
-                <KambafyLogo />
+                <img 
+                  src="/lovable-uploads/ab0dd35a-b655-486d-baa2-8a736777a4de.png" 
+                  alt="Kambafy" 
+                  className="h-8 w-auto"
+                />
               </Link>
               <div className="flex items-center space-x-2 lg:hidden">
                 <Drawer>
