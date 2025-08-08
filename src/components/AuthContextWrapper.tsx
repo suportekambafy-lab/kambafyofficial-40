@@ -49,7 +49,7 @@ const AuthContextWrapper: React.FC<AuthContextWrapperProps> = ({ children }) => 
   return (
     <>
       {children}
-      <PushPermissionPrompt />
+      {/* PushPermissionPrompt removido - agora é controlado via configurações */}
       <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
         <PushTestButton />
         <SaleNotificationButton />
