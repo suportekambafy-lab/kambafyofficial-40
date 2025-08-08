@@ -43,7 +43,8 @@ Deno.serve(async (req) => {
     // Generate SEO-optimized HTML
     const title = (product.seo_title && product.seo_title.length > 0) ? product.seo_title : `${product.name} - Checkout | Kambafy`
     const description = (product.seo_description && product.seo_description.length > 0) ? product.seo_description : (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`)
-    const image = product.cover || 'https://kambafy.com/kambafy-social-preview.png'
+    const rawImage = product.cover || 'https://kambafy.com/kambafy-social-preview.png'
+    const image = (rawImage && rawImage.startsWith('http')) ? rawImage : 'https://kambafy.com/kambafy-social-preview.png'
     const checkoutUrl = `https://pay.kambafy.com/checkout/${product.id}`
     const fbAppId = Deno.env.get('FACEBOOK_APP_ID') || '123456789'
 
@@ -64,6 +65,7 @@ Deno.serve(async (req) => {
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
     <meta property="og:image" content="${image}" />
+    <meta property="og:image:secure_url" content="${image}" />
     <meta property="og:image:alt" content="${product.image_alt || product.name}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />

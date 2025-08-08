@@ -42,7 +42,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
   
   const shareLinks = {
     checkout: checkoutLink,
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(`Confira este produto incrível: ${product.name} - ${previewLink}`)}`,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(previewLink)}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewLink)}`,
     telegram: `https://t.me/share/url?url=${encodeURIComponent(previewLink)}&text=${encodeURIComponent(product.name)}`
   };
@@ -73,23 +73,26 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Link do Checkout</Label>
+              <Label>Link com Preview (recomendado)</Label>
               <div className="flex gap-2">
                 <Input 
-                  value={shareLinks.checkout} 
+                  value={previewLink} 
                   readOnly 
                   className="font-mono text-xs"
                 />
                 <Button 
                   size="sm" 
-                  onClick={() => copyToClipboard(shareLinks.checkout, "Link do checkout")}
+                  onClick={() => copyToClipboard(previewLink, "Link com preview")}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Compartilhe este link para que os clientes possam comprar seu produto
+                Use este link para redes sociais: mostra título, descrição e imagem. Usuários reais serão redirecionados ao checkout automaticamente.
               </p>
+              <div className="text-xs text-muted-foreground">
+                Link direto (sem preview): <span className="font-mono">{shareLinks.checkout}</span>
+              </div>
               <Button 
                 onClick={openCheckoutInNewTab}
                 className="w-full mt-2"
