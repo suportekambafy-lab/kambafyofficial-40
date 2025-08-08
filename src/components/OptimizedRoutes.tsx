@@ -37,7 +37,7 @@ const createLazyWithRetry = (importFn: () => Promise<any>, name: string) => {
 
 const Index = createLazyWithRetry(() => import('@/pages/Index'), "Index");
 const Auth = createLazyWithRetry(() => import('@/pages/Auth'), "Auth");
-const Checkout = createLazyWithRetry(() => import('@/pages/Checkout'), "Checkout");
+const CheckoutDirect = () => import('@/pages/Checkout'); // Direto sem lazy para ser instantâneo
 const ThankYou = createLazyWithRetry(() => import('@/pages/ThankYou'), "ThankYou");
 const NotFound = createLazyWithRetry(() => import('@/pages/NotFound'), "NotFound");
 const HowItWorks = createLazyWithRetry(() => import('@/pages/HowItWorks'), "HowItWorks");
@@ -112,7 +112,7 @@ const withLazyLoading = (Component: React.LazyExoticComponent<any>, fallbackVari
 export const OptimizedRoutes = {
   Index: withLazyLoading(Index),
   Auth: withLazyLoading(Auth, 'settings'),
-  Checkout: withLazyLoading(Checkout),
+  Checkout: React.lazy(CheckoutDirect), // Sem suspense wrapper para ser instantâneo
   ThankYou: withLazyLoading(ThankYou),
   NotFound: withLazyLoading(NotFound),
   HowItWorks: withLazyLoading(HowItWorks),
