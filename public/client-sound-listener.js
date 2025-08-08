@@ -8,7 +8,7 @@ function playNotificationSound() {
     console.log('Client Sound Listener: Tentando tocar som de notificação');
     
     // Criar elemento de áudio
-    const audio = new Audio('/sounds/coin.mp3');
+    const audio = new Audio('/sounds/notification.mp3'); // Altere aqui para usar outro som
     audio.volume = 0.8;
     audio.preload = 'auto';
     
