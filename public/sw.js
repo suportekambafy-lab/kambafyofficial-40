@@ -1,5 +1,5 @@
-// Service Worker para PWA, cache e Web Push - v7
-const CACHE_NAME = 'kambafy-v7';
+// Service Worker para PWA, cache e Web Push
+const CACHE_NAME = 'kambafy-v6';
 const urlsToCache = [
   '/',
   '/manifest.json',
