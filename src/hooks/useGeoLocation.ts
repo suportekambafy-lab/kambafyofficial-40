@@ -33,6 +33,22 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
   }
 };
 
+// Mapeamento de países para idiomas
+const COUNTRY_LANGUAGES: Record<string, string> = {
+  'AO': 'pt', // Angola - Português
+  'PT': 'pt', // Portugal - Português
+  'MZ': 'pt', // Moçambique - Português
+  'BR': 'pt', // Brasil - Português
+  'ES': 'es', // Espanha - Espanhol
+  'US': 'en', // Estados Unidos - Inglês
+  'GB': 'en', // Reino Unido - Inglês
+  'FR': 'fr', // França - Francês
+  'DE': 'de', // Alemanha - Alemão
+  'IT': 'it', // Itália - Italiano
+  'CV': 'pt', // Cabo Verde - Português
+  'ST': 'pt'  // São Tomé e Príncipe - Português
+};
+
 // Margem de segurança para preservar valor (5% a mais)
 const SAFETY_MARGIN = 1.05;
 
@@ -41,6 +57,7 @@ export const useGeoLocation = () => {
   const [supportedCountries, setSupportedCountries] = useState(SUPPORTED_COUNTRIES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [detectedLanguage, setDetectedLanguage] = useState<string>('pt');
 
   const fetchExchangeRates = async () => {
     try {
@@ -97,14 +114,26 @@ export const useGeoLocation = () => {
       if (detectedCountry) {
         console.log(`Detected country: ${detectedCountry.name} (${countryCode})`);
         setUserCountry(detectedCountry);
+        
+        // Detectar idioma automaticamente baseado no país
+        const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
+        setDetectedLanguage(language);
+        console.log(`Auto-detected language: ${language} for country ${countryCode}`);
+        
+        // Aplicar idioma automaticamente na aplicação
+        applyLanguage(language);
       } else {
         console.log(`Country ${countryCode} not supported, defaulting to Angola`);
         setUserCountry(supportedCountries.AO);
+        setDetectedLanguage('pt');
+        applyLanguage('pt');
       }
     } catch (err) {
       console.error('Error detecting country:', err);
       setError('Erro ao detectar localização');
       setUserCountry(supportedCountries.AO);
+      setDetectedLanguage('pt');
+      applyLanguage('pt');
     } finally {
       setLoading(false);
     }
@@ -152,6 +181,26 @@ export const useGeoLocation = () => {
       setUserCountry(country);
       localStorage.setItem('userCountry', countryCode);
       console.log(`Manually changed to: ${country.name}`);
+      
+      // Atualizar idioma quando país é alterado manualmente
+      const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
+      setDetectedLanguage(language);
+      applyLanguage(language);
+    }
+  };
+
+  // Função para aplicar idioma na aplicação
+  const applyLanguage = (language: string) => {
+    try {
+      // Definir atributo lang no HTML
+      document.documentElement.lang = language;
+      
+      // Salvar no localStorage para persistência
+      localStorage.setItem('detectedLanguage', language);
+      
+      console.log(`Language applied: ${language}`);
+    } catch (error) {
+      console.error('Error applying language:', error);
     }
   };
 
@@ -181,6 +230,7 @@ export const useGeoLocation = () => {
     changeCountry,
     supportedCountries,
     detectCountryByIP,
-    fetchExchangeRates
+    fetchExchangeRates,
+    detectedLanguage
   };
 };
