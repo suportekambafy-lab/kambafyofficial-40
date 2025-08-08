@@ -547,17 +547,6 @@ html {
     overscroll-behavior-y: contain;
   }
 }
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-  z-index: 1000;
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: 0.75rem;
-  padding: 1rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-}
 
 /* Animações de entrada melhoradas */
 .animate-slide-up {
