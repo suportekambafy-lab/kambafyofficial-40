@@ -1,5 +1,5 @@
-// Service Worker para PWA, cache e Web Push - v10 (SOM CORRIGIDO FINAL)
-const CACHE_NAME = 'kambafy-v10';
+// Service Worker para PWA, cache e Web Push - v11 (PWA NATIVO CORRIGIDO)
+const CACHE_NAME = 'kambafy-v11';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -93,14 +93,15 @@ self.addEventListener('push', (event) => {
   console.log('🔔 [SW] Data:', payload.data);
 
   event.waitUntil((async () => {
-    // Sempre mostrar a notificação
+    // Sempre mostrar a notificação (silenciosa para permitir som customizado)
     await showNotification(title, {
       body,
       icon: '/kambafy-icon.png',
       badge: '/kambafy-icon.png',
       tag: payload.tag || 'kambafy-push',
       data: { url, ts: Date.now(), ...payload.data },
-      silent: false
+      silent: true, // Silenciar notificação padrão para usar som customizado
+      requireInteraction: false
     });
     
     // SÓ TOCAR SOM SE FOR VENDA

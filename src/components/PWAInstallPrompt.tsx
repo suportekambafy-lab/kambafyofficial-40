@@ -19,7 +19,8 @@ export function PWAInstallPrompt() {
     setIsIOS(iOS);
 
     // Detectar se já está em modo standalone
-    const standalone = window.matchMedia('(display-mode: standalone)').matches;
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || 
+                      (window.navigator as any).standalone === true;
     setIsStandalone(standalone);
 
     // Event listener para o prompt de instalação
@@ -32,7 +33,7 @@ export function PWAInstallPrompt() {
       const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
       
       if (!lastRejected || parseInt(lastRejected) < threeDaysAgo) {
-        setShowPrompt(true);
+        setTimeout(() => setShowPrompt(true), 2000); // Delay de 2s
       }
     };
 
@@ -44,7 +45,7 @@ export function PWAInstallPrompt() {
       const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
       
       if (!lastRejected || parseInt(lastRejected) < threeDaysAgo) {
-        setTimeout(() => setShowPrompt(true), 3000); // Delay de 3s para não incomodar
+        setTimeout(() => setShowPrompt(true), 5000); // Delay de 5s para iOS
       }
     }
 
@@ -94,8 +95,8 @@ export function PWAInstallPrompt() {
           </h3>
           <p className="text-xs text-muted-foreground mb-3">
             {isIOS 
-              ? 'Toque em "Compartilhar" e depois "Adicionar à Tela de Início" para uma experiência nativa.'
-              : 'Instale o app para acesso rápido e notificações de vendas.'
+              ? 'Toque no ícone de "Compartilhar" (↗️) e depois "Adicionar à Tela de Início" para uma experiência nativa.'
+              : 'Instale o app para acesso rápido e notificações de vendas em tempo real.'
             }
           </p>
           
@@ -117,7 +118,7 @@ export function PWAInstallPrompt() {
               size="sm" 
               className="text-xs h-8 px-3"
             >
-              {isIOS ? 'OK' : 'Agora não'}
+              {isIOS ? 'Entendi' : 'Agora não'}
             </Button>
           </div>
         </div>

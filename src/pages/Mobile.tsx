@@ -9,12 +9,16 @@ import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 const Mobile = () => {
   const [userType, setUserType] = useState<'customer' | 'seller' | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const { user, loading } = useAuth();
   const { authReady, isAuthenticated } = useAuthGuard();
+
+  // Initialize push notifications for authenticated users
+  usePushNotifications();
 
   // PWA Error boundary fallback
   const ErrorFallback = () => (
@@ -27,20 +31,20 @@ const Mobile = () => {
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-2">Algo deu errado</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Ocorreu um erro inesperado. Tente uma das opções abaixo.
+          Ocorreu um erro inesperado. Tente recarregar ou voltar à página inicial.
         </p>
         <div className="space-y-3">
           <button 
             onClick={() => window.location.reload()} 
-            className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors touch-target"
           >
-            🔄 Tentar Novamente
+            🔄 Recarregar
           </button>
           <button 
             onClick={() => window.location.href = '/'} 
-            className="w-full bg-muted text-muted-foreground py-3 px-4 rounded-lg font-medium hover:bg-muted/80 transition-colors"
+            className="w-full bg-muted text-muted-foreground py-3 px-4 rounded-lg font-medium hover:bg-muted/80 transition-colors touch-target"
           >
-            🏠 Ir para Início
+            🏠 Página Inicial
           </button>
         </div>
       </div>
@@ -68,7 +72,7 @@ const Mobile = () => {
           </div>
           <div className="space-y-2">
             <LoadingSpinner text="Carregando..." size="lg" />
-            <p className="text-xs text-muted-foreground">Inicializando app...</p>
+            <p className="text-xs text-muted-foreground">Inicializando aplicativo...</p>
           </div>
         </div>
       </div>
@@ -78,7 +82,7 @@ const Mobile = () => {
   // PWA Content with Error Boundary
   return (
     <ModernErrorBoundary fallback={<ErrorFallback />}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background ios-pwa">
         {/* PWA Status Bar Spacing for iOS */}
         <div className="safe-area-inset-top" />
         
@@ -120,8 +124,8 @@ const Mobile = () => {
         {/* PWA Bottom Safe Area for iOS */}
         <div className="safe-area-inset-bottom" />
         
-        {/* PWA Install Prompt */}
-        <PWAInstallPrompt />
+        {/* PWA Install Prompt - só mostrar se não estiver autenticado ou for seller */}
+        {(!isAuthenticated || userType === 'seller') && <PWAInstallPrompt />}
       </div>
     </ModernErrorBoundary>
   );

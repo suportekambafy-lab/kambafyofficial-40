@@ -495,9 +495,58 @@ html {
   }
 }
 
-/* PWA Install Button */
+/* PWA Install Prompt */
 .pwa-install-prompt {
   position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* PWA-specific styles */
+@media (display-mode: standalone) {
+  body {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Enhanced touch targets for PWA */
+@media (hover: none) {
+  button, .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Disable pull-to-refresh on mobile PWA */
+@media screen and (max-width: 768px) {
+  body {
+    overscroll-behavior-y: contain;
+  }
+}
   bottom: 20px;
   left: 20px;
   right: 20px;

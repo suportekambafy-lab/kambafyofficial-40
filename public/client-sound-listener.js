@@ -7,9 +7,10 @@ function playNotificationSound() {
   try {
     console.log('🪙 [COINS] Tentando tocar som de moedas...');
     
-    // URL CORRIGIDA para o som de moedas do Supabase
+    // URL CORRIGIDA para o som de moedas do Supabase (SEM .mp3 duplicado)
     const soundUrls = [
-      'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3'
+      'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3',
+      '/sounds/notification.mp3' // Fallback local
     ];
     
     console.log('🪙 [COINS] URLs de moedas disponíveis:', soundUrls);
