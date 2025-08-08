@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Shield, Check, AlertTriangle } from "lucide-react";
+import { Shield, Check, AlertTriangle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -990,11 +990,7 @@ const Checkout = () => {
                   <h2 className="text-xl font-bold text-gray-900">{product.name.toUpperCase()}</h2>
                   <div className="flex items-center gap-1 mt-1">
                     <span className="text-sm text-gray-600">Entrega instantânea</span>
-                    <img 
-                      src="/lovable-uploads/f0c1b1f2-6682-4b54-8104-b9cdb14c4490.png" 
-                      alt="Verificado" 
-                      className="w-4 h-4" 
-                    />
+                    <CheckCircle className="w-4 h-4 text-green-500" />
                   </div>
                   <div className="text-2xl font-bold text-green-600 mt-2">
                     {getDisplayPrice(originalPrice)}
