@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Intelligent2FAGate from './Intelligent2FAGate';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import PushPermissionPrompt from './PushPermissionPrompt';
 
 interface AuthContextWrapperProps {
   children: React.ReactNode;
@@ -43,7 +44,12 @@ const AuthContextWrapper: React.FC<AuthContextWrapperProps> = ({ children }) => 
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <PushPermissionPrompt />
+    </>
+  );
 };
 
 export default AuthContextWrapper;
