@@ -993,7 +993,7 @@ const Checkout = () => {
                     <img 
                       src="/lovable-uploads/f0c1b1f2-6682-4b54-8104-b9cdb14c4490.png" 
                       alt="Verificado" 
-                      className="w-3 h-3" 
+                      className="w-4 h-4" 
                     />
                   </div>
                   <div className="text-2xl font-bold text-green-600 mt-2">
