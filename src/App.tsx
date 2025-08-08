@@ -57,11 +57,11 @@ const App = () => {
             <AdminAuthProvider>
               <NotificationProvider>
             <AuthContextWrapper>
-              <PWALoginGuard>
                 <TooltipProvider>
                   <CustomToaster ref={toasterRef} />
                   <BrowserRouter>
                 <SubdomainGuard>
+                  <PWALoginGuard>
                   <Suspense fallback={<div className="min-h-screen bg-background" />}>
                     <Routes>
                       <Route path="/" element={<OptimizedRoutes.Index />} />
@@ -98,11 +98,11 @@ const App = () => {
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<OptimizedRoutes.NotFound />} />
                     </Routes>
-                  </Suspense>
+                    </Suspense>
+                  </PWALoginGuard>
                 </SubdomainGuard>
                 </BrowserRouter>
               </TooltipProvider>
-              </PWALoginGuard>
             </AuthContextWrapper>
             </NotificationProvider>
           </AdminAuthProvider>
