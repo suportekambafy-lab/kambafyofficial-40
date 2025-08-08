@@ -16,8 +16,19 @@ export const SaleNotificationButton: React.FC = () => {
 
     setIsLoading(true);
     try {
-      console.log('💰 Simulando notificação de venda...');
+      console.log('💰 [TESTE] Simulando notificação de venda...');
+      console.log('💰 [TESTE] Client Sound Listener disponível?', typeof (window as any).notificarVenda);
+      console.log('💰 [TESTE] Service Worker disponível?', 'serviceWorker' in navigator);
       
+      // PRIMEIRO: Tentar via client-side diretamente
+      if (typeof (window as any).notificarVenda === 'function') {
+        console.log('💰 [TESTE] Chamando notificarVenda diretamente...');
+        (window as any).notificarVenda('9.46 EUR', 'Curso Digital - Teste');
+      } else {
+        console.warn('💰 [TESTE] window.notificarVenda não está disponível');
+      }
+      
+      // SEGUNDO: Tentar via edge function
       const { data, error } = await supabase.functions.invoke('send-web-push', {
         body: {
           user_id: user.id,
@@ -29,32 +40,53 @@ export const SaleNotificationButton: React.FC = () => {
         }
       });
 
-      console.log('✅ Resposta da simulação:', data);
+      console.log('✅ [TESTE] Resposta da edge function:', data);
       
       if (error) {
-        console.error('❌ Erro:', error);
+        console.error('❌ [TESTE] Erro:', error);
         toast.error(`Erro: ${error.message}`);
       } else {
         toast.success(`Notificação de venda simulada! Enviadas: ${data?.sent || 0}`);
       }
     } catch (err) {
-      console.error('❌ Erro ao simular venda:', err);
+      console.error('❌ [TESTE] Erro ao simular venda:', err);
       toast.error('Erro ao simular notificação de venda');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const testSoundDirectly = () => {
+    console.log('🎵 [TESTE DIRETO] Testando som diretamente...');
+    if (typeof (window as any).playNotificationSound === 'function') {
+      (window as any).playNotificationSound();
+    } else if (typeof (window as any).notificarVenda === 'function') {
+      (window as any).notificarVenda('TESTE', 'Som Direto');
+    } else {
+      console.error('🎵 [TESTE DIRETO] Nenhuma função de som disponível');
+      toast.error('Sistema de som não carregado');
+    }
+  };
+
   if (!user) return null;
 
   return (
-    <Button 
-      onClick={simulateSaleNotification} 
-      disabled={isLoading}
-      variant="default"
-      className="mt-2"
-    >
-      {isLoading ? 'Simulando...' : '💰 Simular Notificação de Venda'}
-    </Button>
+    <div className="flex flex-col gap-2">
+      <Button 
+        onClick={simulateSaleNotification} 
+        disabled={isLoading}
+        variant="default"
+        className="text-sm"
+      >
+        {isLoading ? 'Simulando...' : '💰 Simular Venda'}
+      </Button>
+      <Button 
+        onClick={testSoundDirectly} 
+        variant="outline"
+        className="text-sm"
+      >
+        🔊 Testar Som
+      </Button>
+    </div>
   );
 };

@@ -5,72 +5,102 @@ console.log('Client Sound Listener: Carregado e inicializando...');
 // Função melhorada para tocar o som de moedas
 function playNotificationSound() {
   try {
-    console.log('Client Sound Listener: Tentando tocar som de notificação');
+    console.log('🔊 [SOM] Tentando tocar som de notificação');
     
-    // Criar elemento de áudio - usando som de moedas do Supabase
-    const audio = new Audio('https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3.mp3'); // Som de moedas do Supabase Storage
-    audio.volume = 1.0; // Volume máximo
-    audio.preload = 'auto';
+    // Lista de URLs para tentar
+    const soundUrls = [
+      'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3.mp3',
+      'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/audio/coins-shopify.mp3.mp3',
+      '/sounds/coins-shopify.mp3',
+      '/sounds/notification.mp3'
+    ];
     
-    // Log do estado do áudio
-    console.log('Audio criado:', {
-      src: audio.src,
-      volume: audio.volume,
-      readyState: audio.readyState
-    });
+    console.log('🔊 [SOM] URLs disponíveis:', soundUrls);
     
-    // Tentar tocar o som
-    const playPromise = audio.play();
+    // Tentar cada URL sequencialmente
+    let audioAttempt = 0;
+    const tryNextAudio = () => {
+      if (audioAttempt >= soundUrls.length) {
+        console.warn('🔊 [SOM] Todos os áudios falharam, usando fallback sintético');
+        playFallbackSound();
+        return;
+      }
+      
+      const url = soundUrls[audioAttempt];
+      console.log(`🔊 [SOM] Tentativa ${audioAttempt + 1}: ${url}`);
+      
+      const audio = new Audio(url);
+      audio.volume = 0.8;
+      audio.preload = 'auto';
+      
+      audio.addEventListener('loadeddata', () => {
+        console.log(`🔊 [SOM] Áudio carregado: ${url}`);
+      });
+      
+      audio.addEventListener('canplaythrough', () => {
+        console.log(`🔊 [SOM] Áudio pronto para reproduzir: ${url}`);
+      });
+      
+      audio.addEventListener('error', (e) => {
+        console.error(`🔊 [SOM] Erro ao carregar ${url}:`, e);
+        audioAttempt++;
+        tryNextAudio();
+      });
+      
+      const playPromise = audio.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log(`✅ [SOM] Som tocado com sucesso: ${url}`);
+          })
+          .catch((error) => {
+            console.warn(`❌ [SOM] Falha ao tocar ${url}:`, error);
+            audioAttempt++;
+            tryNextAudio();
+          });
+      }
+    };
     
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          console.log('Client Sound Listener: Som de notificação tocado com sucesso');
-        })
-        .catch((error) => {
-          console.warn('Client Sound Listener: Não foi possível tocar o som automaticamente:', error);
-
-          // Fallback imediato com WebAudio (beep curto)
-          try {
-            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-            if (AudioCtx) {
-              const ctx = new AudioCtx();
-              const o = ctx.createOscillator();
-              const g = ctx.createGain();
-              o.type = 'sine';
-              o.frequency.value = 880; // A5
-              o.connect(g);
-              g.connect(ctx.destination);
-              g.gain.setValueAtTime(0.001, ctx.currentTime);
-              g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
-              o.start();
-              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
-              o.stop(ctx.currentTime + 0.3);
-            }
-          } catch (e) {
-            console.warn('WebAudio beep fallback falhou:', e);
-          }
-          
-          // Adicionar listener para próxima interação do usuário
-          const playOnNextClick = () => {
-            audio.play()
-              .then(() => console.log('Som tocado após interação do usuário'))
-              .catch(e => console.error('Erro ao tocar som após interação:', e));
-            
-            // Remover listener após uso
-            document.removeEventListener('click', playOnNextClick);
-            document.removeEventListener('touchstart', playOnNextClick);
-            document.removeEventListener('keydown', playOnNextClick);
-          };
-          
-          // Adicionar múltiplos tipos de eventos para maior compatibilidade
-          document.addEventListener('click', playOnNextClick, { once: true });
-          document.addEventListener('touchstart', playOnNextClick, { once: true });
-          document.addEventListener('keydown', playOnNextClick, { once: true });
-        });
-    }
+    tryNextAudio();
+    
   } catch (error) {
-    console.error('Client Sound Listener: Erro ao criar/tocar som:', error);
+    console.error('🔊 [SOM] Erro crítico ao tocar som:', error);
+    playFallbackSound();
+  }
+}
+
+// Função de fallback para som sintético
+function playFallbackSound() {
+  try {
+    console.log('🔧 [SOM] Gerando som sintético de moedas...');
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      const ctx = new AudioCtx();
+      
+      // Som de moeda sintético (múltiplos tons)
+      const frequencies = [523, 659, 784]; // C5, E5, G5 (acorde de Dó maior)
+      
+      frequencies.forEach((freq, index) => {
+        setTimeout(() => {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.value = freq;
+          o.connect(g);
+          g.connect(ctx.destination);
+          g.gain.setValueAtTime(0.001, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.01);
+          o.start();
+          g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
+          o.stop(ctx.currentTime + 0.35);
+        }, index * 100);
+      });
+      
+      console.log('✅ [SOM] Som sintético de moedas gerado');
+    }
+  } catch (e) {
+    console.warn('🔧 [SOM] Fallback sintético falhou:', e);
   }
 }
 
@@ -120,6 +150,9 @@ function inicializarClientSoundListener() {
     console.warn('Client Sound Listener: Service Worker não é suportado neste navegador');
   }
 }
+
+// Expor função para teste direto
+window.playNotificationSound = playNotificationSound;
 
 // MELHORADA: Função global para disparar notificação de venda
 window.notificarVenda = function(valorComissao, produtoNome) {
