@@ -58,6 +58,8 @@ export const SaleNotificationButton: React.FC = () => {
 
   const testSoundDirectly = () => {
     console.log('🎵 [TESTE DIRETO] Testando som diretamente...');
+    console.log('🎵 [TESTE DIRETO] Permissão notificação:', Notification.permission);
+    
     if (typeof (window as any).playNotificationSound === 'function') {
       (window as any).playNotificationSound();
     } else if (typeof (window as any).notificarVenda === 'function') {
@@ -65,6 +67,18 @@ export const SaleNotificationButton: React.FC = () => {
     } else {
       console.error('🎵 [TESTE DIRETO] Nenhuma função de som disponível');
       toast.error('Sistema de som não carregado');
+    }
+  };
+
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      console.log('🔔 Nova permissão:', permission);
+      if (permission === 'granted') {
+        toast.success('Permissões de notificação concedidas!');
+      } else {
+        toast.error('Permissões negadas. Ative nas configurações do navegador.');
+      }
     }
   };
 
@@ -87,6 +101,15 @@ export const SaleNotificationButton: React.FC = () => {
       >
         🔊 Testar Som
       </Button>
+      {Notification.permission !== 'granted' && (
+        <Button 
+          onClick={requestNotificationPermission} 
+          variant="secondary"
+          className="text-sm"
+        >
+          🔔 Permitir Notificações
+        </Button>
+      )}
     </div>
   );
 };

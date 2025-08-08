@@ -1,19 +1,21 @@
 // Service Worker para PWA, cache e Web Push
-const CACHE_NAME = 'kambafy-v5';
+const CACHE_NAME = 'kambafy-v6';
 const urlsToCache = [
   '/',
   '/manifest.json',
   '/kambafy-icon.png',
   '/kambafy-logo.png',
-  '/sounds/notification.mp3',
-  '/sounds/coins-shopify.mp3',
-  'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3.mp3',
-  'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/audio/coins-shopify.mp3.mp3'
+  '/sounds/notification.mp3'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        // Cache apenas URLs locais para evitar erros de CORS
+        return cache.addAll(urlsToCache);
+      })
+      .then(() => self.skipWaiting())
   );
 });
 
