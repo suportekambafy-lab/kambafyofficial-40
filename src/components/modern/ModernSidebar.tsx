@@ -242,15 +242,15 @@ export function ModernSidebar({
               <span className="font-semibold text-sidebar-foreground">Kambafy</span>
             </motion.div>
           ) : (
-            <motion.div
+            <motion.img
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-sm mx-auto"
-            >
-              <span className="text-primary-foreground font-bold text-sm">K</span>
-            </motion.div>
+              src="/lovable-uploads/a70398e0-b123-4faf-92ad-8fc2499aade2.png"
+              alt="Kambafy"
+              className="w-8 h-8 rounded-lg mx-auto"
+            />
           )}
         </AnimatePresence>
         

@@ -507,9 +507,9 @@ const KambafyLogo = ({
 }) => {
   return <div className={cn('flex items-center', className)}>
       <img 
-        src="/lovable-uploads/a70398e0-b123-4faf-92ad-8fc2499aade2.png" 
+        src="/lovable-uploads/e7ad8aa1-62cf-4e2a-aa70-3e9cd4793b0f.png" 
         alt="Kambafy" 
-        className="h-20 w-auto rounded-lg"
+        className="h-20 w-auto"
       />
     </div>;
 };
