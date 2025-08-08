@@ -711,40 +711,7 @@ const Checkout = () => {
               console.log('✅ Webhooks triggered successfully for local payment');
             }
 
-            // Enviar notificação push para o vendedor
-            try {
-              console.log('📱 Sending push notification to seller...');
-              const pushPayload = {
-                user_id: product.user_id,
-                title: 'Kambafy - Nova Venda Realizada!',
-                body: `Sua comissão: ${totalAmount} ${userCountry.currency} • ${selectedPayment}`,
-                url: '/sales',
-                tag: 'kambafy-sale',
-                data: { 
-                  order_id: orderId, 
-                  product_id: product.id,
-                  payment_method: selectedPayment,
-                  amount: totalAmount.toString(),
-                  currency: userCountry.currency
-                }
-              };
-
-              // Incluir header de serviço interno para autorizar a chamada
-              const { data: pushResponse, error: pushError } = await supabase.functions.invoke('send-web-push', {
-                body: pushPayload,
-                headers: {
-                  'x-service-call': 'true'
-                }
-              });
-
-              if (pushError) {
-                console.error('Error sending push notification:', pushError);
-              } else {
-                console.log('✅ Push notification sent successfully:', pushResponse);
-              }
-            } catch (pushError) {
-              console.error('❌ Error sending push notification:', pushError);
-            }
+            // REMOVIDO: Push notification (será enviada apenas no email de confirmação)
 
           } catch (webhookError) {
             console.error('❌ Error triggering webhooks for local payment:', webhookError);
