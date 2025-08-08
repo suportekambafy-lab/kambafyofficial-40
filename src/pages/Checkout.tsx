@@ -729,8 +729,12 @@ const Checkout = () => {
                 }
               };
 
+              // Incluir header de serviço interno para autorizar a chamada
               const { data: pushResponse, error: pushError } = await supabase.functions.invoke('send-web-push', {
-                body: pushPayload
+                body: pushPayload,
+                headers: {
+                  'x-service-call': 'true'
+                }
               });
 
               if (pushError) {
