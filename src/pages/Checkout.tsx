@@ -874,6 +874,15 @@ const Checkout = () => {
     );
   }
 
+  if (!product) {
+    // Render a minimal, non-animated placeholder while we confirm product availability
+    return (
+      <ThemeProvider forceLightMode={true}>
+        <div className="min-h-screen bg-gray-50" />
+      </ThemeProvider>
+    );
+  }
+
   const originalPrice = parseInt(product.price);
   const convertedPrice = getConvertedPrice(originalPrice);
   const totalPrice = originalPrice + orderBumpPrice;
