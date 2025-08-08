@@ -115,10 +115,6 @@ function inicializarClientSoundListener() {
       
       if (event.data && (event.data.type === 'TOCAR_SOM_VENDA' || event.data.type === 'PLAY_NOTIFICATION_SOUND')) {
         console.log('🎧 [LISTENER] ⚡ COMANDO PARA TOCAR SOM RECEBIDO!');
-        console.log('🎧 [LISTENER] É venda?', event.data.isVenda);
-        console.log('🎧 [LISTENER] Tipo de som:', event.data.sound);
-        
-        // SEMPRE tocar som de moeda para notificações de venda
         playNotificationSound();
       } else {
         console.log('🎧 [LISTENER] Mensagem ignorada, tipo:', event.data?.type);
