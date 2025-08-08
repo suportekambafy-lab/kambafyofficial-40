@@ -8,8 +8,8 @@ function playNotificationSound() {
     console.log('Client Sound Listener: Tentando tocar som de notificação');
     
     // Criar elemento de áudio
-    const audio = new Audio('/sounds/notification.mp3'); // Altere aqui para usar outro som
-    audio.volume = 0.8;
+    const audio = new Audio('/sounds/coins-shopify.mp3'); // Som de moedas estilo Shopify
+    audio.volume = 1.0; // Volume máximo
     audio.preload = 'auto';
     
     // Log do estado do áudio
