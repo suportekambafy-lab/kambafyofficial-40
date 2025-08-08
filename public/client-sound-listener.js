@@ -29,6 +29,27 @@ function playNotificationSound() {
         })
         .catch((error) => {
           console.warn('Client Sound Listener: Não foi possível tocar o som automaticamente:', error);
+
+          // Fallback imediato com WebAudio (beep curto)
+          try {
+            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioCtx) {
+              const ctx = new AudioCtx();
+              const o = ctx.createOscillator();
+              const g = ctx.createGain();
+              o.type = 'sine';
+              o.frequency.value = 880; // A5
+              o.connect(g);
+              g.connect(ctx.destination);
+              g.gain.setValueAtTime(0.001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+              o.start();
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+              o.stop(ctx.currentTime + 0.3);
+            }
+          } catch (e) {
+            console.warn('WebAudio beep fallback falhou:', e);
+          }
           
           // Adicionar listener para próxima interação do usuário
           const playOnNextClick = () => {
@@ -211,6 +232,18 @@ window.solicitarPermissaoNotificacao = async function() {
 // Verificar permissão de notificação e inicializar
 function verificarEInicializar() {
   console.log('Client Sound Listener: Verificando permissões e inicializando...');
+  
+  // Garantir que o Service Worker esteja registrado
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration()
+      .then((reg) => {
+        if (!reg) {
+          console.log('Client Sound Listener: Registrando Service Worker /sw.js');
+          return navigator.serviceWorker.register('/sw.js');
+        }
+      })
+      .catch((e) => console.error('Erro ao registrar Service Worker:', e));
+  }
   
   if ('Notification' in window) {
     const permission = Notification.permission;

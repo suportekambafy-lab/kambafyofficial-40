@@ -13,6 +13,7 @@ import { SubdomainGuard } from "./components/SubdomainGuard";
 import { OptimizedRoutes } from "./components/OptimizedRoutes";
 import { EnhancedErrorBoundary } from "./components/ui/enhanced-error-boundary";
 import { Suspense } from "react";
+import AuthContextWrapper from "./components/AuthContextWrapper";
 
 
 // QueryClient otimizado para performance
@@ -54,6 +55,7 @@ const App = () => {
           <AuthProvider>
             <AdminAuthProvider>
               <NotificationProvider>
+            <AuthContextWrapper>
             <TooltipProvider>
               <CustomToaster ref={toasterRef} />
               <BrowserRouter>
@@ -98,6 +100,7 @@ const App = () => {
                 </SubdomainGuard>
                 </BrowserRouter>
               </TooltipProvider>
+            </AuthContextWrapper>
             </NotificationProvider>
           </AdminAuthProvider>
         </AuthProvider>
