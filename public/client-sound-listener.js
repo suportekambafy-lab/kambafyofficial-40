@@ -115,8 +115,13 @@ function inicializarClientSoundListener() {
         console.log('🎧 [LISTENER] É venda?', event.data.isVenda);
         console.log('🎧 [LISTENER] Tipo de som:', event.data.sound);
         
-        // SEMPRE tocar som de moeda para notificações de venda
-        playNotificationSound();
+        // SÓ TOCAR SOM SE FOR VENDA
+        if (event.data.isVenda === true) {
+          console.log('🔊 [LISTENER] CONFIRMADO: É VENDA! Tocando som de moeda...');
+          playNotificationSound();
+        } else {
+          console.log('🔊 [LISTENER] Não é venda, não tocando som');
+        }
       } else {
         console.log('🎧 [LISTENER] Mensagem ignorada, tipo:', event.data?.type);
       }

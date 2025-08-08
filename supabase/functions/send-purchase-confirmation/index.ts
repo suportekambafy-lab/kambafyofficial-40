@@ -658,7 +658,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('=== SENDING WEB PUSH NOTIFICATION FOR SALE ===');
     // Disparar Web Push para o vendedor (som de moeda para TODOS os métodos de pagamento)
     try {
-      const title = 'Kambafy - Nova Venda Realizada!';
+      const title = 'Nova Venda Realizada!';
       const totalFormatted = parseFloat(amount).toLocaleString('pt-BR', { 
         style: 'currency', 
         currency: currency === 'KZ' ? 'AOA' : currency 
