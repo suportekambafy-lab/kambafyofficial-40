@@ -156,12 +156,18 @@ export function ModernSidebar({
             >
               {/* Header */}
               <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-sm">
-                    <span className="text-primary-foreground font-bold text-sm">K</span>
-                  </div>
-                  <span className="font-semibold text-sidebar-foreground">Kambafy</span>
-                </div>
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/lovable-uploads/fa4aafc7-68f9-462b-a59e-2153ae79b87c.png" 
+                  alt="Kambafy Icon" 
+                  className="w-8 h-8 rounded-lg"
+                />
+                <img 
+                  src="/lovable-uploads/a1884977-ff1a-4dc0-b4cb-b01ee133b4c5.png" 
+                  alt="Kambafy" 
+                  className="h-6 w-auto"
+                />
+              </div>
                 
                 <Button
                   variant="ghost"
@@ -236,10 +242,16 @@ export function ModernSidebar({
               transition={{ duration: 0.2 }}
               className="flex items-center gap-3"
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-sm">
-                <span className="text-primary-foreground font-bold text-sm">K</span>
-              </div>
-              <span className="font-semibold text-sidebar-foreground">Kambafy</span>
+              <img 
+                src="/lovable-uploads/fa4aafc7-68f9-462b-a59e-2153ae79b87c.png" 
+                alt="Kambafy Icon" 
+                className="w-8 h-8 rounded-lg"
+              />
+              <img 
+                src="/lovable-uploads/a1884977-ff1a-4dc0-b4cb-b01ee133b4c5.png" 
+                alt="Kambafy" 
+                className="h-6 w-auto"
+              />
             </motion.div>
           ) : (
             <motion.img
