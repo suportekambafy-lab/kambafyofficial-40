@@ -158,10 +158,10 @@ export const useGeoLocation = () => {
   useEffect(() => {
     const initializeGeoLocation = async () => {
       console.log('🌍 Initializing geolocation...');
-      // First fetch exchange rates
-      await fetchExchangeRates();
-      // Always detect country by IP first (ignore localStorage for fresh detection)
+      // Detect country by IP first (before fetching exchange rates for faster response)
       await detectCountryByIP();
+      // Then fetch exchange rates in background
+      await fetchExchangeRates();
     };
     
     initializeGeoLocation();

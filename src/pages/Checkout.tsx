@@ -96,6 +96,9 @@ const Checkout = () => {
   };
 
   const getDisplayPrice = (priceInKZ: number): string => {
+    // Se ainda está carregando a localização, não mostrar preço
+    if (geoLoading) return "...";
+    
     const displayPrice = formatPrice(priceInKZ);
     console.log(`Displaying ${priceInKZ} KZ as ${displayPrice}`);
     return displayPrice;
