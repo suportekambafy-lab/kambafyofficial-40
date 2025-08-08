@@ -33,9 +33,15 @@ serve(async (req) => {
 
     // Determine caller: user (JWT) or internal service
     const authHeader = req.headers.get('Authorization');
+    const isServiceCall = req.headers.get('x-service-call') === 'true';
     let targetUserId = user_id || '';
 
-    if (authHeader?.startsWith('Bearer ')) {
+    console.log('🔍 Auth header exists:', !!authHeader);
+    console.log('🔍 Is service call:', isServiceCall);
+    console.log('🔍 Target user ID:', targetUserId);
+
+    if (authHeader?.startsWith('Bearer ') && !isServiceCall) {
+      // Only validate JWT for non-service calls with auth header
       const supabaseAuth = createClient(SUPABASE_URL, ANON, {
         global: { headers: { Authorization: authHeader } },
       });
@@ -43,12 +49,14 @@ serve(async (req) => {
       if (!userRes?.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
       // Force to the auth user
       targetUserId = userRes.user.id;
-    } else {
-      // Allow internal calls (e.g., from other edge functions) when no auth header
-      const isService = req.headers.get('x-service-call') === 'true';
-      if (!isService && !targetUserId) {
-        return new Response(JSON.stringify({ error: 'Missing user_id' }), { status: 400, headers: corsHeaders });
+    } else if (isServiceCall) {
+      // Allow internal calls with x-service-call header
+      console.log('✅ Service call authorized');
+      if (!targetUserId) {
+        return new Response(JSON.stringify({ error: 'user_id required for service calls' }), { status: 400, headers: corsHeaders });
       }
+    } else if (!authHeader && !targetUserId) {
+      return new Response(JSON.stringify({ error: 'Missing authentication or user_id' }), { status: 400, headers: corsHeaders });
     }
 
     if (!targetUserId) return new Response(JSON.stringify({ error: 'user_id required' }), { status: 400, headers: corsHeaders });
