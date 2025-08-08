@@ -821,6 +821,7 @@ export type Database = {
           description: string | null
           fantasy_name: string | null
           id: string
+          image_alt: string | null
           member_area_id: string | null
           name: string
           payment_methods: Json | null
@@ -828,7 +829,11 @@ export type Database = {
           revision_requested: boolean | null
           revision_requested_at: string | null
           sales: number | null
+          seo_description: string | null
+          seo_keywords: string[] | null
+          seo_title: string | null
           share_link: string | null
+          slug: string | null
           status: string | null
           support_email: string | null
           support_whatsapp: string | null
@@ -848,6 +853,7 @@ export type Database = {
           description?: string | null
           fantasy_name?: string | null
           id?: string
+          image_alt?: string | null
           member_area_id?: string | null
           name: string
           payment_methods?: Json | null
@@ -855,7 +861,11 @@ export type Database = {
           revision_requested?: boolean | null
           revision_requested_at?: string | null
           sales?: number | null
+          seo_description?: string | null
+          seo_keywords?: string[] | null
+          seo_title?: string | null
           share_link?: string | null
+          slug?: string | null
           status?: string | null
           support_email?: string | null
           support_whatsapp?: string | null
@@ -875,6 +885,7 @@ export type Database = {
           description?: string | null
           fantasy_name?: string | null
           id?: string
+          image_alt?: string | null
           member_area_id?: string | null
           name?: string
           payment_methods?: Json | null
@@ -882,7 +893,11 @@ export type Database = {
           revision_requested?: boolean | null
           revision_requested_at?: string | null
           sales?: number | null
+          seo_description?: string | null
+          seo_keywords?: string[] | null
+          seo_title?: string | null
           share_link?: string | null
+          slug?: string | null
           status?: string | null
           support_email?: string | null
           support_whatsapp?: string | null
@@ -921,6 +936,7 @@ export type Database = {
           iban: string | null
           id: string
           is_creator: boolean | null
+          push_notifications_enabled: boolean | null
           updated_at: string
           user_id: string
         }
@@ -936,6 +952,7 @@ export type Database = {
           iban?: string | null
           id?: string
           is_creator?: boolean | null
+          push_notifications_enabled?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -951,7 +968,50 @@ export type Database = {
           iban?: string | null
           id?: string
           is_creator?: boolean | null
+          push_notifications_enabled?: boolean | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          device_label: string | null
+          endpoint: string
+          id: string
+          is_active: boolean
+          last_seen_at: string | null
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          device_label?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          device_label?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1341,6 +1401,14 @@ export type Database = {
       is_trusted_device: {
         Args: { _user_id: string; _device_fingerprint: string }
         Returns: boolean
+      }
+      unaccent: {
+        Args: { "": string }
+        Returns: string
+      }
+      unaccent_init: {
+        Args: { "": unknown }
+        Returns: unknown
       }
     }
     Enums: {
