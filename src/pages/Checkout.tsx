@@ -508,18 +508,11 @@ const Checkout = () => {
 
     // Para métodos Stripe, o processamento é feito pelo componente StripeCardPayment
     if (['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment)) {
-      console.log('🔄 Stripe payment method selected, processing handled by StripeCardPayment component');
+      console.log('Stripe payment method selected, processing handled by StripeCardPayment component');
       return;
     }
 
     console.log('✅ Processing local payment method:', selectedPayment);
-    console.log('🏢 Product details:', {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      user_id: product.user_id
-    });
-    
     setProcessing(true);
 
     try {
@@ -593,15 +586,9 @@ const Checkout = () => {
         }) : null
       };
 
-      console.log('📋 Inserting order with data:', {
-        ...orderData,
-        // Não mostrar dados sensíveis no log
-        customer_phone: formData.phone ? '***' : null
-      });
+      console.log('Inserting order with corrected data:', orderData);
       console.log('🔍 Order data keys:', Object.keys(orderData));
-      console.log('🔍 Order amount:', orderData.amount, 'Currency:', orderData.currency);
-      console.log('🔍 Payment method:', orderData.payment_method);
-      console.log('🔍 Status:', orderData.status);
+      console.log('🔍 Order data values:', Object.values(orderData));
 
       const { data: insertedOrder, error: orderError } = await supabase
         .from('orders')
@@ -610,9 +597,7 @@ const Checkout = () => {
         .single();
 
       if (orderError) {
-        console.error('❌ Error saving order:', orderError);
-        console.error('❌ Error details:', JSON.stringify(orderError, null, 2));
-        console.error('❌ Order data that failed:', orderData);
+        console.error('Error saving order:', orderError);
         toast({
           title: "Erro",
           description: `Erro ao processar compra: ${orderError.message}`,
@@ -621,10 +606,7 @@ const Checkout = () => {
         setProcessing(false);
         return;
       } else {
-        console.log('✅ Order saved successfully!');
-        console.log('✅ Inserted order:', insertedOrder);
-        console.log('✅ Order ID:', insertedOrder.order_id);
-        console.log('✅ Order status:', insertedOrder.status);
+        console.log('Order saved successfully:', insertedOrder);
         
         try {
           console.log('Updating product sales count...');
@@ -710,8 +692,6 @@ const Checkout = () => {
             } else {
               console.log('✅ Webhooks triggered successfully for local payment');
             }
-
-            // REMOVIDO: Push notification (será enviada apenas no email de confirmação)
 
           } catch (webhookError) {
             console.error('❌ Error triggering webhooks for local payment:', webhookError);

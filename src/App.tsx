@@ -13,8 +13,6 @@ import { SubdomainGuard } from "./components/SubdomainGuard";
 import { OptimizedRoutes } from "./components/OptimizedRoutes";
 import { EnhancedErrorBoundary } from "./components/ui/enhanced-error-boundary";
 import { Suspense } from "react";
-import AuthContextWrapper from "./components/AuthContextWrapper";
-import PWALoginGuard from "./components/PWALoginGuard";
 
 
 // QueryClient otimizado para performance
@@ -56,12 +54,10 @@ const App = () => {
           <AuthProvider>
             <AdminAuthProvider>
               <NotificationProvider>
-            <AuthContextWrapper>
-                <TooltipProvider>
-                  <CustomToaster ref={toasterRef} />
-                  <BrowserRouter>
+            <TooltipProvider>
+              <CustomToaster ref={toasterRef} />
+              <BrowserRouter>
                 <SubdomainGuard>
-                  <PWALoginGuard>
                   <Suspense fallback={<div className="min-h-screen bg-background" />}>
                     <Routes>
                       <Route path="/" element={<OptimizedRoutes.Index />} />
@@ -98,12 +94,10 @@ const App = () => {
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<OptimizedRoutes.NotFound />} />
                     </Routes>
-                    </Suspense>
-                  </PWALoginGuard>
+                  </Suspense>
                 </SubdomainGuard>
                 </BrowserRouter>
               </TooltipProvider>
-            </AuthContextWrapper>
             </NotificationProvider>
           </AdminAuthProvider>
         </AuthProvider>

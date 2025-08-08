@@ -334,27 +334,6 @@ serve(async (req) => {
 
                 console.log('✅ Webhooks triggered successfully');
 
-                // Disparar Web Push para o vendedor (se inscrito)
-                try {
-                  const title = `Nova venda: ${product?.name || 'Produto'}`;
-                  const total = (paymentIntent.amount / 100).toFixed(2);
-                  const currency = paymentIntent.currency.toUpperCase();
-                  const bodyMsg = `Cliente: ${order.customer_name} • Valor: ${total} ${currency}`;
-                  await supabase.functions.invoke('send-web-push', {
-                    body: {
-                      user_id: product?.user_id,
-                      title,
-                      body: bodyMsg,
-                      url: `/sales?order_id=${orderId}`,
-                      tag: 'kambafy-sale',
-                      data: { order_id: orderId, product_id: order.product_id }
-                    },
-                    headers: { 'x-service-call': 'true' }
-                  });
-                } catch (pushErr) {
-                  console.error('❌ Error sending web push:', pushErr);
-                }
-
               } catch (webhookError) {
                 console.error('❌ Error triggering webhooks:', webhookError);
                 // Não falhar o webhook do Stripe por causa dos webhooks customizados

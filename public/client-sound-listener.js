@@ -5,147 +5,80 @@ console.log('Client Sound Listener: Carregado e inicializando...');
 // Função melhorada para tocar o som de moedas
 function playNotificationSound() {
   try {
-    console.log('🪙 [COINS] Tentando tocar som de moedas...');
+    console.log('Client Sound Listener: Tentando tocar som de notificação');
     
-    // URL CORRIGIDA para o som de moedas do Supabase (SEM .mp3 duplicado)
-    const soundUrls = [
-      'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3',
-      '/sounds/notification.mp3' // Fallback local
-    ];
+    // Criar elemento de áudio
+    const audio = new Audio('/sounds/coin.mp3');
+    audio.volume = 0.8;
+    audio.preload = 'auto';
     
-    console.log('🪙 [COINS] URLs de moedas disponíveis:', soundUrls);
+    // Log do estado do áudio
+    console.log('Audio criado:', {
+      src: audio.src,
+      volume: audio.volume,
+      readyState: audio.readyState
+    });
     
-    // Tentar cada URL sequencialmente
-    let audioAttempt = 0;
-    const tryNextAudio = () => {
-      if (audioAttempt >= soundUrls.length) {
-        console.warn('🔊 [SOM] Todos os áudios falharam, usando fallback sintético');
-        playFallbackSound();
-        return;
-      }
-      
-      const url = soundUrls[audioAttempt];
-      console.log(`🪙 [COINS] Tentativa ${audioAttempt + 1}: ${url}`);
-      
-      const audio = new Audio(url);
-      audio.volume = 0.9; // Volume alto para as moedas
-      audio.preload = 'auto';
-      
-      audio.addEventListener('loadeddata', () => {
-        console.log(`🪙 [COINS] Som de moedas carregado: ${url}`);
-      });
-      
-      audio.addEventListener('canplaythrough', () => {
-        console.log(`🪙 [COINS] Som de moedas pronto: ${url}`);
-      });
-      
-      audio.addEventListener('error', (e) => {
-        console.error(`🪙 [COINS] Erro ao carregar moedas ${url}:`, e);
-        audioAttempt++;
-        tryNextAudio();
-      });
-      
-      const playPromise = audio.play();
-      
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            console.log(`✅ [COINS] Som de moedas tocado com sucesso! 🪙💰: ${url}`);
-          })
-          .catch((error) => {
-            console.warn(`❌ [COINS] Falha ao tocar moedas ${url}:`, error);
-            audioAttempt++;
-            tryNextAudio();
-          });
-      }
-    };
+    // Tentar tocar o som
+    const playPromise = audio.play();
     
-    tryNextAudio();
-    
-  } catch (error) {
-    console.error('🔊 [SOM] Erro crítico ao tocar som:', error);
-    playFallbackSound();
-  }
-}
-
-// Função de fallback para som sintético
-function playFallbackSound() {
-  try {
-    console.log('🔧 [SOM] Gerando som sintético de moedas...');
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (AudioCtx) {
-      const ctx = new AudioCtx();
-      
-      // Som de moeda sintético (múltiplos tons)
-      const frequencies = [523, 659, 784]; // C5, E5, G5 (acorde de Dó maior)
-      
-      frequencies.forEach((freq, index) => {
-        setTimeout(() => {
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.type = 'sine';
-          o.frequency.value = freq;
-          o.connect(g);
-          g.connect(ctx.destination);
-          g.gain.setValueAtTime(0.001, ctx.currentTime);
-          g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.01);
-          o.start();
-          g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
-          o.stop(ctx.currentTime + 0.35);
-        }, index * 100);
-      });
-      
-      console.log('✅ [SOM] Som sintético de moedas gerado');
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log('Client Sound Listener: Som de notificação tocado com sucesso');
+        })
+        .catch((error) => {
+          console.warn('Client Sound Listener: Não foi possível tocar o som automaticamente:', error);
+          
+          // Adicionar listener para próxima interação do usuário
+          const playOnNextClick = () => {
+            audio.play()
+              .then(() => console.log('Som tocado após interação do usuário'))
+              .catch(e => console.error('Erro ao tocar som após interação:', e));
+            
+            // Remover listener após uso
+            document.removeEventListener('click', playOnNextClick);
+            document.removeEventListener('touchstart', playOnNextClick);
+            document.removeEventListener('keydown', playOnNextClick);
+          };
+          
+          // Adicionar múltiplos tipos de eventos para maior compatibilidade
+          document.addEventListener('click', playOnNextClick, { once: true });
+          document.addEventListener('touchstart', playOnNextClick, { once: true });
+          document.addEventListener('keydown', playOnNextClick, { once: true });
+        });
     }
-  } catch (e) {
-    console.warn('🔧 [SOM] Fallback sintético falhou:', e);
+  } catch (error) {
+    console.error('Client Sound Listener: Erro ao criar/tocar som:', error);
   }
 }
 
 // MELHORADO: Inicialização e escuta de mensagens
 function inicializarClientSoundListener() {
-  console.log('🎧 [LISTENER] Inicializando sistema de notificações...');
+  console.log('Client Sound Listener: Inicializando sistema de notificações...');
   
   if ('serviceWorker' in navigator) {
     // Escutar mensagens do service worker
     navigator.serviceWorker.addEventListener('message', (event) => {
-      console.log('🎧 [LISTENER] Mensagem recebida do Service Worker:', event.data);
+      console.log('Client Sound Listener: Mensagem recebida do Service Worker:', event.data);
       
       if (event.data && (event.data.type === 'TOCAR_SOM_VENDA' || event.data.type === 'PLAY_NOTIFICATION_SOUND')) {
-        console.log('🎧 [LISTENER] ⚡ COMANDO PARA TOCAR SOM RECEBIDO!');
-        console.log('🎧 [LISTENER] É venda?', event.data.isVenda);
-        console.log('🎧 [LISTENER] Tipo de som:', event.data.sound);
-        console.log('🎧 [LISTENER] Página visível?', !document.hidden);
-        
-        // SÓ TOCAR SOM SE FOR VENDA E PÁGINA ESTIVER VISÍVEL
-        if (event.data.isVenda === true && !document.hidden) {
-          console.log('🪙 [LISTENER] CONFIRMADO: É VENDA + PÁGINA VISÍVEL! Tocando som de moedas...');
-          
-          // Pequeno delay para garantir que a notificação foi processada
-          setTimeout(() => {
-            playNotificationSound();
-          }, 100);
-        } else if (event.data.isVenda === true && document.hidden) {
-          console.log('🔇 [LISTENER] É venda mas página oculta - deixar som padrão do sistema');
-        } else {
-          console.log('🔇 [LISTENER] Não é venda, não tocando som');
-        }
-      } else {
-        console.log('🎧 [LISTENER] Mensagem ignorada, tipo:', event.data?.type);
+        console.log('Client Sound Listener: Comando para tocar som recebido');
+        playNotificationSound();
       }
     });
 
     // Aguardar service worker estar pronto
     navigator.serviceWorker.ready
       .then((registration) => {
-        console.log('🎧 [LISTENER] Service Worker está pronto', {
+        console.log('Client Sound Listener: Service Worker está pronto', {
           active: !!registration.active,
           controller: !!navigator.serviceWorker.controller,
           scope: registration.scope
         });
       })
       .catch((error) => {
-        console.error('🎧 [LISTENER] Erro ao aguardar service worker:', error);
+        console.error('Client Sound Listener: Erro ao aguardar service worker:', error);
       });
       
     // Verificar estado atual do service worker
@@ -166,9 +99,6 @@ function inicializarClientSoundListener() {
     console.warn('Client Sound Listener: Service Worker não é suportado neste navegador');
   }
 }
-
-// Expor função para teste direto
-window.playNotificationSound = playNotificationSound;
 
 // MELHORADA: Função global para disparar notificação de venda
 window.notificarVenda = function(valorComissao, produtoNome) {
@@ -240,58 +170,40 @@ window.testarNotificacaoKambafy = function(valor = '5.000 KZ', produto = 'Curso 
 
 // MELHORADA: Função para solicitar permissão de notificação
 window.solicitarPermissaoNotificacao = async function() {
-  console.log('🔔 [PERMISSÕES] Solicitando permissão de notificação...');
+  console.log('Cliente: Solicitando permissão de notificação...');
   
   if ('Notification' in window) {
     const currentPermission = Notification.permission;
-    console.log('🔔 [PERMISSÕES] Status atual:', currentPermission);
-    
-    if (currentPermission === 'denied') {
-      console.warn('🔔 [PERMISSÕES] ❌ Permissões foram NEGADAS pelo usuário');
-      console.warn('🔔 [PERMISSÕES] 💡 Para ativar: vá em Configurações do Site > Notificações > Permitir');
-      // Não mostrar alert invasivo, apenas log para desenvolvedores
-      return 'denied';
-    }
+    console.log('Permissão atual:', currentPermission);
     
     if (currentPermission === 'default') {
       try {
         const permission = await Notification.requestPermission();
-        console.log('🔔 [PERMISSÕES] Nova permissão:', permission);
+        console.log('Nova permissão de notificação:', permission);
         
         if (permission === 'granted') {
-          console.log('✅ [PERMISSÕES] Notificações permitidas!');
-          
-          // Limpar subscriptions antigas duplicadas
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(async (registration) => {
-              console.log('🧹 [LIMPEZA] Limpando subscriptions duplicadas...');
-              const subscription = await registration.pushManager.getSubscription();
-              if (subscription) {
-                console.log('🧹 [LIMPEZA] Subscription atual encontrada');
-              }
-            });
-          }
+          console.log('Notificações permitidas!');
           
           // Testar com uma notificação de boas-vindas
           setTimeout(() => {
-            console.log('🔔 [TESTE] Enviando notificação de teste...');
+            console.log('Enviando notificação de teste...');
             window.testarNotificacaoKambafy('1.250 KZ', 'E-book Teste');
           }, 1000);
         } else {
-          console.warn('🔔 [PERMISSÕES] ❌ Permissão negada');
+          console.warn('Permissão de notificação negada');
         }
         
         return permission;
       } catch (error) {
-        console.error('🔔 [PERMISSÕES] ❌ Erro ao solicitar permissão:', error);
+        console.error('Erro ao solicitar permissão:', error);
         return 'error';
       }
     } else {
-      console.log('🔔 [PERMISSÕES] ✅ Permissão já definida:', currentPermission);
+      console.log('Permissão já definida:', currentPermission);
       return currentPermission;
     }
   } else {
-    console.warn('🔔 [PERMISSÕES] ❌ Notificações não são suportadas neste navegador');
+    console.warn('Notificações não são suportadas neste navegador');
     return 'not-supported';
   }
 };
@@ -300,32 +212,16 @@ window.solicitarPermissaoNotificacao = async function() {
 function verificarEInicializar() {
   console.log('Client Sound Listener: Verificando permissões e inicializando...');
   
-  // Garantir que o Service Worker esteja registrado
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistration()
-      .then((reg) => {
-        if (!reg) {
-          console.log('Client Sound Listener: Registrando Service Worker /sw.js');
-          return navigator.serviceWorker.register('/sw.js');
-        }
-      })
-      .catch((e) => console.error('Erro ao registrar Service Worker:', e));
-  }
-  
   if ('Notification' in window) {
     const permission = Notification.permission;
-    console.log('🔔 [PERMISSÕES] Status atual:', permission);
+    console.log('Status de notificação atual:', permission);
     
-    // Se ainda não foi solicitada, solicitar automaticamente após 3 segundos (mais sutil)
+    // Se ainda não foi solicitada permissão, solicitar após 3 segundos
     if (permission === 'default') {
       setTimeout(() => {
-        console.log('🔔 [PERMISSÕES] Solicitando permissão automaticamente...');
+        console.log('Solicitando permissão de notificação automaticamente...');
         window.solicitarPermissaoNotificacao();
-      }, 3000); // Delay de 3s para ser menos invasivo
-    } else if (permission === 'denied') {
-      console.log('🔔 [PERMISSÕES] Permissões negadas - usuário deve ativar manualmente nas configurações do navegador');
-    } else if (permission === 'granted') {
-      console.log('✅ [PERMISSÕES] Notificações já permitidas!');
+      }, 3000);
     }
   }
   
@@ -349,32 +245,10 @@ document.addEventListener('visibilitychange', () => {
   // REMOVIDO: não fazer refresh automático ao retornar para a aba
 });
 
-// Desbloquear áudio no primeiro toque/clique (iOS/Android)
-function unlockAudioPlayback() {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (AudioCtx) {
-      const ctx = new AudioCtx();
-      // Criar um nó silencioso para desbloquear
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      g.gain.value = 0.0001;
-      o.connect(g);
-      g.connect(ctx.destination);
-      o.start(0);
-      o.stop(ctx.currentTime + 0.01);
-    }
-    const a = new Audio('/sounds/notification.mp3');
-    a.volume = 0.0;
-    a.play().then(() => a.pause()).catch(() => {});
-    console.log('🔓 Áudio desbloqueado para reprodução de sons.');
-  } catch (e) {
-    console.warn('Não foi possível desbloquear áudio:', e);
-  }
-}
-const onceOpts = { once: true, passive: true };
-document.addEventListener('click', unlockAudioPlayback, onceOpts);
-document.addEventListener('touchstart', unlockAudioPlayback, onceOpts);
+// Adicionar logs de interação para debug
+document.addEventListener('click', () => {
+  console.log('Client Sound Listener: Clique detectado (útil para tocar sons)');
+}, { once: true });
 
 // Inicializar quando DOM estiver carregado
 if (document.readyState === 'loading') {

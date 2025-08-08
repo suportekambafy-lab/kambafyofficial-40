@@ -433,7 +433,7 @@ export function TopBar() {
   const progressPercent = Math.min((dashboardData.totalRevenue / metaTotal) * 100, 100);
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-16 bg-checkout-green z-20 flex items-center justify-between px-6 fixed-top-safe">
+    <div className="fixed top-0 left-0 right-0 h-16 bg-checkout-green z-20 flex items-center justify-between px-6">
       {/* Desktop: Logo à esquerda */}
       {!isMobile && (
         <div className="flex items-center">

@@ -7,49 +7,12 @@ import MinhasCompras from './MinhasCompras';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
-import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 const Mobile = () => {
   const [userType, setUserType] = useState<'customer' | 'seller' | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const { user, loading } = useAuth();
   const { authReady, isAuthenticated } = useAuthGuard();
-
-  // Initialize push notifications for authenticated users
-  usePushNotifications();
-
-  // PWA Error boundary fallback
-  const ErrorFallback = () => (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <div className="w-full max-w-sm bg-card border border-border rounded-lg p-6 text-center shadow-lg">
-        <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-6 h-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">Algo deu errado</h3>
-        <p className="text-sm text-muted-foreground mb-6">
-          Ocorreu um erro inesperado. Tente recarregar ou voltar à página inicial.
-        </p>
-        <div className="space-y-3">
-          <button 
-            onClick={() => window.location.reload()} 
-            className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors touch-target"
-          >
-            🔄 Recarregar
-          </button>
-          <button 
-            onClick={() => window.location.href = '/'} 
-            className="w-full bg-muted text-muted-foreground py-3 px-4 rounded-lg font-medium hover:bg-muted/80 transition-colors touch-target"
-          >
-            🏠 Página Inicial
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -62,72 +25,54 @@ const Mobile = () => {
     }
   }, [isAuthenticated, user]);
 
-  // Loading enquanto verifica autenticação - PWA Optimized
+  // Loading enquanto verifica autenticação
   if (loading || !authReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-        <div className="text-center px-4">
-          <div className="w-16 h-16 bg-primary/10 backdrop-blur rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg border border-primary/20">
-            <span className="text-primary font-bold text-2xl">K</span>
+      <div className="min-h-screen flex items-center justify-center bg-checkout-green">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <span className="text-checkout-green font-bold text-2xl">K</span>
           </div>
-          <div className="space-y-2">
-            <LoadingSpinner text="Carregando..." size="lg" />
-            <p className="text-xs text-muted-foreground">Inicializando aplicativo...</p>
-          </div>
+          <LoadingSpinner text="Carregando..." size="lg" />
         </div>
       </div>
     );
   }
 
-  // PWA Content with Error Boundary
+  // Se não está autenticado, mostra escolha de tipo de usuário
+  if (!isAuthenticated) {
+    if (!userType) {
+      return (
+        <MobileLoginChoice 
+          onChoice={(type) => {
+            setUserType(type);
+            setShowAuth(true);
+          }} 
+        />
+      );
+    }
+
+    if (showAuth) {
+      return <Auth />;
+    }
+  }
+
+  // Se está autenticado, mostra a interface baseada no tipo de usuário
+  // SEMPRE usar as interfaces mobile quando estiver no mobile
+  if (userType === 'seller') {
+    return <MobileDashboard />;
+  } else if (userType === 'customer') {
+    return <MinhasCompras />;
+  }
+
+  // Fallback
   return (
-    <ModernErrorBoundary fallback={<ErrorFallback />}>
-      <div className="min-h-screen bg-background ios-pwa">
-        {/* PWA Status Bar Spacing for iOS */}
-        <div className="safe-area-inset-top" />
-        
-        {!isAuthenticated ? (
-          // Authentication Flow
-          !userType ? (
-            <MobileLoginChoice 
-              onChoice={(type) => {
-                setUserType(type);
-                setShowAuth(true);
-              }} 
-            />
-          ) : showAuth ? (
-            <Auth />
-          ) : (
-            <MobileLoginChoice 
-              onChoice={(type) => {
-                setUserType(type);
-                setShowAuth(true);
-              }} 
-            />
-          )
-        ) : (
-          // Authenticated Content
-          userType === 'seller' ? (
-            <MobileDashboard />
-          ) : userType === 'customer' ? (
-            <MinhasCompras />
-          ) : (
-            <MobileLoginChoice 
-              onChoice={(type) => {
-                setUserType(type);
-                setShowAuth(true);
-              }} 
-            />
-          )
-        )}
-        
-        {/* PWA Bottom Safe Area for iOS */}
-        <div className="safe-area-inset-bottom" />
-        
-        {/* PWA Install Prompt - só mostrar se não estiver autenticado ou for seller */}
-        {(!isAuthenticated || userType === 'seller') && <PWAInstallPrompt />}
-      </div>
-    </ModernErrorBoundary>
+    <MobileLoginChoice 
+      onChoice={(type) => {
+        setUserType(type);
+        setShowAuth(true);
+      }} 
+    />
   );
 };
 

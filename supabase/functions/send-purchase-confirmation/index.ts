@@ -20,7 +20,6 @@ interface PurchaseConfirmationRequest {
   shareLink?: string;
   memberAreaId?: string;
   sellerId: string; // ID do vendedor
-  paymentMethod?: string; // Método de pagamento usado
   orderBump?: {
     bump_product_name: string;
     bump_product_price: string;
@@ -48,7 +47,6 @@ const handler = async (req: Request): Promise<Response> => {
       shareLink,
       memberAreaId,
       sellerId,
-      paymentMethod,
       orderBump,
       baseProductPrice
     }: PurchaseConfirmationRequest = await req.json();
@@ -65,7 +63,6 @@ const handler = async (req: Request): Promise<Response> => {
       shareLink,
       memberAreaId,
       sellerId,
-      paymentMethod,
       orderBump,
       baseProductPrice
     });
@@ -656,57 +653,6 @@ const handler = async (req: Request): Promise<Response> => {
       } catch (sellerEmailError) {
         console.error("Error sending seller congratulatory email:", sellerEmailError);
       }
-    }
-
-    console.log('=== SENDING WEB PUSH NOTIFICATION FOR SALE ===');
-    // Disparar Web Push para o vendedor (som de moeda para TODOS os métodos de pagamento)
-    try {
-      const title = 'Kambafy - Nova Venda Realizada';
-      
-      // Formatar valor corretamente para Kwanza
-      let totalFormatted;
-      if (currency === 'KZ') {
-        totalFormatted = `${parseFloat(amount).toLocaleString('pt-BR')} Kz`;
-      } else {
-        totalFormatted = parseFloat(amount).toLocaleString('pt-BR', { 
-          style: 'currency', 
-          currency: currency 
-        });
-      }
-      
-      // Determinar método de pagamento para exibição
-      const paymentMethods = {
-        'express': 'Express',
-        'multibanco': 'Multibanco', 
-        'stripe': 'Cartão',
-        'mbway': 'MB WAY',
-        'local': 'Pagamento Local'
-      };
-      
-      const displayPaymentMethod = paymentMethods[paymentMethod] || paymentMethod || 'Express';
-      
-      const bodyMsg = `Sua comissão: ${totalFormatted} • ${displayPaymentMethod}`;
-      
-      console.log('🔔 Enviando push notification para:', sellerId);
-      console.log('🔔 Título:', title);
-      console.log('🔔 Mensagem:', bodyMsg);
-      
-      await supabase.functions.invoke('send-web-push', {
-        body: {
-          user_id: sellerId,
-          title,
-          body: bodyMsg,
-          url: `/sales?order_id=${orderId}`,
-          tag: 'kambafy-sale',
-          data: { order_id: orderId, product_id: productId, payment_method: 'various', isVenda: true }
-        },
-        headers: { 'x-service-call': 'true' }
-      });
-      
-      console.log('✅ Web push notification enviada com sucesso');
-    } catch (pushErr) {
-      console.error('❌ Erro ao enviar web push notification:', pushErr);
-      // Não falhar a função por causa da notificação
     }
 
     console.log('=== PURCHASE CONFIRMATION COMPLETE ===');

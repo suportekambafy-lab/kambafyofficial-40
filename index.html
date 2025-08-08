@@ -16,14 +16,11 @@
     <meta name="googlebot" content="index, follow" />
     
     <!-- Viewport and Mobile -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Kambafy" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="screen-orientation" content="portrait" />
     <meta name="format-detection" content="telephone=no" />
-    <meta name="theme-color" content="#10b981" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -91,20 +88,5 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script src="/client-sound-listener.js"></script>
-    
-    <!-- Service Worker Registration -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js', {
-            scope: '/'
-          }).then((registration) => {
-            console.log('✅ SW registrado:', registration.scope);
-          }).catch((error) => {
-            console.log('❌ SW falhou:', error);
-          });
-        });
-      }
-    </script>
   </body>
 </html>
