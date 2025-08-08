@@ -885,15 +885,17 @@ const Checkout = () => {
       <FacebookPixelTracker productId={productId || ''} />
       {product && (
         <SEO 
-          title={`${product.name} - Checkout`}
-          description={product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`}
+          title={product.seo_title || `${product.name} - Checkout`}
+          description={product.seo_description || (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`)}
           ogImage={product.cover || 'https://kambafy.com/kambafy-social-preview.png'}
-          keywords={`${product.name}, comprar ${product.name}, checkout, pagamento seguro, ${product.tags?.join(', ') || ''}`}
+          keywords={(product.seo_keywords && product.seo_keywords.length > 0)
+            ? product.seo_keywords.join(', ')
+            : `${product.name}, comprar ${product.name}, checkout, pagamento seguro, ${product.tags?.join(', ') || ''}`}
           structuredData={{
             "@context": "https://schema.org",
             "@type": "Product",
             "name": product.name,
-            "description": product.description || `Produto digital: ${product.name}`,
+            "description": product.seo_description || (product.description || `Produto digital: ${product.name}`),
             "image": product.cover || 'https://kambafy.com/kambafy-social-preview.png',
             "brand": {
               "@type": "Brand",
@@ -962,7 +964,7 @@ const Checkout = () => {
                 <div className="w-24 h-24 rounded-lg overflow-hidden shadow-sm">
                   <img 
                     src={getProductImage(product.cover)} 
-                    alt={product.name} 
+                    alt={product.image_alt || product.name} 
                     className="w-full h-full object-cover" 
                   />
                 </div>

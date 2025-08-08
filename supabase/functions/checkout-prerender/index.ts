@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     // Fetch product data
     const { data: product, error } = await supabase
       .from('products')
-      .select('id, name, description, cover, fantasy_name, price')
+      .select('id, name, description, cover, fantasy_name, price, seo_title, seo_description, seo_keywords, image_alt, slug')
       .eq('id', productId)
       .single()
 
@@ -41,8 +41,8 @@ Deno.serve(async (req) => {
     console.log('✅ Product found:', product.name)
 
     // Generate SEO-optimized HTML
-    const title = `${product.name} - Checkout | Kambafy`
-    const description = product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`
+    const title = (product.seo_title && product.seo_title.length > 0) ? product.seo_title : `${product.name} - Checkout | Kambafy`
+    const description = (product.seo_description && product.seo_description.length > 0) ? product.seo_description : (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`)
     const image = product.cover || 'https://kambafy.com/kambafy-social-preview.png'
     const checkoutUrl = `https://kambafy.com/checkout/${product.id}`
     const fbAppId = Deno.env.get('FACEBOOK_APP_ID') || '123456789'

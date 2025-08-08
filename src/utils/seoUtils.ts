@@ -63,15 +63,18 @@ export const setStructuredData = (data: any) => {
 
 // Set product SEO immediately when product loads
 export const setProductSEO = (product: any) => {
-  const title = `${product.name} - Checkout | Kambafy`;
-  const description = product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`;
+  const title = product.seo_title || `${product.name} - Checkout | Kambafy`;
+  const description = product.seo_description || (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`);
   const image = product.cover ? getProductImageUrl(product.cover, 'https://kambafy.com/kambafy-social-preview.png') : 'https://kambafy.com/kambafy-social-preview.png';
   const url = `https://kambafy.com/checkout/${product.id}`;
+  const keywords = (product.seo_keywords && product.seo_keywords.length > 0)
+    ? product.seo_keywords.join(', ')
+    : `${product.name}, comprar ${product.name}, checkout, pagamento seguro${product.tags?.length ? ', ' + product.tags.join(', ') : ''}`;
   
-  // Set all meta tags immediately
+  // Set all meta tags imediatamente
   setPageTitle(title);
   setMetaTag('description', description);
-  setMetaTag('keywords', `${product.name}, comprar ${product.name}, checkout, pagamento seguro`);
+  setMetaTag('keywords', keywords);
   
   // Open Graph
   setMetaProperty('og:title', title);

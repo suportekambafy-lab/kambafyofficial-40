@@ -24,6 +24,10 @@ interface Product {
   affiliate_code?: string;
   revision_requested?: boolean;
   revision_requested_at?: string;
+  image_alt?: string;
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string[];
 }
 
 interface ProductCardProps {
@@ -89,7 +93,7 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                 src={product.cover.startsWith('data:') ? product.cover : 
                       (product.cover.includes('supabase') || product.cover.startsWith('http')) ? product.cover : 
                       `https://images.unsplash.com/${product.cover}`}
-                alt={product.name}
+                alt={product.image_alt || product.name}
                 className="w-full h-full object-cover"
                 loading="lazy"
                 onError={(e) => {

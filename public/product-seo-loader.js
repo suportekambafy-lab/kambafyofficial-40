@@ -10,10 +10,13 @@
     
     // Função para aplicar SEO imediatamente
     const applyProductSEO = (product) => {
-      const title = `${product.name} - Checkout | Kambafy`;
-      const description = product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`;
+      const title = product.seo_title || `${product.name} - Checkout | Kambafy`;
+      const description = product.seo_description || (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`);
       const image = product.cover || 'https://kambafy.com/kambafy-social-preview.png';
       const url = `https://kambafy.com/checkout/${product.id}`;
+      const keywords = (product.seo_keywords && product.seo_keywords.length > 0)
+        ? product.seo_keywords.join(', ')
+        : `${product.name}, comprar ${product.name}, checkout, pagamento seguro${product.tags && product.tags.length ? ', ' + product.tags.join(', ') : ''}`;
       
       // Atualizar title
       document.title = title;
@@ -27,6 +30,8 @@
       
       // Meta tags básicas
       updateById('page-description', description);
+      const keywordsTag = document.querySelector('meta[name="keywords"]');
+      if (keywordsTag) keywordsTag.setAttribute('content', keywords);
       
       // Open Graph
       updateById('og-title', title);
@@ -77,7 +82,7 @@
     const loadProductSEO = async () => {
       try {
         // Usar endpoint público para buscar dados do produto
-        const response = await fetch(`https://hcbkqygdtzpxvctfdqbd.supabase.co/rest/v1/products?id=eq.${productId}&select=id,name,description,cover,fantasy_name,price`, {
+        const response = await fetch(`https://hcbkqygdtzpxvctfdqbd.supabase.co/rest/v1/products?id=eq.${productId}&select=id,name,description,cover,fantasy_name,price,seo_title,seo_description,seo_keywords,tags,slug,image_alt`, {
           headers: {
             'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYmtxeWdkdHpweHZjdGZkcWJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MDExODEsImV4cCI6MjA2NzA3NzE4MX0.RBg9ZnGehO-UWjtlLRdlGB0ELML9DH_ltChu2w9h62A',
             'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYmtxeWdkdHpweHZjdGZkcWJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MDExODEsImV4cCI6MjA2NzA3NzE4MX0.RBg9ZnGehO-UWjtlLRdlGB0ELML9DH_ltChu2w9h62A'
