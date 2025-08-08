@@ -43,7 +43,7 @@ const Checkout = () => {
   const { affiliateCode, hasAffiliate } = useAffiliateTracking();
 
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Instantâneo sem loading inicial
   const [error, setError] = useState<string>("");
   const [processing, setProcessing] = useState(false);
   const [formData, setFormData] = useState({
@@ -767,19 +767,8 @@ const Checkout = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <ThemeProvider forceLightMode={true}>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <LoadingSpinner 
-            text="Carregando informações do produto..."
-            size="lg"
-          />
-        </div>
-      </ThemeProvider>
-    );
-  }
-
+  // Remover a condição de loading - agora é instantâneo
+  
   if (error) {
     return (
       <ThemeProvider forceLightMode={true}>
