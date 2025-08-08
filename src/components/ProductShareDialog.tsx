@@ -36,13 +36,15 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
     : 'https://pay.kambafy.com';
     
   const checkoutLink = `${checkoutBaseUrl}/checkout/${product.id}`;
+  // Pre-rendered preview URL for social crawlers (OG/Twitter tags server-side)
+  const previewLink = `https://hcbkqygdtzpxvctfdqbd.functions.supabase.co/checkout-prerender/${product.id}`;
   console.log('Generated checkout link:', checkoutLink);
   
   const shareLinks = {
     checkout: checkoutLink,
-    whatsapp: `https://wa.me/?text=Confira este produto incrível: ${product.name} - ${checkoutLink}`,
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(checkoutLink)}`,
-    telegram: `https://t.me/share/url?url=${encodeURIComponent(checkoutLink)}&text=${encodeURIComponent(product.name)}`
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(`Confira este produto incrível: ${product.name} - ${previewLink}`)}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewLink)}`,
+    telegram: `https://t.me/share/url?url=${encodeURIComponent(previewLink)}&text=${encodeURIComponent(product.name)}`
   };
 
   const openCheckoutInNewTab = () => {
