@@ -281,7 +281,7 @@ const FeaturesSection = () => {
           </AnimatedGroup>
           <AnimatedGroup preset="scale">
             <div className="relative">
-              <img src="/lovable-uploads/65f1bf1a-2132-4221-8bf0-d9d65be0872f.png" alt="Imagem de destaque Kambafy na landing" className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" loading="lazy" />
+              <img src="/lovable-uploads/65f1bf1a-2132-4221-8bf0-d9d65be0872f.png" alt="Imagem de destaque Kambafy na landing" className="rounded-2xl shadow-lg object-contain w-full h-auto" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-checkout-green/20 to-transparent rounded-2xl"></div>
             </div>
           </AnimatedGroup>
