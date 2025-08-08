@@ -218,7 +218,7 @@ const HeroSection = () => {
                   </div>
                 </div>
               </div>
-              <h1 className="mt-8 max-w-4xl mx-auto text-balance sm:text-4xl lg:text-6xl xl:text-7xl lg:mt-16 font-bold md:text-4xl text-3xl text-[#23bb58]">TRANSFORME SEU CONHECIMENTO EM RENDA</h1>
+              <h1 className="mt-8 max-w-4xl mx-auto text-balance sm:text-4xl lg:text-6xl xl:text-7xl lg:mt-16 font-bold md:text-4xl text-3xl text-checkout-green">TRANSFORME SEU CONHECIMENTO EM RENDA</h1>
               <p className="mx-auto mt-6 sm:mt-8 max-w-2xl text-balance text-muted-foreground px-4 sm:px-0 sm:text-base text-base">A Kambafy é uma plataforma digital inovadora que permite a criadores, educadores, marcas e especialistas em toda a lusofonia partilharem conhecimento, criarem infoprodutos e transformarem a sua audiência em rendimento real.</p>
             </AnimatedGroup>
 
