@@ -15,7 +15,7 @@ const defaultMeta = {
   title: 'Kambafy - TRANSFORME SEU CONHECIMENTO EM RENDA',
   description: 'Kambafy é a plataforma completa para criar, vender e gerenciar produtos digitais. Checkout otimizado, analytics avançados, integração com pagamentos e muito mais.',
   keywords: 'vendas digitais, e-commerce, produtos digitais, checkout, pagamentos online, plataforma de vendas, infoprodutos, cursos online',
-  ogImage: 'https://kambafy.com/kambafy-social-preview.png'
+  ogImage: 'https://kambafy.com/lovable-uploads/d8006597-4c28-4313-b50d-96a944e49040.png'
 };
 
 export const SEO = ({
