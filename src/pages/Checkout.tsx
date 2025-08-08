@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Shield, Check, AlertTriangle, CheckCircle } from "lucide-react";
-import { PaymentMethodIcon } from "@/components/PaymentMethodIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1077,10 +1076,11 @@ const Checkout = () => {
                             <Check className="w-3 h-3 text-white" />
                           </div>
                         )}
-                        <div className="w-12 h-12 rounded-xl mb-2 flex items-center justify-center">
-                          <PaymentMethodIcon 
-                            methodId={method.id} 
-                            className={`w-10 h-10 transition-all ${
+                        <div className="w-12 h-12 rounded-xl overflow-hidden mb-2 flex items-center justify-center">
+                          <img
+                            src={method.image}
+                            alt={method.name}
+                            className={`w-10 h-10 object-contain transition-all ${
                               selectedPayment === method.id ? '' : 'opacity-60 saturate-50'
                             }`}
                           />
