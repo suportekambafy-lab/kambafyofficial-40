@@ -716,8 +716,8 @@ const Checkout = () => {
               console.log('📱 Sending push notification to seller...');
               const pushPayload = {
                 user_id: product.user_id,
-                title: '💰 Nova Venda Realizada!',
-                body: `${formData.fullName} • ${totalAmount} ${userCountry.currency} • ${selectedPayment}`,
+                title: 'Kambafy - Nova Venda Realizada!',
+                body: `Sua comissão: ${totalAmount} ${userCountry.currency} • ${selectedPayment}`,
                 url: '/sales',
                 tag: 'kambafy-sale',
                 data: { 
