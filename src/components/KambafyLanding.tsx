@@ -106,8 +106,8 @@ const Header = ({
   };
   return <header>
       <nav data-state={menuState && 'active'} className="fixed z-20 w-full px-2 group">
-        <div className={cn('mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12', isScrolled && 'bg-background/80 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5')}>
-          <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
+        <div className={cn('mx-auto mt-2 max-w-6xl px-4 sm:px-6 transition-all duration-300 lg:px-12', isScrolled && 'bg-background/80 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5')}>
+          <div className="relative flex flex-wrap items-center justify-between gap-4 sm:gap-6 py-2 sm:py-3 lg:gap-0 lg:py-4">
             <div className="flex w-full justify-between lg:w-auto">
               <Link to="/" aria-label="home" className="flex items-center space-x-2">
                 <KambafyLogo />
@@ -195,9 +195,9 @@ const HeroSection = () => {
     window.location.href = `${window.location.protocol}//app.${window.location.hostname.replace(/^app\./, '')}${window.location.port ? ':' + window.location.port : ''}/auth?mode=signup`;
   };
   return <section>
-      <div className="relative pt-24 md:pt-36">
+      <div className="relative pt-16 sm:pt-20 md:pt-24 lg:pt-32 pb-8 sm:pb-12">
         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
-        <div className="mx-auto max-w-7xl px-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
             <AnimatedGroup variants={transitionVariants}>
               <div className="hover:bg-background bg-muted group mx-auto flex w-fit items-center gap-4 rounded-full border p-1 pl-4 shadow-md shadow-black/5 transition-all duration-300">
@@ -214,8 +214,8 @@ const HeroSection = () => {
                   </div>
                 </div>
               </div>
-              <h1 className="mt-8 max-w-4xl mx-auto text-balance sm:text-4xl lg:text-6xl xl:text-7xl lg:mt-16 font-bold md:text-4xl text-3xl text-[#23bb58]">TRANSFORME SEU CONHECIMENTO EM RENDA</h1>
-              <p className="mx-auto mt-6 sm:mt-8 max-w-2xl text-balance text-muted-foreground px-4 sm:px-0 sm:text-base text-base">A Kambafy é uma plataforma digital inovadora que permite a criadores, educadores, marcas e especialistas em toda a lusofonia partilharem conhecimento, criarem infoprodutos e transformarem a sua audiência em rendimento real.</p>
+              <h1 className="mt-6 sm:mt-8 lg:mt-12 max-w-4xl mx-auto text-balance text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#23bb58] leading-tight">TRANSFORME SEU CONHECIMENTO EM RENDA</h1>
+              <p className="mx-auto mt-4 sm:mt-6 lg:mt-8 max-w-2xl text-balance text-muted-foreground px-4 sm:px-0 text-sm sm:text-base lg:text-lg">A Kambafy é uma plataforma digital inovadora que permite a criadores, educadores, marcas e especialistas em toda a lusofonia partilharem conhecimento, criarem infoprodutos e transformarem a sua audiência em rendimento real.</p>
             </AnimatedGroup>
 
             <AnimatedGroup variants={{
@@ -228,7 +228,7 @@ const HeroSection = () => {
               }
             },
             ...transitionVariants
-          }} className="mt-12 flex flex-col items-center justify-center gap-4 md:flex-row">
+          }} className="mt-8 sm:mt-10 lg:mt-12 flex flex-col items-center justify-center gap-3 sm:gap-4 md:flex-row">
               <div className="bg-checkout-green/10 rounded-[14px] border border-checkout-green/20 p-0.5">
                 <Button size="lg" className="rounded-xl px-8 text-base bg-checkout-green hover:bg-checkout-green/90 text-white" onClick={handleGetStarted}>
                   <span className="text-nowrap">Começar a Vender</span>

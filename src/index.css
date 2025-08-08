@@ -7,6 +7,20 @@
 All colors MUST be HSL.
 */
 
+/* Mobile optimizations and safe areas */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+/* Better mobile viewport handling */
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
 @layer base {
   :root {
     --background: 0 0% 99%;
