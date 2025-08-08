@@ -13,6 +13,17 @@ All colors MUST be HSL.
     padding-left: max(0px, env(safe-area-inset-left));
     padding-right: max(0px, env(safe-area-inset-right));
   }
+  
+  /* Specific adjustments for iPhone notch */
+  @media screen and (max-width: 640px) {
+    .hero-section {
+      padding-top: max(5rem, calc(env(safe-area-inset-top) + 2rem));
+    }
+    
+    .header-nav {
+      margin-top: max(1rem, env(safe-area-inset-top));
+    }
+  }
 }
 
 /* Better mobile viewport handling */

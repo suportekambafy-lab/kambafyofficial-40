@@ -105,9 +105,9 @@ const Header = ({
     window.location.href = `${window.location.protocol}//app.${window.location.hostname.replace(/^app\./, '')}${window.location.port ? ':' + window.location.port : ''}/auth?mode=${mode}`;
   };
   return <header>
-      <nav data-state={menuState && 'active'} className="fixed z-20 w-full px-2 group">
-        <div className={cn('mx-auto mt-2 max-w-6xl px-4 sm:px-6 transition-all duration-300 lg:px-12', isScrolled && 'bg-background/80 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5')}>
-          <div className="relative flex flex-wrap items-center justify-between gap-4 sm:gap-6 py-2 sm:py-3 lg:gap-0 lg:py-4">
+      <nav data-state={menuState && 'active'} className="fixed z-20 w-full px-2 group header-nav">
+        <div className={cn('mx-auto mt-4 sm:mt-2 max-w-6xl px-4 sm:px-6 transition-all duration-300 lg:px-12', isScrolled && 'bg-background/80 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5')}>
+          <div className="relative flex flex-wrap items-center justify-between gap-4 sm:gap-6 py-3 sm:py-3 lg:gap-0 lg:py-4">
             <div className="flex w-full justify-between lg:w-auto">
               <Link to="/" aria-label="home" className="flex items-center space-x-2">
                 <KambafyLogo />
@@ -194,8 +194,8 @@ const HeroSection = () => {
   const handleGetStarted = () => {
     window.location.href = `${window.location.protocol}//app.${window.location.hostname.replace(/^app\./, '')}${window.location.port ? ':' + window.location.port : ''}/auth?mode=signup`;
   };
-  return <section>
-      <div className="relative pt-16 sm:pt-20 md:pt-24 lg:pt-32 pb-8 sm:pb-12">
+  return <section className="hero-section">
+      <div className="relative pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-8 sm:pb-12">
         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
