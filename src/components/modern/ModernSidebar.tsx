@@ -156,18 +156,11 @@ export function ModernSidebar({
             >
               {/* Header */}
               <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-              <div className="flex items-center gap-3">
-                <img 
-                  src="/lovable-uploads/fa4aafc7-68f9-462b-a59e-2153ae79b87c.png" 
-                  alt="Kambafy Icon" 
-                  className="w-8 h-8 rounded-lg"
-                />
-                <img 
-                  src="/lovable-uploads/a1884977-ff1a-4dc0-b4cb-b01ee133b4c5.png" 
-                  alt="Kambafy" 
-                  className="h-6 w-auto"
-                />
-              </div>
+              <img 
+                src="/lovable-uploads/3cce4fbf-9919-4f6f-8e4c-cdf61455198e.png" 
+                alt="Kambafy" 
+                className="h-8 w-auto"
+              />
                 
                 <Button
                   variant="ghost"
@@ -243,14 +236,9 @@ export function ModernSidebar({
               className="flex items-center gap-3"
             >
               <img 
-                src="/lovable-uploads/fa4aafc7-68f9-462b-a59e-2153ae79b87c.png" 
-                alt="Kambafy Icon" 
-                className="w-8 h-8 rounded-lg"
-              />
-              <img 
-                src="/lovable-uploads/a1884977-ff1a-4dc0-b4cb-b01ee133b4c5.png" 
+                src="/lovable-uploads/3cce4fbf-9919-4f6f-8e4c-cdf61455198e.png" 
                 alt="Kambafy" 
-                className="h-6 w-auto"
+                className="h-8 w-auto"
               />
             </motion.div>
           ) : (
