@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Limpar Cache PWA</title>
+</head>
+<body>
+    <h1>Limpeza de Cache PWA</h1>
+    <button onclick="clearAll()">Limpar Tudo e Recarregar</button>
+    <div id="status"></div>
+
+    <script>
+        async function clearAll() {
+            const status = document.getElementById('status');
+            status.innerHTML = 'Iniciando limpeza...<br>';
+
+            try {
+                // 1. Desregistrar service workers
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                    await registration.unregister();
+                }
+                status.innerHTML += 'Service workers desregistrados<br>';
+
+                // 2. Limpar caches
+                const cacheNames = await caches.keys();
+                for (let cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                }
+                status.innerHTML += 'Caches limpos<br>';
+
+                // 3. Limpar localStorage
+                localStorage.clear();
+                status.innerHTML += 'LocalStorage limpo<br>';
+
+                // 4. Limpar sessionStorage
+                sessionStorage.clear();
+                status.innerHTML += 'SessionStorage limpo<br>';
+
+                // 5. Limpar IndexedDB
+                if ('indexedDB' in window) {
+                    const databases = await indexedDB.databases();
+                    for (let db of databases) {
+                        indexedDB.deleteDatabase(db.name);
+                    }
+                }
+                status.innerHTML += 'IndexedDB limpo<br>';
+
+                status.innerHTML += 'Limpeza completa! Recarregando em 2 segundos...<br>';
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+
+            } catch (error) {
+                status.innerHTML += `Erro: ${error.message}<br>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 // Service Worker para PWA, cache e Web Push - v11 (PWA NATIVO CORRIGIDO)
-const CACHE_NAME = 'vendas-app-v12';
+const CACHE_NAME = 'sales-platform-v13';
 const urlsToCache = [
   '/',
   '/manifest.json',

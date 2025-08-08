@@ -1,8 +1,8 @@
 {
-  "id": "com.vendas.app",
-  "name": "App de Vendas",
+  "id": "com.sales-platform.app",
+  "name": "Plataforma de Vendas",
   "short_name": "Vendas",
-  "description": "Plataforma completa para criar, vender e gerenciar produtos digitais",
+  "description": "Plataforma completa para vendas digitais",
   "start_url": "/?utm_source=pwa",
   "scope": "/",
   "display": "standalone",
