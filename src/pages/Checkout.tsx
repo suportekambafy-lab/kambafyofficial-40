@@ -43,8 +43,9 @@ const Checkout = () => {
   const { affiliateCode, hasAffiliate } = useAffiliateTracking();
 
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [productNotFound, setProductNotFound] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -178,9 +179,13 @@ const Checkout = () => {
           console.error('Error loading product:', productError);
           setError(`Erro ao carregar produto: ${productError.message}`);
           setProduct(null);
+          setTimeout(() => setProductNotFound(true), 2000);
         } else if (!productData) {
           console.log('No product found with ID:', productId);
-          setError("Produto não encontrado");
+          setTimeout(() => {
+            setError("Produto não encontrado");
+            setProductNotFound(true);
+          }, 2000);
           setProduct(null);
         } else if (productData.status === 'Inativo') {
           console.log('Product is inactive:', productId);
@@ -200,10 +205,11 @@ const Checkout = () => {
         }
       } catch (error) {
         console.error('Unexpected error loading product:', error);
-        setError("Erro inesperado ao carregar produto");
+        setTimeout(() => {
+          setError("Erro inesperado ao carregar produto");
+          setProductNotFound(true);
+        }, 2000);
         setProduct(null);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -802,7 +808,7 @@ const Checkout = () => {
     );
   }
 
-  if (!product) {
+  if (!product && productNotFound) {
     return (
       <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
