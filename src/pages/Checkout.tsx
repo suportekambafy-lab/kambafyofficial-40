@@ -1207,12 +1207,16 @@ const Checkout = () => {
           )}
 
           <div className="mt-12 text-center space-y-4">
-            <div className="w-16 h-16 rounded-lg mx-auto flex items-center justify-center bg-green-600">
-              <span className="text-2xl font-bold text-white">K</span>
-            </div>
-            <div>
-              <h4 className="font-semibold text-green-600">Kambafy</h4>
-              <p className="text-sm text-gray-600">Todos os direitos reservados.</p>
+            <div className="flex flex-col items-center space-y-3">
+              <img 
+                src="/lovable-uploads/451d9e0e-6608-409a-910a-ec955cb5223c.png" 
+                alt="Kambafy"
+                className="w-16 h-16 rounded-lg"
+              />
+              <div>
+                <h4 className="font-semibold text-green-600">Kambafy</h4>
+                <p className="text-sm text-gray-600">Todos os direitos reservados.</p>
+              </div>
             </div>
             <p className="text-xs text-gray-500 max-w-2xl mx-auto">
               Ao clicar em Comprar agora, eu declaro que li e concordo (1) com a Kambafy está processando este pedido em nome de{' '}
