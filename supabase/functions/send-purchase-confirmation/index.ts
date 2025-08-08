@@ -661,7 +661,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('=== SENDING WEB PUSH NOTIFICATION FOR SALE ===');
     // Disparar Web Push para o vendedor (som de moeda para TODOS os métodos de pagamento)
     try {
-      const title = 'Nova Venda Realizada!';
+      const title = 'Kambafy - Nova Venda Realizada';
       
       // Formatar valor corretamente para Kwanza
       let totalFormatted;

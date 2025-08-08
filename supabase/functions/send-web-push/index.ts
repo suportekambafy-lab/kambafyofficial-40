@@ -76,7 +76,7 @@ serve(async (req) => {
     webpush.setVapidDetails('mailto:suporte@kambafy.com', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
     const payload = JSON.stringify({
-      title: title || 'Kambafy',
+      title: title || 'Notificação',
       body: body || 'Você tem uma nova notificação',
       url: url || '/',
       tag: tag || 'kambafy-push',
