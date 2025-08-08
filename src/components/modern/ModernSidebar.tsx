@@ -159,7 +159,7 @@ export function ModernSidebar({
               <img 
                 src="/lovable-uploads/3cce4fbf-9919-4f6f-8e4c-cdf61455198e.png" 
                 alt="Kambafy" 
-                className="h-12 w-auto"
+                className="h-16 w-auto"
               />
                 
                 <Button
@@ -238,7 +238,7 @@ export function ModernSidebar({
               <img 
                 src="/lovable-uploads/3cce4fbf-9919-4f6f-8e4c-cdf61455198e.png" 
                 alt="Kambafy" 
-                className="h-12 w-auto"
+                className="h-16 w-auto"
               />
             </motion.div>
           ) : (
