@@ -509,7 +509,7 @@ const KambafyLogo = ({
       <img 
         src="/lovable-uploads/ec8e901b-3c53-446d-9214-59e3551ae425.png" 
         alt="Kambafy" 
-        className="h-12 w-auto"
+        className="h-20 w-auto"
       />
     </div>;
 };
