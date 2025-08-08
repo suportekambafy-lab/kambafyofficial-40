@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
     <link rel="canonical" href="${checkoutUrl}" />
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/lovable-uploads/451d9e0e-6608-409a-910a-ec955cb5223c.png" />
+    <link rel="icon" type="image/png" href="/kambafy-icon.png" />
     
     <!-- Schema.org markup -->
     <script type="application/ld+json">

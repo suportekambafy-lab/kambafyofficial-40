@@ -111,7 +111,7 @@ const Header = ({
             <div className="flex w-full justify-between lg:w-auto">
               <Link to="/" aria-label="home" className="flex items-center space-x-2">
                 <img 
-                  src="/lovable-uploads/75799d3f-bc89-4da6-ba88-8886c387a40a.png" 
+                  src="/lovable-uploads/ab0dd35a-b655-486d-baa2-8a736777a4de.png" 
                   alt="Kambafy" 
                   className="h-20 w-auto"
                 />
@@ -511,7 +511,7 @@ const KambafyLogo = ({
 }) => {
   return <div className={cn('flex items-center', className)}>
       <img 
-        src="/lovable-uploads/75799d3f-bc89-4da6-ba88-8886c387a40a.png" 
+        src="/lovable-uploads/e7ad8aa1-62cf-4e2a-aa70-3e9cd4793b0f.png" 
         alt="Kambafy" 
         className="h-20 w-auto"
       />
