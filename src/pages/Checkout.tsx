@@ -179,13 +179,13 @@ const Checkout = () => {
           console.error('Error loading product:', productError);
           setError(`Erro ao carregar produto: ${productError.message}`);
           setProduct(null);
-          setTimeout(() => setProductNotFound(true), 800);
+          setTimeout(() => setProductNotFound(true), 2000);
         } else if (!productData) {
           console.log('No product found with ID:', productId);
           setTimeout(() => {
             setError("Produto não encontrado");
             setProductNotFound(true);
-          }, 800);
+          }, 2000);
           setProduct(null);
         } else if (productData?.status === 'Inativo') {
           console.log('Product is inactive:', productId);
@@ -208,7 +208,7 @@ const Checkout = () => {
         setTimeout(() => {
           setError("Erro inesperado ao carregar produto");
           setProductNotFound(true);
-        }, 800);
+        }, 2000);
         setProduct(null);
       }
     };
@@ -878,12 +878,7 @@ const Checkout = () => {
     // Render a minimal, non-animated placeholder while we confirm product availability
     return (
       <ThemeProvider forceLightMode={true}>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-xl font-semibold text-gray-900">Preparando checkout…</h1>
-            <p className="text-sm text-gray-600 mt-2">Carregando informações do produto</p>
-          </div>
-        </div>
+        <div className="min-h-screen bg-gray-50" />
       </ThemeProvider>
     );
   }
