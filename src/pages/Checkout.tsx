@@ -990,7 +990,11 @@ const Checkout = () => {
                   <h2 className="text-xl font-bold text-gray-900">{product.name.toUpperCase()}</h2>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-sm text-gray-600">Entrega instantânea</span>
-                    <Check className="w-4 h-4 text-green-500" />
+                    <img 
+                      src="/lovable-uploads/f0c1b1f2-6682-4b54-8104-b9cdb14c4490.png" 
+                      alt="Verificado" 
+                      className="w-4 h-4" 
+                    />
                   </div>
                   <div className="text-2xl font-bold text-green-600 mt-2">
                     {getDisplayPrice(originalPrice)}
