@@ -824,7 +824,7 @@ const Checkout = () => {
     );
   }
 
-  if (product.status === 'Inativo') {
+  if (product?.status === 'Inativo') {
     return (
       <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -849,7 +849,7 @@ const Checkout = () => {
     );
   }
 
-  if (product.status === 'Banido') {
+  if (product?.status === 'Banido') {
     return (
       <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
