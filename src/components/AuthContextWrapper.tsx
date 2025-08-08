@@ -4,8 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import Intelligent2FAGate from './Intelligent2FAGate';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import PushPermissionPrompt from './PushPermissionPrompt';
-import { PushTestButton } from './PushTestButton';
-import { SaleNotificationButton } from './SaleNotificationButton';
 
 interface AuthContextWrapperProps {
   children: React.ReactNode;
@@ -49,11 +47,6 @@ const AuthContextWrapper: React.FC<AuthContextWrapperProps> = ({ children }) => 
   return (
     <>
       {children}
-      {/* PushPermissionPrompt removido - agora é controlado via configurações */}
-      <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
-        <PushTestButton />
-        <SaleNotificationButton />
-      </div>
     </>
   );
 };
