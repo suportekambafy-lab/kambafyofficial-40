@@ -65,10 +65,10 @@ self.addEventListener('push', (event) => {
   try {
     if (event.data) payload = event.data.json();
   } catch (e) {
-    payload = { title: 'Kambafy', body: event.data?.text() || 'Nova notificação' };
+    payload = { title: '', body: event.data?.text() || 'Nova notificação' };
   }
 
-  const title = payload.title || 'Kambafy - Nova venda! 🎉';
+  const title = payload.title || '';
   const body = payload.body || 'Você recebeu uma nova venda.';
   const url = payload.url || '/';
 
