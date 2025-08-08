@@ -5,14 +5,14 @@ console.log('Client Sound Listener: Carregado e inicializando...');
 // Função melhorada para tocar o som de moedas
 function playNotificationSound() {
   try {
-    console.log('🔊 [SOM] Tentando tocar som de notificação');
+    console.log('🪙 [COINS] Tentando tocar som de moedas...');
     
-    // FORÇAR som de moeda do Supabase
+    // URL CORRIGIDA para o som de moedas do Supabase
     const soundUrls = [
-      'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3.mp3'
+      'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3'
     ];
     
-    console.log('🔊 [SOM] URLs disponíveis:', soundUrls);
+    console.log('🪙 [COINS] URLs de moedas disponíveis:', soundUrls);
     
     // Tentar cada URL sequencialmente
     let audioAttempt = 0;
@@ -24,22 +24,22 @@ function playNotificationSound() {
       }
       
       const url = soundUrls[audioAttempt];
-      console.log(`🔊 [SOM] Tentativa ${audioAttempt + 1}: ${url}`);
+      console.log(`🪙 [COINS] Tentativa ${audioAttempt + 1}: ${url}`);
       
       const audio = new Audio(url);
-      audio.volume = 0.8;
+      audio.volume = 0.9; // Volume alto para as moedas
       audio.preload = 'auto';
       
       audio.addEventListener('loadeddata', () => {
-        console.log(`🔊 [SOM] Áudio carregado: ${url}`);
+        console.log(`🪙 [COINS] Som de moedas carregado: ${url}`);
       });
       
       audio.addEventListener('canplaythrough', () => {
-        console.log(`🔊 [SOM] Áudio pronto para reproduzir: ${url}`);
+        console.log(`🪙 [COINS] Som de moedas pronto: ${url}`);
       });
       
       audio.addEventListener('error', (e) => {
-        console.error(`🔊 [SOM] Erro ao carregar ${url}:`, e);
+        console.error(`🪙 [COINS] Erro ao carregar moedas ${url}:`, e);
         audioAttempt++;
         tryNextAudio();
       });
@@ -49,10 +49,10 @@ function playNotificationSound() {
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
-            console.log(`✅ [SOM] Som tocado com sucesso: ${url}`);
+            console.log(`✅ [COINS] Som de moedas tocado com sucesso! 🪙💰: ${url}`);
           })
           .catch((error) => {
-            console.warn(`❌ [SOM] Falha ao tocar ${url}:`, error);
+            console.warn(`❌ [COINS] Falha ao tocar moedas ${url}:`, error);
             audioAttempt++;
             tryNextAudio();
           });
@@ -117,10 +117,10 @@ function inicializarClientSoundListener() {
         
         // SÓ TOCAR SOM SE FOR VENDA
         if (event.data.isVenda === true) {
-          console.log('🔊 [LISTENER] CONFIRMADO: É VENDA! Tocando som de moeda...');
+          console.log('🪙 [LISTENER] CONFIRMADO: É VENDA! Tocando som de moedas...');
           playNotificationSound();
         } else {
-          console.log('🔊 [LISTENER] Não é venda, não tocando som');
+          console.log('🔇 [LISTENER] Não é venda, não tocando som');
         }
       } else {
         console.log('🎧 [LISTENER] Mensagem ignorada, tipo:', event.data?.type);

@@ -105,15 +105,15 @@ self.addEventListener('push', (event) => {
     
     // SÓ TOCAR SOM SE FOR VENDA
     if (isVenda) {
-      console.log('🔊 [SW] É VENDA! Enviando comando para tocar som de moeda...');
+      console.log('🪙 [SW] É VENDA! Enviando comando para tocar som de moedas...');
       await broadcastMessage({ 
         type: 'PLAY_NOTIFICATION_SOUND',
         isVenda: true,
         sound: 'coins'
       });
-      console.log('🔊 [SW] Comando de som de moeda enviado!');
+      console.log('🪙 [SW] Comando de som de moedas enviado! 🪙💰');
     } else {
-      console.log('🔊 [SW] Não é venda, não tocando som');
+      console.log('🔇 [SW] Não é venda, sem som');
     }
   })());
 });
