@@ -1,7 +1,7 @@
 {
   "id": "com.kambafy.app",
-  "name": "Kambafy - Plataforma de Vendas Digitais",
-  "short_name": "Kambafy",
+  "name": "App de Vendas",
+  "short_name": "Vendas",
   "description": "Plataforma completa para criar, vender e gerenciar produtos digitais",
   "start_url": "/?utm_source=pwa",
   "scope": "/",

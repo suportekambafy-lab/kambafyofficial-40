@@ -73,7 +73,7 @@ serve(async (req) => {
     if (subsError) throw subsError;
 
     // Configure VAPID
-    webpush.setVapidDetails('mailto:noreply@kambafy.com', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    webpush.setVapidDetails('mailto:no-reply@example.com', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
     const payload = JSON.stringify({
       title: title || 'Notificação',
