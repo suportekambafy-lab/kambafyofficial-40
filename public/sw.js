@@ -85,7 +85,7 @@ self.addEventListener('push', (event) => {
   const title = payload.title || '';
   const body = payload.body || 'Você recebeu uma nova venda.';
   const url = payload.url || '/';
-  const isVenda = title.includes('Nova Venda') || payload.tag === 'sale-notification' || payload.data?.isVenda;
+  const isVenda = (payload?.data?.isVenda === true) || /sale/i.test(payload?.tag || '') || (title || '').toLowerCase().includes('venda');
 
   console.log('🔔 [SW] É venda?', isVenda);
   console.log('🔔 [SW] Título:', title);
@@ -93,18 +93,18 @@ self.addEventListener('push', (event) => {
   console.log('🔔 [SW] Data:', payload.data);
 
   event.waitUntil((async () => {
-    // Sempre mostrar a notificação (silenciosa para permitir som customizado)
+    // Mostrar a notificação (permitir som padrão do sistema quando em background)
     await showNotification(title, {
       body,
       icon: '/kambafy-icon.png',
       badge: '/kambafy-icon.png',
       tag: payload.tag || 'sale-push',
       data: { url, ts: Date.now(), ...payload.data },
-      silent: true, // Silenciar notificação padrão para usar som customizado
+      vibrate: [100, 50, 100], // Android: vibração curta
       requireInteraction: false
     });
     
-    // SÓ TOCAR SOM SE FOR VENDA
+    // Tocar som personalizado de moedas quando possível (app em foco)
     if (isVenda) {
       console.log('🪙 [SW] É VENDA! Enviando comando para tocar som de moedas...');
       await broadcastMessage({ 

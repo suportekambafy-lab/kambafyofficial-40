@@ -342,10 +342,32 @@ document.addEventListener('visibilitychange', () => {
   // REMOVIDO: não fazer refresh automático ao retornar para a aba
 });
 
-// Adicionar logs de interação para debug
-document.addEventListener('click', () => {
-  console.log('Client Sound Listener: Clique detectado (útil para tocar sons)');
-}, { once: true });
+// Desbloquear áudio no primeiro toque/clique (iOS/Android)
+function unlockAudioPlayback() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      const ctx = new AudioCtx();
+      // Criar um nó silencioso para desbloquear
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      g.gain.value = 0.0001;
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.start(0);
+      o.stop(ctx.currentTime + 0.01);
+    }
+    const a = new Audio('/sounds/notification.mp3');
+    a.volume = 0.0;
+    a.play().then(() => a.pause()).catch(() => {});
+    console.log('🔓 Áudio desbloqueado para reprodução de sons.');
+  } catch (e) {
+    console.warn('Não foi possível desbloquear áudio:', e);
+  }
+}
+const onceOpts = { once: true, passive: true };
+document.addEventListener('click', unlockAudioPlayback, onceOpts);
+document.addEventListener('touchstart', unlockAudioPlayback, onceOpts);
 
 // Inicializar quando DOM estiver carregado
 if (document.readyState === 'loading') {
