@@ -93,28 +93,46 @@ self.addEventListener('push', (event) => {
   console.log('🔔 [SW] Data:', payload.data);
 
   event.waitUntil((async () => {
-    // Mostrar a notificação (permitir som padrão do sistema quando em background)
-    await showNotification(title, {
-      body,
-      icon: '/kambafy-icon.png',
-      badge: '/kambafy-icon.png',
-      tag: payload.tag || 'sale-push',
-      data: { url, ts: Date.now(), ...payload.data },
-      vibrate: [100, 50, 100], // Android: vibração curta
-      requireInteraction: false
-    });
+    // Verificar se há clientes ativos (app em primeiro plano)
+    const clients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
+    const hasVisibleClient = clients.some(client => client.visibilityState === 'visible');
     
-    // Tocar som personalizado de moedas quando possível (app em foco)
-    if (isVenda) {
-      console.log('🪙 [SW] É VENDA! Enviando comando para tocar som de moedas...');
+    console.log('🔍 [SW] App em primeiro plano?', hasVisibleClient);
+    console.log('🔍 [SW] Clientes ativos:', clients.length);
+    
+    if (hasVisibleClient && isVenda) {
+      // App em foco: notificação silenciosa + som personalizado
+      console.log('📱 [SW] App em foco - som personalizado');
+      await showNotification(title, {
+        body,
+        icon: '/kambafy-icon.png',
+        badge: '/kambafy-icon.png', 
+        tag: payload.tag || 'sale-push',
+        data: { url, ts: Date.now(), ...payload.data },
+        silent: true, // Silenciar para tocar som personalizado
+        requireInteraction: false
+      });
+      
+      // Tocar som de moedas personalizado
       await broadcastMessage({ 
         type: 'PLAY_NOTIFICATION_SOUND',
         isVenda: true,
         sound: 'coins'
       });
-      console.log('🪙 [SW] Comando de som de moedas enviado! 🪙💰');
+      console.log('🪙 [SW] Som de moedas enviado!');
     } else {
-      console.log('🔇 [SW] Não é venda, sem som');
+      // App em background: notificação com som padrão do sistema
+      console.log('🔔 [SW] App em background - som padrão do sistema');
+      await showNotification(title, {
+        body,
+        icon: '/kambafy-icon.png',
+        badge: '/kambafy-icon.png',
+        tag: payload.tag || 'sale-push', 
+        data: { url, ts: Date.now(), ...payload.data },
+        vibrate: isVenda ? [100, 50, 100] : undefined,
+        requireInteraction: false
+        // Sem 'silent: true' para permitir som padrão
+      });
     }
   })());
 });

@@ -115,11 +115,18 @@ function inicializarClientSoundListener() {
         console.log('🎧 [LISTENER] ⚡ COMANDO PARA TOCAR SOM RECEBIDO!');
         console.log('🎧 [LISTENER] É venda?', event.data.isVenda);
         console.log('🎧 [LISTENER] Tipo de som:', event.data.sound);
+        console.log('🎧 [LISTENER] Página visível?', !document.hidden);
         
-        // SÓ TOCAR SOM SE FOR VENDA
-        if (event.data.isVenda === true) {
-          console.log('🪙 [LISTENER] CONFIRMADO: É VENDA! Tocando som de moedas...');
-          playNotificationSound();
+        // SÓ TOCAR SOM SE FOR VENDA E PÁGINA ESTIVER VISÍVEL
+        if (event.data.isVenda === true && !document.hidden) {
+          console.log('🪙 [LISTENER] CONFIRMADO: É VENDA + PÁGINA VISÍVEL! Tocando som de moedas...');
+          
+          // Pequeno delay para garantir que a notificação foi processada
+          setTimeout(() => {
+            playNotificationSound();
+          }, 100);
+        } else if (event.data.isVenda === true && document.hidden) {
+          console.log('🔇 [LISTENER] É venda mas página oculta - deixar som padrão do sistema');
         } else {
           console.log('🔇 [LISTENER] Não é venda, não tocando som');
         }
