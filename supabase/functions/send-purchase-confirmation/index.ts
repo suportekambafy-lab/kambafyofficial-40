@@ -658,12 +658,25 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('=== SENDING WEB PUSH NOTIFICATION FOR SALE ===');
     // Disparar Web Push para o vendedor (som de moeda para TODOS os métodos de pagamento)
     try {
-      const title = `💰 Nova venda: ${productName}`;
+      const title = 'Kambafy - Nova Venda Realizada!';
       const totalFormatted = parseFloat(amount).toLocaleString('pt-BR', { 
         style: 'currency', 
         currency: currency === 'KZ' ? 'AOA' : currency 
       });
-      const bodyMsg = `Cliente: ${customerName} • Valor: ${totalFormatted}`;
+      
+      // Determinar método de pagamento para exibição
+      let displayPaymentMethod = 'Pagamento Local';
+      if (productData?.last_payment_method) {
+        const paymentMethods = {
+          'express': 'Express',
+          'multibanco': 'Multibanco',
+          'stripe': 'Cartão',
+          'mbway': 'MB WAY'
+        };
+        displayPaymentMethod = paymentMethods[productData.last_payment_method] || productData.last_payment_method;
+      }
+      
+      const bodyMsg = `Sua comissão: ${totalFormatted} • ${displayPaymentMethod}`;
       
       console.log('🔔 Enviando push notification para:', sellerId);
       console.log('🔔 Título:', title);
@@ -676,7 +689,7 @@ const handler = async (req: Request): Promise<Response> => {
           body: bodyMsg,
           url: `/sales?order_id=${orderId}`,
           tag: 'kambafy-sale',
-          data: { order_id: orderId, product_id: productId, payment_method: 'various' }
+          data: { order_id: orderId, product_id: productId, payment_method: 'various', isVenda: true }
         },
         headers: { 'x-service-call': 'true' }
       });

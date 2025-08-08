@@ -1,5 +1,5 @@
-// Service Worker para PWA, cache e Web Push - v8 (SOM DE MOEDA CORRIGIDO)
-const CACHE_NAME = 'kambafy-v8';
+// Service Worker para PWA, cache e Web Push - v9 (SOM DE MOEDA FINAL)
+const CACHE_NAME = 'kambafy-v9';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -92,16 +92,15 @@ self.addEventListener('push', (event) => {
   console.log('🔔 [SW] Tag:', payload.tag);
 
   event.waitUntil((async () => {
-    // Sempre mostrar a notificação
+    // Sempre mostrar a notificação SEM som padrão para permitir som customizado
     await showNotification(title, {
       body,
       icon: '/kambafy-icon.png',
       badge: '/kambafy-icon.png',
       tag: payload.tag || 'kambafy-push',
       data: { url, ts: Date.now(), ...payload.data },
-      // FORÇAR som customizado para vendas
-      sound: isVenda ? 'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3.mp3' : undefined,
-      silent: false // Garantir que não seja silenciosa
+      silent: true, // FORÇAR SILENCIOSO para controlar som manualmente
+      requireInteraction: false
     });
     
     console.log('🔊 [SW] Enviando comando para tocar som...');

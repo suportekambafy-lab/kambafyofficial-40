@@ -7,12 +7,9 @@ function playNotificationSound() {
   try {
     console.log('🔊 [SOM] Tentando tocar som de notificação');
     
-    // Lista de URLs para tentar
+    // FORÇAR som de moeda do Supabase
     const soundUrls = [
-      'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3.mp3',
-      'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/audio/coins-shopify.mp3.mp3',
-      '/sounds/coins-shopify.mp3',
-      '/sounds/notification.mp3'
+      'https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/sons/coins-shopify.mp3.mp3'
     ];
     
     console.log('🔊 [SOM] URLs disponíveis:', soundUrls);
