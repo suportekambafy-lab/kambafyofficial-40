@@ -135,8 +135,8 @@ function SellerDashboardContent() {
                     {/* Banner - apenas na home do dashboard */}
                     <div className="w-full flex-shrink-0">
                       <img 
-                        src="/lovable-uploads/3b9c0d82-ce9e-4647-b9d4-582a57e1f294.png" 
-                        alt="Kambafy Banner" 
+                        src="/lovable-uploads/373ca352-3319-4914-9898-1dc76571a167.png" 
+                        alt="Kambafy Banner"
                         className="w-full h-auto object-cover max-h-32"
                       />
                     </div>
