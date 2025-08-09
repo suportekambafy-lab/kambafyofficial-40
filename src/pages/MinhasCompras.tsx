@@ -166,7 +166,7 @@ export default function MinhasCompras() {
                 className="text-white border-white/20 border hover:bg-white/10"
               >
                 <Wallet className="w-4 h-4 mr-2" />
-                Saldo
+                Saldo: Valor
               </Button>
             </CustomerBalanceModal>
             
