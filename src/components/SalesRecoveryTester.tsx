@@ -35,6 +35,13 @@ export function SalesRecoveryTester({ product, onBack }: SalesRecoveryTesterProp
     setLoading(true);
     try {
       console.log("🔄 Criando carrinho abandonado de teste...");
+      console.log("📝 Dados:", {
+        product_id: product.id,
+        customer_email: testData.customerEmail,
+        customer_name: testData.customerName,
+        amount: testData.amount,
+        currency: "KZ"
+      });
       
       const { data, error } = await supabase.functions.invoke('create-test-abandoned-purchase', {
         body: {
@@ -55,15 +62,15 @@ export function SalesRecoveryTester({ product, onBack }: SalesRecoveryTesterProp
       console.log("✅ Carrinho de teste criado:", data);
       
       toast({
-        title: "Carrinho de teste criado",
-        description: `Carrinho abandonado criado para ${testData.customerEmail}`,
+        title: "✅ Carrinho de teste criado!",
+        description: `Carrinho abandonado criado para ${testData.customerEmail}. Agora clique em "Processar Fila" para enviar o email.`,
       });
 
     } catch (error) {
       console.error("Erro:", error);
       toast({
-        title: "Erro",
-        description: `Falha ao criar carrinho de teste: ${error.message}`,
+        title: "❌ Erro ao criar carrinho",
+        description: `Falha ao criar carrinho de teste: ${error.message || "Erro desconhecido"}`,
         variant: "destructive"
       });
     } finally {
@@ -85,16 +92,37 @@ export function SalesRecoveryTester({ product, onBack }: SalesRecoveryTesterProp
 
       console.log("✅ Fila processada:", data);
       
-      toast({
-        title: "Fila processada",
-        description: data.message || "Processamento concluído",
-      });
+      // Verificar se há dados na resposta
+      if (data) {
+        const { message, emailsSent, errors } = data;
+        
+        toast({
+          title: "Fila processada com sucesso!",
+          description: message || `${emailsSent || 0} emails enviados`,
+        });
+
+        // Se houver erros, mostrar em toast separado
+        if (errors && errors.length > 0) {
+          setTimeout(() => {
+            toast({
+              title: "Alguns erros encontrados",
+              description: errors.slice(0, 2).join(", "), // Mostrar apenas os primeiros 2 erros
+              variant: "destructive"
+            });
+          }, 1000);
+        }
+      } else {
+        toast({
+          title: "Processamento concluído",
+          description: "Nenhum carrinho encontrado para processar",
+        });
+      }
 
     } catch (error) {
       console.error("Erro:", error);
       toast({
-        title: "Erro",
-        description: `Falha ao processar fila: ${error.message}`,
+        title: "Erro no processamento",
+        description: `Falha ao processar fila: ${error.message || "Erro desconhecido"}`,
         variant: "destructive"
       });
     } finally {
