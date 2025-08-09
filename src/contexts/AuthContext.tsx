@@ -378,7 +378,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={value}>
       {isBanned && userProfile ? (
         <BannedUserDialog
-          isOpen={true}
           banReason={banReason}
           userEmail={userProfile.email || ''}
           userName={userProfile.full_name || 'Usuário'}
