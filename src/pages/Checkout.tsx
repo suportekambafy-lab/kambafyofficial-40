@@ -171,16 +171,11 @@ const Checkout = () => {
       }
 
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(productId)) {
-        console.error('Invalid UUID format for productId:', productId);
-        setError(`ID do produto inválido: ${productId}`);
-        setLoading(false);
-        return;
-      }
+      const isUUID = uuidRegex.test(productId);
+      
+      console.log(`Loading product ${isUUID ? 'by UUID' : 'by slug'}:`, productId);
 
       try {
-        console.log('Loading product with valid UUID:', productId);
-        
         const { data: productData, error: productError } = await supabase
           .from('products')
           .select(`
@@ -191,7 +186,7 @@ const Checkout = () => {
               url
             )
           `)
-          .eq('id', productId)
+          .eq(isUUID ? 'id' : 'slug', productId)
           .maybeSingle();
 
         console.log('Product query result:', { productData, productError });
@@ -251,10 +246,27 @@ const Checkout = () => {
         
         console.log('📋 Table checkout_customizations exists, sample data:', tableExists);
         
+        // Primeiro buscar o produto para obter o ID correto
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const isUUID = uuidRegex.test(productId);
+        
+        let actualProductId = productId;
+        if (!isUUID) {
+          const { data: productData } = await supabase
+            .from('products')
+            .select('id')
+            .eq('slug', productId)
+            .maybeSingle();
+          
+          if (productData) {
+            actualProductId = productData.id;
+          }
+        }
+        
         const { data, error } = await supabase
           .from('checkout_customizations')
           .select('*')
-          .eq('product_id', productId)
+          .eq('product_id', actualProductId)
           .maybeSingle();
 
         console.log('🎯 Checkout settings query result for product', productId, ':', { data, error });

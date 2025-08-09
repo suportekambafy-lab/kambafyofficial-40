@@ -47,11 +47,15 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
       setLoading(true);
       console.log(`🔍 OrderBump: Buscando order bump para produto ${productId}, posição ${position}`);
       
+      // Verificar se é UUID ou slug
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const isUUID = uuidRegex.test(productId);
+      
       // Buscar o produto principal para obter o user_id do vendedor
       const { data: productData, error: productError } = await supabase
         .from('products')
-        .select('user_id')
-        .eq('id', productId)
+        .select('id, user_id')
+        .eq(isUUID ? 'id' : 'slug', productId)
         .single();
 
       if (productError) {
@@ -64,11 +68,14 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
         return;
       }
 
+      // Usar o ID real do produto para buscar o order bump
+      const actualProductId = productData.id;
+
       // Buscar order bump apenas do mesmo vendedor
       const { data, error } = await supabase
         .from('order_bump_settings')
         .select('*')
-        .eq('product_id', productId)
+        .eq('product_id', actualProductId)
         .eq('enabled', true)
         .eq('position', position)
         .eq('user_id', productData.user_id) // Garantir que seja do mesmo vendedor
