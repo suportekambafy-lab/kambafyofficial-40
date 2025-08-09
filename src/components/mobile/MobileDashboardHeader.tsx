@@ -18,7 +18,7 @@ export function MobileDashboardHeader({ goal, totalRevenue, progressPercentage }
     <div 
       className="relative bg-checkout-green text-white p-4 min-h-[200px] flex flex-col justify-between overflow-hidden"
       style={{
-        backgroundImage: `url('/lovable-uploads/75799d3f-bc89-4da6-ba88-8886c387a40a.png')`,
+        backgroundImage: `url('/lovable-uploads/3e7458ac-89de-46f2-a41b-9dffed4c1017.png')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
