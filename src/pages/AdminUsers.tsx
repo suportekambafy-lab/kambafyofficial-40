@@ -46,7 +46,7 @@ export default function AdminUsers() {
       console.log('Carregando usuários...');
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, user_id, full_name, email, banned, is_creator, avatar_url, bio, account_holder, ban_reason, created_at')
         .order('created_at', { ascending: false });
 
       console.log('Resultado dos usuários:', { data, error });
