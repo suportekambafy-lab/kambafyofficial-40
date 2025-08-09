@@ -25,6 +25,7 @@ import { getPaymentMethodsByCountry } from "@/utils/paymentMethods";
 import { SEO } from "@/components/SEO";
 import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
+import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 
 const Checkout = () => {
   const { productId } = useParams();
@@ -58,6 +59,10 @@ const Checkout = () => {
   const [checkoutSettings, setCheckoutSettings] = useState<any>(null);
   const [orderBump, setOrderBump] = useState<any>(null);
   const [orderBumpPrice, setOrderBumpPrice] = useState(0);
+  const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
+  
+  // Hook para verificar KambaPay
+  const { fetchBalanceByEmail } = useKambaPayBalance();
 
   // Atualizar código de telefone automaticamente baseado no país detectado
   useEffect(() => {
@@ -266,11 +271,42 @@ const Checkout = () => {
     loadCheckoutSettings();
   }, [productId, navigate, toast]);
 
+  // Função para verificar se email está registrado no KambaPay
+  const checkKambaPayEmail = async (email: string) => {
+    if (!email) return;
+    
+    setKambaPayEmailError(null);
+    try {
+      const balance = await fetchBalanceByEmail(email);
+      if (!balance) {
+        setKambaPayEmailError(
+          `O email ${email} não está registrado no KambaPay. Por favor, use outro método de pagamento ou crie uma conta KambaPay.`
+        );
+      }
+    } catch (error) {
+      console.error('Error checking KambaPay registration:', error);
+      setKambaPayEmailError(
+        'Erro ao verificar conta KambaPay. Tente outro método de pagamento.'
+      );
+    }
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+    
+    // Se o email mudou e KambaPay está selecionado, verificar novamente
+    if (field === 'email' && selectedPayment === 'kambapay' && value) {
+      // Usar timeout para evitar muitas chamadas enquanto digita
+      setTimeout(() => {
+        checkKambaPayEmail(value);
+      }, 500);
+    } else if (field === 'email') {
+      // Limpar erro do KambaPay quando email mudar
+      setKambaPayEmailError(null);
+    }
   };
 
   const handleCountryChange = (countryCode: string) => {
@@ -1157,16 +1193,24 @@ const Checkout = () => {
                   </div>
                   
                   <div className={`grid ${getPaymentGridClasses()} gap-3`}>
-                    {availablePaymentMethods.map((method) => (
-                      <div
-                        key={method.id}
-                        className={`cursor-pointer transition-all border rounded-xl p-3 flex flex-col items-center relative ${
-                          selectedPayment === method.id
-                            ? 'border-green-500 border-2 bg-green-50'
-                            : 'border-gray-300 hover:border-green-400'
-                        }`}
-                        onClick={() => setSelectedPayment(method.id)}
-                      >
+                     {availablePaymentMethods.map((method) => (
+                       <div
+                         key={method.id}
+                         className={`cursor-pointer transition-all border rounded-xl p-3 flex flex-col items-center relative ${
+                           selectedPayment === method.id
+                             ? 'border-green-500 border-2 bg-green-50'
+                             : 'border-gray-300 hover:border-green-400'
+                         }`}
+                         onClick={async () => {
+                           setSelectedPayment(method.id);
+                           setKambaPayEmailError(null);
+                           
+                           // Se KambaPay foi selecionado, verificar se o email está registrado
+                           if (method.id === 'kambapay' && formData.email) {
+                             await checkKambaPayEmail(formData.email);
+                           }
+                         }}
+                       >
                         {selectedPayment === method.id && (
                           <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                             <Check className="w-3 h-3 text-white" />
@@ -1253,10 +1297,24 @@ const Checkout = () => {
                           </div>
                         </div>
                         
-                        <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
-                          <strong>💡 Dica:</strong> O pagamento será processado com o email informado acima. 
-                          Certifique-se de que possui saldo suficiente em sua conta KambaPay.
-                        </div>
+                        {kambaPayEmailError ? (
+                          <div className="text-xs text-red-600 bg-red-100 p-3 rounded border border-red-200">
+                            <strong>⚠️ Atenção:</strong> {kambaPayEmailError}
+                            <div className="mt-2">
+                              <button 
+                                className="text-blue-600 underline text-xs"
+                                onClick={() => window.open('/kambapay', '_blank')}
+                              >
+                                Criar conta KambaPay
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
+                            <strong>💡 Dica:</strong> O pagamento será processado com o email informado acima. 
+                            Certifique-se de que possui saldo suficiente em sua conta KambaPay.
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -1307,7 +1365,7 @@ const Checkout = () => {
               {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
                 <Button
                   onClick={handlePurchase}
-                  disabled={!formData.fullName || !formData.email || !formData.phone || !selectedPayment || processing}
+                  disabled={!formData.fullName || !formData.email || !formData.phone || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
                   className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-semibold relative"
                 >
                   {processing ? (

@@ -26,7 +26,7 @@ interface CustomerBalanceModalProps {
 export function CustomerBalanceModal({ children }: CustomerBalanceModalProps) {
   const { user } = useAuth();
   const userEmail = user?.email || '';
-  const { balance, transactions, loading, addBalanceByEmail, registerKambaPayEmail, fetchBalanceByEmail } = useKambaPayBalance();
+  const { balance, transactions, loading, addBalanceByEmail, registerKambaPayEmail, fetchBalanceByEmail, fetchTransactionsByEmail } = useKambaPayBalance();
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -48,6 +48,11 @@ export function CustomerBalanceModal({ children }: CustomerBalanceModalProps) {
     
     const balanceData = await fetchBalanceByEmail(userEmail);
     setIsRegistered(balanceData !== null);
+    
+    // Buscar também as transações
+    if (balanceData) {
+      await fetchTransactionsByEmail(userEmail);
+    }
   };
 
   const handleRegister = async () => {
