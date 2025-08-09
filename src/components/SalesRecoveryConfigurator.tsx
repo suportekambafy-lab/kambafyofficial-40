@@ -78,9 +78,11 @@ export function SalesRecoveryConfigurator({ product, onBack, onComplete }: Sales
   };
 
   const handleSave = async () => {
+    console.log('🔄 Iniciando salvamento das configurações...');
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('👤 Usuário:', user);
       if (!user) throw new Error('Usuário não autenticado');
 
       const settingsData = {
@@ -93,19 +95,32 @@ export function SalesRecoveryConfigurator({ product, onBack, onComplete }: Sales
         max_recovery_attempts: settings.maxRecoveryAttempts
       };
 
+      console.log('📝 Dados a serem salvos:', settingsData);
+      console.log('🆔 ID das configurações existentes:', settings.id);
+
       if (settings.id) {
+        console.log('📝 Atualizando configurações existentes...');
         const { error } = await supabase
           .from('sales_recovery_settings')
           .update(settingsData)
           .eq('id', settings.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro ao atualizar:', error);
+          throw error;
+        }
+        console.log('✅ Configurações atualizadas com sucesso!');
       } else {
+        console.log('➕ Criando novas configurações...');
         const { error } = await supabase
           .from('sales_recovery_settings')
           .insert(settingsData);
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro ao inserir:', error);
+          throw error;
+        }
+        console.log('✅ Configurações criadas com sucesso!');
       }
 
       toast({
@@ -115,10 +130,10 @@ export function SalesRecoveryConfigurator({ product, onBack, onComplete }: Sales
 
       onComplete();
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
+      console.error('❌ Erro ao salvar configurações:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar as configurações.",
+        description: `Não foi possível salvar as configurações: ${error.message}`,
         variant: "destructive"
       });
     } finally {
