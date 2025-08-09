@@ -633,11 +633,24 @@ const Checkout = () => {
           return;
         } else {
           console.error('❌ KambaPay payment failed:', data);
-          toast({
-            title: "Erro no pagamento",
-            description: data?.message || "Pagamento com KambaPay falhou",
-            variant: "destructive"
-          });
+          
+          // Verificar se é erro de saldo insuficiente
+          if (data?.code === 'INSUFFICIENT_BALANCE') {
+            const availableBalance = data?.availableBalance || 0;
+            const requiredAmount = data?.requiredAmount || totalAmount;
+            
+            toast({
+              title: "Saldo insuficiente",
+              description: `Você tem ${availableBalance.toLocaleString()} KZ disponível, mas precisa de ${requiredAmount.toLocaleString()} KZ. Adicione saldo à sua conta KambaPay.`,
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: "Erro no pagamento",
+              description: data?.message || "Pagamento com KambaPay falhou",
+              variant: "destructive"
+            });
+          }
           setProcessing(false);
           return;
         }
@@ -1302,7 +1315,7 @@ const Checkout = () => {
                             <strong>⚠️ Atenção:</strong> {kambaPayEmailError}
                             <div className="mt-2">
                               <button 
-                                className="text-blue-600 underline text-xs"
+                                className="text-blue-600 underline text-xs hover:text-blue-800"
                                 onClick={() => window.open('/kambapay', '_blank')}
                               >
                                 Criar conta KambaPay
@@ -1311,8 +1324,16 @@ const Checkout = () => {
                           </div>
                         ) : (
                           <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
-                            <strong>💡 Dica:</strong> O pagamento será processado com o email informado acima. 
-                            Certifique-se de que possui saldo suficiente em sua conta KambaPay.
+                            <div className="flex items-center justify-between mb-2">
+                              <span><strong>💡 Dica:</strong> O pagamento será processado com o email informado acima.</span>
+                              <button 
+                                className="text-blue-600 underline text-xs hover:text-blue-800"
+                                onClick={() => window.open('/kambapay', '_blank')}
+                              >
+                                Ver saldo
+                              </button>
+                            </div>
+                            <p>Certifique-se de que possui saldo suficiente em sua conta KambaPay.</p>
                           </div>
                         )}
                       </div>
