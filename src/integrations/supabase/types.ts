@@ -177,6 +177,56 @@ export type Database = {
           },
         ]
       }
+      api_usage_logs: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          ip_address: string | null
+          method: string
+          partner_id: string | null
+          request_size: number | null
+          response_size: number | null
+          response_time_ms: number | null
+          status_code: number
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          ip_address?: string | null
+          method: string
+          partner_id?: string | null
+          request_size?: number | null
+          response_size?: number | null
+          response_time_ms?: number | null
+          status_code: number
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          ip_address?: string | null
+          method?: string
+          partner_id?: string | null
+          request_size?: number | null
+          response_size?: number | null
+          response_time_ms?: number | null
+          status_code?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_logs_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       balance_transactions: {
         Row: {
           amount: number
@@ -863,6 +913,119 @@ export type Database = {
           },
         ]
       }
+      partner_transactions: {
+        Row: {
+          amount: number
+          commission_amount: number | null
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json | null
+          order_id: string
+          partner_id: string | null
+          processed_at: string | null
+          status: string
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          commission_amount?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          order_id: string
+          partner_id?: string | null
+          processed_at?: string | null
+          status?: string
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          commission_amount?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          order_id?: string
+          partner_id?: string | null
+          processed_at?: string | null
+          status?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_transactions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          api_key: string | null
+          approved_at: string | null
+          approved_by: string | null
+          commission_rate: number | null
+          company_name: string
+          contact_email: string
+          contact_name: string
+          created_at: string
+          current_month_transactions: number | null
+          id: string
+          monthly_transaction_limit: number | null
+          phone: string | null
+          status: string
+          total_revenue: number | null
+          total_transactions: number | null
+          updated_at: string
+          webhook_url: string | null
+          website: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          commission_rate?: number | null
+          company_name: string
+          contact_email: string
+          contact_name: string
+          created_at?: string
+          current_month_transactions?: number | null
+          id?: string
+          monthly_transaction_limit?: number | null
+          phone?: string | null
+          status?: string
+          total_revenue?: number | null
+          total_transactions?: number | null
+          updated_at?: string
+          webhook_url?: string | null
+          website?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          commission_rate?: number | null
+          company_name?: string
+          contact_email?: string
+          contact_name?: string
+          created_at?: string
+          current_month_transactions?: number | null
+          id?: string
+          monthly_transaction_limit?: number | null
+          phone?: string | null
+          status?: string
+          total_revenue?: number | null
+          total_transactions?: number | null
+          updated_at?: string
+          webhook_url?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       payment_releases: {
         Row: {
           amount: number
@@ -1452,6 +1615,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      approve_partner: {
+        Args: { partner_id: string; admin_id?: string }
+        Returns: undefined
+      }
       calculate_commissions: {
         Args: {
           order_amount: number
@@ -1462,6 +1629,10 @@ export type Database = {
           affiliate_commission: number
           seller_commission: number
         }[]
+      }
+      generate_api_key: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_all_identity_verifications_for_admin: {
         Args: Record<PropertyKey, never>
@@ -1518,6 +1689,18 @@ export type Database = {
       is_trusted_device: {
         Args: { _user_id: string; _device_fingerprint: string }
         Returns: boolean
+      }
+      log_api_usage: {
+        Args: {
+          _partner_id: string
+          _endpoint: string
+          _method: string
+          _status_code: number
+          _response_time_ms?: number
+          _ip_address?: string
+          _user_agent?: string
+        }
+        Returns: undefined
       }
       unaccent: {
         Args: { "": string }
