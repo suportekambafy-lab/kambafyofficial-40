@@ -149,6 +149,17 @@ export const useStreamingQuery = () => {
       const allOrders: any[] = [];
       let chunkNumber = 1;
 
+      // Primeiro, buscar vendas recuperadas para marcar corretamente
+      const { data: recoveredPurchases } = await supabase
+        .from('abandoned_purchases')
+        .select('recovered_order_id')
+        .eq('status', 'recovered')
+        .not('recovered_order_id', 'is', null);
+
+      const recoveredOrderIds = new Set(
+        recoveredPurchases?.map(p => p.recovered_order_id).filter(Boolean) || []
+      );
+
       // Carregar vendas próprias
       while (hasMore) {
         console.log(`📦 Carregando chunk ${chunkNumber} de vendas próprias (offset: ${offset}, size: ${chunkSize})`);
@@ -191,13 +202,18 @@ export const useStreamingQuery = () => {
           .select('id, name, cover, type')
           .in('id', productIds);
 
-        // Combinar dados e marcar como venda própria
+        // Combinar dados e marcar tipo de venda
         const productMap = new Map(products?.map(p => [p.id, p]) || []);
-        const ordersWithProducts = ownOrders.map(order => ({
-          ...order,
-          products: productMap.get(order.product_id) || null,
-          sale_type: 'own' // Marcar como venda própria
-        }));
+        const ordersWithProducts = ownOrders.map(order => {
+          // Verificar se é venda recuperada
+          const isRecovered = recoveredOrderIds.has(order.order_id);
+          
+          return {
+            ...order,
+            products: productMap.get(order.product_id) || null,
+            sale_type: isRecovered ? 'recovered' : 'own' // Marcar como recuperada ou própria
+          };
+        });
 
         allOrders.push(...ordersWithProducts);
 

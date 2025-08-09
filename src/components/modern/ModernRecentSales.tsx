@@ -15,7 +15,7 @@ interface RecentSale {
   currency: string;
   created_at: string;
   product_name?: string;
-  sale_type?: 'own' | 'affiliate';
+  sale_type?: 'own' | 'affiliate' | 'recovered';
   earning_amount?: number;
   affiliate_commission?: number;
   seller_commission?: number;
@@ -84,6 +84,17 @@ export function ModernRecentSales() {
 
       const promises = [];
 
+      // Buscar vendas recuperadas para identificar corretamente
+      const { data: recoveredPurchases } = await supabase
+        .from('abandoned_purchases')
+        .select('recovered_order_id')
+        .eq('status', 'recovered')
+        .not('recovered_order_id', 'is', null);
+
+      const recoveredOrderIds = new Set(
+        recoveredPurchases?.map(p => p.recovered_order_id).filter(Boolean) || []
+      );
+
       // ✅ Vendas próprias - usando product_id
       if (userProductIds.length > 0) {
         promises.push(
@@ -91,6 +102,7 @@ export function ModernRecentSales() {
             .from('orders')
             .select(`
               id,
+              order_id,
               customer_name,
               customer_email,
               amount,
@@ -170,12 +182,15 @@ export function ModernRecentSales() {
 
       // Combinar e formatar vendas
       const allOrders = [
-        // Vendas próprias
-        ...(ownOrders || []).map((order: any) => ({
-          ...order,
-          sale_type: 'own',
-          earning_amount: parseFloat(order.seller_commission?.toString() || order.amount || '0')
-        })),
+        // Vendas próprias - verificar se são recuperadas
+        ...(ownOrders || []).map((order: any) => {
+          const isRecovered = recoveredOrderIds.has(order.order_id);
+          return {
+            ...order,
+            sale_type: isRecovered ? 'recovered' : 'own',
+            earning_amount: parseFloat(order.seller_commission?.toString() || order.amount || '0')
+          };
+        }),
         // Vendas como afiliado
         ...(affiliateOrders || []).map((order: any) => ({
           ...order,
@@ -256,11 +271,15 @@ export function ModernRecentSales() {
                 <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
                   sale.sale_type === 'affiliate' 
                     ? 'bg-purple-100 dark:bg-purple-900/20' 
+                    : sale.sale_type === 'recovered'
+                    ? 'bg-green-100 dark:bg-green-900/20'
                     : 'bg-primary/10'
                 }`}>
                   <span className={`font-medium text-sm ${
                     sale.sale_type === 'affiliate'
                       ? 'text-purple-600 dark:text-purple-400'
+                      : sale.sale_type === 'recovered'
+                      ? 'text-green-600 dark:text-green-400'
                       : 'text-primary'
                   }`}>
                     {getInitials(sale.customer_name)}
@@ -279,6 +298,11 @@ export function ModernRecentSales() {
                         Afiliado
                       </Badge>
                     )}
+                    {sale.sale_type === 'recovered' && (
+                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400">
+                        Recuperado (20% taxa)
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(sale.created_at), { 
@@ -291,11 +315,13 @@ export function ModernRecentSales() {
                   <p className={`text-sm font-medium ${
                     sale.sale_type === 'affiliate' 
                       ? 'text-purple-600 dark:text-purple-400' 
+                      : sale.sale_type === 'recovered'
+                      ? 'text-green-600 dark:text-green-400'
                       : 'text-foreground'
                   }`}>
                     {formatAmount(sale)}
                   </p>
-                  {sale.sale_type === 'affiliate' && (
+                  {(sale.sale_type === 'affiliate' || sale.sale_type === 'recovered') && (
                     <p className="text-xs text-muted-foreground line-through">
                       {parseFloat(sale.amount).toLocaleString()} {sale.currency}
                     </p>
