@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_purchases: {
+        Row: {
+          abandoned_at: string
+          amount: number
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          ip_address: string | null
+          last_recovery_attempt_at: string | null
+          product_id: string
+          recovered_at: string | null
+          recovered_order_id: string | null
+          recovery_attempts_count: number
+          status: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          abandoned_at?: string
+          amount: number
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          ip_address?: string | null
+          last_recovery_attempt_at?: string | null
+          product_id: string
+          recovered_at?: string | null
+          recovered_order_id?: string | null
+          recovery_attempts_count?: number
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          abandoned_at?: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          ip_address?: string | null
+          last_recovery_attempt_at?: string | null
+          product_id?: string
+          recovered_at?: string | null
+          recovered_order_id?: string | null
+          recovery_attempts_count?: number
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abandoned_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_logs: {
         Row: {
           action: string
@@ -1364,6 +1432,150 @@ export type Database = {
         }
         Relationships: []
       }
+      recovery_email_logs: {
+        Row: {
+          abandoned_purchase_id: string
+          clicked_at: string | null
+          created_at: string
+          delivery_status: string
+          email_content: string
+          email_sent_at: string
+          email_subject: string
+          error_message: string | null
+          id: string
+          opened_at: string | null
+        }
+        Insert: {
+          abandoned_purchase_id: string
+          clicked_at?: string | null
+          created_at?: string
+          delivery_status?: string
+          email_content: string
+          email_sent_at?: string
+          email_subject: string
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+        }
+        Update: {
+          abandoned_purchase_id?: string
+          clicked_at?: string | null
+          created_at?: string
+          delivery_status?: string
+          email_content?: string
+          email_sent_at?: string
+          email_subject?: string
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recovery_email_logs_abandoned_purchase_id_fkey"
+            columns: ["abandoned_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "abandoned_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_recovery_analytics: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          product_id: string | null
+          recovery_rate: number
+          total_abandoned: number
+          total_recovered: number
+          total_recovered_amount: number
+          total_recovery_emails_sent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          product_id?: string | null
+          recovery_rate?: number
+          total_abandoned?: number
+          total_recovered?: number
+          total_recovered_amount?: number
+          total_recovery_emails_sent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          product_id?: string | null
+          recovery_rate?: number
+          total_abandoned?: number
+          total_recovered?: number
+          total_recovered_amount?: number
+          total_recovery_emails_sent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_recovery_analytics_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_recovery_settings: {
+        Row: {
+          created_at: string
+          email_delay_hours: number
+          email_subject: string
+          email_template: string
+          enabled: boolean
+          id: string
+          max_recovery_attempts: number
+          product_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_delay_hours?: number
+          email_subject?: string
+          email_template?: string
+          enabled?: boolean
+          id?: string
+          max_recovery_attempts?: number
+          product_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_delay_hours?: number
+          email_subject?: string
+          email_template?: string
+          enabled?: boolean
+          id?: string
+          max_recovery_attempts?: number
+          product_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_recovery_settings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_events: {
         Row: {
           created_at: string | null
@@ -1703,6 +1915,19 @@ export type Database = {
           affiliate_commission: number
           seller_commission: number
         }[]
+      }
+      detect_abandoned_purchase: {
+        Args: {
+          _product_id: string
+          _customer_email: string
+          _customer_name: string
+          _amount: number
+          _currency?: string
+          _customer_phone?: string
+          _ip_address?: string
+          _user_agent?: string
+        }
+        Returns: string
       }
       generate_api_key: {
         Args: Record<PropertyKey, never>
