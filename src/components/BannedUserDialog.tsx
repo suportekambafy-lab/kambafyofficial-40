@@ -19,6 +19,7 @@ export function BannedUserDialog({ isOpen, banReason, userEmail, userName }: Ban
   const [contestMessage, setContestMessage] = useState('');
   const [contactEmail, setContactEmail] = useState(userEmail);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contestSent, setContestSent] = useState(false);
   const { toast } = useToast();
 
   const handleSubmitContest = async () => {
@@ -64,6 +65,7 @@ Este email foi enviado através do sistema de contestação da Kambafy.
         description: 'Sua contestação foi enviada para nossa equipe. Aguarde nossa resposta em até 48-72 horas.',
       });
 
+      setContestSent(true);
       setContestMessage('');
     } catch (error) {
       console.error('Erro ao enviar contestação:', error);
@@ -93,49 +95,71 @@ Este email foi enviado através do sistema de contestação da Kambafy.
             <p className="text-sm text-muted-foreground">{banReason}</p>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Contestar esta decisão
-            </h3>
-            <p className="text-sm text-blue-700 mb-4">
-              Se você acredita que esta suspensão foi um erro, explique sua situação abaixo:
-            </p>
-            
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="contestEmail">Email de contato</Label>
-                <Input
-                  id="contestEmail"
-                  type="email"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                />
+          {contestSent ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Contestação Enviada com Sucesso!
+              </h3>
+              <p className="text-sm text-green-700 mb-4">
+                Sua contestação foi enviada para nossa equipe de suporte. Você receberá uma resposta em até 48-72 horas úteis no email: <strong>{contactEmail}</strong>
+              </p>
+              <div className="bg-green-100 p-3 rounded-md">
+                <p className="text-sm text-green-800">
+                  <strong>Próximos passos:</strong>
+                </p>
+                <ul className="text-sm text-green-700 mt-1 list-disc list-inside">
+                  <li>Aguarde nossa resposta no email fornecido</li>
+                  <li>Verifique também a pasta de spam/lixo eletrônico</li>
+                  <li>Prepare documentos adicionais que possam comprovar sua contestação</li>
+                </ul>
               </div>
-              
-              <div>
-                <Label htmlFor="contestMessage">Mensagem de contestação</Label>
-                <Textarea
-                  id="contestMessage"
-                  value={contestMessage}
-                  onChange={(e) => setContestMessage(e.target.value)}
-                  placeholder="Explique por que acredita que a suspensão foi um erro. Inclua detalhes relevantes e evidências que possam apoiar seu caso..."
-                  rows={4}
-                  className="resize-none"
-                />
-              </div>
-              
-              <Button
-                onClick={handleSubmitContest}
-                disabled={isSubmitting}
-                className="w-full"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {isSubmitting ? 'Enviando...' : 'Enviar Contestação'}
-              </Button>
             </div>
-          </div>
+          ) : (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Contestar esta decisão
+              </h3>
+              <p className="text-sm text-blue-700 mb-4">
+                Se você acredita que esta suspensão foi um erro, explique sua situação abaixo:
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="contestEmail">Email de contato</Label>
+                  <Input
+                    id="contestEmail"
+                    type="email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="contestMessage">Mensagem de contestação</Label>
+                  <Textarea
+                    id="contestMessage"
+                    value={contestMessage}
+                    onChange={(e) => setContestMessage(e.target.value)}
+                    placeholder="Explique por que acredita que a suspensão foi um erro. Inclua detalhes relevantes e evidências que possam apoiar seu caso..."
+                    rows={4}
+                    className="resize-none"
+                  />
+                </div>
+                
+                <Button
+                  onClick={handleSubmitContest}
+                  disabled={isSubmitting}
+                  className="w-full"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {isSubmitting ? 'Enviando...' : 'Enviar Contestação'}
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="text-center text-sm text-muted-foreground">
             <p>Ou envie diretamente para: <strong>suporte@kambafy.com</strong></p>
