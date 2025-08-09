@@ -226,8 +226,13 @@ export function ModernRecentSales() {
   };
 
   const formatAmount = (sale: RecentSale) => {
-    // Usar earning_amount para mostrar apenas o que o usuário ganhou
-    const amount = sale.earning_amount || parseFloat(sale.amount);
+    let amount = sale.earning_amount || parseFloat(sale.amount);
+    
+    // Aplicar desconto de 20% para vendas recuperadas
+    if (sale.sale_type === 'recovered') {
+      amount = amount * 0.8;
+    }
+    
     const currency = sale.currency;
     
     if (currency === 'EUR') {

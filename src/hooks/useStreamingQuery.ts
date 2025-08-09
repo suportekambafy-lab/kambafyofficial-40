@@ -63,10 +63,21 @@ export const useStreamingQuery = () => {
 
       const { data: ownSalesData, error: ownSalesError } = await supabase
         .from('orders')
-        .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id')
+        .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id')
         .in('product_id', userProductIds);
 
       if (ownSalesError) throw ownSalesError;
+
+      // Buscar vendas recuperadas para calcular stats corretos
+      const { data: recoveredPurchases } = await supabase
+        .from('abandoned_purchases')
+        .select('recovered_order_id')
+        .eq('status', 'recovered')
+        .not('recovered_order_id', 'is', null);
+
+      const recoveredOrderIds = new Set(
+        recoveredPurchases?.map(p => p.recovered_order_id).filter(Boolean) || []
+      );
 
       // 📊 STATS RÁPIDOS - vendas como afiliado
       let affiliateSalesData: any[] = [];
@@ -86,8 +97,9 @@ export const useStreamingQuery = () => {
 
       // Calcular stats - vendas próprias + comissões de afiliado
       const stats = (statsData || []).reduce((acc, order) => {
-        const amount = parseFloat(order.amount) || 0;
+        let amount = parseFloat(order.amount) || 0;
         const isAffiliateEarning = userAffiliateCodes.includes(order.affiliate_code);
+        const isRecovered = recoveredOrderIds.has(order.order_id);
         
         if (isAffiliateEarning) {
           // Para vendas como afiliado, mostra apenas a comissão
@@ -97,7 +109,13 @@ export const useStreamingQuery = () => {
           acc.totalAffiliateCommissions += affiliateCommission;
         } else {
           // Para vendas próprias, mostra valor total ou comissão do vendedor
-          const sellerCommission = parseFloat(order.seller_commission?.toString() || '0') || amount;
+          let sellerCommission = parseFloat(order.seller_commission?.toString() || '0') || amount;
+          
+          // Aplicar desconto de 20% se for venda recuperada
+          if (isRecovered) {
+            amount = amount * 0.8;
+            sellerCommission = sellerCommission * 0.8;
+          }
           
           if (order.status === 'completed') {
             acc.paid++;
@@ -149,16 +167,7 @@ export const useStreamingQuery = () => {
       const allOrders: any[] = [];
       let chunkNumber = 1;
 
-      // Primeiro, buscar vendas recuperadas para marcar corretamente
-      const { data: recoveredPurchases } = await supabase
-        .from('abandoned_purchases')
-        .select('recovered_order_id')
-        .eq('status', 'recovered')
-        .not('recovered_order_id', 'is', null);
-
-      const recoveredOrderIds = new Set(
-        recoveredPurchases?.map(p => p.recovered_order_id).filter(Boolean) || []
-      );
+      // Usar as vendas recuperadas já buscadas anteriormente
 
       // Carregar vendas próprias
       while (hasMore) {
@@ -208,8 +217,19 @@ export const useStreamingQuery = () => {
           // Verificar se é venda recuperada
           const isRecovered = recoveredOrderIds.has(order.order_id);
           
+          // Aplicar desconto de 20% se for venda recuperada
+          let adjustedAmount = parseFloat(order.amount) || 0;
+          let adjustedSellerCommission = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+          
+          if (isRecovered) {
+            adjustedAmount = adjustedAmount * 0.8;
+            adjustedSellerCommission = adjustedSellerCommission * 0.8;
+          }
+          
           return {
             ...order,
+            amount: adjustedAmount.toString(),
+            seller_commission: adjustedSellerCommission,
             products: productMap.get(order.product_id) || null,
             sale_type: isRecovered ? 'recovered' : 'own' // Marcar como recuperada ou própria
           };
