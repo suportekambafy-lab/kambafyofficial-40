@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarDrawer } from "@/components/ui/avatar-drawer";
 import { CustomerBalanceModal } from "@/components/CustomerBalanceModal";
+import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
 import professionalManImage from "@/assets/professional-man.jpg";
 
 interface Order {
@@ -45,6 +46,9 @@ export default function MinhasCompras() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
+  
+  // Hook para buscar saldo KambaPay
+  const { balance, fetchBalanceByEmail } = useKambaPayBalance();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -107,6 +111,13 @@ export default function MinhasCompras() {
     }
   }, [user]);
 
+  // Buscar saldo KambaPay quando o usuário estiver logado
+  useEffect(() => {
+    if (user?.email) {
+      fetchBalanceByEmail(user.email);
+    }
+  }, [user, fetchBalanceByEmail]);
+
   const getProductImage = (cover: string) => {
     if (!cover) return professionalManImage;
     if (cover.startsWith('data:')) {
@@ -166,7 +177,7 @@ export default function MinhasCompras() {
                 className="text-white border-white/20 border hover:bg-white/10"
               >
                 <Wallet className="w-4 h-4 mr-2" />
-                Saldo: Valor
+                Saldo: {balance ? `${balance.balance.toLocaleString()} KZ` : '0 KZ'}
               </Button>
             </CustomerBalanceModal>
             
