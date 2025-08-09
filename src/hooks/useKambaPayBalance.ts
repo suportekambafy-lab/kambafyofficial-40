@@ -58,29 +58,40 @@ export function useKambaPayBalance(email?: string) {
       setLoading(true);
       setError(null);
 
+      // Primeiro verifica se já existe registro
+      const existingBalance = await fetchBalanceByEmail(userEmail);
+      if (existingBalance) {
+        return true; // Já está registrado
+      }
+
       // Primeiro registra o email na tabela kambapay_registrations
       const { error: registrationError } = await supabase
         .from('kambapay_registrations')
         .insert([{ email: userEmail }]);
 
-      if (registrationError && registrationError.code !== '23505') { // 23505 é duplicate key
+      // 23505 é código de duplicate key, significa que email já está registrado
+      if (registrationError && registrationError.code !== '23505') {
         console.error('Error registering email:', registrationError);
+        setError('Erro ao registrar email');
         return false;
       }
 
-      // Depois cria o saldo inicial
-      const { error: balanceError } = await supabase
-        .from('customer_balances')
-        .insert([{ 
-          email: userEmail, 
-          balance: 0, 
-          currency: 'KZ',
-          user_id: null 
-        }]);
+      // Depois cria o saldo inicial (só se não existir)
+      if (!existingBalance) {
+        const { error: balanceError } = await supabase
+          .from('customer_balances')
+          .insert([{ 
+            email: userEmail, 
+            balance: 0, 
+            currency: 'KZ',
+            user_id: null 
+          }]);
 
-      if (balanceError && balanceError.code !== '23505') {
-        console.error('Error creating balance:', balanceError);
-        return false;
+        if (balanceError && balanceError.code !== '23505') {
+          console.error('Error creating balance:', balanceError);
+          setError('Erro ao criar saldo');
+          return false;
+        }
       }
 
       return true;
