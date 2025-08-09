@@ -1,19 +1,19 @@
-// Real payment method images - Angola usando imagens reais, Moçambique e Portugal usando SVGs corretos
+// Imagens reais dos métodos de pagamento
 export const PAYMENT_METHOD_IMAGES = {
-  // Angola - Imagens reais
+  // Angola - Imagens reais já existentes
   express: "/lovable-uploads/e9a7b374-3f3c-4e2b-ad03-9cdefa7be8a8.png",
   reference: "/lovable-uploads/d8b7629c-9a63-44ac-a6a8-dbb0d773d76b.png", 
   transfer: "/lovable-uploads/809ca111-22ef-4df7-92fc-ebe47ba15021.png",
   
-  // Moçambique - SVGs dos métodos reais
-  emola: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iI0ZGNjcwMCIvPgo8dGV4dCB4PSIyMCIgeT0iMjUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5lLU08L3RleHQ+CjwvZnZnPg==",
-  epesa: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzAwNzNFNiIvPgo8dGV4dCB4PSIyMCIgeT0iMjUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5lLVBlc2E8L3RleHQ+Cjwvc3ZnPg==",
+  // Moçambique - Imagens reais dos métodos de pagamento
+  emola: "/payment-logos/emola-logo.png",
+  epesa: "/payment-logos/epesa-logo.png",
   
-  // Portugal - SVGs dos métodos reais
-  card: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzJEMzc0OCIvPgo8cmVjdCB4PSI4IiB5PSIxMiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjE2IiByeD0iMiIgZmlsbD0id2hpdGUiLz4KPHJlY3QgeD0iMTAiIHk9IjE4IiB3aWR0aD0iMjAiIGhlaWdodD0iMiIgZmlsbD0iIzJEMzc0OCIvPgo8L3N2Zz4=",
-  klarna: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iI0ZGQjNEMyIvPgo8dGV4dCB4PSIyMCIgeT0iMjUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNGRjEwNzMiIHRleHQtYW5jaG9yPSJtaWRkbGUiPktsYXJuYTwvdGV4dD4KPC9zdmc+",
-  multibanco: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzAwNDY5NiIvPgo8dGV4dCB4PSIyMCIgeT0iMjEiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk11bHRpPC90ZXh0Pgo8dGV4dCB4PSIyMCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJhbmNvPC90ZXh0Pgo8L3N2Zz4=",
-  apple_pay: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzAwMDAwMCIvPgo8cGF0aCBkPSJNMTcuNSAxMi41QzE3LjUgMTEuNSAxOC4yIDEwLjUgMTkuMiAxMC41QzIwLjIgMTAuNSAyMSAxMS41IDIxIDEyLjVDMjEgMTMuNSAyMC4yIDE0LjUgMTkuMiAxNC41QzE4LjIgMTQuNSAxNy41IDEzLjUgMTcuNSAxMi41WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTE2IDE2SDI0VjI4SDE2VjE2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+"
+  // Portugal - Imagens reais dos métodos de pagamento
+  card: "/payment-logos/card-logo.png",
+  klarna: "/payment-logos/klarna-logo.svg",
+  multibanco: "/payment-logos/multibanco-logo.png",
+  apple_pay: "/payment-logos/apple-pay-logo.png"
 };
 
 // Function to get image for payment method
