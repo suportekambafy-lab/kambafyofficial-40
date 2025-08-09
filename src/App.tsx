@@ -91,7 +91,12 @@ const App = () => {
                        <Route path="/admin/logs" element={<OptimizedRoutes.AdminLogs />} />
                        <Route path="/admin/sellers" element={<OptimizedRoutes.AdminSellers />} />
                        <Route path="/admin/identity" element={<OptimizedRoutes.AdminIdentityVerification />} />
+                       <Route path="/admin/partners" element={<OptimizedRoutes.AdminPartners />} />
                       <Route path="/admin/seller-reports" element={<OptimizedRoutes.AdminSellerReports />} />
+                      
+                      {/* Partner Routes */}
+                      <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />
+                      <Route path="/partners/portal" element={<OptimizedRoutes.PartnersPortal />} />
                       
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<OptimizedRoutes.NotFound />} />

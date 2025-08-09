@@ -76,6 +76,11 @@ const AdminSellers = createLazyWithRetry(() => import('@/pages/AdminSellers'), "
 const AdminSellerReports = createLazyWithRetry(() => import('@/pages/AdminSellerReports'), "AdminSellerReports");
 const AdminIdentityVerification = createLazyWithRetry(() => import('@/pages/AdminIdentityVerification'), "AdminIdentityVerification");
 
+// Partner pages - lazy load with retry
+const PartnersApply = createLazyWithRetry(() => import('@/pages/PartnersApply'), "PartnersApply");
+const PartnersPortal = createLazyWithRetry(() => import('@/pages/PartnersPortal'), "PartnersPortal");
+const AdminPartners = createLazyWithRetry(() => import('@/pages/AdminPartners'), "AdminPartners");
+
 // Fallback component otimizado
 const PageFallback = ({ variant = 'dashboard' }: { variant?: 'dashboard' | 'settings' | 'financial' | 'sales' }) => (
   <div className="min-h-screen bg-background">
@@ -144,4 +149,9 @@ export const OptimizedRoutes = {
   AdminSellers: withLazyLoading(AdminSellers, 'dashboard'),
   AdminSellerReports: withLazyLoading(AdminSellerReports, 'dashboard'),
   AdminIdentityVerification: withLazyLoading(AdminIdentityVerification, 'dashboard'),
+  
+  // Partner routes
+  PartnersApply: withLazyLoading(PartnersApply, 'settings'),
+  PartnersPortal: withLazyLoading(PartnersPortal, 'dashboard'),
+  AdminPartners: withLazyLoading(AdminPartners, 'dashboard'),
 };

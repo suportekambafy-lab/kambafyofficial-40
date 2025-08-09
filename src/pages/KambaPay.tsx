@@ -130,6 +130,9 @@ const Header = ({ isLoginOpen, setIsLoginOpen }: { isLoginOpen: boolean; setIsLo
             <Link to="#seguranca" className="text-muted-foreground hover:text-primary transition-colors">
               Segurança
             </Link>
+            <Link to="/partners/apply" className="text-muted-foreground hover:text-primary transition-colors">
+              Torne-se Parceiro
+            </Link>
             <Link to="/contato" className="text-muted-foreground hover:text-primary transition-colors">
               Suporte
             </Link>
@@ -181,6 +184,9 @@ const Header = ({ isLoginOpen, setIsLoginOpen }: { isLoginOpen: boolean; setIsLo
               </Link>
               <Link to="#seguranca" className="block px-4 py-2 text-muted-foreground hover:text-primary transition-colors">
                 Segurança
+              </Link>
+              <Link to="/partners/apply" className="block px-4 py-2 text-muted-foreground hover:text-primary transition-colors">
+                Torne-se Parceiro
               </Link>
               <Link to="/contato" className="block px-4 py-2 text-muted-foreground hover:text-primary transition-colors">
                 Suporte

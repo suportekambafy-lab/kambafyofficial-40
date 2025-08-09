@@ -90,6 +90,12 @@ const menuItems = [
     label: 'Relatórios',
     icon: Calendar,
     description: 'Relatórios detalhados'
+  },
+  {
+    href: '/admin/partners',
+    label: 'Parceiros KambaPay',
+    icon: Globe,
+    description: 'Gerenciar parceiros API'
   }
 ];
 
