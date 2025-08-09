@@ -79,6 +79,7 @@ const App = () => {
                         <Route path="/minhas-compras" element={<OptimizedRoutes.MinhasCompras />} />
                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                       <Route path="/curso/:areaId" element={<OptimizedRoutes.MemberAreaPreview />} />
+                      <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                       
                       {/* Admin Routes */}
                       <Route path="/admin/login" element={<OptimizedRoutes.AdminLogin />} />
