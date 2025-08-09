@@ -133,11 +133,11 @@ function SellerDashboardContent() {
                 <Route path="/" element={
                   <div className="flex flex-col h-full">
                     {/* Banner - apenas na home do dashboard */}
-                    <div className="w-full flex-shrink-0">
+                    <div className="w-full flex-shrink-0 flex justify-center p-4">
                       <img 
                         src="/lovable-uploads/373ca352-3319-4914-9898-1dc76571a167.png" 
                         alt="Kambafy Banner"
-                        className="w-full h-auto object-cover max-h-32"
+                        className="h-auto object-contain max-h-32 rounded-lg"
                       />
                     </div>
                     <div className="flex-1 overflow-y-auto">
