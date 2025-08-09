@@ -42,6 +42,7 @@ export function useKambaPayBalance(email?: string) {
         return null;
       }
 
+      setBalance(data);
       return data;
     } catch (error) {
       console.error('Error in fetchBalanceByEmail:', error);
@@ -54,12 +55,13 @@ export function useKambaPayBalance(email?: string) {
 
   const registerKambaPayEmail = async (userEmail: string) => {
     try {
-      // Primeiro registra o email na tabela de registros
+      setLoading(true);
+      setError(null);
+
+      // Primeiro registra o email na tabela kambapay_registrations
       const { error: registrationError } = await supabase
         .from('kambapay_registrations')
-        .insert([{ email: userEmail }])
-        .select()
-        .single();
+        .insert([{ email: userEmail }]);
 
       if (registrationError && registrationError.code !== '23505') { // 23505 é duplicate key
         console.error('Error registering email:', registrationError);
@@ -84,18 +86,24 @@ export function useKambaPayBalance(email?: string) {
       return true;
     } catch (error) {
       console.error('Error in registerKambaPayEmail:', error);
+      setError('Erro ao registrar email');
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
   const addBalanceByEmail = async (userEmail: string, amount: number, description: string, paymentMethod: string) => {
     try {
+      setLoading(true);
+      setError(null);
+
       // Busca o saldo atual
       const currentBalance = await fetchBalanceByEmail(userEmail);
       
       if (!currentBalance) {
-        // Se não existe, cria um novo registro
-        await registerKambaPayEmail(userEmail);
+        setError('Conta não encontrada');
+        return false;
       }
 
       // Adiciona a transação
@@ -112,6 +120,7 @@ export function useKambaPayBalance(email?: string) {
 
       if (transactionError) {
         console.error('Error adding transaction:', transactionError);
+        setError('Erro ao registrar transação');
         return false;
       }
 
@@ -124,18 +133,28 @@ export function useKambaPayBalance(email?: string) {
 
       if (balanceError) {
         console.error('Error updating balance:', balanceError);
+        setError('Erro ao atualizar saldo');
         return false;
       }
 
+      // Atualiza o estado local
+      await fetchBalanceByEmail(userEmail);
       return true;
     } catch (error) {
       console.error('Error in addBalanceByEmail:', error);
+      setError('Erro inesperado ao adicionar saldo');
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
   const useBalanceByEmail = async (userEmail: string, amount: number, description: string, orderId?: string) => {
     try {
+      setLoading(true);
+      setError(null);
+
+      // Busca o saldo atual
       const currentBalance = await fetchBalanceByEmail(userEmail);
       
       if (!currentBalance || currentBalance.balance < amount) {
@@ -152,12 +171,13 @@ export function useKambaPayBalance(email?: string) {
           type: 'debit',
           amount,
           description,
-          order_id: orderId,
-          currency: 'KZ'
+          currency: 'KZ',
+          order_id: orderId
         }]);
 
       if (transactionError) {
-        console.error('Error adding transaction:', transactionError);
+        console.error('Error adding debit transaction:', transactionError);
+        setError('Erro ao registrar transação');
         return false;
       }
 
@@ -170,20 +190,27 @@ export function useKambaPayBalance(email?: string) {
 
       if (balanceError) {
         console.error('Error updating balance:', balanceError);
+        setError('Erro ao atualizar saldo');
         return false;
       }
 
+      // Atualiza o estado local
+      await fetchBalanceByEmail(userEmail);
       return true;
     } catch (error) {
       console.error('Error in useBalanceByEmail:', error);
+      setError('Erro inesperado ao usar saldo');
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchTransactionsByEmail = async (userEmail: string) => {
-    if (!userEmail) return;
-
     try {
+      setLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
         .from('balance_transactions')
         .select('*')
@@ -193,29 +220,26 @@ export function useKambaPayBalance(email?: string) {
 
       if (error) {
         console.error('Error fetching transactions:', error);
+        setError('Erro ao buscar transações');
         return;
       }
 
-      setTransactions((data || []) as KambaPayTransaction[]);
+      setTransactions((data || []).map(item => ({
+        ...item,
+        type: item.type as 'credit' | 'debit'
+      })));
     } catch (error) {
       console.error('Error in fetchTransactionsByEmail:', error);
+      setError('Erro inesperado ao buscar transações');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     if (email) {
-      const loadData = async () => {
-        setLoading(true);
-        const balanceData = await fetchBalanceByEmail(email);
-        setBalance(balanceData);
-        await fetchTransactionsByEmail(email);
-        setLoading(false);
-      };
-      loadData();
-    } else {
-      setBalance(null);
-      setTransactions([]);
-      setLoading(false);
+      fetchBalanceByEmail(email);
+      fetchTransactionsByEmail(email);
     }
   }, [email]);
 
