@@ -61,7 +61,17 @@ export function ModernRecentSales() {
       
       console.log('📋 Recent Sales carregando vendas próprias + afiliado para:', user.id);
 
-      // Primeiro, buscar códigos de afiliação do usuário
+      // Primeiro, buscar produtos do usuário
+      const { data: userProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (productsError) throw productsError;
+
+      const userProductIds = userProducts?.map(p => p.id) || [];
+
+      // Segundo, buscar códigos de afiliação do usuário
       const { data: affiliateCodes, error: affiliateError } = await supabase
         .from('affiliates')
         .select('affiliate_code')
@@ -72,29 +82,33 @@ export function ModernRecentSales() {
 
       const userAffiliateCodes = affiliateCodes?.map(a => a.affiliate_code) || [];
 
-      const promises = [
-        // ✅ Vendas próprias
-        supabase
-          .from('orders')
-          .select(`
-            id,
-            customer_name,
-            customer_email,
-            amount,
-            currency,
-            created_at,
-            product_id,
-            affiliate_commission,
-            seller_commission,
-            products (
-              name
-            )
-          `)
-          .eq('user_id', user.id)
-          .eq('status', 'completed')
-          .order('created_at', { ascending: false })
-          .limit(10)
-      ];
+      const promises = [];
+
+      // ✅ Vendas próprias - usando product_id
+      if (userProductIds.length > 0) {
+        promises.push(
+          supabase
+            .from('orders')
+            .select(`
+              id,
+              customer_name,
+              customer_email,
+              amount,
+              currency,
+              created_at,
+              product_id,
+              affiliate_commission,
+              seller_commission,
+              products (
+                name
+              )
+            `)
+            .in('product_id', userProductIds)
+            .eq('status', 'completed')
+            .order('created_at', { ascending: false })
+            .limit(10)
+        );
+      }
 
       // Adicionar vendas como afiliado se houver códigos
       if (userAffiliateCodes.length > 0) {
@@ -122,16 +136,33 @@ export function ModernRecentSales() {
             .order('created_at', { ascending: false })
             .limit(10)
         );
+
+      }
+
+      if (promises.length === 0) {
+        setRecentSales([]);
+        return;
       }
 
       const results = await Promise.all(promises);
-      const [ownOrdersData, affiliateOrdersData] = results;
+      let ownOrders: any[] = [];
+      let affiliateOrders: any[] = [];
 
-      const { data: ownOrders, error } = ownOrdersData;
-      const affiliateOrders = affiliateOrdersData ? affiliateOrdersData.data : [];
+      if (userProductIds.length > 0) {
+        const ownOrdersData = results[0];
+        ownOrders = ownOrdersData.data || [];
+        
+        if (userAffiliateCodes.length > 0 && results[1]) {
+          const affiliateOrdersData = results[1];
+          affiliateOrders = affiliateOrdersData.data || [];
+        }
+      } else if (userAffiliateCodes.length > 0) {
+        const affiliateOrdersData = results[0];
+        affiliateOrders = affiliateOrdersData.data || [];
+      }
 
-      if (error) {
-        console.error('❌ Erro ao buscar vendas recentes:', error);
+      if (results[0].error) {
+        console.error('❌ Erro ao buscar vendas recentes:', results[0].error);
         return;
       }
 
