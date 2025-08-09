@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertTriangle, Mail, Send, ArrowLeft } from 'lucide-react';
-import { useCustomToast } from '@/hooks/useCustomToast';
+import { AlertTriangle, Mail, Send } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 interface BannedUserDialogProps {
   isOpen: boolean;
@@ -20,19 +19,14 @@ export function BannedUserDialog({ isOpen, banReason, userEmail, userName }: Ban
   const [contestMessage, setContestMessage] = useState('');
   const [contactEmail, setContactEmail] = useState(userEmail);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useCustomToast();
-
-  const handleClose = () => {
-    navigate('/auth');
-  };
+  const { toast } = useToast();
 
   const handleSubmitContest = async () => {
     if (!contestMessage.trim()) {
       toast({
         title: 'Erro',
-        message: 'Por favor, digite sua mensagem de contestação.',
-        variant: 'error'
+        description: 'Por favor, digite sua mensagem de contestação.',
+        variant: 'destructive'
       });
       return;
     }
@@ -67,8 +61,7 @@ Este email foi enviado através do sistema de contestação da Kambafy.
 
       toast({
         title: 'Contestação Enviada',
-        message: 'Sua contestação foi enviada para nossa equipe. Aguarde nossa resposta em até 48-72 horas.',
-        variant: 'success'
+        description: 'Sua contestação foi enviada para nossa equipe. Aguarde nossa resposta em até 48-72 horas.',
       });
 
       setContestMessage('');
@@ -76,8 +69,8 @@ Este email foi enviado através do sistema de contestação da Kambafy.
       console.error('Erro ao enviar contestação:', error);
       toast({
         title: 'Erro',
-        message: 'Erro ao enviar contestação. Tente novamente ou envie diretamente para suporte@kambafy.com',
-        variant: 'error'
+        description: 'Erro ao enviar contestação. Tente novamente ou envie diretamente para suporte@kambafy.com',
+        variant: 'destructive'
       });
     } finally {
       setIsSubmitting(false);
@@ -85,7 +78,7 @@ Este email foi enviado através do sistema de contestação da Kambafy.
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
