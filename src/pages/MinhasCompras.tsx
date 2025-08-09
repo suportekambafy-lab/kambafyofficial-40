@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HighlightedCard, HighlightedCardHeader, HighlightedCardTitle, HighlightedCardContent } from "@/components/ui/highlighted-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingBag, Calendar, Eye, User, LogOut, Settings, ExternalLink, BookOpen, TrendingUp } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Calendar, Eye, User, LogOut, Settings, ExternalLink, BookOpen, TrendingUp, Wallet } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -12,6 +12,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarDrawer } from "@/components/ui/avatar-drawer";
+import { CustomerBalanceModal } from "@/components/CustomerBalanceModal";
 import professionalManImage from "@/assets/professional-man.jpg";
 
 interface Order {
@@ -145,30 +146,44 @@ export default function MinhasCompras() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground p-4 border-b">
+      <header className="bg-gradient-to-r from-green-400 to-green-500 text-white p-4 border-b shadow-lg">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-checkout-green rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">K</span>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
+              <span className="text-green-500 font-bold text-xl">K</span>
             </div>
-            <span className="text-xl font-bold">Kambafy</span>
+            <div>
+              <span className="text-xl font-bold">Kambafy</span>
+              <p className="text-green-100 text-sm">Suas compras</p>
+            </div>
           </div>
           
-          <h1 className="text-xl font-bold">Compras</h1>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-10 h-10 rounded-full p-0 hover:bg-primary-foreground/10"
-            onClick={() => setAvatarDrawerOpen(true)}
-          >
-            <Avatar className="w-8 h-8">
-              <AvatarImage src="" />
-              <AvatarFallback className="bg-checkout-green text-white text-sm">
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
+          <div className="flex items-center space-x-3">
+            <CustomerBalanceModal>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white border-white/20 border hover:bg-white/10"
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                Saldo
+              </Button>
+            </CustomerBalanceModal>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-10 h-10 rounded-full p-0 hover:bg-white/10"
+              onClick={() => setAvatarDrawerOpen(true)}
+            >
+              <Avatar className="w-8 h-8">
+                <AvatarImage src="" />
+                <AvatarFallback className="bg-green-600 text-white text-sm">
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </div>
         </div>
       </header>
 
