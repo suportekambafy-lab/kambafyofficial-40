@@ -4,6 +4,7 @@ import { FacebookPixelForm } from '@/components/FacebookPixelForm';
 import { WebhookForm } from '@/components/WebhookForm';
 import { CheckoutCustomizer } from '@/components/checkout/CheckoutCustomizer';
 import { OrderBumpConfigurator } from '@/components/OrderBumpConfigurator';
+import { QuizBuilder } from '@/components/QuizBuilder';
 import { IntegrationType } from '@/components/IntegrationTypeSelector';
 
 interface Product {
@@ -64,6 +65,13 @@ export function IntegrationConfigurator({
 
       {integrationType.id === 'custom-checkout' && (
         <CheckoutCustomizer 
+          productId={product.id}
+          onSaveSuccess={handleSuccess}
+        />
+      )}
+
+      {integrationType.id === 'quiz-builder' && (
+        <QuizBuilder 
           productId={product.id}
           onSaveSuccess={handleSuccess}
         />

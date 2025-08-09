@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Facebook, Webhook, Settings, Palette, Plus } from 'lucide-react';
+import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle } from 'lucide-react';
 
 export interface IntegrationType {
   id: string;
@@ -45,6 +45,13 @@ const integrationTypes: IntegrationType[] = [
     description: 'Personalize seu checkout com banners, countdown, avaliações e prova social',
     icon: ({ className }: { className?: string }) => <Palette className={className} />,
     color: 'text-green-600'
+  },
+  {
+    id: 'quiz-builder',
+    name: 'Quiz Builder',
+    description: 'Crie páginas de quiz interativas para qualificar leads e aumentar conversões',
+    icon: ({ className }: { className?: string }) => <HelpCircle className={className} />,
+    color: 'text-indigo-600'
   }
 ];
 
