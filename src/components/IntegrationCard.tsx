@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Settings } from "lucide-react";
+import { Trash2, Settings, BarChart3 } from "lucide-react";
 
 interface IntegrationCardProps {
   name: string;
@@ -11,9 +11,11 @@ interface IntegrationCardProps {
   active: boolean;
   createdAt: string;
   productName?: string;
+  type?: string;
   onToggle: (active: boolean) => void;
   onConfigure: () => void;
   onDelete: () => void;
+  onPanel?: () => void;
 }
 
 export function IntegrationCard({ 
@@ -22,9 +24,11 @@ export function IntegrationCard({
   active, 
   createdAt, 
   productName,
+  type,
   onToggle, 
   onConfigure,
-  onDelete 
+  onDelete,
+  onPanel
 }: IntegrationCardProps) {
   return (
     <Card className="w-full">
@@ -65,6 +69,19 @@ export function IntegrationCard({
               <span className="hidden xs:inline">Configurar</span>
               <span className="xs:hidden">Config</span>
             </Button>
+            
+            {type === 'sales-recovery' && onPanel && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={onPanel}
+                className="flex-1 xs:flex-none text-xs xs:text-sm"
+              >
+                <BarChart3 className="w-3 h-3 xs:w-4 xs:h-4 xs:mr-2" />
+                <span className="hidden xs:inline">Painel</span>
+                <span className="xs:hidden">Painel</span>
+              </Button>
+            )}
             
             <Button 
               variant="outline" 

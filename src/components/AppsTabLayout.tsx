@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Facebook, Webhook, Palette, Settings, Mail } from "lucide-react";
+import { Plus, Facebook, Webhook, Palette, Settings, Mail, RotateCcw } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { IntegrationCard } from "@/components/IntegrationCard";
 import { IntegrationStats } from "@/components/IntegrationStats";
@@ -34,6 +35,7 @@ interface Product {
 type Step = 'product' | 'integration' | 'configure';
 
 export function AppsTabLayout() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
@@ -253,7 +255,7 @@ export function AppsTabLayout() {
             name: 'Recuperação de Vendas',
             active: salesRecovery.enabled || false,
             createdAt: new Date(salesRecovery.created_at || '').toLocaleDateString(),
-            icon: <Mail className="w-5 h-5 text-emerald-600" />,
+            icon: <RotateCcw className="w-5 h-5 text-emerald-600" />,
             productName: salesRecovery.products?.name || 'Produto não encontrado',
             productId: salesRecovery.product_id
           });
@@ -468,7 +470,7 @@ export function AppsTabLayout() {
         id: 'sales-recovery',
         name: 'Recuperação de Vendas',
         description: 'Detecte carrinhos abandonados e envie emails automáticos de recuperação',
-        icon: ({ className }: { className?: string }) => <Mail className={className || "w-6 h-6"} />,
+        icon: ({ className }: { className?: string }) => <RotateCcw className={className || "w-6 h-6"} />,
         color: 'text-emerald-600'
       };
     }
@@ -516,6 +518,12 @@ export function AppsTabLayout() {
     setSelectedProduct(null);
     setSelectedIntegrationType(null);
     setEditingIntegration(null);
+  };
+
+  const handlePanelIntegration = (integration: any) => {
+    if (integration.type === 'sales-recovery') {
+      navigate('/recuperacao-vendas');
+    }
   };
 
   if (loading) {
@@ -695,9 +703,11 @@ export function AppsTabLayout() {
                 active={integration.active}
                 createdAt={integration.createdAt}
                 productName={integration.productName}
+                type={integration.type}
                 onToggle={(active) => handleToggleIntegration(integration, active)}
                 onConfigure={() => handleConfigureIntegration(integration)}
                 onDelete={() => handleDeleteIntegration(integration)}
+                onPanel={() => handlePanelIntegration(integration)}
               />
             ))
           )}

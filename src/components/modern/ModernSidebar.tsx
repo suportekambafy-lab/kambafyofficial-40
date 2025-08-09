@@ -41,7 +41,6 @@ const menuItems = [
   { label: "Relatórios", href: "/vendedor/relatorios", icon: FileText },
   { label: "Colaboradores", href: "/vendedor/colaboradores", icon: UserPlus },
   { label: "Apps", href: "/vendedor/apps", icon: Grid3X3 },
-  { label: "Recuperação de Vendas", href: "/recuperacao-vendas", icon: RotateCcw },
 ];
 
 const bottomItems = [
