@@ -144,7 +144,11 @@ export function QuizBuilder({ productId, onSaveSuccess }: QuizBuilderProps) {
       // Save to Supabase (we'll need to create this table)
       const { error } = await supabase
         .from('quiz_configurations')
-        .upsert(quizData, { onConflict: 'product_id' });
+        .upsert({
+          ...quizData,
+          settings: quizData.settings as any,
+          questions: quizData.questions as any
+        }, { onConflict: 'product_id' });
 
       if (error) throw error;
 

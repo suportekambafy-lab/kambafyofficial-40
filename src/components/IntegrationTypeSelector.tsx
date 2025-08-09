@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle } from 'lucide-react';
+import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle, Mail, Construction } from 'lucide-react';
 
 export interface IntegrationType {
   id: string;
@@ -47,11 +47,21 @@ const integrationTypes: IntegrationType[] = [
     color: 'text-green-600'
   },
   {
+    id: 'sales-recovery',
+    name: 'Recuperação de Vendas',
+    description: 'Detecte carrinhos abandonados e envie emails automáticos de recuperação',
+    icon: ({ className }: { className?: string }) => <Mail className={className} />,
+    color: 'text-emerald-600'
+  }
+];
+
+const comingSoonTypes: IntegrationType[] = [
+  {
     id: 'quiz-builder',
     name: 'Quiz Builder',
-    description: 'Crie páginas de quiz interativas para qualificar leads e aumentar conversões',
-    icon: ({ className }: { className?: string }) => <HelpCircle className={className} />,
-    color: 'text-indigo-600'
+    description: 'Em breve - Crie páginas de quiz interativas para qualificar leads',
+    icon: ({ className }: { className?: string }) => <Construction className={className} />,
+    color: 'text-gray-500'
   }
 ];
 
@@ -65,6 +75,7 @@ export function IntegrationTypeSelector({ selectedType, onTypeSelect }: Integrat
         </p>
       </div>
 
+      {/* Available Integrations */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {integrationTypes.map((type) => (
           <Card
@@ -100,6 +111,46 @@ export function IntegrationTypeSelector({ selectedType, onTypeSelect }: Integrat
           </Card>
         ))}
       </div>
+
+      {/* Coming Soon Section */}
+      {comingSoonTypes.length > 0 && (
+        <div className="space-y-4">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-muted-foreground">Em Breve</h3>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {comingSoonTypes.map((type) => (
+              <Card
+                key={type.id}
+                className="opacity-75 cursor-not-allowed border-dashed"
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className={`${type.color}`}>
+                      {type.icon({ className: "w-8 h-8" })}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold">{type.name}</h3>
+                        <Badge variant="secondary" className="text-xs">Em Breve</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {type.description}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                        <span className="text-xs text-muted-foreground">
+                          Em desenvolvimento
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

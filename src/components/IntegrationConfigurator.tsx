@@ -5,6 +5,7 @@ import { WebhookForm } from '@/components/WebhookForm';
 import { CheckoutCustomizer } from '@/components/checkout/CheckoutCustomizer';
 import { OrderBumpConfigurator } from '@/components/OrderBumpConfigurator';
 import { QuizBuilder } from '@/components/QuizBuilder';
+import { SalesRecoveryConfigurator } from '@/components/SalesRecoveryConfigurator';
 import { IntegrationType } from '@/components/IntegrationTypeSelector';
 
 interface Product {
@@ -67,6 +68,14 @@ export function IntegrationConfigurator({
         <CheckoutCustomizer 
           productId={product.id}
           onSaveSuccess={handleSuccess}
+        />
+      )}
+
+      {integrationType.id === 'sales-recovery' && (
+        <SalesRecoveryConfigurator 
+          product={product}
+          onBack={onBack}
+          onComplete={handleSuccess}
         />
       )}
 
