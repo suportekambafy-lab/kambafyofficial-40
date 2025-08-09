@@ -67,6 +67,8 @@ export const useAbandonedPurchaseDetection = ({
     timeoutRef.current = setTimeout(async () => {
       try {
         console.log('🚨 Detectando possível carrinho abandonado...');
+        console.log('📋 Dados do produto:', product);
+        console.log('📋 Product ID sendo usado:', product.id);
         
         const abandonedData: AbandonedPurchaseData = {
           productId: product.id,
@@ -76,6 +78,8 @@ export const useAbandonedPurchaseDetection = ({
           currency: currency || 'KZ',
           customerPhone: formData.phone || undefined
         };
+
+        console.log('📤 Dados sendo enviados para detecção:', abandonedData);
 
         const { data: abandonedId, error } = await supabase.rpc('detect_abandoned_purchase', {
           _product_id: abandonedData.productId,
@@ -122,29 +126,55 @@ export const useAbandonedPurchaseDetection = ({
 
   // Marcar como recuperado quando compra for finalizada
   const markAsRecovered = async (orderId: string) => {
-    if (!abandonedPurchaseIdRef.current) {
-      return;
-    }
-
     try {
-      console.log('🔄 Marcando carrinho como recuperado:', {
+      console.log('🔄 Tentando marcar carrinho como recuperado:', {
         abandonedPurchaseId: abandonedPurchaseIdRef.current,
-        orderId
+        orderId,
+        customerEmail: formData.email,
+        productId: product?.id
       });
 
-      const { error } = await supabase
-        .from('abandoned_purchases')
-        .update({
-          status: 'recovered',
-          recovered_at: new Date().toISOString(),
-          recovered_order_id: orderId
-        })
-        .eq('id', abandonedPurchaseIdRef.current);
+      if (abandonedPurchaseIdRef.current) {
+        // Usar ID específico do carrinho abandonado se disponível
+        const { error } = await supabase
+          .from('abandoned_purchases')
+          .update({
+            status: 'recovered',
+            recovered_at: new Date().toISOString(),
+            recovered_order_id: orderId
+          })
+          .eq('id', abandonedPurchaseIdRef.current);
 
-      if (error) {
-        console.error('❌ Erro ao marcar como recuperado:', error);
-      } else {
-        console.log('✅ Carrinho marcado como recuperado');
+        if (error) {
+          console.error('❌ Erro ao marcar como recuperado por ID:', error);
+        } else {
+          console.log('✅ Carrinho marcado como recuperado por ID específico');
+          return;
+        }
+      }
+
+      // Fallback: tentar marcar baseado no email e produto se não tiver ID específico
+      if (formData.email && product?.id) {
+        console.log('🔄 Tentando recuperação por email e produto...');
+        
+        const { error: fallbackError } = await supabase
+          .from('abandoned_purchases')
+          .update({
+            status: 'recovered',
+            recovered_at: new Date().toISOString(),
+            recovered_order_id: orderId
+          })
+          .eq('customer_email', formData.email.trim().toLowerCase())
+          .eq('product_id', product.id)
+          .eq('status', 'abandoned')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (fallbackError) {
+          console.error('❌ Erro ao marcar como recuperado por email:', fallbackError);
+        } else {
+          console.log('✅ Carrinho marcado como recuperado por email');
+        }
       }
     } catch (error) {
       console.error('❌ Erro inesperado ao marcar recuperação:', error);
