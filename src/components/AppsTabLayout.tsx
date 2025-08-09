@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Facebook, Webhook, Palette, Settings } from "lucide-react";
+import { Plus, Facebook, Webhook, Palette, Settings, Mail } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { IntegrationCard } from "@/components/IntegrationCard";
 import { IntegrationStats } from "@/components/IntegrationStats";
@@ -230,6 +230,36 @@ export function AppsTabLayout() {
         });
       }
 
+      // Fetch Sales Recovery settings with product name
+      const { data: salesRecoveryData, error: salesRecoveryError } = await supabase
+        .from('sales_recovery_settings')
+        .select(`
+          *,
+          products!inner(name)
+        `)
+        .eq('user_id', user.id);
+
+      if (salesRecoveryError) {
+        console.error('Error fetching sales recovery data:', salesRecoveryError);
+      } else {
+        console.log('Sales recovery data:', salesRecoveryData);
+      }
+
+      if (salesRecoveryData && salesRecoveryData.length > 0) {
+        salesRecoveryData.forEach(salesRecovery => {
+          allIntegrations.push({
+            id: salesRecovery.id,
+            type: 'sales-recovery',
+            name: 'Recuperação de Vendas',
+            active: salesRecovery.enabled || false,
+            createdAt: new Date(salesRecovery.created_at || '').toLocaleDateString(),
+            icon: <Mail className="w-5 h-5 text-emerald-600" />,
+            productName: salesRecovery.products?.name || 'Produto não encontrado',
+            productId: salesRecovery.product_id
+          });
+        });
+      }
+
       console.log('All integrations loaded:', allIntegrations);
       setIntegrations(allIntegrations);
     } catch (error) {
@@ -270,6 +300,12 @@ export function AppsTabLayout() {
       } else if (integration.type === 'order-bump') {
         updateResult = await supabase
           .from('order_bump_settings')
+          .update({ enabled: active })
+          .eq('id', integration.id)
+          .select();
+      } else if (integration.type === 'sales-recovery') {
+        updateResult = await supabase
+          .from('sales_recovery_settings')
           .update({ enabled: active })
           .eq('id', integration.id)
           .select();
@@ -331,6 +367,12 @@ export function AppsTabLayout() {
       } else if (integration.type === 'order-bump') {
         deleteResult = await supabase
           .from('order_bump_settings')
+          .delete()
+          .eq('id', integration.id)
+          .select();
+      } else if (integration.type === 'sales-recovery') {
+        deleteResult = await supabase
+          .from('sales_recovery_settings')
           .delete()
           .eq('id', integration.id)
           .select();
@@ -420,6 +462,14 @@ export function AppsTabLayout() {
         description: 'Adicione produtos extras ao checkout para aumentar o valor das vendas',
         icon: ({ className }: { className?: string }) => <Settings className={className || "w-6 h-6"} />,
         color: 'text-purple-600'
+      };
+    } else if (integration.type === 'sales-recovery') {
+      integrationType = {
+        id: 'sales-recovery',
+        name: 'Recuperação de Vendas',
+        description: 'Detecte carrinhos abandonados e envie emails automáticos de recuperação',
+        icon: ({ className }: { className?: string }) => <Mail className={className || "w-6 h-6"} />,
+        color: 'text-emerald-600'
       };
     }
     
