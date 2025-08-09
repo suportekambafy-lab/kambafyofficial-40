@@ -55,6 +55,7 @@ const MemberAreaPreview = createLazyWithRetry(() => import('@/pages/MemberAreaPr
 const MeusAfiliados = createLazyWithRetry(() => import('@/pages/MeusAfiliados'), "MeusAfiliados");
 const UserIdentity = createLazyWithRetry(() => import('@/pages/UserIdentity'), "UserIdentity");
 const Mobile = createLazyWithRetry(() => import('@/pages/Mobile'), "Mobile");
+const KambaPay = createLazyWithRetry(() => import('@/pages/KambaPay'), "KambaPay");
 
 // Páginas do painel vendedor - lazy load com preload e retry
 const SellerDashboard = createLazyWithRetry(() => 
@@ -131,6 +132,7 @@ export const OptimizedRoutes = {
   MeusAfiliados: withLazyLoading(MeusAfiliados, 'dashboard'),
   UserIdentity: withLazyLoading(UserIdentity, 'settings'),
   Mobile: withLazyLoading(Mobile, 'dashboard'),
+  KambaPay: withLazyLoading(KambaPay, 'settings'),
   
   SellerDashboard: withLazyLoading(SellerDashboard, 'dashboard'),
   AdminLogin: withLazyLoading(AdminLogin, 'settings'),
