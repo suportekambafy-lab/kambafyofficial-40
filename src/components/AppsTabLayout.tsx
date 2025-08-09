@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { IntegrationConfigurator } from "@/components/IntegrationConfigurator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+
 interface Integration {
   id: string;
   type: string;
@@ -22,21 +24,20 @@ interface Integration {
   productName?: string;
   productId?: string;
 }
+
 interface Product {
   id: string;
   name: string;
   type: string;
   status: string;
 }
+
 type Step = 'product' | 'integration' | 'configure';
+
 export function AppsTabLayout() {
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
-  const {
-    user
-  } = useAuth();
+  const { toast } = useToast();
+  const { user } = useAuth();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -45,10 +46,11 @@ export function AppsTabLayout() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIntegrationType, setSelectedIntegrationType] = useState<IntegrationType | null>(null);
   const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
+
   useEffect(() => {
     fetchIntegrations();
     fetchProducts();
-
+    
     // Event listeners para atualizar integrações
     const handleIntegrationCreated = () => {
       console.log('Integration created event received, refreshing...');
@@ -56,29 +58,35 @@ export function AppsTabLayout() {
         fetchIntegrations();
       }, 1000); // Delay para garantir que os dados foram salvos
     };
+
     const handleIntegrationUpdated = () => {
       console.log('Integration updated event received, refreshing...');
       setTimeout(() => {
         fetchIntegrations();
       }, 500);
     };
+
     window.addEventListener('integrationCreated', handleIntegrationCreated);
     window.addEventListener('integrationUpdated', handleIntegrationUpdated);
+
     return () => {
       window.removeEventListener('integrationCreated', handleIntegrationCreated);
       window.removeEventListener('integrationUpdated', handleIntegrationUpdated);
     };
   }, []);
+
   const fetchProducts = async () => {
     if (!user) return;
+
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('products').select('id, name, type, status').eq('user_id', user.id).order('created_at', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, type, status')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
+      
       console.log('Products fetched:', data);
       setProducts(data || []);
     } catch (error) {
@@ -90,26 +98,31 @@ export function AppsTabLayout() {
       });
     }
   };
+
   const fetchIntegrations = async () => {
     if (!user) return;
+
     setLoading(true);
     const allIntegrations: Integration[] = [];
+
     try {
       console.log('Fetching integrations for user:', user.id);
 
       // Fetch Facebook Pixel settings with product name
-      const {
-        data: pixelData,
-        error: pixelError
-      } = await supabase.from('facebook_pixel_settings').select(`
+      const { data: pixelData, error: pixelError } = await supabase
+        .from('facebook_pixel_settings')
+        .select(`
           *,
           products!inner(name)
-        `).eq('user_id', user.id);
+        `)
+        .eq('user_id', user.id);
+
       if (pixelError) {
         console.error('Error fetching pixel data:', pixelError);
       } else {
         console.log('Pixel data:', pixelData);
       }
+
       if (pixelData && pixelData.length > 0) {
         pixelData.forEach(pixel => {
           allIntegrations.push({
@@ -126,18 +139,20 @@ export function AppsTabLayout() {
       }
 
       // Fetch Webhook settings - modificada para funcionar sem product_id obrigatório
-      const {
-        data: webhookData,
-        error: webhookError
-      } = await supabase.from('webhook_settings').select(`
+      const { data: webhookData, error: webhookError } = await supabase
+        .from('webhook_settings')
+        .select(`
           *,
           products(name)
-        `).eq('user_id', user.id);
+        `)
+        .eq('user_id', user.id);
+
       if (webhookError) {
         console.error('Error fetching webhook data:', webhookError);
       } else {
         console.log('Webhook data:', webhookData);
       }
+
       if (webhookData && webhookData.length > 0) {
         webhookData.forEach(webhook => {
           allIntegrations.push({
@@ -154,22 +169,26 @@ export function AppsTabLayout() {
       }
 
       // Fetch Checkout Customization settings with product name
-      const {
-        data: checkoutData,
-        error: checkoutError
-      } = await supabase.from('checkout_customizations').select(`
+      const { data: checkoutData, error: checkoutError } = await supabase
+        .from('checkout_customizations')
+        .select(`
           *,
           products!inner(name)
-        `).eq('user_id', user.id);
+        `)
+        .eq('user_id', user.id);
+
       if (checkoutError) {
         console.error('Error fetching checkout data:', checkoutError);
       } else {
         console.log('Checkout data:', checkoutData);
       }
+
       if (checkoutData && checkoutData.length > 0) {
         checkoutData.forEach(checkout => {
           const settings = checkout.settings as any;
-          const isActive = settings?.banner?.enabled || settings?.countdown?.enabled || settings?.reviews?.enabled || settings?.socialProof?.enabled;
+          const isActive = settings?.banner?.enabled || settings?.countdown?.enabled || 
+                          settings?.reviews?.enabled || settings?.socialProof?.enabled;
+          
           allIntegrations.push({
             id: checkout.id,
             type: 'custom-checkout',
@@ -184,18 +203,20 @@ export function AppsTabLayout() {
       }
 
       // Fetch Order Bump settings with product name
-      const {
-        data: orderBumpData,
-        error: orderBumpError
-      } = await supabase.from('order_bump_settings').select(`
+      const { data: orderBumpData, error: orderBumpError } = await supabase
+        .from('order_bump_settings')
+        .select(`
           *,
           products!inner(name)
-        `).eq('user_id', user.id);
+        `)
+        .eq('user_id', user.id);
+
       if (orderBumpError) {
         console.error('Error fetching order bump data:', orderBumpError);
       } else {
         console.log('Order bump data:', orderBumpData);
       }
+
       if (orderBumpData && orderBumpData.length > 0) {
         orderBumpData.forEach(orderBump => {
           allIntegrations.push({
@@ -212,18 +233,20 @@ export function AppsTabLayout() {
       }
 
       // Fetch Sales Recovery settings with product name
-      const {
-        data: salesRecoveryData,
-        error: salesRecoveryError
-      } = await supabase.from('sales_recovery_settings').select(`
+      const { data: salesRecoveryData, error: salesRecoveryError } = await supabase
+        .from('sales_recovery_settings')
+        .select(`
           *,
           products!inner(name)
-        `).eq('user_id', user.id);
+        `)
+        .eq('user_id', user.id);
+
       if (salesRecoveryError) {
         console.error('Error fetching sales recovery data:', salesRecoveryError);
       } else {
         console.log('Sales recovery data:', salesRecoveryData);
       }
+
       if (salesRecoveryData && salesRecoveryData.length > 0) {
         salesRecoveryData.forEach(salesRecovery => {
           allIntegrations.push({
@@ -238,6 +261,7 @@ export function AppsTabLayout() {
           });
         });
       }
+
       console.log('All integrations loaded:', allIntegrations);
       setIntegrations(allIntegrations);
     } catch (error) {
@@ -251,47 +275,59 @@ export function AppsTabLayout() {
       setLoading(false);
     }
   };
+
   const handleToggleIntegration = async (integration: Integration, active: boolean) => {
     try {
       console.log('Toggling integration:', integration.type, 'to', active);
       let updateResult;
+      
       if (integration.type === 'facebook-pixel') {
-        updateResult = await supabase.from('facebook_pixel_settings').update({
-          enabled: active
-        }).eq('id', integration.id).select();
+        updateResult = await supabase
+          .from('facebook_pixel_settings')
+          .update({ enabled: active })
+          .eq('id', integration.id)
+          .select();
       } else if (integration.type === 'webhook') {
-        updateResult = await supabase.from('webhook_settings').update({
-          active: active
-        }).eq('id', integration.id).select();
+        updateResult = await supabase
+          .from('webhook_settings')
+          .update({ active: active })
+          .eq('id', integration.id)
+          .select();
       } else if (integration.type === 'custom-checkout') {
         toast({
           title: "Aviso",
-          description: "Para personalização do checkout, configure cada opção individualmente"
+          description: "Para personalização do checkout, configure cada opção individualmente",
         });
         return;
       } else if (integration.type === 'order-bump') {
-        updateResult = await supabase.from('order_bump_settings').update({
-          enabled: active
-        }).eq('id', integration.id).select();
+        updateResult = await supabase
+          .from('order_bump_settings')
+          .update({ enabled: active })
+          .eq('id', integration.id)
+          .select();
       } else if (integration.type === 'sales-recovery') {
-        updateResult = await supabase.from('sales_recovery_settings').update({
-          enabled: active
-        }).eq('id', integration.id).select();
+        updateResult = await supabase
+          .from('sales_recovery_settings')
+          .update({ enabled: active })
+          .eq('id', integration.id)
+          .select();
       }
+
       if (updateResult?.error) {
         console.error('Update error:', updateResult.error);
         throw updateResult.error;
       }
+
       console.log('Update successful:', updateResult?.data);
 
       // Update local state
-      setIntegrations(prev => prev.map(int => int.id === integration.id ? {
-        ...int,
-        active
-      } : int));
+      setIntegrations(prev => prev.map(int => 
+        int.id === integration.id ? { ...int, active } : int
+      ));
+
       toast({
         title: active ? "Integração ativada" : "Integração desativada",
-        description: `${integration.name} foi ${active ? 'ativada' : 'desativada'} com sucesso`
+        description: `${integration.name} foi ${active ? 'ativada' : 'desativada'} com sucesso`,
       });
     } catch (error) {
       console.error('Error toggling integration:', error);
@@ -302,35 +338,61 @@ export function AppsTabLayout() {
       });
     }
   };
+
   const handleDeleteIntegration = async (integration: Integration) => {
     if (!confirm(`Tem certeza que deseja eliminar ${integration.name}?`)) {
       return;
     }
+
     try {
       console.log('Deleting integration:', integration.type, integration.id);
       let deleteResult;
+      
       if (integration.type === 'facebook-pixel') {
-        deleteResult = await supabase.from('facebook_pixel_settings').delete().eq('id', integration.id).select();
+        deleteResult = await supabase
+          .from('facebook_pixel_settings')
+          .delete()
+          .eq('id', integration.id)
+          .select();
       } else if (integration.type === 'webhook') {
-        deleteResult = await supabase.from('webhook_settings').delete().eq('id', integration.id).select();
+        deleteResult = await supabase
+          .from('webhook_settings')
+          .delete()
+          .eq('id', integration.id)
+          .select();
       } else if (integration.type === 'custom-checkout') {
-        deleteResult = await supabase.from('checkout_customizations').delete().eq('id', integration.id).select();
+        deleteResult = await supabase
+          .from('checkout_customizations')
+          .delete()
+          .eq('id', integration.id)
+          .select();
       } else if (integration.type === 'order-bump') {
-        deleteResult = await supabase.from('order_bump_settings').delete().eq('id', integration.id).select();
+        deleteResult = await supabase
+          .from('order_bump_settings')
+          .delete()
+          .eq('id', integration.id)
+          .select();
       } else if (integration.type === 'sales-recovery') {
-        deleteResult = await supabase.from('sales_recovery_settings').delete().eq('id', integration.id).select();
+        deleteResult = await supabase
+          .from('sales_recovery_settings')
+          .delete()
+          .eq('id', integration.id)
+          .select();
       }
+
       if (deleteResult?.error) {
         console.error('Delete error:', deleteResult.error);
         throw deleteResult.error;
       }
+
       console.log('Delete successful:', deleteResult?.data);
 
       // Update local state
       setIntegrations(prev => prev.filter(int => int.id !== integration.id));
+
       toast({
         title: "Integração eliminada",
-        description: `${integration.name} foi eliminada com sucesso`
+        description: `${integration.name} foi eliminada com sucesso`,
       });
     } catch (error) {
       console.error('Error deleting integration:', error);
@@ -341,19 +403,22 @@ export function AppsTabLayout() {
       });
     }
   };
+
   const handleConfigureIntegration = (integration: Integration) => {
     console.log('Configuring integration:', integration);
-
+    
     // Find the correct product for this integration
     let targetProduct: Product | null = null;
+    
     if (integration.productId) {
       targetProduct = products.find(p => p.id === integration.productId) || null;
     }
-
+    
     // If no specific product found, use first available product
     if (!targetProduct) {
       targetProduct = products[0] || null;
     }
+    
     if (!targetProduct) {
       toast({
         title: "Erro",
@@ -362,19 +427,18 @@ export function AppsTabLayout() {
       });
       return;
     }
+
     setSelectedProduct(targetProduct);
     setEditingIntegration(integration);
+    
     let integrationType: IntegrationType | null = null;
+    
     if (integration.type === 'facebook-pixel') {
       integrationType = {
         id: 'facebook-pixel',
         name: 'Facebook Pixel',
         description: 'Rastreie conversões e otimize campanhas do Facebook',
-        icon: ({
-          className
-        }: {
-          className?: string;
-        }) => <Facebook className={className || "w-6 h-6"} />,
+        icon: ({ className }: { className?: string }) => <Facebook className={className || "w-6 h-6"} />,
         color: 'text-blue-600'
       };
     } else if (integration.type === 'webhook') {
@@ -382,11 +446,7 @@ export function AppsTabLayout() {
         id: 'webhook',
         name: 'Webhook',
         description: 'Receba notificações em tempo real sobre eventos',
-        icon: ({
-          className
-        }: {
-          className?: string;
-        }) => <Webhook className={className || "w-6 h-6"} />,
+        icon: ({ className }: { className?: string }) => <Webhook className={className || "w-6 h-6"} />,
         color: 'text-orange-600'
       };
     } else if (integration.type === 'custom-checkout') {
@@ -394,11 +454,7 @@ export function AppsTabLayout() {
         id: 'custom-checkout',
         name: 'Checkout Personalizado',
         description: 'Personalize seu checkout com banners, countdown, avaliações e prova social',
-        icon: ({
-          className
-        }: {
-          className?: string;
-        }) => <Palette className={className || "w-6 h-6"} />,
+        icon: ({ className }: { className?: string }) => <Palette className={className || "w-6 h-6"} />,
         color: 'text-green-600'
       };
     } else if (integration.type === 'order-bump') {
@@ -406,11 +462,7 @@ export function AppsTabLayout() {
         id: 'order-bump',
         name: 'Order Bump',
         description: 'Adicione produtos extras ao checkout para aumentar o valor das vendas',
-        icon: ({
-          className
-        }: {
-          className?: string;
-        }) => <Settings className={className || "w-6 h-6"} />,
+        icon: ({ className }: { className?: string }) => <Settings className={className || "w-6 h-6"} />,
         color: 'text-purple-600'
       };
     } else if (integration.type === 'sales-recovery') {
@@ -418,30 +470,30 @@ export function AppsTabLayout() {
         id: 'sales-recovery',
         name: 'Recuperação de Vendas',
         description: 'Detecte carrinhos abandonados e envie emails automáticos de recuperação',
-        icon: ({
-          className
-        }: {
-          className?: string;
-        }) => <RotateCcw className={className || "w-6 h-6"} />,
+        icon: ({ className }: { className?: string }) => <RotateCcw className={className || "w-6 h-6"} />,
         color: 'text-emerald-600'
       };
     }
+    
     if (integrationType) {
       setSelectedIntegrationType(integrationType);
       setCurrentStep('configure');
       setIsCreateOpen(true);
     }
   };
+
   const handleProductSelect = (product: Product) => {
     console.log('Product selected:', product);
     setSelectedProduct(product);
     setCurrentStep('integration');
   };
+
   const handleIntegrationSelect = (type: IntegrationType) => {
     console.log('Integration type selected:', type);
     setSelectedIntegrationType(type);
     setCurrentStep('configure');
   };
+
   const handleConfigurationComplete = () => {
     console.log('Configuration completed, closing sheet and refreshing');
     setIsCreateOpen(false);
@@ -449,15 +501,17 @@ export function AppsTabLayout() {
     setSelectedProduct(null);
     setSelectedIntegrationType(null);
     setEditingIntegration(null);
-
+    
     // Refresh integrations immediately
     fetchIntegrations();
+    
     const message = editingIntegration ? "Integração atualizada com sucesso" : "Integração criada com sucesso";
     toast({
       title: editingIntegration ? "Integração atualizada" : "Integração criada",
-      description: message
+      description: message,
     });
   };
+
   const handleResetCreate = () => {
     console.log('Resetting create flow');
     setCurrentStep('product');
@@ -465,27 +519,34 @@ export function AppsTabLayout() {
     setSelectedIntegrationType(null);
     setEditingIntegration(null);
   };
+
   const handlePanelIntegration = (integration: any) => {
     if (integration.type === 'sales-recovery') {
       navigate('/recuperacao-vendas');
     }
   };
+
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">
+    return (
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Carregando integrações...</p>
         </div>
-      </div>;
+      </div>
+    );
   }
+
   const totalIntegrations = integrations.length;
   const activeIntegrations = integrations.filter(int => int.active).length;
   const inactiveIntegrations = totalIntegrations - activeIntegrations;
-  return <div className="p-3 xs:p-4 md:p-6 space-y-4 xs:space-y-6 max-w-6xl mx-auto">
+
+  return (
+    <div className="p-3 xs:p-4 md:p-6 space-y-4 xs:space-y-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 xs:gap-4">
         <div className="w-full xs:w-auto">
-          <h1 className="text-xl xs:text-2xl md:text-3xl font-bold break-words text-slate-50">Integrações</h1>
+          <h1 className="text-xl xs:text-2xl md:text-3xl font-bold break-words">Integrações</h1>
           <p className="text-muted-foreground mt-2 text-sm xs:text-base">
             Gerencie suas integrações e automações
           </p>
@@ -512,10 +573,16 @@ export function AppsTabLayout() {
                 <div className="flex items-center justify-center mb-6 xs:mb-8 overflow-x-auto pb-2">
                   <div className="flex items-center space-x-2 xs:space-x-3 min-w-max px-2">
                     <div className="flex items-center flex-shrink-0">
-                      <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${currentStep === 'product' || currentStep === 'integration' || currentStep === 'configure' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                      <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
+                        currentStep === 'product' || currentStep === 'integration' || currentStep === 'configure'
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
                         1
                       </div>
-                      <span className={`ml-1 xs:ml-2 text-xs sm:text-sm whitespace-nowrap ${currentStep === 'product' ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                      <span className={`ml-1 xs:ml-2 text-xs sm:text-sm whitespace-nowrap ${
+                        currentStep === 'product' ? 'text-foreground font-medium' : 'text-muted-foreground'
+                      }`}>
                         Produto
                       </span>
                     </div>
@@ -523,10 +590,16 @@ export function AppsTabLayout() {
                     <div className="w-4 xs:w-6 sm:w-8 h-px bg-border flex-shrink-0"></div>
 
                     <div className="flex items-center flex-shrink-0">
-                      <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${currentStep === 'integration' || currentStep === 'configure' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                      <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
+                        currentStep === 'integration' || currentStep === 'configure'
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
                         2
                       </div>
-                      <span className={`ml-1 xs:ml-2 text-xs sm:text-sm whitespace-nowrap ${currentStep === 'integration' ? 'text-orange-600 font-medium' : 'text-muted-foreground'}`}>
+                      <span className={`ml-1 xs:ml-2 text-xs sm:text-sm whitespace-nowrap ${
+                        currentStep === 'integration' ? 'text-orange-600 font-medium' : 'text-muted-foreground'
+                      }`}>
                         Integração
                       </span>
                     </div>
@@ -534,10 +607,16 @@ export function AppsTabLayout() {
                     <div className="w-4 xs:w-6 sm:w-8 h-px bg-border flex-shrink-0"></div>
 
                     <div className="flex items-center flex-shrink-0">
-                      <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${currentStep === 'configure' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                      <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
+                        currentStep === 'configure'
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
                         3
                       </div>
-                      <span className={`ml-1 xs:ml-2 text-xs sm:text-sm whitespace-nowrap ${currentStep === 'configure' ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                      <span className={`ml-1 xs:ml-2 text-xs sm:text-sm whitespace-nowrap ${
+                        currentStep === 'configure' ? 'text-foreground font-medium' : 'text-muted-foreground'
+                      }`}>
                         Configurar
                       </span>
                     </div>
@@ -546,21 +625,39 @@ export function AppsTabLayout() {
 
                 {/* Content */}
                 <div className="space-y-4">
-                  {currentStep === 'product' && <ProductSelector products={products} selectedProduct={selectedProduct} onProductSelect={handleProductSelect} />}
+                  {currentStep === 'product' && (
+                    <ProductSelector
+                      products={products}
+                      selectedProduct={selectedProduct}
+                      onProductSelect={handleProductSelect}
+                    />
+                  )}
 
-                  {currentStep === 'integration' && <div className="space-y-4">
+                  {currentStep === 'integration' && (
+                    <div className="space-y-4">
                       <Button variant="ghost" onClick={() => setCurrentStep('product')} className="mb-4">
                         ← Voltar
                       </Button>
-                      <IntegrationTypeSelector selectedType={selectedIntegrationType} onTypeSelect={handleIntegrationSelect} />
-                    </div>}
+                      <IntegrationTypeSelector
+                        selectedType={selectedIntegrationType}
+                        onTypeSelect={handleIntegrationSelect}
+                      />
+                    </div>
+                  )}
 
-                  {currentStep === 'configure' && selectedProduct && selectedIntegrationType && <div className="space-y-4">
+                  {currentStep === 'configure' && selectedProduct && selectedIntegrationType && (
+                    <div className="space-y-4">
                       <Button variant="ghost" onClick={() => setCurrentStep('integration')} className="mb-4">
                         ← Voltar
                       </Button>
-                      <IntegrationConfigurator product={selectedProduct} integrationType={selectedIntegrationType} onBack={() => setCurrentStep('integration')} onComplete={handleConfigurationComplete} />
-                    </div>}
+                      <IntegrationConfigurator
+                        product={selectedProduct}
+                        integrationType={selectedIntegrationType}
+                        onBack={() => setCurrentStep('integration')}
+                        onComplete={handleConfigurationComplete}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -569,7 +666,11 @@ export function AppsTabLayout() {
       </div>
 
       {/* Stats */}
-      <IntegrationStats total={totalIntegrations} active={activeIntegrations} inactive={inactiveIntegrations} />
+      <IntegrationStats 
+        total={totalIntegrations}
+        active={activeIntegrations}
+        inactive={inactiveIntegrations}
+      />
 
       {/* Integrations List */}
       <Card>
@@ -577,7 +678,8 @@ export function AppsTabLayout() {
           <CardTitle className="text-lg xs:text-xl">Integrações Ativas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 xs:space-y-4 p-3 xs:p-6 pt-0">
-          {integrations.length === 0 ? <div className="text-center py-8 xs:py-12">
+          {integrations.length === 0 ? (
+            <div className="text-center py-8 xs:py-12">
               <Settings className="w-12 h-12 xs:w-16 xs:h-16 text-muted-foreground mx-auto mb-3 xs:mb-4" />
               <h3 className="text-base xs:text-lg font-semibold mb-2">Nenhuma integração configurada</h3>
               <p className="text-sm xs:text-base text-muted-foreground mb-4 px-4">
@@ -591,8 +693,26 @@ export function AppsTabLayout() {
                   </Button>
                 </SheetTrigger>
               </Sheet>
-            </div> : integrations.map(integration => <IntegrationCard key={integration.id} name={integration.name} icon={integration.icon} active={integration.active} createdAt={integration.createdAt} productName={integration.productName} type={integration.type} onToggle={active => handleToggleIntegration(integration, active)} onConfigure={() => handleConfigureIntegration(integration)} onDelete={() => handleDeleteIntegration(integration)} onPanel={() => handlePanelIntegration(integration)} />)}
+            </div>
+          ) : (
+            integrations.map((integration) => (
+              <IntegrationCard
+                key={integration.id}
+                name={integration.name}
+                icon={integration.icon}
+                active={integration.active}
+                createdAt={integration.createdAt}
+                productName={integration.productName}
+                type={integration.type}
+                onToggle={(active) => handleToggleIntegration(integration, active)}
+                onConfigure={() => handleConfigureIntegration(integration)}
+                onDelete={() => handleDeleteIntegration(integration)}
+                onPanel={() => handlePanelIntegration(integration)}
+              />
+            ))
+          )}
         </CardContent>
       </Card>
-    </div>;
+    </div>
+  );
 }
