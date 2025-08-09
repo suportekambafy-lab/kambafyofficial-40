@@ -157,16 +157,16 @@ const handler = async (req: Request): Promise<Response> => {
         console.log(`  - Hora atual: ${now.toISOString()}`);
         console.log(`  - Diferença: ${(now.getTime() - shouldSendAt.getTime()) / 1000} segundos`);
 
-        // Temporariamente reduzir delay para teste
-        const testDelayMinutes = 0.1; // 6 segundos
-        const testDelayMs = testDelayMinutes * 60 * 1000;
+        // Para teste: usar apenas 1 minuto de delay
+        const testDelayMs = 1 * 60 * 1000; // 1 minuto
         const testShouldSendAt = new Date(abandonedAt.getTime() + testDelayMs);
         
+        console.log(`🧪 TESTE - Usando delay de 1 minuto`);
         console.log(`🧪 TESTE - Deve enviar em: ${testShouldSendAt.toISOString()}`);
         console.log(`🧪 TESTE - Diferença: ${(now.getTime() - testShouldSendAt.getTime()) / 1000} segundos`);
 
         if (now < testShouldSendAt) {
-          console.log(`⏳ Carrinho ${purchase.id} ainda não atingiu o tempo de delay de teste`);
+          console.log(`⏳ Carrinho ${purchase.id} ainda não atingiu o tempo de delay de 1 minuto`);
           continue;
         }
 
