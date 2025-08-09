@@ -26,6 +26,8 @@ import { SEO } from "@/components/SEO";
 import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
+import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
+import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 
 const Checkout = () => {
   const { productId } = useParams();
@@ -63,6 +65,16 @@ const Checkout = () => {
   
   // Hook para verificar KambaPay
   const { fetchBalanceByEmail } = useKambaPayBalance();
+
+  // Hook para detectar carrinhos abandonados
+  const totalAmountForDetection = product ? parseFloat(product.price) + orderBumpPrice : 0;
+  const { markAsRecovered, hasDetected, abandonedPurchaseId } = useAbandonedPurchaseDetection({
+    product,
+    formData,
+    totalAmount: totalAmountForDetection,
+    currency: userCountry?.currency || 'KZ',
+    enabled: !!product && !!formData.email && !!formData.fullName
+  });
 
   // Atualizar código de telefone automaticamente baseado no país detectado
   useEffect(() => {
@@ -510,6 +522,9 @@ const Checkout = () => {
         })
       });
 
+      // Marcar carrinho como recuperado se foi detectado anteriormente
+      await markAsRecovered(orderId);
+
       navigate(`/obrigado?${params.toString()}`);
     } catch (error) {
       console.error('Erro ao processar sucesso do pagamento:', error);
@@ -688,6 +703,9 @@ const Checkout = () => {
               order_bump_discounted_price: orderBumpPrice.toString()
             })
           });
+
+          // Marcar carrinho como recuperado se foi detectado anteriormente
+          await markAsRecovered(data.orderId);
 
           navigate(`/obrigado?${params.toString()}`);
           return;
@@ -970,6 +988,9 @@ const Checkout = () => {
         })
       });
 
+      // Marcar carrinho como recuperado se foi detectado anteriormente
+      await markAsRecovered(orderId);
+
       navigate(`/obrigado?${params.toString()}`);
     } catch (error) {
       console.error('Error processing payment:', error);
@@ -1247,6 +1268,15 @@ const Checkout = () => {
                   className="h-12"
                 />
               </div>
+
+              {/* Indicador de detecção de carrinho abandonado - apenas para debug */}
+              {process.env.NODE_ENV === 'development' && (
+                <AbandonedCartIndicator
+                  hasDetected={hasDetected}
+                  abandonedPurchaseId={abandonedPurchaseId}
+                  enabled={!!formData.email && !!formData.fullName}
+                />
+              )}
 
               <OrderBump 
                 productId={productId || ''}
