@@ -317,8 +317,8 @@ export default function KambaExtra() {
 
           {/* Category Filter */}
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full md:w-64">
-              <SelectValue placeholder="Categorias" />
+            <SelectTrigger className="w-full md:w-64 bg-card text-card-foreground border-border">
+              <SelectValue placeholder="Categorias" className="text-card-foreground" />
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
@@ -331,8 +331,8 @@ export default function KambaExtra() {
 
           {/* Sort */}
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full md:w-48">
-              <SelectValue placeholder="Ordenar por" />
+            <SelectTrigger className="w-full md:w-48 bg-card text-card-foreground border-border">
+              <SelectValue placeholder="Ordenar por" className="text-card-foreground" />
             </SelectTrigger>
             <SelectContent>
               {sortOptions.map((option) => (
