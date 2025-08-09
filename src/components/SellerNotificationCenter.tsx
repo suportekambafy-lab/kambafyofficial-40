@@ -51,7 +51,7 @@ export function SellerNotificationCenter({ className }: { className?: string }) 
         <Button
           variant="ghost"
           size="sm"
-          className={cn("relative h-8 w-8 p-0", className)}
+          className={cn("relative h-8 w-8 p-0 text-foreground", className)}
         >
           {unreadCount > 0 ? (
             <BellRing className="h-4 w-4" />
