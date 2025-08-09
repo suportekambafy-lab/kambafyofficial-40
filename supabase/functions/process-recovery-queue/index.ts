@@ -20,6 +20,22 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Verificar se o RESEND_API_KEY está configurado
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("❌ RESEND_API_KEY não configurado");
+      return new Response(
+        JSON.stringify({ 
+          error: "RESEND_API_KEY não configurado",
+          message: "Configure a chave da API do Resend nas configurações do projeto"
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     console.log("🔄 Iniciando processamento da fila de recuperação...");
 
     // Buscar carrinhos abandonados que precisam de recuperação

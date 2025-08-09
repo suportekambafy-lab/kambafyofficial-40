@@ -57,13 +57,26 @@ const handler = async (req: Request): Promise<Response> => {
         )
       `)
       .eq('id', product_id)
-      .single();
+      .maybeSingle();
 
-    if (productError || !product) {
+    if (productError) {
+      console.error("❌ Erro ao buscar produto:", productError);
       return new Response(
         JSON.stringify({ 
-          error: "Produto não encontrado",
-          details: productError?.message
+          error: "Erro ao buscar produto",
+          details: productError.message
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (!product) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Produto não encontrado"
         }),
         {
           status: 404,
@@ -72,7 +85,22 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    if (!product.sales_recovery_settings?.enabled) {
+    // Verificar se existe configuração de recuperação
+    if (!product.sales_recovery_settings || product.sales_recovery_settings.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Nenhuma configuração de recuperação de vendas encontrada para este produto. Configure primeiro no painel de integrações." 
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const recoverySettings = product.sales_recovery_settings[0]; // Pegar a primeira configuração
+
+    if (!recoverySettings.enabled) {
       return new Response(
         JSON.stringify({ 
           error: "Recuperação de vendas não está ativa para este produto" 
@@ -133,7 +161,7 @@ const handler = async (req: Request): Promise<Response> => {
         abandoned_at: abandonedAt.toISOString(),
         note: delay_minutes > 0 
           ? `Carrinho configurado para ser processado imediatamente (delay simulado de ${delay_minutes} minutos)`
-          : `Carrinho será processado após ${product.sales_recovery_settings.email_delay_hours} horas`
+          : `Carrinho será processado após ${recoverySettings.email_delay_hours} horas`
       }),
       {
         status: 200,
