@@ -36,53 +36,59 @@ export default function KambaPay() {
           </div>
 
           <Tabs defaultValue="register" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="register">Registrar / Login</TabsTrigger>
-              <TabsTrigger value="manage" disabled={!registeredEmail}>
-                Gerenciar Saldo
-              </TabsTrigger>
+            <TabsList className="grid w-full grid-cols-1">
+              <TabsTrigger value="register">KambaPay</TabsTrigger>
             </TabsList>
             
             <TabsContent value="register" className="space-y-6">
-              <KambaPayRegistration onSuccess={handleRegistrationSuccess} />
-              
-              <div className="grid md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="text-center">
-                    <CreditCard className="h-8 w-8 text-primary mx-auto mb-2" />
-                    <CardTitle className="text-lg">1. Registre-se</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-center">
-                      Crie sua conta KambaPay com apenas seu email
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="text-center">
-                    <Wallet className="h-8 w-8 text-primary mx-auto mb-2" />
-                    <CardTitle className="text-lg">2. Carregue Saldo</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-center">
-                      Use métodos de pagamento locais para adicionar saldo
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="text-center">
-                    <ShoppingCart className="h-8 w-8 text-primary mx-auto mb-2" />
-                    <CardTitle className="text-lg">3. Pague Facilmente</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-center">
-                      Use seu email para pagar em qualquer checkout
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </div>
+              {!registeredEmail ? (
+                <>
+                  <KambaPayRegistration onSuccess={handleRegistrationSuccess} />
+                  
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardHeader className="text-center">
+                        <CreditCard className="h-8 w-8 text-primary mx-auto mb-2" />
+                        <CardTitle className="text-lg">1. Registre-se</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription className="text-center">
+                          Crie sua conta KambaPay com apenas seu email
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="text-center">
+                        <Wallet className="h-8 w-8 text-primary mx-auto mb-2" />
+                        <CardTitle className="text-lg">2. Carregue Saldo</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription className="text-center">
+                          Use métodos de pagamento locais para adicionar saldo
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="text-center">
+                        <ShoppingCart className="h-8 w-8 text-primary mx-auto mb-2" />
+                        <CardTitle className="text-lg">3. Pague Facilmente</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription className="text-center">
+                          Use seu email para pagar em qualquer checkout
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </>
+              ) : (
+                <KambaPayBalanceManager 
+                  email={registeredEmail} 
+                  onBalanceUpdate={() => {}}
+                />
+              )}
             </TabsContent>
             
             <TabsContent value="manage" className="space-y-6">

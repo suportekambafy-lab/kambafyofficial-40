@@ -567,13 +567,73 @@ const Checkout = () => {
       return;
     }
 
-    // Para KambaPay, usar edge function específica
+    // Para KambaPay, usar edge function específica com 2FA
     if (selectedPayment === 'kambapay') {
       console.log('🔵 KambaPay payment method selected');
       setProcessing(true);
 
       try {
         const totalAmount = parseFloat(product.price) + orderBumpPrice;
+        
+        // Primeiro, enviar código 2FA para segurança da compra
+        console.log('🔒 Enviando código 2FA para compra KambaPay...');
+        
+        const { error: codeError } = await supabase.functions.invoke('send-2fa-code', {
+          body: { 
+            email: formData.email,
+            event_type: 'kambapay_purchase',
+            user_email: formData.email,
+            purchase_data: {
+              product_id: product.id,
+              amount: totalAmount
+            }
+          }
+        });
+
+        if (codeError) {
+          console.error('❌ Erro ao enviar código 2FA:', codeError);
+          toast({
+            title: "Erro de segurança",
+            description: "Não foi possível enviar código de verificação",
+            variant: "destructive"
+          });
+          setProcessing(false);
+          return;
+        }
+
+        // Solicitar código 2FA do usuário
+        const userCode = prompt('Para sua segurança, digite o código de 6 dígitos enviado para seu email:');
+        
+        if (!userCode || userCode.length !== 6) {
+          toast({
+            title: "Verificação cancelada",
+            description: "Código de verificação não informado ou inválido",
+            variant: "destructive"
+          });
+          setProcessing(false);
+          return;
+        }
+
+        // Verificar código 2FA
+        const { data: verificationData, error: verifyError } = await supabase.functions.invoke('verify-2fa-code', {
+          body: {
+            email: formData.email,
+            code: userCode,
+            event_type: 'kambapay_purchase'
+          }
+        });
+
+        if (verifyError || !verificationData?.valid) {
+          toast({
+            title: "Código inválido",
+            description: "O código de verificação está incorreto ou expirado",
+            variant: "destructive"
+          });
+          setProcessing(false);
+          return;
+        }
+
+        console.log('✅ Código 2FA verificado. Processando pagamento KambaPay...');
         
         const paymentData = {
           email: formData.email,
