@@ -402,15 +402,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
-      {isBanned && userProfile && (
-        <div className="fixed inset-0 z-50">
-          <BannedUserDialog
-            banReason={banReason}
-            userEmail={userProfile.email || ''}
-            userName={userProfile.full_name || 'Usuário'}
-          />
-        </div>
+      {isBanned && userProfile ? (
+        <BannedUserDialog
+          banReason={banReason}
+          userEmail={userProfile.email || ''}
+          userName={userProfile.full_name || 'Usuário'}
+        />
+      ) : (
+        children
       )}
     </AuthContext.Provider>
   );
