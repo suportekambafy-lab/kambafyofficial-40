@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Settings, Mail, Clock, BarChart3 } from "lucide-react";
+import { ArrowLeft, Settings, Mail, Clock, BarChart3, TestTube } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SalesRecoveryTester } from "./SalesRecoveryTester";
 
 interface Product {
   id: string;
@@ -34,6 +35,7 @@ interface RecoverySettings {
 
 export function SalesRecoveryConfigurator({ product, onBack, onComplete }: SalesRecoveryConfiguratorProps) {
   const { toast } = useToast();
+  const [showTester, setShowTester] = useState(false);
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<RecoverySettings>({
     enabled: false,
@@ -156,7 +158,15 @@ export function SalesRecoveryConfigurator({ product, onBack, onComplete }: Sales
     { value: 3, label: "3 tentativas" },
     { value: 5, label: "5 tentativas" }
   ];
-
+  
+  if (showTester) {
+    return (
+      <SalesRecoveryTester 
+        product={product} 
+        onBack={() => setShowTester(false)} 
+      />
+    );
+  }
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4 mb-6">
@@ -296,27 +306,30 @@ export function SalesRecoveryConfigurator({ product, onBack, onComplete }: Sales
           </CardContent>
         </Card>
 
-        {/* Analytics Preview */}
+        {/* Test Section */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Relatórios
+              <TestTube className="h-5 w-5" />
+              Teste Rápido
             </CardTitle>
             <CardDescription>
-              Acompanhe o desempenho da recuperação de vendas
+              Teste o sistema de recuperação com um email de teste
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Após ativar a recuperação, você poderá acompanhar:
+            <p className="text-sm text-muted-foreground mb-4">
+              Você pode testar rapidamente o sistema criando um carrinho abandonado de exemplo.
+              Use seu próprio email para receber o teste.
             </p>
-            <ul className="text-sm text-muted-foreground mt-2 space-y-1">
-              <li>• Total de carrinhos abandonados</li>
-              <li>• Emails enviados</li>
-              <li>• Taxa de recuperação</li>
-              <li>• Valor total recuperado</li>
-            </ul>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowTester(true)}
+              className="w-full"
+            >
+              <TestTube className="h-4 w-4 mr-2" />
+              Ir para Painel de Testes
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -324,6 +337,10 @@ export function SalesRecoveryConfigurator({ product, onBack, onComplete }: Sales
       <div className="flex justify-end gap-3">
         <Button variant="outline" onClick={onBack}>
           Cancelar
+        </Button>
+        <Button variant="outline" onClick={() => setShowTester(true)}>
+          <TestTube className="h-4 w-4 mr-2" />
+          Testar Sistema
         </Button>
         <Button onClick={handleSave} disabled={loading}>
           {loading ? "Salvando..." : "Salvar Configurações"}
