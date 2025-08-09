@@ -26,10 +26,26 @@ export function ModernKambaAchievements() {
     if (!user) return;
 
     try {
+      // Primeiro, buscar produtos do usuário
+      const { data: userProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (productsError) throw productsError;
+
+      const userProductIds = userProducts?.map(p => p.id) || [];
+      
+      if (userProductIds.length === 0) {
+        setTotalRevenue(0);
+        return;
+      }
+
+      // Buscar vendas usando product_id
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('amount')
-        .eq('user_id', user.id)
+        .select('amount, seller_commission')
+        .in('product_id', userProductIds)
         .eq('status', 'completed');
 
       if (error) {
@@ -38,7 +54,8 @@ export function ModernKambaAchievements() {
       }
 
       const total = orders?.reduce((sum, order) => {
-        const amount = parseFloat(order.amount) || 0;
+        // Usar seller_commission se disponível, senão usar amount
+        const amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
         return sum + amount;
       }, 0) || 0;
 
