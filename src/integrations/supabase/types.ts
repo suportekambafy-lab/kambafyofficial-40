@@ -183,6 +183,7 @@ export type Database = {
           created_at: string
           currency: string
           description: string
+          email: string | null
           id: string
           order_id: string | null
           type: string
@@ -193,6 +194,7 @@ export type Database = {
           created_at?: string
           currency?: string
           description: string
+          email?: string | null
           id?: string
           order_id?: string | null
           type: string
@@ -203,6 +205,7 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string
+          email?: string | null
           id?: string
           order_id?: string | null
           type?: string
@@ -250,6 +253,7 @@ export type Database = {
           balance: number
           created_at: string
           currency: string
+          email: string | null
           id: string
           updated_at: string
           user_id: string
@@ -258,6 +262,7 @@ export type Database = {
           balance?: number
           created_at?: string
           currency?: string
+          email?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -266,6 +271,7 @@ export type Database = {
           balance?: number
           created_at?: string
           currency?: string
+          email?: string | null
           id?: string
           updated_at?: string
           user_id?: string
@@ -391,6 +397,27 @@ export type Database = {
           user_id?: string
           verified_at?: string | null
           verified_by?: string | null
+        }
+        Relationships: []
+      }
+      kambapay_registrations: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }
