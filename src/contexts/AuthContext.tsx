@@ -190,23 +190,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Verificar se o usuário está banido
         if (session?.user) {
           try {
-            const { data: profile } = await supabase
+            console.log('🔍 Verificando status de banimento para:', session.user.id);
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('banned, ban_reason, full_name, email')
               .eq('user_id', session.user.id)
-              .single();
+              .maybeSingle();
             
-            if (profile) {
+            if (profileError) {
+              console.error('❌ Erro ao buscar profile:', profileError);
+            } else if (profile) {
+              console.log('✅ Profile encontrado:', profile);
               setUserProfile(profile);
               if (profile.banned) {
+                console.log('🚫 Usuário banido:', profile.ban_reason);
                 setIsBanned(true);
                 setBanReason(profile.ban_reason || 'Motivo não especificado');
                 // Não fazer logout, apenas mostrar a tela de contestação
                 return;
               }
+            } else {
+              console.log('📝 Profile não encontrado, usuário será criado depois');
             }
           } catch (error) {
-            console.error('Erro ao verificar status de banimento:', error);
+            console.error('❌ Erro ao verificar status de banimento:', error);
           }
         }
         
@@ -214,16 +221,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
             try {
-              const { data: existingProfile } = await supabase
+              console.log('👤 Verificando profile existente para:', session.user.id);
+              const { data: existingProfile, error: profileCheckError } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('user_id', session.user.id)
-                .single();
+                .maybeSingle();
+              
+              if (profileCheckError) {
+                console.error('❌ Erro ao verificar profile existente:', profileCheckError);
+                return;
+              }
               
               // Verificar se é login via Google e não signup
               const googleAuthMode = localStorage.getItem('googleAuthMode');
               
               if (!existingProfile) {
+                console.log('👤 Profile não existe, criando...');
                 // Usuário novo
                 if (googleAuthMode === 'signin') {
                   // Tentativa de login com Google de usuário que não existe
@@ -240,22 +254,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 
                 // Criar perfil para novos usuários (signup normal)
                 if (session.user.user_metadata) {
-                  await supabase
+                  const { error: insertError } = await supabase
                     .from('profiles')
                     .insert({
                       user_id: session.user.id,
-                      full_name: session.user.user_metadata.full_name || session.user.user_metadata.name,
+                      full_name: session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email?.split('@')[0],
                       email: session.user.email,
                       avatar_url: session.user.user_metadata.avatar_url
                     });
+                  
+                  if (insertError) {
+                    console.error('❌ Erro ao inserir profile:', insertError);
+                  } else {
+                    console.log('✅ Profile criado com sucesso');
+                  }
                 }
+              } else {
+                console.log('✅ Profile já existe:', existingProfile.full_name);
               }
               
               // Limpar flag de Google Auth
               localStorage.removeItem('googleAuthMode');
               
             } catch (error) {
-              console.error('Erro ao processar autenticação:', error);
+              console.error('❌ Erro ao processar autenticação:', error);
             }
           }, 0);
         }
@@ -319,20 +341,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Verificar se o usuário está banido
     if (!error && data.user) {
       try {
-        const { data: profile } = await supabase
+        console.log('🔍 Verificando status de banimento no login para:', data.user.id);
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('banned, ban_reason, full_name, email')
           .eq('user_id', data.user.id)
-          .single();
+          .maybeSingle();
         
-        if (profile?.banned) {
+        if (profileError) {
+          console.error('❌ Erro ao buscar profile no login:', profileError);
+        } else if (profile?.banned) {
+          console.log('🚫 Usuário banido no login:', profile.ban_reason);
           setIsBanned(true);
           setBanReason(profile.ban_reason || 'Motivo não especificado');
           setUserProfile(profile);
           // Não fazer logout, permitir que vejam a tela de contestação
         }
       } catch (error) {
-        console.error('Erro ao verificar status de banimento:', error);
+        console.error('❌ Erro ao verificar status de banimento no login:', error);
       }
     }
 
