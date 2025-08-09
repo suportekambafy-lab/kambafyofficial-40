@@ -48,7 +48,7 @@ interface Sale {
   affiliate_code?: string;
   affiliate_commission?: number;
   seller_commission?: number;
-  sale_type?: 'own' | 'affiliate';
+  sale_type?: 'own' | 'affiliate' | 'recovered';
   products: {
     id: string;
     name: string;
@@ -472,6 +472,15 @@ export default function Sales() {
                                     Total: {formatPrice(sale.amount, sale.currency)}
                                   </div>
                                 </div>
+                              ) : sale.sale_type === 'recovered' ? (
+                                <div>
+                                  <div className="font-bold text-base md:text-lg text-green-600">
+                                    {formatPrice((parseFloat(sale.amount) * 0.8).toString(), sale.currency)}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground line-through">
+                                    Total: {formatPrice(sale.amount, sale.currency)}
+                                  </div>
+                                </div>
                               ) : sale.affiliate_code && sale.seller_commission ? (
                                 <div>
                                   <div className="font-bold text-base md:text-lg text-green-600">
@@ -502,6 +511,11 @@ export default function Sales() {
                               <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
                                 <User className="h-3 w-3 mr-1" />
                                 Comissão Afiliado
+                              </Badge>
+                            ) : sale.sale_type === 'recovered' ? (
+                              <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+                                <User className="h-3 w-3 mr-1" />
+                                Recuperado (-20%)
                               </Badge>
                             ) : sale.affiliate_code ? (
                               <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">

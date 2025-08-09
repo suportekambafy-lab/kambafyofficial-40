@@ -70,9 +70,20 @@ export function ModernSalesChart() {
 
       console.log('📊 Chart carregando vendas dos últimos 7 dias para produtos:', userProductIds);
 
+      // Buscar vendas recuperadas para aplicar desconto
+      const { data: recoveredPurchases } = await supabase
+        .from('abandoned_purchases')
+        .select('recovered_order_id')
+        .eq('status', 'recovered')
+        .not('recovered_order_id', 'is', null);
+
+      const recoveredOrderIds = new Set(
+        recoveredPurchases?.map(p => p.recovered_order_id).filter(Boolean) || []
+      );
+
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('created_at, amount, currency, product_id')
+        .select('created_at, amount, currency, product_id, order_id')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', sevenDaysAgo.toISOString())
@@ -103,6 +114,12 @@ export function ModernSalesChart() {
         
         let amount = parseFloat(order.amount || '0');
         const currency = order.currency || 'KZ';
+        
+        // Aplicar desconto de 20% se for venda recuperada
+        const isRecovered = recoveredOrderIds.has(order.order_id);
+        if (isRecovered) {
+          amount = amount * 0.8;
+        }
         
         // Converter para KZ
         if (currency === 'EUR') {

@@ -179,6 +179,17 @@ export default function Financial() {
         .order('created_at', { ascending: false })
         .limit(200);
 
+      // Buscar vendas recuperadas para aplicar desconto
+      const { data: recoveredPurchases } = await supabase
+        .from('abandoned_purchases')
+        .select('recovered_order_id')
+        .eq('status', 'recovered')
+        .not('recovered_order_id', 'is', null);
+
+      const recoveredOrderIds = new Set(
+        recoveredPurchases?.map(p => p.recovered_order_id).filter(Boolean) || []
+      );
+
       // Buscar solicitações de saque
       const { data: withdrawalRequestsData, error: withdrawalsError } = await supabase
         .from('withdrawal_requests')
@@ -209,12 +220,22 @@ export default function Financial() {
       } else {
         // Combinar vendas próprias e comissões de afiliado
         const allOrders = [
-          // Vendas próprias - usar valor total ou comissão do vendedor
-          ...(ownOrders || []).map(order => ({
-            ...order,
-            earning_amount: parseFloat(order.seller_commission?.toString() || order.amount || '0'),
-            order_type: 'own'
-          })),
+          // Vendas próprias - usar valor total ou comissão do vendedor (com desconto de 20% se recuperada)
+          ...(ownOrders || []).map(order => {
+            const isRecovered = recoveredOrderIds.has(order.order_id);
+            let earning = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+            
+            // Aplicar desconto de 20% se for venda recuperada
+            if (isRecovered) {
+              earning = earning * 0.8;
+            }
+            
+            return {
+              ...order,
+              earning_amount: earning,
+              order_type: 'own'
+            };
+          }),
           // Vendas como afiliado - usar apenas comissão do afiliado
           ...(affiliateOrders || []).map(order => ({
             ...order,

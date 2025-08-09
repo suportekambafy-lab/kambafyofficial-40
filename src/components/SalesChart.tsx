@@ -81,10 +81,21 @@ export function SalesChart({ dateFilter }: SalesChartProps) {
         return;
       }
 
+      // Buscar vendas recuperadas para aplicar desconto
+      const { data: recoveredPurchases } = await supabase
+        .from('abandoned_purchases')
+        .select('recovered_order_id')
+        .eq('status', 'recovered')
+        .not('recovered_order_id', 'is', null);
+
+      const recoveredOrderIds = new Set(
+        recoveredPurchases?.map(p => p.recovered_order_id).filter(Boolean) || []
+      );
+
       // Buscar pedidos do período usando product_id
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('amount, created_at, status, product_id')
+        .select('amount, created_at, status, product_id, order_id')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', startDate.toISOString())
@@ -111,7 +122,15 @@ export function SalesChart({ dateFilter }: SalesChartProps) {
         const orderDate = new Date(order.created_at).toISOString().split('T')[0];
         if (salesByDate[orderDate]) {
           salesByDate[orderDate].sales += 1; // Cada pedido é uma venda
-          salesByDate[orderDate].revenue += parseFloat(order.amount) || 0;
+          
+          let amount = parseFloat(order.amount) || 0;
+          // Aplicar desconto de 20% se for venda recuperada
+          const isRecovered = recoveredOrderIds.has(order.order_id);
+          if (isRecovered) {
+            amount = amount * 0.8;
+          }
+          
+          salesByDate[orderDate].revenue += amount;
         }
       });
 
