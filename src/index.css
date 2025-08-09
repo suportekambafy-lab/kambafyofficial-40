@@ -231,39 +231,6 @@ html {
   background: hsl(var(--checkout-green) / 0.8);
 }
 
-/* Text selection colors */
-::selection {
-  background: hsl(var(--primary) / 0.2);
-  color: hsl(var(--primary-foreground));
-}
-
-::-moz-selection {
-  background: hsl(var(--primary) / 0.2);
-  color: hsl(var(--primary-foreground));
-}
-
-/* Dark mode text selection */
-.dark ::selection {
-  background: hsl(var(--primary) / 0.3);
-  color: hsl(var(--background));
-}
-
-.dark ::-moz-selection {
-  background: hsl(var(--primary) / 0.3);
-  color: hsl(var(--background));
-}
-
-/* Seller dashboard dark mode text selection */
-.seller-dashboard.dark ::selection {
-  background: hsl(var(--primary) / 0.3);
-  color: hsl(var(--background));
-}
-
-.seller-dashboard.dark ::-moz-selection {
-  background: hsl(var(--primary) / 0.3);
-  color: hsl(var(--background));
-}
-
 /* New animations for sign-in page */
 @keyframes fadeSlideIn {
   from {
