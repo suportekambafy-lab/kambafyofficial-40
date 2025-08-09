@@ -7,6 +7,7 @@ import { ModernDashboardHome } from '@/components/modern/ModernDashboardHome';
 import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
 import { SkeletonPage } from '@/components/ui/skeleton-page';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 // Lazy load páginas para melhor performance com retry logic
 const createLazyWithRetry = (importFn: () => Promise<any>, name: string) => {
@@ -170,10 +171,12 @@ function SellerDashboardContent() {
 
 export default function SellerDashboard() {
   return (
-    <ModernErrorBoundary>
-      <SellerThemeProvider>
-        <SellerDashboardContent />
-      </SellerThemeProvider>
-    </ModernErrorBoundary>
+    <ProtectedRoute>
+      <ModernErrorBoundary>
+        <SellerThemeProvider>
+          <SellerDashboardContent />
+        </SellerThemeProvider>
+      </ModernErrorBoundary>
+    </ProtectedRoute>
   );
 }
