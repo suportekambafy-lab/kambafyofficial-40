@@ -1266,6 +1266,80 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_configurations: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          questions: Json
+          settings: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          questions?: Json
+          settings?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          questions?: Json
+          settings?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quiz_responses: {
+        Row: {
+          completed_at: string
+          customer_email: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          ip_address: string | null
+          quiz_id: string
+          responses: Json
+          score: number | null
+          user_agent: string | null
+        }
+        Insert: {
+          completed_at?: string
+          customer_email: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          ip_address?: string | null
+          quiz_id: string
+          responses?: Json
+          score?: number | null
+          user_agent?: string | null
+        }
+        Update: {
+          completed_at?: string
+          customer_email?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          ip_address?: string | null
+          quiz_id?: string
+          responses?: Json
+          score?: number | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_responses_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       read_notifications: {
         Row: {
           created_at: string
