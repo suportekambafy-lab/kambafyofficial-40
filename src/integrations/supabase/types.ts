@@ -187,7 +187,7 @@ export type Database = {
           id: string
           order_id: string | null
           type: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -198,7 +198,7 @@ export type Database = {
           id?: string
           order_id?: string | null
           type: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -209,7 +209,7 @@ export type Database = {
           id?: string
           order_id?: string | null
           type?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -256,7 +256,7 @@ export type Database = {
           email: string | null
           id: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           balance?: number
@@ -265,7 +265,7 @@ export type Database = {
           email?: string | null
           id?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           balance?: number
@@ -274,7 +274,7 @@ export type Database = {
           email?: string | null
           id?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
