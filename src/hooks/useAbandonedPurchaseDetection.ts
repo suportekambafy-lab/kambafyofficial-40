@@ -135,7 +135,30 @@ export const useAbandonedPurchaseDetection = ({
       });
 
       if (abandonedPurchaseIdRef.current) {
-        // Usar ID específico do carrinho abandonado se disponível
+        // Primeiro, processar a taxa de recuperação (20%)
+        try {
+          console.log('💰 Processando taxa de recuperação de 20%...');
+          const { data: feeData, error: feeError } = await supabase.rpc(
+            'process_recovery_fee',
+            {
+              _abandoned_purchase_id: abandonedPurchaseIdRef.current,
+              _order_id: orderId,
+              _fee_percentage: 20.0
+            }
+          );
+
+          if (feeError) {
+            console.error('❌ Erro ao processar taxa de recuperação:', feeError);
+            // Continuar mesmo se a taxa falhar - não bloquear a recuperação
+          } else {
+            console.log('✅ Taxa de recuperação processada com sucesso:', feeData);
+          }
+        } catch (feeException) {
+          console.error('❌ Exceção ao processar taxa de recuperação:', feeException);
+          // Continuar mesmo se a taxa falhar
+        }
+
+        // Depois, marcar como recuperado
         const { error } = await supabase
           .from('abandoned_purchases')
           .update({
@@ -148,7 +171,7 @@ export const useAbandonedPurchaseDetection = ({
         if (error) {
           console.error('❌ Erro ao marcar como recuperado por ID:', error);
         } else {
-          console.log('✅ Carrinho marcado como recuperado por ID específico');
+          console.log('✅ Carrinho marcado como recuperado com taxa processada');
           return;
         }
       }

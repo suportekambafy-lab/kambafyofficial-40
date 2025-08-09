@@ -1479,6 +1479,45 @@ export type Database = {
           },
         ]
       }
+      recovery_fees: {
+        Row: {
+          abandoned_purchase_id: string
+          created_at: string
+          currency: string
+          fee_amount: number
+          fee_percentage: number
+          id: string
+          order_id: string
+          processed_at: string
+          recovery_amount: number
+          seller_user_id: string
+        }
+        Insert: {
+          abandoned_purchase_id: string
+          created_at?: string
+          currency?: string
+          fee_amount: number
+          fee_percentage?: number
+          id?: string
+          order_id: string
+          processed_at?: string
+          recovery_amount: number
+          seller_user_id: string
+        }
+        Update: {
+          abandoned_purchase_id?: string
+          created_at?: string
+          currency?: string
+          fee_amount?: number
+          fee_percentage?: number
+          id?: string
+          order_id?: string
+          processed_at?: string
+          recovery_amount?: number
+          seller_user_id?: string
+        }
+        Relationships: []
+      }
       sales_recovery_analytics: {
         Row: {
           created_at: string
@@ -2000,6 +2039,14 @@ export type Database = {
           _user_agent?: string
         }
         Returns: undefined
+      }
+      process_recovery_fee: {
+        Args: {
+          _abandoned_purchase_id: string
+          _order_id: string
+          _fee_percentage?: number
+        }
+        Returns: string
       }
       unaccent: {
         Args: { "": string }
