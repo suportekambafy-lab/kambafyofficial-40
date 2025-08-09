@@ -160,45 +160,49 @@ export default function Financial() {
 
       const userAffiliateCodes = affiliateCodes?.map(a => a.affiliate_code) || [];
 
-      // Carregar solicitações de saque de forma paralela
-      const promises = [
-        // ✅ QUERY CORRIGIDA - Buscar vendas próprias
-        supabase
+      // Buscar produtos do usuário primeiro
+      const { data: userProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (productsError) throw productsError;
+
+      const userProductIds = userProducts?.map(p => p.id) || [];
+
+      // Buscar vendas dos produtos do usuário
+      const { data: ownOrders, error: ordersError } = await supabase
+        .from('orders')
+        .select('order_id, amount, created_at, status, affiliate_commission, seller_commission, product_id')
+        .in('product_id', userProductIds)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      // Buscar solicitações de saque
+      const { data: withdrawalRequestsData, error: withdrawalsError } = await supabase
+        .from('withdrawal_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      // Buscar vendas como afiliado se houver códigos
+      let affiliateOrders: any[] = [];
+      if (userAffiliateCodes.length > 0) {
+        const { data: affiliateData, error: affiliateError } = await supabase
           .from('orders')
-          .select('order_id, amount, created_at, status, affiliate_commission, seller_commission')
-          .eq('user_id', user.id)
+          .select('order_id, amount, created_at, status, affiliate_commission, seller_commission, affiliate_code')
+          .in('affiliate_code', userAffiliateCodes)
+          .not('affiliate_commission', 'is', null)
           .eq('status', 'completed')
           .order('created_at', { ascending: false })
-          .limit(200), // Limitar para performance
+          .limit(200);
         
-        // Carregar solicitações de saque
-        supabase
-          .from('withdrawal_requests')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-      ];
-
-      // Adicionar vendas como afiliado se houver códigos
-      if (userAffiliateCodes.length > 0) {
-        promises.push(
-          supabase
-            .from('orders')
-            .select('order_id, amount, created_at, status, affiliate_commission, seller_commission, affiliate_code')
-            .in('affiliate_code', userAffiliateCodes)
-            .not('affiliate_commission', 'is', null)
-            .eq('status', 'completed')
-            .order('created_at', { ascending: false })
-            .limit(200)
-        );
+        if (!affiliateError) {
+          affiliateOrders = affiliateData || [];
+        }
       }
 
-      const results = await Promise.all(promises);
-      const [ordersData, withdrawalsData, affiliateOrdersData] = results;
-
-      const { data: ownOrders, error: ordersError } = ordersData;
-      const { data: withdrawalRequestsData } = withdrawalsData;
-      const affiliateOrders = affiliateOrdersData ? affiliateOrdersData.data : [];
 
       if (ordersError) {
         console.error('Error loading orders:', ordersError);
@@ -395,7 +399,15 @@ export default function Financial() {
     if (!user) return;
 
     try {
-      // ✅ QUERY CORRIGIDA - Buscar vendas próprias e de afiliado para relatório
+      // Buscar produtos do usuário primeiro
+      const { data: userProducts } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+
+      const userProductIds = userProducts?.map(p => p.id) || [];
+
+      // ✅ QUERY CORRIGIDA - Buscar vendas pelos produtos do usuário para relatório
       const promises = [
         supabase
           .from('orders')
@@ -407,7 +419,7 @@ export default function Financial() {
               type
             )
           `)
-          .eq('user_id', user.id)
+          .in('product_id', userProductIds)
           .eq('status', 'completed')
           .order('created_at', { ascending: false })
       ];

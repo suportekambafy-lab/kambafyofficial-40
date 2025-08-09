@@ -34,11 +34,37 @@ export const useStreamingQuery = () => {
 
       const userAffiliateCodes = affiliateCodes?.map(a => a.affiliate_code) || [];
 
-      // 📊 STATS RÁPIDOS - vendas próprias do usuário
+      // 📊 STATS RÁPIDOS - vendas dos produtos do usuário (incluindo vendas locais)
+      const { data: userProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', userId);
+
+      if (productsError) throw productsError;
+
+      const userProductIds = userProducts?.map(p => p.id) || [];
+      
+      if (userProductIds.length === 0) {
+        console.log('⚠️ Usuário não tem produtos, retornando dados vazios');
+        setTotalCount(0);
+        onStatsUpdate({
+          paid: 0, pending: 0, cancelled: 0,
+          paidTotal: 0, pendingTotal: 0, cancelledTotal: 0,
+          totalAffiliateCommissions: 0,
+          totalSellerEarnings: 0,
+          ...getAllPaymentMethods().reduce((methodsAcc, method) => {
+            methodsAcc[method.id] = 0;
+            return methodsAcc;
+          }, {} as Record<string, number>)
+        });
+        onOrdersChunk([]);
+        return;
+      }
+
       const { data: ownSalesData, error: ownSalesError } = await supabase
         .from('orders')
-        .select('status, payment_method, amount, affiliate_commission, seller_commission')
-        .eq('user_id', userId);
+        .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id')
+        .in('product_id', userProductIds);
 
       if (ownSalesError) throw ownSalesError;
 
@@ -145,7 +171,7 @@ export const useStreamingQuery = () => {
             affiliate_commission,
             seller_commission
           `)
-          .eq('user_id', userId)
+          .in('product_id', userProductIds)
           .order('created_at', { ascending: false })
           .range(offset, offset + chunkSize - 1);
 
@@ -184,7 +210,7 @@ export const useStreamingQuery = () => {
           const { data: nextChunk } = await supabase
             .from('orders')
             .select('id')
-            .eq('user_id', userId)
+            .in('product_id', userProductIds)
             .order('created_at', { ascending: false })
             .range(offset + chunkSize, offset + chunkSize);
           
