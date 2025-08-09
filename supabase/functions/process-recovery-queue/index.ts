@@ -44,27 +44,29 @@ const handler = async (req: Request): Promise<Response> => {
       .select(`
         *,
         products!inner (
+          id,
           name,
           slug,
-          user_id,
-          sales_recovery_settings!inner (
-            enabled,
-            email_delay_hours,
-            email_subject,
-            email_template,
-            max_recovery_attempts
-          )
+          user_id
         )
       `)
-      .eq('status', 'abandoned')
-      .eq('products.sales_recovery_settings.enabled', true);
+      .eq('status', 'abandoned');
 
     if (fetchError) {
       console.error("❌ Erro ao buscar carrinhos abandonados:", fetchError);
-      throw fetchError;
+      return new Response(
+        JSON.stringify({ 
+          error: "Erro ao buscar carrinhos abandonados",
+          details: fetchError.message
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
-    console.log(`📊 Encontrados ${abandonedPurchases?.length || 0} carrinhos abandonados`);
+    console.log(`📊 Encontrados ${abandonedPurchases?.length || 0} carrinhos abandonados total`);
 
     if (!abandonedPurchases || abandonedPurchases.length === 0) {
       return new Response(
@@ -79,14 +81,69 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Buscar configurações de recuperação para cada produto
+    const productIds = [...new Set(abandonedPurchases.map(p => p.product_id))];
+    
+    const { data: recoverySettings, error: settingsError } = await supabase
+      .from('sales_recovery_settings')
+      .select('*')
+      .in('product_id', productIds)
+      .eq('enabled', true);
+
+    if (settingsError) {
+      console.error("❌ Erro ao buscar configurações:", settingsError);
+      return new Response(
+        JSON.stringify({ 
+          error: "Erro ao buscar configurações de recuperação",
+          details: settingsError.message
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    console.log(`⚙️ Configurações de recuperação encontradas: ${recoverySettings?.length || 0}`);
+
+    if (!recoverySettings || recoverySettings.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          message: "Nenhuma configuração de recuperação ativa encontrada",
+          processed: 0
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Criar mapa de configurações por produto
+    const settingsMap = new Map();
+    recoverySettings.forEach(setting => {
+      settingsMap.set(setting.product_id, setting);
+    });
+
+    // Filtrar carrinhos que têm configuração ativa
+    const purchasesWithSettings = abandonedPurchases.filter(purchase => 
+      settingsMap.has(purchase.product_id)
+    );
+
+    console.log(`🎯 Carrinhos com configuração ativa: ${purchasesWithSettings.length}`);
+
     let emailsSent = 0;
     const errors: string[] = [];
 
     // Processar cada carrinho abandonado
-    for (const purchase of abandonedPurchases) {
+    for (const purchase of purchasesWithSettings) {
       try {
-        const settings = purchase.products.sales_recovery_settings;
+        const settings = settingsMap.get(purchase.product_id);
         
+        if (!settings) {
+          console.log(`⏭️ Carrinho ${purchase.id} não tem configuração ativa`);
+          continue;
+        }
         // Verificar se já passou o tempo de delay
         const abandonedAt = new Date(purchase.abandoned_at);
         const delayMs = settings.email_delay_hours * 60 * 60 * 1000;
@@ -139,7 +196,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Enviar email
         const emailResponse = await resend.emails.send({
-          from: "Kambafy <noreply@kambafy.com>",
+          from: "Kambafy <onboarding@resend.dev>",
           to: [purchase.customer_email],
           subject: settings.email_subject,
           html: `
