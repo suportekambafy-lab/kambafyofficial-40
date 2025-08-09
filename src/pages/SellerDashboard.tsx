@@ -137,7 +137,7 @@ function SellerDashboardContent() {
                       <img 
                         src="/lovable-uploads/373ca352-3319-4914-9898-1dc76571a167.png" 
                         alt="Kambafy Banner"
-                        className="h-auto object-contain max-h-32 rounded-lg"
+                        className="h-auto object-contain max-h-32 rounded-lg w-full max-w-2xl md:max-w-4xl"
                       />
                     </div>
                     <div className="flex-1 overflow-y-auto">
