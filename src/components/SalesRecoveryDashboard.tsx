@@ -63,13 +63,14 @@ export function SalesRecoveryDashboard({ onConfigure }: SalesRecoveryDashboardPr
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - parseInt(dateFilter));
 
-      // Load abandoned purchases
+      // Load abandoned purchases for current user's products
       const { data: purchases, error: purchasesError } = await supabase
         .from('abandoned_purchases')
         .select(`
           *,
           products!inner(name, user_id)
         `)
+        .eq('products.user_id', (await supabase.auth.getUser()).data.user?.id)
         .gte('abandoned_at', startDate.toISOString())
         .lte('abandoned_at', endDate.toISOString())
         .order('abandoned_at', { ascending: false });
@@ -84,37 +85,37 @@ export function SalesRecoveryDashboard({ onConfigure }: SalesRecoveryDashboardPr
 
       setAbandonedPurchases(transformedPurchases);
 
-      // Load analytics
-      const { data: analyticsData, error: analyticsError } = await supabase
-        .from('sales_recovery_analytics')
-        .select('*')
-        .gte('date', startDate.toISOString().split('T')[0])
-        .lte('date', endDate.toISOString().split('T')[0]);
+      // Calculate analytics from the actual data
+      const totalAbandoned = transformedPurchases.length;
+      const totalRecovered = transformedPurchases.filter(p => p.status === 'recovered').length;
+      const totalRecoveredAmount = transformedPurchases
+        .filter(p => p.status === 'recovered')
+        .reduce((sum, p) => sum + p.amount, 0);
+      
+      // Calculate recovery emails sent
+      const totalEmailsSent = transformedPurchases.reduce((sum, p) => sum + p.recovery_attempts_count, 0);
+      
+      // Calculate recovery rate
+      const recoveryRate = totalAbandoned > 0 ? (totalRecovered / totalAbandoned) * 100 : 0;
 
-      if (analyticsError) throw analyticsError;
+      // Load recovery fees to calculate net recovered amount (after 20% fee)
+      const { data: recoveryFees, error: feesError } = await supabase
+        .from('recovery_fees')
+        .select('fee_amount')
+        .eq('seller_user_id', (await supabase.auth.getUser()).data.user?.id)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
 
-      if (analyticsData && analyticsData.length > 0) {
-        const aggregated = analyticsData.reduce((acc, curr) => ({
-          total_abandoned: acc.total_abandoned + curr.total_abandoned,
-          total_recovery_emails_sent: acc.total_recovery_emails_sent + curr.total_recovery_emails_sent,
-          total_recovered: acc.total_recovered + curr.total_recovered,
-          total_recovered_amount: acc.total_recovered_amount + curr.total_recovered_amount,
-          recovery_rate: 0 // Will calculate below
-        }), {
-          total_abandoned: 0,
-          total_recovery_emails_sent: 0,
-          total_recovered: 0,
-          total_recovered_amount: 0,
-          recovery_rate: 0
-        });
+      const totalFees = recoveryFees?.reduce((sum, fee) => sum + fee.fee_amount, 0) || 0;
+      const netRecoveredAmount = totalRecoveredAmount - totalFees;
 
-        // Calculate recovery rate
-        aggregated.recovery_rate = aggregated.total_abandoned > 0 
-          ? (aggregated.total_recovered / aggregated.total_abandoned) * 100 
-          : 0;
-
-        setAnalytics(aggregated);
-      }
+      setAnalytics({
+        total_abandoned: totalAbandoned,
+        total_recovery_emails_sent: totalEmailsSent,
+        total_recovered: totalRecovered,
+        total_recovered_amount: netRecoveredAmount, // Net amount after fees
+        recovery_rate: recoveryRate
+      });
 
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -226,12 +227,14 @@ export function SalesRecoveryDashboard({ onConfigure }: SalesRecoveryDashboardPr
             <CardTitle className="text-sm font-medium">Valor Recuperado</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.total_recovered_amount.toFixed(0)} KZ</div>
-            <p className="text-xs text-muted-foreground">
-              Total recuperado
-            </p>
-          </CardContent>
+           <CardContent>
+             <div className="text-2xl font-bold">
+               {analytics.total_recovered_amount.toLocaleString('pt-AO')} KZ
+             </div>
+             <p className="text-xs text-muted-foreground">
+               Valor líquido (após taxa de 20%)
+             </p>
+           </CardContent>
         </Card>
       </div>
 
