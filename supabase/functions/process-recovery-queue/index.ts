@@ -150,6 +150,13 @@ const handler = async (req: Request): Promise<Response> => {
         const shouldSendAt = new Date(abandonedAt.getTime() + delayMs);
         const now = new Date();
 
+        console.log(`⏰ Carrinho ${purchase.id}:`);
+        console.log(`  - Abandonado em: ${abandonedAt.toISOString()}`);
+        console.log(`  - Delay configurado: ${settings.email_delay_hours} horas`);
+        console.log(`  - Deve enviar em: ${shouldSendAt.toISOString()}`);
+        console.log(`  - Hora atual: ${now.toISOString()}`);
+        console.log(`  - Diferença: ${(now.getTime() - shouldSendAt.getTime()) / 1000} segundos`);
+
         if (now < shouldSendAt) {
           console.log(`⏳ Carrinho ${purchase.id} ainda não atingiu o tempo de delay`);
           continue;
