@@ -204,9 +204,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Não fazer logout, apenas mostrar a tela de contestação
                 return;
               }
+            } else {
+              // Se não existe perfil, criar um básico para não quebrar o fluxo
+              const basicProfile = {
+                banned: false,
+                ban_reason: null,
+                full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuário',
+                email: session.user.email
+              };
+              setUserProfile(basicProfile);
             }
           } catch (error) {
             console.error('Erro ao verificar status de banimento:', error);
+            // Em caso de erro, criar perfil básico para não quebrar o fluxo
+            const basicProfile = {
+              banned: false,
+              ban_reason: null,
+              full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuário',
+              email: session.user.email
+            };
+            setUserProfile(basicProfile);
           }
         }
         
@@ -376,12 +393,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={value}>
-      {isBanned && userProfile ? (
+      {isBanned ? (
         <BannedUserDialog
           isOpen={true}
           banReason={banReason}
-          userEmail={userProfile.email || ''}
-          userName={userProfile.full_name || 'Usuário'}
+          userEmail={userProfile?.email || user?.email || ''}
+          userName={userProfile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário'}
         />
       ) : (
         children

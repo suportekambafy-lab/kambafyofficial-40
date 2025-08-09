@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertTriangle, Mail, Send, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Mail, Send, LogOut } from 'lucide-react';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +22,20 @@ export function BannedUserDialog({ isOpen, banReason, userEmail, userName }: Ban
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useCustomToast();
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast({
+        title: 'Erro',
+        message: 'Erro ao sair da conta. Tente novamente.',
+        variant: 'error'
+      });
+    }
+  };
 
   const handleClose = () => {
     navigate('/auth');
@@ -147,6 +161,17 @@ Este email foi enviado através do sistema de contestação da Kambafy.
           <div className="text-center text-sm text-muted-foreground">
             <p>Ou envie diretamente para: <strong>suporte@kambafy.com</strong></p>
             <p className="mt-2">Nossa equipe responderá em até 48-72 horas úteis.</p>
+          </div>
+
+          <div className="border-t pt-4">
+            <Button
+              onClick={handleSignOut}
+              variant="outline"
+              className="w-full"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair da Conta e Fazer Login com Outra
+            </Button>
           </div>
         </div>
       </DialogContent>
