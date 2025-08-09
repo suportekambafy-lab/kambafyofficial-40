@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, UserX, UserCheck, User, Calendar, Mail, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { BanUserDialog } from '@/components/BanUserDialog';
 
 interface UserProfile {
   id: string;
@@ -19,6 +20,7 @@ interface UserProfile {
   avatar_url: string | null;
   bio: string | null;
   account_holder: string | null;
+  ban_reason: string | null;
   created_at: string;
 }
 
@@ -29,6 +31,8 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [banDialogOpen, setBanDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     if (admin) {
@@ -70,6 +74,74 @@ export default function AdminUsers() {
     }
   };
 
+  const handleBanUser = (user: UserProfile) => {
+    setSelectedUser(user);
+    setBanDialogOpen(true);
+  };
+
+  const handleConfirmBan = async (banReason: string) => {
+    if (!selectedUser) return;
+    
+    setProcessingId(selectedUser.id);
+    
+    try {
+      console.log('Banindo usuário:', { userId: selectedUser.id, banReason });
+      
+      // Atualizar o perfil do usuário
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          banned: true,
+          ban_reason: banReason,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedUser.id);
+
+      if (updateError) {
+        console.error('Erro ao banir usuário:', updateError);
+        throw updateError;
+      }
+
+      // Enviar email de notificação
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-user-ban-notification', {
+          body: {
+            userEmail: selectedUser.email,
+            userName: selectedUser.full_name || 'Usuário',
+            banReason: banReason
+          }
+        });
+
+        if (emailError) {
+          console.error('Erro ao enviar email de banimento:', emailError);
+          // Não falhar a operação por causa do email
+        }
+      } catch (emailError) {
+        console.error('Erro ao enviar email de banimento:', emailError);
+      }
+
+      toast({
+        title: 'Usuário Banido',
+        description: 'Usuário foi banido com sucesso e notificado por email.',
+        variant: 'destructive'
+      });
+
+      // Recarregar dados
+      loadUsers();
+      setBanDialogOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error banning user:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao banir usuário',
+        variant: 'destructive'
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const updateUserStatus = async (userId: string, banned: boolean) => {
     setProcessingId(userId);
     
@@ -80,6 +152,7 @@ export default function AdminUsers() {
         .from('profiles')
         .update({ 
           banned,
+          ban_reason: null, // Limpar motivo ao desbanir
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
@@ -221,7 +294,7 @@ export default function AdminUsers() {
                     </Button>
                   ) : (
                     <Button
-                      onClick={() => updateUserStatus(user.id, true)}
+                      onClick={() => handleBanUser(user)}
                       disabled={processingId === user.id}
                       className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 shadow-sm"
                     >
@@ -244,6 +317,17 @@ export default function AdminUsers() {
             </Card>
           )}
         </div>
+
+        <BanUserDialog
+          isOpen={banDialogOpen}
+          onClose={() => {
+            setBanDialogOpen(false);
+            setSelectedUser(null);
+          }}
+          onConfirm={handleConfirmBan}
+          userName={selectedUser?.full_name || 'Usuário'}
+          isLoading={processingId === selectedUser?.id}
+        />
       </div>
     </div>
   );

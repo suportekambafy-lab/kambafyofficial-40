@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useCustomToast';
+import { BannedUserDialog } from '@/components/BannedUserDialog';
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +21,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBanned, setIsBanned] = useState(false);
+  const [banReason, setBanReason] = useState('');
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   // Função para validar se um usuário é válido
   const isValidUser = (user: User | null): boolean => {
@@ -72,6 +76,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🧹 Limpando estado de autenticação');
     setUser(null);
     setSession(null);
+    setIsBanned(false);
+    setBanReason('');
+    setUserProfile(null);
   };
 
   useEffect(() => {
@@ -180,6 +187,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session.user);
         
+        // Verificar se o usuário está banido
+        if (session?.user) {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('banned, ban_reason, full_name, email')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            if (profile) {
+              setUserProfile(profile);
+              if (profile.banned) {
+                setIsBanned(true);
+                setBanReason(profile.ban_reason || 'Motivo não especificado');
+                // Não fazer logout, apenas mostrar a tela de contestação
+                return;
+              }
+            }
+          } catch (error) {
+            console.error('Erro ao verificar status de banimento:', error);
+          }
+        }
+        
         // Handle profile creation for new users and Google Auth validation
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
@@ -286,6 +316,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: emailNotConfirmedError as any };
     }
 
+    // Verificar se o usuário está banido
+    if (!error && data.user) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('banned, ban_reason, full_name, email')
+          .eq('user_id', data.user.id)
+          .single();
+        
+        if (profile?.banned) {
+          setIsBanned(true);
+          setBanReason(profile.ban_reason || 'Motivo não especificado');
+          setUserProfile(profile);
+          // Não fazer logout, permitir que vejam a tela de contestação
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status de banimento:', error);
+      }
+    }
+
     return { error, data };
   };
 
@@ -326,7 +376,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {isBanned && userProfile ? (
+        <BannedUserDialog
+          isOpen={true}
+          banReason={banReason}
+          userEmail={userProfile.email || ''}
+          userName={userProfile.full_name || 'Usuário'}
+        />
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };
