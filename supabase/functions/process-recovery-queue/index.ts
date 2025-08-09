@@ -194,8 +194,9 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // Preparar dados do email
-        const checkoutUrl = `https://app.kambafy.com/checkout/${purchase.products.slug}?email=${encodeURIComponent(purchase.customer_email)}`;
+        const checkoutUrl = `https://pay.kambafy.com/checkout/${purchase.products.slug}?email=${encodeURIComponent(purchase.customer_email)}`;
         
+        console.log(`🔗 URL de checkout gerada: ${checkoutUrl}`);
         // Substituir variáveis no template
         let emailContent = settings.email_template;
         emailContent = emailContent.replace(/{customer_name}/g, purchase.customer_name);
