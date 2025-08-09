@@ -1199,6 +1199,36 @@ export type Database = {
         }
         Relationships: []
       }
+      two_factor_codes: {
+        Row: {
+          code: string
+          created_at: string
+          event_type: string
+          expires_at: string
+          id: string
+          used: boolean
+          user_email: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          event_type: string
+          expires_at?: string
+          id?: string
+          used?: boolean
+          user_email: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          event_type?: string
+          expires_at?: string
+          id?: string
+          used?: boolean
+          user_email?: string
+        }
+        Relationships: []
+      }
       user_2fa_settings: {
         Row: {
           backup_codes: string[] | null

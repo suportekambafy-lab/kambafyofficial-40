@@ -50,7 +50,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('event_type', event_type)
       .eq('used', false)
       .gte('expires_at', new Date().toISOString())
-      .single();
+      .maybeSingle();
 
     if (fetchError || !codeRecord) {
       console.log('Código não encontrado ou inválido:', fetchError);
