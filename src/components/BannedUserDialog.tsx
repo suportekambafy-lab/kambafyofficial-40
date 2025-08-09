@@ -84,6 +84,8 @@ Este email foi enviado através do sistema de contestação da Kambafy.
     navigate('/auth');
   };
 
+  console.log('🚫 BannedUserDialog renderizando:', { banReason, userEmail, userName });
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}

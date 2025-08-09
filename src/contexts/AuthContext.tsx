@@ -400,14 +400,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPassword,
   };
 
+  console.log('🔍 AuthContext render:', { isBanned, userProfile, user: !!user });
+
   return (
     <AuthContext.Provider value={value}>
       {isBanned && userProfile ? (
-        <BannedUserDialog
-          banReason={banReason}
-          userEmail={userProfile.email || ''}
-          userName={userProfile.full_name || 'Usuário'}
-        />
+        <>
+          {console.log('🚫 Renderizando BannedUserDialog')}
+          <BannedUserDialog
+            banReason={banReason}
+            userEmail={userProfile.email || ''}
+            userName={userProfile.full_name || 'Usuário'}
+          />
+        </>
       ) : (
         children
       )}
