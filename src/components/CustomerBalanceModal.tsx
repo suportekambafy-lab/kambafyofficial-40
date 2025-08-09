@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,45 +9,116 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Wallet, Plus, History, ArrowUp, ArrowDown } from "lucide-react";
-import { useCustomerBalance } from '@/hooks/useCustomerBalance';
+import { Wallet, Plus, History, ArrowUp, ArrowDown, AlertCircle } from "lucide-react";
+import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
+import { useAuth } from '@/contexts/AuthContext';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getPaymentMethodsByCountry } from '@/utils/paymentMethods';
 
 interface CustomerBalanceModalProps {
   children: React.ReactNode;
 }
 
 export function CustomerBalanceModal({ children }: CustomerBalanceModalProps) {
-  const { balance, transactions, loading, addBalance } = useCustomerBalance();
+  const { user } = useAuth();
+  const userEmail = user?.email || '';
+  const { balance, transactions, loading, addBalanceByEmail, registerKambaPayEmail, fetchBalanceByEmail } = useKambaPayBalance();
   const [amount, setAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isRegistered, setIsRegistered] = useState<boolean | null>(null);
+
+  // Pega os métodos de pagamento de Angola (país padrão)
+  const paymentMethods = getPaymentMethodsByCountry('AO');
+
+  useEffect(() => {
+    if (open && userEmail) {
+      checkRegistration();
+    }
+  }, [open, userEmail]);
+
+  const checkRegistration = async () => {
+    if (!userEmail) return;
+    
+    const balanceData = await fetchBalanceByEmail(userEmail);
+    setIsRegistered(balanceData !== null);
+  };
+
+  const handleRegister = async () => {
+    if (!userEmail) {
+      toast.error('Email do usuário não encontrado');
+      return;
+    }
+
+    setIsRegistering(true);
+    try {
+      const success = await registerKambaPayEmail(userEmail);
+      
+      if (success) {
+        toast.success('Registrado no KambaPay com sucesso!');
+        setIsRegistered(true);
+        await checkRegistration();
+      } else {
+        toast.error('Erro ao registrar no KambaPay');
+      }
+    } catch (error) {
+      toast.error('Erro inesperado ao registrar');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
 
   const handleAddBalance = async () => {
+    if (!userEmail) {
+      toast.error('Email do usuário não encontrado');
+      return;
+    }
+
+    if (!isRegistered) {
+      toast.error('Você precisa se registrar no KambaPay primeiro');
+      return;
+    }
+
     const amountValue = parseFloat(amount);
     if (!amountValue || amountValue <= 0) {
       toast.error('Por favor, insira um valor válido');
       return;
     }
 
-    setIsAdding(true);
-    const success = await addBalance(amountValue, `Adição de saldo via ${getPaymentMethod()}`);
-    
-    if (success) {
-      toast.success(`${amountValue} KZ adicionados ao seu saldo!`);
-      setAmount('');
-    } else {
-      toast.error('Erro ao adicionar saldo. Tente novamente.');
+    if (!paymentMethod) {
+      toast.error('Por favor, selecione um método de pagamento');
+      return;
     }
-    setIsAdding(false);
-  };
 
-  const getPaymentMethod = () => {
-    // Simula método de pagamento - em produção seria baseado na seleção do usuário
-    return 'Multicaixa Express';
+    setIsAdding(true);
+    try {
+      const selectedMethod = paymentMethods.find(m => m.id === paymentMethod);
+      const success = await addBalanceByEmail(
+        userEmail, 
+        amountValue, 
+        'Adição de saldo', 
+        selectedMethod?.name || paymentMethod
+      );
+      
+      if (success) {
+        toast.success(`${amountValue} KZ adicionados ao seu saldo!`);
+        setAmount('');
+        setPaymentMethod('');
+        await checkRegistration();
+      } else {
+        toast.error('Erro ao adicionar saldo. Tente novamente.');
+      }
+    } catch (error) {
+      toast.error('Erro inesperado ao adicionar saldo');
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -69,7 +140,39 @@ export function CustomerBalanceModal({ children }: CustomerBalanceModalProps) {
 
         {loading ? (
           <div className="flex justify-center py-8">
-            <LoadingSpinner text="Carregando saldo..." />
+            <LoadingSpinner text="Carregando..." />
+          </div>
+        ) : !isRegistered ? (
+          <div className="space-y-4">
+            <div className="p-4 rounded-lg border border-blue-200 bg-blue-50">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-900">Registrar no KambaPay</span>
+              </div>
+              <p className="text-sm text-blue-700 mb-3">
+                Você precisa se registrar no KambaPay para usar este recurso.
+              </p>
+              <p className="text-xs text-blue-600 mb-3">
+                Email: {userEmail}
+              </p>
+              <Button 
+                onClick={handleRegister}
+                disabled={isRegistering}
+                className="w-full"
+              >
+                {isRegistering ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    Registrando...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="mr-2 h-4 w-4" />
+                    Registrar no KambaPay
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         ) : (
           <Tabs defaultValue="balance" className="space-y-4">
@@ -90,31 +193,62 @@ export function CustomerBalanceModal({ children }: CustomerBalanceModalProps) {
               {/* Add Balance */}
               <div className="space-y-3">
                 <Label htmlFor="amount">Adicionar Saldo</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="Valor em KZ"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    disabled={isAdding}
-                    min="1"
-                    step="0.01"
-                  />
-                  <Button 
-                    onClick={handleAddBalance}
-                    disabled={isAdding || !amount}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isAdding ? (
-                      <LoadingSpinner size="sm" />
-                    ) : (
-                      <Plus className="h-4 w-4" />
-                    )}
-                  </Button>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Valor em KZ"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  disabled={isAdding}
+                  min="1"
+                  step="0.01"
+                />
+
+                <div className="space-y-2">
+                  <Label htmlFor="payment-method">Método de Pagamento</Label>
+                  <Select value={paymentMethod} onValueChange={setPaymentMethod} disabled={isAdding}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha um método de pagamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentMethods.map((method) => (
+                        <SelectItem key={method.id} value={method.id}>
+                          <div className="flex items-center gap-2">
+                            {method.image && (
+                              <img 
+                                src={method.image} 
+                                alt={method.name}
+                                className="w-6 h-6 object-contain"
+                              />
+                            )}
+                            {method.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                <Button 
+                  onClick={handleAddBalance}
+                  disabled={isAdding || !amount || !paymentMethod}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  {isAdding ? (
+                    <>
+                      <LoadingSpinner size="sm" />
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Carregar Saldo
+                    </>
+                  )}
+                </Button>
+
                 <p className="text-xs text-muted-foreground">
-                  Adicione saldo para usar o KambaPay nas suas compras
+                  <strong>Nota:</strong> Em um ambiente real, este carregamento seria processado através do método de pagamento selecionado.
                 </p>
               </div>
 
