@@ -28,14 +28,30 @@ export function MobileSalesChart() {
     try {
       setLoading(true);
       
-      // Buscar vendas dos últimos 7 dias
+      // Buscar produtos do usuário primeiro
+      const { data: userProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (productsError) throw productsError;
+
+      const userProductIds = userProducts?.map(p => p.id) || [];
+      
+      if (userProductIds.length === 0) {
+        setChartData([]);
+        return;
+      }
+
+      // Buscar vendas dos últimos 7 dias usando product_id
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('created_at, amount, currency')
-        .eq('user_id', user.id)
+        .select('created_at, amount, currency, product_id')
+        .in('product_id', userProductIds)
+        .eq('status', 'completed')
         .gte('created_at', sevenDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 

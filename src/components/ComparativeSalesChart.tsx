@@ -95,21 +95,37 @@ export function ComparativeSalesChart({ dateFilter }: ComparativeSalesChartProps
       const previousEnd = new Date(previousStart);
       previousEnd.setDate(previousEnd.getDate() + days);
 
-      // Buscar dados do período atual
+      // Buscar produtos do usuário primeiro
+      const { data: userProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (productsError) throw productsError;
+
+      const userProductIds = userProducts?.map(p => p.id) || [];
+      
+      if (userProductIds.length === 0) {
+        setSalesData([]);
+        setTrend({ percentage: 0, direction: 'neutral' });
+        return;
+      }
+
+      // Buscar dados do período atual - usando product_id
       const { data: currentOrders, error: currentError } = await supabase
         .from('orders')
-        .select('amount, created_at, status')
-        .eq('user_id', user.id)
+        .select('amount, created_at, status, product_id')
+        .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', currentStart.toISOString())
         .lt('created_at', currentEnd.toISOString())
         .order('created_at', { ascending: true });
 
-      // Buscar dados do período anterior
+      // Buscar dados do período anterior - usando product_id
       const { data: previousOrders, error: previousError } = await supabase
         .from('orders')
-        .select('amount, created_at, status')
-        .eq('user_id', user.id)
+        .select('amount, created_at, status, product_id')
+        .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', previousStart.toISOString())
         .lt('created_at', previousEnd.toISOString())

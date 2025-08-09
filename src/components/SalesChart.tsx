@@ -66,11 +66,26 @@ export function SalesChart({ dateFilter }: SalesChartProps) {
       setLoading(true);
       const { startDate, days } = getDateRange();
 
-      // Buscar pedidos do período (usando orders ao invés de products.sales)
+      // Buscar produtos do usuário primeiro
+      const { data: userProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (productsError) throw productsError;
+
+      const userProductIds = userProducts?.map(p => p.id) || [];
+      
+      if (userProductIds.length === 0) {
+        setSalesData([]);
+        return;
+      }
+
+      // Buscar pedidos do período usando product_id
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('amount, created_at, status')
-        .eq('user_id', user.id)
+        .select('amount, created_at, status, product_id')
+        .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: true });

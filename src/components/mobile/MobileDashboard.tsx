@@ -43,10 +43,26 @@ export function MobileDashboard() {
 
     try {
       setLoading(true);
+      
+      // Buscar produtos do usuário primeiro
+      const { data: userProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (productsError) throw productsError;
+
+      const userProductIds = userProducts?.map(p => p.id) || [];
+      
+      if (userProductIds.length === 0) {
+        setAllOrders([]);
+        return;
+      }
+
       const { data: orders, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('user_id', user.id);
+        .in('product_id', userProductIds);
 
       if (error) {
         console.error('Error fetching orders data:', error);
