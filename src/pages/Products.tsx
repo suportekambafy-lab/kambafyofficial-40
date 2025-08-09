@@ -51,11 +51,8 @@ export default function Products() {
     ['products', user?.id],
     async () => {
       if (!user) {
-        console.log('❌ Usuário não encontrado');
         return [];
       }
-      
-      console.log('🔍 Buscando produtos para usuário:', user.id, user.email);
       
       // Buscar produtos próprios incluindo novos campos
       const { data: ownProducts, error: ownError } = await supabase
@@ -65,7 +62,6 @@ export default function Products() {
         .order('created_at', { ascending: false });
 
       if (ownError) throw ownError;
-      console.log('✅ Produtos próprios encontrados:', ownProducts?.length || 0);
 
       const { data: affiliateRelations, error: affiliateError } = await supabase
         .from('affiliates')
@@ -77,14 +73,11 @@ export default function Products() {
         console.error('❌ Erro ao buscar relações de afiliação:', affiliateError);
         throw affiliateError;
       }
-      
-      console.log('🔗 Relações de afiliação encontradas:', affiliateRelations?.length || 0);
 
       // Se há relações de afiliação, buscar os produtos correspondentes
       let affiliateProducts = [];
       if (affiliateRelations && affiliateRelations.length > 0) {
         const productIds = affiliateRelations.map(rel => rel.product_id);
-        console.log('📦 IDs dos produtos de afiliação:', productIds);
         
         const { data: productsData, error: productsError } = await supabase
           .from('products')
@@ -97,7 +90,6 @@ export default function Products() {
         }
         
         affiliateProducts = productsData || [];
-        console.log('🎯 Produtos de afiliação encontrados:', affiliateProducts.length);
       }
 
       // Combinar e marcar produtos de afiliação
@@ -116,9 +108,6 @@ export default function Products() {
         };
       });
 
-      console.log('📦 Total produtos próprios:', ownProductsMarked.length);
-      console.log('🤝 Total produtos de afiliação:', affiliateProductsMarked.length);
-
       return [...ownProductsMarked, ...affiliateProductsMarked];
     },
     {
@@ -132,7 +121,6 @@ export default function Products() {
 
   const handleToggleStatus = useCallback(async (product: Product) => {
     if (!user) {
-      console.log('❌ Usuário não encontrado para toggle status');
       return;
     }
 
@@ -157,7 +145,6 @@ export default function Products() {
     }
     
     const newStatus = product.status === 'Ativo' ? 'Inativo' : 'Ativo';
-    console.log(`🔄 Alterando status do produto ${product.id} de ${product.status} para ${newStatus}`);
     
     try {
       const { data, error } = await supabase
@@ -177,8 +164,6 @@ export default function Products() {
         });
         return;
       }
-
-      console.log('✅ Status alterado com sucesso:', data);
       toast({
         title: "Sucesso",
         description: `Produto ${newStatus === 'Ativo' ? 'ativado' : 'desativado'} com sucesso`
@@ -198,7 +183,6 @@ export default function Products() {
 
   const handleDeleteProduct = useCallback(async () => {
     if (!deleteProduct || !user) {
-      console.log('Cannot delete: missing deleteProduct or user', { deleteProduct: !!deleteProduct, user: !!user });
       return;
     }
 
@@ -213,7 +197,6 @@ export default function Products() {
       return;
     }
 
-    console.log('Starting delete for product:', deleteProduct.id);
     setDeleteLoading(true);
     
     try {
@@ -261,10 +244,7 @@ export default function Products() {
         .eq('user_id', user.id)
         .select();
 
-      console.log('Delete result:', { data, error });
-
       if (error) {
-        console.error('Error deleting product:', error);
         toast({
           title: "Erro",
           description: `Erro ao excluir produto: ${error.message}`,
@@ -273,8 +253,6 @@ export default function Products() {
         setDeleteProduct(null); // Fechar o modal
         return;
       }
-
-      console.log('Product deleted successfully');
       toast({
         title: "Sucesso",
         description: "Produto excluído com sucesso"
@@ -424,13 +402,6 @@ export default function Products() {
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Comece criando seu primeiro produto digital ou solicite afiliação de produtos
                 </p>
-                {/* Debug info */}
-                {user && (
-                  <div className="text-xs text-gray-500 mb-4 text-center">
-                    <p>Debug: Usuário logado: {user.email}</p>
-                    <p>ID: {user.id}</p>
-                  </div>
-                )}
                 <Button onClick={handleNewProduct}>
                   <Plus className="w-4 h-4 mr-2" />
                   Criar Produto
