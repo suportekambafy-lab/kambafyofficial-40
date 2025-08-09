@@ -121,15 +121,15 @@ export const getEnabledPaymentMethods = (): PaymentMethod[] => {
 };
 
 export const getAngolaPaymentMethods = (): PaymentMethod[] => {
-  return PAYMENT_METHODS.filter(method => method.isAngola);
+  return PAYMENT_METHODS.filter(method => method.isAngola || method.id === 'kambapay');
 };
 
 export const getMozambiquePaymentMethods = (): PaymentMethod[] => {
-  return PAYMENT_METHODS.filter(method => method.isMozambique);
+  return PAYMENT_METHODS.filter(method => method.isMozambique || method.id === 'kambapay');
 };
 
 export const getPortugalPaymentMethods = (): PaymentMethod[] => {
-  return PAYMENT_METHODS.filter(method => method.isPortugal);
+  return PAYMENT_METHODS.filter(method => method.isPortugal || method.id === 'kambapay');
 };
 
 export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[] => {

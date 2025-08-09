@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Shield, Check, AlertTriangle, CheckCircle } from "lucide-react";
+import { Shield, Check, AlertTriangle, CheckCircle, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -305,11 +305,11 @@ const Checkout = () => {
       // Filtrar por país
       const countryMethods = enabledMethods.filter((method: any) => {
         if (userCountry.code === 'AO') {
-          return ['express', 'reference', 'transfer'].includes(method.id);
+          return ['express', 'reference', 'transfer', 'kambapay'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
-          return ['emola', 'epesa'].includes(method.id);
+          return ['emola', 'epesa', 'kambapay'].includes(method.id);
         } else if (userCountry.code === 'PT') {
-          return ['card', 'klarna', 'multibanco', 'apple_pay'].includes(method.id);
+          return ['card', 'klarna', 'multibanco', 'apple_pay', 'kambapay'].includes(method.id);
         }
         return false;
       });
@@ -318,7 +318,17 @@ const Checkout = () => {
     }
 
     // Fallback: usar métodos baseados no país selecionado
-    return getPaymentMethodsByCountry(userCountry.code);
+    const countryMethods = getPaymentMethodsByCountry(userCountry.code);
+    
+    // Adicionar KambaPay a todos os países
+    const kambaPayMethod = {
+      id: "kambapay",
+      name: "KambaPay",
+      image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzI1NjNFQiIvPgo8cGF0aCBkPSJNMTIgMTJIMjhWMjhIMTJWMTJaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTYgMTZIMjBWMjRIMTZWMTZaIiBmaWxsPSIjMjU2M0VCIi8+CjxwYXRoIGQ9Ik0yMCAxNkgyNFYyNEgyMFYxNloiIGZpbGw9IiMyNTYzRUIiLz4KPC9zdmc+",
+      enabled: true
+    };
+    
+    return [...countryMethods, kambaPayMethod];
   };
 
   const availablePaymentMethods = getPaymentMethods();
@@ -519,6 +529,92 @@ const Checkout = () => {
     if (['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment)) {
       console.log('Stripe payment method selected, processing handled by StripeCardPayment component');
       return;
+    }
+
+    // Para KambaPay, usar edge function específica
+    if (selectedPayment === 'kambapay') {
+      console.log('🔵 KambaPay payment method selected');
+      setProcessing(true);
+
+      try {
+        const totalAmount = parseFloat(product.price) + orderBumpPrice;
+        
+        const paymentData = {
+          email: formData.email,
+          productId: product.id,
+          productPrice: totalAmount,
+          customerName: formData.fullName,
+          customerPhone: formData.phone,
+          currency: userCountry.currency,
+          orderBump: orderBump ? {
+            bump_product_name: orderBump.bump_product_name,
+            bump_product_price: orderBump.bump_product_price,
+            discount: orderBump.discount,
+            discounted_price: orderBumpPrice
+          } : null
+        };
+
+        console.log('🔵 Processing KambaPay payment with data:', paymentData);
+
+        const { data, error } = await supabase.functions.invoke('process-kambapay-payment', {
+          body: paymentData
+        });
+
+        if (error) {
+          console.error('❌ KambaPay payment error:', error);
+          toast({
+            title: "Erro no pagamento",
+            description: error.message || "Erro ao processar pagamento com KambaPay",
+            variant: "destructive"
+          });
+          setProcessing(false);
+          return;
+        }
+
+        if (data?.success) {
+          console.log('✅ KambaPay payment successful:', data);
+          
+          // Redirecionar para página de sucesso
+          const params = new URLSearchParams({
+            order_id: data.orderId,
+            customer_name: formData.fullName.trim(),
+            customer_email: formData.email.trim().toLowerCase(),
+            product_name: product.name,
+            amount: totalAmount.toString(),
+            currency: userCountry.currency,
+            product_id: productId || '',
+            seller_id: product.user_id,
+            base_product_price: product.price,
+            ...(orderBump && {
+              order_bump_name: orderBump.bump_product_name,
+              order_bump_price: orderBump.bump_product_price,
+              order_bump_discount: orderBump.discount.toString(),
+              order_bump_discounted_price: orderBumpPrice.toString()
+            })
+          });
+
+          navigate(`/obrigado?${params.toString()}`);
+          return;
+        } else {
+          console.error('❌ KambaPay payment failed:', data);
+          toast({
+            title: "Erro no pagamento",
+            description: data?.message || "Pagamento com KambaPay falhou",
+            variant: "destructive"
+          });
+          setProcessing(false);
+          return;
+        }
+      } catch (error) {
+        console.error('❌ Unexpected KambaPay error:', error);
+        toast({
+          title: "Erro no pagamento",
+          description: "Erro inesperado ao processar pagamento com KambaPay",
+          variant: "destructive"
+        });
+        setProcessing(false);
+        return;
+      }
     }
 
     console.log('✅ Processing local payment method:', selectedPayment);
@@ -1132,6 +1228,38 @@ const Checkout = () => {
                     displayPrice={getDisplayPrice(totalPrice)}
                     convertedAmount={convertedTotalPrice}
                   />
+                </div>
+              )}
+
+              {selectedPayment === 'kambapay' && (
+                <div className="mt-6">
+                  <Card className="border-blue-200 bg-blue-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+                          <Wallet className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-blue-900">Pagamento com KambaPay</h3>
+                          <p className="text-sm text-blue-700">Use seu saldo KambaPay para pagar</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-white p-3 rounded-lg border border-blue-200">
+                          <div className="text-sm text-gray-600 mb-1">Valor total</div>
+                          <div className="text-lg font-bold text-blue-600">
+                            {getDisplayPrice(totalPrice)}
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
+                          <strong>💡 Dica:</strong> O pagamento será processado com o email informado acima. 
+                          Certifique-se de que possui saldo suficiente em sua conta KambaPay.
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </div>
