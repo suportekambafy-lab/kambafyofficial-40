@@ -87,7 +87,7 @@ export const useStreamingQuery = () => {
           .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code')
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
-          .eq('status', 'completed');
+          .in('status', ['completed', 'pending']); // Incluir vendas pendentes
 
         if (affiliateDataError) throw affiliateDataError;
         affiliateSalesData = affiliateData || [];
@@ -293,7 +293,7 @@ export const useStreamingQuery = () => {
           `)
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
-          .eq('status', 'completed')
+          .in('status', ['completed', 'pending']) // Incluir vendas pendentes
           // Excluir vendas de produtos próprios para evitar duplicação
           .not('product_id', 'in', `(${userProductIds.length > 0 ? userProductIds.join(',') : 'null'})`)
           .order('created_at', { ascending: false });
