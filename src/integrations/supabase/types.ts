@@ -921,6 +921,7 @@ export type Database = {
           order_bump_data: Json | null
           order_id: string
           payment_method: string | null
+          payment_proof_data: Json | null
           product_id: string
           seller_commission: number | null
           status: string | null
@@ -942,6 +943,7 @@ export type Database = {
           order_bump_data?: Json | null
           order_id: string
           payment_method?: string | null
+          payment_proof_data?: Json | null
           product_id: string
           seller_commission?: number | null
           status?: string | null
@@ -963,6 +965,7 @@ export type Database = {
           order_bump_data?: Json | null
           order_id?: string
           payment_method?: string | null
+          payment_proof_data?: Json | null
           product_id?: string
           seller_commission?: number | null
           status?: string | null
