@@ -194,7 +194,7 @@ export function MobileDashboard() {
   }, [user, loadAllOrders]);
 
   const formatPrice = (amount: number): string => {
-    return `${amount.toLocaleString()} KZ`;
+    return `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`;
   };
 
   const goal = 1000000;

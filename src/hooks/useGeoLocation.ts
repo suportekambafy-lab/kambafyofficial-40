@@ -180,7 +180,7 @@ export const useGeoLocation = () => {
         return `${convertedPrice.toFixed(2)} MZN`;
       case 'KZ':
       default:
-        return `${priceInKZ.toLocaleString()} KZ`;
+        return `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;
     }
   };
 

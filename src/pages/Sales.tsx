@@ -213,7 +213,7 @@ export default function Sales() {
   };
 
   const formatPrice = (amount: string, currency: string) => {
-    return `${parseFloat(amount).toLocaleString()} ${currency}`;
+    return `${parseFloat(amount).toLocaleString('pt-BR')} ${currency}`;
   };
 
   const getStatusBadge = (status: string, paymentMethod: string) => {

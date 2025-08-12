@@ -11,7 +11,7 @@ interface MobileDashboardHeaderProps {
 
 export function MobileDashboardHeader({ goal, totalRevenue, progressPercentage }: MobileDashboardHeaderProps) {
   const formatPrice = (amount: number): string => {
-    return `${amount.toLocaleString()} KZ`;
+    return `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`;
   };
 
   return (

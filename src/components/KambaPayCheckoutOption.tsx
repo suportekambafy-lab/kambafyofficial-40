@@ -124,11 +124,7 @@ export function KambaPayCheckoutOption({
   };
 
   const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat('pt-AO', {
-      style: 'currency',
-      currency: 'AOA',
-      minimumFractionDigits: 0,
-    }).format(amount).replace('AOA', 'KZ');
+    return `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`;
   };
 
   const isDisabled = disabled || loading || isProcessing;
