@@ -145,9 +145,16 @@ export default function Products() {
       return;
     }
     
-    // Lógica de mudança de status:
-    // - Se está Ativo -> Inativo
-    // - Se está Inativo ou Rascunho -> Ativo
+    // Não permitir ativar produtos em rascunho - devem ser publicados primeiro
+    if (product.status === 'Rascunho') {
+      toast({
+        title: "Ação não permitida",
+        description: "Produtos em rascunho devem ser publicados primeiro. Use 'Editar' para completar e publicar o produto.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const newStatus = product.status === 'Ativo' ? 'Inativo' : 'Ativo';
     
     try {
