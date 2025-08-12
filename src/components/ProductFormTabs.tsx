@@ -299,11 +299,17 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
 
       if (missingFields.length > 0) {
         console.log("🚨 Bloqueando publicação devido a campos faltando");
-        toast({
-          title: "❌ Não é possível publicar",
-          description: `Campos obrigatórios faltando: ${missingFields.join(", ")}`,
-          variant: "destructive"
-        });
+        console.log("🍞 Tentando mostrar toast...");
+        try {
+          toast({
+            title: "❌ Não é possível publicar",
+            description: `Campos obrigatórios faltando: ${missingFields.join(", ")}`,
+            variant: "destructive"
+          });
+          console.log("✅ Toast chamado com sucesso");
+        } catch (error) {
+          console.error("❌ Erro ao mostrar toast:", error);
+        }
         return;
       }
       
