@@ -263,7 +263,7 @@ export const useStreamingQuery = () => {
         await new Promise(resolve => setTimeout(resolve, 5));
       }
 
-      // Carregar vendas como afiliado se existirem códigos
+      // Carregar vendas como afiliado se existirem códigos (excluindo vendas próprias)
       if (userAffiliateCodes.length > 0) {
         console.log('📋 Carregando vendas como afiliado...');
         
@@ -294,6 +294,8 @@ export const useStreamingQuery = () => {
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
           .eq('status', 'completed')
+          // Excluir vendas de produtos próprios para evitar duplicação
+          .not('product_id', 'in', `(${userProductIds.length > 0 ? userProductIds.join(',') : 'null'})`)
           .order('created_at', { ascending: false });
 
         if (affiliateOrdersError) throw affiliateOrdersError;

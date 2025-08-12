@@ -122,7 +122,7 @@ export function ModernRecentSales() {
         );
       }
 
-      // Adicionar vendas como afiliado se houver códigos
+      // Adicionar vendas como afiliado se houver códigos (excluindo vendas próprias)
       if (userAffiliateCodes.length > 0) {
         promises.push(
           supabase
@@ -145,10 +145,11 @@ export function ModernRecentSales() {
             .in('affiliate_code', userAffiliateCodes)
             .not('affiliate_commission', 'is', null)
             .eq('status', 'completed')
+            // Excluir vendas de produtos próprios para evitar duplicação
+            .not('product_id', 'in', `(${userProductIds.length > 0 ? userProductIds.join(',') : 'null'})`)
             .order('created_at', { ascending: false })
             .limit(10)
         );
-
       }
 
       if (promises.length === 0) {
