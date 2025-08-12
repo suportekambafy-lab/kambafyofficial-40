@@ -543,8 +543,7 @@ const Checkout = () => {
         })
       });
 
-      // Marcar carrinho como recuperado se foi detectado anteriormente
-      await markAsRecovered(orderId);
+      // Não marcar como recuperado aqui - será feito na seção de transferência bancária se necessário
 
       navigate(`/obrigado?${params.toString()}`);
     } catch (error) {
@@ -681,8 +680,7 @@ const Checkout = () => {
 
       setProduct(prev => ({ ...prev, sales: newSalesCount }));
 
-      // Marcar carrinho como recuperado se foi detectado anteriormente
-      await markAsRecovered(orderId);
+      // Não marcar como recuperado aqui - será feito na seção de transferência bancária se necessário
 
       // Navegar para página de sucesso
       const params = new URLSearchParams({
@@ -877,8 +875,7 @@ const Checkout = () => {
             })
           });
 
-          // Marcar carrinho como recuperado se foi detectado anteriormente
-          await markAsRecovered(data.orderId);
+          // Não marcar como recuperado aqui - será feito na seção de transferência bancária se necessário
 
           navigate(`/obrigado?${params.toString()}`);
           return;
