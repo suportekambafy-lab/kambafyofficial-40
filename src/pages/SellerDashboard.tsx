@@ -132,22 +132,7 @@ function SellerDashboardContent() {
           <main className="flex-1 overflow-y-auto">
             <Suspense fallback={<SkeletonPage variant="dashboard" />}>
               <Routes>
-                <Route path="/" element={
-                  <div className="flex flex-col h-full">
-                    {/* Banner - apenas na home do dashboard */}
-                    <div className="w-full flex-shrink-0 flex justify-center p-4">
-                      <img 
-                        src="/lovable-uploads/6ab74856-b2c6-4880-8149-9c90b67fc783.png" 
-                        alt="Kambafy Banner - Recuperação Automática"
-                        className="h-auto object-contain max-h-32 rounded-lg w-full max-w-md md:max-w-5xl lg:max-w-6xl cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => navigate('/vendedor/apps')}
-                      />
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                      <ModernDashboardHome />
-                    </div>
-                  </div>
-                } />
+                <Route path="/" element={<ModernDashboardHome />} />
                 <Route path="/produtos" element={<Products />} />
                 <Route path="/vendas" element={<Sales />} />
                 <Route path="/financeiro" element={<Financial />} />
