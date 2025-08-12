@@ -567,10 +567,23 @@ const Checkout = () => {
 
   const handleBankTransferPurchase = async (proofFile: File, selectedBank: string) => {
     console.log('🏦 Processing bank transfer purchase with proof:', { fileName: proofFile.name, bank: selectedBank });
+    console.log('🏦 Form data check:', { 
+      fullName: formData.fullName, 
+      email: formData.email, 
+      phone: formData.phone,
+      product: !!product,
+      productId 
+    });
+    
     setProcessing(true);
 
     try {
       if (!formData.fullName || !formData.email || !formData.phone) {
+        console.error('🏦 Missing required fields:', { 
+          fullName: !!formData.fullName, 
+          email: !!formData.email, 
+          phone: !!formData.phone 
+        });
         toast({
           title: "Campos obrigatórios",
           description: "Por favor, preencha todos os campos antes de continuar",
@@ -1545,10 +1558,16 @@ const Checkout = () => {
                     currency={userCountry.currency}
                     onPaymentComplete={async (file, bank) => {
                       setBankTransferData({ file, bank });
-                      console.log('Bank transfer proof uploaded:', { fileName: file.name, bank });
+                      console.log('🏦 Bank transfer proof uploaded:', { fileName: file.name, bank });
                       
-                      // Processar compra por transferência imediatamente
-                      await handleBankTransferPurchase(file, bank);
+                      try {
+                        console.log('🏦 Starting bank transfer purchase process...');
+                        // Processar compra por transferência imediatamente
+                        await handleBankTransferPurchase(file, bank);
+                        console.log('🏦 Bank transfer purchase completed successfully');
+                      } catch (error) {
+                        console.error('🏦 Error in bank transfer purchase:', error);
+                      }
                     }}
                     disabled={processing}
                   />
