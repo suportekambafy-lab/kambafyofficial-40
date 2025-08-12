@@ -60,7 +60,10 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
               {product.name}
             </CardTitle>
             <div className="flex items-center gap-1 md:gap-2 mt-1 md:mt-2 flex-wrap">
-              <Badge variant={isActive ? 'default' : 'secondary'} className="text-xs">
+              <Badge 
+                variant={isActive ? 'default' : product.status === 'Rascunho' ? 'outline' : 'secondary'} 
+                className={`text-xs ${product.status === 'Rascunho' ? 'border-orange-400 text-orange-600 bg-orange-50' : ''}`}
+              >
                 {product.status}
               </Badge>
               {product.status === 'Banido' && product.revision_requested && (

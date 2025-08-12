@@ -32,6 +32,7 @@ interface Product {
   affiliate_code?: string;
   revision_requested?: boolean;
   revision_requested_at?: string;
+  category?: string;
 }
 
 export default function Products() {
@@ -154,6 +155,18 @@ export default function Products() {
         variant: "destructive"
       });
       return;
+    }
+
+    // Validar se rascunho está completo antes de ativar
+    if (product.status === 'Rascunho') {
+      if (!product.name || !product.price || !product.category) {
+        toast({
+          title: "Produto incompleto",
+          description: "Para ativar um rascunho, complete os campos obrigatórios: nome, preço e categoria.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
     
     const newStatus = product.status === 'Ativo' ? 'Inativo' : 'Ativo';
