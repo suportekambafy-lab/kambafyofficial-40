@@ -45,7 +45,13 @@ const Checkout = () => {
     supportedCountries,
     isReady: geoReady
   } = useGeoLocation();
-  const { affiliateCode, hasAffiliate } = useAffiliateTracking();
+  const { 
+    affiliateCode, 
+    hasAffiliate, 
+    markAsValidAffiliate, 
+    markAsInvalidAffiliate,
+    clearAffiliateCode 
+  } = useAffiliateTracking();
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -608,15 +614,21 @@ const Checkout = () => {
           .eq('affiliate_code', affiliateCode)
           .eq('product_id', product.id)
           .eq('status', 'ativo')
-          .single();
+          .maybeSingle();
           
         if (affiliate && !affiliateError) {
+          console.log('✅ Afiliado válido encontrado:', affiliate);
+          markAsValidAffiliate();
           const commission_rate = affiliate.commission_rate;
           const commission_decimal = parseFloat(commission_rate.replace('%', '')) / 100;
           affiliate_commission = Math.round(totalAmount * commission_decimal * 100) / 100;
           seller_commission = Math.round((totalAmount - affiliate_commission) * 100) / 100;
         } else {
+          console.log('❌ Nenhum afiliado válido encontrado para o código:', affiliateCode, affiliateError);
+          markAsInvalidAffiliate();
           seller_commission = totalAmount;
+          // Limpar código de afiliado inválido
+          affiliate_commission = null;
         }
       } else {
         seller_commission = totalAmount;
@@ -939,11 +951,13 @@ const Checkout = () => {
           .eq('affiliate_code', affiliateCode)
           .eq('product_id', product.id)
           .eq('status', 'ativo')
-          .single();
+          .maybeSingle();
           
         console.log('🔍 Dados do afiliado:', { affiliate, affiliateError });
           
         if (affiliate && !affiliateError) {
+          console.log('✅ Afiliado válido encontrado:', affiliate);
+          markAsValidAffiliate();
           const commission_rate = affiliate.commission_rate;
           const commission_decimal = parseFloat(commission_rate.replace('%', '')) / 100;
           affiliate_commission = Math.round(totalAmount * commission_decimal * 100) / 100; // Arredondar para 2 casas
@@ -957,8 +971,11 @@ const Checkout = () => {
             seller_commission
           });
         } else {
-          console.log('⚠️ Afiliado não encontrado ou inativo, vendedor recebe tudo');
+          console.log('❌ Nenhum afiliado válido encontrado para o código:', affiliateCode, affiliateError);
+          markAsInvalidAffiliate();
           seller_commission = totalAmount;
+          // Limpar código de afiliado inválido
+          affiliate_commission = null;
         }
       } else {
         console.log('ℹ️ Sem afiliado, vendedor recebe tudo');
