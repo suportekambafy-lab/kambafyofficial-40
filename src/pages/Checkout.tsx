@@ -974,7 +974,7 @@ const Checkout = () => {
         amount: totalAmount.toString(),
         currency: userCountry.currency,
         payment_method: selectedPayment,
-        status: 'pending', // Bank transfer orders should start as pending
+        status: 'pending', // Angola payment methods should start as pending
         user_id: null, // Always null for checkout page orders (guest orders)
         affiliate_code: hasAffiliate ? affiliateCode : null,
         affiliate_commission: affiliate_commission,
@@ -1158,12 +1158,13 @@ const Checkout = () => {
         })
       });
 
-      // Não marcar vendas de transferência bancária como recuperadas automaticamente
+      // Não marcar vendas angolanas como recuperadas automaticamente
       console.log('🔍 Verificando se deve marcar como recuperado:', {
         hasDetected,
         abandonedPurchaseId,
         email: formData.email,
-        productId: product?.id
+        productId: product?.id,
+        paymentMethod: selectedPayment
       });
       
       // Só marcar como recuperado se realmente houve detecção de abandono
