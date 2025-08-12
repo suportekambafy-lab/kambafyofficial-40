@@ -231,8 +231,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     });
   };
 
-  const handleSave = async (saveAsDraft = false) => {
-    console.log("handleSave called with formData:", formData, "saveAsDraft:", saveAsDraft);
+  const handleSave = async () => {
+    console.log("handleSave called with formData:", formData);
     console.log("editingProduct:", editingProduct);
     if (!user) {
       toast({
@@ -243,46 +243,33 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       return;
     }
 
-    // Validações mais rígidas apenas para publicação (não para rascunho)
-    if (!saveAsDraft) {
-      if (!formData.name || !formData.price || !formData.category) {
-        toast({
-          title: "Erro",
-          description: "Nome, preço e categoria são obrigatórios para publicar",
-          variant: "destructive"
-        });
-        return;
-      }
+    if (!formData.name || !formData.price || !formData.category) {
+      toast({
+        title: "Erro",
+        description: "Nome, preço e categoria são obrigatórios",
+        variant: "destructive"
+      });
+      return;
+    }
 
-      if (formData.type === "Curso" && !formData.memberAreaId) {
-        toast({
-          title: "Erro",
-          description: "Para cursos, você deve selecionar uma área de membros",
-          variant: "destructive"
-        });
-        return;
-      }
+    if (formData.type === "Curso" && !formData.memberAreaId) {
+      toast({
+        title: "Erro",
+        description: "Para cursos, você deve selecionar uma área de membros",
+        variant: "destructive"
+      });
+      return;
+    }
 
-      // Validar se pelo menos um método de pagamento está ativo
-      const activeMethods = formData.paymentMethods.filter(method => method.enabled);
-      if (activeMethods.length === 0) {
-        toast({
-          title: "Erro",
-          description: "Você deve ativar pelo menos um método de pagamento",
-          variant: "destructive"
-        });
-        return;
-      }
-    } else {
-      // Para rascunho, só validar se tem pelo menos nome
-      if (!formData.name.trim()) {
-        toast({
-          title: "Erro",
-          description: "Nome do produto é obrigatório para salvar como rascunho",
-          variant: "destructive"
-        });
-        return;
-      }
+    // Validar se pelo menos um método de pagamento está ativo
+    const activeMethods = formData.paymentMethods.filter(method => method.enabled);
+    if (activeMethods.length === 0) {
+      toast({
+        title: "Erro",
+        description: "Você deve ativar pelo menos um método de pagamento",
+        variant: "destructive"
+      });
+      return;
     }
 
     setSaving(true);
@@ -291,13 +278,13 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       const productData = {
         name: formData.name,
         type: formData.type,
-        price: formData.price || null,
+        price: formData.price,
         description: formData.description,
         share_link: formData.type === "Curso" ? null : formData.shareLink,
         cover: formData.cover,
         commission: formData.allowAffiliates ? formData.commission : null,
         tags: formData.tags,
-        member_area_id: formData.type === "Curso" ? formData.memberAreaId || null : null,
+        member_area_id: formData.type === "Curso" ? formData.memberAreaId : null,
         payment_methods: formData.paymentMethods as any,
         fantasy_name: formData.fantasyName || null,
         allow_affiliates: formData.allowAffiliates,
@@ -305,7 +292,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         support_email: formData.supportEmail || null,
         support_whatsapp: formData.supportWhatsapp || null,
         user_id: user.id,
-        status: saveAsDraft ? "Rascunho" : "Ativo"
+        status: "Ativo"
       };
 
       console.log('Saving product data:', productData);
@@ -341,11 +328,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         console.log('Product saved successfully');
         toast({
           title: "Sucesso",
-          description: saveAsDraft 
-            ? "Produto salvo como rascunho" 
-            : editingProduct 
-              ? "Produto atualizado com sucesso" 
-              : "Produto criado com sucesso"
+          description: editingProduct ? "Produto atualizado com sucesso" : "Produto criado com sucesso"
         });
         
         console.log('onSave callback:', onSave);
@@ -741,7 +724,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       
       <div className="flex gap-2 pt-6 border-t">
         <Button 
-          onClick={() => handleSave(false)} 
+          onClick={handleSave} 
           disabled={saving}
           className="flex-1"
         >
@@ -752,25 +735,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
             </>
           ) : (
             <>
-              <Save className="w-4 h-4 mr-2" />
-              {editingProduct ? "Atualizar" : "Publicar"} Produto
-            </>
-          )}
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={() => handleSave(true)} 
-          disabled={saving}
-        >
-          {saving ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4 mr-2" />
-              Salvar como Rascunho
+              {editingProduct ? "Atualizar" : "Criar"} Produto
             </>
           )}
         </Button>
