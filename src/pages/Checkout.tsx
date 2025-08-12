@@ -203,6 +203,13 @@ const Checkout = () => {
             setProductNotFound(true);
           }, 2000);
           setProduct(null);
+        } else if (productData?.status === 'Rascunho') {
+          console.log('Product is in draft:', productId);
+          setTimeout(() => {
+            setError("Este produto ainda está em desenvolvimento e não está disponível para compra");
+            setProductNotFound(true);
+          }, 2000);
+          setProduct(null);
         } else if (productData?.status === 'Inativo') {
           console.log('Product is inactive:', productId);
           setProduct(productData);

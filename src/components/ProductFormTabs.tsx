@@ -231,8 +231,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     });
   };
 
-  const handleSave = async () => {
-    console.log("handleSave called with formData:", formData);
+  const handleSave = async (isDraft = false) => {
+    console.log("handleSave called with formData:", formData, "isDraft:", isDraft);
     console.log("editingProduct:", editingProduct);
     if (!user) {
       toast({
@@ -243,33 +243,46 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       return;
     }
 
-    if (!formData.name || !formData.price || !formData.category) {
-      toast({
-        title: "Erro",
-        description: "Nome, preço e categoria são obrigatórios",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Para rascunho, só validar nome obrigatório
+    if (isDraft) {
+      if (!formData.name) {
+        toast({
+          title: "Erro",
+          description: "Nome é obrigatório para salvar como rascunho",
+          variant: "destructive"
+        });
+        return;
+      }
+    } else {
+      // Para publicar, validar todos os campos obrigatórios
+      if (!formData.name || !formData.price || !formData.category) {
+        toast({
+          title: "Erro",
+          description: "Nome, preço e categoria são obrigatórios para publicar",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    if (formData.type === "Curso" && !formData.memberAreaId) {
-      toast({
-        title: "Erro",
-        description: "Para cursos, você deve selecionar uma área de membros",
-        variant: "destructive"
-      });
-      return;
-    }
+      if (formData.type === "Curso" && !formData.memberAreaId) {
+        toast({
+          title: "Erro",
+          description: "Para cursos, você deve selecionar uma área de membros",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    // Validar se pelo menos um método de pagamento está ativo
-    const activeMethods = formData.paymentMethods.filter(method => method.enabled);
-    if (activeMethods.length === 0) {
-      toast({
-        title: "Erro",
-        description: "Você deve ativar pelo menos um método de pagamento",
-        variant: "destructive"
-      });
-      return;
+      // Validar se pelo menos um método de pagamento está ativo
+      const activeMethods = formData.paymentMethods.filter(method => method.enabled);
+      if (activeMethods.length === 0) {
+        toast({
+          title: "Erro",
+          description: "Você deve ativar pelo menos um método de pagamento",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     setSaving(true);
@@ -292,7 +305,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         support_email: formData.supportEmail || null,
         support_whatsapp: formData.supportWhatsapp || null,
         user_id: user.id,
-        status: "Ativo"
+        status: isDraft ? "Rascunho" : "Ativo"
       };
 
       console.log('Saving product data:', productData);
@@ -326,9 +339,13 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         });
       } else {
         console.log('Product saved successfully');
+        const successMessage = isDraft 
+          ? (editingProduct ? "Rascunho atualizado com sucesso" : "Produto salvo como rascunho")
+          : (editingProduct ? "Produto atualizado com sucesso" : "Produto criado com sucesso");
+        
         toast({
           title: "Sucesso",
-          description: editingProduct ? "Produto atualizado com sucesso" : "Produto criado com sucesso"
+          description: successMessage
         });
         
         console.log('onSave callback:', onSave);
@@ -723,9 +740,11 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       />
       
       <div className="flex gap-2 pt-6 border-t">
+        {/* Botão Salvar como Rascunho */}
         <Button 
-          onClick={handleSave} 
+          onClick={() => handleSave(true)} 
           disabled={saving}
+          variant="outline"
           className="flex-1"
         >
           {saving ? (
@@ -735,10 +754,30 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
             </>
           ) : (
             <>
-              {editingProduct ? "Atualizar" : "Criar"} Produto
+              <Save className="w-4 h-4 mr-2" />
+              Salvar Rascunho
             </>
           )}
         </Button>
+        
+        {/* Botão Publicar */}
+        <Button 
+          onClick={() => handleSave(false)} 
+          disabled={saving}
+          className="flex-1"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Publicando...
+            </>
+          ) : (
+            <>
+              {editingProduct && editingProduct.status === 'Rascunho' ? "Publicar" : (editingProduct ? "Atualizar" : "Publicar")}
+            </>
+          )}
+        </Button>
+        
         <Button variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
