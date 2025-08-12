@@ -336,7 +336,7 @@ const ThankYou = () => {
             <CheckCircle className="w-6 h-6" />
           )}
           <span className="text-lg font-semibold">
-            {orderStatus === 'pending' ? 'AGUARDANDO PAGAMENTO' : 'COMPRA REALIZADA COM SUCESSO'}
+            {orderStatus === 'pending' ? 'PENDENTE' : 'COMPRA REALIZADA COM SUCESSO'}
           </span>
         </div>
       </div>
@@ -539,10 +539,10 @@ const ThankYou = () => {
               Acesso ao Produto
             </h3>
             
-            {orderStatus === 'pending' && orderDetails.paymentMethod === 'multibanco' ? (
+            {orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod) ? (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                 <p className="text-yellow-800 text-sm mb-2">
-                  <strong>Aguardando Pagamento:</strong> O acesso ao produto será liberado após a confirmação do pagamento por Multibanco.
+                  <strong>Pendente:</strong> O acesso ao produto será liberado após a confirmação do pagamento.
                 </p>
                 <p className="text-yellow-700 text-sm">
                   Você receberá um e-mail de confirmação assim que o pagamento for processado.
@@ -576,17 +576,17 @@ const ThankYou = () => {
                   ? 'bg-gray-400 cursor-not-allowed' 
                   : 'bg-checkout-green hover:bg-checkout-green/90'
               }`}
-              disabled={orderStatus === 'pending' && orderDetails.paymentMethod === 'multibanco'}
+              disabled={orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod)}
             >
               {product?.type === 'Curso' && product?.member_areas ? (
                 <>
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  {orderStatus === 'pending' ? 'Aguardando Pagamento' : 'Acessar Curso'}
+                  {orderStatus === 'pending' ? 'Pendente' : 'Acessar Curso'}
                 </>
               ) : (
                 <>
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  {orderStatus === 'pending' ? 'Aguardando Pagamento' : 'Acessar Produto'}
+                  {orderStatus === 'pending' ? 'Pendente' : 'Acessar Produto'}
                 </>
               )}
             </Button>
