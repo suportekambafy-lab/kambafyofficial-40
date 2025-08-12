@@ -87,16 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Verificar sessão inicial com timeout para evitar hanging
     const getInitialSession = async () => {
       try {
-        // Timeout de 3 segundos para evitar hanging
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Session timeout')), 3000)
-        );
-
-        const { data: { session: currentSession }, error } = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]);
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Erro ao obter sessão inicial:', error);
@@ -139,27 +130,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Reduzir delay para loading inicial drasticamente
-    const quickLoad = setTimeout(() => {
-      if (mounted) {
-        setLoading(false);
-      }
-    }, 10);
-
-    getInitialSession().finally(() => {
-      clearTimeout(quickLoad);
-    });
+    getInitialSession();
 
     // Setup auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
-
-        // ✅ THROTTLING: Evitar processamento excessivo de SIGNED_IN repetidos
-        if (event === 'SIGNED_IN' && user && session?.user?.id === user.id) {
-          console.log('🚫 Auth event throttled: Same user already signed in');
-          return;
-        }
 
         console.log('🔄 Auth state change:', event);
         
@@ -187,37 +163,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session.user);
         
-        // Verificar se o usuário está banido
+        // Verificar se o usuário está banido - mas sem blocking
         if (session?.user) {
-          try {
-            console.log('🔍 Verificando status de banimento para:', session.user.id);
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('banned, ban_reason, full_name, email')
-              .eq('user_id', session.user.id)
-              .maybeSingle();
-            
-            if (profileError) {
-              console.error('❌ Erro ao buscar profile:', profileError);
-            } else if (profile) {
-              console.log('✅ Profile encontrado:', profile);
-              setUserProfile(profile);
-              if (profile.banned) {
-                console.log('🚫 Usuário banido:', profile.ban_reason);
-                setIsBanned(true);
-                setBanReason(profile.ban_reason || 'Motivo não especificado');
-                // Não fazer logout, apenas mostrar a tela de contestação
-                return;
+          // Fazer isso em background sem await para não bloquear
+          setTimeout(async () => {
+            try {
+              console.log('🔍 Verificando status de banimento para:', session.user.id);
+              const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('banned, ban_reason, full_name, email')
+                .eq('user_id', session.user.id)
+                .maybeSingle();
+              
+              if (profileError) {
+                console.error('❌ Erro ao buscar profile:', profileError);
+              } else if (profile) {
+                console.log('✅ Profile encontrado:', profile);
+                setUserProfile(profile);
+                if (profile.banned) {
+                  console.log('🚫 Usuário banido:', profile.ban_reason);
+                  setIsBanned(true);
+                  setBanReason(profile.ban_reason || 'Motivo não especificado');
+                }
+              } else {
+                console.log('📝 Profile não encontrado, usuário será criado depois');
               }
-            } else {
-              console.log('📝 Profile não encontrado, usuário será criado depois');
+            } catch (error) {
+              console.error('❌ Erro ao verificar status de banimento:', error);
             }
-          } catch (error) {
-            console.error('❌ Erro ao verificar status de banimento:', error);
-          }
+          }, 0);
         }
         
-        // Handle profile creation for new users and Google Auth validation
+        // Handle profile creation for new users - também em background
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
             try {
@@ -238,21 +215,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               
               if (!existingProfile) {
                 console.log('👤 Profile não existe, criando...');
-                // Usuário novo
                 if (googleAuthMode === 'signin') {
-                  // Tentativa de login com Google de usuário que não existe
                   localStorage.removeItem('googleAuthMode');
-                  
-                  // Fazer logout e mostrar mensagem
                   await supabase.auth.signOut();
-                  
-                  // Redirecionar para página de registro com mensagem
                   const userType = localStorage.getItem('userType');
                   window.location.href = `/auth?mode=signup&type=${userType}&error=google-account-not-found`;
                   return;
                 }
                 
-                // Criar perfil para novos usuários (signup normal)
                 if (session.user.user_metadata) {
                   const { error: insertError } = await supabase
                     .from('profiles')
@@ -273,13 +243,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log('✅ Profile já existe:', existingProfile.full_name);
               }
               
-              // Limpar flag de Google Auth
               localStorage.removeItem('googleAuthMode');
               
             } catch (error) {
               console.error('❌ Erro ao processar autenticação:', error);
             }
-          }, 0);
+          }, 100);
         }
         
         setLoading(false);
