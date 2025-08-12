@@ -28,6 +28,7 @@ import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
+import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 
 const Checkout = () => {
   const { productId } = useParams();
@@ -62,6 +63,7 @@ const Checkout = () => {
   const [orderBump, setOrderBump] = useState<any>(null);
   const [orderBumpPrice, setOrderBumpPrice] = useState(0);
   const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
+  const [bankTransferData, setBankTransferData] = useState<{file: File, bank: string} | null>(null);
   
   // Hook para verificar KambaPay
   const { fetchBalanceByEmail } = useKambaPayBalance();
@@ -1397,6 +1399,20 @@ const Checkout = () => {
                 </div>
               )}
 
+              {selectedPayment === 'transfer' && (
+                <div className="mt-6">
+                  <BankTransferForm
+                    totalAmount={totalPrice.toString()}
+                    currency={userCountry.currency}
+                    onPaymentComplete={(file, bank) => {
+                      setBankTransferData({ file, bank });
+                      console.log('Bank transfer proof uploaded:', { fileName: file.name, bank });
+                    }}
+                    disabled={processing}
+                  />
+                </div>
+              )}
+
               {selectedPayment === 'kambapay' && (
                 <div className="mt-6">
                   <Card className="border-blue-200 bg-blue-50">
@@ -1492,7 +1508,7 @@ const Checkout = () => {
                 </CardContent>
               </Card>
 
-              {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
+              {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
                 <Button
                   onClick={handlePurchase}
                   disabled={!formData.fullName || !formData.email || !formData.phone || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
