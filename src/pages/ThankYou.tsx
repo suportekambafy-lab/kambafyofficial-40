@@ -283,7 +283,7 @@ const ThankYou = () => {
   };
 
   const getStatusBadge = () => {
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
       return (
         <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
           <Clock className="w-3 h-3 mr-1" />
@@ -300,7 +300,7 @@ const ThankYou = () => {
   };
 
   const getSuccessMessage = () => {
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
       return {
         title: "Pedido Criado com Sucesso!",
         subtitle: "Complete o pagamento para ter acesso ao produto"

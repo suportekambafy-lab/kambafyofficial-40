@@ -977,7 +977,7 @@ const Checkout = () => {
         amount: totalAmount.toString(),
         currency: userCountry.currency,
         payment_method: selectedPayment,
-        status: 'completed',
+        status: 'pending', // Bank transfer orders should start as pending
         user_id: null, // Always null for checkout page orders (guest orders)
         affiliate_code: hasAffiliate ? affiliateCode : null,
         affiliate_commission: affiliate_commission,
@@ -1161,8 +1161,11 @@ const Checkout = () => {
         })
       });
 
-      // Marcar carrinho como recuperado se foi detectado anteriormente
-      await markAsRecovered(orderId);
+      // Não marcar como recuperado automaticamente para transferências bancárias normais
+      // Só marcar se realmente foi uma recuperação de carrinho abandonado
+      if (hasDetected) {
+        await markAsRecovered(orderId);
+      }
 
       navigate(`/obrigado?${params.toString()}`);
     } catch (error) {
