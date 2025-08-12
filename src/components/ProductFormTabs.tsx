@@ -232,8 +232,15 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
   };
 
   const handleSave = async (isDraft = false) => {
-    console.log("handleSave called with formData:", formData, "isDraft:", isDraft);
-    console.log("editingProduct:", editingProduct);
+    console.log("🚀 handleSave called with:", { 
+      isDraft, 
+      formDataName: formData.name, 
+      formDataPrice: formData.price,
+      formDataCategory: formData.category,
+      hasUser: !!user
+    });
+    console.log("📝 Full formData:", formData);
+    console.log("✏️ editingProduct:", editingProduct);
     if (!user) {
       toast({
         title: "Erro",
@@ -291,17 +298,17 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       const productData = {
         name: formData.name,
         type: formData.type,
-        price: formData.price,
+        price: isDraft ? (formData.price || "0") : formData.price, // Para rascunho, usar 0 se vazio
         description: formData.description,
         share_link: formData.type === "Curso" ? null : formData.shareLink,
         cover: formData.cover,
         commission: formData.allowAffiliates ? formData.commission : null,
         tags: formData.tags,
         member_area_id: formData.type === "Curso" ? formData.memberAreaId : null,
-        payment_methods: formData.paymentMethods as any,
+        payment_methods: isDraft ? [] as any : (formData.paymentMethods as any), // Para rascunho, array vazio é ok
         fantasy_name: formData.fantasyName || null,
         allow_affiliates: formData.allowAffiliates,
-        category: formData.category || null,
+        category: isDraft ? (formData.category || null) : formData.category, // Para rascunho, categoria pode ser null
         support_email: formData.supportEmail || null,
         support_whatsapp: formData.supportWhatsapp || null,
         user_id: user.id,
