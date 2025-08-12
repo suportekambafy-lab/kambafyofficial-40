@@ -50,8 +50,8 @@ export function ProductFilter({ value, onValueChange }: ProductFilterProps) {
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="w-full sm:w-48 bg-card text-card-foreground border-border">
-        <SelectValue placeholder="Todos os produtos" className="text-card-foreground" />
+      <SelectTrigger className="w-full sm:w-48">
+        <SelectValue placeholder="Todos os produtos" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="todos">Todos os produtos</SelectItem>

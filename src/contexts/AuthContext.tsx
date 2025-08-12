@@ -3,7 +3,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useCustomToast';
-import { BannedUserDialog } from '@/components/BannedUserDialog';
 
 interface AuthContextType {
   user: User | null;
@@ -21,9 +20,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isBanned, setIsBanned] = useState(false);
-  const [banReason, setBanReason] = useState('');
-  const [userProfile, setUserProfile] = useState<any>(null);
 
   // Função para validar se um usuário é válido
   const isValidUser = (user: User | null): boolean => {
@@ -76,9 +72,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🧹 Limpando estado de autenticação');
     setUser(null);
     setSession(null);
-    setIsBanned(false);
-    setBanReason('');
-    setUserProfile(null);
   };
 
   useEffect(() => {
@@ -187,57 +180,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session.user);
         
-        // Verificar se o usuário está banido
-        if (session?.user) {
-          try {
-            console.log('🔍 Verificando status de banimento para:', session.user.id);
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('banned, ban_reason, full_name, email')
-              .eq('user_id', session.user.id)
-              .maybeSingle();
-            
-            if (profileError) {
-              console.error('❌ Erro ao buscar profile:', profileError);
-            } else if (profile) {
-              console.log('✅ Profile encontrado:', profile);
-              setUserProfile(profile);
-              if (profile.banned) {
-                console.log('🚫 Usuário banido:', profile.ban_reason);
-                setIsBanned(true);
-                setBanReason(profile.ban_reason || 'Motivo não especificado');
-                // Não fazer logout, apenas mostrar a tela de contestação
-                return;
-              }
-            } else {
-              console.log('📝 Profile não encontrado, usuário será criado depois');
-            }
-          } catch (error) {
-            console.error('❌ Erro ao verificar status de banimento:', error);
-          }
-        }
-        
         // Handle profile creation for new users and Google Auth validation
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
             try {
-              console.log('👤 Verificando profile existente para:', session.user.id);
-              const { data: existingProfile, error: profileCheckError } = await supabase
+              const { data: existingProfile } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('user_id', session.user.id)
-                .maybeSingle();
-              
-              if (profileCheckError) {
-                console.error('❌ Erro ao verificar profile existente:', profileCheckError);
-                return;
-              }
+                .single();
               
               // Verificar se é login via Google e não signup
               const googleAuthMode = localStorage.getItem('googleAuthMode');
               
               if (!existingProfile) {
-                console.log('👤 Profile não existe, criando...');
                 // Usuário novo
                 if (googleAuthMode === 'signin') {
                   // Tentativa de login com Google de usuário que não existe
@@ -254,30 +210,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 
                 // Criar perfil para novos usuários (signup normal)
                 if (session.user.user_metadata) {
-                  const { error: insertError } = await supabase
+                  await supabase
                     .from('profiles')
                     .insert({
                       user_id: session.user.id,
-                      full_name: session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email?.split('@')[0],
+                      full_name: session.user.user_metadata.full_name || session.user.user_metadata.name,
                       email: session.user.email,
                       avatar_url: session.user.user_metadata.avatar_url
                     });
-                  
-                  if (insertError) {
-                    console.error('❌ Erro ao inserir profile:', insertError);
-                  } else {
-                    console.log('✅ Profile criado com sucesso');
-                  }
                 }
-              } else {
-                console.log('✅ Profile já existe:', existingProfile.full_name);
               }
               
               // Limpar flag de Google Auth
               localStorage.removeItem('googleAuthMode');
               
             } catch (error) {
-              console.error('❌ Erro ao processar autenticação:', error);
+              console.error('Erro ao processar autenticação:', error);
             }
           }, 0);
         }
@@ -338,30 +286,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: emailNotConfirmedError as any };
     }
 
-    // Verificar se o usuário está banido
-    if (!error && data.user) {
-      try {
-        console.log('🔍 Verificando status de banimento no login para:', data.user.id);
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('banned, ban_reason, full_name, email')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
-        
-        if (profileError) {
-          console.error('❌ Erro ao buscar profile no login:', profileError);
-        } else if (profile?.banned) {
-          console.log('🚫 Usuário banido no login:', profile.ban_reason);
-          setIsBanned(true);
-          setBanReason(profile.ban_reason || 'Motivo não especificado');
-          setUserProfile(profile);
-          // Não fazer logout, permitir que vejam a tela de contestação
-        }
-      } catch (error) {
-        console.error('❌ Erro ao verificar status de banimento no login:', error);
-      }
-    }
-
     return { error, data };
   };
 
@@ -400,22 +324,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPassword,
   };
 
-  console.log('🔍 AuthContext render:', { isBanned, userProfile, user: !!user });
-
   return (
     <AuthContext.Provider value={value}>
-      {isBanned && userProfile ? (
-        <>
-          {console.log('🚫 Renderizando BannedUserDialog')}
-          <BannedUserDialog
-            banReason={banReason}
-            userEmail={userProfile.email || ''}
-            userName={userProfile.full_name || 'Usuário'}
-          />
-        </>
-      ) : (
-        children
-      )}
+      {children}
     </AuthContext.Provider>
   );
 };

@@ -176,11 +176,11 @@ export function ModernSidebar({
             >
               {/* Header */}
               <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-                <img 
-                  src={isDark ? "/lovable-uploads/2cc2ba28-7010-4a14-aa62-c8f5b5368638.png" : "/lovable-uploads/3cce4fbf-9919-4f6f-8e4c-cdf61455198e.png"}
-                  alt="Kambafy" 
-                  className="h-16 w-auto"
-                />
+              <img 
+                src="/lovable-uploads/3cce4fbf-9919-4f6f-8e4c-cdf61455198e.png" 
+                alt="Kambafy" 
+                className="h-16 w-auto"
+              />
                 
                 <Button
                   variant="ghost"

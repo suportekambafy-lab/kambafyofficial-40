@@ -20,7 +20,7 @@ export function MobileFilters({
     <div className="space-y-3">
       <Select value={timeFilter} onValueChange={setTimeFilter}>
         <SelectTrigger className="w-full h-12 rounded-xl border-border bg-card text-card-foreground">
-          <SelectValue className="text-card-foreground" />
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="hoje">Hoje</SelectItem>

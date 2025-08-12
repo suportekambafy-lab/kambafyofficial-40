@@ -136,8 +136,8 @@ export const CustomPeriodSelector = ({
       </label>
       <div className="flex gap-2">
         <Select value={value} onValueChange={handlePresetChange}>
-          <SelectTrigger className="w-full h-11 rounded-xl border-border bg-card text-card-foreground">
-            <SelectValue className="text-card-foreground" />
+          <SelectTrigger className="w-full h-11 rounded-xl border-gray-200 dark:border-gray-700">
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="hoje">Hoje</SelectItem>
@@ -157,7 +157,7 @@ export const CustomPeriodSelector = ({
               <Button
                 variant="outline"
                 className={cn(
-                  "h-11 px-3 rounded-xl border-border bg-card text-card-foreground",
+                  "h-11 px-3 rounded-xl border-gray-200 dark:border-gray-700",
                   !customRange.from && "text-muted-foreground"
                 )}
               >

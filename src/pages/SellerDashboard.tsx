@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
-import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { ModernSidebar } from '@/components/modern/ModernSidebar';
 import { ModernTopBar } from '@/components/modern/ModernTopBar';
 import { ModernDashboardHome } from '@/components/modern/ModernDashboardHome';
 import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
 import { SkeletonPage } from '@/components/ui/skeleton-page';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 // Lazy load páginas para melhor performance com retry logic
 const createLazyWithRetry = (importFn: () => Promise<any>, name: string) => {
@@ -56,7 +55,6 @@ const Members = createLazyWithRetry(() => import("./Members"), "Members");
 
 function SellerDashboardContent() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -137,10 +135,9 @@ function SellerDashboardContent() {
                     {/* Banner - apenas na home do dashboard */}
                     <div className="w-full flex-shrink-0 flex justify-center p-4">
                       <img 
-                        src="/lovable-uploads/6ab74856-b2c6-4880-8149-9c90b67fc783.png" 
-                        alt="Kambafy Banner - Recuperação Automática"
-                        className="h-auto object-contain max-h-32 rounded-lg w-full max-w-md md:max-w-5xl lg:max-w-6xl cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => navigate('/vendedor/apps')}
+                        src="/lovable-uploads/373ca352-3319-4914-9898-1dc76571a167.png" 
+                        alt="Kambafy Banner"
+                        className="h-auto object-contain max-h-32 rounded-lg w-full max-w-md md:max-w-5xl lg:max-w-6xl"
                       />
                     </div>
                     <div className="flex-1 overflow-y-auto">
@@ -171,12 +168,10 @@ function SellerDashboardContent() {
 
 export default function SellerDashboard() {
   return (
-    <ProtectedRoute>
-      <ModernErrorBoundary>
-        <SellerThemeProvider>
-          <SellerDashboardContent />
-        </SellerThemeProvider>
-      </ModernErrorBoundary>
-    </ProtectedRoute>
+    <ModernErrorBoundary>
+      <SellerThemeProvider>
+        <SellerDashboardContent />
+      </SellerThemeProvider>
+    </ModernErrorBoundary>
   );
 }

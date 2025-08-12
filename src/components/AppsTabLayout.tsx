@@ -546,7 +546,7 @@ export function AppsTabLayout() {
       {/* Header */}
       <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 xs:gap-4">
         <div className="w-full xs:w-auto">
-          <h1 className="text-xl xs:text-2xl md:text-3xl font-bold break-words text-foreground">Integrações</h1>
+          <h1 className="text-xl xs:text-2xl md:text-3xl font-bold break-words">Integrações</h1>
           <p className="text-muted-foreground mt-2 text-sm xs:text-base">
             Gerencie suas integrações e automações
           </p>

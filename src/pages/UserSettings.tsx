@@ -14,7 +14,6 @@ import { User, Mail, Camera, Upload, X, Shield, ExternalLink } from "lucide-reac
 import { Link } from "react-router-dom";
 import { TwoFactorSettings } from "@/components/TwoFactorSettings";
 import { PasswordChange } from "@/components/PasswordChange";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function UserSettings() {
   const { user } = useAuth();
@@ -277,187 +276,185 @@ export default function UserSettings() {
   };
 
   return (
-    <ProtectedRoute>
-      <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-6xl mx-auto">
-        <div className="space-y-2">
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Configurações da Conta</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Gerencie suas informações pessoais e configurações</p>
-        </div>
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-2">
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">Configurações da Conta</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Gerencie suas informações pessoais e configurações</p>
+      </div>
 
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile">Perfil</TabsTrigger>
-            <TabsTrigger value="account">Conta</TabsTrigger>
-            <TabsTrigger value="security">Segurança</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="profile" className="space-y-4 md:space-y-6">
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-                  <User className="h-4 w-4 md:h-5 md:w-5" />
-                  Perfil Público
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 md:space-y-6">
-                {/* Avatar Section */}
-                <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6">
-                  <div className="relative">
-                    <Avatar className="h-20 w-20 md:h-24 md:w-24">
-                      <AvatarImage src={profile.avatar_url} />
-                      <AvatarFallback className="text-lg md:text-xl">
-                        {profile.full_name?.charAt(0).toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <label 
-                      htmlFor="avatar-upload" 
-                      className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                    >
-                      {uploadingAvatar ? (
-                        <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-white"></div>
-                      ) : (
-                        <Camera className="h-5 w-5 md:h-6 md:w-6 text-white" />
-                      )}
-                    </label>
-                    
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                      disabled={uploadingAvatar}
-                    />
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="profile">Perfil</TabsTrigger>
+          <TabsTrigger value="account">Conta</TabsTrigger>
+          <TabsTrigger value="security">Segurança</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="profile" className="space-y-4 md:space-y-6">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <User className="h-4 w-4 md:h-5 md:w-5" />
+                Perfil Público
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 md:space-y-6">
+              {/* Avatar Section */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6">
+                <div className="relative">
+                  <Avatar className="h-20 w-20 md:h-24 md:w-24">
+                    <AvatarImage src={profile.avatar_url} />
+                    <AvatarFallback className="text-lg md:text-xl">
+                      {profile.full_name?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <label 
+                    htmlFor="avatar-upload" 
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    {uploadingAvatar ? (
+                      <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-white"></div>
+                    ) : (
+                      <Camera className="h-5 w-5 md:h-6 md:w-6 text-white" />
+                    )}
+                  </label>
+                  
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                    disabled={uploadingAvatar}
+                  />
+                </div>
+                
+                <div className="flex-1 space-y-3 text-center sm:text-left">
+                  <div>
+                    <h3 className="font-medium text-sm md:text-base">Foto de Perfil</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      Clique na foto para alterar. Máximo 5MB.
+                    </p>
                   </div>
                   
-                  <div className="flex-1 space-y-3 text-center sm:text-left">
-                    <div>
-                      <h3 className="font-medium text-sm md:text-base">Foto de Perfil</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground">
-                        Clique na foto para alterar. Máximo 5MB.
-                      </p>
-                    </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                      disabled={uploadingAvatar}
+                      className="text-xs md:text-sm"
+                    >
+                      <Upload className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+                      {uploadingAvatar ? "Enviando..." : "Enviar Foto"}
+                    </Button>
                     
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    {profile.avatar_url && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => document.getElementById('avatar-upload')?.click()}
+                        onClick={removeAvatar}
                         disabled={uploadingAvatar}
                         className="text-xs md:text-sm"
                       >
-                        <Upload className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                        {uploadingAvatar ? "Enviando..." : "Enviar Foto"}
+                        <X className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+                        Remover
                       </Button>
-                      
-                      {profile.avatar_url && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={removeAvatar}
-                          disabled={uploadingAvatar}
-                          className="text-xs md:text-sm"
-                        >
-                          <X className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                          Remover
-                        </Button>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
+              </div>
 
-                {/* Full Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="full_name" className="text-sm md:text-base">Nome Completo</Label>
-                  <Input
-                    id="full_name"
-                    placeholder="Seu nome completo"
-                    value={profile.full_name}
-                    onChange={(e) => handleInputChange("full_name", e.target.value)}
-                    className="text-sm md:text-base"
-                  />
-                </div>
+              {/* Full Name */}
+              <div className="space-y-2">
+                <Label htmlFor="full_name" className="text-sm md:text-base">Nome Completo</Label>
+                <Input
+                  id="full_name"
+                  placeholder="Seu nome completo"
+                  value={profile.full_name}
+                  onChange={(e) => handleInputChange("full_name", e.target.value)}
+                  className="text-sm md:text-base"
+                />
+              </div>
 
-                {/* Bio */}
-                <div className="space-y-2">
-                  <Label htmlFor="bio" className="text-sm md:text-base">Biografia</Label>
-                  <Textarea
-                    id="bio"
-                    placeholder="Conte um pouco sobre você..."
-                    value={profile.bio}
-                    onChange={(e) => handleInputChange("bio", e.target.value)}
-                    rows={3}
-                    className="text-sm md:text-base resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Esta informação será visível para seus clientes
-                  </p>
-                </div>
+              {/* Bio */}
+              <div className="space-y-2">
+                <Label htmlFor="bio" className="text-sm md:text-base">Biografia</Label>
+                <Textarea
+                  id="bio"
+                  placeholder="Conte um pouco sobre você..."
+                  value={profile.bio}
+                  onChange={(e) => handleInputChange("bio", e.target.value)}
+                  rows={3}
+                  className="text-sm md:text-base resize-none"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Esta informação será visível para seus clientes
+                </p>
+              </div>
 
-                <Button 
-                  onClick={() => updateProfile()} 
-                  disabled={loading} 
-                  className="w-full text-sm md:text-base"
-                >
-                  {loading ? "Salvando..." : "Salvar Alterações"}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="account" className="space-y-4 md:space-y-6">
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-                  <Mail className="h-4 w-4 md:h-5 md:w-5" />
-                  Informações da Conta
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-sm md:text-base">Email</Label>
-                  <Input 
-                    value={user?.email || ""} 
-                    disabled 
-                    className="text-sm md:text-base bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Para alterar seu email, entre em contato com o suporte
-                  </p>
-                </div>
+              <Button 
+                onClick={() => updateProfile()} 
+                disabled={loading} 
+                className="w-full text-sm md:text-base"
+              >
+                {loading ? "Salvando..." : "Salvar Alterações"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="account" className="space-y-4 md:space-y-6">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <Mail className="h-4 w-4 md:h-5 md:w-5" />
+                Informações da Conta
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm md:text-base">Email</Label>
+                <Input 
+                  value={user?.email || ""} 
+                  disabled 
+                  className="text-sm md:text-base bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Para alterar seu email, entre em contato com o suporte
+                </p>
+              </div>
 
-                <div className="space-y-2">
-                  <Label className="text-sm md:text-base">ID da Conta</Label>
-                  <Input 
-                    value={user?.id || ""} 
-                    disabled 
-                    className="text-xs md:text-sm bg-muted font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Este é seu identificador único no sistema
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <Label className="text-sm md:text-base">ID da Conta</Label>
+                <Input 
+                  value={user?.id || ""} 
+                  disabled 
+                  className="text-xs md:text-sm bg-muted font-mono"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Este é seu identificador único no sistema
+                </p>
+              </div>
 
-                <div className="space-y-2">
-                  <Label className="text-sm md:text-base">Membro desde</Label>
-                  <Input 
-                    value={user?.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : ""} 
-                    disabled 
-                    className="text-sm md:text-base bg-muted"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              <div className="space-y-2">
+                <Label className="text-sm md:text-base">Membro desde</Label>
+                <Input 
+                  value={user?.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : ""} 
+                  disabled 
+                  className="text-sm md:text-base bg-muted"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
 
-          <TabsContent value="security" className="space-y-4 md:space-y-6">
-            <TwoFactorSettings />
-            <PasswordChange />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </ProtectedRoute>
+        <TabsContent value="security" className="space-y-4 md:space-y-6">
+          <TwoFactorSettings />
+          <PasswordChange />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

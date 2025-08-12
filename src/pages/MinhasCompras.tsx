@@ -15,7 +15,6 @@ import { AvatarDrawer } from "@/components/ui/avatar-drawer";
 import { CustomerBalanceModal } from "@/components/CustomerBalanceModal";
 import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
 import professionalManImage from "@/assets/professional-man.jpg";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 interface Order {
   id: string;
@@ -157,211 +156,209 @@ export default function MinhasCompras() {
   ).length;
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-background">
-        <header className="bg-gradient-to-r from-green-400 to-green-500 text-white p-4 border-b shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
-                <span className="text-green-500 font-bold text-xl">K</span>
-              </div>
-              <div>
-                <span className="text-xl font-bold">Kambafy</span>
-                <p className="text-green-100 text-sm">Suas compras</p>
-              </div>
+    <div className="min-h-screen bg-background">
+      <header className="bg-gradient-to-r from-green-400 to-green-500 text-white p-4 border-b shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
+              <span className="text-green-500 font-bold text-xl">K</span>
             </div>
-            
-            <div className="flex items-center space-x-3">
-              <CustomerBalanceModal>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-white border-white/20 border hover:bg-white/10"
-                >
-                  <Wallet className="w-4 h-4 mr-2" />
-                  Saldo: {balance ? `${balance.balance.toLocaleString()} KZ` : '0 KZ'}
-                </Button>
-              </CustomerBalanceModal>
-              
+            <div>
+              <span className="text-xl font-bold">Kambafy</span>
+              <p className="text-green-100 text-sm">Suas compras</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <CustomerBalanceModal>
               <Button
                 variant="ghost"
-                size="icon"
-                className="w-10 h-10 rounded-full p-0 hover:bg-white/10"
-                onClick={() => setAvatarDrawerOpen(true)}
+                size="sm"
+                className="text-white border-white/20 border hover:bg-white/10"
               >
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src="" />
-                  <AvatarFallback className="bg-green-600 text-white text-sm">
-                    {user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                <Wallet className="w-4 h-4 mr-2" />
+                Saldo: {balance ? `${balance.balance.toLocaleString()} KZ` : '0 KZ'}
               </Button>
-            </div>
-          </div>
-        </header>
-
-        <div className="p-4 md:p-6 space-y-6">
-          {/* Modern Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <HighlightedCard highlightColor="blue">
-              <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <HighlightedCardTitle className="text-sm font-medium">Total de Compras</HighlightedCardTitle>
-                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-              </HighlightedCardHeader>
-              <HighlightedCardContent>
-                <div className="text-2xl font-bold">{totalCompras}</div>
-                <p className="text-xs text-muted-foreground">
-                  {totalCompras === 0 ? 'Nenhuma compra realizada' : `${totalCompras} compra${totalCompras > 1 ? 's' : ''} realizada${totalCompras > 1 ? 's' : ''}`}
-                </p>
-              </HighlightedCardContent>
-            </HighlightedCard>
+            </CustomerBalanceModal>
             
-            <HighlightedCard highlightColor="green">
-              <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <HighlightedCardTitle className="text-sm font-medium">Cursos Disponíveis</HighlightedCardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </HighlightedCardHeader>
-              <HighlightedCardContent>
-                <div className="text-2xl font-bold">{cursosDisponiveis}</div>
-                <p className="text-xs text-muted-foreground">Cursos para acessar</p>
-              </HighlightedCardContent>
-            </HighlightedCard>
-
-            <HighlightedCard highlightColor="purple">
-              <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <HighlightedCardTitle className="text-sm font-medium">Ebooks Disponíveis</HighlightedCardTitle>
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
-              </HighlightedCardHeader>
-              <HighlightedCardContent>
-                <div className="text-2xl font-bold">{ebooksDisponiveis}</div>
-                <p className="text-xs text-muted-foreground">Ebooks para baixar</p>
-              </HighlightedCardContent>
-            </HighlightedCard>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-10 h-10 rounded-full p-0 hover:bg-white/10"
+              onClick={() => setAvatarDrawerOpen(true)}
+            >
+              <Avatar className="w-8 h-8">
+                <AvatarImage src="" />
+                <AvatarFallback className="bg-green-600 text-white text-sm">
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
           </div>
+        </div>
+      </header>
 
-          {/* Purchases List */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingBag className="h-5 w-5" />
-                Minhas Compras
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <LoadingSpinner text="Carregando suas compras..." />
-                </div>
-              ) : orders.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4">
-                  <div className="text-center space-y-4">
-                    <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-                      <ShoppingBag className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold">Nenhuma compra realizada</h3>
-                      <p className="text-muted-foreground">
-                        Suas compras aparecerão aqui quando você adquirir produtos.
-                      </p>
-                    </div>
-                    <Button asChild className="bg-checkout-green hover:bg-checkout-green/90">
-                      <Link to="/">Explorar Produtos</Link>
-                    </Button>
+      <div className="p-4 md:p-6 space-y-6">
+        {/* Modern Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <HighlightedCard highlightColor="blue">
+            <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <HighlightedCardTitle className="text-sm font-medium">Total de Compras</HighlightedCardTitle>
+              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+            </HighlightedCardHeader>
+            <HighlightedCardContent>
+              <div className="text-2xl font-bold">{totalCompras}</div>
+              <p className="text-xs text-muted-foreground">
+                {totalCompras === 0 ? 'Nenhuma compra realizada' : `${totalCompras} compra${totalCompras > 1 ? 's' : ''} realizada${totalCompras > 1 ? 's' : ''}`}
+              </p>
+            </HighlightedCardContent>
+          </HighlightedCard>
+          
+          <HighlightedCard highlightColor="green">
+            <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <HighlightedCardTitle className="text-sm font-medium">Cursos Disponíveis</HighlightedCardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </HighlightedCardHeader>
+            <HighlightedCardContent>
+              <div className="text-2xl font-bold">{cursosDisponiveis}</div>
+              <p className="text-xs text-muted-foreground">Cursos para acessar</p>
+            </HighlightedCardContent>
+          </HighlightedCard>
+
+          <HighlightedCard highlightColor="purple">
+            <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <HighlightedCardTitle className="text-sm font-medium">Ebooks Disponíveis</HighlightedCardTitle>
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+            </HighlightedCardHeader>
+            <HighlightedCardContent>
+              <div className="text-2xl font-bold">{ebooksDisponiveis}</div>
+              <p className="text-xs text-muted-foreground">Ebooks para baixar</p>
+            </HighlightedCardContent>
+          </HighlightedCard>
+        </div>
+
+        {/* Purchases List */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5" />
+              Minhas Compras
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <LoadingSpinner text="Carregando suas compras..." />
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+                    <ShoppingBag className="h-8 w-8 text-muted-foreground" />
                   </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Nenhuma compra realizada</h3>
+                    <p className="text-muted-foreground">
+                      Suas compras aparecerão aqui quando você adquirir produtos.
+                    </p>
+                  </div>
+                  <Button asChild className="bg-checkout-green hover:bg-checkout-green/90">
+                    <Link to="/">Explorar Produtos</Link>
+                  </Button>
                 </div>
-              ) : (
-                <div className="divide-y">
-                  {orders.map((order) => (
-                    <div key={order.id} className="p-6 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-start space-x-4">
-                        <img
-                          src={getProductImage(order.products?.cover || '')}
-                          alt={order.products?.name || 'Produto'}
-                          className="w-16 h-20 object-cover rounded-lg shadow-sm"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold text-lg">{order.products?.name || 'Produto'}</h3>
-                              <p className="text-sm text-muted-foreground">Pedido #{order.order_id}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {new Date(order.created_at).toLocaleDateString('pt-BR')}
-                              </p>
-                              {order.products?.type === 'Curso' && order.products?.member_areas && (
-                                <Badge variant="secondary" className="mt-1 bg-blue-100 text-blue-800">
-                                  Curso: {order.products.member_areas.name}
-                                </Badge>
-                              )}
-                              {order.products?.type === 'Ebook' && (
-                                <Badge variant="secondary" className="mt-1 bg-purple-100 text-purple-800">
-                                  Ebook
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg">{order.amount} {order.currency}</p>
-                              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                                {order.status === 'completed' ? 'Pago' : order.status}
+              </div>
+            ) : (
+              <div className="divide-y">
+                {orders.map((order) => (
+                  <div key={order.id} className="p-6 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-start space-x-4">
+                      <img
+                        src={getProductImage(order.products?.cover || '')}
+                        alt={order.products?.name || 'Produto'}
+                        className="w-16 h-20 object-cover rounded-lg shadow-sm"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-semibold text-lg">{order.products?.name || 'Produto'}</h3>
+                            <p className="text-sm text-muted-foreground">Pedido #{order.order_id}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(order.created_at).toLocaleDateString('pt-BR')}
+                            </p>
+                            {order.products?.type === 'Curso' && order.products?.member_areas && (
+                              <Badge variant="secondary" className="mt-1 bg-blue-100 text-blue-800">
+                                Curso: {order.products.member_areas.name}
                               </Badge>
-                            </div>
+                            )}
+                            {order.products?.type === 'Ebook' && (
+                              <Badge variant="secondary" className="mt-1 bg-purple-100 text-purple-800">
+                                Ebook
+                              </Badge>
+                            )}
                           </div>
-                          <div className="mt-4 flex items-center space-x-2">
-                            {order.products ? (
-                              order.products.type === 'Curso' && order.products.member_areas ? (
-                                <Button
-                                  onClick={() => handleAccessProduct(order.products)}
-                                  size="sm"
-                                  className="bg-checkout-green hover:bg-checkout-green/90"
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-2" />
-                                  Acessar Curso
-                                </Button>
-                              ) : order.products.share_link ? (
-                                <Button
-                                  onClick={() => handleAccessProduct(order.products)}
-                                  size="sm"
-                                  className="bg-checkout-green hover:bg-checkout-green/90"
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-2" />
-                                  Acessar Produto
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled
-                                >
-                                  Link não disponível
-                                </Button>
-                              )
+                          <div className="text-right">
+                            <p className="font-bold text-lg">{order.amount} {order.currency}</p>
+                            <Badge variant="secondary" className="bg-green-100 text-green-800">
+                              {order.status === 'completed' ? 'Pago' : order.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-center space-x-2">
+                          {order.products ? (
+                            order.products.type === 'Curso' && order.products.member_areas ? (
+                              <Button
+                                onClick={() => handleAccessProduct(order.products)}
+                                size="sm"
+                                className="bg-checkout-green hover:bg-checkout-green/90"
+                              >
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Acessar Curso
+                              </Button>
+                            ) : order.products.share_link ? (
+                              <Button
+                                onClick={() => handleAccessProduct(order.products)}
+                                size="sm"
+                                className="bg-checkout-green hover:bg-checkout-green/90"
+                              >
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Acessar Produto
+                              </Button>
                             ) : (
                               <Button
                                 size="sm"
                                 variant="outline"
                                 disabled
                               >
-                                Produto Indisponível
+                                Link não disponível
                               </Button>
-                            )}
-                          </div>
+                            )
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled
+                            >
+                              Produto Indisponível
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <AvatarDrawer
-          isOpen={avatarDrawerOpen}
-          onClose={() => setAvatarDrawerOpen(false)}
-          profileAvatar=""
-          profileName={user?.email || 'Usuário'}
-          isMobile={false}
-        />
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </ProtectedRoute>
+
+      <AvatarDrawer
+        isOpen={avatarDrawerOpen}
+        onClose={() => setAvatarDrawerOpen(false)}
+        profileAvatar=""
+        profileName={user?.email || 'Usuário'}
+        isMobile={false}
+      />
+    </div>
   );
 }

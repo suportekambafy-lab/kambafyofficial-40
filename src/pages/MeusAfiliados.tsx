@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 import {
   Table,
   TableBody,
@@ -191,9 +190,8 @@ export default function MeusAfiliados() {
   }
 
   return (
-    <ProtectedRoute>
-      <div className="p-4 md:p-6 space-y-6">
-        {/* Header */}
+    <div className="p-4 md:p-6 space-y-6">
+      {/* Header */}
       <div className="space-y-4">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">Meus Afiliados</h1>
         
@@ -466,7 +464,6 @@ export default function MeusAfiliados() {
           </TabsContent>
         </Tabs>
       </div>
-      </div>
-    </ProtectedRoute>
+    </div>
   );
 }

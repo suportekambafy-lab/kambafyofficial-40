@@ -1245,7 +1245,6 @@ export type Database = {
         Row: {
           account_holder: string | null
           avatar_url: string | null
-          ban_reason: string | null
           banned: boolean | null
           bio: string | null
           country: string | null
@@ -1262,7 +1261,6 @@ export type Database = {
         Insert: {
           account_holder?: string | null
           avatar_url?: string | null
-          ban_reason?: string | null
           banned?: boolean | null
           bio?: string | null
           country?: string | null
@@ -1279,7 +1277,6 @@ export type Database = {
         Update: {
           account_holder?: string | null
           avatar_url?: string | null
-          ban_reason?: string | null
           banned?: boolean | null
           bio?: string | null
           country?: string | null

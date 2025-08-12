@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Loader2, Upload, X, Shield, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 interface IdentityVerification {
   id: string;
@@ -204,120 +203,170 @@ export default function UserIdentity() {
   const isReadOnly = verification?.status === 'aprovado';
 
   return (
-    <ProtectedRoute>
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <Shield className="w-8 h-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Verificação de Identidade</h1>
-            <p className="text-muted-foreground">
-              Complete sua verificação de identidade para habilitar funcionalidades adicionais
-            </p>
-          </div>
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <Shield className="w-8 h-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold">Verificação de Identidade</h1>
+          <p className="text-muted-foreground">
+            Complete sua verificação de identidade para habilitar funcionalidades adicionais
+          </p>
         </div>
+      </div>
 
-        {verification && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Status da Verificação</CardTitle>
-                {getStatusBadge(verification.status)}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {verification.status === 'rejeitado' && verification.rejection_reason && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                  <p className="text-red-800 font-medium mb-2">Motivo da rejeição:</p>
-                  <p className="text-red-700">{verification.rejection_reason}</p>
-                </div>
-              )}
-              <p className="text-sm text-muted-foreground">
-                Última atualização: {format(new Date(verification.updated_at), 'dd/MM/yyyy HH:mm')}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
+      {verification && (
         <Card>
           <CardHeader>
-            <CardTitle>Informações Pessoais</CardTitle>
-            <CardDescription>
-              Preencha suas informações pessoais conforme constam no seu documento
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="full_name">Nome Completo *</Label>
-                <Input
-                  id="full_name"
-                  value={formData.full_name}
-                  onChange={(e) => handleInputChange('full_name', e.target.value)}
-                  placeholder="Digite seu nome completo"
-                  disabled={isReadOnly}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="birth_date">Data de Nascimento *</Label>
-                <Input
-                  id="birth_date"
-                  type="date"
-                  value={formData.birth_date}
-                  onChange={(e) => handleInputChange('birth_date', e.target.value)}
-                  disabled={isReadOnly}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="document_type">Tipo de Documento *</Label>
-                <Select
-                  value={formData.document_type}
-                  onValueChange={(value) => handleInputChange('document_type', value)}
-                  disabled={isReadOnly}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo de documento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {documentTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="document_number">Número do Documento *</Label>
-                <Input
-                  id="document_number"
-                  value={formData.document_number}
-                  onChange={(e) => handleInputChange('document_number', e.target.value)}
-                  placeholder="Digite o número do documento"
-                  disabled={isReadOnly}
-                />
-              </div>
+            <div className="flex items-center justify-between">
+              <CardTitle>Status da Verificação</CardTitle>
+              {getStatusBadge(verification.status)}
             </div>
+          </CardHeader>
+          <CardContent>
+            {verification.status === 'rejeitado' && verification.rejection_reason && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="text-red-800 font-medium mb-2">Motivo da rejeição:</p>
+                <p className="text-red-700">{verification.rejection_reason}</p>
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground">
+              Última atualização: {format(new Date(verification.updated_at), 'dd/MM/yyyy HH:mm')}
+            </p>
           </CardContent>
         </Card>
+      )}
 
-        {formData.document_type && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload de Documentos</CardTitle>
-              <CardDescription>
-                {needsBackside 
-                  ? 'Faça o upload da frente e verso do seu documento'
-                  : 'Faça o upload do seu documento'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Frente do documento */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Informações Pessoais</CardTitle>
+          <CardDescription>
+            Preencha suas informações pessoais conforme constam no seu documento
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="full_name">Nome Completo *</Label>
+              <Input
+                id="full_name"
+                value={formData.full_name}
+                onChange={(e) => handleInputChange('full_name', e.target.value)}
+                placeholder="Digite seu nome completo"
+                disabled={isReadOnly}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="birth_date">Data de Nascimento *</Label>
+              <Input
+                id="birth_date"
+                type="date"
+                value={formData.birth_date}
+                onChange={(e) => handleInputChange('birth_date', e.target.value)}
+                disabled={isReadOnly}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="document_type">Tipo de Documento *</Label>
+              <Select
+                value={formData.document_type}
+                onValueChange={(value) => handleInputChange('document_type', value)}
+                disabled={isReadOnly}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo de documento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {documentTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="document_number">Número do Documento *</Label>
+              <Input
+                id="document_number"
+                value={formData.document_number}
+                onChange={(e) => handleInputChange('document_number', e.target.value)}
+                placeholder="Digite o número do documento"
+                disabled={isReadOnly}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {formData.document_type && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Upload de Documentos</CardTitle>
+            <CardDescription>
+              {needsBackside 
+                ? 'Faça o upload da frente e verso do seu documento'
+                : 'Faça o upload do seu documento'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Frente do documento */}
+            <div>
+              <Label>Frente do Documento *</Label>
+              {verification?.document_front_url ? (
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Documento enviado
+                  </div>
+                  {!isReadOnly && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeDocument('front')}
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Remover
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => handleFileUpload(e, 'front')}
+                    className="hidden"
+                    id="front-upload"
+                    disabled={isReadOnly || uploading}
+                  />
+                  <label
+                    htmlFor="front-upload"
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 disabled:cursor-not-allowed"
+                  >
+                    {uploading ? (
+                      <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-gray-400" />
+                        <p className="mt-2 text-sm text-gray-500">
+                          Clique para enviar a frente do documento
+                        </p>
+                        <p className="text-xs text-gray-400">PNG, JPG, PDF até 5MB</p>
+                      </>
+                    )}
+                  </label>
+                </div>
+              )}
+            </div>
+
+            {/* Verso do documento (apenas para BI) */}
+            {needsBackside && (
               <div>
-                <Label>Frente do Documento *</Label>
-                {verification?.document_front_url ? (
+                <Label>Verso do Documento *</Label>
+                {verification?.document_back_url ? (
                   <div className="flex items-center gap-3 mt-2">
                     <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
@@ -327,7 +376,7 @@ export default function UserIdentity() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => removeDocument('front')}
+                        onClick={() => removeDocument('back')}
                       >
                         <X className="w-4 h-4 mr-1" />
                         Remover
@@ -339,14 +388,14 @@ export default function UserIdentity() {
                     <input
                       type="file"
                       accept="image/*,.pdf"
-                      onChange={(e) => handleFileUpload(e, 'front')}
+                      onChange={(e) => handleFileUpload(e, 'back')}
                       className="hidden"
-                      id="front-upload"
+                      id="back-upload"
                       disabled={isReadOnly || uploading}
                     />
                     <label
-                      htmlFor="front-upload"
-                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 disabled:cursor-not-allowed"
+                      htmlFor="back-upload"
+                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
                     >
                       {uploading ? (
                         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -354,7 +403,7 @@ export default function UserIdentity() {
                         <>
                           <Upload className="w-8 h-8 text-gray-400" />
                           <p className="mt-2 text-sm text-gray-500">
-                            Clique para enviar a frente do documento
+                            Clique para enviar o verso do documento
                           </p>
                           <p className="text-xs text-gray-400">PNG, JPG, PDF até 5MB</p>
                         </>
@@ -363,75 +412,23 @@ export default function UserIdentity() {
                   </div>
                 )}
               </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-              {/* Verso do documento (apenas para BI) */}
-              {needsBackside && (
-                <div>
-                  <Label>Verso do Documento *</Label>
-                  {verification?.document_back_url ? (
-                    <div className="flex items-center gap-3 mt-2">
-                      <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4" />
-                        Documento enviado
-                      </div>
-                      {!isReadOnly && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeDocument('back')}
-                        >
-                          <X className="w-4 h-4 mr-1" />
-                          Remover
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="mt-2">
-                      <input
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={(e) => handleFileUpload(e, 'back')}
-                        className="hidden"
-                        id="back-upload"
-                        disabled={isReadOnly || uploading}
-                      />
-                      <label
-                        htmlFor="back-upload"
-                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                      >
-                        {uploading ? (
-                          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-                        ) : (
-                          <>
-                            <Upload className="w-8 h-8 text-gray-400" />
-                            <p className="mt-2 text-sm text-gray-500">
-                              Clique para enviar o verso do documento
-                            </p>
-                            <p className="text-xs text-gray-400">PNG, JPG, PDF até 5MB</p>
-                          </>
-                        )}
-                      </label>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {!isReadOnly && (
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSubmit}
-              disabled={loading || uploading}
-              size="lg"
-            >
-              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {verification ? 'Atualizar Verificação' : 'Enviar para Verificação'}
-            </Button>
-          </div>
-        )}
-      </div>
-    </ProtectedRoute>
+      {!isReadOnly && (
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || uploading}
+            size="lg"
+          >
+            {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {verification ? 'Atualizar Verificação' : 'Enviar para Verificação'}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
