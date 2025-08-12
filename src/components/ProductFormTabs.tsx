@@ -232,6 +232,12 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
   };
 
   const handleSave = async (isDraft = false) => {
+    // Evitar múltiplas chamadas simultâneas
+    if (saving) {
+      console.log("🚫 Bloqueando chamada - já está salvando");
+      return;
+    }
+
     console.log("🚀 handleSave called with:", { 
       isDraft, 
       formDataName: formData.name, 
@@ -241,6 +247,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     });
     console.log("📝 Full formData:", formData);
     console.log("✏️ editingProduct:", editingProduct);
+    
     if (!user) {
       toast({
         title: "Erro",
@@ -262,6 +269,15 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       }
     } else {
       // Para publicar, validar todos os campos obrigatórios e mostrar informações específicas
+      console.log("🔍 Validando campos para publicação:");
+      console.log("- Nome:", formData.name);
+      console.log("- Preço:", formData.price, "parseFloat:", parseFloat(formData.price));
+      console.log("- Categoria:", formData.category);
+      console.log("- Descrição:", formData.description);
+      console.log("- Tipo:", formData.type);
+      console.log("- MemberAreaId:", formData.memberAreaId);
+      console.log("- PaymentMethods:", formData.paymentMethods);
+      
       const missingFields = [];
       
       if (!formData.name) missingFields.push("Nome do produto");
@@ -279,7 +295,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         missingFields.push("Pelo menos um método de pagamento ativo");
       }
 
+      console.log("❌ Campos faltando:", missingFields);
+
       if (missingFields.length > 0) {
+        console.log("🚨 Bloqueando publicação devido a campos faltando");
         toast({
           title: "❌ Não é possível publicar",
           description: `Campos obrigatórios faltando: ${missingFields.join(", ")}`,
@@ -287,6 +306,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         });
         return;
       }
+      
+      console.log("✅ Validação passou, prosseguindo com a publicação");
     }
 
     setSaving(true);
