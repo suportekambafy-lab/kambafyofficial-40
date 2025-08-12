@@ -145,6 +145,9 @@ export default function Products() {
       return;
     }
     
+    // Lógica de mudança de status:
+    // - Se está Ativo -> Inativo
+    // - Se está Inativo ou Rascunho -> Ativo
     const newStatus = product.status === 'Ativo' ? 'Inativo' : 'Ativo';
     
     try {
