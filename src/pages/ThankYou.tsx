@@ -287,7 +287,7 @@ const ThankYou = () => {
       return (
         <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
           <Clock className="w-3 h-3 mr-1" />
-          Aguardando Pagamento
+          Pendente
         </Badge>
       );
     }

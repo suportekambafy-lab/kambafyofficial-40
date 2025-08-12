@@ -1161,10 +1161,20 @@ const Checkout = () => {
         })
       });
 
-      // Não marcar como recuperado automaticamente para transferências bancárias normais
-      // Só marcar se realmente foi uma recuperação de carrinho abandonado
-      if (hasDetected) {
+      // Não marcar vendas de transferência bancária como recuperadas automaticamente
+      console.log('🔍 Verificando se deve marcar como recuperado:', {
+        hasDetected,
+        abandonedPurchaseId,
+        email: formData.email,
+        productId: product?.id
+      });
+      
+      // Só marcar como recuperado se realmente houve detecção de abandono
+      if (hasDetected && abandonedPurchaseId) {
+        console.log('✅ Marcando como venda recuperada - carrinho foi detectado como abandonado');
         await markAsRecovered(orderId);
+      } else {
+        console.log('ℹ️ Venda normal - não foi marcada como recuperada');
       }
 
       navigate(`/obrigado?${params.toString()}`);
