@@ -30,9 +30,9 @@ const BANKS: BankAccount[] = [
     id: 'bci',
     name: 'BCI - Banco Comercial e de Investimentos',
     available: true,
-    iban: '004000082010297101007',
-    accountNumber: '182010297100001',
-    accountHolder: 'SAMSOFT SYNC',
+    iban: '0005 0000 09802546101 15',
+    accountNumber: '10980254610001',
+    accountHolder: 'KAMBAFY COMERCIO E SERVICOS LDA',
     logo: '/lovable-uploads/451d9e0e-6608-409a-910a-ec955cb5223c.png'
   },
   {
