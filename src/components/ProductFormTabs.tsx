@@ -304,7 +304,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         cover: formData.cover,
         commission: formData.allowAffiliates ? formData.commission : null,
         tags: formData.tags,
-        member_area_id: formData.type === "Curso" ? formData.memberAreaId : null,
+        member_area_id: (formData.type === "Curso" && formData.memberAreaId) ? formData.memberAreaId : null,
         payment_methods: isDraft ? [] as any : (formData.paymentMethods as any), // Para rascunho, array vazio é ok
         fantasy_name: formData.fantasyName || null,
         allow_affiliates: formData.allowAffiliates,
