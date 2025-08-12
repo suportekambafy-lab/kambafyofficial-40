@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { X, Upload, Plus, Save, Loader2, FileUp } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useCustomToast } from "@/hooks/useCustomToast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,7 +30,7 @@ interface MemberArea {
 }
 
 export default function ProductFormTabs({ editingProduct, selectedType = "", onSave, onCancel }: ProductFormProps) {
-  const { toast } = useToast();
+  const { toast } = useCustomToast();
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]);
@@ -74,8 +74,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
           console.error('Error loading member areas:', error);
           toast({
             title: "Erro",
-            description: "Erro ao carregar áreas de membros",
-            variant: "destructive"
+            message: "Erro ao carregar áreas de membros",
+            variant: "error"
           });
         } else {
           setMemberAreas(data || []);
@@ -169,8 +169,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     if (!user) {
       toast({
         title: "Erro",
-        description: "Você precisa estar logado para fazer upload de imagens",
-        variant: "destructive"
+        message: "Você precisa estar logado para fazer upload de imagens",
+        variant: "error"
       });
       return;
     }
@@ -189,8 +189,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         console.error('Error uploading cover:', error);
         toast({
           title: "Erro",
-          description: "Erro ao fazer upload da capa",
-          variant: "destructive"
+          message: "Erro ao fazer upload da capa",
+          variant: "error"
         });
         return;
       }
@@ -206,14 +206,14 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
 
       toast({
         title: "Sucesso",
-        description: "Capa enviada com sucesso"
+        message: "Capa enviada com sucesso"
       });
     } catch (error) {
       console.error('Exception uploading cover:', error);
       toast({
         title: "Erro",
-        description: "Erro inesperado ao fazer upload da capa",
-        variant: "destructive"
+        message: "Erro inesperado ao fazer upload da capa",
+        variant: "error"
       });
     } finally {
       setUploadingCover(false);
@@ -227,7 +227,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     }));
     toast({
       title: "Sucesso",
-      description: "Arquivo do e-book enviado com sucesso"
+      message: "Arquivo do e-book enviado com sucesso"
     });
   };
 
@@ -251,8 +251,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     if (!user) {
       toast({
         title: "Erro",
-        description: "Você precisa estar logado para salvar produtos",
-        variant: "destructive"
+        message: "Você precisa estar logado para salvar produtos",
+        variant: "error"
       });
       return;
     }
@@ -262,8 +262,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       if (!formData.name) {
         toast({
           title: "Erro",
-          description: "Nome é obrigatório para salvar como rascunho",
-          variant: "destructive"
+          message: "Nome é obrigatório para salvar como rascunho",
+          variant: "error"
         });
         return;
       }
@@ -303,8 +303,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         try {
           toast({
             title: "❌ Não é possível publicar",
-            description: `Campos obrigatórios faltando: ${missingFields.join(", ")}`,
-            variant: "destructive"
+            message: `Campos obrigatórios faltando: ${missingFields.join(", ")}`,
+            variant: "error"
           });
           console.log("✅ Toast chamado com sucesso");
         } catch (error) {
@@ -365,8 +365,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         console.error('Error saving product:', error);
         toast({
           title: "Erro",
-          description: "Erro ao salvar produto: " + error.message,
-          variant: "destructive"
+          message: "Erro ao salvar produto: " + error.message,
+          variant: "error"
         });
       } else {
         console.log('Product saved successfully');
@@ -376,7 +376,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         
         toast({
           title: "Sucesso",
-          description: successMessage
+          message: successMessage
         });
         
         console.log('onSave callback:', onSave);
@@ -410,8 +410,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       console.error('Full error details:', JSON.stringify(error, null, 2));
       toast({
         title: "Erro",
-        description: "Erro inesperado ao salvar produto",
-        variant: "destructive"
+        message: "Erro inesperado ao salvar produto",
+        variant: "error"
       });
     } finally {
       console.log('Setting saving to false');
