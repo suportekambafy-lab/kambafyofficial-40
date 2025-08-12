@@ -565,6 +565,145 @@ const Checkout = () => {
     });
   };
 
+  const handleBankTransferPurchase = async (proofFile: File, selectedBank: string) => {
+    console.log('🏦 Processing bank transfer purchase with proof:', { fileName: proofFile.name, bank: selectedBank });
+    setProcessing(true);
+
+    try {
+      if (!formData.fullName || !formData.email || !formData.phone) {
+        toast({
+          title: "Campos obrigatórios",
+          description: "Por favor, preencha todos os campos antes de continuar",
+          variant: "destructive"
+        });
+        setProcessing(false);
+        return;
+      }
+
+      const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
+      const totalAmount = parseFloat(product.price) + orderBumpPrice;
+
+      // Calcular comissões se houver afiliado
+      let affiliate_commission = null;
+      let seller_commission = null;
+      
+      if (hasAffiliate && affiliateCode) {
+        console.log('🔍 Calculando comissões para afiliado:', affiliateCode);
+        
+        const { data: affiliate, error: affiliateError } = await supabase
+          .from('affiliates')
+          .select('commission_rate')
+          .eq('affiliate_code', affiliateCode)
+          .eq('product_id', product.id)
+          .eq('status', 'ativo')
+          .single();
+          
+        if (affiliate && !affiliateError) {
+          const commission_rate = affiliate.commission_rate;
+          const commission_decimal = parseFloat(commission_rate.replace('%', '')) / 100;
+          affiliate_commission = Math.round(totalAmount * commission_decimal * 100) / 100;
+          seller_commission = Math.round((totalAmount - affiliate_commission) * 100) / 100;
+        } else {
+          seller_commission = totalAmount;
+        }
+      } else {
+        seller_commission = totalAmount;
+      }
+
+      const orderData = {
+        product_id: product.id,
+        order_id: orderId,
+        customer_name: formData.fullName,
+        customer_email: formData.email,
+        customer_phone: formData.phone,
+        amount: totalAmount.toString(),
+        currency: userCountry.currency,
+        payment_method: 'transfer',
+        status: 'pending_verification', // Status específico para transferência
+        user_id: null,
+        affiliate_code: hasAffiliate ? affiliateCode : null,
+        affiliate_commission: affiliate_commission,
+        seller_commission: seller_commission,
+        order_bump_data: orderBump ? JSON.stringify({
+          bump_product_name: orderBump.bump_product_name,
+          bump_product_price: orderBump.bump_product_price,
+          bump_product_image: orderBump.bump_product_image,
+          discount: orderBump.discount,
+          discounted_price: orderBumpPrice
+        }) : null,
+        payment_proof_data: JSON.stringify({
+          bank: selectedBank,
+          proof_file_name: proofFile.name,
+          upload_timestamp: new Date().toISOString()
+        })
+      };
+
+      console.log('🏦 Inserting bank transfer order:', orderData);
+
+      const { data: insertedOrder, error: orderError } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('❌ Error saving bank transfer order:', orderError);
+        toast({
+          title: "Erro",
+          description: `Erro ao processar compra: ${orderError.message}`,
+          variant: "destructive"
+        });
+        setProcessing(false);
+        return;
+      }
+
+      console.log('✅ Bank transfer order saved successfully:', insertedOrder);
+
+      // Atualizar contagem de vendas
+      const newSalesCount = (product.sales || 0) + 1;
+      await supabase
+        .from('products')
+        .update({ sales: newSalesCount })
+        .eq('id', product.id);
+
+      setProduct(prev => ({ ...prev, sales: newSalesCount }));
+
+      // Marcar carrinho como recuperado se foi detectado anteriormente
+      await markAsRecovered(orderId);
+
+      // Navegar para página de sucesso
+      const params = new URLSearchParams({
+        order_id: orderId,
+        customer_name: formData.fullName.trim(),
+        customer_email: formData.email.trim().toLowerCase(),
+        product_name: product.name,
+        amount: totalAmount.toString(),
+        currency: userCountry.currency,
+        product_id: productId || '',
+        seller_id: product.user_id,
+        base_product_price: product.price,
+        payment_method: 'transfer',
+        ...(orderBump && {
+          order_bump_name: orderBump.bump_product_name,
+          order_bump_price: orderBump.bump_product_price,
+          order_bump_discount: orderBump.discount.toString(),
+          order_bump_discounted_price: orderBumpPrice.toString()
+        })
+      });
+
+      navigate(`/obrigado?${params.toString()}`);
+
+    } catch (error) {
+      console.error('❌ Bank transfer purchase error:', error);
+      toast({
+        title: "Erro no pagamento",
+        description: "Erro inesperado ao processar transferência bancária",
+        variant: "destructive"
+      });
+      setProcessing(false);
+    }
+  };
+
   const handlePurchase = async () => {
     console.log('🚀 HandlePurchase called with:', {
       selectedPayment,
@@ -1404,9 +1543,12 @@ const Checkout = () => {
                   <BankTransferForm
                     totalAmount={totalPrice.toString()}
                     currency={userCountry.currency}
-                    onPaymentComplete={(file, bank) => {
+                    onPaymentComplete={async (file, bank) => {
                       setBankTransferData({ file, bank });
                       console.log('Bank transfer proof uploaded:', { fileName: file.name, bank });
+                      
+                      // Processar compra por transferência imediatamente
+                      await handleBankTransferPurchase(file, bank);
                     }}
                     disabled={processing}
                   />
