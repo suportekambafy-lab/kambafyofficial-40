@@ -261,31 +261,28 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         return;
       }
     } else {
-      // Para publicar, validar todos os campos obrigatórios
-      if (!formData.name || !formData.price || !formData.category) {
-        toast({
-          title: "Erro",
-          description: "Nome, preço e categoria são obrigatórios para publicar",
-          variant: "destructive"
-        });
-        return;
-      }
-
+      // Para publicar, validar todos os campos obrigatórios e mostrar informações específicas
+      const missingFields = [];
+      
+      if (!formData.name) missingFields.push("Nome do produto");
+      if (!formData.price || parseFloat(formData.price) <= 0) missingFields.push("Preço válido");
+      if (!formData.category) missingFields.push("Categoria");
+      if (!formData.description) missingFields.push("Descrição");
+      
       if (formData.type === "Curso" && !formData.memberAreaId) {
-        toast({
-          title: "Erro",
-          description: "Para cursos, você deve selecionar uma área de membros",
-          variant: "destructive"
-        });
-        return;
+        missingFields.push("Área de membros (obrigatória para cursos)");
       }
 
       // Validar se pelo menos um método de pagamento está ativo
       const activeMethods = formData.paymentMethods.filter(method => method.enabled);
       if (activeMethods.length === 0) {
+        missingFields.push("Pelo menos um método de pagamento ativo");
+      }
+
+      if (missingFields.length > 0) {
         toast({
-          title: "Erro",
-          description: "Você deve ativar pelo menos um método de pagamento",
+          title: "❌ Não é possível publicar",
+          description: `Campos obrigatórios faltando: ${missingFields.join(", ")}`,
           variant: "destructive"
         });
         return;
