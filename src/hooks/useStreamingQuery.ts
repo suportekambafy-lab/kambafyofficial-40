@@ -109,8 +109,12 @@ export const useStreamingQuery = () => {
           acc.paidTotal += affiliateCommission;
           acc.totalAffiliateCommissions += affiliateCommission;
         } else {
-          // ✅ Para vendedores, usar seller_commission que já vem em KZ original
-          let sellerCommission = parseFloat(order.seller_commission?.toString() || '0') || amount;
+          // ✅ Para vendedores, usar seller_commission que já vem em KZ original da base de dados
+          // Se não houver seller_commission, usar o valor original em KZ
+          let sellerCommission = parseFloat(order.seller_commission?.toString() || '0');
+          if (sellerCommission === 0) {
+            sellerCommission = amount; // Fallback para amount se não houver seller_commission
+          }
           
           // Aplicar desconto de 20% se for venda recuperada
           if (isRecovered) {
@@ -217,19 +221,8 @@ export const useStreamingQuery = () => {
           // Verificar se é venda recuperada
           const isRecovered = recoveredOrderIds.has(order.order_id);
           
-          // ✅ Para vendedores, usar seller_commission que já vem em KZ da base de dados
-          // Não convertir para outras moedas - o vendedor sempre vê em KZ original
-          let sellerEarning = parseFloat(order.seller_commission?.toString() || order.amount || '0');
-          
-          // Aplicar desconto de 20% se for venda recuperada
-          if (isRecovered) {
-            sellerEarning = sellerEarning * 0.8;
-          }
-          
           return {
             ...order,
-            amount: sellerEarning.toString(), // Usar earnings em KZ para o vendedor
-            seller_commission: sellerEarning,
             products: productMap.get(order.product_id) || null,
             sale_type: isRecovered ? 'recovered' : 'own' // Marcar como recuperada ou própria
           };

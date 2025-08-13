@@ -227,7 +227,16 @@ export function ModernRecentSales() {
   };
 
   const formatAmount = (sale: RecentSale) => {
-    let amount = sale.earning_amount || parseFloat(sale.amount);
+    // ✅ Para vendedores, usar seller_commission que já vem em KZ da base de dados
+    // Se for venda de afiliado, usar affiliate_commission
+    let amount = 0;
+    
+    if (sale.sale_type === 'affiliate') {
+      amount = sale.affiliate_commission || 0;
+    } else {
+      // Para vendas próprias, usar seller_commission ou fallback para amount
+      amount = sale.seller_commission || parseFloat(sale.amount);
+    }
     
     // Aplicar desconto de 20% para vendas recuperadas
     if (sale.sale_type === 'recovered') {
@@ -236,7 +245,7 @@ export function ModernRecentSales() {
     
     // ✅ Para vendedores, sempre mostrar em KZ original independente da moeda do comprador
     // O valor já vem convertido para KZ na base de dados
-    return `${amount.toLocaleString()} KZ`;
+    return `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`;
   };
 
   const getInitials = (name: string) => {
