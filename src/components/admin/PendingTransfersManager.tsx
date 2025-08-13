@@ -163,36 +163,8 @@ export function PendingTransfersManager() {
     }
   };
 
-  const viewProof = async (proofData: any) => {
+  const viewProof = (proofData: any) => {
     console.log('💰 Dados do comprovativo:', proofData);
-    
-    // Tentar carregar a imagem do storage se tiver proof_file_name
-    if (proofData.proof_file_name) {
-      try {
-        // Tentar buscar no bucket payment-proofs
-        const { data: publicUrlData } = supabase.storage
-          .from('payment-proofs')
-          .getPublicUrl(proofData.proof_file_name);
-        
-        if (publicUrlData?.publicUrl) {
-          proofData.storage_url = publicUrlData.publicUrl;
-        }
-        
-        // Se não encontrou, tentar no identity-documents
-        if (!proofData.storage_url) {
-          const { data: identityUrlData } = supabase.storage
-            .from('identity-documents')
-            .getPublicUrl(proofData.proof_file_name);
-            
-          if (identityUrlData?.publicUrl) {
-            proofData.storage_url = identityUrlData.publicUrl;
-          }
-        }
-      } catch (error) {
-        console.log('⚠️ Erro ao carregar imagem do storage:', error);
-      }
-    }
-    
     setSelectedProof(proofData);
     setShowProofDialog(true);
   };
@@ -375,11 +347,11 @@ export function PendingTransfersManager() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <label className="font-medium">Banco:</label>
-                    <p className="text-muted-foreground capitalize">{selectedProof.bank || 'N/A'}</p>
+                    <p className="text-muted-foreground">{selectedProof.bank?.toUpperCase() || 'N/A'}</p>
                   </div>
                   <div>
                     <label className="font-medium">Nome do arquivo:</label>
-                    <p className="text-muted-foreground break-all">{selectedProof.proof_file_name || selectedProof.fileName || 'N/A'}</p>
+                    <p className="text-muted-foreground">{selectedProof.proof_file_name || selectedProof.fileName || 'N/A'}</p>
                   </div>
                 </div>
                 
@@ -387,20 +359,14 @@ export function PendingTransfersManager() {
                   <label className="font-medium">Data de upload:</label>
                   <p className="text-muted-foreground">
                     {selectedProof.upload_timestamp ? 
-                      new Date(selectedProof.upload_timestamp).toLocaleString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit', 
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
+                      formatDistanceToNow(new Date(selectedProof.upload_timestamp), { 
+                        addSuffix: true, 
+                        locale: ptBR 
                       }) : 
                       selectedProof.uploadedAt ? 
-                        new Date(selectedProof.uploadedAt).toLocaleString('pt-BR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric', 
-                          hour: '2-digit',
-                          minute: '2-digit'
+                        formatDistanceToNow(new Date(selectedProof.uploadedAt), { 
+                          addSuffix: true, 
+                          locale: ptBR 
                         }) : 'N/A'
                     }
                   </p>
@@ -413,31 +379,20 @@ export function PendingTransfersManager() {
                   </div>
                 )}
                 
-                {(selectedProof.file || selectedProof.storage_url) ? (
+                {selectedProof.file && (
                   <div className="border rounded p-2">
                     <img 
-                      src={selectedProof.storage_url || selectedProof.file} 
+                      src={selectedProof.file} 
                       alt="Comprovativo de transferência"
                       className="max-w-full h-auto rounded"
-                      onError={(e) => {
-                        console.log('❌ Erro ao carregar imagem');
-                        e.currentTarget.style.display = 'none';
-                      }}
                     />
                   </div>
-                ) : (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                    <div className="text-gray-400 text-4xl mb-4">📄</div>
-                    <p className="text-gray-600 font-medium">Comprovativo de Transferência</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Arquivo: <span className="font-medium">{selectedProof.proof_file_name || 'N/A'}</span>
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Banco: <span className="font-medium capitalize">{selectedProof.bank || 'N/A'}</span>
-                    </p>
-                    <div className="mt-4 text-xs text-gray-400">
-                      ℹ️ A imagem do comprovativo foi enviada pelo cliente
-                    </div>
+                )}
+
+                {!selectedProof.file && (
+                  <div className="border rounded p-4 text-center text-muted-foreground">
+                    <p>Preview da imagem não disponível</p>
+                    <p className="text-sm">Arquivo: {selectedProof.proof_file_name || 'N/A'}</p>
                   </div>
                 )}
               </>
