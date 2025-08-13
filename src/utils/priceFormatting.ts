@@ -48,3 +48,14 @@ export const formatPriceFromString = (
   const priceNumber = parseFloat(priceString);
   return formatPrice(priceNumber, targetCountry, useToLocaleString);
 };
+
+// Função específica para vendedores - sempre mostra em KZ original
+export const formatPriceForSeller = (
+  originalAmountKZ: number,
+  useToLocaleString: boolean = true
+): string => {
+  if (useToLocaleString) {
+    return `${parseFloat(originalAmountKZ.toString()).toLocaleString('pt-BR')} KZ`;
+  }
+  return `${originalAmountKZ.toLocaleString()} KZ`;
+};

@@ -64,7 +64,8 @@ export const useStreamingQuery = () => {
       const { data: ownSalesData, error: ownSalesError } = await supabase
         .from('orders')
         .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id')
-        .in('product_id', userProductIds);
+        .in('product_id', userProductIds)
+        .in('status', ['completed', 'pending']); // Incluir vendas pendentes
 
       if (ownSalesError) throw ownSalesError;
 
@@ -108,25 +109,24 @@ export const useStreamingQuery = () => {
           acc.paidTotal += affiliateCommission;
           acc.totalAffiliateCommissions += affiliateCommission;
         } else {
-          // Para vendas próprias, mostra valor total ou comissão do vendedor
+          // ✅ Para vendedores, usar seller_commission que já vem em KZ original
           let sellerCommission = parseFloat(order.seller_commission?.toString() || '0') || amount;
           
           // Aplicar desconto de 20% se for venda recuperada
           if (isRecovered) {
-            amount = amount * 0.8;
             sellerCommission = sellerCommission * 0.8;
           }
           
           if (order.status === 'completed') {
             acc.paid++;
-            acc.paidTotal += sellerCommission;
+            acc.paidTotal += sellerCommission; // Usar comissão do vendedor em KZ
             acc.totalSellerEarnings += sellerCommission;
           } else if (order.status === 'pending') {
             acc.pending++;
-            acc.pendingTotal += amount;
+            acc.pendingTotal += sellerCommission; // Usar comissão também para pending
           } else if (order.status === 'failed') {
             acc.cancelled++;
-            acc.cancelledTotal += amount;
+            acc.cancelledTotal += sellerCommission;
           }
         }
 
@@ -217,19 +217,19 @@ export const useStreamingQuery = () => {
           // Verificar se é venda recuperada
           const isRecovered = recoveredOrderIds.has(order.order_id);
           
-          // Aplicar desconto de 20% se for venda recuperada
-          let adjustedAmount = parseFloat(order.amount) || 0;
-          let adjustedSellerCommission = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+          // ✅ Para vendedores, usar seller_commission que já vem em KZ da base de dados
+          // Não convertir para outras moedas - o vendedor sempre vê em KZ original
+          let sellerEarning = parseFloat(order.seller_commission?.toString() || order.amount || '0');
           
+          // Aplicar desconto de 20% se for venda recuperada
           if (isRecovered) {
-            adjustedAmount = adjustedAmount * 0.8;
-            adjustedSellerCommission = adjustedSellerCommission * 0.8;
+            sellerEarning = sellerEarning * 0.8;
           }
           
           return {
             ...order,
-            amount: adjustedAmount.toString(),
-            seller_commission: adjustedSellerCommission,
+            amount: sellerEarning.toString(), // Usar earnings em KZ para o vendedor
+            seller_commission: sellerEarning,
             products: productMap.get(order.product_id) || null,
             sale_type: isRecovered ? 'recovered' : 'own' // Marcar como recuperada ou própria
           };

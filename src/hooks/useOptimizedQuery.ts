@@ -35,10 +35,12 @@ export const useFinancialData = (userId: string) => {
             currency, 
             created_at, 
             status,
+            seller_commission,
+            affiliate_commission,
             products!inner(user_id)
           `)
           .eq('products.user_id', userId)
-          .eq('status', 'completed'),
+          .in('status', ['completed', 'pending']),
         
         supabase
           .from('withdrawal_requests')

@@ -234,13 +234,8 @@ export function ModernRecentSales() {
       amount = amount * 0.8;
     }
     
-    const currency = sale.currency;
-    
-    if (currency === 'EUR') {
-      return `€${amount.toFixed(2)}`;
-    } else if (currency === 'MZN') {
-      return `${amount.toLocaleString()} MT`;
-    }
+    // ✅ Para vendedores, sempre mostrar em KZ original independente da moeda do comprador
+    // O valor já vem convertido para KZ na base de dados
     return `${amount.toLocaleString()} KZ`;
   };
 
