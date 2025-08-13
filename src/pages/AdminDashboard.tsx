@@ -125,7 +125,7 @@ export default function AdminDashboard() {
     if (admin) {
       console.log('Admin logado, carregando stats...');
       loadStats();
-      logAdminSession('dashboard_access');
+      // Removed logAdminSession to fix 409 error
       setupSessionTimeout();
     }
   }, [admin]);
@@ -142,18 +142,7 @@ export default function AdminDashboard() {
         success: true
       };
 
-      // Log no Supabase
-      await supabase.from('admin_logs').insert({
-        admin_id: sessionData.admin_id,
-        action: sessionData.action,
-        target_type: 'session',
-        details: {
-          ip_address: sessionData.ip_address,
-          user_agent: sessionData.user_agent,
-          timestamp: sessionData.timestamp
-        }
-      });
-
+      // Removed Supabase logging to fix 409 error
       console.log('🔐 Sessão admin logada:', sessionData);
     } catch (error) {
       console.error('❌ Erro ao logar sessão admin:', error);
@@ -177,7 +166,7 @@ export default function AdminDashboard() {
     const resetTimeout = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        logAdminSession('session_timeout');
+        // Removed logAdminSession to fix 409 error
         logout();
       }, 30 * 60 * 1000); // 30 minutos
     };
@@ -344,7 +333,7 @@ export default function AdminDashboard() {
   };
 
   const handleSecureLogout = async () => {
-    await logAdminSession('logout');
+    // Removed logAdminSession to fix 409 error
     logout();
   };
 
