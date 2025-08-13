@@ -128,7 +128,7 @@ export const useStreamingQuery = () => {
           } else if (order.status === 'pending') {
             acc.pending++;
             acc.pendingTotal += sellerCommission; // Usar comissão também para pending
-          } else if (order.status === 'failed') {
+          } else if (order.status === 'failed' || order.status === 'cancelled') {
             acc.cancelled++;
             acc.cancelledTotal += sellerCommission;
           }
