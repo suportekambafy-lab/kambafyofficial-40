@@ -65,7 +65,7 @@ export const useStreamingQuery = () => {
         .from('orders')
         .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id')
         .in('product_id', userProductIds)
-        .in('status', ['completed', 'pending']); // Incluir vendas pendentes
+        .in('status', ['completed', 'pending', 'cancelled', 'failed']); // Incluir todas as vendas
 
       if (ownSalesError) throw ownSalesError;
 
@@ -88,7 +88,7 @@ export const useStreamingQuery = () => {
           .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code')
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
-          .in('status', ['completed', 'pending']); // Incluir vendas pendentes
+          .in('status', ['completed', 'pending', 'cancelled', 'failed']); // Incluir todas as vendas
 
         if (affiliateDataError) throw affiliateDataError;
         affiliateSalesData = affiliateData || [];
@@ -128,7 +128,7 @@ export const useStreamingQuery = () => {
           } else if (order.status === 'pending') {
             acc.pending++;
             acc.pendingTotal += sellerCommission; // Usar comissão também para pending
-          } else if (order.status === 'failed') {
+          } else if (order.status === 'failed' || order.status === 'cancelled') {
             acc.cancelled++;
             acc.cancelledTotal += sellerCommission;
           }
@@ -286,7 +286,7 @@ export const useStreamingQuery = () => {
           `)
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
-          .in('status', ['completed', 'pending']) // Incluir vendas pendentes
+          .in('status', ['completed', 'pending', 'cancelled', 'failed']) // Incluir todas as vendas
           // Excluir vendas de produtos próprios para evitar duplicação
           .not('product_id', 'in', `(${userProductIds.length > 0 ? userProductIds.join(',') : 'null'})`)
           .order('created_at', { ascending: false });
