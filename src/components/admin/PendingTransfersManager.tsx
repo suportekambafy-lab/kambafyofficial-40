@@ -347,11 +347,11 @@ export function PendingTransfersManager() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <label className="font-medium">Banco:</label>
-                    <p className="text-muted-foreground">{selectedProof.bank?.toUpperCase() || 'N/A'}</p>
+                    <p className="text-muted-foreground capitalize">{selectedProof.bank || 'N/A'}</p>
                   </div>
                   <div>
                     <label className="font-medium">Nome do arquivo:</label>
-                    <p className="text-muted-foreground">{selectedProof.proof_file_name || selectedProof.fileName || 'N/A'}</p>
+                    <p className="text-muted-foreground break-all">{selectedProof.proof_file_name || selectedProof.fileName || 'N/A'}</p>
                   </div>
                 </div>
                 
@@ -359,14 +359,20 @@ export function PendingTransfersManager() {
                   <label className="font-medium">Data de upload:</label>
                   <p className="text-muted-foreground">
                     {selectedProof.upload_timestamp ? 
-                      formatDistanceToNow(new Date(selectedProof.upload_timestamp), { 
-                        addSuffix: true, 
-                        locale: ptBR 
+                      new Date(selectedProof.upload_timestamp).toLocaleString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
                       }) : 
                       selectedProof.uploadedAt ? 
-                        formatDistanceToNow(new Date(selectedProof.uploadedAt), { 
-                          addSuffix: true, 
-                          locale: ptBR 
+                        new Date(selectedProof.uploadedAt).toLocaleString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric', 
+                          hour: '2-digit',
+                          minute: '2-digit'
                         }) : 'N/A'
                     }
                   </p>
@@ -379,7 +385,7 @@ export function PendingTransfersManager() {
                   </div>
                 )}
                 
-                {selectedProof.file && (
+                {selectedProof.file ? (
                   <div className="border rounded p-2">
                     <img 
                       src={selectedProof.file} 
@@ -387,12 +393,19 @@ export function PendingTransfersManager() {
                       className="max-w-full h-auto rounded"
                     />
                   </div>
-                )}
-
-                {!selectedProof.file && (
-                  <div className="border rounded p-4 text-center text-muted-foreground">
-                    <p>Preview da imagem não disponível</p>
-                    <p className="text-sm">Arquivo: {selectedProof.proof_file_name || 'N/A'}</p>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <div className="text-gray-400 text-4xl mb-4">📄</div>
+                    <p className="text-gray-600 font-medium">Comprovativo de Transferência</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Arquivo: <span className="font-medium">{selectedProof.proof_file_name || 'N/A'}</span>
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Banco: <span className="font-medium capitalize">{selectedProof.bank || 'N/A'}</span>
+                    </p>
+                    <div className="mt-4 text-xs text-gray-400">
+                      ℹ️ A imagem do comprovativo foi enviada pelo cliente
+                    </div>
                   </div>
                 )}
               </>
