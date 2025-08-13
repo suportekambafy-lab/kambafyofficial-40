@@ -126,7 +126,7 @@ export function PendingTransfersManager() {
     try {
       setProcessingId(transferId);
       
-      const newStatus = action === 'approve' ? 'completed' : 'failed';
+      const newStatus = action === 'approve' ? 'completed' : 'cancelled';
       
       console.log(`💰 ${action === 'approve' ? 'Aprovando' : 'Rejeitando'} transferência:`, transferId);
 
@@ -141,8 +141,10 @@ export function PendingTransfersManager() {
       if (error) throw error;
 
       toast({
-        title: action === 'approve' ? "Transferência Aprovada" : "Transferência Rejeitada",
-        description: `O pagamento foi ${action === 'approve' ? 'aprovado' : 'rejeitado'} com sucesso`,
+        title: action === 'approve' ? "✅ Transferência Aprovada" : "❌ Transferência Rejeitada",
+        description: action === 'approve' 
+          ? "O pagamento foi aprovado com sucesso. O vendedor será notificado." 
+          : "O pagamento foi rejeitado. O pedido aparecerá como cancelado para o vendedor.",
         variant: action === 'approve' ? "default" : "destructive"
       });
 
@@ -162,18 +164,36 @@ export function PendingTransfersManager() {
   };
 
   const viewProof = (proofData: any) => {
+    console.log('💰 Dados do comprovativo:', proofData);
     setSelectedProof(proofData);
     setShowProofDialog(true);
   };
 
   const downloadProof = (proofData: any, orderNumber: string) => {
     try {
-      if (proofData.file) {
-        // Se for um arquivo base64
-        const link = document.createElement('a');
-        link.href = proofData.file;
-        link.download = `comprovativo_${orderNumber}.${proofData.fileType?.split('/')[1] || 'jpg'}`;
-        link.click();
+      // Verificar se existe um arquivo de imagem no comprovativo
+      if (proofData.proof_file_name || proofData.file) {
+        const fileName = proofData.proof_file_name || `comprovativo_${orderNumber}.jpg`;
+        
+        if (proofData.file) {
+          // Se for um arquivo base64
+          const link = document.createElement('a');
+          link.href = proofData.file;
+          link.download = fileName;
+          link.click();
+        } else {
+          toast({
+            title: "Erro",
+            description: "Arquivo do comprovativo não encontrado",
+            variant: "destructive"
+          });
+        }
+      } else {
+        toast({
+          title: "Erro", 
+          description: "Nenhum arquivo disponível para download",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('❌ Erro ao fazer download:', error);
@@ -271,7 +291,7 @@ export function PendingTransfersManager() {
                           Ver Comprovativo
                         </Button>
                         
-                        {transfer.payment_proof_data?.file && (
+                        {transfer.payment_proof_data?.proof_file_name && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -324,6 +344,41 @@ export function PendingTransfersManager() {
           <div className="space-y-4">
             {selectedProof && (
               <>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <label className="font-medium">Banco:</label>
+                    <p className="text-muted-foreground">{selectedProof.bank?.toUpperCase() || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="font-medium">Nome do arquivo:</label>
+                    <p className="text-muted-foreground">{selectedProof.proof_file_name || selectedProof.fileName || 'N/A'}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="font-medium">Data de upload:</label>
+                  <p className="text-muted-foreground">
+                    {selectedProof.upload_timestamp ? 
+                      formatDistanceToNow(new Date(selectedProof.upload_timestamp), { 
+                        addSuffix: true, 
+                        locale: ptBR 
+                      }) : 
+                      selectedProof.uploadedAt ? 
+                        formatDistanceToNow(new Date(selectedProof.uploadedAt), { 
+                          addSuffix: true, 
+                          locale: ptBR 
+                        }) : 'N/A'
+                    }
+                  </p>
+                </div>
+
+                {selectedProof.description && (
+                  <div>
+                    <label className="text-sm font-medium">Descrição:</label>
+                    <p className="text-sm text-muted-foreground mt-1">{selectedProof.description}</p>
+                  </div>
+                )}
+                
                 {selectedProof.file && (
                   <div className="border rounded p-2">
                     <img 
@@ -333,31 +388,13 @@ export function PendingTransfersManager() {
                     />
                   </div>
                 )}
-                
-                {selectedProof.description && (
-                  <div>
-                    <label className="text-sm font-medium">Descrição:</label>
-                    <p className="text-sm text-muted-foreground mt-1">{selectedProof.description}</p>
+
+                {!selectedProof.file && (
+                  <div className="border rounded p-4 text-center text-muted-foreground">
+                    <p>Preview da imagem não disponível</p>
+                    <p className="text-sm">Arquivo: {selectedProof.proof_file_name || 'N/A'}</p>
                   </div>
                 )}
-                
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <label className="font-medium">Tipo de arquivo:</label>
-                    <p className="text-muted-foreground">{selectedProof.fileType || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="font-medium">Data de upload:</label>
-                    <p className="text-muted-foreground">
-                      {selectedProof.uploadedAt ? 
-                        formatDistanceToNow(new Date(selectedProof.uploadedAt), { 
-                          addSuffix: true, 
-                          locale: ptBR 
-                        }) : 'N/A'
-                      }
-                    </p>
-                  </div>
-                </div>
               </>
             )}
           </div>
