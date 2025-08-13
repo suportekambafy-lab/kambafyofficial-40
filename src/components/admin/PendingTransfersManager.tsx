@@ -163,8 +163,36 @@ export function PendingTransfersManager() {
     }
   };
 
-  const viewProof = (proofData: any) => {
+  const viewProof = async (proofData: any) => {
     console.log('💰 Dados do comprovativo:', proofData);
+    
+    // Tentar carregar a imagem do storage se tiver proof_file_name
+    if (proofData.proof_file_name) {
+      try {
+        // Tentar buscar no bucket payment-proofs
+        const { data: publicUrlData } = supabase.storage
+          .from('payment-proofs')
+          .getPublicUrl(proofData.proof_file_name);
+        
+        if (publicUrlData?.publicUrl) {
+          proofData.storage_url = publicUrlData.publicUrl;
+        }
+        
+        // Se não encontrou, tentar no identity-documents
+        if (!proofData.storage_url) {
+          const { data: identityUrlData } = supabase.storage
+            .from('identity-documents')
+            .getPublicUrl(proofData.proof_file_name);
+            
+          if (identityUrlData?.publicUrl) {
+            proofData.storage_url = identityUrlData.publicUrl;
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Erro ao carregar imagem do storage:', error);
+      }
+    }
+    
     setSelectedProof(proofData);
     setShowProofDialog(true);
   };
@@ -385,12 +413,16 @@ export function PendingTransfersManager() {
                   </div>
                 )}
                 
-                {selectedProof.file ? (
+                {(selectedProof.file || selectedProof.storage_url) ? (
                   <div className="border rounded p-2">
                     <img 
-                      src={selectedProof.file} 
+                      src={selectedProof.storage_url || selectedProof.file} 
                       alt="Comprovativo de transferência"
                       className="max-w-full h-auto rounded"
+                      onError={(e) => {
+                        console.log('❌ Erro ao carregar imagem');
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   </div>
                 ) : (
