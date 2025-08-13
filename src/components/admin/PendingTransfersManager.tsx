@@ -77,16 +77,23 @@ export function PendingTransfersManager() {
           created_at,
           payment_proof_data,
           user_id,
+          status,
+          payment_method,
           products (
             name
           )
         `)
-        .eq('status', 'pending')
-        .eq('payment_method', 'transfer')
+        .in('status', ['pending', 'pending_verification'])
+        .in('payment_method', ['transfer', 'bank_transfer', 'transferencia'])
         .not('payment_proof_data', 'is', null)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('💰 Query resultado:', { data: orders, error });
+
+      if (error) {
+        console.error('❌ Erro na query:', error);
+        throw error;
+      }
 
       const formattedTransfers: PendingTransfer[] = (orders || []).map(order => ({
         id: order.id,
