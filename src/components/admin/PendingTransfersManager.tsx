@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -24,7 +24,7 @@ interface PendingTransfer {
 }
 
 export function PendingTransfersManager() {
-  const { user } = useAuth();
+  const { admin } = useAdminAuth();
   const { toast } = useToast();
   const [pendingTransfers, setPendingTransfers] = useState<PendingTransfer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +33,7 @@ export function PendingTransfersManager() {
   const [showProofDialog, setShowProofDialog] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (admin) {
       fetchPendingTransfers();
       
       // Set up real-time subscription for updates
@@ -57,7 +57,7 @@ export function PendingTransfersManager() {
         supabase.removeChannel(channel);
       };
     }
-  }, [user]);
+  }, [admin]);
 
   const fetchPendingTransfers = async () => {
     try {
