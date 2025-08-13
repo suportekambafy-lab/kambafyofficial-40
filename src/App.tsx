@@ -93,7 +93,8 @@ const App = () => {
                        <Route path="/admin/sellers" element={<OptimizedRoutes.AdminSellers />} />
                        <Route path="/admin/identity" element={<OptimizedRoutes.AdminIdentityVerification />} />
                        <Route path="/admin/partners" element={<OptimizedRoutes.AdminPartners />} />
-                      <Route path="/admin/seller-reports" element={<OptimizedRoutes.AdminSellerReports />} />
+                       <Route path="/admin/seller-reports" element={<OptimizedRoutes.AdminSellerReports />} />
+                       <Route path="/admin/payment-approvals" element={<OptimizedRoutes.AdminPaymentApprovals />} />
                       
                       {/* Partner Routes */}
                       <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />

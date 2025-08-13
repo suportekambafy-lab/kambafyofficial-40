@@ -92,6 +92,13 @@ const menuItems = [
     description: 'Relatórios detalhados'
   },
   {
+    href: '/admin/payment-approvals',
+    label: 'Aprovar Pagamentos',
+    icon: CreditCard,
+    description: 'Transferências pendentes',
+    badge: 'pending_transfers'
+  },
+  {
     href: '/admin/partners',
     label: 'Parceiros KambaPay',
     icon: Globe,
@@ -125,6 +132,9 @@ export default function AdminDrawer({
         return stats.total_products > 0 ? stats.total_products.toString() : undefined;
       case 'withdrawals':
         return stats.pending_withdrawals > 0 ? stats.pending_withdrawals.toString() : undefined;
+      case 'pending_transfers':
+        // Esta será calculada dinamicamente na página
+        return undefined;
       default:
         return undefined;
     }
