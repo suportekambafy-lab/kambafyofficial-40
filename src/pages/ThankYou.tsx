@@ -87,6 +87,19 @@ const ThankYou = () => {
     }
   };
 
+  // Verificar se chegamos de uma página de upsell
+  useEffect(() => {
+    const fromOrder = searchParams.get('from_order');
+    const returnUrl = searchParams.get('return_url');
+    
+    if (fromOrder && returnUrl) {
+      console.log('🎯 Voltando de página de upsell, redirecionando para página original');
+      // Redirecionar para a página original sem os parâmetros do upsell
+      window.location.href = returnUrl;
+      return;
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     const loadProduct = async () => {
       console.log('🔍 ThankYou: ==> CARREGANDO PRODUTO <==');

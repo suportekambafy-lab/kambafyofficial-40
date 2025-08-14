@@ -1192,7 +1192,19 @@ const Checkout = () => {
         console.log('ℹ️ Venda normal - não foi marcada como recuperada');
       }
 
-      navigate(`/obrigado?${params.toString()}`);
+      // Verificar se há configuração de upsell
+      if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
+        console.log('🎯 Redirecionando para página de upsell:', checkoutSettings.upsell.link_pagina_upsell);
+        // Adicionar parâmetros necessários para tracking
+        const upsellUrl = new URL(checkoutSettings.upsell.link_pagina_upsell);
+        upsellUrl.searchParams.append('from_order', orderId);
+        upsellUrl.searchParams.append('customer_email', formData.email);
+        upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
+        window.location.href = upsellUrl.toString();
+      } else {
+        console.log('🏠 Redirecionando para página de agradecimento');
+        navigate(`/obrigado?${params.toString()}`);
+      }
     } catch (error) {
       console.error('Error processing payment:', error);
       toast({
