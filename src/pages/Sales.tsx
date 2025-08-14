@@ -218,32 +218,18 @@ export default function Sales() {
     const amountNum = parseFloat(amount);
     const currencyInfo = getCurrencyInfo(currency);
     
-    // Se não for KZ, mostrar valor convertido para KZ + valor original com bandeira
-    if (currency.toUpperCase() !== 'KZ') {
-      const convertedToKZ = convertToKZ(amountNum, currency);
-      return (
-        <div className="text-right">
-          <div className="font-bold text-checkout-green">
-            {convertedToKZ.toLocaleString('pt-BR')} KZ
-          </div>
-          <div className="text-xs text-gray-500 flex items-center gap-1 justify-end">
-            <span>{currencyInfo.flag}</span>
-            <span className="line-through">{amountNum.toLocaleString('pt-BR')} {currency}</span>
-          </div>
-        </div>
-      );
-    }
-    
-    // Se for KZ, mostrar normalmente mas ainda com bandeira
+    // Sempre mostrar valor original em KZ + bandeira do país
     return (
       <div className="text-right">
         <div className="font-bold text-checkout-green">
-          {amountNum.toLocaleString('pt-BR')} {currency}
+          {amountNum.toLocaleString('pt-BR')} KZ
         </div>
-        <div className="text-xs text-gray-500 flex items-center gap-1 justify-end">
-          <span>{currencyInfo.flag}</span>
-          <span>Angola</span>
-        </div>
+        {currency.toUpperCase() !== 'KZ' && (
+          <div className="text-xs text-gray-500 flex items-center gap-1 justify-end">
+            <span>{currencyInfo.flag}</span>
+            <span>{currencyInfo.name}</span>
+          </div>
+        )}
       </div>
     );
   };
