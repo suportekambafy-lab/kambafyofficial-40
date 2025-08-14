@@ -50,6 +50,9 @@ const ThankYou = () => {
     orderBumpDiscountedPrice: searchParams.get('order_bump_discounted_price') || ''
   });
 
+  // Estado para pedidos relacionados (upsells)
+  const [relatedOrders, setRelatedOrders] = useState<any[]>([]);
+
   // Verificar se chegamos de um cancelamento do Stripe
   useEffect(() => {
     const redirectStatus = searchParams.get('redirect_status');
@@ -152,6 +155,21 @@ const ThankYou = () => {
           }
         } else {
           console.log('❌ ThankYou: Produto não encontrado');
+        }
+
+        // Buscar pedidos relacionados (upsells vinculados a este pedido)
+        console.log('🔗 ThankYou: Buscando pedidos relacionados...');
+        const { data: relatedOrdersData, error: relatedError } = await supabase
+          .from('orders')
+          .select('*')
+          .or(`parent_order_id.eq.${orderDetails.orderId},order_id.eq.${orderDetails.orderId}`)
+          .neq('order_id', orderDetails.orderId);
+
+        if (relatedError) {
+          console.error('❌ Erro ao buscar pedidos relacionados:', relatedError);
+        } else if (relatedOrdersData?.length > 0) {
+          console.log('✅ Pedidos relacionados encontrados:', relatedOrdersData);
+          setRelatedOrders(relatedOrdersData);
         }
 
         // Para Multibanco e Apple Pay, buscar dados reais do Stripe se necessário
@@ -516,6 +534,26 @@ const ThankYou = () => {
                         {orderDetails.convertedCurrency || orderDetails.currency}
                       </span>
                     </div>
+                  </div>
+                )}
+
+                {/* Related Orders (Upsells) */}
+                {relatedOrders.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Produtos Adicionais Comprados</label>
+                    {relatedOrders.map((relatedOrder, index) => (
+                      <div key={relatedOrder.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-checkout-text font-medium">{relatedOrder.product?.name || 'Produto Upsell'}</p>
+                            <p className="text-xs text-blue-600">Pedido #{relatedOrder.order_id}</p>
+                          </div>
+                          <span className="text-green-600 font-medium">
+                            {relatedOrder.amount} {relatedOrder.currency}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
                 

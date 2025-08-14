@@ -98,6 +98,9 @@ serve(async (req) => {
 
     // Gerar order ID único
     const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
+    
+    // Verificar se é um upsell de outro pedido
+    const upsellFrom = body.upsellFrom;
 
     let automaticPaymentMethods;
     let allowRedirects;
@@ -142,7 +145,8 @@ serve(async (req) => {
         targetCurrency: targetCurrency || '',
         paymentMethod: paymentMethod,
         testMode: testMode ? 'true' : 'false',
-        order_id: orderId
+        order_id: orderId,
+        upsell_from: upsellFrom || ''
       },
       automatic_payment_methods: automaticPaymentMethods,
     };

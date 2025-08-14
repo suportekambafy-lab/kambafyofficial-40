@@ -74,6 +74,18 @@ const Checkout = () => {
   // Hook para verificar KambaPay
   const { fetchBalanceByEmail } = useKambaPayBalance();
 
+  // Verificar se é um upsell de outro pedido
+  const [upsellFromOrder, setUpsellFromOrder] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const upsellFrom = urlParams.get('upsell_from');
+    if (upsellFrom) {
+      setUpsellFromOrder(upsellFrom);
+      console.log('🎯 Detectado upsell do pedido:', upsellFrom);
+    }
+  }, []);
+
   // Hook para detectar carrinhos abandonados
   const totalAmountForDetection = product ? parseFloat(product.price) + orderBumpPrice : 0;
   const { markAsRecovered, hasDetected, abandonedPurchaseId } = useAbandonedPurchaseDetection({
@@ -531,6 +543,42 @@ const Checkout = () => {
       }
 
       const totalAmountInKZ = parseFloat(product.price) + orderBumpPrice;
+      
+      // Verificar se há upsell configurado
+      const shouldRedirectToUpsell = checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link;
+      
+      if (shouldRedirectToUpsell) {
+        // Redirecionar para página de upsell
+        const upsellUrl = new URL(checkoutSettings.upsell.link);
+        upsellUrl.searchParams.set('from_order', orderId);
+        
+        // Criar URL de retorno para página de obrigado
+        const returnParams = new URLSearchParams({
+          order_id: orderId,
+          customer_name: formData.fullName.trim(),
+          customer_email: formData.email.trim().toLowerCase(),
+          product_name: product.name,
+          amount: totalAmountInKZ.toString(),
+          currency: 'KZ',
+          product_id: productId || '',
+          seller_id: product.user_id,
+          base_product_price: product.price,
+          ...(orderBump && {
+            order_bump_name: orderBump.bump_product_name,
+            order_bump_price: orderBump.bump_product_price,
+            order_bump_discount: orderBump.discount.toString(),
+            order_bump_discounted_price: orderBumpPrice.toString()
+          })
+        });
+        
+        const returnUrl = `${window.location.origin}/obrigado?${returnParams.toString()}`;
+        upsellUrl.searchParams.set('return_url', returnUrl);
+        
+        console.log('🎯 Redirecionando para upsell:', upsellUrl.toString());
+        window.location.href = upsellUrl.toString();
+        return;
+      }
+
       const params = new URLSearchParams({
         order_id: orderId,
         customer_name: formData.fullName.trim(),
@@ -868,6 +916,41 @@ const Checkout = () => {
         if (data?.success) {
           console.log('✅ KambaPay payment successful:', data);
           
+          // Verificar se há upsell configurado para KambaPay
+          const shouldRedirectToUpsell = checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link;
+          
+          if (shouldRedirectToUpsell) {
+            // Redirecionar para página de upsell
+            const upsellUrl = new URL(checkoutSettings.upsell.link);
+            upsellUrl.searchParams.set('from_order', data.orderId);
+            
+            // Criar URL de retorno para página de obrigado
+            const returnParams = new URLSearchParams({
+              order_id: data.orderId,
+              customer_name: formData.fullName.trim(),
+              customer_email: formData.email.trim().toLowerCase(),
+              product_name: product.name,
+              amount: totalAmount.toString(),
+              currency: userCountry.currency,
+              product_id: productId || '',
+              seller_id: product.user_id,
+              base_product_price: product.price,
+              ...(orderBump && {
+                order_bump_name: orderBump.bump_product_name,
+                order_bump_price: orderBump.bump_product_price,
+                order_bump_discount: orderBump.discount.toString(),
+                order_bump_discounted_price: orderBumpPrice.toString()
+              })
+            });
+            
+            const returnUrl = `${window.location.origin}/obrigado?${returnParams.toString()}`;
+            upsellUrl.searchParams.set('return_url', returnUrl);
+            
+            console.log('🎯 Redirecionando para upsell KambaPay:', upsellUrl.toString());
+            window.location.href = upsellUrl.toString();
+            return;
+          }
+
           // Redirecionar para página de sucesso
           const params = new URLSearchParams({
             order_id: data.orderId,
