@@ -36,10 +36,6 @@ export interface CheckoutCustomizationSettings {
     recentPurchases: string[];
     position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   };
-  upsell: {
-    enabled: boolean;
-    link_pagina_upsell: string;
-  };
 }
 
 const defaultSettings: CheckoutCustomizationSettings = {
@@ -88,10 +84,6 @@ const defaultSettings: CheckoutCustomizationSettings = {
       'Beatriz Ferreira acabou de comprar há 12 min'
     ],
     position: 'bottom-right'
-  },
-  upsell: {
-    enabled: false,
-    link_pagina_upsell: ''
   }
 };
 
@@ -118,10 +110,6 @@ const mergeSettings = (loadedData: any): CheckoutCustomizationSettings => {
   
   if (loadedData.socialProof && typeof loadedData.socialProof === 'object') {
     result.socialProof = { ...defaultSettings.socialProof, ...loadedData.socialProof };
-  }
-  
-  if (loadedData.upsell && typeof loadedData.upsell === 'object') {
-    result.upsell = { ...defaultSettings.upsell, ...loadedData.upsell };
   }
   
   return result;

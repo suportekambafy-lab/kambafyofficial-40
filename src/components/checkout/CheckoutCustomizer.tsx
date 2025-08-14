@@ -67,12 +67,6 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
     }));
   };
 
-  const updateUpsellSetting = (key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      upsell: { ...prev.upsell, [key]: value }
-    }));
-  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -141,12 +135,11 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
         {/* Configurações */}
         <div className="space-y-6">
           <Tabs defaultValue="countdown" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="countdown">Timer</TabsTrigger>
               <TabsTrigger value="banner">Banner</TabsTrigger>
               <TabsTrigger value="reviews">Avaliações</TabsTrigger>
               <TabsTrigger value="social">Social</TabsTrigger>
-              <TabsTrigger value="upsell">Upsell</TabsTrigger>
             </TabsList>
 
             <TabsContent value="countdown" className="space-y-4">
@@ -425,47 +418,6 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
               </Card>
             </TabsContent>
 
-            <TabsContent value="upsell" className="space-y-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Upsell Pós-Compra</CardTitle>
-                    <Switch
-                      checked={settings.upsell.enabled}
-                      onCheckedChange={(checked) => updateUpsellSetting('enabled', checked)}
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>Link da Página de Upsell</Label>
-                    <Input
-                      type="url"
-                      placeholder="https://minha-pagina-de-upsell.com"
-                      value={settings.upsell.link_pagina_upsell}
-                      onChange={(e) => updateUpsellSetting('link_pagina_upsell', e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Insira o link da página de upsell (com botão de checkout do produto extra) que será exibida após a compra.
-                    </p>
-                  </div>
-                  {settings.upsell.enabled && !settings.upsell.link_pagina_upsell && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                      <p className="text-sm text-yellow-800">
-                        ⚠️ Configure o link da página de upsell para que ela seja exibida após a compra.
-                      </p>
-                    </div>
-                  )}
-                  {settings.upsell.enabled && settings.upsell.link_pagina_upsell && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-sm text-green-800">
-                        ✅ Após a compra, o cliente será redirecionado para: {settings.upsell.link_pagina_upsell}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
 
           <Button 
