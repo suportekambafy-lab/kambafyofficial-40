@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods } from "@/utils/paymentMethods";
+import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 
 interface Sale {
   id: string;
@@ -72,6 +73,7 @@ interface SalesStats {
 export default function Sales() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getCurrencyInfo, convertToKZ } = useCurrencyToCountry();
   const [sales, setSales] = useState<Sale[]>([]);
   const [salesStats, setSalesStats] = useState<SalesStats>({
     paid: 0,
@@ -213,7 +215,37 @@ export default function Sales() {
   };
 
   const formatPrice = (amount: string, currency: string) => {
-    return `${parseFloat(amount).toLocaleString('pt-BR')} ${currency}`;
+    const amountNum = parseFloat(amount);
+    const currencyInfo = getCurrencyInfo(currency);
+    
+    // Se não for KZ, mostrar valor convertido para KZ + valor original com bandeira
+    if (currency.toUpperCase() !== 'KZ') {
+      const convertedToKZ = convertToKZ(amountNum, currency);
+      return (
+        <div className="text-right">
+          <div className="font-bold text-checkout-green">
+            {convertedToKZ.toLocaleString('pt-BR')} KZ
+          </div>
+          <div className="text-xs text-gray-500 flex items-center gap-1 justify-end">
+            <span>{currencyInfo.flag}</span>
+            <span className="line-through">{amountNum.toLocaleString('pt-BR')} {currency}</span>
+          </div>
+        </div>
+      );
+    }
+    
+    // Se for KZ, mostrar normalmente mas ainda com bandeira
+    return (
+      <div className="text-right">
+        <div className="font-bold text-checkout-green">
+          {amountNum.toLocaleString('pt-BR')} {currency}
+        </div>
+        <div className="text-xs text-gray-500 flex items-center gap-1 justify-end">
+          <span>{currencyInfo.flag}</span>
+          <span>Angola</span>
+        </div>
+      </div>
+    );
   };
 
   const getStatusBadge = (status: string, paymentMethod: string) => {
@@ -468,17 +500,17 @@ export default function Sales() {
                                   <div className="font-bold text-base md:text-lg text-blue-600">
                                     {formatCurrency(parseFloat(sale.affiliate_commission?.toString() || '0'))}
                                   </div>
-                                  <div className="text-xs text-muted-foreground line-through">
-                                    Total: {formatPrice(sale.amount, sale.currency)}
+                                  <div className="text-xs text-muted-foreground">
+                                    {formatPrice(sale.amount, sale.currency)}
                                   </div>
                                 </div>
                               ) : sale.sale_type === 'recovered' ? (
                                 <div>
                                   <div className="font-bold text-base md:text-lg text-green-600">
-                                    {formatPrice((parseFloat(sale.amount) * 0.8).toString(), sale.currency)}
+                                    {formatCurrency(parseFloat(sale.amount) * 0.8)}
                                   </div>
-                                  <div className="text-xs text-muted-foreground line-through">
-                                    Total: {formatPrice(sale.amount, sale.currency)}
+                                  <div className="text-xs text-muted-foreground">
+                                    {formatPrice(sale.amount, sale.currency)}
                                   </div>
                                 </div>
                               ) : sale.affiliate_code && sale.seller_commission ? (
@@ -486,8 +518,8 @@ export default function Sales() {
                                   <div className="font-bold text-base md:text-lg text-green-600">
                                     {formatCurrency(parseFloat(sale.seller_commission?.toString() || '0'))}
                                   </div>
-                                  <div className="text-xs text-muted-foreground line-through">
-                                    Total: {formatPrice(sale.amount, sale.currency)}
+                                  <div className="text-xs text-muted-foreground">
+                                    {formatPrice(sale.amount, sale.currency)}
                                   </div>
                                 </div>
                               ) : (

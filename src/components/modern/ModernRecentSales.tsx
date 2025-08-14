@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 
 interface RecentSale {
   id: string;
@@ -23,6 +24,7 @@ interface RecentSale {
 
 export function ModernRecentSales() {
   const { user } = useAuth();
+  const { getCurrencyInfo, convertToKZ } = useCurrencyToCountry();
   const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -243,9 +245,26 @@ export function ModernRecentSales() {
       amount = amount * 0.8;
     }
     
-    // ✅ Para vendedores, sempre mostrar em KZ original independente da moeda do comprador
-    // O valor já vem convertido para KZ na base de dados
-    return `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`;
+    const currencyInfo = getCurrencyInfo(sale.currency);
+    
+    // ✅ Se não for KZ, converter e mostrar valor original também
+    if (sale.currency.toUpperCase() !== 'KZ') {
+      const convertedToKZ = convertToKZ(amount, sale.currency);
+      return {
+        main: `${convertedToKZ.toLocaleString('pt-BR')} KZ`,
+        original: `${amount.toLocaleString('pt-BR')} ${sale.currency}`,
+        flag: currencyInfo.flag,
+        isConverted: true
+      };
+    }
+    
+    // ✅ Se for KZ, mostrar normalmente
+    return {
+      main: `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`,
+      original: null,
+      flag: currencyInfo.flag,
+      isConverted: false
+    };
   };
 
   const getInitials = (name: string) => {
@@ -329,9 +348,15 @@ export function ModernRecentSales() {
                       ? 'text-green-600 dark:text-green-400'
                       : 'text-foreground'
                   }`}>
-                    {formatAmount(sale)}
+                    {formatAmount(sale).main}
                   </p>
-                  {(sale.sale_type === 'affiliate' || sale.sale_type === 'recovered') && (
+                  {formatAmount(sale).isConverted && (
+                    <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
+                      <span>{formatAmount(sale).flag}</span>
+                      <span className="line-through">{formatAmount(sale).original}</span>
+                    </div>
+                  )}
+                  {!formatAmount(sale).isConverted && sale.sale_type !== 'own' && (
                     <p className="text-xs text-muted-foreground line-through">
                       {parseFloat(sale.amount).toLocaleString()} {sale.currency}
                     </p>

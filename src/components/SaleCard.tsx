@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, Calendar, Package, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building } from "lucide-react";
 import { getPaymentMethodName } from "@/utils/paymentMethods";
+import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 
 interface Sale {
   id: string;
@@ -27,6 +28,8 @@ interface SaleCardProps {
 }
 
 export const SaleCard = memo(({ sale }: SaleCardProps) => {
+  const { getCurrencyInfo, convertToKZ } = useCurrencyToCountry();
+  
   const getProductImage = (cover: string) => {
     if (!cover) return "/placeholder.svg";
     if (cover.startsWith('data:')) {
@@ -41,7 +44,31 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
   };
 
   const formatPrice = (amount: string, currency: string) => {
-    return `${parseFloat(amount).toLocaleString('pt-BR')} ${currency}`;
+    const amountNum = parseFloat(amount);
+    const currencyInfo = getCurrencyInfo(currency);
+    
+    // Se não for KZ, mostrar valor convertido para KZ + valor original
+    if (currency.toUpperCase() !== 'KZ') {
+      const convertedToKZ = convertToKZ(amountNum, currency);
+      return (
+        <div className="text-right">
+          <div className="font-bold text-checkout-green">
+            {convertedToKZ.toLocaleString('pt-BR')} KZ
+          </div>
+          <div className="text-xs text-gray-500 flex items-center gap-1">
+            <span>{currencyInfo.flag}</span>
+            <span className="line-through">{amountNum.toLocaleString('pt-BR')} {currency}</span>
+          </div>
+        </div>
+      );
+    }
+    
+    // Se for KZ, mostrar normalmente
+    return (
+      <div className="font-bold text-checkout-green">
+        {amountNum.toLocaleString('pt-BR')} {currency}
+      </div>
+    );
   };
 
   const getStatusBadge = (status: string, paymentMethod: string) => {
@@ -111,9 +138,7 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
           </div>
           
           <div className="flex justify-between items-center pt-2">
-            <span className="font-bold text-checkout-green">
-              {formatPrice(sale.amount, sale.currency)}
-            </span>
+            {formatPrice(sale.amount, sale.currency)}
           </div>
         </div>
       </CardContent>
