@@ -4,6 +4,7 @@ import { FacebookPixelForm } from '@/components/FacebookPixelForm';
 import { WebhookForm } from '@/components/WebhookForm';
 import { CheckoutCustomizer } from '@/components/checkout/CheckoutCustomizer';
 import { OrderBumpConfigurator } from '@/components/OrderBumpConfigurator';
+import { UpsellConfigurator } from '@/components/UpsellConfigurator';
 import { QuizBuilder } from '@/components/QuizBuilder';
 import { SalesRecoveryConfigurator } from '@/components/SalesRecoveryConfigurator';
 import { IntegrationType } from '@/components/IntegrationTypeSelector';
@@ -66,6 +67,13 @@ export function IntegrationConfigurator({
 
       {integrationType.id === 'custom-checkout' && (
         <CheckoutCustomizer 
+          productId={product.id}
+          onSaveSuccess={handleSuccess}
+        />
+      )}
+
+      {integrationType.id === 'upsell' && (
+        <UpsellConfigurator 
           productId={product.id}
           onSaveSuccess={handleSuccess}
         />

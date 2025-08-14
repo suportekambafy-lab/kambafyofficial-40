@@ -78,6 +78,14 @@ export default function Apps() {
             icon: ({ className }: { className?: string }) => <span className={className}>🛒</span>,
             color: 'text-green-600'
           };
+        } else if (configureType === 'upsell') {
+          integrationType = {
+            id: 'upsell',
+            name: 'Upsell Pós-Compra',
+            description: 'Configure ofertas especiais que aparecem após a compra principal',
+            icon: ({ className }: { className?: string }) => <span className={className}>⬆️</span>,
+            color: 'text-indigo-600'
+          };
         }
         
         if (integrationType) {

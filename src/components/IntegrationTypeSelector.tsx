@@ -47,6 +47,13 @@ const integrationTypes: IntegrationType[] = [
     color: 'text-green-600'
   },
   {
+    id: 'upsell',
+    name: 'Upsell Pós-Compra',
+    description: 'Configure ofertas especiais que aparecem após a compra principal',
+    icon: ({ className }: { className?: string }) => <Settings className={className} />,
+    color: 'text-indigo-600'
+  },
+  {
     id: 'sales-recovery',
     name: 'Recuperação de Vendas',
     description: 'Detecte carrinhos abandonados e envie emails automáticos de recuperação',
