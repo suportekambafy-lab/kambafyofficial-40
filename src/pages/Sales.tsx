@@ -218,13 +218,13 @@ export default function Sales() {
   const formatPrice = (sale: Sale) => {
     const currencyInfo = getCurrencyInfo(sale.currency);
     
-    // Sempre mostrar o preço original do produto em KZ + bandeira do país de pagamento
-    const originalPriceKZ = sale.products?.price ? parseFloat(sale.products.price) : 0;
+    // Usar o valor efetivamente pago pelo cliente (amount da ordem)
+    const paidAmount = parseFloat(sale.amount);
     
     return (
       <div className="text-right">
         <div className="font-bold text-checkout-green">
-          {originalPriceKZ.toLocaleString('pt-BR')} KZ
+          {paidAmount.toLocaleString('pt-BR')} KZ
         </div>
         {sale.currency.toUpperCase() !== 'KZ' && (
           <div className="text-xs text-gray-500 flex items-center gap-1 justify-end">
