@@ -13,6 +13,7 @@ serve(async (req) => {
   }
 
   try {
+    const requestBody = await req.json();
     const { 
       amount, 
       currency, 
@@ -23,8 +24,9 @@ serve(async (req) => {
       convertedAmount,
       targetCurrency,
       paymentMethod = 'card',
-      testMode 
-    } = await req.json();
+      testMode,
+      upsellFrom
+    } = requestBody;
 
     if (!amount || !currency || !productId || !customerData) {
       throw new Error('Dados obrigatórios não fornecidos');
@@ -100,7 +102,6 @@ serve(async (req) => {
     const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
     
     // Verificar se é um upsell de outro pedido
-    const upsellFrom = body.upsellFrom;
 
     let automaticPaymentMethods;
     let allowRedirects;
