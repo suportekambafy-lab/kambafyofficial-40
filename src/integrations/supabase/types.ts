@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1928,33 +1928,33 @@ export type Database = {
     }
     Functions: {
       admin_approve_product: {
-        Args: { product_id: string; admin_id?: string }
+        Args: { admin_id?: string; product_id: string }
         Returns: undefined
       }
       admin_ban_product: {
         Args:
-          | { product_id: string; admin_id?: string }
-          | { product_id: string; admin_id?: string; ban_reason_text?: string }
+          | { admin_id?: string; ban_reason_text?: string; product_id: string }
+          | { admin_id?: string; product_id: string }
         Returns: undefined
       }
       admin_process_withdrawal_request: {
         Args: {
-          request_id: string
-          new_status: string
           admin_id?: string
+          new_status: string
           notes_text?: string
+          request_id: string
         }
         Returns: undefined
       }
       approve_partner: {
-        Args: { partner_id: string; admin_id?: string }
+        Args: { admin_id?: string; partner_id: string }
         Returns: undefined
       }
       calculate_commissions: {
         Args: {
-          order_amount: number
           commission_rate: string
           has_affiliate: boolean
+          order_amount: number
         }
         Returns: {
           affiliate_commission: number
@@ -1963,13 +1963,13 @@ export type Database = {
       }
       detect_abandoned_purchase: {
         Args: {
-          _product_id: string
-          _customer_email: string
-          _customer_name: string
           _amount: number
           _currency?: string
+          _customer_email: string
+          _customer_name: string
           _customer_phone?: string
           _ip_address?: string
+          _product_id: string
           _user_agent?: string
         }
         Returns: string
@@ -1981,33 +1981,33 @@ export type Database = {
       get_all_identity_verifications_for_admin: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          user_id: string
-          full_name: string
           birth_date: string
-          document_type: string
-          document_number: string
-          document_front_url: string
+          created_at: string
           document_back_url: string
-          status: string
+          document_front_url: string
+          document_number: string
+          document_type: string
+          full_name: string
+          id: string
           rejection_reason: string
+          status: string
+          updated_at: string
+          user_id: string
           verified_at: string
           verified_by: string
-          created_at: string
-          updated_at: string
         }[]
       }
       get_all_withdrawal_requests_for_admin: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          user_id: string
-          amount: number
-          status: string
-          created_at: string
-          updated_at: string
           admin_notes: string
           admin_processed_by: string
+          amount: number
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
         }[]
       }
       get_current_user_email: {
@@ -2027,21 +2027,21 @@ export type Database = {
         Returns: boolean
       }
       is_suspicious_ip: {
-        Args: { _user_id: string; _ip_address: string }
+        Args: { _ip_address: string; _user_id: string }
         Returns: boolean
       }
       is_trusted_device: {
-        Args: { _user_id: string; _device_fingerprint: string }
+        Args: { _device_fingerprint: string; _user_id: string }
         Returns: boolean
       }
       log_api_usage: {
         Args: {
-          _partner_id: string
           _endpoint: string
-          _method: string
-          _status_code: number
-          _response_time_ms?: number
           _ip_address?: string
+          _method: string
+          _partner_id: string
+          _response_time_ms?: number
+          _status_code: number
           _user_agent?: string
         }
         Returns: undefined
@@ -2049,8 +2049,8 @@ export type Database = {
       process_recovery_fee: {
         Args: {
           _abandoned_purchase_id: string
-          _order_id: string
           _fee_percentage?: number
+          _order_id: string
         }
         Returns: string
       }
