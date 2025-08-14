@@ -247,23 +247,12 @@ export function ModernRecentSales() {
     
     const currencyInfo = getCurrencyInfo(sale.currency);
     
-    // ✅ Se não for KZ, converter e mostrar valor original também
-    if (sale.currency.toUpperCase() !== 'KZ') {
-      const convertedToKZ = convertToKZ(amount, sale.currency);
-      return {
-        main: `${convertedToKZ.toLocaleString('pt-BR')} KZ`,
-        original: `${amount.toLocaleString('pt-BR')} ${sale.currency}`,
-        flag: currencyInfo.flag,
-        isConverted: true
-      };
-    }
-    
-    // ✅ Se for KZ, mostrar normalmente
+    // ✅ Sempre mostrar valor original em KZ + bandeira do país
     return {
       main: `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`,
-      original: null,
       flag: currencyInfo.flag,
-      isConverted: false
+      countryName: currencyInfo.name,
+      showCountry: sale.currency.toUpperCase() !== 'KZ'
     };
   };
 
@@ -350,16 +339,11 @@ export function ModernRecentSales() {
                   }`}>
                     {formatAmount(sale).main}
                   </p>
-                  {formatAmount(sale).isConverted && (
+                  {formatAmount(sale).showCountry && (
                     <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
                       <span>{formatAmount(sale).flag}</span>
-                      <span className="line-through">{formatAmount(sale).original}</span>
+                      <span>{formatAmount(sale).countryName}</span>
                     </div>
-                  )}
-                  {!formatAmount(sale).isConverted && sale.sale_type !== 'own' && (
-                    <p className="text-xs text-muted-foreground line-through">
-                      {parseFloat(sale.amount).toLocaleString()} {sale.currency}
-                    </p>
                   )}
                 </div>
               </div>
