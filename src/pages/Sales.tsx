@@ -55,6 +55,7 @@ interface Sale {
     name: string;
     cover: string;
     type: string;
+    price: string;
   } | null;
 }
 
@@ -214,17 +215,18 @@ export default function Sales() {
     return `https://images.unsplash.com/${cover}`;
   };
 
-  const formatPrice = (amount: string, currency: string) => {
-    const amountNum = parseFloat(amount);
-    const currencyInfo = getCurrencyInfo(currency);
+  const formatPrice = (sale: Sale) => {
+    const currencyInfo = getCurrencyInfo(sale.currency);
     
-    // Sempre mostrar valor original em KZ + bandeira do país
+    // Sempre mostrar o preço original do produto em KZ + bandeira do país de pagamento
+    const originalPriceKZ = sale.products?.price ? parseFloat(sale.products.price) : 0;
+    
     return (
       <div className="text-right">
         <div className="font-bold text-checkout-green">
-          {amountNum.toLocaleString('pt-BR')} KZ
+          {originalPriceKZ.toLocaleString('pt-BR')} KZ
         </div>
-        {currency.toUpperCase() !== 'KZ' && (
+        {sale.currency.toUpperCase() !== 'KZ' && (
           <div className="text-xs text-gray-500 flex items-center gap-1 justify-end">
             <span>{currencyInfo.flag}</span>
             <span>{currencyInfo.name}</span>
@@ -486,32 +488,32 @@ export default function Sales() {
                                   <div className="font-bold text-base md:text-lg text-blue-600">
                                     {formatCurrency(parseFloat(sale.affiliate_commission?.toString() || '0'))}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {formatPrice(sale.amount, sale.currency)}
-                                  </div>
+                                   <div className="text-xs text-muted-foreground">
+                                     {formatPrice(sale)}
+                                   </div>
                                 </div>
                               ) : sale.sale_type === 'recovered' ? (
                                 <div>
                                   <div className="font-bold text-base md:text-lg text-green-600">
                                     {formatCurrency(parseFloat(sale.amount) * 0.8)}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {formatPrice(sale.amount, sale.currency)}
-                                  </div>
+                                   <div className="text-xs text-muted-foreground">
+                                     {formatPrice(sale)}
+                                   </div>
                                 </div>
                               ) : sale.affiliate_code && sale.seller_commission ? (
                                 <div>
                                   <div className="font-bold text-base md:text-lg text-green-600">
                                     {formatCurrency(parseFloat(sale.seller_commission?.toString() || '0'))}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {formatPrice(sale.amount, sale.currency)}
-                                  </div>
+                                   <div className="text-xs text-muted-foreground">
+                                     {formatPrice(sale)}
+                                   </div>
                                 </div>
                               ) : (
-                                <div className="font-bold text-base md:text-lg">
-                                  {formatPrice(sale.amount, sale.currency)}
-                                </div>
+                                 <div className="font-bold text-base md:text-lg">
+                                   {formatPrice(sale)}
+                                 </div>
                               )}
                             </div>
                             {getStatusBadge(sale.status, sale.payment_method)}

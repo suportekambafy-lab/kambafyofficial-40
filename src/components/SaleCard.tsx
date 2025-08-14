@@ -20,6 +20,7 @@ interface Sale {
     name: string;
     cover: string;
     type: string;
+    price: string;
   } | null;
 }
 
@@ -43,17 +44,18 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
     return `https://images.unsplash.com/${cover}`;
   };
 
-  const formatPrice = (amount: string, currency: string) => {
-    const amountNum = parseFloat(amount);
-    const currencyInfo = getCurrencyInfo(currency);
+  const formatPrice = (sale: Sale) => {
+    const currencyInfo = getCurrencyInfo(sale.currency);
     
-    // Sempre mostrar o valor original em KZ + bandeira do país
+    // Sempre mostrar o preço original do produto em KZ + bandeira do país de pagamento
+    const originalPriceKZ = sale.products?.price ? parseFloat(sale.products.price) : 0;
+    
     return (
       <div className="text-right">
         <div className="font-bold text-checkout-green">
-          {amountNum.toLocaleString('pt-BR')} KZ
+          {originalPriceKZ.toLocaleString('pt-BR')} KZ
         </div>
-        {currency.toUpperCase() !== 'KZ' && (
+        {sale.currency.toUpperCase() !== 'KZ' && (
           <div className="text-xs text-gray-500 flex items-center gap-1 justify-end">
             <span>{currencyInfo.flag}</span>
             <span>{currencyInfo.name}</span>
@@ -130,7 +132,7 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
           </div>
           
           <div className="flex justify-between items-center pt-2">
-            {formatPrice(sale.amount, sale.currency)}
+            {formatPrice(sale)}
           </div>
         </div>
       </CardContent>

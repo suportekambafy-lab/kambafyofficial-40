@@ -212,7 +212,7 @@ export const useStreamingQuery = () => {
         const productIds = [...new Set(ownOrders.map(o => o.product_id))];
         const { data: products } = await supabase
           .from('products')
-          .select('id, name, cover, type')
+          .select('id, name, cover, type, price')
           .in('id', productIds);
 
         // Combinar dados e marcar tipo de venda
@@ -281,7 +281,8 @@ export const useStreamingQuery = () => {
               id,
               name,
               cover,
-              type
+              type,
+              price
             )
           `)
           .in('affiliate_code', userAffiliateCodes)

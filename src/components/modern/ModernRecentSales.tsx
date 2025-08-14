@@ -114,7 +114,8 @@ export function ModernRecentSales() {
               affiliate_commission,
               seller_commission,
               products (
-                name
+                name,
+                price
               )
             `)
             .in('product_id', userProductIds)
@@ -141,7 +142,8 @@ export function ModernRecentSales() {
               seller_commission,
               affiliate_code,
               products (
-                name
+                name,
+                price
               )
             `)
             .in('affiliate_code', userAffiliateCodes)
