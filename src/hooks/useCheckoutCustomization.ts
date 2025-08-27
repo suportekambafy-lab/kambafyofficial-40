@@ -125,14 +125,23 @@ export function useCheckoutCustomization(productId: string) {
   useEffect(() => {
     console.log('🎯 useCheckoutCustomization - Estado do usuário:', user ? '✅ Logado' : '❌ Não logado');
     console.log('📦 Product ID:', productId);
-    if (user && productId) {
+    if (productId) {
       loadSettings();
+    } else {
+      setLoading(false);
     }
   }, [user, productId]);
 
   const loadSettings = async () => {
     try {
       setLoading(true);
+      
+      if (!user) {
+        // For anonymous users, just use default settings
+        setSettings(defaultSettings);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('checkout_customizations')
         .select('settings')
