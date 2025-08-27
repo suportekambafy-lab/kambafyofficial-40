@@ -65,8 +65,8 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer kVo8Q~-e~OxZrzFzcrsLdLrINrRGYvow_7DTEdsJ`,
-        'X-Client-Id': '47d451f4-2f6d-4032-ab13-3ab70c5d8298',
+        'Authorization': `Bearer ${Deno.env.get("APPYPAY_API_KEY")}`,
+        'X-Client-Id': Deno.env.get("APPYPAY_CLIENT_ID"),
       },
       body: JSON.stringify(appyPayData)
     });

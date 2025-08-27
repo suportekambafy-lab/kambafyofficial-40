@@ -21,6 +21,7 @@ import { CheckoutBanner } from '@/components/checkout/CheckoutBanner';
 import { CheckoutCountdown } from '@/components/checkout/CheckoutCountdown';
 import { CheckoutReviews } from '@/components/checkout/CheckoutReviews';
 import { CheckoutSocialProof } from '@/components/checkout/CheckoutSocialProof';
+import { ReferencePayment } from '@/components/checkout/ReferencePayment';
 import { useAbandonedPurchaseDetection } from '@/hooks/useAbandonedPurchaseDetection';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -66,6 +67,7 @@ const Checkout = () => {
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
@@ -271,19 +273,28 @@ const Checkout = () => {
     switch (selectedPaymentMethod) {
       case 'reference':
         return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Pagamento por Referência</h3>
-            <p className="text-gray-600">
-              Será gerada uma referência bancária para pagamento do valor de {totalAmount.toLocaleString('pt-BR')} KZ.
-            </p>
-            <Button 
-              onClick={() => handleReferencePayment({ fullName: '', email: '', phone: '' })}
-              disabled={processingPayment}
-              className="w-full"
-            >
-              {processingPayment ? 'Gerando referência...' : 'Gerar Referência de Pagamento'}
-            </Button>
-          </div>
+          <ReferencePayment
+            productId={productId || ''}
+            amount={Math.round(totalAmount * 100)}
+            customerData={{
+              name: watch('fullName') || '',
+              email: watch('email') || '',
+              phone: watch('phone') || ''
+            }}
+            onSuccess={(orderId) => {
+              if (abandonedPurchaseId) {
+                markAsRecovered(orderId);
+              }
+              window.location.href = `/obrigado?order=${orderId}`;
+            }}
+            onError={(error) => {
+              toast({
+                title: "Erro no pagamento",
+                description: error,
+                variant: "destructive"
+              });
+            }}
+          />
         );
 
       default:
