@@ -44,7 +44,7 @@ const Checkout = () => {
   const { product, isLoading: isProductLoading, error: productError } = useProduct(productId || '');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
-  const { country } = useGeoLocation();
+  const { userCountry } = useGeoLocation();
   const { convertedAmount, originalAmount, originalCurrency, targetCurrency, convertCurrency } = useCurrencyConverter();
   const [totalAmount, setTotalAmount] = useState(0);
   const { settings, loading: settingsLoading } = useCheckoutCustomization(productId || '');
@@ -73,9 +73,9 @@ const Checkout = () => {
   useEffect(() => {
     if (product) {
       setTotalAmount(product.price);
-      convertCurrency(product.price, 'KZ', country === 'PT' ? 'EUR' : 'KZ');
+      convertCurrency(product.price, 'KZ', userCountry?.code === 'PT' ? 'EUR' : 'KZ');
     }
-  }, [product, country, convertCurrency]);
+  }, [product, userCountry, convertCurrency]);
 
   useEffect(() => {
     if (user) {
@@ -145,7 +145,6 @@ const Checkout = () => {
           convertedAmount: convertedAmount,
           targetCurrency: targetCurrency,
           paymentMethod: selectedPaymentMethod,
-          testMode: product.test_mode,
           upsellFrom: localStorage.getItem('upsell_from') || ''
         }),
       });
@@ -214,8 +213,8 @@ const Checkout = () => {
     }
   };
 
-  const handleReferencePayment = async () => {
-    if (!product || !formData.fullName || !formData.email) {
+  const handleReferencePayment = async (data: z.infer<typeof formSchema>) => {
+    if (!product || !data.fullName || !data.email) {
       toast({
         title: "Dados incompletos",
         description: "Preencha todos os campos obrigatórios.",
@@ -229,21 +228,21 @@ const Checkout = () => {
     try {
       const orderId = `REF_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
       
-      const { data, error } = await supabase.functions.invoke('create-reference-payment', {
+      const { data: responseData, error } = await supabase.functions.invoke('create-reference-payment', {
         body: {
           productId: product.id,
           amount: totalAmount * 100, // Converter para centavos
           customerData: {
-            name: formData.fullName,
-            email: formData.email,
-            phone: formData.phone
+            name: data.fullName,
+            email: data.email,
+            phone: data.phone
           },
           orderId
         }
       });
 
-      if (error || data?.error) {
-        throw new Error(data?.error || error?.message || 'Erro ao processar pagamento');
+      if (error || responseData?.error) {
+        throw new Error(responseData?.error || error?.message || 'Erro ao processar pagamento');
       }
 
       // Marcar carrinho como recuperado se aplicável
@@ -252,7 +251,7 @@ const Checkout = () => {
       }
 
       // Redirecionar para página de sucesso com dados da referência
-      navigate(`/obrigado?order=${orderId}&reference=${data.reference}&amount=${data.amount}`);
+      navigate(`/obrigado?order=${orderId}&reference=${responseData.reference}&amount=${responseData.amount}`);
       
     } catch (error) {
       console.error('Reference payment error:', error);
@@ -278,8 +277,8 @@ const Checkout = () => {
               Será gerada uma referência bancária para pagamento do valor de {totalAmount.toLocaleString('pt-BR')} KZ.
             </p>
             <Button 
-              onClick={handleReferencePayment}
-              disabled={processingPayment || !formData.fullName || !formData.email}
+              onClick={() => handleReferencePayment({ fullName: '', email: '', phone: '' })}
+              disabled={processingPayment}
               className="w-full"
             >
               {processingPayment ? 'Gerando referência...' : 'Gerar Referência de Pagamento'}

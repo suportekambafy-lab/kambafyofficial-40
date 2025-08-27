@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useGeoLocation } from '@/hooks/useGeoLocation';
 import { getPaymentMethodsByCountry, PaymentMethod } from '@/utils/paymentMethods';
-import { getCurrencyInfo } from '@/hooks/useCurrencyToCountry';
+import { useCurrencyToCountry } from '@/hooks/useCurrencyToCountry';
 
 interface PaymentMethodsSelectorProps {
   selectedMethod: string;
@@ -19,8 +19,9 @@ export function PaymentMethodsSelector({
   productPrice, 
   disabled 
 }: PaymentMethodsSelectorProps) {
-  const { country } = useGeoLocation();
-  const availableMethods = getPaymentMethodsByCountry(country || 'AO');
+  const { userCountry } = useGeoLocation();
+  const { getCurrencyInfo } = useCurrencyToCountry();
+  const availableMethods = getPaymentMethodsByCountry(userCountry?.code || 'AO');
 
   const formatPrice = (price: number, currency: string = 'KZ') => {
     return `${parseFloat(price.toString()).toLocaleString('pt-BR')} ${currency}`;
