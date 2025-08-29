@@ -1524,6 +1524,66 @@ export type Database = {
         }
         Relationships: []
       }
+      reference_payments: {
+        Row: {
+          amount: number
+          appypay_transaction_id: string | null
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          expires_at: string
+          id: string
+          order_id: string
+          paid_at: string | null
+          product_id: string
+          reference_number: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          webhook_data: Json | null
+        }
+        Insert: {
+          amount: number
+          appypay_transaction_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          expires_at: string
+          id?: string
+          order_id: string
+          paid_at?: string | null
+          product_id: string
+          reference_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          webhook_data?: Json | null
+        }
+        Update: {
+          amount?: number
+          appypay_transaction_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          expires_at?: string
+          id?: string
+          order_id?: string
+          paid_at?: string | null
+          product_id?: string
+          reference_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          webhook_data?: Json | null
+        }
+        Relationships: []
+      }
       sales_recovery_analytics: {
         Row: {
           created_at: string
