@@ -65,9 +65,14 @@ serve(async (req) => {
 
     console.log('🔑 Checking AppyPay environment variables...');
     // Buscar configurações AppyPay
-    const appyPayBaseUrl = Deno.env.get('APPYPAY_BASE_URL')
+    let appyPayBaseUrl = Deno.env.get('APPYPAY_BASE_URL')
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID')
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET')
+    
+    // Fix base URL if it contains {version} placeholder
+    if (appyPayBaseUrl?.includes('{version}')) {
+      appyPayBaseUrl = appyPayBaseUrl.replace('/{version}/applications', '')
+    }
 
     console.log('📋 AppyPay config check:', {
       baseUrl: appyPayBaseUrl ? '✅ Set' : '❌ Missing',
