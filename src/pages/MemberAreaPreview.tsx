@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import MemberAreaFullPage from "@/components/MemberAreaFullPage";
 import ProtectedMemberArea from "@/components/ProtectedMemberArea";
+import { MemberAreaAuthProvider } from "@/contexts/MemberAreaAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import type { Lesson, Module, MemberArea } from "@/types/memberArea";
 
@@ -129,12 +130,14 @@ export default function MemberAreaPreviewPage() {
   }
 
   return (
-    <ProtectedMemberArea>
-      <MemberAreaFullPage
-        memberArea={memberArea}
-        lessons={lessons}
-        modules={modules}
-      />
-    </ProtectedMemberArea>
+    <MemberAreaAuthProvider memberAreaId={memberArea.id}>
+      <ProtectedMemberArea>
+        <MemberAreaFullPage
+          memberArea={memberArea}
+          lessons={lessons}
+          modules={modules}
+        />
+      </ProtectedMemberArea>
+    </MemberAreaAuthProvider>
   );
 }
