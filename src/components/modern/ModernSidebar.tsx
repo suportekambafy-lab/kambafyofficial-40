@@ -176,11 +176,11 @@ export function ModernSidebar({
             >
               {/* Header */}
               <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-                <img 
-                  src={isDark ? "/lovable-uploads/2cc2ba28-7010-4a14-aa62-c8f5b5368638.png" : "/lovable-uploads/3cce4fbf-9919-4f6f-8e4c-cdf61455198e.png"}
-                  alt="Kambafy" 
-                  className="h-16 w-auto"
-                />
+              <img 
+                src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
+                alt="Kambafy" 
+                className="h-16 w-auto"
+              />
                 
                 <Button
                   variant="ghost"
@@ -256,7 +256,7 @@ export function ModernSidebar({
               className="flex items-center gap-3"
             >
               <img 
-                src={isDark ? "/lovable-uploads/2cc2ba28-7010-4a14-aa62-c8f5b5368638.png" : "/lovable-uploads/3cce4fbf-9919-4f6f-8e4c-cdf61455198e.png"}
+                src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
                 alt="Kambafy" 
                 className="h-16 w-auto"
               />
@@ -267,7 +267,7 @@ export function ModernSidebar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              src={isDark ? "/lovable-uploads/0342efae-661f-4db4-8039-dff20d70a659.png" : "/lovable-uploads/5eecc394-b0e2-4691-945e-036898f70758.png"}
+              src={isDark ? "/lovable-uploads/4d0d0f85-0d04-42ce-beda-53593e9bbfe7.png" : "/lovable-uploads/4c38c8ef-bc1c-4a0b-a9cd-cff3e521772a.png"}
               alt="Kambafy"
               className="w-8 h-8 rounded-lg mx-auto"
             />
