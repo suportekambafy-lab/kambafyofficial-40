@@ -34,7 +34,8 @@ serve(async (req) => {
       customerName, 
       customerPhone, 
       amount, 
-      orderId 
+      orderId,
+      testEndpoint // Novo parâmetro opcional para testes
     } = requestBody;
 
     console.log('📋 Extracted parameters:', {
@@ -43,7 +44,8 @@ serve(async (req) => {
       customerName,
       customerPhone,
       amount,
-      orderId
+      orderId,
+      testEndpoint
     });
 
     console.log('✅ Creating AppyPay reference for order:', orderId)
@@ -97,8 +99,15 @@ serve(async (req) => {
 
     console.log('Sending request to AppyPay:', { ...appyPayPayload, client_secret: '[HIDDEN]' })
 
+    console.log('🌐 Calling AppyPay API...');
+    // Usar endpoint de teste se fornecido, senão usar o padrão
+    const endpoint = testEndpoint || '/api/references/create';
+    const fullUrl = `${appyPayBaseUrl}${endpoint}`;
+    console.log('📋 AppyPay API URL:', fullUrl);
+    console.log('📋 AppyPay payload:', { ...appyPayPayload, client_secret: '[HIDDEN]' });
+    
     // Criar referência no AppyPay
-    const appyPayResponse = await fetch(`${appyPayBaseUrl}/api/references/create`, {
+    const appyPayResponse = await fetch(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -107,14 +116,31 @@ serve(async (req) => {
       body: JSON.stringify(appyPayPayload)
     })
 
+    console.log('📤 AppyPay Response Status:', appyPayResponse.status);
+    console.log('📤 AppyPay Response Headers:', [...appyPayResponse.headers.entries()]);
+    
+    const responseText = await appyPayResponse.text();
+    console.log('📤 AppyPay Response Text:', responseText);
+    
     if (!appyPayResponse.ok) {
-      const errorText = await appyPayResponse.text()
-      console.error('AppyPay API error:', errorText)
-      throw new Error(`AppyPay API error: ${appyPayResponse.status} - ${errorText}`)
+      console.error('❌ AppyPay API Error:', {
+        endpoint,
+        fullUrl,
+        status: appyPayResponse.status,
+        statusText: appyPayResponse.statusText,
+        response: responseText
+      });
+      throw new Error(`AppyPay API error: ${appyPayResponse.status} - ${responseText} (endpoint: ${endpoint})`);
     }
-
-    const appyPayData = await appyPayResponse.json()
-    console.log('AppyPay response:', appyPayData)
+    
+    let appyPayData;
+    try {
+      appyPayData = JSON.parse(responseText);
+      console.log('✅ AppyPay Response Data:', appyPayData);
+    } catch (e) {
+      console.error('❌ Could not parse AppyPay response as JSON');
+      throw new Error(`AppyPay API returned invalid JSON: ${responseText}`);
+    }
 
     // Salvar referência na nossa base de dados
     const { data: referencePayment, error: dbError } = await supabase

@@ -1,6 +1,7 @@
 import { AppyPayDemo } from '@/components/checkout/AppyPayDemo';
 import { AppyPayDebugTest } from '@/components/AppyPayDebugTest';
 import { AppyPaySimpleTest } from '@/components/AppyPaySimpleTest';
+import { AppyPayEndpointTest } from '@/components/AppyPayEndpointTest';
 import { SEO } from '@/components/SEO';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -76,6 +77,10 @@ const AppyPayTest = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+          <div className="mb-8">
+            <AppyPayEndpointTest />
+          </div>
+
           <div className="mb-8">
             <AppyPaySimpleTest />
           </div>
