@@ -12,27 +12,23 @@ export const AppyPayEndpointTest = () => {
     setLoading(true);
     setResults([]);
     
-    // Lista de endpoints possíveis para pagamentos (baseado na URL base correta)
+    // Lista de endpoints possíveis para referências (baseado na URL fornecida)
     const endpointsToTest = [
-      '/payments', // Endpoint mais comum para pagamentos
+      '/references', // Endpoint correto fornecido pelo utilizador
+      '/references/create',
+      '/v1/references', // Com versão explícita
+      '/payments', 
       '/payments/create',
       '/transactions',
       '/transactions/create', 
-      '/references',
-      '/references/create',
       '/orders',
       '/orders/create',
       '/checkout',
       '/checkout/create',
       '/payment-references',
-      '/payment-references/create',
-      '/v1/payments', // Com versão explícita
-      '/v1/transactions',
-      '/v1/references',
-      '/api/payments', // Com prefixo api
+      '/api/references', // Com prefixo api
+      '/api/payments',
       '/api/transactions',
-      '/api/references',
-      '/applications' // Endpoint fornecido (para comparar)
     ];
 
     const testData = {
@@ -161,7 +157,7 @@ export const AppyPayEndpointTest = () => {
 
         <div className="text-xs text-muted-foreground space-y-1">
           <p><strong>💡 Este teste:</strong></p>
-          <p>• Testa 18 endpoints diferentes da API AppyPay focados em pagamentos</p>
+          <p>• Testa 15 endpoints diferentes da API AppyPay focados em referências</p>
           <p>• Identifica qual endpoint está funcionando</p>
           <p>• Mostra as respostas detalhadas de cada um</p>
           <p>• Ajuda a diagnosticar problemas de URL/endpoint</p>
