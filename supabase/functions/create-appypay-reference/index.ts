@@ -72,9 +72,18 @@ serve(async (req) => {
     console.log('📋 Raw environment values:', {
       baseUrlExists: !!appyPayBaseUrl,
       baseUrlValue: appyPayBaseUrl,
+      baseUrlLength: appyPayBaseUrl?.length || 0,
       clientIdExists: !!clientId,
       clientSecretExists: !!clientSecret
     });
+    
+    // Debug: listar todas as variáveis de ambiente que começam com APPYPAY
+    console.log('📋 All APPYPAY env vars:', 
+      Object.fromEntries(
+        Object.entries(Deno.env.toObject())
+          .filter(([key]) => key.startsWith('APPYPAY'))
+      )
+    );
     
     // Handle version placeholder - replace {version} with v1
     if (appyPayBaseUrl?.includes('{version}')) {
