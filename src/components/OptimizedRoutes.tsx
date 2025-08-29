@@ -61,6 +61,8 @@ const SalesRecovery = createLazyWithRetry(() => import('@/pages/SalesRecovery'),
 // Member Area routes
 const MemberArea = createLazyWithRetry(() => import('@/pages/MemberArea'), "MemberArea");
 const MemberAreaLogin = createLazyWithRetry(() => import('@/pages/MemberAreaLogin'), "MemberAreaLogin");
+const ModuleDetail = createLazyWithRetry(() => import('@/pages/ModuleDetail'), "ModuleDetail");
+const LessonDetail = createLazyWithRetry(() => import('@/pages/LessonDetail'), "LessonDetail");
 
 
 // Páginas do painel vendedor - lazy load com preload e retry
@@ -169,4 +171,6 @@ export const OptimizedRoutes = {
   // Member Area pages
   MemberArea: withLazyLoading(MemberArea, 'member-area'),
   MemberAreaLogin: withLazyLoading(MemberAreaLogin, 'member-area'),
+  ModuleDetail: withLazyLoading(ModuleDetail, 'member-area'),
+  LessonDetail: withLazyLoading(LessonDetail, 'member-area'),
 };

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import MemberAreaFullPage from '@/components/MemberAreaFullPage';
+import ModernMemberDashboard from '@/components/modern/ModernMemberDashboard';
 import type { Lesson, Module, MemberArea } from '@/types/memberArea';
 
 interface MemberAreaContentProps {
@@ -94,7 +94,7 @@ export default function MemberAreaContent({ memberArea }: MemberAreaContentProps
   }
 
   return (
-    <MemberAreaFullPage
+    <ModernMemberDashboard
       memberArea={memberArea}
       lessons={lessons}
       modules={modules}

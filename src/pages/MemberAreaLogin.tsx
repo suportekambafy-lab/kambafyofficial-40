@@ -159,101 +159,106 @@ export default function MemberAreaLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md mx-auto shadow-lg">
-        <CardHeader className="text-center space-y-2">
-          <div className="w-16 h-16 mx-auto bg-blue-600 rounded-full flex items-center justify-center mb-4">
-            <BookOpen className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+      
+      <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
+        {/* Logo/Brand Section */}
+        <div className="mb-8 text-center">
+          <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+            <BookOpen className="w-10 h-10 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl font-bold">Acesso à Área de Membros</CardTitle>
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold text-blue-700">{memberArea.name}</h3>
-            {memberArea.description && (
-              <p className="text-sm text-muted-foreground">{memberArea.description}</p>
-            )}
-          </div>
-        </CardHeader>
+          <h1 className="text-3xl font-bold text-foreground mb-2">{memberArea.name}</h1>
+          {memberArea.description && (
+            <p className="text-muted-foreground max-w-md">{memberArea.description}</p>
+          )}
+        </div>
 
-        <CardContent className="space-y-6">
-          <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-            <Lock className="w-4 h-4 text-blue-600" />
-            <p className="text-sm text-blue-700">
-              Insira suas informações para acessar o conteúdo exclusivo
+        {/* Login Card */}
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <CardTitle className="text-xl font-semibold">Acesse sua área exclusiva</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Entre para continuar seus estudos
             </p>
-          </div>
+          </CardHeader>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Digite seu nome completo"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={loading}
-              />
+          <CardContent className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium">Nome Completo</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="h-12 auth-input focus-ring transition-all duration-200"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="h-12 auth-input focus-ring transition-all duration-200"
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full h-12 bg-primary hover:bg-primary/90 transition-all duration-200 shadow-lg font-medium"
+                disabled={loading || !email.trim() || !name.trim()}
+              >
+                {loading ? (
+                  <>
+                    <LoadingSpinner />
+                    <span className="ml-2">Verificando acesso...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4 mr-2" />
+                    Entrar na Área de Membros
+                  </>
+                )}
+              </Button>
+            </form>
+
+            {/* Info Section */}
+            <div className="pt-4 border-t border-border/50">
+              <div className="space-y-3 text-xs text-muted-foreground">
+                <div className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                  <p>Você deve ter comprado um produto que dá acesso a esta área</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                  <p>Use o mesmo e-mail utilizado na compra</p>
+                </div>
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Digite seu e-mail"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700"
-              disabled={loading || !email.trim() || !name.trim()}
-            >
-              {loading ? (
-                <>
-                  <LoadingSpinner />
-                  Verificando acesso...
-                </>
-              ) : (
-                <>
-                  <Lock className="w-4 h-4 mr-2" />
-                  Acessar Área de Membros
-                </>
-              )}
-            </Button>
-          </form>
-
-          <div className="pt-4 border-t">
-            <div className="space-y-2 text-xs text-muted-foreground">
-              <p className="flex items-start gap-2">
-                <span className="w-1 h-1 bg-current rounded-full mt-2 flex-shrink-0"></span>
-                Você deve ter comprado um produto que dá acesso a esta área de membros
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="w-1 h-1 bg-current rounded-full mt-2 flex-shrink-0"></span>
-                Use o mesmo e-mail da compra para fazer login
-              </p>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/')}
-              className="text-muted-foreground"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar ao início
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Back Link */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate('/')}
+          className="mt-6 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar ao início
+        </Button>
+      </div>
     </div>
   );
 }
