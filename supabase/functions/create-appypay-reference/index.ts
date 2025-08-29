@@ -69,26 +69,9 @@ serve(async (req) => {
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID')
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET')
     
-    console.log('📋 Raw environment values:', {
-      baseUrlExists: !!appyPayBaseUrl,
-      baseUrlValue: appyPayBaseUrl,
-      baseUrlLength: appyPayBaseUrl?.length || 0,
-      clientIdExists: !!clientId,
-      clientSecretExists: !!clientSecret
-    });
-    
-    // Debug: listar todas as variáveis de ambiente que começam com APPYPAY
-    console.log('📋 All APPYPAY env vars:', 
-      Object.fromEntries(
-        Object.entries(Deno.env.toObject())
-          .filter(([key]) => key.startsWith('APPYPAY'))
-      )
-    );
-    
     // Handle version placeholder - replace {version} with v1
     if (appyPayBaseUrl?.includes('{version}')) {
       appyPayBaseUrl = appyPayBaseUrl.replace('{version}', 'v1')
-      console.log('📋 Updated base URL after version replacement:', appyPayBaseUrl);
     }
 
     console.log('📋 AppyPay config check:', {
@@ -98,13 +81,8 @@ serve(async (req) => {
     });
 
     if (!appyPayBaseUrl || !clientId || !clientSecret) {
-      const missing = [];
-      if (!appyPayBaseUrl) missing.push('APPYPAY_BASE_URL');
-      if (!clientId) missing.push('APPYPAY_CLIENT_ID'); 
-      if (!clientSecret) missing.push('APPYPAY_CLIENT_SECRET');
-      
-      console.error('❌ AppyPay configuration incomplete - missing:', missing);
-      throw new Error(`AppyPay configuration not found. Missing: ${missing.join(', ')}`);
+      console.error('❌ AppyPay configuration incomplete');
+      throw new Error('AppyPay configuration not found')
     }
 
     // Preparar dados para AppyPay (formato mais padrão)
@@ -129,8 +107,8 @@ serve(async (req) => {
     console.log('Sending request to AppyPay:', { ...appyPayPayload, client_secret: '[HIDDEN]' })
 
     console.log('🌐 Calling AppyPay API...');
-    // Usar endpoint de teste se fornecido, senão usar o endpoint correto para referências
-    const endpoint = testEndpoint || '/references';
+    // Usar endpoint de teste se fornecido, senão usar endpoint mais provável para pagamentos
+    const endpoint = testEndpoint || '/payments';
     const fullUrl = `${appyPayBaseUrl}${endpoint}`;
     console.log('📋 AppyPay API URL:', fullUrl);
     console.log('📋 AppyPay payload:', { ...appyPayPayload, client_secret: '[HIDDEN]' });
@@ -173,19 +151,6 @@ serve(async (req) => {
       throw new Error(`AppyPay API returned invalid JSON: ${responseText}`);
     }
 
-    // Processar resposta da AppyPay (formato array)
-    let referenceData;
-    if (appyPayData.references && Array.isArray(appyPayData.references) && appyPayData.references.length > 0) {
-      referenceData = appyPayData.references[0];
-      console.log('✅ Using references array format:', referenceData);
-    } else if (appyPayData.referenceNumber) {
-      referenceData = appyPayData;
-      console.log('✅ Using direct format:', referenceData);
-    } else {
-      console.error('❌ Unexpected AppyPay response format:', appyPayData);
-      throw new Error('Invalid AppyPay response format');
-    }
-
     // Salvar referência na nossa base de dados
     const { data: referencePayment, error: dbError } = await supabase
       .from('reference_payments')
@@ -197,10 +162,10 @@ serve(async (req) => {
         customer_phone: customerPhone,
         amount: parseFloat(amount),
         currency: 'KZ',
-        reference_number: referenceData.referenceNumber || referenceData.reference_number,
-        appypay_transaction_id: referenceData.id || referenceData.transaction_id || referenceData.entity,
+        reference_number: appyPayData.reference_number,
+        appypay_transaction_id: appyPayData.transaction_id,
         status: 'pending',
-        expires_at: referenceData.expirationDate || expiresAt.toISOString(),
+        expires_at: expiresAt.toISOString(),
         webhook_data: appyPayData
       })
       .select()
@@ -218,11 +183,11 @@ serve(async (req) => {
         success: true,
         data: {
           reference_payment_id: referencePayment.id,
-          reference_number: referenceData.referenceNumber || referenceData.reference_number,
-          transaction_id: referenceData.id || referenceData.transaction_id || referenceData.entity,
+          reference_number: appyPayData.reference_number,
+          transaction_id: appyPayData.transaction_id,
           amount: parseFloat(amount),
           currency: 'KZ',
-          expires_at: referenceData.expirationDate || expiresAt.toISOString(),
+          expires_at: expiresAt.toISOString(),
           payment_instructions: appyPayData.payment_instructions || 'Use a referência para fazer o pagamento'
         }
       }),
