@@ -777,6 +777,9 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          hero_description: string | null
+          hero_image_url: string | null
+          hero_title: string | null
           id: string
           name: string
           updated_at: string
@@ -786,6 +789,9 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          hero_description?: string | null
+          hero_image_url?: string | null
+          hero_title?: string | null
           id?: string
           name: string
           updated_at?: string
@@ -795,6 +801,9 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          hero_description?: string | null
+          hero_image_url?: string | null
+          hero_title?: string | null
           id?: string
           name?: string
           updated_at?: string
@@ -805,6 +814,7 @@ export type Database = {
       }
       modules: {
         Row: {
+          cover_image_url: string | null
           created_at: string
           description: string | null
           id: string
@@ -816,6 +826,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cover_image_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -827,6 +838,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cover_image_url?: string | null
           created_at?: string
           description?: string | null
           id?: string

@@ -25,6 +25,7 @@ export interface Module {
   created_at: string;
   updated_at: string;
   lessons_count?: number;
+  cover_image_url?: string | null;
 }
 
 export interface MemberArea {
@@ -37,4 +38,7 @@ export interface MemberArea {
   created_at: string;
   updated_at: string;
   user_id: string;
+  hero_image_url?: string | null;
+  hero_title?: string | null;
+  hero_description?: string | null;
 }

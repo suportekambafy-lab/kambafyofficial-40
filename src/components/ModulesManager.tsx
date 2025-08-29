@@ -21,6 +21,7 @@ interface Module {
   status: string; // Changed from union type to string to match database
   created_at: string;
   lessons_count?: number;
+  cover_image_url?: string | null;
 }
 
 interface ModulesManagerProps {
@@ -38,7 +39,8 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    status: 'draft' as 'draft' | 'published' | 'archived'
+    status: 'draft' as 'draft' | 'published' | 'archived',
+    cover_image_url: ''
   });
 
   useEffect(() => {
@@ -94,14 +96,15 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
     if (!user) return;
 
     try {
-      const moduleData = {
-        title: formData.title,
-        description: formData.description,
-        status: formData.status,
-        user_id: user.id,
-        member_area_id: memberAreaId,
-        order_number: editingModule ? editingModule.order_number : modules.length + 1
-      };
+        const moduleData = {
+          title: formData.title,
+          description: formData.description,
+          status: formData.status,
+          cover_image_url: formData.cover_image_url,
+          user_id: user.id,
+          member_area_id: memberAreaId,
+          order_number: editingModule ? editingModule.order_number : modules.length + 1
+        };
 
       if (editingModule) {
         const { error } = await supabase
@@ -146,7 +149,8 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
     setFormData({
       title: module.title,
       description: module.description || '',
-      status: module.status as 'draft' | 'published' | 'archived'
+      status: module.status as 'draft' | 'published' | 'archived',
+      cover_image_url: module.cover_image_url || ''
     });
     setDialogOpen(true);
   };
@@ -248,7 +252,8 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
     setFormData({
       title: '',
       description: '',
-      status: 'draft'
+      status: 'draft',
+      cover_image_url: ''
     });
     setEditingModule(null);
   };
@@ -325,6 +330,19 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
                       placeholder="Descreva o conteúdo do módulo..."
                       rows={3}
                     />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="cover_image_url">Imagem de Capa do Módulo</Label>
+                    <Input
+                      id="cover_image_url"
+                      value={formData.cover_image_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, cover_image_url: e.target.value }))}
+                      placeholder="URL da imagem de capa (ex: https://example.com/image.jpg)"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Esta imagem será exibida na vitrine dos módulos estilo Netflix
+                    </p>
                   </div>
                   
                   <div className="space-y-2">

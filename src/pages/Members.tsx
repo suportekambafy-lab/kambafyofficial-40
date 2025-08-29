@@ -73,7 +73,11 @@ export default function Members() {
   
   const [areaFormData, setAreaFormData] = useState({
     name: '',
-    url: ''
+    url: '',
+    description: '',
+    hero_image_url: '',
+    hero_title: '',
+    hero_description: ''
   });
 
   useEffect(() => {
@@ -400,6 +404,10 @@ export default function Members() {
       const insertData = {
         name: areaFormData.name,
         url: areaUrl,
+        description: areaFormData.description || null,
+        hero_image_url: areaFormData.hero_image_url || null,
+        hero_title: areaFormData.hero_title || null,
+        hero_description: areaFormData.hero_description || null,
         user_id: user.id
       };
       
@@ -430,7 +438,14 @@ export default function Members() {
         description: "Área de membros criada com sucesso"
       });
 
-      setAreaFormData({ name: '', url: '' });
+      setAreaFormData({ 
+        name: '', 
+        url: '',
+        description: '',
+        hero_image_url: '',
+        hero_title: '',
+        hero_description: ''
+      });
       setAreaDialogOpen(false);
       
       await loadData();
@@ -1561,6 +1576,55 @@ export default function Members() {
                         value={areaFormData.name}
                         onChange={(e) => setAreaFormData(prev => ({ ...prev, name: e.target.value }))}
                         placeholder="Ex: Master Drop"
+                        disabled={isCreatingArea}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="area-description">Descrição</Label>
+                      <Textarea
+                        id="area-description"
+                        value={areaFormData.description}
+                        onChange={(e) => setAreaFormData(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Descreva brevemente sua área de membros..."
+                        rows={2}
+                        disabled={isCreatingArea}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="hero-image">Imagem Hero/Banner</Label>
+                      <Input
+                        id="hero-image"
+                        value={areaFormData.hero_image_url}
+                        onChange={(e) => setAreaFormData(prev => ({ ...prev, hero_image_url: e.target.value }))}
+                        placeholder="URL da imagem hero (ex: https://example.com/banner.jpg)"
+                        disabled={isCreatingArea}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Esta será a grande imagem de capa exibida no topo da área de membros
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="hero-title">Título Hero</Label>
+                      <Input
+                        id="hero-title"
+                        value={areaFormData.hero_title}
+                        onChange={(e) => setAreaFormData(prev => ({ ...prev, hero_title: e.target.value }))}
+                        placeholder="Ex: Bem-vindo ao Master Drop"
+                        disabled={isCreatingArea}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="hero-description">Descrição Hero</Label>
+                      <Textarea
+                        id="hero-description"
+                        value={areaFormData.hero_description}
+                        onChange={(e) => setAreaFormData(prev => ({ ...prev, hero_description: e.target.value }))}
+                        placeholder="Texto que aparecerá na seção hero..."
+                        rows={2}
                         disabled={isCreatingArea}
                       />
                     </div>

@@ -254,16 +254,23 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
       <div className="flex-1 overflow-auto">
         {/* Hero Section */}
         <div className="relative h-96 bg-gradient-to-br from-primary via-primary/90 to-primary/80 overflow-hidden">
-          <div className="absolute inset-0 bg-black/20"></div>
+          {memberArea.hero_image_url && (
+            <img 
+              src={memberArea.hero_image_url} 
+              alt={memberArea.hero_title || memberArea.name}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          <div className="absolute inset-0 bg-black/40"></div>
           <div className="relative h-full flex items-center justify-center text-center p-8">
             <div className="max-w-2xl">
-              <h1 className="text-4xl font-bold text-primary-foreground mb-4">
-                {memberArea.name}
+              <h1 className="text-4xl font-bold text-white mb-4">
+                {memberArea.hero_title || memberArea.name}
               </h1>
-              <p className="text-xl text-primary-foreground/90 mb-6">
-                {memberArea.description || 'Bem-vindo à sua área exclusiva de aprendizado'}
+              <p className="text-xl text-white/90 mb-6">
+                {memberArea.hero_description || memberArea.description || 'Bem-vindo à sua área exclusiva de aprendizado'}
               </p>
-              <div className="flex items-center justify-center gap-6 text-primary-foreground/80">
+              <div className="flex items-center justify-center gap-6 text-white/80">
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-5 h-5" />
                   <span>{publishedLessons.length} aulas</span>
@@ -314,12 +321,22 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
                     className="group cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-0 bg-card overflow-hidden"
                     onClick={() => handleModuleClick(module)}
                   >
-                    <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative">
-                      <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <BookOpen className="w-8 h-8 text-primary" />
-                      </div>
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <Button size="sm" className="bg-primary/90 hover:bg-primary">
+                    <div className="aspect-video relative overflow-hidden">
+                      {module.cover_image_url ? (
+                        <img 
+                          src={module.cover_image_url} 
+                          alt={module.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                          <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <BookOpen className="w-8 h-8 text-primary" />
+                          </div>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <Button size="sm" className="bg-white/90 text-foreground hover:bg-white">
                           <Play className="w-4 h-4 mr-2" />
                           Acessar
                         </Button>
