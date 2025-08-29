@@ -1,4 +1,5 @@
 import { AppyPayDemo } from '@/components/checkout/AppyPayDemo';
+import { AppyPayDebugTest } from '@/components/AppyPayDebugTest';
 import { SEO } from '@/components/SEO';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -74,7 +75,18 @@ const AppyPayTest = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <AppyPayDemo />
+          <div className="mb-8">
+            <AppyPayDebugTest />
+          </div>
+          
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Demo Interativo</h2>
+            <p className="text-gray-600">
+              Após verificar a conexão acima, teste o fluxo completo de pagamento:
+            </p>
+          </div>
+          
+          <AppyPayDemo />
               </CardContent>
             </Card>
 

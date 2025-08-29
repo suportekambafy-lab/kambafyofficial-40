@@ -48,6 +48,9 @@ export const AppyPayPaymentForm: React.FC<AppyPayPaymentFormProps> = ({
     setLoading(true);
 
     try {
+      console.log('🚀 Starting AppyPay reference creation...');
+      console.log('📋 Request data:', { productId, customerEmail: customerData.email, customerName: customerData.name, amount, orderId });
+      
       const { data, error } = await supabase.functions.invoke('create-appypay-reference', {
         body: {
           productId,
@@ -59,21 +62,29 @@ export const AppyPayPaymentForm: React.FC<AppyPayPaymentFormProps> = ({
         }
       });
 
-      if (error) throw error;
+      console.log('📤 Supabase function response:', { data, error });
+
+      if (error) {
+        console.error('❌ Supabase function error:', error);
+        throw error;
+      }
 
       if (data.success) {
+        console.log('✅ Reference created successfully:', data.data);
         setReferenceData(data.data);
         toast({
           title: "Referência criada com sucesso",
           description: "Use a referência abaixo para fazer o pagamento."
         });
       } else {
+        console.error('❌ AppyPay API error:', data.error);
         throw new Error(data.error || 'Erro ao criar referência');
       }
 
     } catch (error: any) {
-      console.error('Error creating AppyPay reference:', error);
+      console.error('💥 Error creating AppyPay reference:', error);
       const errorMessage = error.message || 'Erro ao criar referência de pagamento';
+      console.error('📋 Error details:', { error, message: errorMessage });
       toast({
         title: "Erro",
         description: errorMessage,
