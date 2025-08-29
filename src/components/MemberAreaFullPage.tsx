@@ -4,11 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Play, Lock, CheckCircle, Star, ArrowLeft, AlertCircle, Menu, ChevronDown, ChevronUp, MessageCircle, Send, BookOpen, Users } from "lucide-react";
+import { Play, Lock, CheckCircle, Star, ArrowLeft, AlertCircle, Menu, ChevronDown, ChevronUp, MessageCircle, Send, BookOpen, Users, LogOut } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLessonProgress } from "@/hooks/useLessonProgress";
-import { useAuth } from "@/contexts/AuthContext";
+import { useMemberAreaAuth } from "@/contexts/MemberAreaAuthContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import VideoPlayer from "@/components/ui/video-player";
@@ -22,7 +22,7 @@ interface MemberAreaFullPageProps {
 
 export default function MemberAreaFullPage({ memberArea, lessons, modules = [] }: MemberAreaFullPageProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { student, logout } = useMemberAreaAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const publishedLessons = lessons.filter(lesson => lesson.status === 'published').sort((a, b) => a.order_number - b.order_number);
@@ -160,7 +160,24 @@ export default function MemberAreaFullPage({ memberArea, lessons, modules = [] }
   };
 
   const handleGoBack = () => {
-    navigate('/minhas-compras');
+    navigate('/');
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso"
+      });
+      navigate(`/login/${memberArea.id}`);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao fazer logout",
+        variant: "destructive"
+      });
+    }
   };
 
   const renderLessonCard = (lesson: Lesson, index: number) => (
@@ -284,7 +301,7 @@ export default function MemberAreaFullPage({ memberArea, lessons, modules = [] }
         )}
       </div>
       
-      {user && (
+          {student && (
         <div className="space-y-2">
           <Textarea
             placeholder="Adicione um comentário..."
@@ -361,6 +378,15 @@ export default function MemberAreaFullPage({ memberArea, lessons, modules = [] }
               </div>
               <h1 className="text-lg font-bold text-gray-900 truncate">{memberArea.name}</h1>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="flex-shrink-0"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
           </div>
         </header>
 
@@ -473,6 +499,15 @@ export default function MemberAreaFullPage({ memberArea, lessons, modules = [] }
           </div>
           
           <div className="flex items-center space-x-2 sm:space-x-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="hidden sm:flex items-center gap-1 flex-shrink-0"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
             <Button
               variant="ghost"
               size="sm"

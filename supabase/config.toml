@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.kambapay-public-api]
 verify_jwt = false
+
+[functions.member-area-login]
+verify_jwt = false
+
+[functions.member-area-verify]
+verify_jwt = false
+
+[functions.member-area-logout]
+verify_jwt = false

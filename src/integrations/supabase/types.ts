@@ -688,6 +688,56 @@ export type Database = {
           },
         ]
       }
+      member_area_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          ip_address: string | null
+          last_activity: string
+          member_area_id: string
+          session_token: string
+          student_email: string
+          student_name: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          last_activity?: string
+          member_area_id: string
+          session_token: string
+          student_email: string
+          student_name: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          last_activity?: string
+          member_area_id?: string
+          session_token?: string
+          student_email?: string
+          student_name?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_area_sessions_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_area_students: {
         Row: {
           access_granted_at: string
@@ -2020,6 +2070,10 @@ export type Database = {
           affiliate_commission: number
           seller_commission: number
         }[]
+      }
+      cleanup_expired_member_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       detect_abandoned_purchase: {
         Args: {

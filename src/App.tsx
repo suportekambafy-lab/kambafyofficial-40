@@ -78,7 +78,11 @@ const App = () => {
                         <Route path="/meus-afiliados" element={<OptimizedRoutes.MeusAfiliados />} />
                         <Route path="/minhas-compras" element={<OptimizedRoutes.MinhasCompras />} />
                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
-                      <Route path="/curso/:areaId" element={<OptimizedRoutes.MemberAreaPreview />} />
+                       <Route path="/curso/:areaId" element={<OptimizedRoutes.MemberAreaPreview />} />
+                        
+                        {/* Member Area Routes - New Authentication System */}
+                        <Route path="/area/:areaId" element={<OptimizedRoutes.MemberArea />} />
+                        <Route path="/login/:areaId" element={<OptimizedRoutes.MemberAreaLogin />} />
                        <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                         <Route path="/kambapay" element={<OptimizedRoutes.KambaPay />} />
                         <Route path="/recuperacao-vendas" element={<OptimizedRoutes.SalesRecovery />} />
