@@ -69,9 +69,9 @@ serve(async (req) => {
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID')
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET')
     
-    // Fix base URL if it contains {version} placeholder
+    // Handle version placeholder - replace {version} with v1
     if (appyPayBaseUrl?.includes('{version}')) {
-      appyPayBaseUrl = appyPayBaseUrl.replace('/{version}/applications', '')
+      appyPayBaseUrl = appyPayBaseUrl.replace('{version}', 'v1')
     }
 
     console.log('📋 AppyPay config check:', {
@@ -107,8 +107,8 @@ serve(async (req) => {
     console.log('Sending request to AppyPay:', { ...appyPayPayload, client_secret: '[HIDDEN]' })
 
     console.log('🌐 Calling AppyPay API...');
-    // Usar endpoint de teste se fornecido, senão usar o padrão mais comum
-    const endpoint = testEndpoint || '/api/v1/references';
+    // Usar endpoint de teste se fornecido, senão usar o padrão baseado na URL fornecida
+    const endpoint = testEndpoint || '/applications';
     const fullUrl = `${appyPayBaseUrl}${endpoint}`;
     console.log('📋 AppyPay API URL:', fullUrl);
     console.log('📋 AppyPay payload:', { ...appyPayPayload, client_secret: '[HIDDEN]' });

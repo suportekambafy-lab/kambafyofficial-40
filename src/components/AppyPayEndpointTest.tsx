@@ -14,6 +14,7 @@ export const AppyPayEndpointTest = () => {
     
     // Lista de endpoints possíveis para testar
     const endpointsToTest = [
+      '/applications', // Baseado na URL fornecida pelo utilizador
       '/api/references/create',
       '/api/v1/payment-references',
       '/api/v1/references/create', 
@@ -152,7 +153,7 @@ export const AppyPayEndpointTest = () => {
 
         <div className="text-xs text-muted-foreground space-y-1">
           <p><strong>💡 Este teste:</strong></p>
-          <p>• Testa 10 endpoints diferentes da API AppyPay</p>
+          <p>• Testa 11 endpoints diferentes da API AppyPay</p>
           <p>• Identifica qual endpoint está funcionando</p>
           <p>• Mostra as respostas detalhadas de cada um</p>
           <p>• Ajuda a diagnosticar problemas de URL/endpoint</p>

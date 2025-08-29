@@ -15,8 +15,9 @@ export const AppyPayUrlTest = () => {
     setLoading(true);
     setResults([]);
     
-    // URLs base possíveis para testar
+    // URLs base possíveis para testar (incluindo URL fornecida pelo utilizador)
     const baseUrlsToTest = [
+      'https://gwy-api.appypay.co.ao/v1', // URL fornecida pelo utilizador
       'https://api.appypay.com',
       'https://appypay.com/api',
       'https://sandbox.appypay.com',
@@ -179,7 +180,7 @@ export const AppyPayUrlTest = () => {
 
         <div className="text-xs text-muted-foreground space-y-1">
           <p><strong>💡 Este teste:</strong></p>
-          <p>• Testa 9+ URLs base diferentes para a API AppyPay</p>
+          <p>• Testa 10+ URLs base diferentes para a API AppyPay</p>
           <p>• Verifica se cada URL responde (status 200, 404, erro)</p>
           <p>• Testa endpoints comuns em URLs que funcionam</p>
           <p>• Identifica a URL base correta da API AppyPay</p>
