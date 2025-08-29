@@ -107,8 +107,8 @@ serve(async (req) => {
     console.log('Sending request to AppyPay:', { ...appyPayPayload, client_secret: '[HIDDEN]' })
 
     console.log('🌐 Calling AppyPay API...');
-    // Usar endpoint de teste se fornecido, senão usar o padrão baseado na URL fornecida
-    const endpoint = testEndpoint || '/applications';
+    // Usar endpoint de teste se fornecido, senão usar endpoint mais provável para pagamentos
+    const endpoint = testEndpoint || '/payments';
     const fullUrl = `${appyPayBaseUrl}${endpoint}`;
     console.log('📋 AppyPay API URL:', fullUrl);
     console.log('📋 AppyPay payload:', { ...appyPayPayload, client_secret: '[HIDDEN]' });
