@@ -80,28 +80,30 @@ serve(async (req) => {
       throw new Error('AppyPay configuration not found')
     }
 
-    // Preparar dados para AppyPay
+    // Preparar dados para AppyPay (formato mais padrão)
     const expiresAt = new Date()
     expiresAt.setHours(expiresAt.getHours() + 24) // 24 horas para expirar
 
     const appyPayPayload = {
-      client_id: clientId,
-      client_secret: clientSecret,
       amount: parseFloat(amount),
-      currency: 'KZ',
-      reference: `REF-${orderId}`,
+      currency: 'AOA', // Usar código ISO correto para Kwanza Angolano
       description: `Pagamento do pedido ${orderId}`,
-      customer_email: customerEmail,
-      customer_name: customerName,
-      customer_phone: customerPhone,
-      expires_at: expiresAt.toISOString()
+      reference: `REF-${orderId}`,
+      customer: {
+        name: customerName,
+        email: customerEmail,
+        phone: customerPhone
+      },
+      expires_at: expiresAt.toISOString(),
+      callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/appypay-webhook`,
+      return_url: `https://kambafy.com/obrigado?order_id=${orderId}`
     }
 
     console.log('Sending request to AppyPay:', { ...appyPayPayload, client_secret: '[HIDDEN]' })
 
     console.log('🌐 Calling AppyPay API...');
-    // Usar endpoint de teste se fornecido, senão usar o padrão
-    const endpoint = testEndpoint || '/api/references/create';
+    // Usar endpoint de teste se fornecido, senão usar o padrão mais comum
+    const endpoint = testEndpoint || '/api/v1/references';
     const fullUrl = `${appyPayBaseUrl}${endpoint}`;
     console.log('📋 AppyPay API URL:', fullUrl);
     console.log('📋 AppyPay payload:', { ...appyPayPayload, client_secret: '[HIDDEN]' });
@@ -111,7 +113,9 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${clientSecret}`, // Usar só o secret como Bearer token
+        'X-Client-ID': clientId // Client ID como header separado
       },
       body: JSON.stringify(appyPayPayload)
     })
