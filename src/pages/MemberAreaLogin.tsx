@@ -15,6 +15,7 @@ interface MemberArea {
   name: string;
   description?: string;
   url: string;
+  logo_url?: string;
 }
 
 export default function MemberAreaLogin() {
@@ -41,7 +42,7 @@ export default function MemberAreaLogin() {
         // First try by ID
         let { data, error } = await supabase
           .from('member_areas')
-          .select('id, name, description, url')
+          .select('id, name, description, url, logo_url')
           .eq('id', areaId)
           .single();
 
@@ -49,7 +50,7 @@ export default function MemberAreaLogin() {
         if (error || !data) {
           const { data: dataByUrl, error: errorByUrl } = await supabase
             .from('member_areas')
-            .select('id, name, description, url')
+            .select('id, name, description, url, logo_url')
             .eq('url', areaId)
             .single();
 
@@ -158,27 +159,37 @@ export default function MemberAreaLogin() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent"></div>
       
       <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
         {/* Logo/Brand Section */}
         <div className="mb-8 text-center">
-          <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <BookOpen className="w-10 h-10 text-primary-foreground" />
+          <div className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center shadow-lg overflow-hidden">
+            {memberArea?.logo_url ? (
+              <img
+                src={memberArea.logo_url}
+                alt={`${memberArea.name} Logo`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center">
+                <BookOpen className="w-10 h-10 text-white" />
+              </div>
+            )}
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">{memberArea.name}</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{memberArea.name}</h1>
           {memberArea.description && (
-            <p className="text-muted-foreground max-w-md">{memberArea.description}</p>
+            <p className="text-gray-300 max-w-md">{memberArea.description}</p>
           )}
         </div>
 
         {/* Login Card */}
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-gray-800/80 backdrop-blur-sm">
           <CardHeader className="text-center pb-6">
-            <CardTitle className="text-xl font-semibold">Acesse sua área exclusiva</CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <CardTitle className="text-xl font-semibold text-white">Acesse sua área exclusiva</CardTitle>
+            <p className="text-sm text-gray-300">
               Entre para continuar seus estudos
             </p>
           </CardHeader>
@@ -186,7 +197,7 @@ export default function MemberAreaLogin() {
           <CardContent className="space-y-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">Nome Completo</Label>
+                <Label htmlFor="name" className="text-sm font-medium text-gray-200">Nome Completo</Label>
                 <Input
                   id="name"
                   type="text"
@@ -195,12 +206,12 @@ export default function MemberAreaLogin() {
                   onChange={(e) => setName(e.target.value)}
                   required
                   disabled={loading}
-                  className="h-12 auth-input focus-ring transition-all duration-200"
+                  className="h-12 bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">E-mail</Label>
+                <Label htmlFor="email" className="text-sm font-medium text-gray-200">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
@@ -209,13 +220,13 @@ export default function MemberAreaLogin() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading}
-                  className="h-12 auth-input focus-ring transition-all duration-200"
+                  className="h-12 bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
                 />
               </div>
 
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-primary hover:bg-primary/90 transition-all duration-200 shadow-lg font-medium"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 transition-all duration-200 shadow-lg font-medium text-white"
                 disabled={loading || !email.trim() || !name.trim()}
               >
                 {loading ? (
@@ -233,14 +244,14 @@ export default function MemberAreaLogin() {
             </form>
 
             {/* Info Section */}
-            <div className="pt-4 border-t border-border/50">
-              <div className="space-y-3 text-xs text-muted-foreground">
+            <div className="pt-4 border-t border-gray-700">
+              <div className="space-y-3 text-xs text-gray-400">
                 <div className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                   <p>Você deve ter comprado um produto que dá acesso a esta área</p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                   <p>Use o mesmo e-mail utilizado na compra</p>
                 </div>
               </div>
@@ -253,7 +264,7 @@ export default function MemberAreaLogin() {
           variant="ghost" 
           size="sm" 
           onClick={() => navigate('/')}
-          className="mt-6 text-muted-foreground hover:text-foreground transition-colors"
+          className="mt-6 text-gray-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar ao início

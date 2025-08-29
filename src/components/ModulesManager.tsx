@@ -12,6 +12,7 @@ import { Plus, MoreHorizontal, Edit, Trash2, Eye, EyeOff, GripVertical, BookOpen
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { ImageUploader } from "@/components/ImageUploader";
 
 interface Module {
   id: string;
@@ -333,12 +334,13 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="cover_image_url">Imagem de Capa do Módulo</Label>
-                    <Input
-                      id="cover_image_url"
+                    <ImageUploader
+                      label="Imagem de Capa do Módulo"
                       value={formData.cover_image_url}
-                      onChange={(e) => setFormData(prev => ({ ...prev, cover_image_url: e.target.value }))}
-                      placeholder="URL da imagem de capa (ex: https://example.com/image.jpg)"
+                      onChange={(url) => setFormData(prev => ({ ...prev, cover_image_url: url || '' }))}
+                      bucket="member-area-assets"
+                      folder={user?.id || 'anonymous'}
+                      aspectRatio="16/9"
                     />
                     <p className="text-xs text-muted-foreground">
                       Esta imagem será exibida na vitrine dos módulos estilo Netflix

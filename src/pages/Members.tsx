@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import VideoUploader from "@/components/VideoUploader";
 import StudentsManager from "@/components/StudentsManager";
 import MemberAreaPreview from "@/components/MemberAreaPreview";
+import { ImageUploader } from "@/components/ImageUploader";
 import { useNavigate } from "react-router-dom";
 import type { Lesson, Module, MemberArea } from "@/types/memberArea";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -77,7 +78,8 @@ export default function Members() {
     description: '',
     hero_image_url: '',
     hero_title: '',
-    hero_description: ''
+    hero_description: '',
+    logo_url: ''
   });
 
   useEffect(() => {
@@ -408,6 +410,7 @@ export default function Members() {
         hero_image_url: areaFormData.hero_image_url || null,
         hero_title: areaFormData.hero_title || null,
         hero_description: areaFormData.hero_description || null,
+        logo_url: areaFormData.logo_url || null,
         user_id: user.id
       };
       
@@ -444,7 +447,8 @@ export default function Members() {
         description: '',
         hero_image_url: '',
         hero_title: '',
-        hero_description: ''
+        hero_description: '',
+        logo_url: ''
       });
       setAreaDialogOpen(false);
       
@@ -1593,12 +1597,28 @@ export default function Members() {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="hero-image">Imagem Hero/Banner</Label>
-                      <Input
-                        id="hero-image"
+                      <ImageUploader
+                        label="Logo da Área (para página de login)"
+                        value={areaFormData.logo_url}
+                        onChange={(url) => setAreaFormData(prev => ({ ...prev, logo_url: url || '' }))}
+                        bucket="member-area-assets"
+                        folder={user?.id || 'anonymous'}
+                        aspectRatio="1/1"
+                        disabled={isCreatingArea}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Logo que aparecerá na página de login da área de membros
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <ImageUploader
+                        label="Imagem Hero/Banner"
                         value={areaFormData.hero_image_url}
-                        onChange={(e) => setAreaFormData(prev => ({ ...prev, hero_image_url: e.target.value }))}
-                        placeholder="URL da imagem hero (ex: https://example.com/banner.jpg)"
+                        onChange={(url) => setAreaFormData(prev => ({ ...prev, hero_image_url: url || '' }))}
+                        bucket="member-area-assets"
+                        folder={user?.id || 'anonymous'}
+                        aspectRatio="16/9"
                         disabled={isCreatingArea}
                       />
                       <p className="text-xs text-muted-foreground">

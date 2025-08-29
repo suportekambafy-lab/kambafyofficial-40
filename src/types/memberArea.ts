@@ -41,4 +41,5 @@ export interface MemberArea {
   hero_image_url?: string | null;
   hero_title?: string | null;
   hero_description?: string | null;
+  logo_url?: string | null;
 }

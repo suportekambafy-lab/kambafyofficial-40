@@ -781,6 +781,7 @@ export type Database = {
           hero_image_url: string | null
           hero_title: string | null
           id: string
+          logo_url: string | null
           name: string
           updated_at: string
           url: string
@@ -793,6 +794,7 @@ export type Database = {
           hero_image_url?: string | null
           hero_title?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           updated_at?: string
           url: string
@@ -805,6 +807,7 @@ export type Database = {
           hero_image_url?: string | null
           hero_title?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           updated_at?: string
           url?: string
