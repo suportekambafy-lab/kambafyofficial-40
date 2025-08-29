@@ -7,17 +7,27 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('🚀 AppyPay Create Reference - Request received');
+  console.log('📋 Request method:', req.method);
+  console.log('📋 Request URL:', req.url);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('✅ Handling CORS preflight');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('🔧 Initializing Supabase client...');
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    console.log('📥 Parsing request body...');
+    const requestBody = await req.json();
+    console.log('📋 Request body:', requestBody);
+    
     const { 
       productId, 
       customerEmail, 
@@ -25,21 +35,46 @@ serve(async (req) => {
       customerPhone, 
       amount, 
       orderId 
-    } = await req.json()
+    } = requestBody;
 
-    console.log('Creating AppyPay reference for order:', orderId)
+    console.log('📋 Extracted parameters:', {
+      productId,
+      customerEmail,
+      customerName,
+      customerPhone,
+      amount,
+      orderId
+    });
+
+    console.log('✅ Creating AppyPay reference for order:', orderId)
 
     // Validar dados obrigatórios
     if (!productId || !customerEmail || !customerName || !amount || !orderId) {
-      throw new Error('Missing required fields')
+      const missingFields = [];
+      if (!productId) missingFields.push('productId');
+      if (!customerEmail) missingFields.push('customerEmail');
+      if (!customerName) missingFields.push('customerName');
+      if (!amount) missingFields.push('amount');
+      if (!orderId) missingFields.push('orderId');
+      
+      console.error('❌ Missing required fields:', missingFields);
+      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
 
+    console.log('🔑 Checking AppyPay environment variables...');
     // Buscar configurações AppyPay
     const appyPayBaseUrl = Deno.env.get('APPYPAY_BASE_URL')
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID')
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET')
 
+    console.log('📋 AppyPay config check:', {
+      baseUrl: appyPayBaseUrl ? '✅ Set' : '❌ Missing',
+      clientId: clientId ? '✅ Set' : '❌ Missing',
+      clientSecret: clientSecret ? '✅ Set' : '❌ Missing'
+    });
+
     if (!appyPayBaseUrl || !clientId || !clientSecret) {
+      console.error('❌ AppyPay configuration incomplete');
       throw new Error('AppyPay configuration not found')
     }
 
@@ -127,16 +162,23 @@ serve(async (req) => {
       }
     )
 
-  } catch (error) {
-    console.error('Error in create-appypay-reference:', error)
+  } catch (error: any) {
+    console.error('💥 Error in create-appypay-reference:', error);
+    console.error('📋 Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        timestamp: new Date().toISOString()
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      { 
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
   }
