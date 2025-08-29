@@ -5,12 +5,3 @@ verify_jwt = false
 
 [functions.kambapay-public-api]
 verify_jwt = false
-
-[functions.appypay-webhook]
-verify_jwt = false
-
-[functions.create-appypay-reference]
-verify_jwt = false
-
-[functions.verify-appypay-payment]
-verify_jwt = false

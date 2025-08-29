@@ -104,16 +104,6 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     custom: true,
     countryFlag: "🇦🇴",
     countryName: "Saldo Digital"
-  },
-  {
-    id: "appypay_reference",
-    name: "Pagamento por Referência AppyPay",
-    image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzE2YTM0YSIvPgo8cGF0aCBkPSJNMTAgMTJoMjB2NGgtMjB6bTAgNmgxNnY0aC0xNnptMCA2aDEydjRoLTEyeiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+",
-    enabled: true,
-    custom: true,
-    isAngola: true,
-    countryFlag: "🇦🇴",
-    countryName: "Angola"
   }
 ];
 
@@ -131,7 +121,7 @@ export const getEnabledPaymentMethods = (): PaymentMethod[] => {
 };
 
 export const getAngolaPaymentMethods = (): PaymentMethod[] => {
-  return PAYMENT_METHODS.filter(method => method.isAngola || method.id === 'kambapay' || method.id === 'appypay_reference');
+  return PAYMENT_METHODS.filter(method => method.isAngola || method.id === 'kambapay');
 };
 
 export const getMozambiquePaymentMethods = (): PaymentMethod[] => {
