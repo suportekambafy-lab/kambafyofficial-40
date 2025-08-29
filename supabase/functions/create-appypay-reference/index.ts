@@ -164,6 +164,19 @@ serve(async (req) => {
       throw new Error(`AppyPay API returned invalid JSON: ${responseText}`);
     }
 
+    // Processar resposta da AppyPay (formato array)
+    let referenceData;
+    if (appyPayData.references && Array.isArray(appyPayData.references) && appyPayData.references.length > 0) {
+      referenceData = appyPayData.references[0];
+      console.log('✅ Using references array format:', referenceData);
+    } else if (appyPayData.referenceNumber) {
+      referenceData = appyPayData;
+      console.log('✅ Using direct format:', referenceData);
+    } else {
+      console.error('❌ Unexpected AppyPay response format:', appyPayData);
+      throw new Error('Invalid AppyPay response format');
+    }
+
     // Salvar referência na nossa base de dados
     const { data: referencePayment, error: dbError } = await supabase
       .from('reference_payments')
@@ -175,10 +188,10 @@ serve(async (req) => {
         customer_phone: customerPhone,
         amount: parseFloat(amount),
         currency: 'KZ',
-        reference_number: appyPayData.reference_number,
-        appypay_transaction_id: appyPayData.transaction_id,
+        reference_number: referenceData.referenceNumber || referenceData.reference_number,
+        appypay_transaction_id: referenceData.id || referenceData.transaction_id || referenceData.entity,
         status: 'pending',
-        expires_at: expiresAt.toISOString(),
+        expires_at: referenceData.expirationDate || expiresAt.toISOString(),
         webhook_data: appyPayData
       })
       .select()
@@ -196,11 +209,11 @@ serve(async (req) => {
         success: true,
         data: {
           reference_payment_id: referencePayment.id,
-          reference_number: appyPayData.reference_number,
-          transaction_id: appyPayData.transaction_id,
+          reference_number: referenceData.referenceNumber || referenceData.reference_number,
+          transaction_id: referenceData.id || referenceData.transaction_id || referenceData.entity,
           amount: parseFloat(amount),
           currency: 'KZ',
-          expires_at: expiresAt.toISOString(),
+          expires_at: referenceData.expirationDate || expiresAt.toISOString(),
           payment_instructions: appyPayData.payment_instructions || 'Use a referência para fazer o pagamento'
         }
       }),
