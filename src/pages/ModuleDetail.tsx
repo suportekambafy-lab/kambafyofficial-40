@@ -14,10 +14,10 @@ import {
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/hooks/use-toast';
-import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
+import { MemberAreaAuthProvider, useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import type { Lesson, Module } from '@/types/memberArea';
 
-export default function ModuleDetail() {
+function ModuleDetailContent() {
   const { areaId, moduleId } = useParams<{ areaId: string; moduleId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -238,5 +238,21 @@ export default function ModuleDetail() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ModuleDetail() {
+  const { areaId } = useParams<{ areaId: string }>();
+  const navigate = useNavigate();
+
+  if (!areaId) {
+    navigate('/');
+    return null;
+  }
+
+  return (
+    <MemberAreaAuthProvider memberAreaId={areaId}>
+      <ModuleDetailContent />
+    </MemberAreaAuthProvider>
   );
 }

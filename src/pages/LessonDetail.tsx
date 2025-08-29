@@ -18,13 +18,13 @@ import {
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/hooks/use-toast';
-import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
+import { MemberAreaAuthProvider, useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { useLessonProgress } from '@/hooks/useLessonProgress';
 import VideoPlayer from '@/components/ui/video-player';
 import { useState, useEffect } from 'react';
 import type { Lesson } from '@/types/memberArea';
 
-export default function LessonDetail() {
+function LessonDetailContent() {
   const { areaId, lessonId } = useParams<{ areaId: string; lessonId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -367,5 +367,21 @@ export default function LessonDetail() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LessonDetail() {
+  const { areaId } = useParams<{ areaId: string }>();
+  const navigate = useNavigate();
+
+  if (!areaId) {
+    navigate('/');
+    return null;
+  }
+
+  return (
+    <MemberAreaAuthProvider memberAreaId={areaId}>
+      <LessonDetailContent />
+    </MemberAreaAuthProvider>
   );
 }

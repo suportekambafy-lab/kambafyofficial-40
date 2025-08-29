@@ -392,7 +392,10 @@ export default function Members() {
         .replace(/-+/g, '-')
         .trim();
 
-      const areaUrl = `https://app.kambafy.com/auth?mode=login-customer`;
+      // Generate unique URL using timestamp to avoid duplicates
+      const timestamp = Date.now();
+      const uniqueSlug = `${cleanName}-${timestamp}`;
+      const areaUrl = uniqueSlug;
       
       const insertData = {
         name: areaFormData.name,
@@ -1243,12 +1246,26 @@ export default function Members() {
                       />
                     </div>
                     <div>
-                      <Label className="text-xs md:text-sm font-medium">URL de Acesso</Label>
-                      <Input 
-                        value={selectedArea.url} 
-                        disabled 
-                        className="mt-1 text-sm" 
-                      />
+                      <Label className="text-xs md:text-sm font-medium">URL de Acesso dos Alunos</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input 
+                          value={`https://app.kambafy.com/login/${selectedArea.url}`} 
+                          disabled 
+                          className="text-sm" 
+                        />
+                        <Button 
+                          size="sm" 
+                          onClick={() => {
+                            navigator.clipboard.writeText(`https://app.kambafy.com/login/${selectedArea.url}`);
+                            toast({
+                              title: "Link copiado!",
+                              description: "O link de acesso foi copiado para a área de transferência"
+                            });
+                          }}
+                        >
+                          Copiar
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-3 md:space-y-4">
@@ -1580,14 +1597,16 @@ export default function Members() {
                           className="p-4 cursor-pointer hover:bg-gray-50"
                           onClick={() => setSelectedArea(area)}
                         >
-                          <div className="space-y-2">
-                            <div className="font-medium text-sm">{area.name}</div>
-                            <div className="text-xs text-blue-600 truncate">{area.url}</div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Alunos:</span>
-                              <Badge variant="secondary" className="text-xs">{area.students_count}</Badge>
+                            <div className="space-y-2">
+                              <div className="font-medium text-sm">{area.name}</div>
+                              <div className="text-xs text-blue-600 truncate">
+                                /login/{area.url}
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Alunos:</span>
+                                <Badge variant="secondary" className="text-xs">{area.students_count}</Badge>
+                              </div>
                             </div>
-                          </div>
                         </div>
                       ))}
                     </div>
@@ -1616,7 +1635,7 @@ export default function Members() {
                           onClick={() => setSelectedArea(area)}
                         >
                           <TableCell className="font-medium">{area.name}</TableCell>
-                          <TableCell className="text-blue-600 underline">{area.url}</TableCell>
+                          <TableCell className="text-blue-600 underline">/login/{area.url}</TableCell>
                           <TableCell>{area.students_count}</TableCell>
                         </TableRow>
                       ))}
