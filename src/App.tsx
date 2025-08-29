@@ -100,6 +100,9 @@ const App = () => {
                       <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />
                       <Route path="/partners/portal" element={<OptimizedRoutes.PartnersPortal />} />
                       
+                      {/* Test Routes */}
+                      <Route path="/appypay-test" element={<OptimizedRoutes.AppyPayTest />} />
+                      
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<OptimizedRoutes.NotFound />} />
                     </Routes>

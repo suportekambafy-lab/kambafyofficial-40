@@ -29,6 +29,7 @@ import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
+import { AppyPayCheckout } from "@/components/checkout/AppyPayCheckout";
 
 const Checkout = () => {
   const { productId } = useParams();
@@ -1750,6 +1751,25 @@ const Checkout = () => {
                   </Card>
                 </div>
               )}
+
+              {selectedPayment === 'reference' && (
+                <div className="mt-6">
+                  <AppyPayCheckout
+                    productId={productId || ''}
+                    amount={(totalPrice * 100).toString()}
+                    orderId={Math.random().toString(36).substr(2, 9).toUpperCase()}
+                    onSuccess={(paymentData) => {
+                      console.log('AppyPay Payment Success:', paymentData);
+                      const params = new URLSearchParams({
+                        order_id: paymentData.order_id || '',
+                        status: 'completed'
+                      });
+                      navigate(`/obrigado?${params.toString()}`);
+                    }}
+                    onBack={() => setSelectedPayment('')}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="space-y-6">
@@ -1792,7 +1812,7 @@ const Checkout = () => {
                 </CardContent>
               </Card>
 
-              {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
+              {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer', 'reference'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
                 <Button
                   onClick={handlePurchase}
                   disabled={!formData.fullName || !formData.email || !formData.phone || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
