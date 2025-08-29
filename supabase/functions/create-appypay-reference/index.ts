@@ -69,9 +69,17 @@ serve(async (req) => {
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID')
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET')
     
+    console.log('📋 Raw environment values:', {
+      baseUrlExists: !!appyPayBaseUrl,
+      baseUrlValue: appyPayBaseUrl,
+      clientIdExists: !!clientId,
+      clientSecretExists: !!clientSecret
+    });
+    
     // Handle version placeholder - replace {version} with v1
     if (appyPayBaseUrl?.includes('{version}')) {
       appyPayBaseUrl = appyPayBaseUrl.replace('{version}', 'v1')
+      console.log('📋 Updated base URL after version replacement:', appyPayBaseUrl);
     }
 
     console.log('📋 AppyPay config check:', {
@@ -81,8 +89,13 @@ serve(async (req) => {
     });
 
     if (!appyPayBaseUrl || !clientId || !clientSecret) {
-      console.error('❌ AppyPay configuration incomplete');
-      throw new Error('AppyPay configuration not found')
+      const missing = [];
+      if (!appyPayBaseUrl) missing.push('APPYPAY_BASE_URL');
+      if (!clientId) missing.push('APPYPAY_CLIENT_ID'); 
+      if (!clientSecret) missing.push('APPYPAY_CLIENT_SECRET');
+      
+      console.error('❌ AppyPay configuration incomplete - missing:', missing);
+      throw new Error(`AppyPay configuration not found. Missing: ${missing.join(', ')}`);
     }
 
     // Preparar dados para AppyPay (formato mais padrão)
