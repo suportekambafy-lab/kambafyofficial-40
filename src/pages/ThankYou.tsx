@@ -305,7 +305,7 @@ const ThankYou = () => {
     }
 
     if (product?.type === 'Curso' && product?.member_areas?.id) {
-      navigate(`/curso/${product.member_areas.id}`);
+      navigate(`/area/${product.member_areas.id}`);
     } else if (product?.share_link) {
       window.open(product.share_link, '_blank');
     } else {

@@ -74,13 +74,12 @@ const App = () => {
                       <Route path="/termos" element={<OptimizedRoutes.Terms />} />
                       <Route path="/cookies" element={<OptimizedRoutes.Cookies />} />
                       <Route path="/apps" element={<OptimizedRoutes.Apps />} />
-                      <Route path="/vendedor/*" element={<OptimizedRoutes.SellerDashboard />} />
+                       <Route path="/vendedor/*" element={<OptimizedRoutes.SellerDashboard />} />
                         <Route path="/meus-afiliados" element={<OptimizedRoutes.MeusAfiliados />} />
                         <Route path="/minhas-compras" element={<OptimizedRoutes.MinhasCompras />} />
                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
-                       <Route path="/curso/:areaId" element={<OptimizedRoutes.MemberAreaPreview />} />
                         
-                         {/* Member Area Routes - New Authentication System */}
+                         {/* Member Area Routes - Modern Authentication System */}
                          <Route path="/area/:areaId" element={<OptimizedRoutes.MemberArea />} />
                          <Route path="/login/:areaId" element={<OptimizedRoutes.MemberAreaLogin />} />
                          <Route path="/area/:areaId/module/:moduleId" element={<OptimizedRoutes.ModuleDetail />} />
