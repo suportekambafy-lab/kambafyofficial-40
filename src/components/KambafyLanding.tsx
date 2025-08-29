@@ -58,7 +58,7 @@ export function KambafyLanding() {
     const userType = option === 'business' ? 'seller' : 'customer';
     window.location.href = `${window.location.protocol}//app.${window.location.hostname.replace(/^app\./, '')}${window.location.port ? ':' + window.location.port : ''}/auth?type=${userType}`;
   };
-  return <>
+  return <div className="font-bricolage">
       <Header onLoginOptionSelect={handleLoginOptionSelect} />
       <main className="overflow-hidden">
         <HeroSection />
@@ -69,7 +69,7 @@ export function KambafyLanding() {
         <CTASection />
       </main>
       <Footer />
-    </>;
+    </div>;
 }
 const menuItems = [{
   name: 'Recursos',
