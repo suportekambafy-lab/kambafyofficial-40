@@ -48,7 +48,6 @@ export default function Members() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
-  const [editingArea, setEditingArea] = useState<MemberArea | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedArea, setSelectedArea] = useState<MemberArea | null>(null);
   const [videoUploaderOpen, setVideoUploaderOpen] = useState(false);
@@ -58,7 +57,6 @@ export default function Members() {
   const [draggedLesson, setDraggedLesson] = useState<Lesson | null>(null);
   const [draggedModule, setDraggedModule] = useState<Module | null>(null);
   const [selectedModuleForLesson, setSelectedModuleForLesson] = useState<string>('');
-  const [areaEditDialogOpen, setAreaEditDialogOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -466,77 +464,6 @@ export default function Members() {
     } finally {
       setIsCreatingArea(false);
     }
-  };
-
-  const handleUpdateArea = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !editingArea) return;
-
-    try {
-      setIsCreatingArea(true);
-      
-      const updateData = {
-        name: areaFormData.name,
-        description: areaFormData.description || null,
-        hero_image_url: areaFormData.hero_image_url || null,
-        hero_title: areaFormData.hero_title || null,
-        hero_description: areaFormData.hero_description || null,
-        logo_url: areaFormData.logo_url || null,
-        updated_at: new Date().toISOString()
-      };
-      
-      const { error } = await supabase
-        .from('member_areas')
-        .update(updateData)
-        .eq('id', editingArea.id);
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Sucesso",
-        description: "Área de membros atualizada com sucesso"
-      });
-
-      setAreaFormData({ 
-        name: '', 
-        url: '',
-        description: '',
-        hero_image_url: '',
-        hero_title: '',
-        hero_description: '',
-        logo_url: ''
-      });
-      setAreaEditDialogOpen(false);
-      setEditingArea(null);
-      
-      await loadData();
-
-    } catch (error) {
-      console.error('Erro ao atualizar área:', error);
-      toast({
-        title: "Erro",
-        description: `Não foi possível atualizar a área de membros: ${error.message || 'Erro desconhecido'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreatingArea(false);
-    }
-  };
-
-  const handleEditArea = (area: MemberArea) => {
-    setEditingArea(area);
-    setAreaFormData({
-      name: area.name,
-      url: area.url,
-      description: area.description || '',
-      hero_image_url: area.hero_image_url || '',
-      hero_title: area.hero_title || '',
-      hero_description: area.hero_description || '',
-      logo_url: area.logo_url || ''
-    });
-    setAreaEditDialogOpen(true);
   };
 
   const handleSubmitModule = async (e: React.FormEvent) => {
@@ -1742,114 +1669,6 @@ export default function Members() {
               </Dialog>
             </div>
 
-            {/* Dialog de Edição de Área de Membros */}
-            <Dialog open={areaEditDialogOpen} onOpenChange={setAreaEditDialogOpen}>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Editar Área de Membros</DialogTitle>
-                  <DialogDescription>
-                    Atualize as informações da sua área de membros
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleUpdateArea} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-area-name">Nome da área de membros</Label>
-                    <Input
-                      id="edit-area-name"
-                      value={areaFormData.name}
-                      onChange={(e) => setAreaFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Ex: Master Drop"
-                      disabled={isCreatingArea}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-area-description">Descrição</Label>
-                    <Textarea
-                      id="edit-area-description"
-                      value={areaFormData.description}
-                      onChange={(e) => setAreaFormData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Descreva brevemente sua área de membros..."
-                      rows={2}
-                      disabled={isCreatingArea}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <ImageUploader
-                      label="Logo da Área (para página de login)"
-                      value={areaFormData.logo_url}
-                      onChange={(url) => setAreaFormData(prev => ({ ...prev, logo_url: url || '' }))}
-                      bucket="member-area-assets"
-                      folder={user?.id || 'anonymous'}
-                      aspectRatio="1/1"
-                      disabled={isCreatingArea}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Logo que aparecerá na página de login da área de membros
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <ImageUploader
-                      label="Imagem Hero/Banner"
-                      value={areaFormData.hero_image_url}
-                      onChange={(url) => setAreaFormData(prev => ({ ...prev, hero_image_url: url || '' }))}
-                      bucket="member-area-assets"
-                      folder={user?.id || 'anonymous'}
-                      aspectRatio="16/9"
-                      disabled={isCreatingArea}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Esta será a grande imagem de capa exibida no topo da área de membros
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-hero-title">Título Hero</Label>
-                    <Input
-                      id="edit-hero-title"
-                      value={areaFormData.hero_title}
-                      onChange={(e) => setAreaFormData(prev => ({ ...prev, hero_title: e.target.value }))}
-                      placeholder="Ex: Bem-vindo ao Master Drop"
-                      disabled={isCreatingArea}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-hero-description">Descrição Hero</Label>
-                    <Textarea
-                      id="edit-hero-description"
-                      value={areaFormData.hero_description}
-                      onChange={(e) => setAreaFormData(prev => ({ ...prev, hero_description: e.target.value }))}
-                      placeholder="Uma descrição cativante para sua área de membros..."
-                      rows={3}
-                      disabled={isCreatingArea}
-                    />
-                  </div>
-                </form>
-                <DialogFooter>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    onClick={() => {
-                      setAreaEditDialogOpen(false);
-                      setEditingArea(null);
-                    }}
-                    disabled={isCreatingArea}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    onClick={handleUpdateArea}
-                    disabled={isCreatingArea || !areaFormData.name.trim()}
-                  >
-                    {isCreatingArea ? 'Atualizando...' : 'Atualizar Área'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
             <Card>
               <CardContent className="p-0">
                 {/* Versão móvel - Cards */}
@@ -1859,7 +1678,8 @@ export default function Members() {
                       {memberAreas.map((area) => (
                         <div 
                           key={area.id} 
-                          className="p-4"
+                          className="p-4 cursor-pointer hover:bg-gray-50"
+                          onClick={() => setSelectedArea(area)}
                         >
                             <div className="space-y-2">
                               <div className="font-medium text-sm">{area.name}</div>
@@ -1869,23 +1689,6 @@ export default function Members() {
                               <div className="flex items-center justify-between">
                                 <span className="text-xs text-gray-500">Alunos:</span>
                                 <Badge variant="secondary" className="text-xs">{area.students_count}</Badge>
-                              </div>
-                              <div className="flex gap-2 mt-3">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  onClick={() => setSelectedArea(area)}
-                                  className="flex-1"
-                                >
-                                  Gerenciar
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  onClick={() => handleEditArea(area)}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
                               </div>
                             </div>
                         </div>
@@ -1906,36 +1709,18 @@ export default function Members() {
                         <TableHead>NOME</TableHead>
                         <TableHead>URL</TableHead>
                         <TableHead>ALUNOS</TableHead>
-                        <TableHead>AÇÕES</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {memberAreas.map((area) => (
                         <TableRow 
                           key={area.id} 
-                          className="hover:bg-gray-50"
+                          className="cursor-pointer hover:bg-gray-50"
+                          onClick={() => setSelectedArea(area)}
                         >
                           <TableCell className="font-medium">{area.name}</TableCell>
                           <TableCell className="text-blue-600 underline">/login/{area.url}</TableCell>
                           <TableCell>{area.students_count}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                onClick={() => setSelectedArea(area)}
-                              >
-                                Gerenciar
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                onClick={() => handleEditArea(area)}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
