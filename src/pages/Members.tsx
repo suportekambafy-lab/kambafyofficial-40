@@ -69,7 +69,8 @@ export default function Members() {
   const [moduleFormData, setModuleFormData] = useState({
     title: '',
     description: '',
-    status: 'draft' as 'draft' | 'published' | 'archived'
+    status: 'draft' as 'draft' | 'published' | 'archived',
+    cover_image_url: ''
   });
 
   useEffect(() => {
@@ -352,6 +353,7 @@ export default function Members() {
         title: moduleFormData.title,
         description: moduleFormData.description,
         status: moduleFormData.status,
+        cover_image_url: moduleFormData.cover_image_url || null,
         user_id: user.id,
         member_area_id: selectedArea?.id,
         order_number: editingModule ? editingModule.order_number : modules.length + 1
@@ -444,6 +446,7 @@ export default function Members() {
       };
 
       console.log('Lesson data to insert:', lessonData);
+      console.log('Form data before saving:', formData);
 
       if (editingLesson) {
         console.log('Updating lesson:', editingLesson.id);
@@ -475,6 +478,8 @@ export default function Members() {
           console.error('Insert error:', error);
           throw error;
         }
+        
+        console.log('Successfully saved lesson with video_url:', data?.video_url);
         
         toast({
           title: "Sucesso",
@@ -522,7 +527,8 @@ export default function Members() {
     setModuleFormData({
       title: module.title,
       description: module.description || '',
-      status: module.status as 'draft' | 'published' | 'archived'
+      status: module.status as 'draft' | 'published' | 'archived',
+      cover_image_url: module.cover_image_url || ''
     });
     setModuleDialogOpen(true);
   };
@@ -655,14 +661,19 @@ export default function Members() {
     setModuleFormData({
       title: '',
       description: '',
-      status: 'draft'
+      status: 'draft',
+      cover_image_url: ''
     });
     setEditingModule(null);
   };
 
   const handleVideoUploaded = (videoUrl: string) => {
     console.log('Video uploaded:', videoUrl);
-    setFormData(prev => ({ ...prev, video_url: videoUrl }));
+    setFormData(prev => {
+      const newFormData = { ...prev, video_url: videoUrl };
+      console.log('Updated formData with video:', newFormData);
+      return newFormData;
+    });
     toast({
       title: "Sucesso",
       description: "Vídeo enviado com sucesso! Agora preencha os dados da aula."
@@ -1220,6 +1231,20 @@ export default function Members() {
                   placeholder="Descreva o conteúdo do módulo..."
                   rows={3}
                 />
+              </div>
+              
+              <div className="space-y-2">
+                <ImageUploader
+                  label="Imagem de Capa do Módulo"
+                  value={moduleFormData.cover_image_url}
+                  onChange={(url) => setModuleFormData(prev => ({ ...prev, cover_image_url: url || '' }))}
+                  bucket="member-area-assets"
+                  folder={user?.id || 'anonymous'}
+                  aspectRatio="16/9"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Esta imagem será exibida na vitrine dos módulos
+                </p>
               </div>
               
               <div className="space-y-2">
