@@ -82,9 +82,16 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       const publicUrl = `https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/member-videos/${data.path}`;
       
       console.log('Public URL:', publicUrl);
+      console.log('Calling onVideoUploaded with URL:', publicUrl);
 
+      // Chamar callback ANTES de fechar o modal
       onVideoUploaded(publicUrl);
+      
+      // Resetar estados
       setSelectedFile(null);
+      setUploadProgress(0);
+      
+      // Fechar modal
       onOpenChange(false);
 
       toast({
@@ -100,7 +107,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       });
     } finally {
       setUploading(false);
-      setUploadProgress(0);
     }
   };
 

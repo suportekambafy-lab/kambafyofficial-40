@@ -15,13 +15,15 @@ import {
   Menu,
   Home,
   MessageCircle,
-  HelpCircle
+  HelpCircle,
+  X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import VideoPlayer from '@/components/ui/video-player';
 import type { Lesson, Module, MemberArea } from '@/types/memberArea';
 
 interface ModernMemberDashboardProps {
@@ -36,6 +38,7 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentVideo, setCurrentVideo] = useState<{ lesson: Lesson; isPlaying: boolean } | null>(null);
 
   const publishedLessons = lessons.filter(lesson => lesson.status === 'published').sort((a, b) => a.order_number - b.order_number);
   const publishedModules = modules.filter(module => module.status === 'published').sort((a, b) => a.order_number - b.order_number);
@@ -58,11 +61,21 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
   };
 
   const handleModuleClick = (module: Module) => {
-    navigate(`/area/${memberArea.id}/module/${module.id}`);
+    // Mostrar primeiro vídeo do módulo
+    const moduleLesson = lessons.find(l => l.module_id === module.id && l.status === 'published');
+    if (moduleLesson?.video_url) {
+      setCurrentVideo({ lesson: moduleLesson, isPlaying: true });
+    }
   };
 
   const handleLessonClick = (lesson: Lesson) => {
-    navigate(`/area/${memberArea.id}/lesson/${lesson.id}`);
+    if (lesson.video_url) {
+      setCurrentVideo({ lesson, isPlaying: true });
+    }
+  };
+
+  const closeVideo = () => {
+    setCurrentVideo(null);
   };
 
   const NavigationSidebar = ({ isMobileSidebar = false }: { isMobileSidebar?: boolean }) => (
@@ -203,14 +216,14 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
           {publishedModules.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">Módulos</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 {publishedModules.map((module) => (
                   <div
                     key={module.id}
                     className="cursor-pointer group"
                     onClick={() => handleModuleClick(module)}
                   >
-                    <div className="aspect-video relative overflow-hidden rounded-lg bg-gray-800">
+                    <div className="aspect-[2/3] relative overflow-hidden rounded-lg bg-gray-800">
                       {module.cover_image_url ? (
                         <img 
                           src={module.cover_image_url} 
@@ -218,11 +231,14 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-700 to-gray-900">
                           <Play className="w-8 h-8 text-gray-400" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300"></div>
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <Play className="w-10 h-10 text-white drop-shadow-lg" />
+                      </div>
                     </div>
                     <h4 className="text-sm font-medium text-white mt-2 line-clamp-2">{module.title}</h4>
                   </div>
@@ -235,18 +251,21 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
           {publishedLessons.filter(l => !l.module_id).length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">Aulas</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 {publishedLessons.filter(l => !l.module_id).map((lesson) => (
                   <div
                     key={lesson.id}
                     className="cursor-pointer group"
                     onClick={() => handleLessonClick(lesson)}
                   >
-                    <div className="aspect-video relative overflow-hidden rounded-lg bg-gray-800">
-                      <div className="w-full h-full flex items-center justify-center">
+                    <div className="aspect-[2/3] relative overflow-hidden rounded-lg bg-gray-800">
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-700 to-gray-900">
                         <Play className="w-8 h-8 text-gray-400" />
                       </div>
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300"></div>
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <Play className="w-10 h-10 text-white drop-shadow-lg" />
+                      </div>
                     </div>
                     <h4 className="text-sm font-medium text-white mt-2 line-clamp-2">{lesson.title}</h4>
                     <p className="text-xs text-gray-400">{lesson.duration || 5} min</p>
@@ -256,6 +275,31 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
             </div>
           )}
         </div>
+
+        {/* Video Player Modal */}
+        {currentVideo && (
+          <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
+            <div className="relative w-full max-w-4xl mx-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={closeVideo}
+                className="absolute -top-12 right-0 text-white hover:text-gray-300"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+              <div className="bg-black rounded-lg overflow-hidden">
+                <VideoPlayer src={currentVideo.lesson.video_url!} />
+                <div className="p-4">
+                  <h3 className="text-xl font-bold text-white mb-2">{currentVideo.lesson.title}</h3>
+                  {currentVideo.lesson.description && (
+                    <p className="text-gray-300 text-sm">{currentVideo.lesson.description}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -336,15 +380,15 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
           {/* Modules Section */}
           {publishedModules.length > 0 && (
             <section>
-              <h2 className="text-2xl font-bold text-white mb-6">Módulo 1</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <h2 className="text-2xl font-bold text-white mb-6">Módulos</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                 {publishedModules.map((module) => (
                   <div
                     key={module.id}
                     className="cursor-pointer group"
                     onClick={() => handleModuleClick(module)}
                   >
-                    <div className="aspect-video relative overflow-hidden rounded-lg bg-gray-800">
+                    <div className="aspect-[2/3] relative overflow-hidden rounded-lg bg-gray-800">
                       {module.cover_image_url ? (
                         <img 
                           src={module.cover_image_url} 
@@ -352,11 +396,11 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
+                        <div className="w-full h-full bg-gradient-to-b from-gray-700 to-gray-900 flex items-center justify-center">
                           <Play className="w-12 h-12 text-gray-400" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/50 transition-colors duration-300"></div>
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <Play className="w-12 h-12 text-white drop-shadow-lg" />
                       </div>
@@ -374,23 +418,20 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
           {publishedLessons.filter(l => !l.module_id).length > 0 && (
             <section>
               <h2 className="text-2xl font-bold text-white mb-6">Aulas Avulsas</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                 {publishedLessons.filter(l => !l.module_id).map((lesson) => (
                   <div
                     key={lesson.id}
                     className="cursor-pointer group"
                     onClick={() => handleLessonClick(lesson)}
                   >
-                    <div className="aspect-video relative overflow-hidden rounded-lg bg-gray-800">
-                      <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
+                    <div className="aspect-[2/3] relative overflow-hidden rounded-lg bg-gray-800">
+                      <div className="w-full h-full bg-gradient-to-b from-gray-700 to-gray-900 flex items-center justify-center">
                         <Play className="w-12 h-12 text-gray-400" />
                       </div>
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/50 transition-colors duration-300"></div>
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <Play className="w-12 h-12 text-white drop-shadow-lg" />
-                      </div>
-                      <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
-                        {lesson.duration || 5}min
                       </div>
                     </div>
                     <h3 className="text-white font-medium mt-2 text-sm group-hover:text-gray-300 transition-colors line-clamp-2">
@@ -403,6 +444,31 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
           )}
         </div>
       </div>
+
+      {/* Video Player Modal */}
+      {currentVideo && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
+          <div className="relative w-full max-w-4xl mx-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={closeVideo}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300"
+            >
+              <X className="w-6 h-6" />
+            </Button>
+            <div className="bg-black rounded-lg overflow-hidden">
+              <VideoPlayer src={currentVideo.lesson.video_url!} />
+              <div className="p-4">
+                <h3 className="text-xl font-bold text-white mb-2">{currentVideo.lesson.title}</h3>
+                {currentVideo.lesson.description && (
+                  <p className="text-gray-300 text-sm">{currentVideo.lesson.description}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

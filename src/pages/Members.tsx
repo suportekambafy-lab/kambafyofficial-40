@@ -668,12 +668,14 @@ export default function Members() {
   };
 
   const handleVideoUploaded = (videoUrl: string) => {
-    console.log('Video uploaded:', videoUrl);
+    console.log('Video uploaded callback received:', videoUrl);
     setFormData(prev => {
       const newFormData = { ...prev, video_url: videoUrl };
       console.log('Updated formData with video:', newFormData);
       return newFormData;
     });
+    // Fechar o modal do video uploader automaticamente
+    setVideoUploaderOpen(false);
     toast({
       title: "Sucesso",
       description: "Vídeo enviado com sucesso! Agora preencha os dados da aula."
