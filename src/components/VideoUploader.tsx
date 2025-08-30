@@ -26,15 +26,27 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type.startsWith('video/')) {
-        setSelectedFile(file);
-      } else {
+      if (!file.type.startsWith('video/')) {
         toast({
           title: "Erro",
           description: "Por favor, selecione um arquivo de vídeo",
           variant: "destructive"
         });
+        return;
       }
+
+      // Verificar tamanho do arquivo (50MB limite)
+      const maxSizeInBytes = 50 * 1024 * 1024; // 50MB
+      if (file.size > maxSizeInBytes) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "O vídeo deve ter no máximo 50MB. Por favor, comprima o arquivo e tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setSelectedFile(file);
     }
   };
 
