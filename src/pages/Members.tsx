@@ -18,6 +18,7 @@ import VideoUploader from "@/components/VideoUploader";
 import StudentsManager from "@/components/StudentsManager";
 import MemberAreaPreview from "@/components/MemberAreaPreview";
 import { ImageUploader } from "@/components/ImageUploader";
+import { MemberAreaCreationForm } from "@/components/MemberAreaCreationForm";
 import { useNavigate } from "react-router-dom";
 import type { Lesson, Module, MemberArea } from "@/types/memberArea";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -51,7 +52,6 @@ export default function Members() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedArea, setSelectedArea] = useState<MemberArea | null>(null);
   const [videoUploaderOpen, setVideoUploaderOpen] = useState(false);
-  const [isCreatingArea, setIsCreatingArea] = useState(false);
   const [loadingLessons, setLoadingLessons] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [draggedLesson, setDraggedLesson] = useState<Lesson | null>(null);
@@ -70,16 +70,6 @@ export default function Members() {
     title: '',
     description: '',
     status: 'draft' as 'draft' | 'published' | 'archived'
-  });
-  
-  const [areaFormData, setAreaFormData] = useState({
-    name: '',
-    url: '',
-    description: '',
-    hero_image_url: '',
-    hero_title: '',
-    hero_description: '',
-    logo_url: ''
   });
 
   useEffect(() => {
@@ -350,119 +340,6 @@ export default function Members() {
       });
     } finally {
       setLoadingProducts(false);
-    }
-  };
-
-  const handleCreateArea = async () => {
-    console.log('=== CREATING AREA ===');
-    
-    if (loading) {
-      console.log('Still loading, please wait...');
-      toast({
-        title: "Aguarde",
-        description: "Carregando informações do usuário...",
-        variant: "default"
-      });
-      return;
-    }
-
-    if (!user) {
-      console.error('No user found for area creation');
-      toast({
-        title: "Erro de Autenticação",
-        description: "Você precisa estar logado para criar uma área de membros. Tente fazer login novamente.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!areaFormData.name.trim()) {
-      console.log('Area name is empty');
-      toast({
-        title: "Erro", 
-        description: "Por favor, digite um nome para a área de membros",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    console.log('Creating area with data:', areaFormData);
-    setIsCreatingArea(true);
-
-    try {
-      const cleanName = areaFormData.name.toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim();
-
-      // Generate unique URL using timestamp to avoid duplicates
-      const timestamp = Date.now();
-      const uniqueSlug = `${cleanName}-${timestamp}`;
-      const areaUrl = uniqueSlug;
-      
-      const insertData = {
-        name: areaFormData.name,
-        url: areaUrl,
-        description: areaFormData.description || null,
-        hero_image_url: areaFormData.hero_image_url || null,
-        hero_title: areaFormData.hero_title || null,
-        hero_description: areaFormData.hero_description || null,
-        logo_url: areaFormData.logo_url || null,
-        user_id: user.id
-      };
-      
-      console.log('Inserting into database:', insertData);
-
-      const { data, error } = await supabase
-        .from('member_areas')
-        .insert([insertData])
-        .select()
-        .single();
-
-      console.log('Insert result:', { data, error });
-
-      if (error) {
-        console.error('Database error:', error);
-        toast({
-          title: "Erro",
-          description: `Erro ao criar área: ${error.message}`,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('Area created successfully:', data);
-
-      toast({
-        title: "Sucesso",
-        description: "Área de membros criada com sucesso"
-      });
-
-      setAreaFormData({ 
-        name: '', 
-        url: '',
-        description: '',
-        hero_image_url: '',
-        hero_title: '',
-        hero_description: '',
-        logo_url: ''
-      });
-      setAreaDialogOpen(false);
-      
-      await loadData();
-
-    } catch (error) {
-      console.error('Erro ao criar área:', error);
-      toast({
-        title: "Erro",
-        description: `Não foi possível criar a área de membros: ${error.message || 'Erro desconhecido'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreatingArea(false);
     }
   };
 
@@ -1538,15 +1415,16 @@ export default function Members() {
   }
 
   return (
-    <div className="p-3 md:p-6 space-y-4 md:space-y-6">
-      <div className="flex flex-col gap-3 md:gap-4">
-        <h1 className="text-xl md:text-3xl font-bold text-foreground">Área de Membros</h1>
-        
-        <Tabs defaultValue="areas" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md h-auto">
-            <TabsTrigger value="areas" className="text-blue-600 text-xs md:text-sm py-2">Áreas de membros</TabsTrigger>
-            <TabsTrigger value="cursos" className="text-xs md:text-sm py-2">Cursos</TabsTrigger>
-          </TabsList>
+    <OptimizedPageWrapper>
+      <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-7xl mx-auto">
+        <div className="flex flex-col gap-3 md:gap-4">
+          <h1 className="text-xl md:text-3xl font-bold text-foreground">Área de Membros</h1>
+          
+          <Tabs defaultValue="areas" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 max-w-md h-auto">
+              <TabsTrigger value="areas" className="text-blue-600 text-xs md:text-sm py-2">Áreas de membros</TabsTrigger>
+              <TabsTrigger value="cursos" className="text-xs md:text-sm py-2">Cursos</TabsTrigger>
+            </TabsList>
           
           <TabsContent value="areas" className="space-y-4 md:space-y-6">
             <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
@@ -1561,112 +1439,17 @@ export default function Members() {
               </div>
               <Dialog open={areaDialogOpen} onOpenChange={setAreaDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button disabled={isCreatingArea} size="sm" className="w-full md:w-auto text-xs md:text-sm">
-                    {isCreatingArea ? 'Criando...' : 'Criar área de membros'}
+                  <Button size="sm" className="w-full md:w-auto text-xs md:text-sm">
+                    Criar área de membros
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Criar área de membros</DialogTitle>
-                    <DialogDescription>
-                      Digite o nome da sua nova área de membros
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="area-name">Nome da área de membros</Label>
-                      <Input
-                        id="area-name"
-                        value={areaFormData.name}
-                        onChange={(e) => setAreaFormData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Ex: Master Drop"
-                        disabled={isCreatingArea}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="area-description">Descrição</Label>
-                      <Textarea
-                        id="area-description"
-                        value={areaFormData.description}
-                        onChange={(e) => setAreaFormData(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Descreva brevemente sua área de membros..."
-                        rows={2}
-                        disabled={isCreatingArea}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <ImageUploader
-                        label="Logo da Área (para página de login)"
-                        value={areaFormData.logo_url}
-                        onChange={(url) => setAreaFormData(prev => ({ ...prev, logo_url: url || '' }))}
-                        bucket="member-area-assets"
-                        folder={user?.id || 'anonymous'}
-                        aspectRatio="1/1"
-                        disabled={isCreatingArea}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Logo que aparecerá na página de login da área de membros
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <ImageUploader
-                        label="Imagem Hero/Banner"
-                        value={areaFormData.hero_image_url}
-                        onChange={(url) => setAreaFormData(prev => ({ ...prev, hero_image_url: url || '' }))}
-                        bucket="member-area-assets"
-                        folder={user?.id || 'anonymous'}
-                        aspectRatio="16/9"
-                        disabled={isCreatingArea}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Esta será a grande imagem de capa exibida no topo da área de membros
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="hero-title">Título Hero</Label>
-                      <Input
-                        id="hero-title"
-                        value={areaFormData.hero_title}
-                        onChange={(e) => setAreaFormData(prev => ({ ...prev, hero_title: e.target.value }))}
-                        placeholder="Ex: Bem-vindo ao Master Drop"
-                        disabled={isCreatingArea}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="hero-description">Descrição Hero</Label>
-                      <Textarea
-                        id="hero-description"
-                        value={areaFormData.hero_description}
-                        onChange={(e) => setAreaFormData(prev => ({ ...prev, hero_description: e.target.value }))}
-                        placeholder="Texto que aparecerá na seção hero..."
-                        rows={2}
-                        disabled={isCreatingArea}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setAreaDialogOpen(false)}
-                      disabled={isCreatingArea}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button 
-                      onClick={handleCreateArea}
-                      disabled={isCreatingArea || !areaFormData.name.trim()}
-                    >
-                      {isCreatingArea ? 'Criando...' : 'Criar área de membros'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
               </Dialog>
+              
+              <MemberAreaCreationForm
+                open={areaDialogOpen}
+                onOpenChange={setAreaDialogOpen}
+                onSuccess={loadData}
+              />
             </div>
 
             <Card>
@@ -1880,6 +1663,6 @@ export default function Members() {
 
         </Tabs>
       </div>
-    </div>
+    </OptimizedPageWrapper>
   );
 }
