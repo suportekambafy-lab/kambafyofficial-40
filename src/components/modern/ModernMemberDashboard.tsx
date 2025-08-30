@@ -314,15 +314,6 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
                   <Play className="w-5 h-5 mr-2" />
                   Assistir agora
                 </Button>
-                <Button className="bg-gray-600/80 text-white hover:bg-gray-600 px-6 py-3 text-lg">
-                  Entrar no grupo
-                </Button>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-gray-300">
-                <span>Seu grupo sumiu? Saiba mais sobre</span>
-                <Button variant="link" className="text-gray-300 underline p-0 h-auto">
-                  remoção do grupo
-                </Button>
               </div>
             </div>
           </div>
