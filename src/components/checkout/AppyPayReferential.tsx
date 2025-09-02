@@ -113,7 +113,7 @@ export const AppyPayReferential: React.FC<AppyPayReferentialProps> = ({
       <CardHeader className="text-center">
         <CardTitle className="flex items-center justify-center gap-2">
           <CreditCard className="h-5 w-5 text-blue-600" />
-          Pagamento por Referência AppyPay
+          Pagamento por Referência - Angola
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Valor: <span className="font-medium text-lg">{formatPrice(productPrice, 'AOA')}</span>
@@ -197,7 +197,7 @@ export const AppyPayReferential: React.FC<AppyPayReferentialProps> = ({
               {charge.reference && (
                 <div className="p-3 bg-blue-50 rounded-lg border">
                   <Label className="text-xs text-blue-600 uppercase tracking-wide font-medium">
-                    Referência Multibanco
+                    Referência de Pagamento
                   </Label>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-lg font-mono font-bold text-blue-900">
@@ -251,11 +251,12 @@ export const AppyPayReferential: React.FC<AppyPayReferentialProps> = ({
 
             {/* Instruções de pagamento */}
             <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
-              <h4 className="font-medium text-gray-900 mb-2">Como Pagar:</h4>
+              <h4 className="font-medium text-gray-900 mb-2">Como Pagar em Angola:</h4>
               <ul className="text-sm text-gray-700 space-y-1">
-                <li>• <strong>Multibanco:</strong> Use a referência acima em qualquer terminal Multibanco</li>
+                <li>• <strong>Referência Bancária:</strong> Use a referência acima em qualquer banco em Angola</li>
                 <li>• <strong>Transferência:</strong> Use os dados da referência para transferência bancária</li>
-                <li>• <strong>Online Banking:</strong> Acesse seu banco online e use a referência</li>
+                <li>• <strong>ATM:</strong> Acesse um ATM e use a referência para pagamento</li>
+                <li>• <strong>Mobile Banking:</strong> Use a referência no seu banco móvel</li>
               </ul>
               <p className="text-xs text-gray-600 mt-2">
                 O pagamento será confirmado automaticamente após processamento bancário.
