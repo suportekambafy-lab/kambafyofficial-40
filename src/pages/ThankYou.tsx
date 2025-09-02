@@ -425,7 +425,7 @@ const ThankYou = () => {
                       <div>
                         <p className="text-sm text-gray-600">Valor</p>
                         <p className="text-lg font-bold text-green-600">
-                          €{multibancoData.amount}
+                          €{(parseFloat(multibancoData.amount) / 100).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -530,8 +530,11 @@ const ThankYou = () => {
                         )}
                       </div>
                       <span className="text-green-600 font-medium">
-                        +{orderDetails.orderBumpDiscountedPrice || orderDetails.orderBumpPrice} 
-                        {orderDetails.convertedCurrency || orderDetails.currency}
+                        {/* Para Multibanco, mostrar em EUR */}
+                        {orderDetails.paymentMethod === 'multibanco' 
+                          ? `+€${orderDetails.orderBumpDiscountedPrice ? (parseFloat(orderDetails.orderBumpDiscountedPrice) / 650).toFixed(2) : (parseFloat(orderDetails.orderBumpPrice) / 650).toFixed(2)}`
+                          : `+${orderDetails.orderBumpDiscountedPrice || orderDetails.orderBumpPrice} ${orderDetails.convertedCurrency || orderDetails.currency}`
+                        }
                       </span>
                     </div>
                   </div>
@@ -549,7 +552,11 @@ const ThankYou = () => {
                             <p className="text-xs text-blue-600">Pedido #{relatedOrder.order_id}</p>
                           </div>
                           <span className="text-green-600 font-medium">
-                            {relatedOrder.amount} {relatedOrder.currency}
+                            {/* Para Multibanco, mostrar em EUR */}
+                            {orderDetails.paymentMethod === 'multibanco' 
+                              ? `€${(parseFloat(relatedOrder.amount) / 650).toFixed(2)}`
+                              : `${relatedOrder.amount} ${relatedOrder.currency}`
+                            }
                           </span>
                         </div>
                       </div>
@@ -560,10 +567,12 @@ const ThankYou = () => {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Valor Total Pago</label>
                   <p className="text-2xl font-bold text-checkout-green">
-                    {/* Mostrar valor convertido se disponível, senão mostrar valor original */}
-                    {orderDetails.convertedAmount && orderDetails.convertedCurrency 
-                      ? `${orderDetails.convertedAmount} ${orderDetails.convertedCurrency}`
-                      : `${orderDetails.amount} ${orderDetails.currency}`
+                    {/* Para Multibanco, sempre mostrar em EUR */}
+                    {orderDetails.paymentMethod === 'multibanco' 
+                      ? `€${orderDetails.convertedAmount || (parseFloat(orderDetails.amount) / 650).toFixed(2)}`
+                      : orderDetails.convertedAmount && orderDetails.convertedCurrency 
+                        ? `${orderDetails.convertedAmount} ${orderDetails.convertedCurrency}`
+                        : `${orderDetails.amount} ${orderDetails.currency}`
                     }
                   </p>
                 </div>
