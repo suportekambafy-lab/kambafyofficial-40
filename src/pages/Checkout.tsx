@@ -29,7 +29,6 @@ import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
-import { AppyPayReferential } from "@/components/checkout/AppyPayReferential";
 
 
 const Checkout = () => {
@@ -1699,20 +1698,6 @@ const Checkout = () => {
                 </div>
               )}
 
-              {selectedPayment === 'reference' && (
-                <div className="mt-6">
-                  <AppyPayReferential
-                    productPrice={totalPrice}
-                    productName={product.name}
-                    currency="AOA"
-                    onPaymentCreated={(reference) => {
-                      console.log('🎯 Referência criada:', reference);
-                      // Aqui você pode implementar lógica adicional se necessário
-                    }}
-                    disabled={!formData.fullName || !formData.email || !formData.phone || processing}
-                  />
-                </div>
-              )}
 
               {selectedPayment === 'kambapay' && (
                 <div className="mt-6">
