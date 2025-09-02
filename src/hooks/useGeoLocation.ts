@@ -30,6 +30,69 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
     currency: 'MZN',
     flag: '🇲🇿',
     exchangeRate: 0.0697 // Fallback rate based on your example: 39000 KZ = 2720.22 MZN
+  },
+  BR: {
+    code: 'BR',
+    name: 'Brasil',
+    currency: 'BRL',
+    flag: '🇧🇷',
+    exchangeRate: 0.0065 // Fallback rate
+  },
+  US: {
+    code: 'US',
+    name: 'Estados Unidos',
+    currency: 'USD',
+    flag: '🇺🇸',
+    exchangeRate: 0.0012 // Fallback rate
+  },
+  GB: {
+    code: 'GB',
+    name: 'Reino Unido',
+    currency: 'GBP',
+    flag: '🇬🇧',
+    exchangeRate: 0.0010 // Fallback rate
+  },
+  ES: {
+    code: 'ES',
+    name: 'Espanha',
+    currency: 'EUR',
+    flag: '🇪🇸',
+    exchangeRate: 0.0012 // Fallback rate
+  },
+  FR: {
+    code: 'FR',
+    name: 'França',
+    currency: 'EUR',
+    flag: '🇫🇷',
+    exchangeRate: 0.0012 // Fallback rate
+  },
+  DE: {
+    code: 'DE',
+    name: 'Alemanha',
+    currency: 'EUR',
+    flag: '🇩🇪',
+    exchangeRate: 0.0012 // Fallback rate
+  },
+  IT: {
+    code: 'IT',
+    name: 'Itália',
+    currency: 'EUR',
+    flag: '🇮🇹',
+    exchangeRate: 0.0012 // Fallback rate
+  },
+  CV: {
+    code: 'CV',
+    name: 'Cabo Verde',
+    currency: 'CVE',
+    flag: '🇨🇻',
+    exchangeRate: 0.12 // Fallback rate
+  },
+  ST: {
+    code: 'ST',
+    name: 'São Tomé e Príncipe',
+    currency: 'STN',
+    flag: '🇸🇹',
+    exchangeRate: 0.028 // Fallback rate
   }
 };
 
@@ -76,16 +139,51 @@ export const useGeoLocation = () => {
       
       const updatedCountries = { ...SUPPORTED_COUNTRIES };
       
-      // Update EUR rate with safety margin
+      // Update EUR rate with safety margin (for PT, ES, FR, DE, IT)
       if (data.rates.EUR) {
-        updatedCountries.PT.exchangeRate = data.rates.EUR * SAFETY_MARGIN;
-        console.log(`Updated EUR rate with safety margin: 1 KZ = ${updatedCountries.PT.exchangeRate} EUR (original: ${data.rates.EUR})`);
+        const eurRate = data.rates.EUR * SAFETY_MARGIN;
+        updatedCountries.PT.exchangeRate = eurRate;
+        updatedCountries.ES.exchangeRate = eurRate;
+        updatedCountries.FR.exchangeRate = eurRate;
+        updatedCountries.DE.exchangeRate = eurRate;
+        updatedCountries.IT.exchangeRate = eurRate;
+        console.log(`Updated EUR rate with safety margin: 1 KZ = ${eurRate} EUR (original: ${data.rates.EUR})`);
       }
       
       // Update MZN rate with safety margin
       if (data.rates.MZN) {
         updatedCountries.MZ.exchangeRate = data.rates.MZN * SAFETY_MARGIN;
         console.log(`Updated MZN rate with safety margin: 1 KZ = ${updatedCountries.MZ.exchangeRate} MZN (original: ${data.rates.MZN})`);
+      }
+      
+      // Update BRL rate with safety margin
+      if (data.rates.BRL) {
+        updatedCountries.BR.exchangeRate = data.rates.BRL * SAFETY_MARGIN;
+        console.log(`Updated BRL rate with safety margin: 1 KZ = ${updatedCountries.BR.exchangeRate} BRL (original: ${data.rates.BRL})`);
+      }
+      
+      // Update USD rate with safety margin
+      if (data.rates.USD) {
+        updatedCountries.US.exchangeRate = data.rates.USD * SAFETY_MARGIN;
+        console.log(`Updated USD rate with safety margin: 1 KZ = ${updatedCountries.US.exchangeRate} USD (original: ${data.rates.USD})`);
+      }
+      
+      // Update GBP rate with safety margin
+      if (data.rates.GBP) {
+        updatedCountries.GB.exchangeRate = data.rates.GBP * SAFETY_MARGIN;
+        console.log(`Updated GBP rate with safety margin: 1 KZ = ${updatedCountries.GB.exchangeRate} GBP (original: ${data.rates.GBP})`);
+      }
+      
+      // Update CVE rate with safety margin
+      if (data.rates.CVE) {
+        updatedCountries.CV.exchangeRate = data.rates.CVE * SAFETY_MARGIN;
+        console.log(`Updated CVE rate with safety margin: 1 KZ = ${updatedCountries.CV.exchangeRate} CVE (original: ${data.rates.CVE})`);
+      }
+      
+      // Update STN rate with safety margin
+      if (data.rates.STN) {
+        updatedCountries.ST.exchangeRate = data.rates.STN * SAFETY_MARGIN;
+        console.log(`Updated STN rate with safety margin: 1 KZ = ${updatedCountries.ST.exchangeRate} STN (original: ${data.rates.STN})`);
       }
       
       setSupportedCountries(updatedCountries);
@@ -178,6 +276,16 @@ export const useGeoLocation = () => {
         return `€${convertedPrice.toFixed(2)}`;
       case 'MZN':
         return `${convertedPrice.toFixed(2)} MZN`;
+      case 'BRL':
+        return `R$${convertedPrice.toFixed(2)}`;
+      case 'USD':
+        return `$${convertedPrice.toFixed(2)}`;
+      case 'GBP':
+        return `£${convertedPrice.toFixed(2)}`;
+      case 'CVE':
+        return `${convertedPrice.toFixed(2)} CVE`;
+      case 'STN':
+        return `${convertedPrice.toFixed(2)} STN`;
       case 'KZ':
       default:
         return `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;

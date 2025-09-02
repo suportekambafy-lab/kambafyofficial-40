@@ -29,6 +29,7 @@ import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
+import { useCheckoutTranslations } from "@/hooks/useCheckoutTranslations";
 
 
 const Checkout = () => {
@@ -53,6 +54,9 @@ const Checkout = () => {
     markAsInvalidAffiliate,
     clearAffiliateCode 
   } = useAffiliateTracking();
+  
+  // Hook para traduções automáticas baseadas no país
+  const { t } = useCheckoutTranslations();
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -640,7 +644,7 @@ const Checkout = () => {
         });
         toast({
           title: "Campos obrigatórios",
-          description: "Por favor, preencha todos os campos antes de continuar",
+          description: t('fillAllFields'),
           variant: "destructive"
         });
         setProcessing(false);
@@ -792,7 +796,7 @@ const Checkout = () => {
       console.log('❌ Validation failed - missing required fields');
       toast({
         title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios",
+        description: t('fillAllFields'),
         variant: "destructive"
       });
       return;
@@ -1305,7 +1309,7 @@ const Checkout = () => {
       <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <LoadingSpinner 
-            text="Carregando informações do produto..."
+            text={t('productInfo')}
             size="lg"
           />
         </div>
@@ -1327,7 +1331,7 @@ const Checkout = () => {
               onClick={() => window.location.reload()} 
               className="mt-4"
             >
-              Tentar novamente
+              {t('processing')}
             </Button>
           </div>
         </div>
@@ -1340,8 +1344,8 @@ const Checkout = () => {
       <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Produto não encontrado</h1>
-            <p className="text-muted-foreground">O produto que você está procurando não existe ou foi removido.</p>
+            <h1 className="text-2xl font-bold mb-4">{t('productNotFound')}</h1>
+            <p className="text-muted-foreground">{t('productNotFound')}</p>
             <p className="text-sm text-muted-foreground mt-2">
               Product ID: {productId}
             </p>
@@ -1359,9 +1363,9 @@ const Checkout = () => {
             <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-orange-600" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">Oferta Expirada</h1>
+            <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">{t('productInactive')}</h1>
             <p className="text-sm sm:text-base text-gray-600 mb-6">
-              Infelizmente, esta oferta não está mais disponível. O produto foi temporariamente desativado pelo vendedor.
+              {t('productInactive')}
             </p>
             <div className="bg-gray-100 p-4 rounded-lg mb-6">
               <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{product.name}</h3>
@@ -1384,9 +1388,9 @@ const Checkout = () => {
             <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">Produto Indisponível</h1>
+            <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">{t('productBanned')}</h1>
             <p className="text-sm sm:text-base text-gray-600 mb-6">
-              Este produto não está mais disponível para compra. Foi removido temporariamente por questões administrativas.
+              {t('productBanned')}
             </p>
             <div className="bg-gray-100 p-4 rounded-lg mb-6">
               <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{product.name}</h3>
@@ -1528,11 +1532,11 @@ const Checkout = () => {
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-gray-700 font-medium">
-                  Nome completo
+                  {t('fullName')}
                 </Label>
                 <Input
                   id="fullName"
-                  placeholder="Digite seu nome completo"
+                  placeholder={t('fullName')}
                   value={formData.fullName}
                   onChange={(e) => handleInputChange("fullName", e.target.value)}
                   className="h-12 border-gray-300 focus:border-green-500"
@@ -1541,12 +1545,12 @@ const Checkout = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 font-medium">
-                  E-mail
+                  {t('email')}
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Digite seu e-mail para receber a compra"
+                  placeholder={t('email')}
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className="h-12 border-gray-300 focus:border-green-500"
@@ -1555,7 +1559,7 @@ const Checkout = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-gray-700 font-medium">
-                  Telefone ou Whatsapp
+                  {t('phone')}
                 </Label>
                 <PhoneInput
                   value={formData.phone}
@@ -1588,9 +1592,9 @@ const Checkout = () => {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <span className="text-green-600 font-medium">
-                      Pagar com: {selectedPayment && <span className="text-gray-700">{getSelectedPaymentName()}</span>}
+                      {t('paymentMethods')}: {selectedPayment && <span className="text-gray-700">{getSelectedPaymentName()}</span>}
                     </span>
-                    <p className="text-gray-700 font-medium">Selecione a forma de pagamento desejada</p>
+                    <p className="text-gray-700 font-medium">{t('selectPaymentMethod')}</p>
                   </div>
                   
                   <div className={`grid ${getPaymentGridClasses()} gap-3`}>
@@ -1724,7 +1728,9 @@ const Checkout = () => {
                         
                         {kambaPayEmailError ? (
                           <div className="text-xs text-red-600 bg-red-100 p-3 rounded border border-red-200">
-                            <strong>⚠️ Atenção:</strong> {kambaPayEmailError}
+                            <strong>⚠️ Atenção:</strong> {kambaPayEmailError ? (
+                              kambaPayEmailError.includes('não está registrado') ? t('kambaPayNotRegistered') : t('kambaPayError')
+                            ) : kambaPayEmailError}
                             <div className="mt-2">
                               <button 
                                 className="text-blue-600 underline text-xs hover:text-blue-800"
@@ -1758,10 +1764,10 @@ const Checkout = () => {
             <div className="space-y-6">
               <Card className="shadow-sm">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumo do pedido</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('orderSummary')}</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Produto principal</span>
+                      <span className="text-gray-700">{t('product')}</span>
                       <span className="font-medium text-gray-900">
                         {getDisplayPrice(originalPrice)}
                       </span>
@@ -1785,7 +1791,7 @@ const Checkout = () => {
                     
                     <div className="border-t pt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Total</span>
+                        <span className="text-gray-700 font-medium">{t('total')}</span>
                         <span className="text-2xl font-bold text-green-600">
                           {getDisplayPrice(totalPrice)}
                         </span>
@@ -1806,10 +1812,10 @@ const Checkout = () => {
                       <div className="w-6 h-6 rounded bg-green-700 flex items-center justify-center mr-2">
                         <span className="text-xs font-bold text-white animate-bounce">K</span>
                       </div>
-                      PROCESSANDO...
+                      {t('processing').toUpperCase()}
                     </div>
                   ) : (
-                    `COMPRAR AGORA - ${getDisplayPrice(totalPrice)}`
+                    `${t('completeOrder').toUpperCase()} - ${getDisplayPrice(totalPrice)}`
                   )}
                 </Button>
               )}

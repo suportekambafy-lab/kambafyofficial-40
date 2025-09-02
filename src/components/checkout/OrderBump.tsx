@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Check } from "lucide-react";
+import { useCheckoutTranslations } from "@/hooks/useCheckoutTranslations";
 
 interface CountryInfo {
   code: string;
@@ -39,6 +40,7 @@ interface OrderBumpProps {
 }
 
 export function OrderBump({ productId, position, onToggle, userCountry, formatPrice }: OrderBumpProps) {
+  const { t } = useCheckoutTranslations();
   const [orderBump, setOrderBump] = useState<OrderBumpData | null>(null);
   const [isSelected, setIsSelected] = useState(false);
   const [loading, setLoading] = useState(true);
