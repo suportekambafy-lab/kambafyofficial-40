@@ -66,7 +66,9 @@ const CHECKOUT_TRANSLATIONS = {
     year: 'ano',
     years: 'anos',
     
-    // Mensagens de erro e sucesso
+    // Mensagens de indisponibilidade
+    paymentMethodsNotAvailable: 'Métodos de pagamento não disponíveis',
+    paymentMethodsSoon: 'Em breve teremos opções de pagamento para sua região.',
     paymentError: 'Erro no pagamento',
     processingError: 'Erro ao finalizar compra. Entre em contato conosco.',
     invalidCode: 'Código inválido',
@@ -148,7 +150,9 @@ const CHECKOUT_TRANSLATIONS = {
     year: 'year',
     years: 'years',
     
-    // Error and success messages
+    // Payment unavailable messages
+    paymentMethodsNotAvailable: 'Payment methods not available',
+    paymentMethodsSoon: 'Soon we will have payment options for your region.',
     paymentError: 'Payment error',
     processingError: 'Error completing purchase. Please contact us.',
     invalidCode: 'Invalid code',
@@ -230,7 +234,9 @@ const CHECKOUT_TRANSLATIONS = {
     year: 'año',
     years: 'años',
     
-    // Mensajes de error y éxito
+    // Mensajes de indisponibilidad
+    paymentMethodsNotAvailable: 'Métodos de pago no disponibles',
+    paymentMethodsSoon: 'Pronto tendremos opciones de pago para tu región.',
     paymentError: 'Error de pago',
     processingError: 'Error al finalizar compra. Contacta con nosotros.',
     invalidCode: 'Código inválido',
@@ -312,7 +318,9 @@ const CHECKOUT_TRANSLATIONS = {
     year: 'an',
     years: 'ans',
     
-    // Messages d'erreur et de succès
+    // Messages d'indisponibilité
+    paymentMethodsNotAvailable: 'Méthodes de paiement non disponibles',
+    paymentMethodsSoon: 'Nous aurons bientôt des options de paiement pour votre région.',
     paymentError: 'Erreur de paiement',
     processingError: 'Erreur lors de la finalisation de l\'achat. Contactez-nous.',
     invalidCode: 'Code invalide',
@@ -337,20 +345,19 @@ export const useCheckoutTranslations = () => {
   const [currentTranslations, setCurrentTranslations] = useState(CHECKOUT_TRANSLATIONS.pt);
 
   useEffect(() => {
-    console.log(`🌐 useCheckoutTranslations: Detected language changed to: ${detectedLanguage}`);
-    
     // Aplicar traduções automaticamente baseado no idioma detectado
-    const translations = CHECKOUT_TRANSLATIONS[detectedLanguage as keyof typeof CHECKOUT_TRANSLATIONS] || CHECKOUT_TRANSLATIONS.pt;
-    setCurrentTranslations(translations);
+    const translations = CHECKOUT_TRANSLATIONS[detectedLanguage as keyof typeof CHECKOUT_TRANSLATIONS];
     
-    console.log(`🌐 Checkout translations applied for language: ${detectedLanguage}`);
-    console.log(`🌐 Sample translation - "addToOrder": ${translations.addToOrder}`);
+    if (translations) {
+      setCurrentTranslations(translations);
+    } else {
+      setCurrentTranslations(CHECKOUT_TRANSLATIONS.pt);
+    }
   }, [detectedLanguage]);
 
   // Função helper para obter uma tradução
   const t = (key: keyof typeof CHECKOUT_TRANSLATIONS.pt): string => {
-    const translation = currentTranslations[key] || CHECKOUT_TRANSLATIONS.pt[key] || key;
-    return translation;
+    return currentTranslations[key] || CHECKOUT_TRANSLATIONS.pt[key] || key;
   };
 
   return {

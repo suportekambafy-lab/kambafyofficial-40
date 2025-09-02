@@ -1567,7 +1567,7 @@ const Checkout = () => {
                   onChange={(value) => handleInputChange("phone", value)}
                   selectedCountry={formData.phoneCountry}
                   onCountryChange={handleCountryChange}
-                  placeholder="Digite seu telefone"
+                  placeholder={t('phone')}
                   className="h-12"
                 />
               </div>
@@ -1588,42 +1588,6 @@ const Checkout = () => {
                 userCountry={userCountry}
                 formatPrice={formatPrice}
               />
-
-              {/* Teste temporário de traduções */}
-              <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
-                <div className="text-xs text-blue-600 mb-2">
-                  🌍 Teste de traduções - Idioma: {detectedLanguage} | País: {userCountry.name}
-                </div>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  <button 
-                    onClick={() => changeCountry('US')} 
-                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    🇺🇸 EN
-                  </button>
-                  <button 
-                    onClick={() => changeCountry('ES')} 
-                    className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    🇪🇸 ES
-                  </button>
-                  <button 
-                    onClick={() => changeCountry('FR')} 
-                    className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-                  >
-                    🇫🇷 FR
-                  </button>
-                  <button 
-                    onClick={() => changeCountry('AO')} 
-                    className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
-                  >
-                    🇦🇴 PT
-                  </button>
-                </div>
-                <div className="text-xs text-blue-700">
-                  Teste: "{t('addToOrder')}" | "{t('completeOrder')}" | "{t('limitedOffers')}"
-                </div>
-              </div>
 
               {availablePaymentMethods.length > 0 ? (
                 <div className="space-y-4">
@@ -1678,10 +1642,10 @@ const Checkout = () => {
                 <div className="space-y-4">
                   <div className="text-center py-8 bg-gray-100 rounded-lg">
                     <p className="text-gray-600 font-medium">
-                      Métodos de pagamento não disponíveis para {userCountry.name}
+                      {t('paymentMethodsNotAvailable')}
                     </p>
                     <p className="text-sm text-gray-500 mt-2">
-                      Em breve teremos opções de pagamento para sua região.
+                      {t('paymentMethodsSoon')}
                     </p>
                   </div>
                 </div>
