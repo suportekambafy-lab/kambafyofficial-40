@@ -1,5 +1,8 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.appypay-token]
+verify_jwt = false
+
 [functions.checkout-prerender]
 verify_jwt = false
 
