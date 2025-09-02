@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { AnimatedGroup } from "@/components/ui/animated-group";
-import { ArrowRight, Menu, X, Play, Star, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
-import { CustomIcon } from "@/components/ui/custom-icon";
+import { ArrowRight, Menu, X, Play, Star, Users, BookOpen, DollarSign, Shield, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { SubdomainLink } from './SubdomainLink';
@@ -254,19 +253,19 @@ const HeroSection = () => {
 };
 const FeaturesSection = () => {
   const features = [{
-    icon: <CustomIcon name="book" size={32} className="text-checkout-green" />,
+    icon: <BookOpen className="w-8 h-8 text-checkout-green" />,
     title: "Order Bump",
     description: "Aumente suas vendas com ofertas complementares no momento da compra."
   }, {
-    icon: <CustomIcon name="dollar" size={32} className="text-checkout-green" />,
+    icon: <DollarSign className="w-8 h-8 text-checkout-green" />,
     title: "Checkout Personalizado",
     description: "Customize completamente sua página de checkout para maximizar conversões."
   }, {
-    icon: <CustomIcon name="progress" size={32} className="text-checkout-green" />,
+    icon: <Users className="w-8 h-8 text-checkout-green" />,
     title: "Pixel",
     description: "Integre Facebook Pixel e outras ferramentas de tracking para otimizar campanhas."
   }, {
-    icon: <CustomIcon name="shield" size={32} className="text-checkout-green" />,
+    icon: <Shield className="w-8 h-8 text-checkout-green" />,
     title: "Afiliação",
     description: "Sistema completo de afiliados para expandir suas vendas através de parceiros."
   }];

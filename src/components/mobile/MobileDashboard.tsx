@@ -8,8 +8,7 @@ import { MobileFilters } from './MobileFilters';
 import { MobileProfile } from './MobileProfile';
 import { MobileSalesChart } from './MobileSalesChart';
 import { Button } from "@/components/ui/button";
-import { Home, User } from 'lucide-react';
-import { CustomIcon } from '@/components/ui/custom-icon';
+import { Home, BarChart3, User } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -264,7 +263,7 @@ export function MobileDashboard() {
             className={`flex flex-col items-center p-3 ${activeTab === 'stats' ? 'text-checkout-green' : 'text-gray-500'}`}
             onClick={() => setActiveTab('stats')}
           >
-            <CustomIcon name="chart" size={24} className="mb-1" />
+            <BarChart3 className="h-6 w-6 mb-1" />
             <span className="text-xs">Relatórios</span>
           </Button>
           <Button 

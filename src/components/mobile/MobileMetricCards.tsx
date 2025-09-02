@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp } from 'lucide-react';
-import { CustomIcon } from '@/components/ui/custom-icon';
+import { DollarSign, TrendingUp } from 'lucide-react';
 
 interface SalesData {
   totalRevenue: number;
@@ -27,7 +26,7 @@ export function MobileMetricCards({ salesData, loading, formatPrice }: MobileMet
         <CardContent className="p-6">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
-              <CustomIcon name="dollar" size={24} className="text-blue-600" />
+              <DollarSign className="w-6 h-6 text-blue-600" />
             </div>
             <div className="flex-1">
               <div className="text-sm text-muted-foreground mb-1">Valor líquido</div>
