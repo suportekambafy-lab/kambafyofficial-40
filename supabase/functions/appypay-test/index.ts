@@ -28,10 +28,13 @@ serve(async (req) => {
       baseUrl: baseUrl ? `✅ ${baseUrl}` : '❌ Indefinido'
     });
     
-    // Testar URLs de token
+    // Testar URLs de token (limpar URLs malformadas)
+    const cleanUrl = (url) => url ? url.replace(/^url\s+/, '').trim() : null;
+    
     const tokenUrls = [
-      authBaseUrl ? `${authBaseUrl}/v2.0/token` : null,
-      baseUrl ? `${baseUrl}/v2.0/token` : null,
+      authBaseUrl ? `${cleanUrl(authBaseUrl)}/v2.0/token` : null,
+      apiBaseUrl ? `${cleanUrl(apiBaseUrl)}/v2.0/token` : null,
+      baseUrl ? `${cleanUrl(baseUrl)}/v2.0/token` : null,
       'https://gwy-api.appypay.co.ao/v2.0/token', // URL de teste conhecida
       'https://gwy-api-tst.appypay.co.ao/v2.0/token' // URL de teste conhecida
     ].filter(Boolean);

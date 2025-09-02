@@ -20,6 +20,8 @@ interface Product {
 
 type Step = 'product' | 'integration' | 'configure' | 'complete';
 
+import { AppyPayStatus } from "@/components/AppyPayStatus";
+
 export default function Apps() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -179,7 +181,14 @@ export default function Apps() {
 
   // Se não está criando nova integração, mostra o gerenciamento
   if (!isNew) {
-    return <AppsTabLayout />;
+    return (
+      <div className="p-3 xs:p-4 md:p-6 space-y-4 xs:space-y-6 max-w-6xl mx-auto min-h-screen">
+        <div className="space-y-8">
+          <AppyPayStatus />
+        </div>
+        <AppsTabLayout />
+      </div>
+    );
   }
 
   return (
