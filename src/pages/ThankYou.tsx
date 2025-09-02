@@ -425,7 +425,7 @@ const ThankYou = () => {
                       <div>
                         <p className="text-sm text-gray-600">Valor</p>
                         <p className="text-lg font-bold text-green-600">
-                          €{(parseFloat(multibancoData.amount) / 100).toFixed(2)}
+                          €{multibancoData.amount}
                         </p>
                       </div>
                     </div>
@@ -567,9 +567,9 @@ const ThankYou = () => {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Valor Total Pago</label>
                   <p className="text-2xl font-bold text-checkout-green">
-                    {/* Para Multibanco, sempre mostrar em EUR */}
+                    {/* Para Multibanco, usar o valor convertido direto */}
                     {orderDetails.paymentMethod === 'multibanco' 
-                      ? `€${orderDetails.convertedAmount || (parseFloat(orderDetails.amount) / 650).toFixed(2)}`
+                      ? `€${orderDetails.convertedAmount}`
                       : orderDetails.convertedAmount && orderDetails.convertedCurrency 
                         ? `${orderDetails.convertedAmount} ${orderDetails.convertedCurrency}`
                         : `${orderDetails.amount} ${orderDetails.currency}`
