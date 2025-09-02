@@ -171,14 +171,10 @@ serve(async (req) => {
     // Salvar ordem no banco com status "pending" para todos os métodos Stripe
     const orderStatus = 'pending';
     
-    // Para métodos Stripe, salvar o valor convertido
-    const finalAmount = paymentMethod === 'card' || paymentMethod === 'klarna' || paymentMethod === 'multibanco' || paymentMethod === 'apple_pay' 
-      ? (convertedAmount || (amount / 100)).toString()
-      : (originalAmount || (amount / 100)).toString();
-    
-    const finalCurrency = paymentMethod === 'card' || paymentMethod === 'klarna' || paymentMethod === 'multibanco' || paymentMethod === 'apple_pay'
-      ? (targetCurrency || currency).toUpperCase()
-      : (originalCurrency || 'KZ');
+    // CORREÇÃO CRÍTICA: Vendedor SEMPRE deve ver o valor original em KZ que ele definiu
+    // independente de como o cliente pagou (EUR, USD, etc.)
+    const finalAmount = (originalAmount || (amount / 100)).toString();
+    const finalCurrency = (originalCurrency || 'KZ');
     
     const orderData = {
       product_id: productId,

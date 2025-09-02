@@ -263,8 +263,9 @@ serve(async (req) => {
                   customerEmail: order.customer_email,
                   productName: product?.name,
                   orderId: orderId,
-                  amount: (paymentIntent.amount / 100).toString(), // Converter de centavos para valor real
-                  currency: paymentIntent.currency.toUpperCase(),
+                  // CORREÇÃO: Usar valor original do metadata ao invés do valor convertido do Stripe
+                  amount: paymentIntent.metadata.originalAmount || (paymentIntent.amount / 100).toString(),
+                  currency: paymentIntent.metadata.originalCurrency || paymentIntent.currency.toUpperCase(),
                   productId: order.product_id,
                   sellerId: product?.user_id
                 };
@@ -319,8 +320,9 @@ serve(async (req) => {
                     product_name: product?.name,
                     customer_email: order.customer_email,
                     customer_name: order.customer_name,
-                    price: (paymentIntent.amount / 100).toString(),
-                    currency: paymentIntent.currency.toUpperCase(),
+                    // CORREÇÃO: Usar valor original do metadata
+                    price: paymentIntent.metadata.originalAmount || (paymentIntent.amount / 100).toString(),
+                    currency: paymentIntent.metadata.originalCurrency || paymentIntent.currency.toUpperCase(),
                     timestamp: new Date().toISOString()
                   },
                   user_id: product?.user_id,
