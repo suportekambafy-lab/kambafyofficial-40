@@ -3,7 +3,7 @@ project_id = "hcbkqygdtzpxvctfdqbd"
 [functions.appypay-token]
 verify_jwt = false
 
-[functions.appyay-create-charge]
+[functions.appypay-create-charge]
 verify_jwt = false
 
 [functions.checkout-prerender]
