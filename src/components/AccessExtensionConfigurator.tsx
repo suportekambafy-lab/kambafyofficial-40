@@ -332,10 +332,13 @@ export const AccessExtensionConfigurator = ({
               <Label htmlFor="extension-price">Preço da Extensão (KZ)</Label>
               <Input
                 id="extension-price"
-                type="text"
+                type="number"
+                min="0"
+                step="1"
                 value={localExtensionPrice}
                 onChange={(e) => {
-                  setLocalExtensionPrice(e.target.value);
+                  const value = e.target.value;
+                  setLocalExtensionPrice(value);
                   setTimeout(updateConfig, 0);
                 }}
                 placeholder="Ex: 5000"
