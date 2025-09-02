@@ -35,125 +35,33 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🔄 Iniciando criação de cobrança AppyPay');
+    console.log('🔄 TESTE - Iniciando criação de cobrança AppyPay');
     
     const requestData: CreateChargeRequest = await req.json();
-    console.log('📥 Dados recebidos:', JSON.stringify(requestData, null, 2));
-    console.log('🔍 Verificando variáveis de ambiente...');
+    console.log('📥 TESTE - Dados recebidos:', JSON.stringify(requestData, null, 2));
 
-    const baseUrl = Deno.env.get('APPYPAY_BASE_URL');
-    
-    console.log('📊 Status das variáveis:', {
-      baseUrl: baseUrl ? `✅ ${baseUrl}` : '❌ Indefinido'
-    });
-    
-    if (!baseUrl) {
-      console.error('❌ APPYPAY_BASE_URL não configurada');
-      return new Response(
-        JSON.stringify({ error: 'URL base da AppyPay não configurada' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    console.log('🔑 Gerando token de acesso AppyPay');
-    
-    // Criar cliente supabase para chamar a função de token
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
-    
-    console.log('📞 Chamando função appypay-token...');
-    
-    // Obter token de acesso via função supabase
-    const { data: tokenData, error: tokenError } = await supabase.functions.invoke('appypay-token');
-    
-    console.log('📨 Resposta da função appypay-token:', {
-      success: !!tokenData,
-      error: tokenError?.message || 'Nenhum erro',
-      data: tokenData ? 'Token recebido' : 'Sem dados'
-    });
-    
-    if (tokenError || !tokenData?.success) {
-      console.error('❌ Erro ao gerar token:', tokenError || tokenData?.error);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Erro ao gerar token de acesso',
-          details: tokenError?.message || tokenData?.error
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    const accessToken = tokenData.access_token;
-    console.log('✅ Token obtido com sucesso');
-
-    // Preparar dados da cobrança conforme documentação AppyPay
-    const chargeData = {
+    // TESTE: Retornar dados simulados para testar a interface
+    const mockCharge = {
+      id: 'test_' + Date.now(),
+      reference: '999 888 777',
       amount: requestData.amount,
       currency: requestData.currency,
       description: requestData.description,
       merchantTransactionId: requestData.merchantTransactionId,
-      paymentMethod: "REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f", // ID fixo para referência multibanco
-      options: {
-        SmartcardNumber: "Smart_card_Number",
-        MerchantOrigin: "Kambafy_Platform"
-      },
-      notify: {
-        name: requestData.customerName,
-        telephone: requestData.customerPhone,
-        email: requestData.customerEmail,
-        smsNotification: requestData.smsNotification ?? true,
-        emailNotification: requestData.emailNotification ?? true
-      }
+      status: 'pending',
+      expiryDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas
+      paymentInstructions: 'Use esta referência para pagamento em qualquer terminal Multicaixa ou banco em Angola',
+      customerName: requestData.customerName,
+      customerEmail: requestData.customerEmail,
+      customerPhone: requestData.customerPhone
     };
 
-    console.log('📤 Enviando dados para AppyPay:', JSON.stringify(chargeData, null, 2));
-
-    // Fazer requisição para criar cobrança
-    const chargesUrl = `${baseUrl}/v1/charges`;
-    
-    const response = await fetch(chargesUrl, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(chargeData)
-    });
-
-    const responseText = await response.text();
-    console.log('📨 Resposta da API AppyPay:', response.status, responseText);
-
-    if (!response.ok) {
-      console.error('❌ Erro na requisição AppyPay:', response.status, responseText);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Erro ao criar cobrança na AppyPay',
-          status: response.status,
-          details: responseText 
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    const chargeResult = JSON.parse(responseText);
-    console.log('✅ Cobrança criada com sucesso:', chargeResult);
+    console.log('✅ TESTE - Cobrança simulada criada:', mockCharge);
 
     return new Response(
       JSON.stringify({
         success: true,
-        charge: chargeResult
+        charge: mockCharge
       }),
       {
         status: 200,
@@ -162,7 +70,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('💥 Erro inesperado:', error);
+    console.error('💥 TESTE - Erro inesperado:', error);
     return new Response(
       JSON.stringify({ 
         error: 'Erro interno do servidor',
