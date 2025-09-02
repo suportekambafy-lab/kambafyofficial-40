@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { supabase } from "../_shared/supabase.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.54.0"
 
 interface CreateChargeRequest {
   amount: number;
@@ -54,6 +54,12 @@ serve(async (req) => {
     }
 
     console.log('🔑 Gerando token de acesso AppyPay');
+    
+    // Criar cliente supabase para chamar a função de token
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
     
     // Obter token de acesso via função supabase
     const { data: tokenData, error: tokenError } = await supabase.functions.invoke('appypay-token');
