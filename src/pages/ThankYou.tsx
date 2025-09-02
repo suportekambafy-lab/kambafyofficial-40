@@ -567,9 +567,14 @@ const ThankYou = () => {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Valor Total Pago</label>
                   <p className="text-2xl font-bold text-checkout-green">
-                    {/* Para Multibanco, usar o valor real do stripe */}
-                    {orderDetails.paymentMethod === 'multibanco' && multibancoData?.amount
-                      ? `€${multibancoData.amount}`
+                    {/* Para Multibanco, tentar múltiplas fontes de dados */}
+                    {orderDetails.paymentMethod === 'multibanco' 
+                      ? (multibancoData?.amount 
+                          ? `€${multibancoData.amount}` 
+                          : orderDetails.convertedAmount 
+                            ? `€${orderDetails.convertedAmount}`
+                            : `€${(parseFloat(orderDetails.amount) / 1050).toFixed(2)}`
+                        )
                       : orderDetails.convertedAmount && orderDetails.convertedCurrency 
                         ? `${orderDetails.convertedAmount} ${orderDetails.convertedCurrency}`
                         : `${orderDetails.amount} ${orderDetails.currency}`
