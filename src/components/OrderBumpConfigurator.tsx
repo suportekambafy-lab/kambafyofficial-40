@@ -190,7 +190,7 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
         // Limpar items para extensões
         newSettings.items = [];
       } 
-      // Se for produto adicional
+      // Se for produto extra
       else if (config.bumpType === 'product') {
         // Para produtos, não usar o campo bump_product_price da settings principal
         if (config.bumpProductName && config.bumpProductPrice) {
@@ -414,7 +414,7 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
           <Button variant="ghost" onClick={() => setShowProductSelector(false)}>
             ← Voltar
           </Button>
-          <h3 className="text-lg font-semibold">Selecionar Produto Extra</h3>
+          <h3 className="text-lg font-semibold">Selecionar Extra</h3>
         </div>
         <ProductSelector
           products={products}
