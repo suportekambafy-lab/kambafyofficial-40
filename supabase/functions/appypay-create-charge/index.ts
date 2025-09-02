@@ -56,7 +56,8 @@ serve(async (req) => {
     const tokenResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/appypay-token`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        'Authorization': req.headers.get('Authorization') || '',
+        'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
         'Content-Type': 'application/json'
       }
     });
@@ -75,9 +76,26 @@ serve(async (req) => {
     const tokenData = await tokenResponse.json();
     console.log('✅ Token obtido com sucesso');
 
+    // Prioriza APPYPAY_API_BASE_URL, depois APPYPAY_BASE_URL
+    let apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL') || Deno.env.get('APPYPAY_BASE_URL');
+    
+    if (!apiBaseUrl) {
+      console.error('❌ URL da API AppyPay não configurada');
+      return new Response(
+        JSON.stringify({ error: 'URL da API AppyPay não configurada' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Sanitizar URL base - remover prefixos inválidos e paths
+    apiBaseUrl = apiBaseUrl.replace(/^url\s+/, '').replace(/\/v[0-9]+.*$/, '').replace(/\/$/, '');
+    
     // Preparar payload para criar cobrança
-    const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
     const chargeUrl = `${apiBaseUrl}/v2.0/charges`;
+    console.log('🌐 URL da cobrança sanitizada:', chargeUrl);
     
     const chargePayload = {
       amount: requestData.amount,

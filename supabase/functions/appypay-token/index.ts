@@ -17,12 +17,15 @@ serve(async (req) => {
     
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
-    const baseUrl = Deno.env.get('APPYPAY_BASE_URL');
+    
+    // Prioriza APPYPAY_AUTH_BASE_URL, depois APPYPAY_BASE_URL
+    let baseUrl = Deno.env.get('APPYPAY_AUTH_BASE_URL') || Deno.env.get('APPYPAY_BASE_URL');
     
     console.log('📊 Status das variáveis:', {
       clientId: clientId ? '✅ Definido' : '❌ Indefinido',
       clientSecret: clientSecret ? '✅ Definido' : '❌ Indefinido',
-      baseUrl: baseUrl ? `✅ ${baseUrl}` : '❌ Indefinido'
+      authBaseUrl: Deno.env.get('APPYPAY_AUTH_BASE_URL') ? '✅ Definido' : '❌ Indefinido',
+      baseUrl: baseUrl ? '✅ Definido' : '❌ Indefinido'
     });
     
     if (!clientId || !clientSecret) {
@@ -35,11 +38,9 @@ serve(async (req) => {
         }
       );
     }
-
-    console.log('📡 Fazendo requisição para token OAuth2');
     
     if (!baseUrl) {
-      console.error('❌ APPYPAY_BASE_URL não configurada');
+      console.error('❌ URL base da AppyPay não configurada');
       return new Response(
         JSON.stringify({ error: 'URL base da AppyPay não configurada' }),
         { 
@@ -48,10 +49,15 @@ serve(async (req) => {
         }
       );
     }
+
+    console.log('📡 Fazendo requisição para token OAuth2');
+    
+    // Sanitizar URL base - remover prefixos inválidos e paths
+    baseUrl = baseUrl.replace(/^url\s+/, '').replace(/\/v[0-9]+.*$/, '').replace(/\/$/, '');
     
     // URL para geração de token AppyPay v2.0
     const tokenUrl = `${baseUrl}/v2.0/token`;
-    console.log('🌐 URL do token:', tokenUrl);
+    console.log('🌐 URL do token sanitizada:', tokenUrl);
     
     const formData = new URLSearchParams();
     formData.append('grant_type', 'client_credentials');
