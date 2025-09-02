@@ -45,7 +45,8 @@ const Checkout = () => {
     convertPrice,
     changeCountry, 
     supportedCountries,
-    isReady: geoReady
+    isReady: geoReady,
+    detectedLanguage
   } = useGeoLocation();
   const { 
     affiliateCode, 
@@ -609,16 +610,16 @@ const Checkout = () => {
       console.error('Erro ao processar sucesso do pagamento:', error);
       toast({
         title: "Erro",
-        description: "Erro ao finalizar compra. Entre em contato conosco.",
+        description: t('processingError'),
         variant: "destructive"
       });
     }
   };
 
   const handleCardPaymentError = (error: string) => {
-    toast({
-      title: "Erro no pagamento",
-      description: error,
+      toast({
+        title: t('paymentError'),
+        description: error,
       variant: "destructive"
     });
   };
@@ -876,8 +877,8 @@ const Checkout = () => {
 
         if (verifyError || !verificationData?.valid) {
           toast({
-            title: "Código inválido",
-            description: "O código de verificação está incorreto ou expirado",
+            title: t('invalidCode'),
+            description: t('codeExpired'),
             variant: "destructive"
           });
           setProcessing(false);
@@ -1369,10 +1370,10 @@ const Checkout = () => {
             </p>
             <div className="bg-gray-100 p-4 rounded-lg mb-6">
               <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{product.name}</h3>
-              <p className="text-xs sm:text-sm text-gray-600">Status: Inativo</p>
+              <p className="text-xs sm:text-sm text-gray-600">Status: {t('inactive')}</p>
             </div>
             <p className="text-xs text-gray-500 mt-4">
-              Entre em contato com o vendedor para mais informações sobre a disponibilidade deste produto.
+              {t('contactSeller')}
             </p>
           </div>
         </div>
@@ -1587,6 +1588,42 @@ const Checkout = () => {
                 userCountry={userCountry}
                 formatPrice={formatPrice}
               />
+
+              {/* Teste temporário de traduções */}
+              <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
+                <div className="text-xs text-blue-600 mb-2">
+                  🌍 Teste de traduções - Idioma: {detectedLanguage} | País: {userCountry.name}
+                </div>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <button 
+                    onClick={() => changeCountry('US')} 
+                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    🇺🇸 EN
+                  </button>
+                  <button 
+                    onClick={() => changeCountry('ES')} 
+                    className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    🇪🇸 ES
+                  </button>
+                  <button 
+                    onClick={() => changeCountry('FR')} 
+                    className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    🇫🇷 FR
+                  </button>
+                  <button 
+                    onClick={() => changeCountry('AO')} 
+                    className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                  >
+                    🇦🇴 PT
+                  </button>
+                </div>
+                <div className="text-xs text-blue-700">
+                  Teste: "{t('addToOrder')}" | "{t('completeOrder')}" | "{t('limitedOffers')}"
+                </div>
+              </div>
 
               {availablePaymentMethods.length > 0 ? (
                 <div className="space-y-4">
@@ -1840,16 +1877,16 @@ const Checkout = () => {
               />
               <div>
                 <h4 className="font-semibold text-green-600">Kambafy</h4>
-                <p className="text-sm text-gray-600">Todos os direitos reservados.</p>
+                <p className="text-sm text-gray-600">{t('allRightsReserved')}</p>
               </div>
             </div>
             <p className="text-xs text-gray-500 max-w-2xl mx-auto">
-              Ao clicar em Comprar agora, eu declaro que li e concordo (1) com a Kambafy está processando este pedido em nome de{' '}
+              {t('termsText')}{' '}
               <span className="text-green-600">
-                {product?.fantasy_name || 'produtor'}
-              </span> não possui responsabilidade pelo conteúdo e/ou faz controle prévio deste (li) com os{' '}
-              <span className="underline cursor-pointer">Termos de uso</span> e{' '}
-              <span className="underline cursor-pointer">Política de privacidade</span>.
+                {product?.fantasy_name || t('producer')}
+              </span> {t('noResponsibility')}{' '}
+              <span className="underline cursor-pointer">{t('termsOfUse')}</span> e{' '}
+              <span className="underline cursor-pointer">{t('privacyPolicy')}</span>.
             </p>
           </div>
         </div>

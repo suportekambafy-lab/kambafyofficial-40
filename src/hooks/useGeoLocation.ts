@@ -227,12 +227,18 @@ export const useGeoLocation = () => {
         setDetectedLanguage(language);
         console.log(`🌍 Auto-detected language: ${language} for country ${countryCode}`);
         
+        // Salvar país e idioma no localStorage
+        localStorage.setItem('userCountry', countryCode);
+        localStorage.setItem('detectedLanguage', language);
+        
         // Aplicar idioma automaticamente na aplicação
         applyLanguage(language);
       } else {
         console.log(`🌍 Country ${countryCode} not supported, defaulting to Angola`);
         setUserCountry(supportedCountries.AO);
         setDetectedLanguage('pt');
+        localStorage.setItem('userCountry', 'AO');
+        localStorage.setItem('detectedLanguage', 'pt');
         applyLanguage('pt');
       }
     } catch (err) {
@@ -302,6 +308,7 @@ export const useGeoLocation = () => {
       // Atualizar idioma quando país é alterado manualmente
       const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
       setDetectedLanguage(language);
+      localStorage.setItem('detectedLanguage', language);
       applyLanguage(language);
     }
   };
@@ -325,12 +332,31 @@ export const useGeoLocation = () => {
     const initializeGeoLocation = async () => {
       console.log('🌍 Initializing geolocation hook...');
       
-      // Limpar localStorage para forçar detecção por IP
-      localStorage.removeItem('userCountry');
-      console.log('🌍 Cleared localStorage userCountry');
+      // Verificar se já tem país salvo
+      const savedCountry = localStorage.getItem('userCountry');
+      const savedLanguage = localStorage.getItem('detectedLanguage');
       
-      // Detect country by IP first
-      await detectCountryByIP();
+      if (savedCountry && supportedCountries[savedCountry]) {
+        console.log(`🌍 Using saved country: ${savedCountry}`);
+        const country = supportedCountries[savedCountry];
+        setUserCountry(country);
+        
+        if (savedLanguage) {
+          console.log(`🌍 Using saved language: ${savedLanguage}`);
+          setDetectedLanguage(savedLanguage);
+          applyLanguage(savedLanguage);
+        } else {
+          const language = COUNTRY_LANGUAGES[savedCountry] || 'pt';
+          setDetectedLanguage(language);
+          applyLanguage(language);
+        }
+        setLoading(false);
+      } else {
+        console.log('🌍 No saved country, detecting by IP...');
+        // Detect country by IP first
+        await detectCountryByIP();
+      }
+      
       // Then fetch exchange rates
       await fetchExchangeRates();
       // Só agora marcar como pronto

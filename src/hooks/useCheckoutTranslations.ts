@@ -64,7 +64,25 @@ const CHECKOUT_TRANSLATIONS = {
     month: 'mês',
     months: 'meses',
     year: 'ano',
-    years: 'anos'
+    years: 'anos',
+    
+    // Mensagens de erro e sucesso
+    paymentError: 'Erro no pagamento',
+    processingError: 'Erro ao finalizar compra. Entre em contato conosco.',
+    invalidCode: 'Código inválido',
+    codeExpired: 'O código de verificação está incorreto ou expirado',
+    
+    // Status do produto 
+    inactive: 'Inativo',
+    contactSeller: 'Entre em contato com o vendedor para mais informações sobre a disponibilidade deste produto.',
+    
+    // Footer
+    allRightsReserved: 'Todos os direitos reservados.',
+    termsText: 'Ao clicar em Comprar agora, eu declaro que li e concordo (1) com a Kambafy está processando este pedido em nome de',
+    noResponsibility: 'não possui responsabilidade pelo conteúdo e/ou faz controle prévio deste (li) com os',
+    termsOfUse: 'Termos de uso',
+    privacyPolicy: 'Política de privacidade',
+    producer: 'produtor'
   },
   
   en: {
@@ -128,7 +146,25 @@ const CHECKOUT_TRANSLATIONS = {
     month: 'month',
     months: 'months',
     year: 'year',
-    years: 'years'
+    years: 'years',
+    
+    // Error and success messages
+    paymentError: 'Payment error',
+    processingError: 'Error completing purchase. Please contact us.',
+    invalidCode: 'Invalid code',
+    codeExpired: 'The verification code is incorrect or expired',
+    
+    // Product status
+    inactive: 'Inactive',
+    contactSeller: 'Contact the seller for more information about this product availability.',
+    
+    // Footer
+    allRightsReserved: 'All rights reserved.',
+    termsText: 'By clicking Buy now, I declare that I have read and agree (1) that Kambafy is processing this order on behalf of',
+    noResponsibility: 'has no responsibility for the content and/or prior control of this (read) with the',
+    termsOfUse: 'Terms of use',
+    privacyPolicy: 'Privacy policy',
+    producer: 'producer'
   },
   
   es: {
@@ -192,7 +228,25 @@ const CHECKOUT_TRANSLATIONS = {
     month: 'mes',
     months: 'meses',
     year: 'año',
-    years: 'años'
+    years: 'años',
+    
+    // Mensajes de error y éxito
+    paymentError: 'Error de pago',
+    processingError: 'Error al finalizar compra. Contacta con nosotros.',
+    invalidCode: 'Código inválido',
+    codeExpired: 'El código de verificación es incorrecto o ha expirado',
+    
+    // Estado del producto
+    inactive: 'Inactivo',
+    contactSeller: 'Contacta con el vendedor para más información sobre la disponibilidad de este producto.',
+    
+    // Footer
+    allRightsReserved: 'Todos los derechos reservados.',
+    termsText: 'Al hacer clic en Comprar ahora, declaro que he leído y acepto (1) que Kambafy está procesando este pedido en nombre de',
+    noResponsibility: 'no tiene responsabilidad por el contenido y/o control previo de este (leído) con los',
+    termsOfUse: 'Términos de uso',
+    privacyPolicy: 'Política de privacidad',
+    producer: 'productor'
   },
   
   fr: {
@@ -256,7 +310,25 @@ const CHECKOUT_TRANSLATIONS = {
     month: 'mois',
     months: 'mois',
     year: 'an',
-    years: 'ans'
+    years: 'ans',
+    
+    // Messages d'erreur et de succès
+    paymentError: 'Erreur de paiement',
+    processingError: 'Erreur lors de la finalisation de l\'achat. Contactez-nous.',
+    invalidCode: 'Code invalide',
+    codeExpired: 'Le code de vérification est incorrect ou expiré',
+    
+    // Statut du produit
+    inactive: 'Inactif',
+    contactSeller: 'Contactez le vendeur pour plus d\'informations sur la disponibilité de ce produit.',
+    
+    // Pied de page
+    allRightsReserved: 'Tous droits réservés.',
+    termsText: 'En cliquant sur Acheter maintenant, je déclare avoir lu et accepté (1) que Kambafy traite cette commande au nom de',
+    noResponsibility: 'n\'a aucune responsabilité pour le contenu et/ou le contrôle préalable de celui-ci (lu) avec les',
+    termsOfUse: 'Conditions d\'utilisation',
+    privacyPolicy: 'Politique de confidentialité',
+    producer: 'producteur'
   }
 };
 
@@ -265,16 +337,20 @@ export const useCheckoutTranslations = () => {
   const [currentTranslations, setCurrentTranslations] = useState(CHECKOUT_TRANSLATIONS.pt);
 
   useEffect(() => {
+    console.log(`🌐 useCheckoutTranslations: Detected language changed to: ${detectedLanguage}`);
+    
     // Aplicar traduções automaticamente baseado no idioma detectado
     const translations = CHECKOUT_TRANSLATIONS[detectedLanguage as keyof typeof CHECKOUT_TRANSLATIONS] || CHECKOUT_TRANSLATIONS.pt;
     setCurrentTranslations(translations);
     
-    console.log(`🌍 Checkout translations applied for language: ${detectedLanguage}`);
+    console.log(`🌐 Checkout translations applied for language: ${detectedLanguage}`);
+    console.log(`🌐 Sample translation - "addToOrder": ${translations.addToOrder}`);
   }, [detectedLanguage]);
 
   // Função helper para obter uma tradução
   const t = (key: keyof typeof CHECKOUT_TRANSLATIONS.pt): string => {
-    return currentTranslations[key] || CHECKOUT_TRANSLATIONS.pt[key] || key;
+    const translation = currentTranslations[key] || CHECKOUT_TRANSLATIONS.pt[key] || key;
+    return translation;
   };
 
   return {
