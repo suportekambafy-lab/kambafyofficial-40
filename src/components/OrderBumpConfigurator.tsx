@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Plus, Trash2, Check } from "lucide-react";
+import { AccessExtensionConfigurator } from "./AccessExtensionConfigurator";
 
 interface Product {
   id: string;
@@ -42,7 +43,12 @@ interface OrderBumpSettings {
   title: string;
   description: string;
   position: string;
+  bump_type: string;
   items: OrderBumpItem[];
+  // Campos para extensão de acesso
+  access_extension_type?: string;
+  access_extension_value?: number;
+  access_extension_description?: string;
 }
 
 export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpConfiguratorProps) {
@@ -58,7 +64,11 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
     title: "Aproveite esta oferta especial!",
     description: "Adicione este produto por apenas mais:",
     position: "after_payment_method",
-    items: []
+    bump_type: "product",
+    items: [],
+    access_extension_type: "months",
+    access_extension_value: 6,
+    access_extension_description: ""
   });
 
   useEffect(() => {
@@ -134,12 +144,38 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
           title: settingsData.title,
           description: settingsData.description,
           position: settingsData.position,
-          items: itemsData || []
+          bump_type: settingsData.bump_type || 'product',
+          items: itemsData || [],
+          access_extension_type: settingsData.access_extension_type || 'months',
+          access_extension_value: settingsData.access_extension_value || 6,
+          access_extension_description: settingsData.access_extension_description || ''
         });
       }
     } catch (error) {
       console.error('Error fetching order bump settings:', error);
     }
+  };
+
+  const handleExtensionConfigChange = (config: {
+    bumpType: string;
+    bumpProductName?: string;
+    bumpProductPrice?: string;
+    extensionType?: string;
+    extensionValue?: number;
+    extensionDescription?: string;
+  }) => {
+    setSettings(prev => ({
+      ...prev,
+      bump_type: config.bumpType,
+      access_extension_type: config.extensionType,
+      access_extension_value: config.extensionValue,
+      access_extension_description: config.extensionDescription,
+      // Para compatibilidade, se for produto, manter os valores antigos
+      ...(config.bumpType === 'product' && {
+        bump_product_name: config.bumpProductName || prev.items[0]?.bump_product_name || '',
+        bump_product_price: config.bumpProductPrice || prev.items[0]?.bump_product_price || ''
+      })
+    }));
   };
 
   const handleAddItem = () => {
@@ -200,11 +236,21 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
     try {
       setLoading(true);
 
-      if (settings.enabled && settings.items.length === 0) {
-        console.log('❌ Erro: Order bump ativado mas sem itens');
+      if (settings.enabled && settings.bump_type === 'product' && settings.items.length === 0) {
+        console.log('❌ Erro: Order bump de produto ativado mas sem itens');
         toast({
           title: "Erro",
           description: "Adicione pelo menos um produto extra para ativar",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (settings.enabled && settings.bump_type === 'access_extension' && !settings.access_extension_type) {
+        console.log('❌ Erro: Extensão de acesso ativada mas sem configuração');
+        toast({
+          title: "Erro", 
+          description: "Configure a extensão de acesso antes de ativar",
           variant: "destructive"
         });
         return;
@@ -223,6 +269,11 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
         title: settings.title,
         description: settings.description,
         position: settings.position,
+        bump_type: settings.bump_type,
+        // Campos para extensão de acesso
+        access_extension_type: settings.access_extension_type,
+        access_extension_value: settings.access_extension_value,
+        access_extension_description: settings.access_extension_description,
         // Manter compatibilidade com campos antigos
         bump_product_name: settings.items[0]?.bump_product_name || "",
         bump_product_price: settings.items[0]?.bump_product_price || "",
@@ -389,80 +440,93 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
             </Select>
           </div>
 
-          {/* Produtos Extras */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Produtos Extras</Label>
-              <Button onClick={handleAddItem} size="sm" variant="outline">
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Extra
-              </Button>
-            </div>
+          {/* Configuração de Extensão ou Produto */}
+          <AccessExtensionConfigurator
+            bumpType={settings.bump_type}
+            bumpProductName={settings.items[0]?.bump_product_name}
+            bumpProductPrice={settings.items[0]?.bump_product_price}
+            extensionType={settings.access_extension_type}
+            extensionValue={settings.access_extension_value}
+            extensionDescription={settings.access_extension_description}
+            onConfigChange={handleExtensionConfigChange}
+          />
 
-            {settings.items.length === 0 ? (
-              <div className="text-center py-8 border border-dashed rounded-lg">
-                <p className="text-muted-foreground">Nenhum produto extra adicionado</p>
-                <Button onClick={handleAddItem} className="mt-2">
+          {/* Produtos Extras (apenas para bump_type === 'product') */}
+          {settings.bump_type === 'product' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Produtos Extras</Label>
+                <Button onClick={handleAddItem} size="sm" variant="outline">
                   <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Primeiro Extra
+                  Adicionar Extra
                 </Button>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {settings.items.map((item, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-center gap-4">
-                      {item.bump_product_image && (
-                        <img 
-                          src={item.bump_product_image} 
-                          alt={item.bump_product_name}
-                          className="w-12 h-12 object-cover rounded"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <h4 className="font-medium">{item.bump_product_name}</h4>
-                        <p className="text-sm text-muted-foreground">{item.bump_product_price}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex flex-col">
-                          <Label htmlFor={`discount-${index}`} className="text-xs text-muted-foreground mb-1">
-                            Desconto
-                          </Label>
-                          <div className="flex items-center gap-1">
-                            <Input
-                              id={`discount-${index}`}
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={item.discount}
-                              onChange={(e) => updateItemDiscount(index, Number(e.target.value))}
-                              className="w-16 text-center"
-                              placeholder="0"
-                            />
-                            <span className="text-sm text-muted-foreground">% OFF</span>
+
+              {settings.items.length === 0 ? (
+                <div className="text-center py-8 border border-dashed rounded-lg">
+                  <p className="text-muted-foreground">Nenhum produto extra adicionado</p>
+                  <Button onClick={handleAddItem} className="mt-2">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Primeiro Extra
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {settings.items.map((item, index) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex items-center gap-4">
+                        {item.bump_product_image && (
+                          <img 
+                            src={item.bump_product_image} 
+                            alt={item.bump_product_name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <h4 className="font-medium">{item.bump_product_name}</h4>
+                          <p className="text-sm text-muted-foreground">{item.bump_product_price}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col">
+                            <Label htmlFor={`discount-${index}`} className="text-xs text-muted-foreground mb-1">
+                              Desconto
+                            </Label>
+                            <div className="flex items-center gap-1">
+                              <Input
+                                id={`discount-${index}`}
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={item.discount}
+                                onChange={(e) => updateItemDiscount(index, Number(e.target.value))}
+                                className="w-16 text-center"
+                                placeholder="0"
+                              />
+                              <span className="text-sm text-muted-foreground">% OFF</span>
+                            </div>
                           </div>
                         </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEditItem(index)}
+                        >
+                          Alterar
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleRemoveItem(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditItem(index)}
-                      >
-                        Alterar
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleRemoveItem(index)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Botões */}
           <div className="flex gap-4 pt-4">

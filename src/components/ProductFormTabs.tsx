@@ -15,6 +15,7 @@ import EbookUploader from "./EbookUploader";
 import PaymentMethodsSelector from "./PaymentMethodsSelector";
 import { PaymentMethod } from "@/utils/paymentMethods";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
+import { AccessDurationSelector } from "./AccessDurationSelector";
 
 interface ProductFormProps {
   editingProduct?: any;
@@ -53,7 +54,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     allowAffiliates: false,
     category: "",
     supportEmail: "",
-    supportWhatsapp: ""
+    supportWhatsapp: "",
+    accessDurationType: "lifetime",
+    accessDurationValue: null as number | null,
+    accessDurationDescription: ""
   });
 
   const [newTag, setNewTag] = useState("");
@@ -108,7 +112,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         allowAffiliates: editingProduct.allow_affiliates || false,
         category: editingProduct.category || "",
         supportEmail: editingProduct.support_email || "",
-        supportWhatsapp: editingProduct.support_whatsapp || ""
+        supportWhatsapp: editingProduct.support_whatsapp || "",
+        accessDurationType: editingProduct.access_duration_type || "lifetime",
+        accessDurationValue: editingProduct.access_duration_value || null,
+        accessDurationDescription: editingProduct.access_duration_description || ""
       });
     } else {
       setFormData({
@@ -126,10 +133,22 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         allowAffiliates: false,
         category: "",
         supportEmail: "",
-        supportWhatsapp: ""
+        supportWhatsapp: "",
+        accessDurationType: "lifetime",
+        accessDurationValue: null,
+        accessDurationDescription: ""
       });
     }
   }, [editingProduct, selectedType]);
+
+  const handleAccessDurationChange = (type: string, value: number | null, description: string) => {
+    setFormData(prev => ({
+      ...prev,
+      accessDurationType: type,
+      accessDurationValue: value,
+      accessDurationDescription: description
+    }));
+  };
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -335,6 +354,9 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         category: isDraft ? (formData.category || null) : formData.category, // Para rascunho, categoria pode ser null
         support_email: formData.supportEmail || null,
         support_whatsapp: formData.supportWhatsapp || null,
+        access_duration_type: formData.accessDurationType,
+        access_duration_value: formData.accessDurationValue,
+        access_duration_description: formData.accessDurationDescription,
         user_id: user.id,
         status: isDraft ? "Rascunho" : "Ativo"
       };
@@ -401,7 +423,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
             allowAffiliates: false,
             category: "",
             supportEmail: "",
-            supportWhatsapp: ""
+            supportWhatsapp: "",
+            accessDurationType: "lifetime",
+            accessDurationValue: null,
+            accessDurationDescription: ""
           });
         }
       }
@@ -633,6 +658,14 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
   // Fase 4: Configurações
   const advancedTab = (
     <div className="space-y-6">
+      {/* Duração de Acesso */}
+      <AccessDurationSelector
+        durationType={formData.accessDurationType}
+        durationValue={formData.accessDurationValue}
+        durationDescription={formData.accessDurationDescription}
+        onDurationChange={handleAccessDurationChange}
+      />
+
       <div className="space-y-2">
         <Label>Tags</Label>
         <div className="flex gap-2">

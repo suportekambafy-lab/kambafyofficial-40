@@ -366,6 +366,53 @@ export type Database = {
           },
         ]
       }
+      customer_access: {
+        Row: {
+          access_expires_at: string | null
+          access_granted_at: string
+          created_at: string
+          customer_email: string
+          customer_name: string
+          id: string
+          is_active: boolean
+          order_id: string
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          access_expires_at?: string | null
+          access_granted_at?: string
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          id?: string
+          is_active?: boolean
+          order_id: string
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          access_expires_at?: string | null
+          access_granted_at?: string
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          id?: string
+          is_active?: boolean
+          order_id?: string
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_access_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_balances: {
         Row: {
           balance: number
@@ -918,9 +965,13 @@ export type Database = {
       }
       order_bump_settings: {
         Row: {
+          access_extension_description: string | null
+          access_extension_type: string | null
+          access_extension_value: number | null
           bump_product_image: string | null
           bump_product_name: string
           bump_product_price: string
+          bump_type: string | null
           created_at: string
           description: string
           discount: number
@@ -933,9 +984,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          access_extension_description?: string | null
+          access_extension_type?: string | null
+          access_extension_value?: number | null
           bump_product_image?: string | null
           bump_product_name: string
           bump_product_price: string
+          bump_type?: string | null
           created_at?: string
           description?: string
           discount?: number
@@ -948,9 +1003,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          access_extension_description?: string | null
+          access_extension_type?: string | null
+          access_extension_value?: number | null
           bump_product_image?: string | null
           bump_product_name?: string
           bump_product_price?: string
+          bump_type?: string | null
           created_at?: string
           description?: string
           discount?: number
@@ -1197,6 +1256,9 @@ export type Database = {
       }
       products: {
         Row: {
+          access_duration_description: string | null
+          access_duration_type: string | null
+          access_duration_value: number | null
           admin_approved: boolean | null
           allow_affiliates: boolean | null
           ban_reason: string | null
@@ -1229,6 +1291,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          access_duration_description?: string | null
+          access_duration_type?: string | null
+          access_duration_value?: number | null
           admin_approved?: boolean | null
           allow_affiliates?: boolean | null
           ban_reason?: string | null
@@ -1261,6 +1326,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          access_duration_description?: string | null
+          access_duration_type?: string | null
+          access_duration_value?: number | null
           admin_approved?: boolean | null
           allow_affiliates?: boolean | null
           ban_reason?: string | null
@@ -2075,6 +2143,14 @@ export type Database = {
         Args: { admin_id?: string; partner_id: string }
         Returns: undefined
       }
+      calculate_access_expiration: {
+        Args: {
+          base_date?: string
+          duration_type: string
+          duration_value: number
+        }
+        Returns: string
+      }
       calculate_commissions: {
         Args: {
           commission_rate: string
@@ -2085,6 +2161,10 @@ export type Database = {
           affiliate_commission: number
           seller_commission: number
         }[]
+      }
+      check_customer_access: {
+        Args: { p_customer_email: string; p_product_id: string }
+        Returns: boolean
       }
       cleanup_expired_member_sessions: {
         Args: Record<PropertyKey, never>
@@ -2100,6 +2180,16 @@ export type Database = {
           _ip_address?: string
           _product_id: string
           _user_agent?: string
+        }
+        Returns: string
+      }
+      extend_customer_access: {
+        Args: {
+          p_customer_email: string
+          p_extension_type: string
+          p_extension_value: number
+          p_order_id: string
+          p_product_id: string
         }
         Returns: string
       }
