@@ -163,6 +163,7 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
     extensionType?: string;
     extensionValue?: number;
     extensionDescription?: string;
+    extensionPrice?: string;
   }) => {
     console.log('🔄 handleExtensionConfigChange called with:', config);
     
@@ -173,6 +174,8 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
         access_extension_type: config.extensionType,
         access_extension_value: config.extensionValue,
         access_extension_description: config.extensionDescription,
+        // Adicionar preço da extensão
+        bump_product_price: config.bumpType === 'access_extension' ? config.extensionPrice : config.bumpProductPrice,
       };
 
       // Se for produto adicional e temos dados do produto
@@ -463,6 +466,7 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
             extensionType={settings.access_extension_type}
             extensionValue={settings.access_extension_value}
             extensionDescription={settings.access_extension_description}
+            extensionPrice={settings.bump_type === 'access_extension' ? (settings as any).bump_product_price : ''}
             productId={productId}
             onConfigChange={handleExtensionConfigChange}
           />

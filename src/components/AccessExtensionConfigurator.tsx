@@ -27,6 +27,7 @@ interface AccessExtensionConfiguratorProps {
   extensionType?: string;
   extensionValue?: number;
   extensionDescription?: string;
+  extensionPrice?: string;
   productId: string;
   onConfigChange: (config: {
     bumpType: string;
@@ -35,6 +36,7 @@ interface AccessExtensionConfiguratorProps {
     extensionType?: string;
     extensionValue?: number;
     extensionDescription?: string;
+    extensionPrice?: string;
   }) => void;
 }
 
@@ -45,6 +47,7 @@ export const AccessExtensionConfigurator = ({
   extensionType = 'months',
   extensionValue = 6,
   extensionDescription = '',
+  extensionPrice = '',
   productId,
   onConfigChange
 }: AccessExtensionConfiguratorProps) => {
@@ -58,6 +61,7 @@ export const AccessExtensionConfigurator = ({
   const [localExtensionType, setLocalExtensionType] = useState(extensionType);
   const [localExtensionValue, setLocalExtensionValue] = useState(extensionValue);
   const [localExtensionDescription, setLocalExtensionDescription] = useState(extensionDescription);
+  const [localExtensionPrice, setLocalExtensionPrice] = useState(extensionPrice);
 
   useEffect(() => {
     fetchProducts();
@@ -137,7 +141,8 @@ export const AccessExtensionConfigurator = ({
       bumpProductPrice: localProductPrice,
       extensionType: localExtensionType,
       extensionValue: localExtensionValue,
-      extensionDescription: description
+      extensionDescription: description,
+      extensionPrice: localExtensionPrice
     });
   };
 
@@ -302,6 +307,20 @@ export const AccessExtensionConfigurator = ({
             )}
 
             <div>
+              <Label htmlFor="extension-price">Preço da Extensão (KZ)</Label>
+              <Input
+                id="extension-price"
+                type="text"
+                value={localExtensionPrice}
+                onChange={(e) => {
+                  setLocalExtensionPrice(e.target.value);
+                  setTimeout(updateConfig, 0);
+                }}
+                placeholder="Ex: 5000"
+              />
+            </div>
+
+            <div>
               <Label htmlFor="extension-description">Descrição Personalizada (Opcional)</Label>
               <Textarea
                 id="extension-description"
@@ -318,6 +337,7 @@ export const AccessExtensionConfigurator = ({
             <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
               <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
                 Preview: {generateExtensionDescription(localExtensionType, localExtensionValue)}
+                {localExtensionPrice && ` - ${localExtensionPrice} KZ`}
               </p>
               <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                 {localExtensionType === 'lifetime' 
