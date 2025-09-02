@@ -451,7 +451,7 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
           )}
 
           {/* 3. Compra Segura (será adicionado no checkout) */}
-          <div className="bg-green-600 text-white py-3 px-4 text-center">
+          <div className="text-white py-3 px-4 text-center" style={{ backgroundColor: '#1b2f1a' }}>
             <span className="font-semibold flex items-center justify-center gap-2">
               <div className="relative inline-flex items-center justify-center">
                 <Shield className="h-5 w-5" />
