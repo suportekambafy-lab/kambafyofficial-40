@@ -110,10 +110,16 @@ export const useStreamingQuery = () => {
           acc.totalAffiliateCommissions += affiliateCommission;
         } else {
           // ✅ Para vendedores, usar seller_commission que já vem em KZ original da base de dados
-          // Se não houver seller_commission, usar o valor original em KZ
           let sellerCommission = parseFloat(order.seller_commission?.toString() || '0');
           if (sellerCommission === 0) {
-            sellerCommission = amount; // Fallback para amount se não houver seller_commission
+            // CORREÇÃO: Para vendas antigas sem seller_commission, converter de volta para KZ
+            if (order.currency === 'EUR') {
+              sellerCommission = amount * 1053; // Taxa EUR->KZ aproximada
+            } else if (order.currency === 'MZN') {
+              sellerCommission = amount * 13; // Taxa MZN->KZ aproximada
+            } else {
+              sellerCommission = amount; // Se já está em KZ
+            }
           }
           
           // Aplicar desconto de 20% se for venda recuperada

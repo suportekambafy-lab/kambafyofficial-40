@@ -238,8 +238,19 @@ export function ModernRecentSales() {
     if (sale.sale_type === 'affiliate') {
       amount = sale.affiliate_commission || 0;
     } else {
-      // Para vendas próprias, usar seller_commission ou fallback para amount
-      amount = sale.seller_commission || parseFloat(sale.amount);
+      // Para vendas próprias, usar seller_commission ou converter de volta se for venda antiga
+      amount = sale.seller_commission || 0;
+      if (amount === 0) {
+        const amountValue = parseFloat(sale.amount);
+        // CORREÇÃO: Converter vendas antigas de volta para KZ
+        if (sale.currency === 'EUR') {
+          amount = amountValue * 1053; // Taxa EUR->KZ aproximada
+        } else if (sale.currency === 'MZN') {
+          amount = amountValue * 13; // Taxa MZN->KZ aproximada  
+        } else {
+          amount = amountValue; // Se já está em KZ
+        }
+      }
     }
     
     // Aplicar desconto de 20% para vendas recuperadas

@@ -123,12 +123,26 @@ export function ModernDashboardHome() {
 
       // Combinar vendas próprias e comissões de afiliado
       const allOrdersWithEarnings = [
-        // Vendas próprias - usar valor total ou comissão do vendedor
-        ...(ownOrders || []).map((order: any) => ({
-          ...order,
-          earning_amount: parseFloat(order.seller_commission?.toString() || order.amount || '0'),
-          order_type: 'own'
-        })),
+        // Vendas próprias - usar comissão do vendedor ou converter vendas antigas
+        ...(ownOrders || []).map((order: any) => {
+          let earning_amount = parseFloat(order.seller_commission?.toString() || '0');
+          if (earning_amount === 0) {
+            const amountValue = parseFloat(order.amount || '0');
+            // CORREÇÃO: Converter vendas antigas de volta para KZ
+            if (order.currency === 'EUR') {
+              earning_amount = amountValue * 1053; // Taxa EUR->KZ aproximada
+            } else if (order.currency === 'MZN') {
+              earning_amount = amountValue * 13; // Taxa MZN->KZ aproximada
+            } else {
+              earning_amount = amountValue; // Se já está em KZ
+            }
+          }
+          return {
+            ...order,
+            earning_amount,
+            order_type: 'own'
+          };
+        }),
         // Vendas como afiliado - usar apenas comissão do afiliado
         ...(affiliateOrders || []).map((order: any) => ({
           ...order,

@@ -190,12 +190,16 @@ serve(async (req) => {
       if (orderId) {
         console.log('🔄 Updating order status for order_id:', orderId);
         
-        // Atualizar status do pedido para "completed"
+        // Atualizar status do pedido para "completed" e garantir seller_commission
+        const originalAmount = parseFloat(paymentIntent.metadata.originalAmount || (paymentIntent.amount / 100).toString());
+        
         const { data: orderData, error: updateError } = await supabase
           .from('orders')
           .update({ 
             status: 'completed',
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            // CORREÇÃO: Garantir que seller_commission seja populado com valor original
+            seller_commission: originalAmount
           })
           .eq('order_id', orderId)
           .select('*')
