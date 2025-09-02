@@ -191,7 +191,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
           
           {/* Conteúdo principal */}
           <div className="flex items-start gap-4">
-            {orderBump.bump_product_image && (
+            {orderBump.bump_product_image && orderBump.bump_type !== 'access_extension' && (
               <div className="w-16 h-16 bg-white rounded-lg overflow-hidden flex-shrink-0 shadow-sm border">
                 <img 
                   src={orderBump.bump_product_image} 
@@ -209,6 +209,23 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
                 {orderBump.description}
               </p>
 
+              {/* Mostrar detalhes da extensão se for do tipo access_extension */}
+              {orderBump.bump_type === 'access_extension' && (
+                <div className="mb-2 p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <p className="text-xs text-blue-800 dark:text-blue-200 font-medium">
+                    {orderBump.access_extension_type === 'lifetime' 
+                      ? '🔥 Acesso Vitalício'
+                      : `⏰ +${orderBump.access_extension_value} ${
+                          orderBump.access_extension_type === 'days' 
+                            ? (orderBump.access_extension_value === 1 ? 'dia' : 'dias')
+                            : orderBump.access_extension_type === 'months' 
+                            ? (orderBump.access_extension_value === 1 ? 'mês' : 'meses')
+                            : (orderBump.access_extension_value === 1 ? 'ano' : 'anos')
+                        } de tempo de acesso`
+                    }
+                  </p>
+                </div>
+              )}
               
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -248,7 +265,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
             ) : (
               <>
                 <Plus className="w-4 h-4 mr-2" />
-                Adicionar Produto
+                {orderBump.bump_type === 'access_extension' ? 'Adicionar Extensão' : 'Adicionar Produto'}
               </>
             )}
           </Button>

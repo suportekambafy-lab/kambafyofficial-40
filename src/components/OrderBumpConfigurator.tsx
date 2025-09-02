@@ -45,6 +45,11 @@ interface OrderBumpSettings {
   position: string;
   bump_type: string;
   items: OrderBumpItem[];
+  // Campos para extensão de acesso
+  access_extension_type?: string;
+  access_extension_value?: number;
+  access_extension_description?: string;
+  bump_product_price?: string; // Adicionar para o preço da extensão
 }
 
 export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpConfiguratorProps) {
@@ -60,8 +65,12 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
     title: "Aproveite esta oferta especial!",
     description: "Adicione este produto por apenas mais:",
     position: "after_payment_method",
-    bump_type: "product", // Sempre produto adicional
-    items: []
+    bump_type: "product",
+    items: [],
+    access_extension_type: "months",
+    access_extension_value: 6,
+    access_extension_description: "",
+    bump_product_price: "" // Adicionar este campo
   });
 
   useEffect(() => {
@@ -139,8 +148,13 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
           title: settingsData.title,
           description: settingsData.description,
           position: settingsData.position,
-          bump_type: 'product', // Sempre produto adicional
-          items: itemsData || []
+          bump_type: settingsData.bump_type || 'product',
+          items: itemsData || [],
+          access_extension_type: settingsData.access_extension_type || 'months',
+          access_extension_value: settingsData.access_extension_value || 6,
+          access_extension_description: settingsData.access_extension_description || '',
+          // Se for extensão, o preço fica no bump_product_price
+          bump_product_price: settingsData.bump_product_price || ''
         });
 
         console.log('✅ Estado atualizado com configurações existentes');
@@ -154,25 +168,41 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
     bumpType: string;
     bumpProductName?: string;
     bumpProductPrice?: string;
+    extensionType?: string;
+    extensionValue?: number;
+    extensionDescription?: string;
+    extensionPrice?: string;
   }) => {
     console.log('🔄 handleExtensionConfigChange called with:', config);
     
     setSettings(prev => {
       const newSettings = {
         ...prev,
-        bump_type: 'product', // Sempre produto adicional
+        bump_type: config.bumpType,
+        access_extension_type: config.extensionType || 'months',
+        access_extension_value: config.extensionValue || 6,
+        access_extension_description: config.extensionDescription || '',
       };
 
-      // Sempre produto adicional
-      if (config.bumpProductName && config.bumpProductPrice) {
-        const newItem: OrderBumpItem = {
-          bump_product_name: config.bumpProductName,
-          bump_product_price: config.bumpProductPrice,
-          bump_product_image: null,
-          discount: 0,
-          order_position: 0
-        };
-        newSettings.items = [newItem];
+      // Se for extensão de acesso
+      if (config.bumpType === 'access_extension') {
+        newSettings.bump_product_price = config.extensionPrice || '';
+        // Limpar items para extensões
+        newSettings.items = [];
+      } 
+      // Se for produto adicional
+      else if (config.bumpType === 'product') {
+        // Para produtos, não usar o campo bump_product_price da settings principal
+        if (config.bumpProductName && config.bumpProductPrice) {
+          const newItem: OrderBumpItem = {
+            bump_product_name: config.bumpProductName,
+            bump_product_price: config.bumpProductPrice,
+            bump_product_image: null,
+            discount: 0,
+            order_position: 0
+          };
+          newSettings.items = [newItem];
+        }
       }
 
       console.log('🔄 New settings after config change:', newSettings);
@@ -238,14 +268,28 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
     try {
       setLoading(true);
 
-      if (settings.enabled && settings.items.length === 0) {
-        console.log('❌ Erro: Order bump ativado mas sem produtos adicionados');
+      if (settings.enabled && settings.bump_type === 'product' && settings.items.length === 0) {
+        console.log('❌ Erro: Order bump de produto ativado mas sem itens');
         toast({
           title: "Erro",
-          description: "Adicione pelo menos um produto adicional para ativar",
+          description: "Adicione pelo menos um produto extra para ativar",
           variant: "destructive"
         });
         return;
+      }
+
+      if (settings.enabled && settings.bump_type === 'access_extension') {
+        if (!settings.access_extension_type || !settings.bump_product_price || settings.bump_product_price.trim() === '') {
+          console.log('❌ Erro: Extensão de acesso ativada mas sem configuração completa');
+          console.log('Extension type:', settings.access_extension_type);
+          console.log('Extension price:', settings.bump_product_price);
+          toast({
+            title: "Erro", 
+            description: "Configure o tipo de extensão e preço antes de ativar",
+            variant: "destructive"
+          });
+          return;
+        }
       }
 
       console.log('👤 Verificando autenticação...');
@@ -261,15 +305,27 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
         title: settings.title,
         description: settings.description,
         position: settings.position,
-        bump_type: 'product', // Sempre produto adicional
-        bump_product_name: settings.items[0]?.bump_product_name || "",
-        bump_product_price: settings.items[0]?.bump_product_price || "",
+        bump_type: settings.bump_type,
+        // Campos para extensão de acesso
+        access_extension_type: settings.access_extension_type,
+        access_extension_value: settings.access_extension_value,
+        access_extension_description: settings.access_extension_description,
+        // Para extensão, usar o preço da extensão; para produto, usar o preço do item
+        bump_product_name: settings.bump_type === 'access_extension' ? 
+          (settings.access_extension_description || `Extensão de ${settings.access_extension_value} ${settings.access_extension_type}`) :
+          (settings.items[0]?.bump_product_name || ""),
+        bump_product_price: settings.bump_type === 'access_extension' ? 
+          settings.bump_product_price : 
+          (settings.items[0]?.bump_product_price || ""),
         bump_product_image: settings.items[0]?.bump_product_image || null,
         discount: settings.items[0]?.discount || 0
       };
 
       console.log('💾 Salvando configurações principais:', orderBumpData);
       console.log('📍 Tipo de bump:', settings.bump_type);
+      console.log('📍 Extension type:', settings.access_extension_type);
+      console.log('📍 Extension value:', settings.access_extension_value);
+      console.log('📍 Extension price:', settings.bump_product_price);
       const { data: savedSettings, error } = await supabase
         .from('order_bump_settings')
         .upsert(orderBumpData, { onConflict: 'product_id' })
@@ -358,7 +414,7 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
           <Button variant="ghost" onClick={() => setShowProductSelector(false)}>
             ← Voltar
           </Button>
-          <h3 className="text-lg font-semibold">Selecionar Produto Adicional</h3>
+          <h3 className="text-lg font-semibold">Selecionar Produto Extra</h3>
         </div>
         <ProductSelector
           products={products}
@@ -429,29 +485,34 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
 
           {/* Configuração de Extensão ou Produto */}
           <AccessExtensionConfigurator
-            bumpProductName={settings.items[0]?.bump_product_name || ''}
-            bumpProductPrice={settings.items[0]?.bump_product_price || ''}
+            bumpType={settings.bump_type}
+            bumpProductName={settings.bump_type === 'product' ? settings.items[0]?.bump_product_name : ''}
+            bumpProductPrice={settings.bump_type === 'product' ? settings.items[0]?.bump_product_price : ''}
+            extensionType={settings.access_extension_type}
+            extensionValue={settings.access_extension_value}
+            extensionDescription={settings.access_extension_description}
+            extensionPrice={settings.bump_type === 'access_extension' ? settings.bump_product_price || '' : ''}
             productId={productId}
             onConfigChange={handleExtensionConfigChange}
           />
 
-          {/* Produtos Adicionais */}
+          {/* Produtos Extras (apenas para bump_type === 'product') */}
           {settings.bump_type === 'product' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label>Produtos Adicionais</Label>
+                <Label>Produtos Extras</Label>
                 <Button onClick={handleAddItem} size="sm" variant="outline">
                   <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Produto
+                  Adicionar Extra
                 </Button>
               </div>
 
               {settings.items.length === 0 ? (
                 <div className="text-center py-8 border border-dashed rounded-lg">
-                  <p className="text-muted-foreground">Nenhum produto adicional adicionado</p>
+                  <p className="text-muted-foreground">Nenhum produto extra adicionado</p>
                   <Button onClick={handleAddItem} className="mt-2">
                     <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Primeiro Produto
+                    Adicionar Primeiro Extra
                   </Button>
                 </div>
               ) : (

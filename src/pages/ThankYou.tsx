@@ -516,7 +516,7 @@ const ThankYou = () => {
                 {/* Order Bump Information */}
                 {orderDetails.orderBumpName && (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                    <label className="text-sm font-medium text-orange-700">Produto Adicional Incluído</label>
+                    <label className="text-sm font-medium text-orange-700">Produto Extra Adicionado</label>
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-checkout-text font-medium">{orderDetails.orderBumpName}</p>
