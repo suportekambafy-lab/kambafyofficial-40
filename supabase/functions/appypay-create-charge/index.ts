@@ -39,8 +39,13 @@ serve(async (req) => {
     
     const requestData: CreateChargeRequest = await req.json();
     console.log('📥 Dados recebidos:', JSON.stringify(requestData, null, 2));
+    console.log('🔍 Verificando variáveis de ambiente...');
 
     const baseUrl = Deno.env.get('APPYPAY_BASE_URL');
+    
+    console.log('📊 Status das variáveis:', {
+      baseUrl: baseUrl ? `✅ ${baseUrl}` : '❌ Indefinido'
+    });
     
     if (!baseUrl) {
       console.error('❌ APPYPAY_BASE_URL não configurada');
@@ -61,8 +66,16 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
     
+    console.log('📞 Chamando função appypay-token...');
+    
     // Obter token de acesso via função supabase
     const { data: tokenData, error: tokenError } = await supabase.functions.invoke('appypay-token');
+    
+    console.log('📨 Resposta da função appypay-token:', {
+      success: !!tokenData,
+      error: tokenError?.message || 'Nenhum erro',
+      data: tokenData ? 'Token recebido' : 'Sem dados'
+    });
     
     if (tokenError || !tokenData?.success) {
       console.error('❌ Erro ao gerar token:', tokenError || tokenData?.error);

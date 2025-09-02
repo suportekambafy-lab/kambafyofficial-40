@@ -13,9 +13,17 @@ serve(async (req) => {
 
   try {
     console.log('🔑 Iniciando geração de token AppyPay');
+    console.log('🔍 Verificando variáveis de ambiente...');
     
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
+    const baseUrl = Deno.env.get('APPYPAY_BASE_URL');
+    
+    console.log('📊 Status das variáveis:', {
+      clientId: clientId ? '✅ Definido' : '❌ Indefinido',
+      clientSecret: clientSecret ? '✅ Definido' : '❌ Indefinido',
+      baseUrl: baseUrl ? `✅ ${baseUrl}` : '❌ Indefinido'
+    });
     
     if (!clientId || !clientSecret) {
       console.error('❌ Credenciais AppyPay não configuradas');
@@ -30,8 +38,6 @@ serve(async (req) => {
 
     console.log('📡 Fazendo requisição para token OAuth2');
     
-    const baseUrl = Deno.env.get('APPYPAY_BASE_URL');
-    
     if (!baseUrl) {
       console.error('❌ APPYPAY_BASE_URL não configurada');
       return new Response(
@@ -45,6 +51,7 @@ serve(async (req) => {
     
     // URL para geração de token - try different common OAuth2 paths
     const tokenUrl = `${baseUrl}/oauth/token`;
+    console.log('🌐 URL do token:', tokenUrl);
     
     const formData = new URLSearchParams();
     formData.append('grant_type', 'client_credentials');
