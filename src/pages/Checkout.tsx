@@ -30,6 +30,7 @@ import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetec
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { AppyPayReferential } from "@/components/checkout/AppyPayReferential";
+import { AppyPayTest } from "@/components/AppyPayTest";
 
 
 const Checkout = () => {
@@ -1424,6 +1425,11 @@ const Checkout = () => {
 
   return (
     <ThemeProvider forceLightMode={true}>
+      {/* Componente temporário para testar configuração AppyPay */}
+      <div className="fixed top-4 right-4 z-50">
+        <AppyPayTest />
+      </div>
+      
       <FacebookPixelTracker productId={productId || ''} />
       {product && (
         <SEO 
