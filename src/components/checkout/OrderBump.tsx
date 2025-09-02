@@ -22,7 +22,12 @@ interface OrderBumpData {
   bump_product_name: string;
   bump_product_price: string;
   bump_product_image: string | null;
-  user_id: string; // Adicionado para garantir que apenas produtos do vendedor sejam exibidos
+  user_id: string;
+  // Campos para extensões de acesso
+  bump_type?: string;
+  access_extension_type?: string;
+  access_extension_value?: number;
+  access_extension_description?: string;
 }
 
 interface OrderBumpProps {
@@ -90,6 +95,8 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
 
       if (data) {
         console.log(`✅ OrderBump: Order bump encontrado:`, data);
+        console.log(`📋 Tipo do bump:`, data.bump_type);
+        console.log(`⏰ Extensão - Tipo:`, data.access_extension_type, `Valor:`, data.access_extension_value);
       } else {
         console.log(`❌ OrderBump: Nenhum order bump encontrado para produto ${productId} na posição ${position}`);
       }
@@ -184,13 +191,19 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
           
           {/* Conteúdo principal */}
           <div className="flex items-start gap-4">
-            {orderBump.bump_product_image && (
+            {orderBump.bump_product_image && orderBump.bump_type !== 'access_extension' && (
               <div className="w-20 h-20 bg-white rounded-lg overflow-hidden flex-shrink-0 shadow-sm border">
                 <img 
                   src={orderBump.bump_product_image} 
                   alt={orderBump.bump_product_name}
                   className="w-full h-full object-cover"
                 />
+              </div>
+            )}
+
+            {orderBump.bump_type === 'access_extension' && (
+              <div className="w-20 h-20 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm border">
+                <div className="text-blue-600 text-2xl">⏰</div>
               </div>
             )}
             
@@ -201,6 +214,24 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
               <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
                 {orderBump.description}
               </p>
+
+              {/* Mostrar detalhes da extensão se for do tipo access_extension */}
+              {orderBump.bump_type === 'access_extension' && (
+                <div className="mb-3 p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                    {orderBump.access_extension_type === 'lifetime' 
+                      ? '🔥 Acesso Vitalício'
+                      : `⏰ +${orderBump.access_extension_value} ${
+                          orderBump.access_extension_type === 'days' 
+                            ? (orderBump.access_extension_value === 1 ? 'dia' : 'dias')
+                            : orderBump.access_extension_type === 'months' 
+                            ? (orderBump.access_extension_value === 1 ? 'mês' : 'meses')
+                            : (orderBump.access_extension_value === 1 ? 'ano' : 'anos')
+                        } de acesso`
+                    }
+                  </p>
+                </div>
+              )}
               
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -240,7 +271,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
             ) : (
               <>
                 <Plus className="w-5 h-5 mr-2" />
-                Adicionar Produto
+                {orderBump.bump_type === 'access_extension' ? 'Adicionar Extensão' : 'Adicionar Produto'}
               </>
             )}
           </Button>

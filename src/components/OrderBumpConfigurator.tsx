@@ -179,27 +179,33 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
       const newSettings = {
         ...prev,
         bump_type: config.bumpType,
-        access_extension_type: config.extensionType,
-        access_extension_value: config.extensionValue,
-        access_extension_description: config.extensionDescription,
-        // Adicionar preço da extensão
-        bump_product_price: config.bumpType === 'access_extension' ? config.extensionPrice : config.bumpProductPrice,
+        access_extension_type: config.extensionType || 'months',
+        access_extension_value: config.extensionValue || 6,
+        access_extension_description: config.extensionDescription || '',
       };
 
-      // Se for produto adicional e temos dados do produto
-      if (config.bumpType === 'product' && config.bumpProductName && config.bumpProductPrice) {
-        const newItem: OrderBumpItem = {
-          bump_product_name: config.bumpProductName,
-          bump_product_price: config.bumpProductPrice,
-          bump_product_image: null, // Será definido pelo ProductSelector
-          discount: 0,
-          order_position: 0
-        };
-        
-        newSettings.items = [newItem];
+      // Se for extensão de acesso
+      if (config.bumpType === 'access_extension') {
+        newSettings.bump_product_price = config.extensionPrice || '';
+        // Limpar items para extensões
+        newSettings.items = [];
+      } 
+      // Se for produto adicional
+      else if (config.bumpType === 'product') {
+        // Para produtos, não usar o campo bump_product_price da settings principal
+        if (config.bumpProductName && config.bumpProductPrice) {
+          const newItem: OrderBumpItem = {
+            bump_product_name: config.bumpProductName,
+            bump_product_price: config.bumpProductPrice,
+            bump_product_image: null,
+            discount: 0,
+            order_position: 0
+          };
+          newSettings.items = [newItem];
+        }
       }
 
-      console.log('🔄 New settings:', newSettings);
+      console.log('🔄 New settings after config change:', newSettings);
       return newSettings;
     });
   };
@@ -272,16 +278,18 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
         return;
       }
 
-      if (settings.enabled && settings.bump_type === 'access_extension' && (!settings.access_extension_type || !settings.bump_product_price)) {
-        console.log('❌ Erro: Extensão de acesso ativada mas sem configuração completa');
-        console.log('Extension type:', settings.access_extension_type);
-        console.log('Extension price:', settings.bump_product_price);
-        toast({
-          title: "Erro", 
-          description: "Configure a extensão de tempo e preço antes de ativar",
-          variant: "destructive"
-        });
-        return;
+      if (settings.enabled && settings.bump_type === 'access_extension') {
+        if (!settings.access_extension_type || !settings.bump_product_price || settings.bump_product_price.trim() === '') {
+          console.log('❌ Erro: Extensão de acesso ativada mas sem configuração completa');
+          console.log('Extension type:', settings.access_extension_type);
+          console.log('Extension price:', settings.bump_product_price);
+          toast({
+            title: "Erro", 
+            description: "Configure o tipo de extensão e preço antes de ativar",
+            variant: "destructive"
+          });
+          return;
+        }
       }
 
       console.log('👤 Verificando autenticação...');
@@ -478,12 +486,12 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
           {/* Configuração de Extensão ou Produto */}
           <AccessExtensionConfigurator
             bumpType={settings.bump_type}
-            bumpProductName={settings.items[0]?.bump_product_name}
-            bumpProductPrice={settings.items[0]?.bump_product_price}
+            bumpProductName={settings.bump_type === 'product' ? settings.items[0]?.bump_product_name : ''}
+            bumpProductPrice={settings.bump_type === 'product' ? settings.items[0]?.bump_product_price : ''}
             extensionType={settings.access_extension_type}
             extensionValue={settings.access_extension_value}
             extensionDescription={settings.access_extension_description}
-            extensionPrice={settings.bump_product_price || ''}
+            extensionPrice={settings.bump_type === 'access_extension' ? settings.bump_product_price || '' : ''}
             productId={productId}
             onConfigChange={handleExtensionConfigChange}
           />

@@ -65,12 +65,28 @@ export const AccessExtensionConfigurator = ({
 
   useEffect(() => {
     fetchProducts();
+  }, [productId]);
+
+  // Sincronizar estados locais quando as props mudam
+  useEffect(() => {
+    console.log('🔄 AccessExtensionConfigurator: Sincronizando props:', {
+      bumpType,
+      bumpProductName,
+      bumpProductPrice,
+      extensionType,
+      extensionValue,
+      extensionDescription,
+      extensionPrice
+    });
     
-    // Inicializar o preço da extensão se já existe
-    if (extensionPrice && localBumpType === 'access_extension') {
-      setLocalExtensionPrice(extensionPrice);
-    }
-  }, [productId, extensionPrice]);
+    setLocalBumpType(bumpType || 'product');
+    setLocalProductName(bumpProductName || '');
+    setLocalProductPrice(bumpProductPrice || '');
+    setLocalExtensionType(extensionType || 'months');
+    setLocalExtensionValue(extensionValue || 6);
+    setLocalExtensionDescription(extensionDescription || '');
+    setLocalExtensionPrice(extensionPrice || '');
+  }, [bumpType, bumpProductName, bumpProductPrice, extensionType, extensionValue, extensionDescription, extensionPrice]);
 
   const fetchProducts = async () => {
     try {
