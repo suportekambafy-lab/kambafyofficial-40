@@ -29,8 +29,6 @@ import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
-import { AppyPayReferential } from "@/components/checkout/AppyPayReferential";
-import { AppyPayTest } from "@/components/AppyPayTest";
 
 
 const Checkout = () => {
@@ -1425,10 +1423,6 @@ const Checkout = () => {
 
   return (
     <ThemeProvider forceLightMode={true}>
-      {/* Componente temporário para testar configuração AppyPay */}
-      <div className="fixed top-4 right-4 z-50">
-        <AppyPayTest />
-      </div>
       
       <FacebookPixelTracker productId={productId || ''} />
       {product && (
@@ -1701,21 +1695,6 @@ const Checkout = () => {
                       }
                     }}
                     disabled={processing}
-                  />
-                </div>
-              )}
-
-              {selectedPayment === 'reference' && (
-                <div className="mt-6">
-                  <AppyPayReferential
-                    productPrice={totalPrice}
-                    productName={product.name}
-                    currency="AOA"
-                    onPaymentCreated={(reference) => {
-                      console.log('🎯 Referência AppyPay criada:', reference);
-                      // Aqui pode implementar lógica adicional se necessário
-                    }}
-                    disabled={!formData.fullName || !formData.email || !formData.phone || processing}
                   />
                 </div>
               )}
