@@ -29,7 +29,6 @@ import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
-import { useCheckoutTranslations } from "@/hooks/useCheckoutTranslations";
 
 
 const Checkout = () => {
@@ -45,8 +44,7 @@ const Checkout = () => {
     convertPrice,
     changeCountry, 
     supportedCountries,
-    isReady: geoReady,
-    detectedLanguage
+    isReady: geoReady
   } = useGeoLocation();
   const { 
     affiliateCode, 
@@ -55,9 +53,6 @@ const Checkout = () => {
     markAsInvalidAffiliate,
     clearAffiliateCode 
   } = useAffiliateTracking();
-  
-  // Hook para traduções automáticas baseadas no país
-  const { t } = useCheckoutTranslations();
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -610,16 +605,16 @@ const Checkout = () => {
       console.error('Erro ao processar sucesso do pagamento:', error);
       toast({
         title: "Erro",
-        description: t('processingError'),
+        description: "Erro ao finalizar compra. Entre em contato conosco.",
         variant: "destructive"
       });
     }
   };
 
   const handleCardPaymentError = (error: string) => {
-      toast({
-        title: t('paymentError'),
-        description: error,
+    toast({
+      title: "Erro no pagamento",
+      description: error,
       variant: "destructive"
     });
   };
@@ -645,7 +640,7 @@ const Checkout = () => {
         });
         toast({
           title: "Campos obrigatórios",
-          description: t('fillAllFields'),
+          description: "Por favor, preencha todos os campos antes de continuar",
           variant: "destructive"
         });
         setProcessing(false);
@@ -797,7 +792,7 @@ const Checkout = () => {
       console.log('❌ Validation failed - missing required fields');
       toast({
         title: "Erro",
-        description: t('fillAllFields'),
+        description: "Por favor, preencha todos os campos obrigatórios",
         variant: "destructive"
       });
       return;
@@ -877,8 +872,8 @@ const Checkout = () => {
 
         if (verifyError || !verificationData?.valid) {
           toast({
-            title: t('invalidCode'),
-            description: t('codeExpired'),
+            title: "Código inválido",
+            description: "O código de verificação está incorreto ou expirado",
             variant: "destructive"
           });
           setProcessing(false);
@@ -1310,7 +1305,7 @@ const Checkout = () => {
       <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <LoadingSpinner 
-            text={t('productInfo')}
+            text="Carregando informações do produto..."
             size="lg"
           />
         </div>
@@ -1332,7 +1327,7 @@ const Checkout = () => {
               onClick={() => window.location.reload()} 
               className="mt-4"
             >
-              {t('processing')}
+              Tentar novamente
             </Button>
           </div>
         </div>
@@ -1345,8 +1340,8 @@ const Checkout = () => {
       <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">{t('productNotFound')}</h1>
-            <p className="text-muted-foreground">{t('productNotFound')}</p>
+            <h1 className="text-2xl font-bold mb-4">Produto não encontrado</h1>
+            <p className="text-muted-foreground">O produto que você está procurando não existe ou foi removido.</p>
             <p className="text-sm text-muted-foreground mt-2">
               Product ID: {productId}
             </p>
@@ -1364,16 +1359,16 @@ const Checkout = () => {
             <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-orange-600" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">{t('productInactive')}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">Oferta Expirada</h1>
             <p className="text-sm sm:text-base text-gray-600 mb-6">
-              {t('productInactive')}
+              Infelizmente, esta oferta não está mais disponível. O produto foi temporariamente desativado pelo vendedor.
             </p>
             <div className="bg-gray-100 p-4 rounded-lg mb-6">
               <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{product.name}</h3>
-              <p className="text-xs sm:text-sm text-gray-600">Status: {t('inactive')}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Status: Inativo</p>
             </div>
             <p className="text-xs text-gray-500 mt-4">
-              {t('contactSeller')}
+              Entre em contato com o vendedor para mais informações sobre a disponibilidade deste produto.
             </p>
           </div>
         </div>
@@ -1389,9 +1384,9 @@ const Checkout = () => {
             <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">{t('productBanned')}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">Produto Indisponível</h1>
             <p className="text-sm sm:text-base text-gray-600 mb-6">
-              {t('productBanned')}
+              Este produto não está mais disponível para compra. Foi removido temporariamente por questões administrativas.
             </p>
             <div className="bg-gray-100 p-4 rounded-lg mb-6">
               <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{product.name}</h3>
@@ -1533,11 +1528,11 @@ const Checkout = () => {
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-gray-700 font-medium">
-                  {t('fullName')}
+                  Nome completo
                 </Label>
                 <Input
                   id="fullName"
-                  placeholder={t('fullName')}
+                  placeholder="Digite seu nome completo"
                   value={formData.fullName}
                   onChange={(e) => handleInputChange("fullName", e.target.value)}
                   className="h-12 border-gray-300 focus:border-green-500"
@@ -1546,12 +1541,12 @@ const Checkout = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 font-medium">
-                  {t('email')}
+                  E-mail
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder={t('email')}
+                  placeholder="Digite seu e-mail para receber a compra"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className="h-12 border-gray-300 focus:border-green-500"
@@ -1560,14 +1555,14 @@ const Checkout = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-gray-700 font-medium">
-                  {t('phone')}
+                  Telefone ou Whatsapp
                 </Label>
                 <PhoneInput
                   value={formData.phone}
                   onChange={(value) => handleInputChange("phone", value)}
                   selectedCountry={formData.phoneCountry}
                   onCountryChange={handleCountryChange}
-                  placeholder={t('phone')}
+                  placeholder="Digite seu telefone"
                   className="h-12"
                 />
               </div>
@@ -1593,9 +1588,9 @@ const Checkout = () => {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <span className="text-green-600 font-medium">
-                      {t('paymentMethods')}: {selectedPayment && <span className="text-gray-700">{getSelectedPaymentName()}</span>}
+                      Pagar com: {selectedPayment && <span className="text-gray-700">{getSelectedPaymentName()}</span>}
                     </span>
-                    <p className="text-gray-700 font-medium">{t('selectPaymentMethod')}</p>
+                    <p className="text-gray-700 font-medium">Selecione a forma de pagamento desejada</p>
                   </div>
                   
                   <div className={`grid ${getPaymentGridClasses()} gap-3`}>
@@ -1642,10 +1637,10 @@ const Checkout = () => {
                 <div className="space-y-4">
                   <div className="text-center py-8 bg-gray-100 rounded-lg">
                     <p className="text-gray-600 font-medium">
-                      {t('paymentMethodsNotAvailable')}
+                      Métodos de pagamento não disponíveis para {userCountry.name}
                     </p>
                     <p className="text-sm text-gray-500 mt-2">
-                      {t('paymentMethodsSoon')}
+                      Em breve teremos opções de pagamento para sua região.
                     </p>
                   </div>
                 </div>
@@ -1729,9 +1724,7 @@ const Checkout = () => {
                         
                         {kambaPayEmailError ? (
                           <div className="text-xs text-red-600 bg-red-100 p-3 rounded border border-red-200">
-                            <strong>⚠️ Atenção:</strong> {kambaPayEmailError ? (
-                              kambaPayEmailError.includes('não está registrado') ? t('kambaPayNotRegistered') : t('kambaPayError')
-                            ) : kambaPayEmailError}
+                            <strong>⚠️ Atenção:</strong> {kambaPayEmailError}
                             <div className="mt-2">
                               <button 
                                 className="text-blue-600 underline text-xs hover:text-blue-800"
@@ -1765,10 +1758,10 @@ const Checkout = () => {
             <div className="space-y-6">
               <Card className="shadow-sm">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('orderSummary')}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumo do pedido</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-700">{t('product')}</span>
+                      <span className="text-gray-700">Produto principal</span>
                       <span className="font-medium text-gray-900">
                         {getDisplayPrice(originalPrice)}
                       </span>
@@ -1792,7 +1785,7 @@ const Checkout = () => {
                     
                     <div className="border-t pt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">{t('total')}</span>
+                        <span className="text-gray-700 font-medium">Total</span>
                         <span className="text-2xl font-bold text-green-600">
                           {getDisplayPrice(totalPrice)}
                         </span>
@@ -1813,10 +1806,10 @@ const Checkout = () => {
                       <div className="w-6 h-6 rounded bg-green-700 flex items-center justify-center mr-2">
                         <span className="text-xs font-bold text-white animate-bounce">K</span>
                       </div>
-                      {t('processing').toUpperCase()}
+                      PROCESSANDO...
                     </div>
                   ) : (
-                    `${t('completeOrder').toUpperCase()} - ${getDisplayPrice(totalPrice)}`
+                    `COMPRAR AGORA - ${getDisplayPrice(totalPrice)}`
                   )}
                 </Button>
               )}
@@ -1841,16 +1834,16 @@ const Checkout = () => {
               />
               <div>
                 <h4 className="font-semibold text-green-600">Kambafy</h4>
-                <p className="text-sm text-gray-600">{t('allRightsReserved')}</p>
+                <p className="text-sm text-gray-600">Todos os direitos reservados.</p>
               </div>
             </div>
             <p className="text-xs text-gray-500 max-w-2xl mx-auto">
-              {t('termsText')}{' '}
+              Ao clicar em Comprar agora, eu declaro que li e concordo (1) com a Kambafy está processando este pedido em nome de{' '}
               <span className="text-green-600">
-                {product?.fantasy_name || t('producer')}
-              </span> {t('noResponsibility')}{' '}
-              <span className="underline cursor-pointer">{t('termsOfUse')}</span> e{' '}
-              <span className="underline cursor-pointer">{t('privacyPolicy')}</span>.
+                {product?.fantasy_name || 'produtor'}
+              </span> não possui responsabilidade pelo conteúdo e/ou faz controle prévio deste (li) com os{' '}
+              <span className="underline cursor-pointer">Termos de uso</span> e{' '}
+              <span className="underline cursor-pointer">Política de privacidade</span>.
             </p>
           </div>
         </div>

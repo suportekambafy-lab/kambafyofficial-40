@@ -30,69 +30,6 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
     currency: 'MZN',
     flag: '🇲🇿',
     exchangeRate: 0.0697 // Fallback rate based on your example: 39000 KZ = 2720.22 MZN
-  },
-  BR: {
-    code: 'BR',
-    name: 'Brasil',
-    currency: 'BRL',
-    flag: '🇧🇷',
-    exchangeRate: 0.0065 // Fallback rate
-  },
-  US: {
-    code: 'US',
-    name: 'Estados Unidos',
-    currency: 'USD',
-    flag: '🇺🇸',
-    exchangeRate: 0.0012 // Fallback rate
-  },
-  GB: {
-    code: 'GB',
-    name: 'Reino Unido',
-    currency: 'GBP',
-    flag: '🇬🇧',
-    exchangeRate: 0.0010 // Fallback rate
-  },
-  ES: {
-    code: 'ES',
-    name: 'Espanha',
-    currency: 'EUR',
-    flag: '🇪🇸',
-    exchangeRate: 0.0012 // Fallback rate
-  },
-  FR: {
-    code: 'FR',
-    name: 'França',
-    currency: 'EUR',
-    flag: '🇫🇷',
-    exchangeRate: 0.0012 // Fallback rate
-  },
-  DE: {
-    code: 'DE',
-    name: 'Alemanha',
-    currency: 'EUR',
-    flag: '🇩🇪',
-    exchangeRate: 0.0012 // Fallback rate
-  },
-  IT: {
-    code: 'IT',
-    name: 'Itália',
-    currency: 'EUR',
-    flag: '🇮🇹',
-    exchangeRate: 0.0012 // Fallback rate
-  },
-  CV: {
-    code: 'CV',
-    name: 'Cabo Verde',
-    currency: 'CVE',
-    flag: '🇨🇻',
-    exchangeRate: 0.12 // Fallback rate
-  },
-  ST: {
-    code: 'ST',
-    name: 'São Tomé e Príncipe',
-    currency: 'STN',
-    flag: '🇸🇹',
-    exchangeRate: 0.028 // Fallback rate
   }
 };
 
@@ -139,51 +76,16 @@ export const useGeoLocation = () => {
       
       const updatedCountries = { ...SUPPORTED_COUNTRIES };
       
-      // Update EUR rate with safety margin (for PT, ES, FR, DE, IT)
+      // Update EUR rate with safety margin
       if (data.rates.EUR) {
-        const eurRate = data.rates.EUR * SAFETY_MARGIN;
-        updatedCountries.PT.exchangeRate = eurRate;
-        updatedCountries.ES.exchangeRate = eurRate;
-        updatedCountries.FR.exchangeRate = eurRate;
-        updatedCountries.DE.exchangeRate = eurRate;
-        updatedCountries.IT.exchangeRate = eurRate;
-        console.log(`Updated EUR rate with safety margin: 1 KZ = ${eurRate} EUR (original: ${data.rates.EUR})`);
+        updatedCountries.PT.exchangeRate = data.rates.EUR * SAFETY_MARGIN;
+        console.log(`Updated EUR rate with safety margin: 1 KZ = ${updatedCountries.PT.exchangeRate} EUR (original: ${data.rates.EUR})`);
       }
       
       // Update MZN rate with safety margin
       if (data.rates.MZN) {
         updatedCountries.MZ.exchangeRate = data.rates.MZN * SAFETY_MARGIN;
         console.log(`Updated MZN rate with safety margin: 1 KZ = ${updatedCountries.MZ.exchangeRate} MZN (original: ${data.rates.MZN})`);
-      }
-      
-      // Update BRL rate with safety margin
-      if (data.rates.BRL) {
-        updatedCountries.BR.exchangeRate = data.rates.BRL * SAFETY_MARGIN;
-        console.log(`Updated BRL rate with safety margin: 1 KZ = ${updatedCountries.BR.exchangeRate} BRL (original: ${data.rates.BRL})`);
-      }
-      
-      // Update USD rate with safety margin
-      if (data.rates.USD) {
-        updatedCountries.US.exchangeRate = data.rates.USD * SAFETY_MARGIN;
-        console.log(`Updated USD rate with safety margin: 1 KZ = ${updatedCountries.US.exchangeRate} USD (original: ${data.rates.USD})`);
-      }
-      
-      // Update GBP rate with safety margin
-      if (data.rates.GBP) {
-        updatedCountries.GB.exchangeRate = data.rates.GBP * SAFETY_MARGIN;
-        console.log(`Updated GBP rate with safety margin: 1 KZ = ${updatedCountries.GB.exchangeRate} GBP (original: ${data.rates.GBP})`);
-      }
-      
-      // Update CVE rate with safety margin
-      if (data.rates.CVE) {
-        updatedCountries.CV.exchangeRate = data.rates.CVE * SAFETY_MARGIN;
-        console.log(`Updated CVE rate with safety margin: 1 KZ = ${updatedCountries.CV.exchangeRate} CVE (original: ${data.rates.CVE})`);
-      }
-      
-      // Update STN rate with safety margin
-      if (data.rates.STN) {
-        updatedCountries.ST.exchangeRate = data.rates.STN * SAFETY_MARGIN;
-        console.log(`Updated STN rate with safety margin: 1 KZ = ${updatedCountries.ST.exchangeRate} STN (original: ${data.rates.STN})`);
       }
       
       setSupportedCountries(updatedCountries);
@@ -227,18 +129,12 @@ export const useGeoLocation = () => {
         setDetectedLanguage(language);
         console.log(`🌍 Auto-detected language: ${language} for country ${countryCode}`);
         
-        // Salvar país e idioma no localStorage
-        localStorage.setItem('userCountry', countryCode);
-        localStorage.setItem('detectedLanguage', language);
-        
         // Aplicar idioma automaticamente na aplicação
         applyLanguage(language);
       } else {
         console.log(`🌍 Country ${countryCode} not supported, defaulting to Angola`);
         setUserCountry(supportedCountries.AO);
         setDetectedLanguage('pt');
-        localStorage.setItem('userCountry', 'AO');
-        localStorage.setItem('detectedLanguage', 'pt');
         applyLanguage('pt');
       }
     } catch (err) {
@@ -282,16 +178,6 @@ export const useGeoLocation = () => {
         return `€${convertedPrice.toFixed(2)}`;
       case 'MZN':
         return `${convertedPrice.toFixed(2)} MZN`;
-      case 'BRL':
-        return `R$${convertedPrice.toFixed(2)}`;
-      case 'USD':
-        return `$${convertedPrice.toFixed(2)}`;
-      case 'GBP':
-        return `£${convertedPrice.toFixed(2)}`;
-      case 'CVE':
-        return `${convertedPrice.toFixed(2)} CVE`;
-      case 'STN':
-        return `${convertedPrice.toFixed(2)} STN`;
       case 'KZ':
       default:
         return `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;
@@ -308,7 +194,6 @@ export const useGeoLocation = () => {
       // Atualizar idioma quando país é alterado manualmente
       const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
       setDetectedLanguage(language);
-      localStorage.setItem('detectedLanguage', language);
       applyLanguage(language);
     }
   };
@@ -332,31 +217,12 @@ export const useGeoLocation = () => {
     const initializeGeoLocation = async () => {
       console.log('🌍 Initializing geolocation hook...');
       
-      // Verificar se já tem país salvo
-      const savedCountry = localStorage.getItem('userCountry');
-      const savedLanguage = localStorage.getItem('detectedLanguage');
+      // Limpar localStorage para forçar detecção por IP
+      localStorage.removeItem('userCountry');
+      console.log('🌍 Cleared localStorage userCountry');
       
-      if (savedCountry && supportedCountries[savedCountry]) {
-        console.log(`🌍 Using saved country: ${savedCountry}`);
-        const country = supportedCountries[savedCountry];
-        setUserCountry(country);
-        
-        if (savedLanguage) {
-          console.log(`🌍 Using saved language: ${savedLanguage}`);
-          setDetectedLanguage(savedLanguage);
-          applyLanguage(savedLanguage);
-        } else {
-          const language = COUNTRY_LANGUAGES[savedCountry] || 'pt';
-          setDetectedLanguage(language);
-          applyLanguage(language);
-        }
-        setLoading(false);
-      } else {
-        console.log('🌍 No saved country, detecting by IP...');
-        // Detect country by IP first
-        await detectCountryByIP();
-      }
-      
+      // Detect country by IP first
+      await detectCountryByIP();
       // Then fetch exchange rates
       await fetchExchangeRates();
       // Só agora marcar como pronto

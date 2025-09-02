@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Check } from "lucide-react";
-import { useCheckoutTranslations } from "@/hooks/useCheckoutTranslations";
 
 interface CountryInfo {
   code: string;
@@ -40,7 +39,6 @@ interface OrderBumpProps {
 }
 
 export function OrderBump({ productId, position, onToggle, userCountry, formatPrice }: OrderBumpProps) {
-  const { t } = useCheckoutTranslations();
   const [orderBump, setOrderBump] = useState<OrderBumpData | null>(null);
   const [isSelected, setIsSelected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -155,7 +153,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
       <div className="flex items-center gap-2">
         <div className="bg-gray-700 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
           <span>🏷️</span>
-          {t('limitedOffers')}
+          Ofertas limitadas
         </div>
       </div>
       
@@ -216,14 +214,14 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
                 <div className="mb-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded">
                   <p className="text-xs text-blue-800 dark:text-blue-200 font-medium">
                     {orderBump.access_extension_type === 'lifetime' 
-                      ? `🔥 ${t('lifetimeAccess')}`
+                      ? '🔥 Acesso Vitalício'
                       : `⏰ +${orderBump.access_extension_value} ${
                           orderBump.access_extension_type === 'days' 
-                            ? (orderBump.access_extension_value === 1 ? t('day') : t('days'))
+                            ? (orderBump.access_extension_value === 1 ? 'dia' : 'dias')
                             : orderBump.access_extension_type === 'months' 
-                            ? (orderBump.access_extension_value === 1 ? t('month') : t('months'))
-                            : (orderBump.access_extension_value === 1 ? t('year') : t('years'))
-                        } ${t('accessExtension')}`
+                            ? (orderBump.access_extension_value === 1 ? 'mês' : 'meses')
+                            : (orderBump.access_extension_value === 1 ? 'ano' : 'anos')
+                        } de tempo de acesso`
                     }
                   </p>
                 </div>
@@ -244,6 +242,24 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
                   </>
                 )}
               </div>
+            </div>
+
+            <div className="flex-shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                className={`transition-all border-2 ${
+                  isSelected 
+                    ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' 
+                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggle();
+                }}
+              >
+                {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              </Button>
             </div>
           </div>
         </div>
