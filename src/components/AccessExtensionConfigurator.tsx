@@ -65,7 +65,12 @@ export const AccessExtensionConfigurator = ({
 
   useEffect(() => {
     fetchProducts();
-  }, [productId]);
+    
+    // Inicializar o preço da extensão se já existe
+    if (extensionPrice && localBumpType === 'access_extension') {
+      setLocalExtensionPrice(extensionPrice);
+    }
+  }, [productId, extensionPrice]);
 
   const fetchProducts = async () => {
     try {
@@ -126,14 +131,15 @@ export const AccessExtensionConfigurator = ({
       ? generateExtensionDescription(localExtensionType, localExtensionValue)
       : localExtensionDescription;
 
-    console.log('🔄 updateConfig called with:', {
-      bumpType: localBumpType,
-      bumpProductName: localProductName,
-      bumpProductPrice: localProductPrice,
-      extensionType: localExtensionType,
-      extensionValue: localExtensionValue,
-      extensionDescription: description
-    });
+      console.log('🔄 updateConfig called with:', {
+        bumpType: localBumpType,
+        bumpProductName: localProductName,
+        bumpProductPrice: localProductPrice,
+        extensionType: localExtensionType,
+        extensionValue: localExtensionValue,
+        extensionDescription: description,
+        extensionPrice: localExtensionPrice
+      });
 
     onConfigChange({
       bumpType: localBumpType,
