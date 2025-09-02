@@ -1,7 +1,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, BookOpen, GraduationCap } from "lucide-react";
+import { X, GraduationCap } from "lucide-react";
+import { CustomIcon } from "@/components/ui/custom-icon";
 
 interface ProductTypeSelectorProps {
   onClose: () => void;
@@ -29,7 +30,7 @@ export default function ProductTypeSelector({ onClose, onSelectType }: ProductTy
               className="h-20 flex-col gap-2 hover:bg-primary/5"
               onClick={() => onSelectType("E-book")}
             >
-              <BookOpen className="h-8 w-8" />
+              <CustomIcon name="book" size={32} />
               <span className="font-medium">E-book</span>
               <span className="text-xs text-muted-foreground">Livro digital ou material de leitura</span>
             </Button>

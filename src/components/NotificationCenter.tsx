@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, DollarSign, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Bell, X, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { CustomIcon } from '@/components/ui/custom-icon';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -280,7 +281,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'withdrawal':
-        return <DollarSign className="h-4 w-4 text-orange-500" />;
+        return <CustomIcon name="dollar" size={16} className="text-orange-500" />;
       case 'high_value_sale':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'product_approval':

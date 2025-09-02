@@ -9,7 +9,8 @@ import { ModernKambaAchievements } from './ModernKambaAchievements';
 import { ProductFilter } from '@/components/ProductFilter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-period-selector';
-import { DollarSign, TrendingUp, Eye, EyeOff } from 'lucide-react';
+import { TrendingUp, Eye, EyeOff } from 'lucide-react';
+import { CustomIcon } from '@/components/ui/custom-icon';
 import { Button } from '@/components/ui/button';
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 
@@ -338,7 +339,7 @@ export function ModernDashboardHome() {
         <ModernMetricCard
           title="Vendas Realizadas"
           value={showValues.revenue ? `${dashboardData.totalRevenue.toLocaleString('pt-BR')} KZ` : "••••••••"}
-          icon={<DollarSign className="w-5 h-5" />}
+          icon={<CustomIcon name="dollar" size={20} />}
           trend={calculateTrend(dashboardData.totalRevenue, dashboardData.previousRevenue)}
           trendUp={dashboardData.totalRevenue >= dashboardData.previousRevenue}
           className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow duration-200"
