@@ -164,18 +164,33 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
     extensionValue?: number;
     extensionDescription?: string;
   }) => {
-    setSettings(prev => ({
-      ...prev,
-      bump_type: config.bumpType,
-      access_extension_type: config.extensionType,
-      access_extension_value: config.extensionValue,
-      access_extension_description: config.extensionDescription,
-      // Para compatibilidade, se for produto, manter os valores antigos
-      ...(config.bumpType === 'product' && {
-        bump_product_name: config.bumpProductName || prev.items[0]?.bump_product_name || '',
-        bump_product_price: config.bumpProductPrice || prev.items[0]?.bump_product_price || ''
-      })
-    }));
+    console.log('🔄 handleExtensionConfigChange called with:', config);
+    
+    setSettings(prev => {
+      const newSettings = {
+        ...prev,
+        bump_type: config.bumpType,
+        access_extension_type: config.extensionType,
+        access_extension_value: config.extensionValue,
+        access_extension_description: config.extensionDescription,
+      };
+
+      // Se for produto adicional e temos dados do produto
+      if (config.bumpType === 'product' && config.bumpProductName && config.bumpProductPrice) {
+        const newItem: OrderBumpItem = {
+          bump_product_name: config.bumpProductName,
+          bump_product_price: config.bumpProductPrice,
+          bump_product_image: null, // Será definido pelo ProductSelector
+          discount: 0,
+          order_position: 0
+        };
+        
+        newSettings.items = [newItem];
+      }
+
+      console.log('🔄 New settings:', newSettings);
+      return newSettings;
+    });
   };
 
   const handleAddItem = () => {
@@ -448,6 +463,7 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
             extensionType={settings.access_extension_type}
             extensionValue={settings.access_extension_value}
             extensionDescription={settings.access_extension_description}
+            productId={productId}
             onConfigChange={handleExtensionConfigChange}
           />
 
