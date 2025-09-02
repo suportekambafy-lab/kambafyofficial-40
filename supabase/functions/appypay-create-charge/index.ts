@@ -115,6 +115,7 @@ serve(async (req) => {
 
     console.log('📡 Criando cobrança:', chargeUrl);
     console.log('📋 Payload:', JSON.stringify(chargePayload, null, 2));
+    console.log('🔐 Authorization:', `${tokenData.token_type} ${tokenData.access_token ? tokenData.access_token.substring(0, 10) + '...' : 'UNDEFINED'}`);
 
     // Criar cobrança na AppyPay
     const chargeResponse = await fetch(chargeUrl, {
@@ -126,14 +127,22 @@ serve(async (req) => {
       body: JSON.stringify(chargePayload)
     });
 
+    console.log('📊 Charge Response status:', chargeResponse.status);
+    console.log('📊 Charge Response headers:', Object.fromEntries(chargeResponse.headers.entries()));
+
     const chargeResponseText = await chargeResponse.text();
     console.log('📨 Resposta da AppyPay:', chargeResponseText);
 
     if (!chargeResponse.ok) {
       console.error('❌ Erro ao criar cobrança:', chargeResponse.status, chargeResponseText);
+      console.error('❌ URL tentada:', chargeUrl);
+      console.error('❌ Base URL API original:', Deno.env.get('APPYPAY_API_BASE_URL') || Deno.env.get('APPYPAY_BASE_URL'));
+      
       return new Response(
         JSON.stringify({ 
           error: 'Erro ao criar cobrança na AppyPay',
+          status: chargeResponse.status,
+          url: chargeUrl,
           details: chargeResponseText 
         }),
         { 

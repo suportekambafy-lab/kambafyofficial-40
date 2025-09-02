@@ -64,6 +64,12 @@ serve(async (req) => {
     formData.append('client_id', clientId);
     formData.append('client_secret', clientSecret);
 
+    console.log('📋 Payload:', {
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret ? '***' : 'UNDEFINED'
+    });
+
     const response = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
@@ -72,14 +78,22 @@ serve(async (req) => {
       body: formData.toString()
     });
 
+    console.log('📊 Response status:', response.status);
+    console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()));
+
     const responseText = await response.text();
     console.log('📨 Resposta da API:', responseText);
 
     if (!response.ok) {
       console.error('❌ Erro na requisição OAuth2:', response.status, responseText);
+      console.error('❌ URL tentada:', tokenUrl);
+      console.error('❌ Base URL original:', Deno.env.get('APPYPAY_AUTH_BASE_URL') || Deno.env.get('APPYPAY_BASE_URL'));
+      
       return new Response(
         JSON.stringify({ 
-          error: 'Erro ao obter token de acesso',
+          error: 'Erro ao obter token de acesso da AppyPay',
+          status: response.status,
+          url: tokenUrl,
           details: responseText 
         }),
         { 
