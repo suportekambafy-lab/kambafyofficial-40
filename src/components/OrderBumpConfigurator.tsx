@@ -190,8 +190,8 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
         // Limpar items para extensões
         newSettings.items = [];
       } 
-      // Se for produto adicional
-      else if (config.bumpType === 'product') {
+        // Se for produto adicional
+        else if (config.bumpType === 'product') {
         // Para produtos, não usar o campo bump_product_price da settings principal
         if (config.bumpProductName && config.bumpProductPrice) {
           const newItem: OrderBumpItem = {
@@ -664,7 +664,7 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
                   className="w-full mt-4 transition-all rounded-xl py-3 font-semibold bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg"
                 >
                   <Plus className="w-5 h-5 mr-2" />
-                  Adicionar Produto
+                  Adicionar Produto Extra
                 </Button>
               </div>
             </div>

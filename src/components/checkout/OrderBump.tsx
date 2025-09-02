@@ -265,7 +265,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
             ) : (
               <>
                 <Plus className="w-4 h-4 mr-2" />
-                {orderBump.bump_type === 'access_extension' ? 'Adicionar Extensão' : 'Adicionar Produto'}
+                {orderBump.bump_type === 'access_extension' ? 'Adicionar Extensão' : 'Adicionar Extra'}
               </>
             )}
           </Button>
