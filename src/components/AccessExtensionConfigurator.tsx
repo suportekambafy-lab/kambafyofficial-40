@@ -217,7 +217,7 @@ export const AccessExtensionConfigurator = ({
               <RadioGroupItem value="product" id="product" />
               <Label htmlFor="product" className="flex items-center gap-2 cursor-pointer">
                 <Package className="w-4 h-4" />
-                Produto Extra
+                Produto Adicional
               </Label>
             </div>
             <div className="flex items-center space-x-2 p-3 border rounded-lg">
@@ -230,10 +230,10 @@ export const AccessExtensionConfigurator = ({
           </RadioGroup>
         </div>
 
-        {/* Configuração para Produto Extra */}
+        {/* Configuração para Produto Adicional */}
         {localBumpType === 'product' && (
           <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <h4 className="font-medium">Produto Extra</h4>
+            <h4 className="font-medium">Produto Adicional</h4>
             
             {showProductSelector ? (
               <div className="space-y-4">

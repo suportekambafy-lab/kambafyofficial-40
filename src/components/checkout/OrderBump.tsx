@@ -159,16 +159,16 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
       
       {/* Order Bump Card */}
       <div 
-        className={`border-2 border-dashed rounded-2xl transition-all cursor-pointer overflow-hidden ${
+        className={`border-2 border-dashed rounded-lg transition-all cursor-pointer overflow-hidden max-w-md ${
           isSelected 
             ? 'border-orange-400 bg-orange-50 dark:bg-orange-950/10 shadow-lg' 
             : 'border-orange-200 bg-white dark:bg-gray-900 hover:border-orange-300 hover:shadow-md'
         }`}
         onClick={handleToggle}
       >
-        <div className="bg-gradient-to-r from-orange-100 to-orange-50 dark:from-orange-950/20 dark:to-orange-900/10 p-3">
+        <div className="bg-gradient-to-r from-orange-100 to-orange-50 dark:from-orange-950/20 dark:to-orange-900/10 p-2">
           {/* Header com título e botão */}
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-1">
             <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
               {orderBump.title}
             </h3>
@@ -190,9 +190,9 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
           </div>
           
           {/* Conteúdo principal */}
-          <div className="flex items-start gap-4">
+          <div className="flex items-center gap-3">
             {orderBump.bump_product_image && orderBump.bump_type !== 'access_extension' && (
-              <div className="w-16 h-16 bg-white rounded-lg overflow-hidden flex-shrink-0 shadow-sm border">
+              <div className="w-12 h-12 bg-white rounded-md overflow-hidden flex-shrink-0 shadow-sm border">
                 <img 
                   src={orderBump.bump_product_image} 
                   alt={orderBump.bump_product_name}
@@ -202,16 +202,16 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
             )}
             
             <div className="flex-1 min-w-0">
-              <h4 className="font-bold text-base mb-1 text-gray-900 dark:text-gray-100 line-clamp-2">
+              <h4 className="font-semibold text-sm mb-0.5 text-gray-900 dark:text-gray-100 line-clamp-1">
                 {orderBump.bump_product_name}
               </h4>
-              <p className="text-gray-600 dark:text-gray-400 text-xs mb-2 line-clamp-2">
+              <p className="text-gray-600 dark:text-gray-400 text-xs mb-1 line-clamp-1">
                 {orderBump.description}
               </p>
 
               {/* Mostrar detalhes da extensão se for do tipo access_extension */}
               {orderBump.bump_type === 'access_extension' && (
-                <div className="mb-2 p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <div className="mb-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded">
                   <p className="text-xs text-blue-800 dark:text-blue-200 font-medium">
                     {orderBump.access_extension_type === 'lifetime' 
                       ? '🔥 Acesso Vitalício'
@@ -228,47 +228,40 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
               )}
               
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <span className="text-lg font-bold text-green-600 dark:text-green-400">
                   {getDisplayPrice(orderBump.bump_product_price, orderBump.discount)}
                 </span>
                 {orderBump.discount > 0 && (
                   <>
-                    <span className="text-gray-500 line-through text-base">
+                    <span className="text-gray-500 line-through text-xs">
                       {getOriginalPrice(orderBump.bump_product_price)}
                     </span>
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
                       -{orderBump.discount}% OFF
                     </span>
                   </>
                 )}
               </div>
             </div>
+
+            <div className="flex-shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                className={`transition-all border-2 ${
+                  isSelected 
+                    ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' 
+                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggle();
+                }}
+              >
+                {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
-          
-          {/* Botão de ação */}
-          <Button 
-            className={`w-full mt-3 transition-all rounded-xl py-2 text-sm font-semibold ${
-              isSelected 
-                ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg' 
-                : 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg'
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggle();
-            }}
-          >
-            {isSelected ? (
-              <>
-                <Check className="w-4 h-4 mr-2" />
-                Produto Adicionado
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 mr-2" />
-                {orderBump.bump_type === 'access_extension' ? 'Adicionar Extensão' : 'Adicionar Extra'}
-              </>
-            )}
-          </Button>
         </div>
       </div>
     </div>
