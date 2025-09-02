@@ -30,8 +30,21 @@ serve(async (req) => {
 
     console.log('📡 Fazendo requisição para token OAuth2');
     
-    // URL para geração de token conforme documentação
-    const tokenUrl = 'https://login.appypay.ao/v2.0/token';
+    const baseUrl = Deno.env.get('APPYPAY_BASE_URL');
+    
+    if (!baseUrl) {
+      console.error('❌ APPYPAY_BASE_URL não configurada');
+      return new Response(
+        JSON.stringify({ error: 'URL base da AppyPay não configurada' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // URL para geração de token - try different common OAuth2 paths
+    const tokenUrl = `${baseUrl}/oauth/token`;
     
     const formData = new URLSearchParams();
     formData.append('grant_type', 'client_credentials');
