@@ -53,7 +53,18 @@ const CHECKOUT_TRANSLATIONS = {
     
     // Carrinho abandonado
     cartAbandoned: 'Carrinho abandonado detectado',
-    continueCheckout: 'Continue sua compra'
+    continueCheckout: 'Continue sua compra',
+    
+    // Order bump textos adicionais
+    limitedOffers: 'Ofertas limitadas',
+    lifetimeAccess: 'Acesso Vitalício',
+    accessExtension: 'de tempo de acesso',
+    day: 'dia',
+    days: 'dias',
+    month: 'mês',
+    months: 'meses',
+    year: 'ano',
+    years: 'anos'
   },
   
   en: {
@@ -106,7 +117,18 @@ const CHECKOUT_TRANSLATIONS = {
     
     // Abandoned cart
     cartAbandoned: 'Abandoned cart detected',
-    continueCheckout: 'Continue your purchase'
+    continueCheckout: 'Continue your purchase',
+    
+    // Order bump additional texts
+    limitedOffers: 'Limited offers',
+    lifetimeAccess: 'Lifetime Access',
+    accessExtension: 'of access time',
+    day: 'day',
+    days: 'days',
+    month: 'month',
+    months: 'months',
+    year: 'year',
+    years: 'years'
   },
   
   es: {
@@ -159,7 +181,18 @@ const CHECKOUT_TRANSLATIONS = {
     
     // Carrito abandonado
     cartAbandoned: 'Carrito abandonado detectado',
-    continueCheckout: 'Continúa tu compra'
+    continueCheckout: 'Continúa tu compra',
+    
+    // Order bump textos adicionales
+    limitedOffers: 'Ofertas limitadas',
+    lifetimeAccess: 'Acceso de por Vida',
+    accessExtension: 'de tiempo de acceso',
+    day: 'día',
+    days: 'días',
+    month: 'mes',
+    months: 'meses',
+    year: 'año',
+    years: 'años'
   },
   
   fr: {
@@ -212,7 +245,18 @@ const CHECKOUT_TRANSLATIONS = {
     
     // Panier abandonné
     cartAbandoned: 'Panier abandonné détecté',
-    continueCheckout: 'Continuez votre achat'
+    continueCheckout: 'Continuez votre achat',
+    
+    // Order bump textes supplémentaires
+    limitedOffers: 'Offres limitées',
+    lifetimeAccess: 'Accès à Vie',
+    accessExtension: 'de temps d\'accès',
+    day: 'jour',
+    days: 'jours',
+    month: 'mois',
+    months: 'mois',
+    year: 'an',
+    years: 'ans'
   }
 };
 

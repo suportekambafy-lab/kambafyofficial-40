@@ -155,7 +155,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
       <div className="flex items-center gap-2">
         <div className="bg-gray-700 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
           <span>🏷️</span>
-          Ofertas limitadas
+          {t('limitedOffers')}
         </div>
       </div>
       
@@ -216,14 +216,14 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
                 <div className="mb-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded">
                   <p className="text-xs text-blue-800 dark:text-blue-200 font-medium">
                     {orderBump.access_extension_type === 'lifetime' 
-                      ? '🔥 Acesso Vitalício'
+                      ? `🔥 ${t('lifetimeAccess')}`
                       : `⏰ +${orderBump.access_extension_value} ${
                           orderBump.access_extension_type === 'days' 
-                            ? (orderBump.access_extension_value === 1 ? 'dia' : 'dias')
+                            ? (orderBump.access_extension_value === 1 ? t('day') : t('days'))
                             : orderBump.access_extension_type === 'months' 
-                            ? (orderBump.access_extension_value === 1 ? 'mês' : 'meses')
-                            : (orderBump.access_extension_value === 1 ? 'ano' : 'anos')
-                        } de tempo de acesso`
+                            ? (orderBump.access_extension_value === 1 ? t('month') : t('months'))
+                            : (orderBump.access_extension_value === 1 ? t('year') : t('years'))
+                        } ${t('accessExtension')}`
                     }
                   </p>
                 </div>
