@@ -31,7 +31,7 @@ serve(async (req) => {
     console.log('📡 Fazendo requisição para token OAuth2');
     
     // URL para geração de token conforme documentação
-    const tokenUrl = 'https://login.appypay.co.ao/v2.0/token';
+    const tokenUrl = 'https://login.appypay.ao/v2.0/token';
     
     const formData = new URLSearchParams();
     formData.append('grant_type', 'client_credentials');
