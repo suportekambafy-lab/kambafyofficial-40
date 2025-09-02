@@ -45,17 +45,17 @@ const integrationTypes: IntegrationType[] = [
     description: 'Personalize seu checkout com banners, countdown, avaliações e prova social',
     icon: ({ className }: { className?: string }) => <Palette className={className} />,
     color: 'text-green-600'
-  },
-  {
-    id: 'sales-recovery',
-    name: 'Recuperação de Vendas',
-    description: 'Detecte carrinhos abandonados e envie emails automáticos de recuperação',
-    icon: ({ className }: { className?: string }) => <Mail className={className} />,
-    color: 'text-emerald-600'
   }
 ];
 
 const comingSoonTypes: IntegrationType[] = [
+  {
+    id: 'sales-recovery',
+    name: 'Recuperação de Vendas',
+    description: 'Em breve - Detecte carrinhos abandonados e envie emails automáticos de recuperação',
+    icon: ({ className }: { className?: string }) => <Mail className={className} />,
+    color: 'text-gray-500'
+  },
   {
     id: 'upsell',
     name: 'Upsell Pós-Compra',
