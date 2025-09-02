@@ -35,33 +35,120 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🔄 TESTE - Iniciando criação de cobrança AppyPay');
+    console.log('🔄 Iniciando criação de cobrança AppyPay v2.0');
     
     const requestData: CreateChargeRequest = await req.json();
-    console.log('📥 TESTE - Dados recebidos:', JSON.stringify(requestData, null, 2));
+    console.log('📥 Dados recebidos:', JSON.stringify(requestData, null, 2));
 
-    // TESTE: Retornar dados simulados para testar a interface
-    const mockCharge = {
-      id: 'test_' + Date.now(),
-      reference: '999 888 777',
+    // Validar dados obrigatórios
+    if (!requestData.amount || !requestData.currency || !requestData.customerName || !requestData.customerEmail) {
+      return new Response(
+        JSON.stringify({ error: 'Dados obrigatórios em falta: amount, currency, customerName, customerEmail' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Obter token de acesso
+    console.log('🔑 Obtendo token de acesso...');
+    const tokenResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/appypay-token`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!tokenResponse.ok) {
+      console.error('❌ Erro ao obter token:', tokenResponse.status);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao obter token de acesso' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const tokenData = await tokenResponse.json();
+    console.log('✅ Token obtido com sucesso');
+
+    // Preparar payload para criar cobrança
+    const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
+    const chargeUrl = `${apiBaseUrl}/v2.0/charges`;
+    
+    const chargePayload = {
       amount: requestData.amount,
       currency: requestData.currency,
       description: requestData.description,
       merchantTransactionId: requestData.merchantTransactionId,
-      status: 'pending',
-      expiryDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas
-      paymentInstructions: 'Use esta referência para pagamento em qualquer terminal Multicaixa ou banco em Angola',
+      customer: {
+        name: requestData.customerName,
+        email: requestData.customerEmail,
+        phone: requestData.customerPhone
+      },
+      notifications: {
+        sms: requestData.smsNotification || false,
+        email: requestData.emailNotification || false
+      }
+    };
+
+    console.log('📡 Criando cobrança:', chargeUrl);
+    console.log('📋 Payload:', JSON.stringify(chargePayload, null, 2));
+
+    // Criar cobrança na AppyPay
+    const chargeResponse = await fetch(chargeUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `${tokenData.token_type} ${tokenData.access_token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(chargePayload)
+    });
+
+    const chargeResponseText = await chargeResponse.text();
+    console.log('📨 Resposta da AppyPay:', chargeResponseText);
+
+    if (!chargeResponse.ok) {
+      console.error('❌ Erro ao criar cobrança:', chargeResponse.status, chargeResponseText);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Erro ao criar cobrança na AppyPay',
+          details: chargeResponseText 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const appyPayCharge = JSON.parse(chargeResponseText);
+    
+    // Normalizar resposta para compatibilidade com o frontend
+    const normalizedCharge = {
+      id: appyPayCharge.id || appyPayCharge.chargeId,
+      reference: appyPayCharge.reference || appyPayCharge.paymentReference,
+      amount: requestData.amount,
+      currency: requestData.currency,
+      description: requestData.description,
+      merchantTransactionId: requestData.merchantTransactionId,
+      status: appyPayCharge.status || 'pending',
+      expiryDate: appyPayCharge.expiryDate || appyPayCharge.expireAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      paymentInstructions: appyPayCharge.paymentInstructions || 'Use esta referência para pagamento em qualquer terminal Multicaixa ou banco em Angola',
       customerName: requestData.customerName,
       customerEmail: requestData.customerEmail,
       customerPhone: requestData.customerPhone
     };
 
-    console.log('✅ TESTE - Cobrança simulada criada:', mockCharge);
+    console.log('✅ Cobrança criada com sucesso:', normalizedCharge);
 
     return new Response(
       JSON.stringify({
         success: true,
-        charge: mockCharge
+        charge: normalizedCharge
       }),
       {
         status: 200,

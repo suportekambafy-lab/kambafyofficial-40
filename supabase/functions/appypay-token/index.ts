@@ -49,15 +49,14 @@ serve(async (req) => {
       );
     }
     
-    // URL para geração de token - try different common OAuth2 paths
-    const tokenUrl = `${baseUrl}/oauth/token`;
+    // URL para geração de token AppyPay v2.0
+    const tokenUrl = `${baseUrl}/v2.0/token`;
     console.log('🌐 URL do token:', tokenUrl);
     
     const formData = new URLSearchParams();
     formData.append('grant_type', 'client_credentials');
     formData.append('client_id', clientId);
     formData.append('client_secret', clientSecret);
-    formData.append('resource', 'bee57785-7a19-4f1c-9c8d-aa03f2f0e333');
 
     const response = await fetch(tokenUrl, {
       method: 'POST',
