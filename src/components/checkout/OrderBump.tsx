@@ -243,24 +243,6 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
                 )}
               </div>
             </div>
-
-            <div className="flex-shrink-0">
-              <Button
-                size="sm"
-                variant="outline"
-                className={`transition-all border-2 ${
-                  isSelected 
-                    ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' 
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleToggle();
-                }}
-              >
-                {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              </Button>
-            </div>
           </div>
         </div>
       </div>

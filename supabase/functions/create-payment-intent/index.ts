@@ -189,8 +189,7 @@ serve(async (req) => {
       user_id: product.user_id,
       stripe_payment_intent_id: paymentIntent.id,
       // CORREÇÃO: Popular seller_commission com o valor original em KZ
-      seller_commission: parseFloat(finalAmount),
-      ...(affiliateCode && { affiliate_code: affiliateCode })
+      seller_commission: parseFloat(finalAmount)
     };
 
     console.log('Saving order with corrected data:', orderData);
