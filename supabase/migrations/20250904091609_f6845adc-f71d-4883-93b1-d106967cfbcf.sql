@@ -1,0 +1,1 @@
+UPDATE products SET seo_title = NULL WHERE id = '45a71fee-6d60-4c13-9823-3f1166ca2677';
