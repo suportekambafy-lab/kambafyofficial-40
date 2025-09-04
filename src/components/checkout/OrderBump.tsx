@@ -246,6 +246,18 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
           </div>
         </div>
       </div>
+      
+      {/* Botão adicional "Adicionar também" */}
+      {!isSelected && (
+        <div className="flex justify-center">
+          <Button
+            onClick={handleToggle}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-all"
+          >
+            Adicionar também
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
