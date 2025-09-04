@@ -1,0 +1,1 @@
+UPDATE products SET seo_description = 'A melhor mentoria do mercado para criação de marca com lojas online sem stock. Aprenda a transformar seu conhecimento em renda.' WHERE id = '45a71fee-6d60-4c13-9823-3f1166ca2677';
