@@ -10,7 +10,11 @@
     
     // Função para aplicar SEO imediatamente
     const applyProductSEO = (product) => {
-      const title = product.seo_title || `${product.name} - Checkout | Kambafy`;
+      // Se não há seo_title customizado ou se está vazio/nulo, usar sempre o nome atual
+      const title = (product.seo_title && product.seo_title.trim()) 
+        ? product.seo_title 
+        : `${product.name} | Kambafy`;
+        
       const description = product.seo_description || (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`);
       const image = product.cover || 'https://kambafy.com/kambafy-social-preview.png';
       const url = `https://kambafy.com/checkout/${product.id}`;

@@ -63,7 +63,12 @@ export const setStructuredData = (data: any) => {
 
 // Set product SEO immediately when product loads
 export const setProductSEO = (product: any) => {
-  const title = product.seo_title || `${product.name} - Checkout | Kambafy`;
+  // Se não há seo_title customizado ou se está vazio/nulo, usar sempre o nome atual
+  // Isso garante que mudanças no nome do produto reflitam no SEO
+  const title = (product.seo_title && product.seo_title.trim()) 
+    ? product.seo_title 
+    : `${product.name} | Kambafy`;
+    
   const description = product.seo_description || (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`);
   const image = product.cover ? getProductImageUrl(product.cover, 'https://kambafy.com/kambafy-social-preview.png') : 'https://kambafy.com/kambafy-social-preview.png';
   const url = `https://kambafy.com/checkout/${product.id}`;
@@ -119,5 +124,5 @@ export const setProductSEO = (product: any) => {
     }
   });
   
-  console.log('🎯 Product SEO set:', { title, description, image });
+  console.log('🎯 Product SEO set:', { title, description, image, usedCustomTitle: !!(product.seo_title && product.seo_title.trim()) });
 };

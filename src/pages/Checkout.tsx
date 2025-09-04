@@ -1427,7 +1427,7 @@ const Checkout = () => {
       <FacebookPixelTracker productId={productId || ''} />
       {product && (
         <SEO 
-          title={product.seo_title || `${product.name} - Checkout`}
+          title={(product.seo_title && product.seo_title.trim()) ? product.seo_title : `${product.name} | Kambafy`}
           description={product.seo_description || (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`)}
           ogImage={product.cover || 'https://kambafy.com/kambafy-social-preview.png'}
           keywords={(product.seo_keywords && product.seo_keywords.length > 0)

@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     console.log('✅ Product found:', product.name)
 
     // Generate SEO-optimized HTML
-    const title = (product.seo_title && product.seo_title.length > 0) ? product.seo_title : `${product.name} - Checkout | Kambafy`
+    const title = (product.seo_title && product.seo_title.trim()) ? product.seo_title : `${product.name} | Kambafy`
     const description = (product.seo_description && product.seo_description.length > 0) ? product.seo_description : (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`)
     const rawImage = product.cover || 'https://kambafy.com/kambafy-social-preview.png'
     const image = (rawImage && rawImage.startsWith('http')) ? rawImage : 'https://kambafy.com/kambafy-social-preview.png'
