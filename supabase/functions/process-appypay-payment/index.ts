@@ -57,35 +57,58 @@ serve(async (req) => {
       status: appyPayResponse.status,
       statusText: appyPayResponse.statusText,
       headers: Object.fromEntries(appyPayResponse.headers.entries()),
-      bodyText: responseText
+      bodyText: responseText,
+      hasContent: !!responseText,
+      contentLength: responseText?.length || 0
     });
 
     let responseData;
-    try {
-      responseData = responseText ? JSON.parse(responseText) : {};
-    } catch (jsonError) {
-      console.error('❌ Erro ao analisar JSON da AppyPay:', jsonError);
+    if (!responseText || responseText.trim() === '') {
+      console.log('⚠️ AppyPay retornou resposta vazia');
       responseData = { 
-        error: 'Resposta inválida da AppyPay',
-        rawResponse: responseText,
-        parseError: jsonError.message
+        message: 'Resposta vazia da AppyPay',
+        status: appyPayResponse.status,
+        statusText: appyPayResponse.statusText
       };
+    } else {
+      try {
+        responseData = JSON.parse(responseText);
+        console.log('✅ JSON parseado com sucesso:', responseData);
+      } catch (jsonError) {
+        console.error('❌ Erro ao analisar JSON da AppyPay:', jsonError);
+        responseData = { 
+          error: 'Resposta inválida da AppyPay',
+          rawResponse: responseText,
+          parseError: jsonError.message,
+          status: appyPayResponse.status
+        };
+      }
     }
     
-    console.log('📥 Resposta completa da AppyPay:', {
+    console.log('📊 Status da resposta AppyPay:', {
+      ok: appyPayResponse.ok,
       status: appyPayResponse.status,
-      statusText: appyPayResponse.statusText,
-      headers: Object.fromEntries(appyPayResponse.headers.entries()),
-      data: responseData
+      hasResponseData: !!responseData
     });
 
     if (!appyPayResponse.ok) {
-      console.error('❌ Erro da AppyPay:', responseData);
+      console.error('❌ Erro da AppyPay (status não-2xx):', {
+        status: appyPayResponse.status,
+        statusText: appyPayResponse.statusText,
+        responseData
+      });
+      
+      // Se for resposta vazia mas com erro de status, tratar como erro da API
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: responseData?.message || 'Erro na AppyPay',
-          details: responseData 
+          error: `AppyPay retornou erro ${appyPayResponse.status}: ${appyPayResponse.statusText}`,
+          details: {
+            status: appyPayResponse.status,
+            statusText: appyPayResponse.statusText,
+            rawResponse: responseText,
+            ...responseData
+          }
         }),
         { 
           status: 400,
@@ -94,13 +117,14 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ AppyPay processou com sucesso');
+    console.log('✅ AppyPay processou com sucesso (status 2xx)');
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         data: responseData,
-        message: 'Pagamento processado com sucesso'
+        message: 'Pagamento processado com sucesso',
+        appyPayStatus: appyPayResponse.status
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

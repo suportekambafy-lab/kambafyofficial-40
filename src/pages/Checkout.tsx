@@ -846,7 +846,12 @@ const Checkout = () => {
         });
 
         if (appyPayError) {
-          console.error('❌ Erro na edge function:', appyPayError);
+          console.error('❌ Erro na chamada da edge function:', appyPayError);
+          console.log('📋 Detalhes do erro:', {
+            name: appyPayError.name,
+            message: appyPayError.message,
+            stack: appyPayError.stack
+          });
           throw new Error(`Erro na integração: ${appyPayError.message}`);
         }
 
@@ -859,7 +864,8 @@ const Checkout = () => {
           isSuccess: appyPayResult.success,
           hasData: !!appyPayResult.data,
           hasError: !!appyPayResult.error,
-          message: appyPayResult.message
+          message: appyPayResult.message,
+          status: appyPayResult.appyPayStatus
         });
 
         if (!appyPayResult.success) {
@@ -867,7 +873,14 @@ const Checkout = () => {
             error: appyPayResult.error,
             details: appyPayResult.details
           });
-          throw new Error(`AppyPay error: ${appyPayResult.error || 'Erro desconhecido'}`);
+          
+          // Mostrar detalhes específicos do erro da AppyPay
+          const errorMessage = appyPayResult.error || 'Erro desconhecido';
+          const statusDetails = appyPayResult.details?.status 
+            ? ` (Status: ${appyPayResult.details.status})` 
+            : '';
+          
+          throw new Error(`AppyPay: ${errorMessage}${statusDetails}`);
         }
 
         console.log('📥 Resposta completa da AppyPay:', appyPayResult);
