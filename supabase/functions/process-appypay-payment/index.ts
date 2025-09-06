@@ -38,7 +38,26 @@ serve(async (req) => {
       })
     });
 
-    const responseData = await appyPayResponse.json();
+    // Verificar se há conteúdo para analisar
+    const responseText = await appyPayResponse.text();
+    console.log('📋 Resposta bruta da AppyPay:', {
+      status: appyPayResponse.status,
+      statusText: appyPayResponse.statusText,
+      headers: Object.fromEntries(appyPayResponse.headers.entries()),
+      bodyText: responseText
+    });
+
+    let responseData;
+    try {
+      responseData = responseText ? JSON.parse(responseText) : {};
+    } catch (jsonError) {
+      console.error('❌ Erro ao analisar JSON da AppyPay:', jsonError);
+      responseData = { 
+        error: 'Resposta inválida da AppyPay',
+        rawResponse: responseText,
+        parseError: jsonError.message
+      };
+    }
     
     console.log('📥 Resposta completa da AppyPay:', {
       status: appyPayResponse.status,
