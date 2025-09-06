@@ -32,14 +32,17 @@ serve(async (req) => {
     console.log('🔐 Verificando credenciais:', {
       hasSecret: !!clientSecret,
       secretLength: clientSecret?.length || 0,
-      secretPrefix: clientSecret ? clientSecret.substring(0, 10) + '...' : 'undefined'
+      secretPrefix: clientSecret ? clientSecret.substring(0, 10) + '...' : 'undefined',
+      allEnvKeys: Object.keys(Deno.env.toObject()).filter(key => key.includes('APPYPAY'))
     });
 
     if (clientSecret) {
       appyPayHeaders['Authorization'] = `Bearer ${clientSecret}`;
-      console.log('🔐 Authorization header configurado');
+      console.log('🔐 Authorization header configurado com Bearer token');
+      console.log('📤 Headers finais:', Object.keys(appyPayHeaders));
     } else {
       console.log('⚠️ APPYPAY_CLIENT_SECRET não encontrado nas variáveis de ambiente');
+      console.log('📋 Variáveis disponíveis:', Object.keys(Deno.env.toObject()));
     }
 
     console.log('📋 Headers sendo enviados:', Object.keys(appyPayHeaders));
