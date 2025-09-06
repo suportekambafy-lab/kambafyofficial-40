@@ -33,27 +33,16 @@ serve(async (req) => {
       customerEmail
     });
 
-    // Estrutura completa da requisição baseada na documentação da AppyPay
+    // Estrutura simplificada da requisição baseada na especificação
     const appyPayPayload = {
-      amount: parseInt(amount), // Garantir que é um número inteiro
+      amount: parseInt(amount), // total da transação
       currency: currency || "AOA",
-      description: description,
-      merchantTransactionId: merchantTransactionId,
-      paymentMethod: paymentMethod,
-      options: {
-        SmartcardNumber: "Smart_card_Number", // Valor padrão
-        MerchantOrigin: "Kambafy_Platform"    // Identificação da plataforma
-      },
-      notify: {
-        name: customerName || "Cliente",
-        telephone: customerPhone || "",
-        email: customerEmail || "",
-        smsNotification: true,
-        emailNotification: true
-      }
+      description: description, // nome do produto
+      merchantTransactionId: merchantTransactionId, // id único da transação
+      paymentMethod: paymentMethod
     };
 
-    console.log('📤 Payload completo para AppyPay:', appyPayPayload);
+    console.log('📤 Payload AppyPay (estrutura correta):', appyPayPayload);
 
     // Buscar credenciais da AppyPay
     const apiKey = Deno.env.get('APPYPAY_API_KEY');
