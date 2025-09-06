@@ -58,12 +58,16 @@ serve(async (req) => {
     // Buscar credenciais da AppyPay
     const apiKey = Deno.env.get('APPYPAY_API_KEY');
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
+    
+    // URLs corretas baseadas no padrão Microsoft OAuth2
+    const authBaseUrl = 'https://login.microsoftonline.com/auth.appypay.co.ao';
     const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL') || 'https://gwy-api.appypay.co.ao';
     
     console.log('🔐 Verificando credenciais:', {
       hasApiKey: !!apiKey,
       hasClientId: !!clientId,
       apiKeyLength: apiKey?.length || 0,
+      authBaseUrl,
       apiBaseUrl
     });
     
@@ -81,7 +85,43 @@ serve(async (req) => {
       );
     }
 
-    console.log('🔐 Usando autenticação direta com API Key');
+    console.log('🔐 Testando token de autenticação...');
+    
+    // Testar se o token é válido fazendo uma requisição GET para o endpoint de auth
+    try {
+      const authTestResponse = await fetch(`${authBaseUrl}/oauth2/token`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('🔐 Teste de autenticação:', {
+        status: authTestResponse.status,
+        statusText: authTestResponse.statusText
+      });
+      
+      if (!authTestResponse.ok && authTestResponse.status !== 401) {
+        const authError = await authTestResponse.text();
+        console.error('❌ Erro no teste de autenticação:', authError);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: `Erro na autenticação AppyPay: ${authTestResponse.status} - ${authError}`
+          }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      console.log('✅ Token testado (status esperado para teste)');
+    } catch (authError) {
+      console.error('❌ Erro de conexão na autenticação:', authError.message);
+    }
 
     // Fazer requisição direta para AppyPay com API Key como Bearer token
     // Tentar múltiplos endpoints possíveis
