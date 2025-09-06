@@ -831,22 +831,26 @@ const Checkout = () => {
           paymentMethod: "REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f"
         };
 
-        console.log('📤 Enviando dados para AppyPay:', appyPayData);
+        console.log('📤 Enviando dados para AppyPay via edge function:', appyPayData);
 
-        const response = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(appyPayData)
+        const { data: appyPayResult, error: appyPayError } = await supabase.functions.invoke('process-appypay-payment', {
+          body: appyPayData
         });
 
-        const appyPayResponse = await response.json();
-        console.log('📥 Resposta da AppyPay:', appyPayResponse);
+        console.log('🔄 Resultado da edge function:', { appyPayResult, appyPayError });
 
-        if (!response.ok) {
-          throw new Error(`AppyPay error: ${appyPayResponse?.message || 'Erro desconhecido'}`);
+        if (appyPayError) {
+          console.error('❌ Erro na edge function:', appyPayError);
+          throw new Error(`Erro na integração: ${appyPayError.message}`);
         }
+
+        if (!appyPayResult?.success) {
+          console.error('❌ Erro na AppyPay (via edge function):', appyPayResult);
+          throw new Error(`AppyPay error: ${appyPayResult?.error || 'Erro desconhecido'}`);
+        }
+
+        console.log('📥 Resposta completa da AppyPay:', appyPayResult);
+        console.log('📋 Dados específicos da resposta:', appyPayResult.data);
 
         console.log('✅ AppyPay processou com sucesso, continuando com processamento local...');
         
