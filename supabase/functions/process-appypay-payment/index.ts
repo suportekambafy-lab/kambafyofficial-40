@@ -150,17 +150,68 @@ serve(async (req) => {
     // Fazer requisição para AppyPay usando o endpoint correto fornecido
     const chargesUrl = 'https://gwy-api-tst.appypay.co.ao/v2.0/charges';
     console.log(`💳 Fazendo requisição para endpoint correto: ${chargesUrl}`);
-
-    const appyPayResponse = await fetch(chargesUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'User-Agent': 'Kambafy-Integration/1.0'
-      },
-      body: JSON.stringify(appyPayPayload)
+    
+    // Log do payload e headers para debug
+    console.log('📤 Payload sendo enviado:', JSON.stringify(appyPayPayload, null, 2));
+    console.log('🔑 API Key sendo usada:', {
+      hasKey: !!apiKey,
+      keyLength: apiKey?.length || 0,
+      keyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'N/A'
     });
+
+    // Tentar diferentes métodos de autenticação
+    const authMethods = [
+      { name: 'Bearer Token', headers: { 'Authorization': `Bearer ${apiKey}` } },
+      { name: 'X-API-Key', headers: { 'X-API-Key': apiKey } },
+      { name: 'ApiKey', headers: { 'ApiKey': apiKey } },
+      { name: 'api-key', headers: { 'api-key': apiKey } }
+    ];
+    
+    let appyPayResponse;
+    
+    for (const authMethod of authMethods) {
+      console.log(`🔐 Tentando método: ${authMethod.name}`);
+      
+      try {
+        appyPayResponse = await fetch(chargesUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'Kambafy-Integration/1.0',
+            ...authMethod.headers
+          },
+          body: JSON.stringify(appyPayPayload)
+        });
+        
+        console.log(`💳 Resposta com ${authMethod.name}:`, {
+          status: appyPayResponse.status,
+          statusText: appyPayResponse.statusText
+        });
+        
+        // Se não for 401, usar este método
+        if (appyPayResponse.status !== 401) {
+          console.log(`✅ Método de auth funcionou: ${authMethod.name}`);
+          break;
+        }
+        
+      } catch (fetchError) {
+        console.log(`❌ Erro com ${authMethod.name}:`, fetchError.message);
+      }
+    }
+    
+    // Se ainda for 401 com todos os métodos
+    if (appyPayResponse && appyPayResponse.status === 401) {
+      console.error('❌ Todos os métodos de autenticação retornaram 401');
+      
+      // Tentar ler a resposta de erro para mais detalhes
+      try {
+        const errorText = await appyPayResponse.text();
+        console.log('📋 Detalhe do erro 401:', errorText);
+      } catch (e) {
+        console.log('❌ Não foi possível ler detalhes do erro');
+      }
+    }
 
     // Verificar se há conteúdo para analisar
     const responseText = await appyPayResponse.text();
