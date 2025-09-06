@@ -55,14 +55,18 @@ serve(async (req) => {
 
     console.log('📤 Payload completo para AppyPay:', appyPayPayload);
 
-    // Buscar credenciais da AppyPay
+    // Buscar credenciais e URLs da AppyPay
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
+    const authBaseUrl = Deno.env.get('APPYPAY_AUTH_BASE_URL') || 'https://gwy-api.appypay.co.ao';
+    const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL') || 'https://gwy-api.appypay.co.ao';
     
-    console.log('🔐 Verificando credenciais:', {
+    console.log('🔐 Verificando credenciais e configurações:', {
       hasClientId: !!clientId,
       hasClientSecret: !!clientSecret,
-      clientIdLength: clientId?.length || 0
+      clientIdLength: clientId?.length || 0,
+      authBaseUrl,
+      apiBaseUrl
     });
     
     if (!clientId || !clientSecret) {
@@ -82,31 +86,64 @@ serve(async (req) => {
     // Primeiro: Gerar Bearer Token usando as credenciais
     console.log('🔐 Gerando Bearer Token...');
     
-    const authResponse = await fetch('https://gwy-api.appypay.co.ao/v2.0/auth/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
-        grant_type: 'client_credentials'
-      })
-    });
+    // Endpoints possíveis para autenticação (vamos tentar múltiplos)
+    const authEndpoints = [
+      `${authBaseUrl}/connect/token`,
+      `${authBaseUrl}/v2.0/connect/token`,
+      `${authBaseUrl}/oauth/token`,
+      `${authBaseUrl}/v2.0/auth/token`
+    ];
+    
+    let authResponse;
+    let authError = '';
+    
+    // Tentar cada endpoint até encontrar um que funcione
+    for (const endpoint of authEndpoints) {
+      console.log(`🔗 Tentando endpoint de auth: ${endpoint}`);
+      
+      // Preparar dados no formato form-urlencoded
+      const formData = new URLSearchParams();
+      formData.append('client_id', clientId);
+      formData.append('client_secret', clientSecret);
+      formData.append('grant_type', 'client_credentials');
+      
+      try {
+        authResponse = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+          },
+          body: formData.toString()
+        });
+        
+        console.log(`🔐 Resposta da autenticação ${endpoint}:`, {
+          status: authResponse.status,
+          statusText: authResponse.statusText
+        });
+        
+        if (authResponse.ok) {
+          console.log(`✅ Endpoint funcionou: ${endpoint}`);
+          break;
+        } else {
+          const errorText = await authResponse.text();
+          authError += `${endpoint}: ${authResponse.status} ${authResponse.statusText} - ${errorText}\n`;
+          console.log(`❌ Endpoint falhou ${endpoint}: ${authResponse.status} - ${errorText}`);
+        }
+      } catch (fetchError) {
+        authError += `${endpoint}: Erro de conexão - ${fetchError.message}\n`;
+        console.log(`❌ Erro de conexão ${endpoint}:`, fetchError.message);
+      }
+    }
 
-    console.log('🔐 Resposta da autenticação:', {
-      status: authResponse.status,
-      statusText: authResponse.statusText
-    });
-
-    if (!authResponse.ok) {
-      const authError = await authResponse.text();
-      console.error('❌ Erro na autenticação:', authError);
+    
+    // Verificar se conseguimos autenticar
+    if (!authResponse || !authResponse.ok) {
+      console.error('❌ Falha na autenticação em todos os endpoints:', authError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Erro na autenticação AppyPay: ${authResponse.status} - ${authError}`
+          error: `Erro na autenticação AppyPay. Tentamos múltiplos endpoints:\n${authError}`
         }),
         { 
           status: 400,
@@ -118,12 +155,28 @@ serve(async (req) => {
     const authData = await authResponse.json();
     const bearerToken = authData.access_token;
     
+    if (!bearerToken) {
+      console.error('❌ Token de acesso não encontrado na resposta:', authData);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Token de acesso não recebido da AppyPay'
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
     console.log('✅ Bearer Token gerado com sucesso');
 
     // Segundo: Fazer requisição de cobrança com Bearer Token
+    const chargesUrl = `${apiBaseUrl}/v2.0/charges`;
+    console.log(`💳 Fazendo requisição de cobrança para: ${chargesUrl}`);
 
     // Fazer requisição para AppyPay com o Bearer Token gerado
-    const appyPayResponse = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {
+    const appyPayResponse = await fetch(chargesUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
