@@ -887,10 +887,12 @@ const Checkout = () => {
         console.log('📋 Dados específicos da resposta:', appyPayResult.data);
         console.log('✅ Status da integração:', appyPayResult.message);
 
-        console.log('✅ AppyPay processou com sucesso, continuando com processamento local...');
-        
-        // Continuar com o processamento local normal após sucesso da AppyPay
-        // O código vai "cair" no bloco de processamento local mais abaixo (linha 1013)
+        // Exibir resposta da AppyPay de forma simples
+        alert(`Resposta da AppyPay:\n\nStatus: ${appyPayResult.success ? 'Sucesso' : 'Erro'}\n\nDados: ${JSON.stringify(appyPayResult.data, null, 2)}\n\nResposta completa: ${JSON.stringify(appyPayResult, null, 2)}`);
+
+        console.log('✅ AppyPay processou, resposta exibida ao usuário');
+        setProcessing(false);
+        return;
         
       } catch (error) {
         console.error('❌ Erro na integração com AppyPay:', error);
