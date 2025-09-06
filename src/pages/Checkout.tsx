@@ -824,7 +824,7 @@ const Checkout = () => {
         const merchantTransactionId = `TR${Date.now()}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
         
         const appyPayData = {
-          amount: Math.round(totalAmount * 100), // Converter para centavos/kwanzas menores
+          amount: Math.round(totalAmount * 100), // Converter para centavos/kwanzas menores  
           currency: "AOA",
           description: product.name,
           merchantTransactionId: merchantTransactionId,
@@ -887,8 +887,27 @@ const Checkout = () => {
         console.log('📋 Dados específicos da resposta:', appyPayResult.data);
         console.log('✅ Status da integração:', appyPayResult.message);
 
-        // Exibir resposta da AppyPay de forma simples
-        alert(`Resposta da AppyPay:\n\nStatus: ${appyPayResult.success ? 'Sucesso' : 'Erro'}\n\nDados: ${JSON.stringify(appyPayResult.data, null, 2)}\n\nResposta completa: ${JSON.stringify(appyPayResult, null, 2)}`);
+        // Exibir resposta da AppyPay de forma mais organizada
+        const responseInfo = `
+=== RESPOSTA DA APPYPAY ===
+
+Status: ${appyPayResult.success ? '✅ Sucesso' : '❌ Erro'}
+
+${appyPayResult.success ? 
+  `Dados retornados:
+${JSON.stringify(appyPayResult.data, null, 2)}` : 
+  `Erro: ${appyPayResult.error || 'Erro desconhecido'}`
+}
+
+Resposta HTTP: ${appyPayResult.appyPayStatus || 'N/A'}
+
+Payload enviado:
+${JSON.stringify(appyPayData, null, 2)}
+
+=========================
+        `;
+        
+        alert(responseInfo);
 
         console.log('✅ AppyPay processou, resposta exibida ao usuário');
         setProcessing(false);

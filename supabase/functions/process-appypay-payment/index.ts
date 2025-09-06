@@ -13,28 +13,35 @@ serve(async (req) => {
   try {
     const { amount, currency, description, merchantTransactionId, paymentMethod } = await req.json();
 
-    console.log('📤 Enviando para AppyPay:', {
+    console.log('📤 Dados recebidos:', {
       amount,
       currency,
       description,
       merchantTransactionId,
-      paymentMethod,
-      url: 'https://gwy-api.appypay.co.ao/v2.0/charges'
+      paymentMethod
     });
 
-    // Fazer requisição simples para AppyPay
+    // Estrutura da requisição baseada na documentação da AppyPay
+    const appyPayPayload = {
+      amount: parseInt(amount), // Garantir que é um número inteiro
+      currency: currency || "AOA",
+      description: description,
+      merchantTransactionId: merchantTransactionId,
+      paymentMethod: paymentMethod
+    };
+
+    console.log('📤 Payload final para AppyPay:', appyPayPayload);
+
+    // Fazer requisição para AppyPay com diferentes opções de autenticação
     const appyPayResponse = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        // Adicionar diferentes tipos de autenticação comuns
+        'Accept': 'application/json',
+        'User-Agent': 'Kambafy-Integration/1.0'
       },
-      body: JSON.stringify({
-        amount,
-        currency,
-        description,
-        merchantTransactionId,
-        paymentMethod
-      })
+      body: JSON.stringify(appyPayPayload)
     });
 
     // Verificar se há conteúdo para analisar
