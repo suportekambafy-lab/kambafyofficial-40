@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Shield, Check, AlertTriangle, CheckCircle, Wallet } from "lucide-react";
+import { Shield, Check, AlertTriangle, CheckCircle, Wallet, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1653,15 +1653,16 @@ const Checkout = () => {
                              ? 'border-green-500 border-2 bg-green-50'
                              : 'border-gray-300 hover:border-green-400'
                          }`}
-                         onClick={async () => {
-                           setSelectedPayment(method.id);
-                           setKambaPayEmailError(null);
-                           
-                           // Se KambaPay foi selecionado, verificar se o email está registrado
-                           if (method.id === 'kambapay' && formData.email) {
-                             await checkKambaPayEmail(formData.email);
-                           }
-                         }}
+                          onClick={async () => {
+                            console.log('🔍 Método de pagamento selecionado:', method.id);
+                            setSelectedPayment(method.id);
+                            setKambaPayEmailError(null);
+                            
+                            // Se KambaPay foi selecionado, verificar se o email está registrado
+                            if (method.id === 'kambapay' && formData.email) {
+                              await checkKambaPayEmail(formData.email);
+                            }
+                          }}
                        >
                         {selectedPayment === method.id && (
                           <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -1747,6 +1748,57 @@ const Checkout = () => {
                     }}
                     disabled={processing}
                   />
+                </div>
+              )}
+
+              {selectedPayment === 'referencia' && (
+                <div className="mt-6">
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-orange-600 flex items-center justify-center">
+                          <Receipt className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-orange-900">Pagamento por Referência</h3>
+                          <p className="text-sm text-orange-700">Pague com referência bancária via AppyPay</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-white p-3 rounded-lg border border-orange-200">
+                          <div className="text-sm text-gray-600 mb-1">Valor total</div>
+                          <div className="text-lg font-bold text-orange-600">
+                            {getDisplayPrice(totalPrice)}
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-orange-600 bg-orange-100 p-2 rounded">
+                          <p><strong>💡 Como funciona:</strong></p>
+                          <p>1. Clique em "Finalizar Pagamento"</p>
+                          <p>2. Você receberá uma referência de pagamento</p>
+                          <p>3. Use a referência para pagar em qualquer banco ou ATM</p>
+                        </div>
+
+                        <Button
+                          onClick={handlePurchase}
+                          disabled={!formData.fullName || !formData.email || !formData.phone || processing}
+                          className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white font-semibold"
+                        >
+                          {processing ? (
+                            <div className="flex items-center justify-center">
+                              <div className="w-6 h-6 rounded bg-orange-700 flex items-center justify-center mr-2">
+                                <span className="text-xs font-bold text-white animate-bounce">⟳</span>
+                              </div>
+                              PROCESSANDO...
+                            </div>
+                          ) : (
+                            `FINALIZAR PAGAMENTO - ${getDisplayPrice(totalPrice)}`
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
 
@@ -1846,7 +1898,7 @@ const Checkout = () => {
                 </CardContent>
               </Card>
 
-              {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer', 'reference'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
+              {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer', 'referencia'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
                 <Button
                   onClick={handlePurchase}
                   disabled={!formData.fullName || !formData.email || !formData.phone || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
