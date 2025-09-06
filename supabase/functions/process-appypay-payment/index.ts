@@ -123,14 +123,18 @@ serve(async (req) => {
       console.error('❌ Erro de conexão na autenticação:', authError.message);
     }
 
-    // Fazer requisição direta para AppyPay com API Key como Bearer token
-    // Tentar múltiplos endpoints possíveis
+    // Fazer requisição direta para AppyPay - usar endpoints corretos
     const possibleEndpoints = [
       `${apiBaseUrl}/charges`,
       `${apiBaseUrl}/v1/charges`, 
-      `${apiBaseUrl}/v2.0/charges`,
+      `${apiBaseUrl}/v2/charges`,
       `${apiBaseUrl}/api/charges`,
-      `${apiBaseUrl}/api/v1/charges`
+      `${apiBaseUrl}/api/v1/charges`,
+      `${apiBaseUrl}/api/v2/charges`,
+      // Tentar sem o apiBaseUrl também
+      'https://api.appypay.co.ao/charges',
+      'https://api.appypay.co.ao/v1/charges',
+      'https://api.appypay.co.ao/v2/charges'
     ];
     
     let appyPayResponse;
