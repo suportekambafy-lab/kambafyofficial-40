@@ -85,7 +85,67 @@ serve(async (req) => {
       );
     }
 
-    console.log('🔐 Usando endpoint de autenticação:', authUrl);
+    console.log('🔐 Testando endpoint de autenticação primeiro...');
+    
+    // Testar o endpoint de autenticação específico
+    try {
+      const authTestResponse = await fetch(authUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('🔐 Teste de autenticação:', {
+        url: authUrl,
+        status: authTestResponse.status,
+        statusText: authTestResponse.statusText
+      });
+      
+      // Tentar ler a resposta
+      const authResponseText = await authTestResponse.text();
+      console.log('🔐 Resposta da autenticação:', {
+        hasContent: !!authResponseText,
+        contentLength: authResponseText?.length || 0,
+        content: authResponseText ? authResponseText.substring(0, 200) + '...' : 'vazia'
+      });
+      
+      // Se for 2xx, é sucesso
+      if (authTestResponse.ok) {
+        console.log('✅ Endpoint de autenticação FUNCIONOU!');
+      } else if (authTestResponse.status === 401) {
+        console.log('⚠️ Endpoint encontrado mas token inválido (401)');
+      } else if (authTestResponse.status === 404) {
+        console.log('❌ Endpoint de autenticação não encontrado (404)');
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: `Endpoint de autenticação não encontrado: ${authUrl}`
+          }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      } else {
+        console.log(`⚠️ Endpoint responde com status: ${authTestResponse.status}`);
+      }
+      
+    } catch (authError) {
+      console.error('❌ Erro de conexão na autenticação:', authError.message);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Erro de conexão no endpoint de autenticação: ${authError.message}`
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // Fazer requisição para AppyPay - tentar diferentes endpoints de charges
     const possibleChargesEndpoints = [
