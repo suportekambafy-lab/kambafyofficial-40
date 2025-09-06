@@ -59,15 +59,15 @@ serve(async (req) => {
     const apiKey = Deno.env.get('APPYPAY_API_KEY');
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
     
-    // URLs corretas baseadas no padrão Microsoft OAuth2
-    const authBaseUrl = 'https://login.microsoftonline.com/auth.appypay.co.ao';
+    // URL específica de autenticação
+    const authUrl = 'https://login.microsoftonline.com/auth.appypay.co.ao/oauth2/token';
     const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL') || 'https://gwy-api.appypay.co.ao';
     
     console.log('🔐 Verificando credenciais:', {
       hasApiKey: !!apiKey,
       hasClientId: !!clientId,
       apiKeyLength: apiKey?.length || 0,
-      authBaseUrl,
+      authUrl,
       apiBaseUrl
     });
     
@@ -85,131 +85,22 @@ serve(async (req) => {
       );
     }
 
-    console.log('🔐 Testando token de autenticação...');
-    
-    // Testar se o token é válido fazendo uma requisição GET para o endpoint de auth
-    try {
-      const authTestResponse = await fetch(`${authBaseUrl}/oauth2/token`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('🔐 Teste de autenticação:', {
-        status: authTestResponse.status,
-        statusText: authTestResponse.statusText
-      });
-      
-      if (!authTestResponse.ok && authTestResponse.status !== 401) {
-        const authError = await authTestResponse.text();
-        console.error('❌ Erro no teste de autenticação:', authError);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: `Erro na autenticação AppyPay: ${authTestResponse.status} - ${authError}`
-          }),
-          { 
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-      }
-      
-      console.log('✅ Token testado (status esperado para teste)');
-    } catch (authError) {
-      console.error('❌ Erro de conexão na autenticação:', authError.message);
-    }
+    console.log('🔐 Usando endpoint de autenticação:', authUrl);
 
-    // Fazer requisição direta para AppyPay - usar endpoints corretos
-    const possibleEndpoints = [
-      `${apiBaseUrl}/charges`,
-      `${apiBaseUrl}/v1/charges`, 
-      `${apiBaseUrl}/v2/charges`,
-      `${apiBaseUrl}/api/charges`,
-      `${apiBaseUrl}/api/v1/charges`,
-      `${apiBaseUrl}/api/v2/charges`,
-      // Tentar sem o apiBaseUrl também
-      'https://api.appypay.co.ao/charges',
-      'https://api.appypay.co.ao/v1/charges',
-      'https://api.appypay.co.ao/v2/charges'
-    ];
-    
-    let appyPayResponse;
-    let chargesError = '';
-    
-    // Tentar diferentes métodos de autenticação
-    const authMethods = [
-      { name: 'Bearer Token', headers: { 'Authorization': `Bearer ${apiKey}` } },
-      { name: 'API Key Header', headers: { 'X-API-Key': apiKey } },
-      { name: 'AppyPay Key', headers: { 'AppyPay-Key': apiKey } },
-      { name: 'Api-Key Header', headers: { 'Api-Key': apiKey } }
-    ];
-    
-    for (const endpoint of possibleEndpoints) {
-      console.log(`💳 Tentando endpoint: ${endpoint}`);
-      
-      for (const authMethod of authMethods) {
-        console.log(`🔐 Tentando método de auth: ${authMethod.name}`);
-        
-        try {
-          appyPayResponse = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'User-Agent': 'Kambafy-Integration/1.0',
-              ...authMethod.headers
-            },
-            body: JSON.stringify(appyPayPayload)
-          });
-          
-          console.log(`💳 Resposta ${endpoint} com ${authMethod.name}:`, {
-            status: appyPayResponse.status,
-            statusText: appyPayResponse.statusText
-          });
-          
-          // Se não for 401 (unauthorized) ou 404 (not found), parar de tentar
-          if (appyPayResponse.status !== 401 && appyPayResponse.status !== 404) {
-            console.log(`✅ Método funcionou: ${authMethod.name} em ${endpoint} (status: ${appyPayResponse.status})`);
-            break;
-          } else {
-            console.log(`❌ ${authMethod.name} falhou: ${appyPayResponse.status}`);
-          }
-        } catch (fetchError) {
-          chargesError += `${endpoint} (${authMethod.name}): ${fetchError.message}\n`;
-          console.log(`❌ Erro de conexão ${endpoint} (${authMethod.name}):`, fetchError.message);
-        }
-      }
-      
-      // Se encontrou um método que funcionou, parar de tentar endpoints
-      if (appyPayResponse && appyPayResponse.status !== 401 && appyPayResponse.status !== 404) {
-        break;
-      }
-    }
-    
-    // Se todos os métodos falharam
-    if (!appyPayResponse || appyPayResponse.status === 401 || appyPayResponse.status === 404) {
-      console.error('❌ Todos os métodos de autenticação falharam:', chargesError);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Falha na autenticação AppyPay. Status: ${appyPayResponse?.status}. Tentamos múltiplos métodos de auth.`,
-          details: {
-            testedEndpoints: possibleEndpoints,
-            testedAuthMethods: authMethods.map(m => m.name),
-            lastStatus: appyPayResponse?.status,
-            lastStatusText: appyPayResponse?.statusText
-          }
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
+    // Fazer requisição para AppyPay usando o endpoint correto
+    const chargesUrl = `${apiBaseUrl}/v2.0/charges`;
+    console.log(`💳 Fazendo requisição para: ${chargesUrl}`);
+
+    const appyPayResponse = await fetch(chargesUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'User-Agent': 'Kambafy-Integration/1.0'
+      },
+      body: JSON.stringify(appyPayPayload)
+    });
 
     // Verificar se há conteúdo para analisar
     const responseText = await appyPayResponse.text();
