@@ -815,7 +815,7 @@ const Checkout = () => {
     }
 
     // Para pagamento por referência, enviar para AppyPay
-    if (selectedPayment === 'transfer') {
+    if (selectedPayment === 'referencia') {
       console.log('🏦 Pagamento por referência selecionado - enviando para AppyPay');
       setProcessing(true);
 

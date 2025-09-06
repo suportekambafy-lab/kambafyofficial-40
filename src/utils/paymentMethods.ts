@@ -34,6 +34,15 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     countryName: "Angola"
   },
   {
+    id: "referencia",
+    name: "Pagamento por Referência",
+    image: getPaymentMethodImage("transfer"),
+    enabled: true,
+    isAngola: true,
+    countryFlag: "🇦🇴",
+    countryName: "Angola"
+  },
+  {
     id: "emola",
     name: "e-Mola",
     image: getPaymentMethodImage("emola"),
