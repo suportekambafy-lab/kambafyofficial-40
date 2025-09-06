@@ -87,20 +87,76 @@ serve(async (req) => {
 
     console.log('🔐 Usando endpoint de autenticação:', authUrl);
 
-    // Fazer requisição para AppyPay usando o endpoint correto
-    const chargesUrl = `${apiBaseUrl}/v2.0/charges`;
-    console.log(`💳 Fazendo requisição para: ${chargesUrl}`);
-
-    const appyPayResponse = await fetch(chargesUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'User-Agent': 'Kambafy-Integration/1.0'
-      },
-      body: JSON.stringify(appyPayPayload)
-    });
+    // Fazer requisição para AppyPay - tentar diferentes endpoints de charges
+    const possibleChargesEndpoints = [
+      `${apiBaseUrl}/charges`,
+      `${apiBaseUrl}/v1/charges`,
+      `${apiBaseUrl}/v2/charges`,
+      `${apiBaseUrl}/v2.0/charges`,
+      `${apiBaseUrl}/api/charges`,
+      `${apiBaseUrl}/api/v1/charges`,
+      `${apiBaseUrl}/api/v2/charges`,
+      // Tentar URLs alternativas
+      'https://api.appypay.co.ao/charges',
+      'https://api.appypay.co.ao/v1/charges',
+      'https://api.appypay.co.ao/v2/charges'
+    ];
+    
+    let appyPayResponse;
+    let chargesError = '';
+    
+    for (const endpoint of possibleChargesEndpoints) {
+      console.log(`💳 Tentando endpoint de charges: ${endpoint}`);
+      
+      try {
+        appyPayResponse = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+            'User-Agent': 'Kambafy-Integration/1.0'
+          },
+          body: JSON.stringify(appyPayPayload)
+        });
+        
+        console.log(`💳 Resposta ${endpoint}:`, {
+          status: appyPayResponse.status,
+          statusText: appyPayResponse.statusText
+        });
+        
+        // Se não for 404, paramos de tentar (mesmo que seja 401 ou outro erro)
+        if (appyPayResponse.status !== 404) {
+          console.log(`✅ Endpoint encontrado: ${endpoint} (status: ${appyPayResponse.status})`);
+          break;
+        } else {
+          chargesError += `${endpoint}: 404 Not Found\n`;
+          console.log(`❌ Endpoint 404: ${endpoint}`);
+        }
+      } catch (fetchError) {
+        chargesError += `${endpoint}: Erro de conexão - ${fetchError.message}\n`;
+        console.log(`❌ Erro de conexão ${endpoint}:`, fetchError.message);
+      }
+    }
+    
+    // Se todos os endpoints retornaram 404
+    if (!appyPayResponse || appyPayResponse.status === 404) {
+      console.error('❌ Nenhum endpoint de charges encontrado:', chargesError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Nenhum endpoint de charges AppyPay válido encontrado. Todos retornaram 404.`,
+          details: {
+            testedEndpoints: possibleChargesEndpoints,
+            errors: chargesError
+          }
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // Verificar se há conteúdo para analisar
     const responseText = await appyPayResponse.text();
