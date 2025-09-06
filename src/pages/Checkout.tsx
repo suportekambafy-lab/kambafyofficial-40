@@ -814,6 +814,57 @@ const Checkout = () => {
       return;
     }
 
+    // Para pagamento por referência, enviar para AppyPay
+    if (selectedPayment === 'transfer') {
+      console.log('🏦 Pagamento por referência selecionado - enviando para AppyPay');
+      setProcessing(true);
+
+      try {
+        const totalAmount = parseFloat(product.price) + orderBumpPrice;
+        const merchantTransactionId = `TR${Date.now()}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+        
+        const appyPayData = {
+          amount: Math.round(totalAmount * 100), // Converter para centavos/kwanzas menores
+          currency: "AOA",
+          description: product.name,
+          merchantTransactionId: merchantTransactionId,
+          paymentMethod: "REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f"
+        };
+
+        console.log('📤 Enviando dados para AppyPay:', appyPayData);
+
+        const response = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(appyPayData)
+        });
+
+        const appyPayResponse = await response.json();
+        console.log('📥 Resposta da AppyPay:', appyPayResponse);
+
+        if (!response.ok) {
+          throw new Error(`AppyPay error: ${appyPayResponse?.message || 'Erro desconhecido'}`);
+        }
+
+        console.log('✅ AppyPay processou com sucesso, continuando com processamento local...');
+        
+        // Continuar com o processamento local normal após sucesso da AppyPay
+        // O código vai "cair" no bloco de processamento local mais abaixo (linha 1013)
+        
+      } catch (error) {
+        console.error('❌ Erro na integração com AppyPay:', error);
+        toast({
+          title: "Erro no pagamento",
+          description: error.message || "Erro ao processar pagamento por referência",
+          variant: "destructive"
+        });
+        setProcessing(false);
+        return;
+      }
+    }
+
     // Para KambaPay, usar edge function específica com 2FA
     if (selectedPayment === 'kambapay') {
       console.log('🔵 KambaPay payment method selected');
