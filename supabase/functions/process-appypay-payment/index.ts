@@ -157,6 +157,7 @@ serve(async (req) => {
     ];
     
     let appyPayResponse;
+    let responseText = '';
     
     for (const authMethod of authMethods) {
       console.log(`🔐 Tentando método: ${authMethod.name}`);
@@ -173,37 +174,30 @@ serve(async (req) => {
           body: JSON.stringify(appyPayPayload)
         });
         
+        // Ler a resposta imediatamente para evitar "Body already consumed"
+        responseText = await appyPayResponse.text();
+        
         console.log(`💳 Resposta com ${authMethod.name}:`, {
           status: appyPayResponse.status,
-          statusText: appyPayResponse.statusText
+          statusText: appyPayResponse.statusText,
+          hasContent: !!responseText,
+          contentLength: responseText?.length || 0
         });
         
         // Se não for 401, usar este método
         if (appyPayResponse.status !== 401) {
           console.log(`✅ Método de auth funcionou: ${authMethod.name}`);
           break;
+        } else {
+          console.log(`📋 Detalhe do erro 401 com ${authMethod.name}:`, responseText.substring(0, 200));
         }
         
       } catch (fetchError) {
         console.log(`❌ Erro com ${authMethod.name}:`, fetchError.message);
       }
     }
-    
-    // Se ainda for 401 com todos os métodos
-    if (appyPayResponse && appyPayResponse.status === 401) {
-      console.error('❌ Todos os métodos de autenticação retornaram 401');
-      
-      // Tentar ler a resposta de erro para mais detalhes
-      try {
-        const errorText = await appyPayResponse.text();
-        console.log('📋 Detalhe do erro 401:', errorText);
-      } catch (e) {
-        console.log('❌ Não foi possível ler detalhes do erro');
-      }
-    }
 
-    // Verificar se há conteúdo para analisar
-    const responseText = await appyPayResponse.text();
+    // Verificar se há conteúdo para analisar (usar responseText já lido anteriormente)
     console.log('📋 Resposta bruta da AppyPay:', {
       status: appyPayResponse.status,
       statusText: appyPayResponse.statusText,
