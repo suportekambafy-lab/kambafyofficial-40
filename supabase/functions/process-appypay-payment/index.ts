@@ -208,8 +208,100 @@ serve(async (req) => {
     });
 
     let responseData;
-    if (!responseText || responseText.trim() === '') {
-      console.log('⚠️ AppyPay retornou resposta vazia');
+    
+    // Se for 401, tentar diferentes estratégias para obter mais detalhes
+    if (appyPayResponse.status === 401) {
+      console.log('🔍 Analisando erro 401 em detalhes...');
+      
+      if (!responseText || responseText.trim() === '') {
+        console.log('⚠️ Erro 401 sem corpo de resposta - pode indicar problema de autenticação OAuth');
+        console.log('💡 Verificando headers para mais informações...');
+        
+        const wwwAuthHeader = appyPayResponse.headers.get('www-authenticate');
+        console.log('🔐 Header www-authenticate:', wwwAuthHeader);
+        
+        // Parece que precisa de autenticação OAuth primeiro
+        console.log('🎯 Tentativa: Fazer autenticação OAuth primeiro');
+        
+        try {
+          // Tentar obter token OAuth usando as credenciais
+          const oauthResponse = await fetch('https://login.microsoftonline.com/auth.appypay.co.ao/oauth2/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json'
+            },
+            body: new URLSearchParams({
+              grant_type: 'client_credentials',
+              client_id: clientId || '',
+              client_secret: apiKey || '',
+              scope: 'https://gwy-api.appypay.co.ao/.default'
+            })
+          });
+          
+          console.log('🔐 Resposta OAuth:', {
+            status: oauthResponse.status,
+            statusText: oauthResponse.statusText
+          });
+          
+          const oauthText = await oauthResponse.text();
+          console.log('🔐 Corpo da resposta OAuth:', oauthText.substring(0, 500));
+          
+          if (oauthResponse.ok && oauthText) {
+            const oauthData = JSON.parse(oauthText);
+            if (oauthData.access_token) {
+              console.log('✅ Token OAuth obtido com sucesso');
+              
+              // Tentar novamente com o token OAuth
+              const retryResponse = await fetch(chargesUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  'Authorization': `Bearer ${oauthData.access_token}`
+                },
+                body: JSON.stringify(appyPayPayload)
+              });
+              
+              const retryText = await retryResponse.text();
+              console.log('🔄 Retry com token OAuth:', {
+                status: retryResponse.status,
+                statusText: retryResponse.statusText,
+                responseText: retryText.substring(0, 200)
+              });
+              
+              // Usar a resposta do retry
+              appyPayResponse = retryResponse;
+              responseText = retryText;
+            }
+          }
+          
+        } catch (oauthError) {
+          console.log('❌ Erro na autenticação OAuth:', oauthError.message);
+        }
+        
+        responseData = { 
+          error: 'Unauthorized',
+          error_description: 'API Key inválida ou expirada. Resposta vazia indica problema de autenticação.',
+          status: appyPayResponse.status,
+          statusText: appyPayResponse.statusText,
+          wwwAuthenticate: wwwAuthHeader
+        };
+      } else {
+        try {
+          responseData = JSON.parse(responseText);
+          console.log('✅ JSON parseado do erro 401:', responseData);
+        } catch (jsonError) {
+          responseData = { 
+            error: 'Invalid response format',
+            error_description: 'Resposta 401 não é JSON válido',
+            rawResponse: responseText,
+            parseError: jsonError.message
+          };
+        }
+      }
+    } else if (!responseText || responseText.trim() === '') {
+      console.log('⚠️ AppyPay retornou resposta vazia para status não-401');
       responseData = { 
         message: 'Resposta vazia da AppyPay',
         status: appyPayResponse.status,
