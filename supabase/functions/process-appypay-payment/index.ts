@@ -55,21 +55,22 @@ serve(async (req) => {
 
     console.log('📤 Payload completo para AppyPay:', appyPayPayload);
 
-    // Buscar token de autenticação
-    const apiKey = Deno.env.get('APPYPAY_API_KEY');
+    // Buscar credenciais da AppyPay
+    const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
+    const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
     
-    console.log('🔐 Verificando token:', {
-      hasToken: !!apiKey,
-      tokenLength: apiKey?.length || 0,
-      tokenPrefix: apiKey ? apiKey.substring(0, 8) + '...' : 'N/A'
+    console.log('🔐 Verificando credenciais:', {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+      clientIdLength: clientId?.length || 0
     });
     
-    if (!apiKey) {
-      console.error('❌ APPYPAY_API_KEY não encontrada');
+    if (!clientId || !clientSecret) {
+      console.error('❌ Credenciais da AppyPay não encontradas');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Token de autenticação da AppyPay não configurado'
+          error: 'Credenciais da AppyPay não configuradas (CLIENT_ID e CLIENT_SECRET necessários)'
         }),
         { 
           status: 400,
@@ -78,15 +79,56 @@ serve(async (req) => {
       );
     }
 
-    console.log('🔐 Token encontrado, configurando autenticação Bearer');
+    // Primeiro: Gerar Bearer Token usando as credenciais
+    console.log('🔐 Gerando Bearer Token...');
+    
+    const authResponse = await fetch('https://gwy-api.appypay.co.ao/v2.0/auth/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'client_credentials'
+      })
+    });
 
-    // Fazer requisição para AppyPay com autenticação Bearer
+    console.log('🔐 Resposta da autenticação:', {
+      status: authResponse.status,
+      statusText: authResponse.statusText
+    });
+
+    if (!authResponse.ok) {
+      const authError = await authResponse.text();
+      console.error('❌ Erro na autenticação:', authError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Erro na autenticação AppyPay: ${authResponse.status} - ${authError}`
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const authData = await authResponse.json();
+    const bearerToken = authData.access_token;
+    
+    console.log('✅ Bearer Token gerado com sucesso');
+
+    // Segundo: Fazer requisição de cobrança com Bearer Token
+
+    // Fazer requisição para AppyPay com o Bearer Token gerado
     const appyPayResponse = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${bearerToken}`,
         'User-Agent': 'Kambafy-Integration/1.0'
       },
       body: JSON.stringify(appyPayPayload)
