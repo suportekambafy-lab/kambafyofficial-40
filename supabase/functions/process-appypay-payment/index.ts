@@ -58,6 +58,12 @@ serve(async (req) => {
     // Buscar token de autenticação
     const apiKey = Deno.env.get('APPYPAY_API_KEY');
     
+    console.log('🔐 Verificando token:', {
+      hasToken: !!apiKey,
+      tokenLength: apiKey?.length || 0,
+      tokenPrefix: apiKey ? apiKey.substring(0, 8) + '...' : 'N/A'
+    });
+    
     if (!apiKey) {
       console.error('❌ APPYPAY_API_KEY não encontrada');
       return new Response(
