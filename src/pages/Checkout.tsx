@@ -393,7 +393,7 @@ const Checkout = () => {
       // Filtrar por país
       const countryMethods = enabledMethods.filter((method: any) => {
         if (userCountry.code === 'AO') {
-          return ['express', 'referencia', 'transfer', 'kambapay'].includes(method.id);
+          return ['express', 'reference', 'transfer', 'kambapay'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
           return ['emola', 'epesa', 'kambapay'].includes(method.id);
         } else if (userCountry.code === 'PT') {
@@ -815,7 +815,7 @@ const Checkout = () => {
     }
 
     // Para pagamento por referência, enviar para AppyPay
-    if (selectedPayment === 'referencia') {
+    if (selectedPayment === 'reference') {
       console.log('🏦 Pagamento por referência selecionado - enviando para AppyPay');
       setProcessing(true);
 
@@ -1751,7 +1751,7 @@ const Checkout = () => {
                 </div>
               )}
 
-              {selectedPayment === 'referencia' && (
+              {selectedPayment === 'reference' && (
                 <div className="mt-6">
                   <Card className="border-orange-200 bg-orange-50">
                     <CardContent className="p-4">
@@ -1898,7 +1898,7 @@ const Checkout = () => {
                 </CardContent>
               </Card>
 
-              {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer', 'referencia'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
+              {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer', 'reference'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
                 <Button
                   onClick={handlePurchase}
                   disabled={!formData.fullName || !formData.email || !formData.phone || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
