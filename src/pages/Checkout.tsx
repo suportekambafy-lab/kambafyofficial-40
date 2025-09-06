@@ -837,20 +837,42 @@ const Checkout = () => {
           body: appyPayData
         });
 
-        console.log('🔄 Resultado da edge function:', { appyPayResult, appyPayError });
+        console.log('🔄 Resultado completo da edge function:', { 
+          success: !appyPayError,
+          result: appyPayResult, 
+          error: appyPayError,
+          hasResult: !!appyPayResult,
+          hasError: !!appyPayError
+        });
 
         if (appyPayError) {
           console.error('❌ Erro na edge function:', appyPayError);
           throw new Error(`Erro na integração: ${appyPayError.message}`);
         }
 
-        if (!appyPayResult?.success) {
-          console.error('❌ Erro na AppyPay (via edge function):', appyPayResult);
-          throw new Error(`AppyPay error: ${appyPayResult?.error || 'Erro desconhecido'}`);
+        if (!appyPayResult) {
+          console.error('❌ Nenhuma resposta da edge function');
+          throw new Error('Nenhuma resposta recebida da integração');
+        }
+
+        console.log('📦 Processando resposta da edge function:', {
+          isSuccess: appyPayResult.success,
+          hasData: !!appyPayResult.data,
+          hasError: !!appyPayResult.error,
+          message: appyPayResult.message
+        });
+
+        if (!appyPayResult.success) {
+          console.error('❌ Erro retornado pela AppyPay:', {
+            error: appyPayResult.error,
+            details: appyPayResult.details
+          });
+          throw new Error(`AppyPay error: ${appyPayResult.error || 'Erro desconhecido'}`);
         }
 
         console.log('📥 Resposta completa da AppyPay:', appyPayResult);
         console.log('📋 Dados específicos da resposta:', appyPayResult.data);
+        console.log('✅ Status da integração:', appyPayResult.message);
 
         console.log('✅ AppyPay processou com sucesso, continuando com processamento local...');
         

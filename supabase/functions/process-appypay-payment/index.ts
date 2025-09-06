@@ -22,13 +22,26 @@ serve(async (req) => {
       url: 'https://gwy-api.appypay.co.ao/v2.0/charges'
     });
 
+    // Headers para AppyPay
+    const appyPayHeaders = {
+      'Content-Type': 'application/json'
+    };
+
+    // Adicionar Authorization se o secret estiver configurado
+    const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
+    if (clientSecret) {
+      appyPayHeaders['Authorization'] = `Bearer ${clientSecret}`;
+      console.log('🔐 Authorization header adicionado');
+    } else {
+      console.log('⚠️ APPYPAY_CLIENT_SECRET não configurado');
+    }
+
+    console.log('📋 Headers sendo enviados:', Object.keys(appyPayHeaders));
+
     // Fazer requisição para AppyPay
     const appyPayResponse = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('APPYPAY_CLIENT_SECRET')}`, // Se precisar de autenticação
-      },
+      headers: appyPayHeaders,
       body: JSON.stringify({
         amount,
         currency,
