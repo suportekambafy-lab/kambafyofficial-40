@@ -55,13 +55,32 @@ serve(async (req) => {
 
     console.log('📤 Payload completo para AppyPay:', appyPayPayload);
 
-    // Fazer requisição para AppyPay com diferentes opções de autenticação
+    // Buscar token de autenticação
+    const apiKey = Deno.env.get('APPYPAY_API_KEY');
+    
+    if (!apiKey) {
+      console.error('❌ APPYPAY_API_KEY não encontrada');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Token de autenticação da AppyPay não configurado'
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    console.log('🔐 Token encontrado, configurando autenticação Bearer');
+
+    // Fazer requisição para AppyPay com autenticação Bearer
     const appyPayResponse = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Adicionar diferentes tipos de autenticação comuns
         'Accept': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
         'User-Agent': 'Kambafy-Integration/1.0'
       },
       body: JSON.stringify(appyPayPayload)
