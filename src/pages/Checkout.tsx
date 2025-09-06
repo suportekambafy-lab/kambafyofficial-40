@@ -393,7 +393,7 @@ const Checkout = () => {
       // Filtrar por país
       const countryMethods = enabledMethods.filter((method: any) => {
         if (userCountry.code === 'AO') {
-          return ['express', 'reference', 'transfer', 'kambapay'].includes(method.id);
+          return ['express', 'referencia', 'transfer', 'kambapay'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
           return ['emola', 'epesa', 'kambapay'].includes(method.id);
         } else if (userCountry.code === 'PT') {
