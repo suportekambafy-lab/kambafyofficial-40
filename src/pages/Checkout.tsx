@@ -828,10 +828,13 @@ const Checkout = () => {
           currency: "AOA",
           description: product.name,
           merchantTransactionId: merchantTransactionId,
-          paymentMethod: "REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f"
+          paymentMethod: "REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f",
+          customerName: formData.fullName,
+          customerPhone: formData.phone,
+          customerEmail: formData.email
         };
 
-        console.log('📤 Enviando dados para AppyPay via edge function:', appyPayData);
+        console.log('📤 Enviando dados completos para AppyPay via edge function:', appyPayData);
 
         const { data: appyPayResult, error: appyPayError } = await supabase.functions.invoke('process-appypay-payment', {
           body: appyPayData
