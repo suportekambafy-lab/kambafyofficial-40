@@ -136,46 +136,69 @@ serve(async (req) => {
     let appyPayResponse;
     let chargesError = '';
     
+    // Tentar diferentes métodos de autenticação
+    const authMethods = [
+      { name: 'Bearer Token', headers: { 'Authorization': `Bearer ${apiKey}` } },
+      { name: 'API Key Header', headers: { 'X-API-Key': apiKey } },
+      { name: 'AppyPay Key', headers: { 'AppyPay-Key': apiKey } },
+      { name: 'Api-Key Header', headers: { 'Api-Key': apiKey } }
+    ];
+    
     for (const endpoint of possibleEndpoints) {
       console.log(`💳 Tentando endpoint: ${endpoint}`);
       
-      try {
-        appyPayResponse = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-            'User-Agent': 'Kambafy-Integration/1.0'
-          },
-          body: JSON.stringify(appyPayPayload)
-        });
+      for (const authMethod of authMethods) {
+        console.log(`🔐 Tentando método de auth: ${authMethod.name}`);
         
-        console.log(`💳 Resposta ${endpoint}:`, {
-          status: appyPayResponse.status,
-          statusText: appyPayResponse.statusText
-        });
-        
-        if (appyPayResponse.status !== 404) {
-          console.log(`✅ Endpoint encontrado: ${endpoint} (status: ${appyPayResponse.status})`);
-          break;
-        } else {
-          chargesError += `${endpoint}: 404 Not Found\n`;
-          console.log(`❌ Endpoint 404: ${endpoint}`);
+        try {
+          appyPayResponse = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'User-Agent': 'Kambafy-Integration/1.0',
+              ...authMethod.headers
+            },
+            body: JSON.stringify(appyPayPayload)
+          });
+          
+          console.log(`💳 Resposta ${endpoint} com ${authMethod.name}:`, {
+            status: appyPayResponse.status,
+            statusText: appyPayResponse.statusText
+          });
+          
+          // Se não for 401 (unauthorized) ou 404 (not found), parar de tentar
+          if (appyPayResponse.status !== 401 && appyPayResponse.status !== 404) {
+            console.log(`✅ Método funcionou: ${authMethod.name} em ${endpoint} (status: ${appyPayResponse.status})`);
+            break;
+          } else {
+            console.log(`❌ ${authMethod.name} falhou: ${appyPayResponse.status}`);
+          }
+        } catch (fetchError) {
+          chargesError += `${endpoint} (${authMethod.name}): ${fetchError.message}\n`;
+          console.log(`❌ Erro de conexão ${endpoint} (${authMethod.name}):`, fetchError.message);
         }
-      } catch (fetchError) {
-        chargesError += `${endpoint}: Erro de conexão - ${fetchError.message}\n`;
-        console.log(`❌ Erro de conexão ${endpoint}:`, fetchError.message);
+      }
+      
+      // Se encontrou um método que funcionou, parar de tentar endpoints
+      if (appyPayResponse && appyPayResponse.status !== 401 && appyPayResponse.status !== 404) {
+        break;
       }
     }
     
-    // Se todos os endpoints retornaram 404, mostrar erro
-    if (!appyPayResponse || appyPayResponse.status === 404) {
-      console.error('❌ Nenhum endpoint de charges encontrado:', chargesError);
+    // Se todos os métodos falharam
+    if (!appyPayResponse || appyPayResponse.status === 401 || appyPayResponse.status === 404) {
+      console.error('❌ Todos os métodos de autenticação falharam:', chargesError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Nenhum endpoint de charges AppyPay disponível:\n${chargesError}`
+          error: `Falha na autenticação AppyPay. Status: ${appyPayResponse?.status}. Tentamos múltiplos métodos de auth.`,
+          details: {
+            testedEndpoints: possibleEndpoints,
+            testedAuthMethods: authMethods.map(m => m.name),
+            lastStatus: appyPayResponse?.status,
+            lastStatusText: appyPayResponse?.statusText
+          }
         }),
         { 
           status: 400,
