@@ -29,11 +29,17 @@ serve(async (req) => {
 
     // Adicionar Authorization se o secret estiver configurado
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
+    console.log('🔐 Verificando credenciais:', {
+      hasSecret: !!clientSecret,
+      secretLength: clientSecret?.length || 0,
+      secretPrefix: clientSecret ? clientSecret.substring(0, 10) + '...' : 'undefined'
+    });
+
     if (clientSecret) {
       appyPayHeaders['Authorization'] = `Bearer ${clientSecret}`;
-      console.log('🔐 Authorization header adicionado');
+      console.log('🔐 Authorization header configurado');
     } else {
-      console.log('⚠️ APPYPAY_CLIENT_SECRET não configurado');
+      console.log('⚠️ APPYPAY_CLIENT_SECRET não encontrado nas variáveis de ambiente');
     }
 
     console.log('📋 Headers sendo enviados:', Object.keys(appyPayHeaders));
