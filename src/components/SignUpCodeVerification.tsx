@@ -125,45 +125,41 @@ const SignUpCodeVerification = ({
         return;
       }
 
-      console.log('✅ Código válido! Fazendo login direto...');
+      console.log('✅ Código válido! Confirmando email no Supabase...');
       
-      // Se o código for válido, fazer login direto (o usuário já foi criado)
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
+      // Usar edge function para confirmar o email no Supabase
+      const { data: confirmResponse, error: confirmError } = await supabase.functions.invoke('verify-signup-code', {
+        body: {
+          email: email,
+          code: code,
+          password: password
+        }
       });
 
-      if (loginError) {
-        console.error('❌ Erro no login:', loginError);
-        
-        // Se o login falhar, provavelmente é porque o email não está confirmado
-        if (loginError.message.includes('Email not confirmed') || 
-            loginError.message.includes('not confirmed') ||
-            loginError.message.includes('email_not_confirmed')) {
-          
-          console.log('📧 Email não confirmado - conta criada mas precisa de confirmação manual');
-          toast({
-            title: "Conta criada com sucesso!",
-            description: "Sua conta foi criada. Você receberá um email de confirmação em breve.",
-          });
-        } else {
-          toast({
-            title: "Erro no login",
-            description: "Conta criada, mas ocorreu um erro no login automático.",
-            variant: "destructive"
-          });
-        }
-        
-        onVerificationSuccess();
+      if (confirmError || !confirmResponse?.success) {
+        console.error('❌ Erro na confirmação:', confirmError);
+        toast({
+          title: "Erro na confirmação",
+          description: confirmResponse?.error || "Não foi possível confirmar sua conta. Tente novamente.",
+          variant: "destructive"
+        });
         return;
       }
 
-      console.log('✅ Login automático realizado com sucesso!');
-
-      toast({
-        title: "Bem-vindo!",
-        description: "Conta criada e login realizado com sucesso. Redirecionando...",
-      });
+      console.log('✅ Conta confirmada com sucesso!');
+      
+      // Se teve sucesso, mostrar mensagem apropriada
+      if (confirmResponse.autoLoginFailed) {
+        toast({
+          title: "Conta confirmada!",
+          description: "Sua conta foi confirmada. Faça login manualmente.",
+        });
+      } else {
+        toast({
+          title: "Bem-vindo!",
+          description: "Conta criada e login realizado com sucesso!",
+        });
+      }
       
       // Pequeno delay para mostrar o toast antes de redirecionar
       setTimeout(() => {
