@@ -227,37 +227,41 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
                 </div>
               )}
               
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {getDisplayPrice(orderBump.bump_product_price, orderBump.discount)}
-                </span>
-                {orderBump.discount > 0 && (
-                  <>
-                    <span className="text-gray-500 line-through text-xs">
-                      {getOriginalPrice(orderBump.bump_product_price)}
-                    </span>
-                    <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                      -{orderBump.discount}% OFF
-                    </span>
-                  </>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {getDisplayPrice(orderBump.bump_product_price, orderBump.discount)}
+                  </span>
+                  {orderBump.discount > 0 && (
+                    <>
+                      <span className="text-gray-500 line-through text-xs">
+                        {getOriginalPrice(orderBump.bump_product_price)}
+                      </span>
+                      <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                        -{orderBump.discount}% OFF
+                      </span>
+                    </>
+                  )}
+                </div>
+                
+                {/* Botão "Adicionar também" ao lado do preço */}
+                {!isSelected && (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggle();
+                    }}
+                    size="sm"
+                    className="bg-checkout-orange hover:bg-checkout-orange/90 text-white px-3 py-1 text-xs font-medium transition-all"
+                  >
+                    Adicionar
+                  </Button>
                 )}
               </div>
             </div>
           </div>
         </div>
       </div>
-      
-      {/* Botão adicional "Adicionar também" */}
-      {!isSelected && (
-        <div className="flex justify-center">
-          <Button
-            onClick={handleToggle}
-            className="bg-checkout-orange hover:bg-checkout-orange/90 text-white px-6 py-2 rounded-lg font-medium transition-all"
-          >
-            Adicionar também
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
