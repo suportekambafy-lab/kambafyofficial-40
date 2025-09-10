@@ -13,41 +13,16 @@ serve(async (req) => {
   }
 
   try {
-    const { email, code, password } = await req.json();
+    const { email, password } = await req.json();
 
-    if (!email || !code || !password) {
+    if (!email || !password) {
       return Response.json(
-        { success: false, error: 'Email, código e senha são obrigatórios' },
+        { success: false, error: 'Email e senha são obrigatórios' },
         { status: 400, headers: corsHeaders }
       );
     }
 
-    // Criar cliente Supabase para verificar código
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
-
-    // Verificar se o código é válido
-    const { data: codeData, error: codeError } = await supabaseClient
-      .from('two_factor_codes')
-      .select('*')
-      .eq('user_email', email)
-      .eq('code', code)
-      .eq('event_type', 'signup')
-      .eq('used', false)
-      .gte('expires_at', new Date().toISOString())
-      .single();
-
-    if (codeError || !codeData) {
-      console.log('❌ Código inválido ou expirado:', codeError);
-      return Response.json(
-        { success: false, error: 'Código inválido ou expirado' },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    console.log('✅ Código válido, confirmando email no Supabase...');
+    console.log('✅ Confirmando email no Supabase para:', email);
 
     // Criar cliente admin para confirmar usuário
     const supabaseAdmin = createClient(
@@ -92,11 +67,11 @@ serve(async (req) => {
 
     console.log('✅ Email confirmado com sucesso!');
 
-    // Marcar código como usado
-    await supabaseClient
-      .from('two_factor_codes')
-      .update({ used: true })
-      .eq('id', codeData.id);
+    // Criar cliente normal para tentar fazer login automático
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
 
     // Tentar fazer login automático
     const { data: loginData, error: loginError } = await supabaseClient.auth.signInWithPassword({

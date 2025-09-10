@@ -131,7 +131,6 @@ const SignUpCodeVerification = ({
       const { data: confirmResponse, error: confirmError } = await supabase.functions.invoke('verify-signup-code', {
         body: {
           email: email,
-          code: code,
           password: password
         }
       });
