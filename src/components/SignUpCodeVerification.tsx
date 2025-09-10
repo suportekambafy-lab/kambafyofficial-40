@@ -125,42 +125,35 @@ const SignUpCodeVerification = ({
         return;
       }
 
-      console.log('✅ Código válido! Confirmando conta...');
+      console.log('✅ Código válido! Fazendo login direto...');
       
-      // Confirmar a conta via edge function
-      const { data: confirmResponse, error: confirmError } = await supabase.functions.invoke('confirm-signup', {
-        body: {
-          email: email,
-          code: code
-        }
-      });
-
-      console.log('🔐 Resposta da confirmação:', confirmResponse, confirmError);
-
-      if (confirmError || !confirmResponse?.success) {
-        console.error('❌ Erro na confirmação:', confirmError);
-        toast({
-          title: "Erro na confirmação",
-          description: "Não foi possível confirmar a conta. Tente novamente.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('✅ Conta confirmada! Fazendo login automático...');
-      
-      // Fazer login automático após confirmação
+      // Se o código for válido, fazer login direto (o usuário já foi criado)
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
         email: email,
         password: password
       });
 
       if (loginError) {
-        console.error('❌ Erro no login automático:', loginError);
-        toast({
-          title: "Conta criada com sucesso!",
-          description: "Sua conta foi criada. Por favor, faça login manualmente.",
-        });
+        console.error('❌ Erro no login:', loginError);
+        
+        // Se o login falhar, provavelmente é porque o email não está confirmado
+        if (loginError.message.includes('Email not confirmed') || 
+            loginError.message.includes('not confirmed') ||
+            loginError.message.includes('email_not_confirmed')) {
+          
+          console.log('📧 Email não confirmado - conta criada mas precisa de confirmação manual');
+          toast({
+            title: "Conta criada com sucesso!",
+            description: "Sua conta foi criada. Você receberá um email de confirmação em breve.",
+          });
+        } else {
+          toast({
+            title: "Erro no login",
+            description: "Conta criada, mas ocorreu um erro no login automático.",
+            variant: "destructive"
+          });
+        }
+        
         onVerificationSuccess();
         return;
       }
