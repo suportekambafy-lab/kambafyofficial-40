@@ -81,6 +81,19 @@ const handler = async (req: Request): Promise<Response> => {
     let htmlContent = '';
 
     switch (event_type) {
+      case 'signup':
+        subject = 'Código de verificação - Confirmação de cadastro';
+        htmlContent = `
+          <h1>Bem-vindo à Kambafy!</h1>
+          <p>Para finalizar seu cadastro, use o código de verificação abaixo:</p>
+          <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
+          <p>Este código é válido por 10 minutos.</p>
+          <p>Se você não fez este cadastro, ignore este email.</p>
+          <br>
+          <p>Equipe Kambafy</p>
+        `;
+        break;
+        
       case 'kambapay_login':
         subject = 'Código de verificação - Login KambaPay';
         htmlContent = `

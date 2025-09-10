@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/useCustomToast';
 import PasswordRecovery from '@/components/PasswordRecovery';
+import SignUpCodeVerification from '@/components/SignUpCodeVerification';
 import { supabase } from '@/integrations/supabase/client';
 import { SignInPage, Testimonial } from '@/components/ui/sign-in';
 import { CountrySelector } from '@/components/auth/CountrySelector';
@@ -35,8 +36,15 @@ const Auth = () => {
   const mode = searchParams.get('mode');
   const userTypeParam = searchParams.get('type') as 'customer' | 'seller' | null;
   const errorParam = searchParams.get('error');
-  const [currentView, setCurrentView] = useState<'login' | 'signup' | 'password-recovery' | 'reset-password'>('login');
+  const [currentView, setCurrentView] = useState<'login' | 'signup' | 'password-recovery' | 'reset-password' | 'signup-verification'>('login');
   const [selectedUserType, setSelectedUserType] = useState<'customer' | 'seller' | null>(userTypeParam);
+  
+  // Estados para verificação de signup
+  const [signupData, setSignupData] = useState<{
+    email: string;
+    password: string;
+    fullName: string;
+  } | null>(null);
   
   // Estados para o novo design
   const [fullName, setFullName] = useState('');
@@ -250,6 +258,7 @@ const Auth = () => {
       localStorage.setItem('userType', userType);
       localStorage.setItem('userCountry', selectedCountry);
       
+      // Fazer signup sem confirmação automática
       const result = await signUp(email, password, fullName);
 
       if (result.error) {
@@ -265,9 +274,13 @@ const Auth = () => {
 
         setErrorField(message);
       } else {
-        // O toast já é mostrado no AuthContext quando a conta é criada com sucesso
-        // Redirecionar para login com mensagem
-        setCurrentView('login');
+        // Salvar dados do signup e ir para verificação
+        setSignupData({
+          email,
+          password,
+          fullName
+        });
+        setCurrentView('signup-verification');
         setErrorField('');
       }
     } catch (error) {
@@ -275,6 +288,22 @@ const Auth = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSignupVerificationSuccess = () => {
+    // Após verificação bem-sucedida, voltar para login
+    setCurrentView('login');
+    setSignupData(null);
+    toast({
+      title: "Conta criada com sucesso!",
+      description: "Sua conta foi confirmada. Você já pode fazer login.",
+    });
+  };
+
+  const handleSignupVerificationBack = () => {
+    // Voltar para o signup
+    setCurrentView('signup');
+    setSignupData(null);
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -327,6 +356,43 @@ const Auth = () => {
       <PasswordRecovery
         onBack={() => setCurrentView('login')}
       />
+    );
+  }
+
+  if (currentView === 'signup-verification') {
+    if (!signupData) {
+      setCurrentView('signup');
+      return null;
+    }
+    
+    return (
+      <div className="h-[100dvh] flex flex-col md:flex-row font-geist w-[100dvw]">
+        <section className="flex-1 flex items-center justify-center p-8">
+          <SignUpCodeVerification
+            email={signupData.email}
+            password={signupData.password}
+            fullName={signupData.fullName}
+            onVerificationSuccess={handleSignupVerificationSuccess}
+            onBack={handleSignupVerificationBack}
+          />
+        </section>
+
+        {sampleTestimonials.length > 0 && (
+          <section className="hidden md:block flex-1 relative p-4">
+            <div className="animate-slide-right animate-delay-300 absolute inset-4 rounded-3xl bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80)` }}></div>
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 px-8 w-full justify-center">
+              <div className={`animate-testimonial animate-delay-1000 flex items-start gap-3 rounded-3xl bg-card/40 dark:bg-zinc-800/40 backdrop-blur-xl border border-white/10 p-5 w-64`}>
+                <img src={sampleTestimonials[0].avatarSrc} className="h-10 w-10 object-cover rounded-2xl" alt="avatar" />
+                <div className="text-sm leading-snug">
+                  <p className="flex items-center gap-1 font-medium">{sampleTestimonials[0].name}</p>
+                  <p className="text-muted-foreground">{sampleTestimonials[0].handle}</p>
+                  <p className="mt-1 text-foreground/80">{sampleTestimonials[0].text}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
     );
   }
 
