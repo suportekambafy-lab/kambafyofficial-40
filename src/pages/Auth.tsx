@@ -258,7 +258,28 @@ const Auth = () => {
       localStorage.setItem('userType', userType);
       localStorage.setItem('userCountry', selectedCountry);
       
-      // Salvar dados para verificação e criação posterior
+      // Fazer o signup AGORA (mas ficará não-confirmado)
+      console.log('🔄 Fazendo signup inicial...');
+      const { error: signupError } = await signUp(email, password, fullName);
+      
+      if (signupError) {
+        let message = "Ocorreu um erro. Tente novamente.";
+        
+        if (signupError.message.includes('User already registered')) {
+          message = "Este email já está registrado. Tente fazer login.";
+        } else if (signupError.message.includes('Password')) {
+          message = "A senha deve ter pelo menos 6 caracteres.";
+        } else if (signupError.message.includes('email')) {
+          message = "Por favor, insira um email válido.";
+        }
+
+        setErrorField(message);
+        return;
+      }
+      
+      console.log('✅ Signup inicial concluído, indo para verificação');
+      
+      // Salvar dados para verificação e confirmação posterior
       setSignupData({
         email,
         password,
@@ -276,22 +297,10 @@ const Auth = () => {
   };
 
   const handleSignupVerificationSuccess = () => {
-    // Após verificação bem-sucedida, redirecionar para o painel
-    const userType = localStorage.getItem('userType') || 'business';
-    const redirectPath = userType === 'customer' ? '/minhas-compras' : '/vendedor';
-    
+    // Após verificação bem-sucedida, o usuário já estará logado 
+    // através do AuthContext que detecta mudanças na sessão
     setCurrentView('login');
     setSignupData(null);
-    
-    toast({
-      title: "Conta criada com sucesso!",
-      description: "Bem-vindo! Redirecionando para seu painel...",
-    });
-    
-    // Fazer o redirecionamento
-    setTimeout(() => {
-      navigate(redirectPath);
-    }, 2000);
   };
 
   const handleSignupVerificationBack = () => {

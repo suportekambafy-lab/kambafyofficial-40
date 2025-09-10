@@ -262,17 +262,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    // Signup normal com confirmação automática
+    // Signup com confirmação manual desabilitada
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
       options: {
-        emailRedirectTo: undefined, // Não usar redirect automático
+        emailRedirectTo: undefined,
         data: {
           full_name: fullName,
         },
       },
     });
+    
+    // Imediatamente deslogar para evitar auto-confirmação
+    if (!error && data.user) {
+      await supabase.auth.signOut();
+    }
     
     return { error, data };
   };

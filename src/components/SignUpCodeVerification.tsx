@@ -125,48 +125,51 @@ const SignUpCodeVerification = ({
         return;
       }
 
-      console.log('✅ Código válido! Criando conta...');
+      console.log('✅ Código válido! Confirmando conta...');
       
-      // Se o código for válido, fazer o signup real agora
-      const { data: signupData, error: signupError } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          emailRedirectTo: undefined, // Não queremos redirect automático
-          data: {
-            full_name: fullName,
-          },
-        },
+      // Confirmar a conta via edge function
+      const { data: confirmResponse, error: confirmError } = await supabase.functions.invoke('confirm-signup', {
+        body: {
+          email: email,
+          code: code
+        }
       });
 
-      if (signupError) {
-        console.error('❌ Erro no signup:', signupError);
-        
-        if (signupError.message.includes('User already registered')) {
-          toast({
-            title: "Conta já existe",
-            description: "Este email já está cadastrado. Redirecionando...",
-          });
-          // Pequeno delay antes de redirecionar
-          setTimeout(() => {
-            onVerificationSuccess();
-          }, 1500);
-          return;
-        }
-        
+      console.log('🔐 Resposta da confirmação:', confirmResponse, confirmError);
+
+      if (confirmError || !confirmResponse?.success) {
+        console.error('❌ Erro na confirmação:', confirmError);
         toast({
-          title: "Erro no cadastro",
-          description: signupError.message || "Erro ao criar conta.",
+          title: "Erro na confirmação",
+          description: "Não foi possível confirmar a conta. Tente novamente.",
           variant: "destructive"
         });
         return;
       }
 
-      console.log('✅ Signup realizado com sucesso:', signupData);
+      console.log('✅ Conta confirmada! Fazendo login automático...');
+      
+      // Fazer login automático após confirmação
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (loginError) {
+        console.error('❌ Erro no login automático:', loginError);
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Sua conta foi criada. Por favor, faça login manualmente.",
+        });
+        onVerificationSuccess();
+        return;
+      }
+
+      console.log('✅ Login automático realizado com sucesso!');
 
       toast({
-        title: "Conta criada com sucesso!",
-        description: "Sua conta foi criada. Redirecionando para seu painel...",
+        title: "Bem-vindo!",
+        description: "Conta criada e login realizado com sucesso. Redirecionando...",
       });
       
       // Pequeno delay para mostrar o toast antes de redirecionar
