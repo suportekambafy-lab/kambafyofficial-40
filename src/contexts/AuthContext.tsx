@@ -10,7 +10,6 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error?: AuthError }>;
-  confirmSignUp: (email: string, code: string) => Promise<{ error?: any }>;
   signIn: (email: string, password: string) => Promise<{ error?: AuthError }>;
   signOut: () => Promise<{ error?: AuthError }>;
   resetPassword: (email: string) => Promise<{ error?: AuthError }>;
@@ -263,12 +262,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    // Não usar confirmação automática por email - vamos usar código de verificação
+    // Signup normal com confirmação automática
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
       options: {
-        emailRedirectTo: undefined, // Remover redirect automático
+        emailRedirectTo: undefined, // Não usar redirect automático
         data: {
           full_name: fullName,
         },
@@ -276,47 +275,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     
     return { error, data };
-  };
-
-  const confirmSignUp = async (email: string, code: string) => {
-    // A confirmação será feita pela edge function que já verifica o código
-    // e confirma o usuário automaticamente
-    try {
-      const { data: verifyResponse, error: verifyError } = await supabase.functions.invoke('verify-2fa-code', {
-        body: {
-          email: email.trim().toLowerCase(),
-          code,
-          event_type: 'signup'
-        }
-      });
-
-      if (verifyError || !verifyResponse?.valid) {
-        return { error: { message: 'Código inválido ou expirado' } };
-      }
-
-      // Se chegou até aqui, o código foi válido
-      // O usuário ainda não está confirmado no Supabase Auth
-      // Vamos marcar o usuário como confirmado via edge function
-      const { error: confirmError } = await supabase.functions.invoke('confirm-signup', {
-        body: {
-          email: email.trim().toLowerCase(),
-          code
-        }
-      });
-
-      if (confirmError) {
-        return { error: { message: 'Erro ao confirmar conta' } };
-      }
-
-      toast({
-        title: "Conta confirmada com sucesso!",
-        description: "Você já pode fazer login com suas credenciais.",
-      });
-
-      return { error: null };
-    } catch (error) {
-      return { error: { message: 'Erro ao confirmar conta' } };
-    }
   };
 
   const signIn = async (email: string, password: string) => {
@@ -396,7 +354,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     loading,
     signUp,
-    confirmSignUp,
     signIn,
     signOut,
     resetPassword,

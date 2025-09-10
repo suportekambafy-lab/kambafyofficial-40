@@ -258,32 +258,17 @@ const Auth = () => {
       localStorage.setItem('userType', userType);
       localStorage.setItem('userCountry', selectedCountry);
       
-      // Fazer signup sem confirmação automática
-      const result = await signUp(email, password, fullName);
-
-      if (result.error) {
-        let message = "Ocorreu um erro. Tente novamente.";
-        
-        if (result.error.message.includes('User already registered')) {
-          message = "Este email já está registrado. Tente fazer login.";
-        } else if (result.error.message.includes('Password')) {
-          message = "A senha deve ter pelo menos 6 caracteres.";
-        } else if (result.error.message.includes('email')) {
-          message = "Por favor, insira um email válido.";
-        }
-
-        setErrorField(message);
-      } else {
-        // Salvar dados do signup e ir para verificação
-        setSignupData({
-          email,
-          password,
-          fullName
-        });
-        setCurrentView('signup-verification');
-        setErrorField('');
-      }
+      // Salvar dados para verificação e criação posterior
+      setSignupData({
+        email,
+        password,
+        fullName
+      });
+      setCurrentView('signup-verification');
+      setErrorField('');
+      
     } catch (error) {
+      console.error('Erro no processo de signup:', error);
       setErrorField("Ocorreu um erro inesperado. Tente novamente.");
     } finally {
       setLoading(false);
@@ -291,13 +276,22 @@ const Auth = () => {
   };
 
   const handleSignupVerificationSuccess = () => {
-    // Após verificação bem-sucedida, voltar para login
+    // Após verificação bem-sucedida, redirecionar para o painel
+    const userType = localStorage.getItem('userType') || 'business';
+    const redirectPath = userType === 'customer' ? '/minhas-compras' : '/vendedor';
+    
     setCurrentView('login');
     setSignupData(null);
+    
     toast({
       title: "Conta criada com sucesso!",
-      description: "Sua conta foi confirmada. Você já pode fazer login.",
+      description: "Bem-vindo! Redirecionando para seu painel...",
     });
+    
+    // Fazer o redirecionamento
+    setTimeout(() => {
+      navigate(redirectPath);
+    }, 2000);
   };
 
   const handleSignupVerificationBack = () => {

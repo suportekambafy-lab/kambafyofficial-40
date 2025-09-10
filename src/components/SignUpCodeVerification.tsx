@@ -9,7 +9,6 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useAuth } from '@/contexts/AuthContext';
 
 interface SignUpCodeVerificationProps {
   email: string;
@@ -32,7 +31,6 @@ const SignUpCodeVerification = ({
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutos
   const [codeAlreadySent, setCodeAlreadySent] = useState(false);
   const { toast } = useToast();
-  const { confirmSignUp } = useAuth();
 
   const sendVerificationCode = useCallback(async () => {
     if (resendLoading) return;
@@ -106,7 +104,7 @@ const SignUpCodeVerification = ({
     try {
       console.log('🔐 Verificando código:', code);
       
-      // Primeiro verificar o código
+      // Verificar o código 2FA
       const { data: verifyResponse, error: verifyError } = await supabase.functions.invoke('verify-2fa-code', {
         body: {
           email: email,
@@ -115,7 +113,10 @@ const SignUpCodeVerification = ({
         }
       });
 
+      console.log('🔐 Resposta da verificação:', verifyResponse, verifyError);
+
       if (verifyError || !verifyResponse?.valid) {
+        console.error('❌ Código inválido:', verifyError);
         toast({
           title: "Código inválido",
           description: "O código inserido está incorreto ou expirado.",
@@ -124,24 +125,54 @@ const SignUpCodeVerification = ({
         return;
       }
 
-      // Se código válido, confirmar o signup
-      const result = await confirmSignUp(email, code);
+      console.log('✅ Código válido! Criando conta...');
       
-      if (result.error) {
+      // Se o código for válido, fazer o signup real agora
+      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          emailRedirectTo: undefined, // Não queremos redirect automático
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
+
+      if (signupError) {
+        console.error('❌ Erro no signup:', signupError);
+        
+        if (signupError.message.includes('User already registered')) {
+          toast({
+            title: "Conta já existe",
+            description: "Este email já está cadastrado. Redirecionando...",
+          });
+          // Pequeno delay antes de redirecionar
+          setTimeout(() => {
+            onVerificationSuccess();
+          }, 1500);
+          return;
+        }
+        
         toast({
-          title: "Erro na confirmação",
-          description: result.error.message || "Erro ao confirmar conta.",
+          title: "Erro no cadastro",
+          description: signupError.message || "Erro ao criar conta.",
           variant: "destructive"
         });
         return;
       }
 
+      console.log('✅ Signup realizado com sucesso:', signupData);
+
       toast({
-        title: "Conta confirmada!",
-        description: "Sua conta foi criada e confirmada com sucesso.",
+        title: "Conta criada com sucesso!",
+        description: "Sua conta foi criada. Redirecionando para seu painel...",
       });
       
-      onVerificationSuccess();
+      // Pequeno delay para mostrar o toast antes de redirecionar
+      setTimeout(() => {
+        onVerificationSuccess();
+      }, 1500);
       
     } catch (error) {
       console.error('❌ Erro na verificação:', error);
