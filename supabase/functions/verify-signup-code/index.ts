@@ -32,7 +32,7 @@ serve(async (req) => {
     const { data: codeData, error: codeError } = await supabaseClient
       .from('two_factor_codes')
       .select('*')
-      .eq('email', email)
+      .eq('user_email', email)
       .eq('code', code)
       .eq('event_type', 'signup')
       .eq('used', false)
