@@ -262,24 +262,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    // Signup com confirmação manual desabilitada
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
-      options: {
-        emailRedirectTo: undefined,
-        data: {
-          full_name: fullName,
+    console.log('🔑 Iniciando signup:', { email, fullName });
+    
+    try {
+      // O trigger do banco de dados agora previne confirmação automática
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          emailRedirectTo: undefined, // Não usar redirect
+          data: {
+            full_name: fullName,
+          },
         },
-      },
-    });
-    
-    // Imediatamente deslogar para evitar auto-confirmação
-    if (!error && data.user) {
-      await supabase.auth.signOut();
+      });
+
+      if (error) {
+        console.error('❌ Erro no signup:', error);
+        return { error };
+      }
+
+      console.log('✅ Signup realizado - trigger deve ter prevenido confirmação automática:', data);
+      
+      // Imediatamente deslogar para garantir que não há sessão ativa
+      if (data.user) {
+        console.log('🔒 Desconectando usuário para forçar verificação por código...');
+        await supabase.auth.signOut();
+      }
+
+      return { error: null, data };
+    } catch (err) {
+      console.error('❌ Erro inesperado no signup:', err);
+      return { error: err as AuthError };
     }
-    
-    return { error, data };
   };
 
   const signIn = async (email: string, password: string) => {
