@@ -11,8 +11,9 @@ interface UseOptimizedCheckoutProps {
 }
 
 export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) => {
+  console.log('🔧 useOptimizedCheckout initialized with loading: false');
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [checkoutSettings, setCheckoutSettings] = useState<any>(null);
@@ -104,6 +105,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     }
 
     try {
+      setLoading(true); // Só mostrar loading durante a busca real
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       const isUUID = uuidRegex.test(productId);
       
