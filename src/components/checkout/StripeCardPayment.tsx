@@ -501,11 +501,6 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Lock className="w-4 h-4" />
                 Pagamento seguro com {getPaymentMethodName()}
-                {paymentMethod === 'klarna' && (
-                  <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                    Pague em 3x sem juros
-                  </span>
-                )}
               </div>
               
               <div className="text-sm text-gray-600">
