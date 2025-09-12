@@ -260,7 +260,7 @@ const OptimizedCheckout = () => {
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {/* Banner customizado - lazy load */}
           {checkoutSettings?.banner?.enabled && (
-            <Suspense fallback={<div className="h-12 bg-gradient-to-r from-blue-50 to-blue-100 animate-pulse rounded mb-6" />}>
+            <Suspense fallback={<div />}>
               <OptimizedCustomBanner bannerImage={checkoutSettings.banner.bannerImage} />
             </Suspense>
           )}
@@ -285,7 +285,7 @@ const OptimizedCheckout = () => {
 
           {/* Order Bump - Antes dos métodos de pagamento */}
           {checkoutSettings?.orderBump?.enabled && (
-            <Suspense fallback={<div className="h-40 bg-blue-50 animate-pulse rounded-lg border mb-6" />}>
+            <Suspense fallback={<div />}>
               <OptimizedOrderBump
                 productId={productId || ''}
                 position="before_payment_method"
