@@ -191,16 +191,63 @@ const OptimizedCheckout = () => {
     setTheme('light');
   }, [setTheme]);
 
-  // Estados de carregamento e erro
-  if (loading) {
-    return (
-      <ThemeProvider forceLightMode={true}>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <LoadingSpinner text="Carregando informações do produto..." size="lg" />
+  // Mostrar skeleton checkout enquanto carrega - sem tela branca
+  const showingSkeleton = loading || !product;
+
+  // Skeleton components para carregamento imediato
+  const SkeletonProductHeader = () => (
+    <div className="bg-white p-6 rounded-lg shadow-sm border mb-8">
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="w-full md:w-1/3">
+          <div className="w-full h-48 md:h-64 bg-gray-200 animate-pulse rounded-lg"></div>
         </div>
-      </ThemeProvider>
-    );
-  }
+        <div className="w-full md:w-2/3">
+          <div className="h-4 bg-gray-200 animate-pulse rounded mb-4 w-24"></div>
+          <div className="h-8 bg-gray-200 animate-pulse rounded mb-4 w-3/4"></div>
+          <div className="h-4 bg-gray-200 animate-pulse rounded mb-2 w-full"></div>
+          <div className="h-4 bg-gray-200 animate-pulse rounded mb-6 w-2/3"></div>
+          <div className="h-10 bg-gray-200 animate-pulse rounded w-32"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const SkeletonPaymentMethods = () => (
+    <div className="mb-6">
+      <div className="h-6 bg-gray-200 animate-pulse rounded mb-4 w-40"></div>
+      <div className="grid grid-cols-2 gap-3">
+        {[1, 2].map(i => (
+          <div key={i} className="p-4 border-2 border-gray-200 rounded-lg">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-8 h-8 bg-gray-200 animate-pulse rounded"></div>
+              <div className="h-4 bg-gray-200 animate-pulse rounded w-16"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const SkeletonForm = () => (
+    <div className="space-y-4">
+      <div>
+        <div className="h-4 bg-gray-200 animate-pulse rounded mb-2 w-24"></div>
+        <div className="h-10 bg-gray-200 animate-pulse rounded w-full"></div>
+      </div>
+      <div>
+        <div className="h-4 bg-gray-200 animate-pulse rounded mb-2 w-16"></div>
+        <div className="h-10 bg-gray-200 animate-pulse rounded w-full"></div>
+      </div>
+      <div>
+        <div className="h-4 bg-gray-200 animate-pulse rounded mb-2 w-12"></div>
+        <div className="h-10 bg-gray-200 animate-pulse rounded w-full"></div>
+      </div>
+      <div>
+        <div className="h-4 bg-gray-200 animate-pulse rounded mb-2 w-20"></div>
+        <div className="h-10 bg-gray-200 animate-pulse rounded w-full"></div>
+      </div>
+    </div>
+  );
 
   if (error) {
     return (
@@ -278,10 +325,14 @@ const OptimizedCheckout = () => {
           )}
 
           {/* Header do produto */}
-          <ProductHeader 
-            product={product}
-            formatPrice={formatPrice}
-          />
+          {showingSkeleton ? (
+            <SkeletonProductHeader />
+          ) : (
+            <ProductHeader 
+              product={product}
+              formatPrice={formatPrice}
+            />
+          )}
 
           {/* Order Bump - Antes dos métodos de pagamento */}
           {checkoutSettings?.orderBump?.enabled && (
@@ -300,75 +351,82 @@ const OptimizedCheckout = () => {
           <Card className="mb-8">
             <CardContent className="p-6">
               <div className="grid md:grid-cols-2 gap-8">
-                {/* Informações do cliente */}
                 <div>
                   <h2 className="text-xl font-semibold mb-6">Informações de Cobrança</h2>
                   
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="fullName">Nome Completo *</Label>
-                      <Input
-                        id="fullName"
-                        placeholder="Digite seu nome completo"
-                        value={formData.fullName}
-                        onChange={(e) => handleInputChange('fullName', e.target.value)}
-                        required
-                      />
-                    </div>
+                  {showingSkeleton ? (
+                    <SkeletonForm />
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="fullName">Nome Completo *</Label>
+                        <Input
+                          id="fullName"
+                          placeholder="Digite seu nome completo"
+                          value={formData.fullName}
+                          onChange={(e) => handleInputChange('fullName', e.target.value)}
+                          required
+                        />
+                      </div>
 
-                    <div>
-                      <Label htmlFor="email">Email *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="Digite seu email"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        required
-                      />
-                    </div>
+                      <div>
+                        <Label htmlFor="email">Email *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Digite seu email"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          required
+                        />
+                      </div>
 
-                    <div>
-                      <Label>País</Label>
-                      <CountrySelector 
-                        selectedCountry={userCountry || { 
-                          code: 'AO', 
-                          name: 'Angola', 
-                          currency: 'KZ', 
-                          flag: '🇦🇴',
-                          exchangeRate: 1 
-                        }}
-                        onCountryChange={handleCountryChange}
-                        supportedCountries={{
-                          AO: { code: 'AO', name: 'Angola', currency: 'KZ', flag: '🇦🇴', exchangeRate: 1 },
-                          PT: { code: 'PT', name: 'Portugal', currency: 'EUR', flag: '🇵🇹', exchangeRate: 0.0015 },
-                          MZ: { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿', exchangeRate: 0.096 }
-                        }}
-                      />
-                    </div>
+                      <div>
+                        <Label>País</Label>
+                        <CountrySelector 
+                          selectedCountry={userCountry || { 
+                            code: 'AO', 
+                            name: 'Angola', 
+                            currency: 'KZ', 
+                            flag: '🇦🇴',
+                            exchangeRate: 1 
+                          }}
+                          onCountryChange={handleCountryChange}
+                          supportedCountries={{
+                            AO: { code: 'AO', name: 'Angola', currency: 'KZ', flag: '🇦🇴', exchangeRate: 1 },
+                            PT: { code: 'PT', name: 'Portugal', currency: 'EUR', flag: '🇵🇹', exchangeRate: 0.0015 },
+                            MZ: { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿', exchangeRate: 0.096 }
+                          }}
+                        />
+                      </div>
 
-                    <div>
-                      <Label htmlFor="phone">Telefone</Label>
-                      <PhoneInput
-                        value={formData.phone}
-                        onChange={(value) => handleInputChange('phone', value)}
-                        selectedCountry={formData.phoneCountry}
-                        onCountryChange={(country) => handleInputChange('phoneCountry', country)}
-                      />
+                      <div>
+                        <Label htmlFor="phone">Telefone</Label>
+                        <PhoneInput
+                          value={formData.phone}
+                          onChange={(value) => handleInputChange('phone', value)}
+                          selectedCountry={formData.phoneCountry}
+                          onCountryChange={(country) => handleInputChange('phoneCountry', country)}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Métodos de pagamento */}
                 <div>
                   <h2 className="text-xl font-semibold mb-6">Pagamento</h2>
                   
-                  <PaymentMethods
-                    availablePaymentMethods={availablePaymentMethods}
-                    selectedPayment={selectedPayment}
-                    setSelectedPayment={setSelectedPayment}
-                    userCountry={userCountry}
-                  />
+                  {showingSkeleton ? (
+                    <SkeletonPaymentMethods />
+                  ) : (
+                    <PaymentMethods
+                      availablePaymentMethods={availablePaymentMethods}
+                      selectedPayment={selectedPayment}
+                      setSelectedPayment={setSelectedPayment}
+                      userCountry={userCountry}
+                    />
+                  )}
 
                   {/* Renderização condicional dos componentes de pagamento */}
                   {selectedPayment && ['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && (
