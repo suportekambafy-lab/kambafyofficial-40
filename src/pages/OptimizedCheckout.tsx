@@ -44,7 +44,7 @@ const KambaPayCheckoutOption = lazy(() =>
 );
 
 // Componente otimizado do header do produto
-const ProductHeader = memo(({ product, formatPrice, geoLoading, geoReady }: any) => {
+const ProductHeader = memo(({ product, formatPrice }: any) => {
   const getProductImage = (cover: string) => {
     if (!cover) return professionalManImage;
     if (cover.startsWith('data:')) return cover;
@@ -53,7 +53,7 @@ const ProductHeader = memo(({ product, formatPrice, geoLoading, geoReady }: any)
   };
 
   const getDisplayPrice = (priceInKZ: number): string => {
-    if (geoLoading || !geoReady) return "...";
+    // Sempre mostrar preço para evitar flash
     return formatPrice(priceInKZ);
   };
 
@@ -281,8 +281,6 @@ const OptimizedCheckout = () => {
           <ProductHeader 
             product={product}
             formatPrice={formatPrice}
-            geoLoading={geoLoading}
-            geoReady={geoReady}
           />
 
           {/* Order Bump - Antes dos métodos de pagamento */}

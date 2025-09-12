@@ -90,6 +90,13 @@ export const useGeoLocation = () => {
       
       setSupportedCountries(updatedCountries);
       
+      // Salvar taxas para evitar flash na próxima visita
+      localStorage.setItem('exchangeRates', JSON.stringify({
+        EUR: updatedCountries.PT.exchangeRate,
+        MZN: updatedCountries.MZ.exchangeRate
+      }));
+      localStorage.setItem('ratesLastUpdate', Date.now().toString());
+      
       // Update current country if it's not Angola
       if (userCountry.code !== 'AO') {
         setUserCountry(updatedCountries[userCountry.code]);
@@ -217,15 +224,51 @@ export const useGeoLocation = () => {
     const initializeGeoLocation = async () => {
       console.log('🌍 Initializing geolocation hook...');
       
-      // Limpar localStorage para forçar detecção por IP
-      localStorage.removeItem('userCountry');
-      console.log('🌍 Cleared localStorage userCountry');
+      // Verificar se já temos dados salvos para evitar flash de loading
+      const storedCountry = localStorage.getItem('userCountry');
+      const storedRates = localStorage.getItem('exchangeRates');
+      const lastUpdate = localStorage.getItem('ratesLastUpdate');
       
-      // Detect country by IP first
+      // Se temos dados recentes (menos de 1 hora), usar imediatamente
+      const now = Date.now();
+      const oneHour = 60 * 60 * 1000;
+      const hasRecentData = lastUpdate && (now - parseInt(lastUpdate)) < oneHour;
+      
+      if (storedCountry && storedRates && hasRecentData) {
+        try {
+          const countryData = supportedCountries[storedCountry];
+          const rates = JSON.parse(storedRates);
+          
+          if (countryData && rates) {
+            console.log('🌍 Using cached data to prevent flash');
+            setUserCountry(countryData);
+            
+            // Aplicar taxas salvas
+            const updatedCountries = { ...SUPPORTED_COUNTRIES };
+            if (rates.EUR) updatedCountries.PT.exchangeRate = rates.EUR;
+            if (rates.MZN) updatedCountries.MZ.exchangeRate = rates.MZN;
+            setSupportedCountries(updatedCountries);
+            
+            setIsReady(true);
+            setLoading(false);
+            
+            // Detectar idioma e aplicar
+            const language = COUNTRY_LANGUAGES[storedCountry] || 'pt';
+            setDetectedLanguage(language);
+            applyLanguage(language);
+            
+            // Atualizar taxas em background
+            fetchExchangeRates();
+            return;
+          }
+        } catch (error) {
+          console.error('Error loading cached data:', error);
+        }
+      }
+      
+      // Se não temos dados em cache, fazer detecção normal
       await detectCountryByIP();
-      // Then fetch exchange rates
       await fetchExchangeRates();
-      // Só agora marcar como pronto
       setIsReady(true);
       console.log('🌍 Geolocation fully ready with real exchange rates');
     };

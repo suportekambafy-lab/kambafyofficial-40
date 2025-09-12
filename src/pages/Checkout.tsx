@@ -143,9 +143,7 @@ const Checkout = () => {
   };
 
   const getDisplayPrice = (priceInKZ: number): string => {
-    // Se ainda está carregando ou não está pronto (sem taxas reais), não mostrar preço
-    if (geoLoading || !geoReady) return "...";
-    
+    // Sempre mostrar um preço para evitar flash - usar fallback se necessário
     const displayPrice = formatPrice(priceInKZ);
     console.log(`Displaying ${priceInKZ} KZ as ${displayPrice}`);
     return displayPrice;
@@ -1609,7 +1607,6 @@ ${JSON.stringify(appyPayData, null, 2)}
               selectedCountry={userCountry}
               onCountryChange={handleCountryChange}
               supportedCountries={supportedCountries}
-              loading={geoLoading}
             />
           </div>
         </div>
