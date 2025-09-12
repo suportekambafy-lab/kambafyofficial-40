@@ -37,7 +37,7 @@ const createLazyWithRetry = (importFn: () => Promise<any>, name: string) => {
 
 const Index = createLazyWithRetry(() => import('@/pages/Index'), "Index");
 const Auth = createLazyWithRetry(() => import('@/pages/Auth'), "Auth");
-const CheckoutDirect = () => import('@/pages/OptimizedCheckout'); // Direto sem lazy para ser instantâneo
+const CheckoutDirect = () => import('@/pages/Checkout'); // Direto sem lazy para ser instantâneo
 const ThankYou = createLazyWithRetry(() => import('@/pages/ThankYou'), "ThankYou");
 const NotFound = createLazyWithRetry(() => import('@/pages/NotFound'), "NotFound");
 const HowItWorks = createLazyWithRetry(() => import('@/pages/HowItWorks'), "HowItWorks");

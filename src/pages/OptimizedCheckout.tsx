@@ -384,7 +384,7 @@ const OptimizedCheckout = () => {
                           email: formData.email,
                           phone: formData.phone
                         }}
-                        onSuccess={() => {/* lógica de sucesso será implementada */}}
+                        onSuccess={() => {/* lógica de sucesso */}}
                         onError={(error) => console.error(error)}
                         productId={productId || ''}
                         processing={processing}
@@ -400,19 +400,9 @@ const OptimizedCheckout = () => {
                       <KambaPayCheckoutOption
                         productPrice={parseFloat(product?.price || '0') + orderBumpPrice}
                         currency={userCountry?.currency}
-                        onPaymentSuccess={() => {/* lógica de sucesso será implementada */}}
+                        onPaymentSuccess={() => {/* lógica de sucesso */}}
                         onSelect={() => {}}
                         selected={true}
-                      />
-                    </Suspense>
-                  )}
-
-                  {selectedPayment && ['express', 'reference', 'transfer'].includes(selectedPayment) && (
-                    <Suspense fallback={<div className="h-32 bg-gray-50 animate-pulse rounded" />}>
-                      <BankTransferForm 
-                        totalAmount={formatPrice(parseFloat(product?.price || '0') + orderBumpPrice)}
-                        currency={userCountry?.currency || 'KZ'}
-                        onPaymentComplete={(file, bank) => setBankTransferData({file, bank})}
                       />
                     </Suspense>
                   )}
