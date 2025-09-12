@@ -49,6 +49,11 @@ const OptimizedPaymentMethod = memo(({ method, isSelected, onClick }: OptimizedP
       
       <p className="text-xs text-gray-700 text-center leading-tight font-medium">
         {method.name}
+        {method.id === 'klarna' && (
+          <span className="block text-[10px] text-green-600 font-semibold mt-1">
+            Pague em 3 prestações sem juros
+          </span>
+        )}
       </p>
     </div>
   );
