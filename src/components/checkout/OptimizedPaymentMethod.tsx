@@ -1,0 +1,59 @@
+import { memo } from 'react';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface PaymentMethod {
+  id: string;
+  name: string;
+  image: string;
+  enabled: boolean;
+}
+
+interface OptimizedPaymentMethodProps {
+  method: PaymentMethod;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+const OptimizedPaymentMethod = memo(({ method, isSelected, onClick }: OptimizedPaymentMethodProps) => {
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        "relative p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md group",
+        isSelected 
+          ? "border-green-500 bg-green-50 shadow-sm" 
+          : "border-gray-200 hover:border-gray-300"
+      )}
+    >
+      {isSelected && (
+        <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+          <Check className="w-3 h-3 text-white" />
+        </div>
+      )}
+      
+      <div className="w-12 h-12 rounded-xl overflow-hidden mb-2 flex items-center justify-center bg-white">
+        <img
+          src={method.image}
+          alt={method.name}
+          className={cn(
+            "w-8 h-8 object-contain transition-all duration-200",
+            isSelected ? "scale-110" : "opacity-70 saturate-50 group-hover:opacity-90 group-hover:saturate-75"
+          )}
+          loading="lazy"
+          decoding="async"
+          width="32"
+          height="32"
+        />
+      </div>
+      
+      <p className="text-xs text-gray-700 text-center leading-tight font-medium">
+        {method.name}
+      </p>
+    </div>
+  );
+});
+
+OptimizedPaymentMethod.displayName = 'OptimizedPaymentMethod';
+
+export { OptimizedPaymentMethod };

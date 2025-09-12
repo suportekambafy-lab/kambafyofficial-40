@@ -23,7 +23,8 @@ import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
-import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
+import { OptimizedImage } from '@/components/ui/optimized-image';
+import { OptimizedPaymentMethod } from '@/components/checkout/OptimizedPaymentMethod';
 
 // Importar componentes otimizados
 import { 
@@ -388,7 +389,7 @@ const Checkout = () => {
     if (cover.includes('supabase') || cover.startsWith('http')) {
       return cover;
     }
-    // Caso contrário, assumir que é ID do Unsplash (compatibilidade)
+    // Para Unsplash, retornar sem parâmetros - a otimização será feita no OptimizedImage
     return `https://images.unsplash.com/${cover}`;
   };
 
@@ -1629,10 +1630,13 @@ ${JSON.stringify(appyPayData, null, 2)}
             <CardContent className="p-6">
               <div className="flex items-center gap-6">
                 <div className="w-24 h-24 rounded-lg overflow-hidden shadow-sm">
-                  <img 
+                  <OptimizedImage
                     src={getProductImage(product.cover)} 
                     alt={product.image_alt || product.name} 
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-cover"
+                    width={96}
+                    height={96}
+                    quality={80}
                   />
                 </div>
                 <div className="flex-1">
@@ -1720,43 +1724,22 @@ ${JSON.stringify(appyPayData, null, 2)}
                   
                   <div className={`grid ${getPaymentGridClasses()} gap-3`}>
                      {availablePaymentMethods.map((method) => (
-                       <div
+                       <OptimizedPaymentMethod
                          key={method.id}
-                         className={`cursor-pointer transition-all border rounded-xl p-3 flex flex-col items-center relative ${
-                           selectedPayment === method.id
-                             ? 'border-green-500 border-2 bg-green-50'
-                             : 'border-gray-300 hover:border-green-400'
-                         }`}
-                          onClick={async () => {
-                            console.log('🔍 Método de pagamento selecionado:', method.id);
-                            setSelectedPayment(method.id);
-                            setKambaPayEmailError(null);
-                            
-                            // Se KambaPay foi selecionado, verificar se o email está registrado
-                            if (method.id === 'kambapay' && formData.email) {
-                              await checkKambaPayEmail(formData.email);
-                            }
-                          }}
-                       >
-                        {selectedPayment === method.id && (
-                          <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                        )}
-                        <div className="w-12 h-12 rounded-xl overflow-hidden mb-2 flex items-center justify-center">
-                          <img
-                            src={method.image}
-                            alt={method.name}
-                            className={`w-10 h-10 object-contain transition-all ${
-                              selectedPayment === method.id ? '' : 'opacity-60 saturate-50'
-                            }`}
-                          />
-                        </div>
-                        <p className="text-xs text-gray-700 text-center leading-tight">
-                          {method.name}
-                        </p>
-                      </div>
-                    ))}
+                         method={method}
+                         isSelected={selectedPayment === method.id}
+                         onClick={async () => {
+                           console.log('🔍 Método de pagamento selecionado:', method.id);
+                           setSelectedPayment(method.id);
+                           setKambaPayEmailError(null);
+                           
+                           // Se KambaPay foi selecionado, verificar se o email está registrado
+                           if (method.id === 'kambapay' && formData.email) {
+                             await checkKambaPayEmail(formData.email);
+                           }
+                         }}
+                       />
+                     ))}
                   </div>
                 </div>
               ) : (
