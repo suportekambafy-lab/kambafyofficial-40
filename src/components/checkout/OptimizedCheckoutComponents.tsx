@@ -90,9 +90,16 @@ export const OptimizedOrderBump = memo(({
   </OptimizedSuspenseWrapper>
 ));
 
+export const OptimizedStripeCardPayment = memo((props: any) => (
+  <OptimizedSuspenseWrapper fallback={<div className="h-32 bg-gray-50 animate-pulse rounded" />}>
+    <StripeCardPayment {...props} />
+  </OptimizedSuspenseWrapper>
+));
+
 OptimizedSuspenseWrapper.displayName = 'OptimizedSuspenseWrapper';
 OptimizedCustomBanner.displayName = 'OptimizedCustomBanner';
 OptimizedCountdownTimer.displayName = 'OptimizedCountdownTimer';
 OptimizedFakeReviews.displayName = 'OptimizedFakeReviews';
 OptimizedSocialProof.displayName = 'OptimizedSocialProof';
 OptimizedOrderBump.displayName = 'OptimizedOrderBump';
+OptimizedStripeCardPayment.displayName = 'OptimizedStripeCardPayment';

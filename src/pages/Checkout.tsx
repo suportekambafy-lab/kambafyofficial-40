@@ -23,14 +23,19 @@ import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
+import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 
-// Lazy load apenas componentes que podem não ser necessários
-const CustomBanner = lazy(() => import('@/components/checkout/CustomBanner'));
-const CountdownTimer = lazy(() => import('@/components/checkout/CountdownTimer'));
-const FakeReviews = lazy(() => import('@/components/checkout/FakeReviews'));
-const SocialProof = lazy(() => import('@/components/checkout/SocialProof'));
-const OrderBump = lazy(() => import('@/components/checkout/OrderBump').then(module => ({ default: module.OrderBump })));
-const StripeCardPayment = lazy(() => import('@/components/checkout/StripeCardPayment'));
+// Importar componentes otimizados
+import { 
+  OptimizedCustomBanner,
+  OptimizedCountdownTimer,
+  OptimizedFakeReviews,
+  OptimizedSocialProof,
+  OptimizedOrderBump,
+  OptimizedStripeCardPayment
+} from '@/components/checkout/OptimizedCheckoutComponents';
+
+// Lazy load componentes mais simples
 const KambaPayCheckoutOption = lazy(() => import('@/components/KambaPayCheckoutOption').then(module => ({ default: module.KambaPayCheckoutOption })));
 
 
@@ -1577,7 +1582,7 @@ ${JSON.stringify(appyPayData, null, 2)}
       )}
       <div className="min-h-screen bg-gray-50">
         {checkoutSettings?.countdown?.enabled && (
-          <CountdownTimer
+          <OptimizedCountdownTimer
             minutes={checkoutSettings.countdown.minutes}
             title={checkoutSettings.countdown.title}
             backgroundColor={checkoutSettings.countdown.backgroundColor}
@@ -1586,7 +1591,7 @@ ${JSON.stringify(appyPayData, null, 2)}
         )}
 
         {checkoutSettings?.banner?.enabled && checkoutSettings.banner.bannerImage && (
-          <CustomBanner
+          <OptimizedCustomBanner
             bannerImage={checkoutSettings.banner.bannerImage}
           />
         )}
@@ -1611,10 +1616,12 @@ ${JSON.stringify(appyPayData, null, 2)}
 
         <div className="max-w-4xl mx-auto px-4 py-8">
           {checkoutSettings?.socialProof?.enabled && (
-            <SocialProof
-              totalSales={checkoutSettings.socialProof.totalSales}
-              position={checkoutSettings.socialProof.position}
-              enabled={checkoutSettings.socialProof.enabled}
+            <OptimizedSocialProof
+              settings={{
+                totalSales: checkoutSettings.socialProof.totalSales,
+                position: checkoutSettings.socialProof.position,
+                enabled: checkoutSettings.socialProof.enabled
+              }}
             />
           )}
 
@@ -1694,7 +1701,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                 />
               )}
 
-              <OrderBump 
+              <OptimizedOrderBump 
                 productId={productId || ''}
                 position="before_payment_method"
                 onToggle={handleOrderBumpToggle}
@@ -1765,7 +1772,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                 </div>
               )}
 
-              <OrderBump 
+              <OptimizedOrderBump 
                 productId={productId || ''}
                 position="after_payment_method"
                 onToggle={handleOrderBumpToggle}
@@ -1775,7 +1782,7 @@ ${JSON.stringify(appyPayData, null, 2)}
 
               {(['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment)) && (
                 <div className="mt-6">
-                  <StripeCardPayment
+                  <OptimizedStripeCardPayment
                     amount={totalPrice}
                     currency={userCountry.currency}
                     productId={productId || ''}
@@ -1988,7 +1995,7 @@ ${JSON.stringify(appyPayData, null, 2)}
 
           {checkoutSettings?.reviews?.enabled && (
             <div className="mt-8 mb-8">
-              <FakeReviews
+              <OptimizedFakeReviews
                 reviews={checkoutSettings.reviews.reviews}
                 title={checkoutSettings.reviews.title}
               />
