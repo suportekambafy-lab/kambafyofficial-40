@@ -1721,7 +1721,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                         <span className="text-gray-700">
                           {getSelectedPaymentName()}
                           {selectedPayment === 'klarna' && (
-                            <span className="text-green-600 font-semibold"> - Pague em 3 prestações sem juros</span>
+                            <span className="text-green-600 font-semibold"> - Pague em 3x sem juros</span>
                           )}
                         </span>
                       )}
