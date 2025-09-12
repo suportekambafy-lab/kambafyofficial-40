@@ -40,6 +40,7 @@ const KambaPayCheckoutOption = lazy(() => import('@/components/KambaPayCheckoutO
 
 
 const Checkout = () => {
+  console.log('🛒 Checkout component initialized');
   const { productId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -54,6 +55,8 @@ const Checkout = () => {
     supportedCountries,
     isReady: geoReady
   } = useGeoLocation();
+  
+  console.log('🌍 Geo state:', { geoLoading, geoReady, userCountry: userCountry?.code });
   const { 
     affiliateCode, 
     hasAffiliate, 
@@ -63,7 +66,7 @@ const Checkout = () => {
   } = useAffiliateTracking();
 
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Iniciar true até geo estar pronto
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -104,6 +107,20 @@ const Checkout = () => {
     currency: userCountry?.currency || 'KZ',
     enabled: !!product && !!formData.email && !!formData.fullName
   });
+
+  // Aguardar geo para marcar como não loading
+  useEffect(() => {
+    if (geoReady) {
+      console.log('🌍 Geo ready - checkout can show content');
+      // Se não temos produto ainda, manter loading
+      if (!product && !error && !productNotFound) {
+        console.log('⏳ Geo ready but product not loaded yet');
+        // Loading será setado para false no loadProduct
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [geoReady, product, error, productNotFound]);
 
   // Atualizar código de telefone automaticamente baseado no país detectado
   useEffect(() => {
@@ -325,9 +342,16 @@ const Checkout = () => {
       }
     };
 
+    // Aguardar geo estar pronto ANTES de carregar produto
+    if (!geoReady) {
+      console.log('⏳ Waiting for geo to be ready before loading product...');
+      return;
+    }
+
+    console.log('✅ Geo is ready, now loading product and settings...');
     loadProduct();
     loadCheckoutSettings();
-  }, [productId, navigate, toast]);
+  }, [productId, navigate, toast, geoReady]); // Adicionar geoReady como dependência
 
   // Função para verificar se email está registrado no KambaPay
   const checkKambaPayEmail = async (email: string) => {
