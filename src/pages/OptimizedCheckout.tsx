@@ -267,7 +267,7 @@ const OptimizedCheckout = () => {
 
           {/* Timer countdown - lazy load */}
           {checkoutSettings?.countdown?.enabled && (
-            <Suspense fallback={<div className="h-16 bg-red-50 animate-pulse rounded mb-6" />}>
+            <Suspense fallback={<div />}>
               <OptimizedCountdownTimer 
                 minutes={checkoutSettings.countdown.timeInMinutes || 30}
                 title={checkoutSettings.countdown.message}
@@ -372,7 +372,7 @@ const OptimizedCheckout = () => {
 
                   {/* Renderização condicional dos componentes de pagamento */}
                   {selectedPayment && ['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && (
-                    <Suspense fallback={<div className="h-32 bg-gray-50 animate-pulse rounded" />}>
+                    <Suspense fallback={<div />}>
                       <StripeCardPayment
                         paymentMethod={selectedPayment}
                         amount={parseFloat(product?.price || '0') + orderBumpPrice}
@@ -394,7 +394,7 @@ const OptimizedCheckout = () => {
                   )}
 
                   {selectedPayment === 'kambapay' && (
-                    <Suspense fallback={<div className="h-32 bg-gray-50 animate-pulse rounded" />}>
+                    <Suspense fallback={<div />}>
                       <KambaPayCheckoutOption
                         productPrice={parseFloat(product?.price || '0') + orderBumpPrice}
                         currency={userCountry?.currency}
@@ -411,7 +411,7 @@ const OptimizedCheckout = () => {
 
           {/* Reviews falsas - lazy load */}
           {checkoutSettings?.reviews?.enabled && (
-            <Suspense fallback={<div className="h-32 bg-gray-50 animate-pulse rounded mb-6" />}>
+            <Suspense fallback={<div />}>
               <OptimizedFakeReviews 
                 reviews={checkoutSettings.reviews.fakeReviews || []}
                 title={checkoutSettings.reviews.title}
@@ -421,7 +421,7 @@ const OptimizedCheckout = () => {
 
           {/* Social proof - lazy load */}
           {checkoutSettings?.socialProof?.enabled && (
-            <Suspense fallback={<div className="fixed bottom-4 right-4 w-64 h-16 bg-white animate-pulse rounded shadow" />}>
+            <Suspense fallback={<div />}>
               <OptimizedSocialProof settings={checkoutSettings.socialProof} />
             </Suspense>
           )}

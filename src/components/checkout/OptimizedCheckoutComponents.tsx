@@ -24,7 +24,7 @@ const OptimizedSuspenseWrapper = memo(({
 
 // Componentes otimizados memoizados
 export const OptimizedCustomBanner = memo(({ bannerImage }: { bannerImage?: string }) => (
-  <OptimizedSuspenseWrapper fallback={<div className="h-12 bg-gradient-to-r from-blue-50 to-blue-100 animate-pulse rounded" />}>
+  <OptimizedSuspenseWrapper fallback={<div />}>
     <CustomBanner bannerImage={bannerImage} />
   </OptimizedSuspenseWrapper>
 ));
@@ -40,7 +40,7 @@ export const OptimizedCountdownTimer = memo(({
   backgroundColor?: string;
   textColor?: string;
 }) => (
-  <OptimizedSuspenseWrapper fallback={<div className="h-16 bg-red-50 animate-pulse rounded" />}>
+  <OptimizedSuspenseWrapper fallback={<div />}>
     <CountdownTimer
       minutes={minutes}
       title={title}
@@ -51,13 +51,13 @@ export const OptimizedCountdownTimer = memo(({
 ));
 
 export const OptimizedFakeReviews = memo(({ reviews, title }: { reviews: any[]; title?: string }) => (
-  <OptimizedSuspenseWrapper fallback={<div className="h-32 bg-gray-50 animate-pulse rounded" />}>
+  <OptimizedSuspenseWrapper fallback={<div />}>
     <FakeReviews reviews={reviews} title={title} />
   </OptimizedSuspenseWrapper>
 ));
 
 export const OptimizedSocialProof = memo(({ settings }: { settings: any }) => (
-  <OptimizedSuspenseWrapper fallback={<div className="fixed bottom-4 right-4 w-64 h-16 bg-white animate-pulse rounded shadow" />}>
+  <OptimizedSuspenseWrapper fallback={<div />}>
     <SocialProof
       totalSales={settings?.totalSales}
       position={settings?.position}
@@ -79,7 +79,7 @@ export const OptimizedOrderBump = memo(({
   userCountry: any;
   formatPrice: (price: number) => string;
 }) => (
-  <OptimizedSuspenseWrapper fallback={<div className="h-40 bg-blue-50 animate-pulse rounded-lg border" />}>
+  <OptimizedSuspenseWrapper fallback={<div />}>
     <OrderBump
       productId={productId}
       position={position}
@@ -91,7 +91,7 @@ export const OptimizedOrderBump = memo(({
 ));
 
 export const OptimizedStripeCardPayment = memo((props: any) => (
-  <OptimizedSuspenseWrapper fallback={<div className="h-32 bg-gray-50 animate-pulse rounded" />}>
+  <OptimizedSuspenseWrapper fallback={<div />}>
     <StripeCardPayment {...props} />
   </OptimizedSuspenseWrapper>
 ));
