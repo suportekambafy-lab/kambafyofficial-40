@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, memo, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Shield, Check, AlertTriangle, CheckCircle, Wallet, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,17 +10,11 @@ import professionalManImage from "@/assets/professional-man.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
-import CustomBanner from "@/components/checkout/CustomBanner";
-import CountdownTimer from "@/components/checkout/CountdownTimer";
-import FakeReviews from "@/components/checkout/FakeReviews";
-import SocialProof from "@/components/checkout/SocialProof";
-import StripeCardPayment from "@/components/checkout/StripeCardPayment";
 import { CountrySelector } from "@/components/checkout/CountrySelector";
 import { FacebookPixelTracker } from "@/components/FacebookPixelTracker";
 import { useToast } from "@/hooks/use-toast";
 import { PhoneInput } from "@/components/PhoneInput";
 import { useGeoLocation } from "@/hooks/useGeoLocation";
-import { OrderBump } from "@/components/checkout/OrderBump";
 import { getPaymentMethodsByCountry } from "@/utils/paymentMethods";
 import { SEO } from "@/components/SEO";
 import { setProductSEO } from "@/utils/seoUtils";
@@ -29,6 +23,15 @@ import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
+
+// Lazy load apenas componentes que podem não ser necessários
+const CustomBanner = lazy(() => import('@/components/checkout/CustomBanner'));
+const CountdownTimer = lazy(() => import('@/components/checkout/CountdownTimer'));
+const FakeReviews = lazy(() => import('@/components/checkout/FakeReviews'));
+const SocialProof = lazy(() => import('@/components/checkout/SocialProof'));
+const OrderBump = lazy(() => import('@/components/checkout/OrderBump').then(module => ({ default: module.OrderBump })));
+const StripeCardPayment = lazy(() => import('@/components/checkout/StripeCardPayment'));
+const KambaPayCheckoutOption = lazy(() => import('@/components/KambaPayCheckoutOption').then(module => ({ default: module.KambaPayCheckoutOption })));
 
 
 const Checkout = () => {
@@ -384,13 +387,14 @@ const Checkout = () => {
     return `https://images.unsplash.com/${cover}`;
   };
 
-  const getPaymentMethods = () => {
+  // Memoizar métodos de pagamento para evitar recálculos
+  const availablePaymentMethods = useMemo(() => {
+    if (!userCountry) return [];
+    
     // Primeiro, verificar se o produto tem métodos de pagamento configurados
     if (product?.payment_methods && Array.isArray(product.payment_methods)) {
-      // Filtrar apenas métodos habilitados E que sejam do país atual
       const enabledMethods = product.payment_methods.filter((method: any) => method.enabled);
       
-      // Filtrar por país
       const countryMethods = enabledMethods.filter((method: any) => {
         if (userCountry.code === 'AO') {
           return ['express', 'reference', 'transfer', 'kambapay'].includes(method.id);
@@ -417,9 +421,9 @@ const Checkout = () => {
     };
     
     return [...countryMethods, kambaPayMethod];
-  };
+  }, [userCountry, product]);
 
-  const availablePaymentMethods = getPaymentMethods();
+  const getPaymentMethods = () => availablePaymentMethods;
 
   const getSelectedPaymentName = () => {
     const selected = availablePaymentMethods.find(method => method.id === selectedPayment);
