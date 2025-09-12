@@ -240,7 +240,7 @@ export const useGeoLocation = () => {
           const rates = JSON.parse(storedRates);
           
           if (countryData && rates) {
-            console.log('🌍 Using cached data to prevent flash');
+            console.log('🌍 Using cached data to prevent flash - checkout can now load immediately');
             setUserCountry(countryData);
             
             // Aplicar taxas salvas
@@ -270,7 +270,7 @@ export const useGeoLocation = () => {
       await detectCountryByIP();
       await fetchExchangeRates();
       setIsReady(true);
-      console.log('🌍 Geolocation fully ready with real exchange rates');
+      console.log('🌍 Geolocation fully ready with real exchange rates - checkout can now load');
     };
     
     initializeGeoLocation();

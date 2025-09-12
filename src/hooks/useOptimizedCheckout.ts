@@ -11,9 +11,9 @@ interface UseOptimizedCheckoutProps {
 }
 
 export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) => {
-  console.log('🔧 useOptimizedCheckout initialized with loading: false');
+  console.log('🔧 useOptimizedCheckout initialized - waiting for geo data before showing content');
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Iniciar como true até tudo estar pronto
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [checkoutSettings, setCheckoutSettings] = useState<any>(null);
@@ -105,7 +105,6 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     }
 
     try {
-      setLoading(true); // Só mostrar loading durante a busca real
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       const isUUID = uuidRegex.test(productId);
       
@@ -234,15 +233,30 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
   // Effect otimizado para carregar dados
   useEffect(() => {
     if (productId) {
-      loadProduct();
-      // Delay para carregamento das configurações
-      const timeout = setTimeout(() => {
-        loadCheckoutSettings();
-      }, 100);
+      const initializeCheckout = async () => {
+        console.log('🚀 Initializing complete checkout system...');
+        
+        // Aguardar geo estar pronto ANTES de carregar produto
+        if (!geoReady) {
+          console.log('⏳ Waiting for geo to be ready...');
+          return;
+        }
+        
+        console.log('✅ Geo is ready, loading product and settings...');
+        
+        // Agora carregar produto e configurações
+        await loadProduct();
+        
+        const timeout = setTimeout(() => {
+          loadCheckoutSettings();
+        }, 100);
+        
+        return () => clearTimeout(timeout);
+      };
       
-      return () => clearTimeout(timeout);
+      initializeCheckout();
     }
-  }, [productId, loadProduct, loadCheckoutSettings]);
+  }, [productId, geoReady, loadProduct, loadCheckoutSettings]);
 
   return {
     // Estado
