@@ -32,18 +32,18 @@ const OptimizedPaymentMethod = memo(({ method, isSelected, onClick }: OptimizedP
         </div>
       )}
       
-      <div className="w-12 h-12 rounded-xl overflow-hidden mb-2 flex items-center justify-center bg-white">
+      <div className="w-12 h-12 mb-2 flex items-center justify-center">
         <img
           src={method.image}
           alt={method.name}
           className={cn(
-            "w-8 h-8 object-contain transition-all duration-200",
+            "w-10 h-10 object-contain transition-all duration-200",
             isSelected ? "scale-110" : "opacity-70 saturate-50 group-hover:opacity-90 group-hover:saturate-75"
           )}
           loading="lazy"
           decoding="async"
-          width="32"
-          height="32"
+          width="40"
+          height="40"
         />
       </div>
       
