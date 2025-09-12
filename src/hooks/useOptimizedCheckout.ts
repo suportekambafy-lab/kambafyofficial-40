@@ -13,7 +13,7 @@ interface UseOptimizedCheckoutProps {
 export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) => {
   console.log('🔧 useOptimizedCheckout initialized - waiting for geo data before showing content');
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true); // Iniciar como true até tudo estar pronto
+  const [loading, setLoading] = useState(false); // Não iniciar como loading - carregar rápido
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [checkoutSettings, setCheckoutSettings] = useState<any>(null);
@@ -105,6 +105,8 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     }
 
     try {
+      setLoading(true); // Ativar loading apenas quando carregar
+      console.log('Loading product by UUID:', productId);
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       const isUUID = uuidRegex.test(productId);
       
@@ -137,6 +139,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
       } else {
         setProduct(productData);
         setError("");
+        setLoading(false); // Definir loading como false quando produto carregar
         
         // Aplicar SEO apenas quando necessário
         if (typeof window !== 'undefined' && productData) {
@@ -146,6 +149,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         }
       }
     } catch (error) {
+      setLoading(false); // Definir loading como false em caso de erro
       setTimeout(() => {
         setError("Erro inesperado ao carregar produto");
         setProductNotFound(true);
@@ -230,33 +234,35 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     }
   }, []);
 
-  // Effect otimizado para carregar dados
+  // Effect otimizado - carregamento rápido
   useEffect(() => {
-    if (productId) {
-      const initializeCheckout = async () => {
-        console.log('🚀 Initializing complete checkout system...');
-        
-        // Aguardar geo estar pronto ANTES de carregar produto
-        if (!geoReady) {
-          console.log('⏳ Waiting for geo to be ready...');
-          return;
-        }
-        
-        console.log('✅ Geo is ready, loading product and settings...');
-        
-        // Agora carregar produto e configurações
-        await loadProduct();
-        
-        const timeout = setTimeout(() => {
-          loadCheckoutSettings();
-        }, 100);
-        
-        return () => clearTimeout(timeout);
-      };
+    if (!productId) return;
+
+    const initializeCheckout = async () => {
+      console.log('🚀 Starting fast checkout initialization...');
       
-      initializeCheckout();
+      // Carregar produto imediatamente (sem esperar geo)
+      console.log('⚡ Loading product immediately...');
+      await loadProduct();
+      
+      // Carregar configurações do checkout
+      const timeout = setTimeout(() => {
+        loadCheckoutSettings();
+      }, 100);
+      
+      return () => clearTimeout(timeout);
+    };
+    
+    initializeCheckout();
+  }, [productId, loadProduct, loadCheckoutSettings]);
+
+  // Otimização secundária - quando geo estiver pronto, preços se atualizam automaticamente
+  useEffect(() => {
+    if (geoReady && product) {
+      console.log('🎯 Geo ready - prices will update smoothly');
+      // Os preços são atualizados automaticamente via userCountry nos componentes
     }
-  }, [productId, geoReady, loadProduct, loadCheckoutSettings]);
+  }, [geoReady, product]);
 
   return {
     // Estado

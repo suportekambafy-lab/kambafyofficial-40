@@ -66,7 +66,7 @@ const Checkout = () => {
   } = useAffiliateTracking();
 
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true); // Iniciar true até geo estar pronto
+  const [loading, setLoading] = useState(false); // Não iniciar com loading
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -108,19 +108,8 @@ const Checkout = () => {
     enabled: !!product && !!formData.email && !!formData.fullName
   });
 
-  // Aguardar geo para marcar como não loading
-  useEffect(() => {
-    if (geoReady) {
-      console.log('🌍 Geo ready - checkout can show content');
-      // Se não temos produto ainda, manter loading
-      if (!product && !error && !productNotFound) {
-        console.log('⏳ Geo ready but product not loaded yet');
-        // Loading será setado para false no loadProduct
-      } else {
-        setLoading(false);
-      }
-    }
-  }, [geoReady, product, error, productNotFound]);
+  // Remover efeito que aguarda geo - não precisamos mais
+  // Os preços se atualizam automaticamente quando geo estiver pronto
 
   // Atualizar código de telefone automaticamente baseado no país detectado
   useEffect(() => {
@@ -342,16 +331,10 @@ const Checkout = () => {
       }
     };
 
-    // Aguardar geo estar pronto ANTES de carregar produto
-    if (!geoReady) {
-      console.log('⏳ Waiting for geo to be ready before loading product...');
-      return;
-    }
-
-    console.log('✅ Geo is ready, now loading product and settings...');
+    console.log('🚀 Loading product and settings immediately...');
     loadProduct();
     loadCheckoutSettings();
-  }, [productId, navigate, toast, geoReady]); // Adicionar geoReady como dependência
+  }, [productId, navigate, toast]); // Carregar imediatamente, sem esperar geo
 
   // Função para verificar se email está registrado no KambaPay
   const checkKambaPayEmail = async (email: string) => {
