@@ -207,6 +207,18 @@ const OptimizedCheckout = () => {
     selectedPayment
   });
 
+  // FORÇA DEBUG - SEMPRE LOGAR
+  console.log('🚨 FORCED DEBUG - País detectado:', userCountry?.code);
+  console.log('🚨 FORCED DEBUG - É país apenas cartão?', isCardOnlyCountry);
+  console.log('🚨 FORCED DEBUG - Métodos disponíveis:', availablePaymentMethods);
+  console.log('🚨 FORCED DEBUG - Método selecionado:', selectedPayment);
+
+  // Detectar se estamos no US e forçar cartão se necessário
+  const forceCardForUS = userCountry?.code === 'US';
+  if (forceCardForUS && availablePaymentMethods.length === 0) {
+    console.log('🚨 FORCING CARD METHOD FOR US');
+  }
+
   // Forçar modo claro sempre
   useEffect(() => {
     setTheme('light');
@@ -214,6 +226,10 @@ const OptimizedCheckout = () => {
 
   // Auto-selecionar primeiro método de pagamento disponível
   useEffect(() => {
+    console.log('🎯 Payment method auto-selection effect triggered');
+    console.log('🎯 Available methods:', availablePaymentMethods.length, availablePaymentMethods.map(m => m.id));
+    console.log('🎯 Current selected payment:', selectedPayment);
+    
     if (availablePaymentMethods.length > 0 && !selectedPayment) {
       console.log('🎯 Auto-selecting first payment method:', availablePaymentMethods[0].id);
       setSelectedPayment(availablePaymentMethods[0].id);
@@ -456,14 +472,24 @@ const OptimizedCheckout = () => {
                   {showingSkeleton ? (
                     <SkeletonPaymentMethods />
                   ) : (
-                    <PaymentMethods
-                      availablePaymentMethods={availablePaymentMethods}
-                      selectedPayment={selectedPayment}
-                      setSelectedPayment={setSelectedPayment}
-                      userCountry={userCountry}
-                      t={t}
-                      isTranslationReady={isTranslationReady}
-                    />
+                    <>
+                      <PaymentMethods
+                        availablePaymentMethods={availablePaymentMethods}
+                        selectedPayment={selectedPayment}
+                        setSelectedPayment={setSelectedPayment}
+                        userCountry={userCountry}
+                        t={t}
+                        isTranslationReady={isTranslationReady}
+                      />
+                      
+                      {/* DEBUG: Mostrar info dos métodos */}
+                      <div className="bg-yellow-100 p-2 text-xs mt-2 rounded">
+                        <strong>DEBUG:</strong> País: {userCountry?.code} | 
+                        Métodos: {availablePaymentMethods.map(m => m.id).join(', ')} | 
+                        Selecionado: {selectedPayment} | 
+                        Card Only: {isCardOnlyCountry ? 'Sim' : 'Não'}
+                      </div>
+                    </>
                   )}
 
                   {/* Renderização condicional dos componentes de pagamento */}

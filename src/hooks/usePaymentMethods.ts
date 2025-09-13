@@ -36,6 +36,11 @@ const DEFAULT_PAYMENT_METHODS = [
 ];
 
 export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: any[]) => {
+  // FORÇA LOGS SEMPRE
+  console.log('🚨 usePaymentMethods EXECUTADO!');
+  console.log('🚨 Country Code recebido:', countryCode);
+  console.log('🚨 Product methods recebidos:', productPaymentMethods);
+  
   const availablePaymentMethods = useMemo(() => {
     console.log('🔍 usePaymentMethods - Country:', countryCode, 'Card only countries:', CARD_ONLY_COUNTRIES);
     console.log('🔍 Product payment methods:', productPaymentMethods);
@@ -43,11 +48,14 @@ export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: 
     // Se é um país que usa apenas cartão (Argentina, Espanha, Estados Unidos)
     if (countryCode && CARD_ONLY_COUNTRIES.includes(countryCode)) {
       console.log('✅ Forcing card-only payment methods for international country:', countryCode);
+      console.log('✅ Returning CARD_PAYMENT_METHODS:', CARD_PAYMENT_METHODS);
       return CARD_PAYMENT_METHODS;
     }
     
     console.log('🔄 Using default payment methods for country:', countryCode);
-    return productPaymentMethods || DEFAULT_PAYMENT_METHODS;
+    const result = productPaymentMethods || DEFAULT_PAYMENT_METHODS;
+    console.log('🔄 Returning methods:', result);
+    return result;
   }, [countryCode, productPaymentMethods]);
 
   const isCardOnlyCountry = useMemo(() => {
