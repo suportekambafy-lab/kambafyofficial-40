@@ -148,6 +148,18 @@ export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[]
       return getMozambiquePaymentMethods();
     case 'PT':
       return getPortugalPaymentMethods();
+    case 'ES':
+    case 'AR': 
+    case 'US':
+      // Países que usam apenas cartão internacional (Stripe)
+      return [{
+        id: 'card_international',
+        name: 'Cartão Internacional (Stripe)',
+        image: getPaymentMethodImage("card"),
+        enabled: true,
+        countryFlag: "🌍",
+        countryName: "Internacional"
+      }];
     default:
       return [];
   }
