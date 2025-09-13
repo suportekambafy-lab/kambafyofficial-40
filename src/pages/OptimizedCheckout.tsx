@@ -17,6 +17,7 @@ import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 import { useTranslation } from "@/hooks/useTranslation";
+import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { OptimizedContainer } from "@/components/ui/optimized-containers";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,8 +38,6 @@ const OptimizedSocialProof = lazy(() =>
 const OptimizedOrderBump = lazy(() => 
   import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedOrderBump }))
 );
-
-// Componentes traduzidos
 const OptimizedProductHeader = lazy(() => 
   import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedProductHeader }))
 );
@@ -106,7 +105,9 @@ const PaymentMethods = memo(({
   availablePaymentMethods, 
   selectedPayment, 
   setSelectedPayment,
-  userCountry 
+  userCountry,
+  t,
+  isTranslationReady
 }: any) => {
   const getPaymentGridClasses = () => {
     const methodCount = availablePaymentMethods.length;
@@ -118,9 +119,9 @@ const PaymentMethods = memo(({
 
   return (
     <div className="mb-6">
-                  <Label className="text-base font-semibold mb-4 block">
-                    Método de Pagamento
-                  </Label>
+      <Label className="text-base font-semibold mb-4 block">
+        {isTranslationReady ? t('payment.title') : 'Método de Pagamento'}
+      </Label>
       <div className={`grid ${getPaymentGridClasses()} gap-3`}>
         {availablePaymentMethods.map((method: any) => (
           <div
@@ -186,12 +187,15 @@ const OptimizedCheckout = () => {
     markAsRecovered,
     hasDetected,
     abandonedPurchaseId,
-    availablePaymentMethods,
+    availablePaymentMethods: productPaymentMethods,
     handleInputChange,
     handleCountryChange,
     handleOrderBumpToggle,
     fetchBalanceByEmail
   } = useOptimizedCheckout({ productId: productId || '' });
+
+  // Hook para métodos de pagamento específicos por país
+  const { availablePaymentMethods, isCardOnlyCountry } = usePaymentMethods(userCountry?.code, productPaymentMethods);
 
   // Forçar modo claro sempre
   useEffect(() => {
@@ -405,7 +409,10 @@ const OptimizedCheckout = () => {
                           supportedCountries={{
                             AO: { code: 'AO', name: 'Angola', currency: 'KZ', flag: '🇦🇴', exchangeRate: 1 },
                             PT: { code: 'PT', name: 'Portugal', currency: 'EUR', flag: '🇵🇹', exchangeRate: 0.0015 },
-                            MZ: { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿', exchangeRate: 0.096 }
+                            MZ: { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿', exchangeRate: 0.096 },
+                            AR: { code: 'AR', name: 'Argentina', currency: 'ARS', flag: '🇦🇷', exchangeRate: 0.85 },
+                            ES: { code: 'ES', name: 'Espanha', currency: 'EUR', flag: '🇪🇸', exchangeRate: 0.0015 },
+                            US: { code: 'US', name: 'Estados Unidos', currency: 'USD', flag: '🇺🇸', exchangeRate: 0.0011 }
                           }}
                         />
                       </div>
@@ -435,6 +442,8 @@ const OptimizedCheckout = () => {
                       selectedPayment={selectedPayment}
                       setSelectedPayment={setSelectedPayment}
                       userCountry={userCountry}
+                      t={t}
+                      isTranslationReady={isTranslationReady}
                     />
                   )}
 
