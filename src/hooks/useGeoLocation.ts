@@ -135,6 +135,9 @@ export const useGeoLocation = () => {
       
       // Update current country if it's not Angola
       if (userCountry.code !== 'AO') {
+        setUserCountry({...userCountry, exchangeRate: updatedCountries[userCountry.code as keyof typeof updatedCountries]?.exchangeRate || userCountry.exchangeRate});
+      }
+      if (userCountry.code !== 'AO') {
         setUserCountry(updatedCountries[userCountry.code]);
       }
       

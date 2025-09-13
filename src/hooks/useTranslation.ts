@@ -38,9 +38,11 @@ const translations = {
     'orderbump.title': 'Oferta especial!',
     'orderbump.add': 'Adicionar à compra',
     
-    // Garantia
-    'guarantee.title': 'Garantia de 7 dias',
-    'guarantee.description': 'Se não ficar satisfeito, devolvemos seu dinheiro'
+    'payment.card.title': 'Pagamento Seguro',
+    'payment.card.description': 'Processado de forma segura pelo Stripe',
+    'payment.card.currency': 'Moeda',
+    'payment.card.pay': 'Pagar',
+    'payment.powered': 'Powered by',
   },
   
   es: {
@@ -77,6 +79,12 @@ const translations = {
     // Order Bump
     'orderbump.title': '¡Oferta especial!',
     'orderbump.add': 'Agregar a la compra',
+    
+    'payment.card.title': 'Pago Seguro',
+    'payment.card.description': 'Procesado de forma segura por Stripe',
+    'payment.card.currency': 'Moneda',
+    'payment.card.pay': 'Pagar',
+    'payment.powered': 'Powered by',
     
     // Garantía
     'guarantee.title': 'Garantía de 7 días',
@@ -117,6 +125,12 @@ const translations = {
     // Order Bump
     'orderbump.title': 'Special offer!',
     'orderbump.add': 'Add to purchase',
+    
+    'payment.card.title': 'Secure Payment',
+    'payment.card.description': 'Securely processed by Stripe',
+    'payment.card.currency': 'Currency',
+    'payment.card.pay': 'Pay',
+    'payment.powered': 'Powered by',
     
     // Guarantee
     'guarantee.title': '7-day guarantee',

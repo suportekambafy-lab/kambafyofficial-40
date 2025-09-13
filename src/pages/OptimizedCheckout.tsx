@@ -15,6 +15,7 @@ import { PhoneInput } from "@/components/PhoneInput";
 import { SEO } from "@/components/SEO";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
+import { StripePaymentForm } from "@/components/checkout/StripePaymentForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
@@ -448,38 +449,60 @@ const OptimizedCheckout = () => {
                   )}
 
                   {/* Renderização condicional dos componentes de pagamento */}
-                  {selectedPayment && ['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && (
-                    <Suspense fallback={<div />}>
-                      <StripeCardPayment
-                        paymentMethod={selectedPayment}
-                        amount={parseFloat(product?.price || '0') + orderBumpPrice}
-                        currency={userCountry?.currency || 'KZ'}
-                        customerData={{ 
-                          name: formData.fullName,
-                          email: formData.email,
-                          phone: formData.phone
-                        }}
-                        onSuccess={() => {/* lógica de sucesso */}}
-                        onError={(error) => console.error(error)}
-                        productId={productId || ''}
-                        processing={processing}
-                        setProcessing={setProcessing}
-                        displayPrice={formatPrice(parseFloat(product?.price || '0') + orderBumpPrice)}
-                        convertedAmount={convertPrice(parseFloat(product?.price || '0') + orderBumpPrice)}
-                      />
-                    </Suspense>
-                  )}
+                  {selectedPayment && availablePaymentMethods.find(m => m.id === selectedPayment) && (
+                    <div className="mt-6">
+                      {/* Stripe para países específicos (Argentina, Espanha, Estados Unidos) */}
+                      {isCardOnlyCountry && selectedPayment === 'card' && (
+                        <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded"></div>}>
+                          <StripePaymentForm
+                            product={product}
+                            customerInfo={formData}
+                            amount={parseFloat(product?.price || '0') + orderBumpPrice}
+                            currency={userCountry?.currency || 'KZ'}
+                            formatPrice={formatPrice}
+                            isSubmitting={processing}
+                            setIsSubmitting={setProcessing}
+                            t={isTranslationReady ? t : undefined}
+                          />
+                        </Suspense>
+                      )}
 
-                  {selectedPayment === 'kambapay' && (
-                    <Suspense fallback={<div />}>
-                      <KambaPayCheckoutOption
-                        productPrice={parseFloat(product?.price || '0') + orderBumpPrice}
-                        currency={userCountry?.currency}
-                        onPaymentSuccess={() => {/* lógica de sucesso */}}
-                        onSelect={() => {}}
-                        selected={true}
-                      />
-                    </Suspense>
+                      {/* Métodos tradicionais para outros países */}
+                      {!isCardOnlyCountry && ['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && (
+                        <Suspense fallback={<div />}>
+                          <StripeCardPayment
+                            paymentMethod={selectedPayment}
+                            amount={parseFloat(product?.price || '0') + orderBumpPrice}
+                            currency={userCountry?.currency || 'KZ'}
+                            customerData={{ 
+                              name: formData.fullName,
+                              email: formData.email,
+                              phone: formData.phone
+                            }}
+                            onSuccess={() => {/* lógica de sucesso */}}
+                            onError={(error) => console.error(error)}
+                            productId={productId || ''}
+                            processing={processing}
+                            setProcessing={setProcessing}
+                            displayPrice={formatPrice(parseFloat(product?.price || '0') + orderBumpPrice)}
+                            convertedAmount={convertPrice(parseFloat(product?.price || '0') + orderBumpPrice)}
+                          />
+                        </Suspense>
+                      )}
+
+                      {/* KambaPay para Angola */}
+                      {!isCardOnlyCountry && selectedPayment === 'kambapay' && (
+                        <Suspense fallback={<div />}>
+                          <KambaPayCheckoutOption
+                            productPrice={parseFloat(product?.price || '0') + orderBumpPrice}
+                            currency={userCountry?.currency}
+                            onPaymentSuccess={() => {/* lógica de sucesso */}}
+                            onSelect={() => {}}
+                            selected={true}
+                          />
+                        </Suspense>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
