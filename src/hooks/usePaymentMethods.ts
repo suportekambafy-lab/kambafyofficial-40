@@ -38,34 +38,16 @@ const DEFAULT_PAYMENT_METHODS = [
 export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: any[]) => {
   const availablePaymentMethods = useMemo(() => {
     console.log('🔍 usePaymentMethods - Country:', countryCode, 'Card only countries:', CARD_ONLY_COUNTRIES);
+    console.log('🔍 Product payment methods:', productPaymentMethods);
     
     // Se é um país que usa apenas cartão (Argentina, Espanha, Estados Unidos)
     if (countryCode && CARD_ONLY_COUNTRIES.includes(countryCode)) {
-      console.log('✅ Using card-only payment methods for country:', countryCode);
+      console.log('✅ Forcing card-only payment methods for international country:', countryCode);
       return CARD_PAYMENT_METHODS;
     }
     
-    // Verificar se o produto tem métodos configurados
-    if (productPaymentMethods && productPaymentMethods.length > 0) {
-      // Filtrar apenas métodos habilitados
-      const enabledMethods = productPaymentMethods.filter((method: any) => method.enabled);
-      
-      // Se tem cartão internacional habilitado e é país internacional
-      if (countryCode && ['AR', 'ES', 'US'].includes(countryCode)) {
-        const internationalCard = enabledMethods.find(m => m.id === 'card_international');
-        if (internationalCard) {
-          return [internationalCard];
-        }
-        // Fallback para cartão internacional se não configurado
-        return CARD_PAYMENT_METHODS;
-      }
-      
-      return enabledMethods;
-    }
-    
-    // Usar métodos de pagamento do produto ou padrão
     console.log('🔄 Using default payment methods for country:', countryCode);
-    return DEFAULT_PAYMENT_METHODS;
+    return productPaymentMethods || DEFAULT_PAYMENT_METHODS;
   }, [countryCode, productPaymentMethods]);
 
   const isCardOnlyCountry = useMemo(() => {
@@ -73,6 +55,9 @@ export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: 
     console.log('🎯 isCardOnlyCountry for', countryCode, ':', result);
     return result;
   }, [countryCode]);
+
+  console.log('🎯 Final payment methods:', availablePaymentMethods);
+  console.log('🎯 Is card only country:', isCardOnlyCountry);
 
   return {
     availablePaymentMethods,

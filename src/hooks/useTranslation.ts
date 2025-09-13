@@ -98,6 +98,7 @@ export const useTranslation = () => {
   useEffect(() => {
     const detectedLang = localStorage.getItem('detectedLanguage') || 'pt';
     console.log('🌍 Translation hook - detected language:', detectedLang);
+    console.log('🌍 Available static translations:', Object.keys(STATIC_TRANSLATIONS));
     setCurrentLanguage(detectedLang);
   }, []);
 
@@ -136,9 +137,12 @@ export const useTranslation = () => {
   };
 
   const t = (key: string): string => {
+    console.log(`🌍 Translation request: ${key} (${currentLanguage})`);
+    
     // Primeiro, verificar traduções dinâmicas (cache)
     const dynamicTranslation = dynamicTranslations[`${key}_${currentLanguage}`];
     if (dynamicTranslation) {
+      console.log(`🎯 Found dynamic translation: ${key} -> ${dynamicTranslation}`);
       return dynamicTranslation;
     }
 
@@ -154,19 +158,24 @@ export const useTranslation = () => {
     // Se não encontrar tradução estática, tentar traduzir com AI (apenas se não for português)
     if (currentLanguage !== 'pt') {
       const portugueeseText = STATIC_TRANSLATIONS.pt[key] || key;
+      console.log(`🤖 Triggering AI translation for: ${portugueeseText} -> ${currentLanguage}`);
       
       // Fazer tradução assíncrona e armazenar resultado
       translateWithAI(portugueeseText, currentLanguage).then(translated => {
+        console.log(`✅ AI translation completed: ${key} -> ${translated}`);
         setDynamicTranslations(prev => ({
           ...prev,
           [`${key}_${currentLanguage}`]: translated
         }));
+      }).catch(error => {
+        console.error(`❌ AI translation failed for ${key}:`, error);
       });
     }
 
     // Retornar texto original como fallback
-    console.log(`🔤 Fallback Translation: ${key} -> ${key} (${currentLanguage})`);
-    return STATIC_TRANSLATIONS.pt[key] || key;
+    const fallback = STATIC_TRANSLATIONS.pt[key] || key;
+    console.log(`🔤 Fallback Translation: ${key} -> ${fallback} (${currentLanguage})`);
+    return fallback;
   };
 
   const changeLanguage = (language: string) => {

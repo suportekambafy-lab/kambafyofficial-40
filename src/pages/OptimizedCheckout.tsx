@@ -198,10 +198,27 @@ const OptimizedCheckout = () => {
   // Hook para métodos de pagamento específicos por país
   const { availablePaymentMethods, isCardOnlyCountry } = usePaymentMethods(userCountry?.code, productPaymentMethods);
 
+  console.log('🛒 Checkout Debug Info:', {
+    userCountry: userCountry?.code,
+    isCardOnlyCountry,
+    availablePaymentMethods: availablePaymentMethods.map(m => m.id),
+    productPaymentMethods: productPaymentMethods?.length || 0,
+    geoReady,
+    selectedPayment
+  });
+
   // Forçar modo claro sempre
   useEffect(() => {
     setTheme('light');
   }, [setTheme]);
+
+  // Auto-selecionar primeiro método de pagamento disponível
+  useEffect(() => {
+    if (availablePaymentMethods.length > 0 && !selectedPayment) {
+      console.log('🎯 Auto-selecting first payment method:', availablePaymentMethods[0].id);
+      setSelectedPayment(availablePaymentMethods[0].id);
+    }
+  }, [availablePaymentMethods, selectedPayment]);
 
   // Mostrar skeleton checkout enquanto carrega - sem tela branca
   const showingSkeleton = loading || !product;
@@ -453,7 +470,7 @@ const OptimizedCheckout = () => {
                   {selectedPayment && availablePaymentMethods.find(m => m.id === selectedPayment) && (
                     <div className="mt-6">
                       {/* Stripe para países específicos (Argentina, Espanha, Estados Unidos) */}
-                      {isCardOnlyCountry && (selectedPayment === 'card' || selectedPayment === 'card_international') && (
+                      {isCardOnlyCountry && (selectedPayment === 'card_international' || selectedPayment === 'card') && (
                         <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded"></div>}>
                           <StripePaymentForm
                             product={product}
