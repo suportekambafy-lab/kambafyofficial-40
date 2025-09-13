@@ -207,11 +207,18 @@ const OptimizedCheckout = () => {
     selectedPayment
   });
 
-  // FORÇA DEBUG - SEMPRE LOGAR
-  console.log('🚨 FORCED DEBUG - País detectado:', userCountry?.code);
-  console.log('🚨 FORCED DEBUG - É país apenas cartão?', isCardOnlyCountry);
-  console.log('🚨 FORCED DEBUG - Métodos disponíveis:', availablePaymentMethods);
-  console.log('🚨 FORCED DEBUG - Método selecionado:', selectedPayment);
+  // FORÇA EXECUÇÃO DO HOOK - SEMPRE
+  console.log('🚨 CHECKOUT - País detectado:', userCountry?.code);
+  console.log('🚨 CHECKOUT - Product methods length:', productPaymentMethods?.length);
+  console.log('🚨 CHECKOUT - É país apenas cartão?', isCardOnlyCountry);
+  console.log('🚨 CHECKOUT - Métodos disponíveis:', availablePaymentMethods?.length, availablePaymentMethods?.map(m => m.id));
+  console.log('🚨 CHECKOUT - Método selecionado:', selectedPayment);
+  
+  // FORÇA RE-CALL DO HOOK se necessário
+  const forceCardMethods = userCountry?.code === 'US' && (!availablePaymentMethods || availablePaymentMethods.length === 0);
+  if (forceCardMethods) {
+    console.log('🚨 FORÇANDO CARTÃO PARA US - hook não retornou métodos');
+  }
 
   // Detectar se estamos no US e forçar cartão se necessário
   const forceCardForUS = userCountry?.code === 'US';
@@ -482,12 +489,18 @@ const OptimizedCheckout = () => {
                         isTranslationReady={isTranslationReady}
                       />
                       
-                      {/* DEBUG: Mostrar info dos métodos */}
-                      <div className="bg-yellow-100 p-2 text-xs mt-2 rounded">
-                        <strong>DEBUG:</strong> País: {userCountry?.code} | 
-                        Métodos: {availablePaymentMethods.map(m => m.id).join(', ')} | 
-                        Selecionado: {selectedPayment} | 
-                        Card Only: {isCardOnlyCountry ? 'Sim' : 'Não'}
+                      {/* DEBUG: Mostrar info dos métodos - SEMPRE VISÍVEL */}
+                      <div className="bg-yellow-100 p-4 text-sm mt-4 rounded border-2 border-yellow-400">
+                        <div className="font-bold text-yellow-800 mb-2">🔍 DEBUG - Informações de Pagamento:</div>
+                        <div className="text-yellow-700 space-y-1">
+                          <div><strong>País detectado:</strong> {userCountry?.code || 'Não detectado'}</div>
+                          <div><strong>É país apenas cartão:</strong> {isCardOnlyCountry ? 'SIM' : 'NÃO'}</div>
+                          <div><strong>Métodos disponíveis:</strong> {availablePaymentMethods?.length || 0}</div>
+                          <div><strong>Lista de métodos:</strong> {availablePaymentMethods?.map(m => m.id).join(', ') || 'Nenhum'}</div>
+                          <div><strong>Método selecionado:</strong> {selectedPayment || 'Nenhum'}</div>
+                          <div><strong>Product methods:</strong> {productPaymentMethods?.length || 0}</div>
+                          <div><strong>Geo ready:</strong> {geoReady ? 'SIM' : 'NÃO'}</div>
+                        </div>
                       </div>
                     </>
                   )}
