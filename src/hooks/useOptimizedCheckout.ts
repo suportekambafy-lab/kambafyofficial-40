@@ -75,6 +75,9 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
           return ['emola', 'epesa', 'kambapay'].includes(method.id);
         } else if (userCountry.code === 'PT') {
           return ['card', 'klarna', 'multibanco', 'apple_pay', 'kambapay'].includes(method.id);
+        } else if (['AR', 'ES', 'US'].includes(userCountry.code)) {
+          // Para países internacionais, verificar se tem cartão internacional habilitado
+          return ['card_international', 'kambapay'].includes(method.id);
         }
         return false;
       });
@@ -85,7 +88,19 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     // Fallback: usar métodos baseados no país selecionado
     const countryMethods = getPaymentMethodsByCountry(userCountry.code);
     
-    // Adicionar KambaPay a todos os países
+    // Para países internacionais (AR, ES, US), retornar apenas cartão se não configurado
+    if (['AR', 'ES', 'US'].includes(userCountry.code)) {
+      return [
+        {
+          id: "card_international",
+          name: "Cartão Internacional (Stripe)",
+          image: "/payment-logos/card-logo.png",
+          enabled: true
+        }
+      ];
+    }
+    
+    // Adicionar KambaPay a outros países
     const kambaPayMethod = {
       id: "kambapay",
       name: "KambaPay",

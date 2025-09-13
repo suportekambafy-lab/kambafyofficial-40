@@ -453,7 +453,7 @@ const OptimizedCheckout = () => {
                   {selectedPayment && availablePaymentMethods.find(m => m.id === selectedPayment) && (
                     <div className="mt-6">
                       {/* Stripe para países específicos (Argentina, Espanha, Estados Unidos) */}
-                      {isCardOnlyCountry && selectedPayment === 'card' && (
+                      {isCardOnlyCountry && (selectedPayment === 'card' || selectedPayment === 'card_international') && (
                         <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded"></div>}>
                           <StripePaymentForm
                             product={product}

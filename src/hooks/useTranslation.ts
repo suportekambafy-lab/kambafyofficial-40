@@ -1,233 +1,178 @@
 import { useState, useEffect } from 'react';
-import { useGeoLocation } from './useGeoLocation';
+import { supabase } from '@/integrations/supabase/client';
 
-// Textos de tradução para o checkout
-const translations = {
+// Traduções estáticas básicas como fallback
+const STATIC_TRANSLATIONS: Record<string, Record<string, string>> = {
   pt: {
-    // Produto
-    'product.title': 'Finalize sua compra',
-    'product.price': 'Preço',
-    'product.description': 'Descrição',
-    'product.sales': 'vendas',
-    
-    // Formulário
-    'form.title': 'Informações de contato',
-    'form.name': 'Nome completo',
+    // Textos do formulário
+    'form.title': 'Informações do Cliente',
+    'form.name': 'Nome Completo',
     'form.name.placeholder': 'Digite seu nome completo',
     'form.email': 'Email',
     'form.email.placeholder': 'Digite seu email',
-    'form.phone': 'Telefone (opcional)',
-    'form.phone.placeholder': 'Digite seu telefone',
+    'form.phone': 'Telefone',
     
-    // Pagamento
-    'payment.title': 'Forma de pagamento',
-    'payment.processing': 'Processando pagamento...',
-    'payment.complete': 'Finalizar compra',
-    'payment.secure': 'Pagamento 100% seguro',
+    // Textos de pagamento
+    'payment.title': 'Método de Pagamento',
+    'payment.secure': '100% Seguro',
+    'payment.processing': 'Processando...',
+    'payment.powered': 'Powered by',
     
-    // Botões
-    'button.buy': 'Comprar agora',
-    'button.loading': 'Carregando...',
-    
-    // Mensagens
-    'loading.product': 'Carregando produto...',
-    'error.load': 'Erro ao carregar produto',
-    'success.purchase': 'Compra realizada com sucesso!',
-    
-    // Order Bump
-    'orderbump.title': 'Oferta especial!',
-    'orderbump.add': 'Adicionar à compra',
-    
+    // Textos de cartão
     'payment.card.title': 'Pagamento Seguro',
     'payment.card.description': 'Processado de forma segura pelo Stripe',
     'payment.card.currency': 'Moeda',
     'payment.card.pay': 'Pagar',
-    'payment.powered': 'Powered by',
+    
+    // Textos gerais
+    'button.loading': 'Carregando...',
+    'button.buy': 'Finalizar Compra',
+    'product.sales': 'vendas',
+    'orderbump.title': 'Oferta Especial'
   },
-  
-  es: {
-    // Producto
-    'product.title': 'Finaliza tu compra',
-    'product.price': 'Precio',
-    'product.description': 'Descripción',
-    'product.sales': 'ventas',
-    
-    // Formulario
-    'form.title': 'Información de contacto',
-    'form.name': 'Nombre completo',
-    'form.name.placeholder': 'Ingresa tu nombre completo',
-    'form.email': 'Email',
-    'form.email.placeholder': 'Ingresa tu email',
-    'form.phone': 'Teléfono (opcional)',
-    'form.phone.placeholder': 'Ingresa tu teléfono',
-    
-    // Pago
-    'payment.title': 'Forma de pago',
-    'payment.processing': 'Procesando pago...',
-    'payment.complete': 'Finalizar compra',
-    'payment.secure': 'Pago 100% seguro',
-    
-    // Botones
-    'button.buy': 'Comprar ahora',
-    'button.loading': 'Cargando...',
-    
-    // Mensajes
-    'loading.product': 'Cargando producto...',
-    'error.load': 'Error al cargar producto',
-    'success.purchase': '¡Compra realizada con éxito!',
-    
-    // Order Bump
-    'orderbump.title': '¡Oferta especial!',
-    'orderbump.add': 'Agregar a la compra',
-    
-    'payment.card.title': 'Pago Seguro',
-    'payment.card.description': 'Procesado de forma segura por Stripe',
-    'payment.card.currency': 'Moneda',
-    'payment.card.pay': 'Pagar',
-    'payment.powered': 'Powered by',
-    
-    // Garantía
-    'guarantee.title': 'Garantía de 7 días',
-    'guarantee.description': 'Si no quedas satisfecho, devolvemos tu dinero'
-  },
-  
   en: {
-    // Product
-    'product.title': 'Complete your purchase',
-    'product.price': 'Price',
-    'product.description': 'Description',
-    'product.sales': 'sales',
-    
-    // Form
-    'form.title': 'Contact information',
-    'form.name': 'Full name',
+    // Form texts
+    'form.title': 'Customer Information',
+    'form.name': 'Full Name',
     'form.name.placeholder': 'Enter your full name',
     'form.email': 'Email',
     'form.email.placeholder': 'Enter your email',
-    'form.phone': 'Phone (optional)',
-    'form.phone.placeholder': 'Enter your phone',
+    'form.phone': 'Phone',
     
-    // Payment
-    'payment.title': 'Payment method',
-    'payment.processing': 'Processing payment...',
-    'payment.complete': 'Complete purchase',
-    'payment.secure': '100% secure payment',
+    // Payment texts
+    'payment.title': 'Payment Method',
+    'payment.secure': '100% Secure',
+    'payment.processing': 'Processing...',
+    'payment.powered': 'Powered by',
     
-    // Buttons
-    'button.buy': 'Buy now',
-    'button.loading': 'Loading...',
-    
-    // Messages
-    'loading.product': 'Loading product...',
-    'error.load': 'Error loading product',
-    'success.purchase': 'Purchase completed successfully!',
-    
-    // Order Bump
-    'orderbump.title': 'Special offer!',
-    'orderbump.add': 'Add to purchase',
-    
+    // Card texts
     'payment.card.title': 'Secure Payment',
     'payment.card.description': 'Securely processed by Stripe',
     'payment.card.currency': 'Currency',
     'payment.card.pay': 'Pay',
+    
+    // General texts
+    'button.loading': 'Loading...',
+    'button.buy': 'Complete Purchase',
+    'product.sales': 'sales',
+    'orderbump.title': 'Special Offer'
+  },
+  es: {
+    // Textos del formulario
+    'form.title': 'Información del Cliente',
+    'form.name': 'Nombre Completo',
+    'form.name.placeholder': 'Ingrese su nombre completo',
+    'form.email': 'Email',
+    'form.email.placeholder': 'Ingrese su email',
+    'form.phone': 'Teléfono',
+    
+    // Textos de pago
+    'payment.title': 'Método de Pago',
+    'payment.secure': '100% Seguro',
+    'payment.processing': 'Procesando...',
     'payment.powered': 'Powered by',
     
-    // Guarantee
-    'guarantee.title': '7-day guarantee',
-    'guarantee.description': "If you're not satisfied, we'll refund your money"
+    // Textos de tarjeta
+    'payment.card.title': 'Pago Seguro',
+    'payment.card.description': 'Procesado de forma segura por Stripe',
+    'payment.card.currency': 'Moneda',
+    'payment.card.pay': 'Pagar',
+    
+    // Textos generales
+    'button.loading': 'Cargando...',
+    'button.buy': 'Finalizar Compra',
+    'product.sales': 'ventas',
+    'orderbump.title': 'Oferta Especial'
   }
 };
 
-// Mapeamento de países para idiomas (expandido)
-const COUNTRY_TO_LANGUAGE: Record<string, keyof typeof translations> = {
-  // Português
-  'AO': 'pt', // Angola
-  'PT': 'pt', // Portugal
-  'BR': 'pt', // Brasil
-  'MZ': 'pt', // Moçambique
-  'CV': 'pt', // Cabo Verde
-  'ST': 'pt', // São Tomé e Príncipe
-  'GW': 'pt', // Guiné-Bissau
-  'TL': 'pt', // Timor-Leste
-  
-  // Espanhol
-  'ES': 'es', // Espanha
-  'MX': 'es', // México
-  'AR': 'es', // Argentina
-  'CO': 'es', // Colômbia
-  'PE': 'es', // Peru
-  'VE': 'es', // Venezuela
-  'CL': 'es', // Chile
-  'EC': 'es', // Equador
-  'GT': 'es', // Guatemala
-  'CU': 'es', // Cuba
-  'BO': 'es', // Bolívia
-  'DO': 'es', // República Dominicana
-  'HN': 'es', // Honduras
-  'PY': 'es', // Paraguai
-  'SV': 'es', // El Salvador
-  'NI': 'es', // Nicarágua
-  'CR': 'es', // Costa Rica
-  'PA': 'es', // Panamá
-  'UY': 'es', // Uruguai
-  'GQ': 'es', // Guiné Equatorial
-  
-  // Inglês
-  'US': 'en', // Estados Unidos  
-  'GB': 'en', // Reino Unido
-  'CA': 'en', // Canadá
-  'AU': 'en', // Austrália
-  'NZ': 'en', // Nova Zelândia
-  'IE': 'en', // Irlanda
-  'ZA': 'en', // África do Sul
-  'IN': 'en', // Índia
-  'PK': 'en', // Paquistão
-  'NG': 'en', // Nigéria
-  'KE': 'en', // Quénia
-  'UG': 'en', // Uganda
-  'TZ': 'en', // Tanzânia
-  'GH': 'en', // Gana
-  'ZW': 'en', // Zimbábue
-  'BW': 'en', // Botswana
-  'MW': 'en', // Malawi
-  'ZM': 'en', // Zâmbia
-  'SL': 'en', // Serra Leoa
-  'LR': 'en', // Libéria
-};
+// Cache de traduções
+const translationCache = new Map<string, string>();
 
 export const useTranslation = () => {
-  const { userCountry, detectedLanguage, isReady } = useGeoLocation();
-  const [currentLanguage, setCurrentLanguage] = useState<keyof typeof translations>('pt');
-  const [isTranslationReady, setIsTranslationReady] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState('pt');
+  const [isTranslationReady, setIsTranslationReady] = useState(true);
+  const [dynamicTranslations, setDynamicTranslations] = useState<Record<string, string>>({});
 
+  // Detectar idioma automaticamente baseado no localStorage ou navegador
   useEffect(() => {
-    if (isReady && userCountry) {
-      // Detectar idioma baseado no país
-      const detectedLang = COUNTRY_TO_LANGUAGE[userCountry.code] || 'pt';
-      setCurrentLanguage(detectedLang);
-      setIsTranslationReady(true);
-      
-      console.log(`Auto-detected language: ${detectedLang} for country: ${userCountry.code}`);
-    }
-  }, [isReady, userCountry]);
+    const detectedLang = localStorage.getItem('detectedLanguage') || 'pt';
+    console.log('🌍 Translation hook - detected language:', detectedLang);
+    setCurrentLanguage(detectedLang);
+  }, []);
 
-  // Função para obter tradução
-  const t = (key: string): string => {
-    const translation = translations[currentLanguage]?.[key as keyof typeof translations[typeof currentLanguage]];
+  // Função para traduzir usando OpenAI
+  const translateWithAI = async (text: string, targetLanguage: string): Promise<string> => {
+    const cacheKey = `${text}_${targetLanguage}`;
     
-    // Fallback para português se a tradução não existir
-    if (!translation) {
-      return translations.pt[key as keyof typeof translations.pt] || key;
+    // Verificar cache primeiro
+    if (translationCache.has(cacheKey)) {
+      return translationCache.get(cacheKey)!;
     }
-    
-    return translation;
+
+    try {
+      console.log('🤖 Translating with AI:', { text, targetLanguage });
+      
+      const { data, error } = await supabase.functions.invoke('translate-text', {
+        body: { text, targetLanguage, sourceLanguage: 'auto' }
+      });
+
+      if (error) {
+        console.error('Translation error:', error);
+        return text; // Return original text if translation fails
+      }
+
+      const translatedText = data.translatedText || text;
+      
+      // Armazenar no cache
+      translationCache.set(cacheKey, translatedText);
+      
+      console.log('✅ AI Translation completed:', { original: text, translated: translatedText });
+      return translatedText;
+    } catch (error) {
+      console.error('❌ Translation API error:', error);
+      return text; // Return original text if API fails
+    }
   };
 
-  // Função para mudar idioma manualmente
-  const changeLanguage = (lang: keyof typeof translations) => {
-    setCurrentLanguage(lang);
-    localStorage.setItem('preferredLanguage', lang);
-    console.log(`Language changed to: ${lang}`);
+  const t = (key: string): string => {
+    // Primeiro, verificar traduções dinâmicas (cache)
+    const dynamicTranslation = dynamicTranslations[`${key}_${currentLanguage}`];
+    if (dynamicTranslation) {
+      return dynamicTranslation;
+    }
+
+    // Depois, verificar traduções estáticas
+    const staticTranslation = STATIC_TRANSLATIONS[currentLanguage]?.[key] || 
+                            STATIC_TRANSLATIONS.pt[key];
+    
+    if (staticTranslation) {
+      console.log(`🔤 Static Translation: ${key} -> ${staticTranslation} (${currentLanguage})`);
+      return staticTranslation;
+    }
+
+    // Se não encontrar tradução estática, tentar traduzir com AI (apenas se não for português)
+    if (currentLanguage !== 'pt') {
+      const portugueeseText = STATIC_TRANSLATIONS.pt[key] || key;
+      
+      // Fazer tradução assíncrona e armazenar resultado
+      translateWithAI(portugueeseText, currentLanguage).then(translated => {
+        setDynamicTranslations(prev => ({
+          ...prev,
+          [`${key}_${currentLanguage}`]: translated
+        }));
+      });
+    }
+
+    // Retornar texto original como fallback
+    console.log(`🔤 Fallback Translation: ${key} -> ${key} (${currentLanguage})`);
+    return STATIC_TRANSLATIONS.pt[key] || key;
+  };
+
+  const changeLanguage = (language: string) => {
+    console.log('🌍 Changing language to:', language);
+    setCurrentLanguage(language);
+    localStorage.setItem('detectedLanguage', language);
   };
 
   return {
@@ -235,6 +180,6 @@ export const useTranslation = () => {
     currentLanguage,
     changeLanguage,
     isTranslationReady,
-    availableLanguages: Object.keys(translations) as (keyof typeof translations)[]
+    translateWithAI // Expor função para uso direto se necessário
   };
 };

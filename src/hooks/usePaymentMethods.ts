@@ -6,8 +6,8 @@ const CARD_ONLY_COUNTRIES = ['AR', 'ES', 'US'];
 // Métodos de pagamento por cartão para países específicos
 const CARD_PAYMENT_METHODS = [
   {
-    id: 'card',
-    name: 'Cartão de Crédito/Débito',
+    id: 'card_international',
+    name: 'Cartão Internacional (Stripe)',
     image: '/payment-logos/card-logo.png',
     enabled: true
   }
@@ -45,9 +45,27 @@ export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: 
       return CARD_PAYMENT_METHODS;
     }
     
+    // Verificar se o produto tem métodos configurados
+    if (productPaymentMethods && productPaymentMethods.length > 0) {
+      // Filtrar apenas métodos habilitados
+      const enabledMethods = productPaymentMethods.filter((method: any) => method.enabled);
+      
+      // Se tem cartão internacional habilitado e é país internacional
+      if (countryCode && ['AR', 'ES', 'US'].includes(countryCode)) {
+        const internationalCard = enabledMethods.find(m => m.id === 'card_international');
+        if (internationalCard) {
+          return [internationalCard];
+        }
+        // Fallback para cartão internacional se não configurado
+        return CARD_PAYMENT_METHODS;
+      }
+      
+      return enabledMethods;
+    }
+    
     // Usar métodos de pagamento do produto ou padrão
     console.log('🔄 Using default payment methods for country:', countryCode);
-    return productPaymentMethods || DEFAULT_PAYMENT_METHODS;
+    return DEFAULT_PAYMENT_METHODS;
   }, [countryCode, productPaymentMethods]);
 
   const isCardOnlyCountry = useMemo(() => {
