@@ -104,7 +104,7 @@ export const OptimizedStripeCardPayment = memo((props: any) => (
 ));
 
 // Componentes traduzidos
-export const OptimizedProductHeader = memo(({ product, formatPrice, t }: any) => {
+export const OptimizedProductHeader = memo(({ product, formatPrice, userCountry, t }: any) => {
   const getProductImage = (cover: string) => {
     if (!cover) return professionalManImage;
     if (cover.startsWith('data:')) return cover;
@@ -113,6 +113,7 @@ export const OptimizedProductHeader = memo(({ product, formatPrice, t }: any) =>
   };
 
   const getDisplayPrice = (priceInKZ: number): string => {
+    // Use formatPrice que já considera o userCountry
     return formatPrice(priceInKZ);
   };
 

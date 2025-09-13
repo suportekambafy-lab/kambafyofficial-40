@@ -50,7 +50,7 @@ const KambaPayCheckoutOption = lazy(() =>
 );
 
 // Componente otimizado do header do produto
-const ProductHeader = memo(({ product, formatPrice }: any) => {
+const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
   const getProductImage = (cover: string) => {
     if (!cover) return professionalManImage;
     if (cover.startsWith('data:')) return cover;
@@ -344,6 +344,7 @@ const OptimizedCheckout = () => {
               <OptimizedProductHeader 
                 product={product}
                 formatPrice={formatPrice}
+                userCountry={userCountry}
                 t={t}
               />
             </Suspense>
@@ -457,9 +458,19 @@ const OptimizedCheckout = () => {
                           <StripePaymentForm
                             product={product}
                             customerInfo={formData}
-                            amount={parseFloat(product?.price || '0') + orderBumpPrice}
+                            amount={convertPrice(parseFloat(product?.price || '0') + orderBumpPrice)}
                             currency={userCountry?.currency || 'KZ'}
-                            formatPrice={formatPrice}
+                            formatPrice={(amount) => {
+                              // Para Stripe, formatear na moeda local
+                              if (userCountry?.currency === 'ARS') {
+                                return `$${amount.toFixed(2)} ARS`;
+                              } else if (userCountry?.currency === 'USD') {
+                                return `$${amount.toFixed(2)} USD`;
+                              } else if (userCountry?.currency === 'EUR') {
+                                return `€${amount.toFixed(2)}`;
+                              }
+                              return formatPrice(amount);
+                            }}
                             isSubmitting={processing}
                             setIsSubmitting={setProcessing}
                             t={isTranslationReady ? t : undefined}

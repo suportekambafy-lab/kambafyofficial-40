@@ -224,6 +224,10 @@ export const useGeoLocation = () => {
         return `€${convertedPrice.toFixed(2)}`;
       case 'MZN':
         return `${convertedPrice.toFixed(2)} MZN`;
+      case 'ARS':
+        return `$${convertedPrice.toFixed(2)} ARS`;
+      case 'USD':
+        return `$${convertedPrice.toFixed(2)} USD`;
       case 'KZ':
       default:
         return `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;

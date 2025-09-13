@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-// Países que devem usar apenas pagamento por cartão
+// Países que devem usar apenas pagamento por cartão (Stripe)
 const CARD_ONLY_COUNTRIES = ['AR', 'ES', 'US'];
 
 // Métodos de pagamento por cartão para países específicos
@@ -37,17 +37,23 @@ const DEFAULT_PAYMENT_METHODS = [
 
 export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: any[]) => {
   const availablePaymentMethods = useMemo(() => {
-    // Se é um país que usa apenas cartão
+    console.log('🔍 usePaymentMethods - Country:', countryCode, 'Card only countries:', CARD_ONLY_COUNTRIES);
+    
+    // Se é um país que usa apenas cartão (Argentina, Espanha, Estados Unidos)
     if (countryCode && CARD_ONLY_COUNTRIES.includes(countryCode)) {
+      console.log('✅ Using card-only payment methods for country:', countryCode);
       return CARD_PAYMENT_METHODS;
     }
     
     // Usar métodos de pagamento do produto ou padrão
+    console.log('🔄 Using default payment methods for country:', countryCode);
     return productPaymentMethods || DEFAULT_PAYMENT_METHODS;
   }, [countryCode, productPaymentMethods]);
 
   const isCardOnlyCountry = useMemo(() => {
-    return countryCode ? CARD_ONLY_COUNTRIES.includes(countryCode) : false;
+    const result = countryCode ? CARD_ONLY_COUNTRIES.includes(countryCode) : false;
+    console.log('🎯 isCardOnlyCountry for', countryCode, ':', result);
+    return result;
   }, [countryCode]);
 
   return {
