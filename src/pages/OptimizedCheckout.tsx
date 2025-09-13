@@ -492,38 +492,35 @@ const OptimizedCheckout = () => {
                   )}
                 </div>
 
-                {/* Métodos de pagamento */}
+                {/* Métodos de pagamento - FORÇADO A APARECER */}
                 <div>
                   <h2 className="text-xl font-semibold mb-6">{isTranslationReady ? t('payment.title') : 'Pagamento'}</h2>
                   
-                  {showingSkeleton ? (
-                    <SkeletonPaymentMethods />
-                  ) : (
-                    <>
-                      <PaymentMethods
-                        availablePaymentMethods={finalPaymentMethods}
-                        selectedPayment={selectedPayment}
-                        setSelectedPayment={setSelectedPayment}
-                        userCountry={userCountry}
-                        t={t}
-                        isTranslationReady={isTranslationReady}
-                      />
-                      
-                      {/* DEBUG: Mostrar info dos métodos - SEMPRE VISÍVEL */}
-                      <div className="bg-yellow-100 p-4 text-sm mt-4 rounded border-2 border-yellow-400">
-                        <div className="font-bold text-yellow-800 mb-2">🔍 DEBUG - Informações de Pagamento:</div>
-                        <div className="text-yellow-700 space-y-1">
-                          <div><strong>País detectado:</strong> {userCountry?.code || 'Não detectado'}</div>
-                          <div><strong>É país apenas cartão:</strong> {isCardOnlyCountry ? 'SIM' : 'NÃO'}</div>
-                          <div><strong>Métodos disponíveis:</strong> {finalPaymentMethods?.length || 0}</div>
-                          <div><strong>Lista de métodos:</strong> {finalPaymentMethods?.map(m => m.id).join(', ') || 'Nenhum'}</div>
-                          <div><strong>Método selecionado:</strong> {selectedPayment || 'Nenhum'}</div>
-                          <div><strong>Product methods:</strong> {productPaymentMethods?.length || 0}</div>
-                          <div><strong>Geo ready:</strong> {geoReady ? 'SIM' : 'NÃO'}</div>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <PaymentMethods
+                    availablePaymentMethods={finalPaymentMethods}
+                    selectedPayment={selectedPayment}
+                    setSelectedPayment={setSelectedPayment}
+                    userCountry={userCountry}
+                    t={t}
+                    isTranslationReady={isTranslationReady}
+                  />
+                  
+                  {/* DEBUG: Mostrar info dos métodos - SEMPRE VISÍVEL */}
+                  <div className="bg-yellow-100 p-4 text-sm mt-4 rounded border-2 border-yellow-400">
+                    <div className="font-bold text-yellow-800 mb-2">🔍 DEBUG - Informações de Pagamento:</div>
+                    <div className="text-yellow-700 space-y-1">
+                      <div><strong>País detectado:</strong> {userCountry?.code || 'Não detectado'}</div>
+                      <div><strong>É país apenas cartão:</strong> {isCardOnlyCountry ? 'SIM' : 'NÃO'}</div>
+                      <div><strong>Métodos disponíveis:</strong> {finalPaymentMethods?.length || 0}</div>
+                      <div><strong>Lista de métodos:</strong> {finalPaymentMethods?.map(m => m.id).join(', ') || 'Nenhum'}</div>
+                      <div><strong>Método selecionado:</strong> {selectedPayment || 'Nenhum'}</div>
+                      <div><strong>Product methods:</strong> {productPaymentMethods?.length || 0}</div>
+                      <div><strong>Geo ready:</strong> {geoReady ? 'SIM' : 'NÃO'}</div>
+                      <div><strong>Skeleton?:</strong> {showingSkeleton ? 'SIM' : 'NÃO'}</div>
+                      <div><strong>Loading:</strong> {loading ? 'SIM' : 'NÃO'}</div>
+                      <div><strong>Product exists:</strong> {product ? 'SIM' : 'NÃO'}</div>
+                    </div>
+                  </div>
 
                   {/* Renderização condicional dos componentes de pagamento */}
                   {selectedPayment && finalPaymentMethods.find(m => m.id === selectedPayment) && (
