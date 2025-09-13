@@ -196,12 +196,25 @@ const OptimizedCheckout = () => {
   } = useOptimizedCheckout({ productId: productId || '' });
 
   // Hook para métodos de pagamento específicos por país
+  console.log('🚨 ANTES DE CHAMAR usePaymentMethods:', userCountry?.code, productPaymentMethods?.length);
   const { availablePaymentMethods, isCardOnlyCountry } = usePaymentMethods(userCountry?.code, productPaymentMethods);
+  console.log('🚨 DEPOIS DE CHAMAR usePaymentMethods:', availablePaymentMethods?.length, isCardOnlyCountry);
+
+  // FORÇA DEBUG MANUAL - ARGENTINA DEVE SER CARD ONLY
+  const manualCardCheck = userCountry?.code === 'AR';
+  const shouldShowCard = ['AR', 'ES', 'US'].includes(userCountry?.code || '');
+  
+  console.log('🚨 MANUAL DEBUG:');
+  console.log('🚨 País:', userCountry?.code);
+  console.log('🚨 É Argentina?', manualCardCheck);
+  console.log('🚨 Deveria mostrar cartão?', shouldShowCard);
+  console.log('🚨 availablePaymentMethods recebido do hook:', availablePaymentMethods);
+  console.log('🚨 isCardOnlyCountry recebido do hook:', isCardOnlyCountry);
 
   console.log('🛒 Checkout Debug Info:', {
     userCountry: userCountry?.code,
     isCardOnlyCountry,
-    availablePaymentMethods: availablePaymentMethods.map(m => m.id),
+    availablePaymentMethods: availablePaymentMethods?.map(m => m.id) || [],
     productPaymentMethods: productPaymentMethods?.length || 0,
     geoReady,
     selectedPayment

@@ -36,25 +36,26 @@ const DEFAULT_PAYMENT_METHODS = [
 ];
 
 export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: any[]) => {
-  console.log('🚨 usePaymentMethods HOOK INICIADO');
-  console.log('🚨 Country Code:', countryCode);
-  console.log('🚨 Product methods:', productPaymentMethods);
-  console.log('🚨 CARD_ONLY_COUNTRIES:', CARD_ONLY_COUNTRIES);
+  console.log('🚨🚨🚨 usePaymentMethods HOOK EXECUTADO!');
+  console.log('🚨🚨🚨 País recebido:', countryCode);
+  console.log('🚨🚨🚨 Product methods:', productPaymentMethods);
+  console.log('🚨🚨🚨 CARD_ONLY_COUNTRIES:', CARD_ONLY_COUNTRIES);
+  console.log('🚨🚨🚨 É país cartão?', countryCode && CARD_ONLY_COUNTRIES.includes(countryCode));
   
   const availablePaymentMethods = useMemo(() => {
-    console.log('🔍 useMemo executando - Country:', countryCode);
-    console.log('🔍 Is card only country?', countryCode && CARD_ONLY_COUNTRIES.includes(countryCode));
+    console.log('🔍🔍🔍 useMemo executando - Country:', countryCode);
+    console.log('🔍🔍🔍 Is card only country?', countryCode && CARD_ONLY_COUNTRIES.includes(countryCode));
     
     // Se é um país que usa apenas cartão
     if (countryCode && CARD_ONLY_COUNTRIES.includes(countryCode)) {
-      console.log('✅ FORÇANDO CARTÃO PARA PAÍS:', countryCode);
-      console.log('✅ MÉTODOS RETORNADOS:', CARD_PAYMENT_METHODS);
+      console.log('✅✅✅ FORÇANDO CARTÃO PARA PAÍS:', countryCode);
+      console.log('✅✅✅ MÉTODOS RETORNADOS:', CARD_PAYMENT_METHODS);
       return CARD_PAYMENT_METHODS;
     }
     
     // Países padrão (Angola, Portugal, Moçambique, etc.)
     const result = productPaymentMethods?.length ? productPaymentMethods : DEFAULT_PAYMENT_METHODS;
-    console.log('🔄 MÉTODOS PADRÃO PARA:', countryCode, result);
+    console.log('🔄🔄🔄 MÉTODOS PADRÃO PARA:', countryCode, result);
     return result;
   }, [countryCode, productPaymentMethods]);
 
