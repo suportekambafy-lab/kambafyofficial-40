@@ -16,6 +16,7 @@ import { SEO } from "@/components/SEO";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
+import { useTranslation } from "@/hooks/useTranslation";
 import { OptimizedContainer } from "@/components/ui/optimized-containers";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +36,11 @@ const OptimizedSocialProof = lazy(() =>
 );
 const OptimizedOrderBump = lazy(() => 
   import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedOrderBump }))
+);
+
+// Componentes traduzidos
+const OptimizedProductHeader = lazy(() => 
+  import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedProductHeader }))
 );
 
 // Componente StripeCardPayment importado normalmente (mais complexo para otimizar)
@@ -112,9 +118,9 @@ const PaymentMethods = memo(({
 
   return (
     <div className="mb-6">
-      <Label className="text-base font-semibold mb-4 block">
-        Método de Pagamento
-      </Label>
+                  <Label className="text-base font-semibold mb-4 block">
+                    Método de Pagamento
+                  </Label>
       <div className={`grid ${getPaymentGridClasses()} gap-3`}>
         {availablePaymentMethods.map((method: any) => (
           <div
@@ -150,6 +156,7 @@ const OptimizedCheckout = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { setTheme } = useTheme();
+  const { t, isTranslationReady } = useTranslation();
   
   const [selectedPayment, setSelectedPayment] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -255,7 +262,7 @@ const OptimizedCheckout = () => {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <OptimizedContainer error={error} className="text-center">
             <Button onClick={() => window.location.reload()} className="mt-4">
-              Tentar novamente
+              {isTranslationReady ? t('button.loading') : 'Tentar novamente'}
             </Button>
           </OptimizedContainer>
         </div>
@@ -267,7 +274,7 @@ const OptimizedCheckout = () => {
     return (
       <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <OptimizedContainer empty emptyMessage="Produto não encontrado">
+          <OptimizedContainer empty emptyMessage={isTranslationReady ? t('error.load') : 'Produto não encontrado'}>
             <div></div>
           </OptimizedContainer>
         </div>
@@ -328,10 +335,13 @@ const OptimizedCheckout = () => {
           {showingSkeleton ? (
             <SkeletonProductHeader />
           ) : (
-            <ProductHeader 
-              product={product}
-              formatPrice={formatPrice}
-            />
+            <Suspense fallback={<SkeletonProductHeader />}>
+              <OptimizedProductHeader 
+                product={product}
+                formatPrice={formatPrice}
+                t={t}
+              />
+            </Suspense>
           )}
 
           {/* Order Bump - Antes dos métodos de pagamento */}
@@ -352,17 +362,17 @@ const OptimizedCheckout = () => {
             <CardContent className="p-6">
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h2 className="text-xl font-semibold mb-6">Informações de Cobrança</h2>
+                  <h2 className="text-xl font-semibold mb-6">{isTranslationReady ? t('form.title') : 'Informações de Cobrança'}</h2>
                   
                   {showingSkeleton ? (
                     <SkeletonForm />
                   ) : (
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="fullName">Nome Completo *</Label>
+                        <Label htmlFor="fullName">{isTranslationReady ? t('form.name') : 'Nome Completo'} *</Label>
                         <Input
                           id="fullName"
-                          placeholder="Digite seu nome completo"
+                          placeholder={isTranslationReady ? t('form.name.placeholder') : 'Digite seu nome completo'}
                           value={formData.fullName}
                           onChange={(e) => handleInputChange('fullName', e.target.value)}
                           required
@@ -370,11 +380,11 @@ const OptimizedCheckout = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor="email">Email *</Label>
+                        <Label htmlFor="email">{isTranslationReady ? t('form.email') : 'Email'} *</Label>
                         <Input
                           id="email"
                           type="email"
-                          placeholder="Digite seu email"
+                          placeholder={isTranslationReady ? t('form.email.placeholder') : 'Digite seu email'}
                           value={formData.email}
                           onChange={(e) => handleInputChange('email', e.target.value)}
                           required
@@ -401,7 +411,7 @@ const OptimizedCheckout = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor="phone">Telefone</Label>
+                        <Label htmlFor="phone">{isTranslationReady ? t('form.phone') : 'Telefone'}</Label>
                         <PhoneInput
                           value={formData.phone}
                           onChange={(value) => handleInputChange('phone', value)}
@@ -415,7 +425,7 @@ const OptimizedCheckout = () => {
 
                 {/* Métodos de pagamento */}
                 <div>
-                  <h2 className="text-xl font-semibold mb-6">Pagamento</h2>
+                  <h2 className="text-xl font-semibold mb-6">{isTranslationReady ? t('payment.title') : 'Pagamento'}</h2>
                   
                   {showingSkeleton ? (
                     <SkeletonPaymentMethods />
