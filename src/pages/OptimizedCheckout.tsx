@@ -197,8 +197,8 @@ const OptimizedCheckout = () => {
 
   // Hook para métodos de pagamento específicos por país
   console.log('🚨 ANTES DE CHAMAR usePaymentMethods:', userCountry?.code, productPaymentMethods?.length);
-  const { availablePaymentMethods, isCardOnlyCountry } = usePaymentMethods(userCountry?.code, productPaymentMethods);
-  console.log('🚨 DEPOIS DE CHAMAR usePaymentMethods:', availablePaymentMethods?.length, isCardOnlyCountry);
+  const { availablePaymentMethods: countryPaymentMethods, isCardOnlyCountry } = usePaymentMethods(userCountry?.code, productPaymentMethods);
+  console.log('🚨 DEPOIS DE CHAMAR usePaymentMethods:', countryPaymentMethods?.length, isCardOnlyCountry);
 
   // FORÇA DEBUG MANUAL - ARGENTINA DEVE SER CARD ONLY
   const manualCardCheck = userCountry?.code === 'AR';
@@ -208,13 +208,13 @@ const OptimizedCheckout = () => {
   console.log('🚨 País:', userCountry?.code);
   console.log('🚨 É Argentina?', manualCardCheck);
   console.log('🚨 Deveria mostrar cartão?', shouldShowCard);
-  console.log('🚨 availablePaymentMethods recebido do hook:', availablePaymentMethods);
+  console.log('🚨 countryPaymentMethods recebido do hook:', countryPaymentMethods);
   console.log('🚨 isCardOnlyCountry recebido do hook:', isCardOnlyCountry);
 
   console.log('🛒 Checkout Debug Info:', {
     userCountry: userCountry?.code,
     isCardOnlyCountry,
-    availablePaymentMethods: availablePaymentMethods?.map(m => m.id) || [],
+    countryPaymentMethods: countryPaymentMethods?.map(m => m.id) || [],
     productPaymentMethods: productPaymentMethods?.length || 0,
     geoReady,
     selectedPayment
@@ -224,18 +224,18 @@ const OptimizedCheckout = () => {
   console.log('🚨 CHECKOUT - País detectado:', userCountry?.code);
   console.log('🚨 CHECKOUT - Product methods length:', productPaymentMethods?.length);
   console.log('🚨 CHECKOUT - É país apenas cartão?', isCardOnlyCountry);
-  console.log('🚨 CHECKOUT - Métodos disponíveis:', availablePaymentMethods?.length, availablePaymentMethods?.map(m => m.id));
+  console.log('🚨 CHECKOUT - Métodos disponíveis:', countryPaymentMethods?.length, countryPaymentMethods?.map(m => m.id));
   console.log('🚨 CHECKOUT - Método selecionado:', selectedPayment);
   
   // FORÇA RE-CALL DO HOOK se necessário
-  const forceCardMethods = userCountry?.code === 'US' && (!availablePaymentMethods || availablePaymentMethods.length === 0);
+  const forceCardMethods = userCountry?.code === 'US' && (!countryPaymentMethods || countryPaymentMethods.length === 0);
   if (forceCardMethods) {
     console.log('🚨 FORÇANDO CARTÃO PARA US - hook não retornou métodos');
   }
 
   // Detectar se estamos no US e forçar cartão se necessário
   const forceCardForUS = userCountry?.code === 'US';
-  if (forceCardForUS && availablePaymentMethods.length === 0) {
+  if (forceCardForUS && countryPaymentMethods.length === 0) {
     console.log('🚨 FORCING CARD METHOD FOR US');
   }
 
@@ -247,14 +247,14 @@ const OptimizedCheckout = () => {
   // Auto-selecionar primeiro método de pagamento disponível
   useEffect(() => {
     console.log('🎯 Payment method auto-selection effect triggered');
-    console.log('🎯 Available methods:', availablePaymentMethods.length, availablePaymentMethods.map(m => m.id));
+    console.log('🎯 Available methods:', countryPaymentMethods.length, countryPaymentMethods.map(m => m.id));
     console.log('🎯 Current selected payment:', selectedPayment);
     
-    if (availablePaymentMethods.length > 0 && !selectedPayment) {
-      console.log('🎯 Auto-selecting first payment method:', availablePaymentMethods[0].id);
-      setSelectedPayment(availablePaymentMethods[0].id);
+    if (countryPaymentMethods.length > 0 && !selectedPayment) {
+      console.log('🎯 Auto-selecting first payment method:', countryPaymentMethods[0].id);
+      setSelectedPayment(countryPaymentMethods[0].id);
     }
-  }, [availablePaymentMethods, selectedPayment]);
+  }, [countryPaymentMethods, selectedPayment]);
 
   // Mostrar skeleton checkout enquanto carrega - sem tela branca
   const showingSkeleton = loading || !product;
@@ -494,7 +494,7 @@ const OptimizedCheckout = () => {
                   ) : (
                     <>
                       <PaymentMethods
-                        availablePaymentMethods={availablePaymentMethods}
+                        availablePaymentMethods={countryPaymentMethods}
                         selectedPayment={selectedPayment}
                         setSelectedPayment={setSelectedPayment}
                         userCountry={userCountry}
@@ -508,8 +508,8 @@ const OptimizedCheckout = () => {
                         <div className="text-yellow-700 space-y-1">
                           <div><strong>País detectado:</strong> {userCountry?.code || 'Não detectado'}</div>
                           <div><strong>É país apenas cartão:</strong> {isCardOnlyCountry ? 'SIM' : 'NÃO'}</div>
-                          <div><strong>Métodos disponíveis:</strong> {availablePaymentMethods?.length || 0}</div>
-                          <div><strong>Lista de métodos:</strong> {availablePaymentMethods?.map(m => m.id).join(', ') || 'Nenhum'}</div>
+                          <div><strong>Métodos disponíveis:</strong> {countryPaymentMethods?.length || 0}</div>
+                          <div><strong>Lista de métodos:</strong> {countryPaymentMethods?.map(m => m.id).join(', ') || 'Nenhum'}</div>
                           <div><strong>Método selecionado:</strong> {selectedPayment || 'Nenhum'}</div>
                           <div><strong>Product methods:</strong> {productPaymentMethods?.length || 0}</div>
                           <div><strong>Geo ready:</strong> {geoReady ? 'SIM' : 'NÃO'}</div>
@@ -519,7 +519,7 @@ const OptimizedCheckout = () => {
                   )}
 
                   {/* Renderização condicional dos componentes de pagamento */}
-                  {selectedPayment && availablePaymentMethods.find(m => m.id === selectedPayment) && (
+                  {selectedPayment && countryPaymentMethods.find(m => m.id === selectedPayment) && (
                     <div className="mt-6">
                       {/* Stripe para países específicos (Argentina, Espanha, Estados Unidos) */}
                       {isCardOnlyCountry && (selectedPayment === 'card_international' || selectedPayment === 'card') && (
