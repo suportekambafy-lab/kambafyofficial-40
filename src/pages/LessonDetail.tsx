@@ -215,6 +215,31 @@ function LessonDetailContent() {
                   <VideoPlayer
                     src={lesson.video_url}
                     onError={handleVideoError}
+                    onTimeUpdate={(currentTime, duration) => {
+                      if (duration > 0) {
+                        const progress = Math.floor((currentTime / duration) * 100);
+                        updateLessonProgress(lessonId!, { 
+                          progress_percentage: progress,
+                          completed: progress >= 90 
+                        });
+                      }
+                    }}
+                    onPlay={() => {
+                      console.log('Vídeo iniciado');
+                    }}
+                    onPause={() => {
+                      console.log('Vídeo pausado');
+                    }}
+                    onEnded={() => {
+                      updateLessonProgress(lessonId!, { 
+                        progress_percentage: 100,
+                        completed: true 
+                      });
+                      toast({
+                        title: "Aula concluída!",
+                        description: "Você completou esta aula com sucesso."
+                      });
+                    }}
                     crossOrigin="anonymous"
                   />
                 ) : (

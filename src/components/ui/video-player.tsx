@@ -3,7 +3,7 @@
 
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Volume2, Volume1, VolumeX } from "lucide-react";
+import { Play, Pause, Volume2, Volume1, VolumeX, SkipForward, SkipBack } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -48,17 +48,25 @@ const CustomSlider = ({
 
 interface VideoPlayerProps {
   src: string;
+  onProgress?: (progress: number) => void;
+  onTimeUpdate?: (currentTime: number, duration: number) => void;
+  onPlay?: () => void;
+  onPause?: () => void;
+  onEnded?: () => void;
   onError?: () => void;
   onLoadedMetadata?: () => void;
-  onTimeUpdate?: () => void;
   crossOrigin?: "" | "anonymous" | "use-credentials";
 }
 
 const VideoPlayer = ({ 
   src, 
-  onError, 
-  onLoadedMetadata, 
+  onProgress,
   onTimeUpdate,
+  onPlay,
+  onPause,
+  onEnded,
+  onError, 
+  onLoadedMetadata,
   crossOrigin = "anonymous"
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -75,8 +83,10 @@ const VideoPlayer = ({
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
+        onPause?.();
       } else {
         videoRef.current.play();
+        onPlay?.();
       }
       setIsPlaying(!isPlaying);
     }
@@ -99,10 +109,8 @@ const VideoPlayer = ({
       setCurrentTime(videoRef.current.currentTime);
       setDuration(videoRef.current.duration);
       
-      // Call external onTimeUpdate if provided
-      if (onTimeUpdate) {
-        onTimeUpdate();
-      }
+      onProgress?.(isFinite(progress) ? progress : 0);
+      onTimeUpdate?.(videoRef.current.currentTime, videoRef.current.duration);
     }
   };
 
@@ -136,6 +144,13 @@ const VideoPlayer = ({
     }
   };
 
+  const skipTime = (seconds: number) => {
+    if (videoRef.current) {
+      const newTime = Math.max(0, Math.min(videoRef.current.duration, videoRef.current.currentTime + seconds));
+      videoRef.current.currentTime = newTime;
+    }
+  };
+
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
@@ -162,9 +177,13 @@ const VideoPlayer = ({
     >
       <video
         ref={videoRef}
-        className="w-full h-full object-contain"
+        className="w-full aspect-video object-contain"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+        onEnded={() => {
+          setIsPlaying(false);
+          onEnded?.();
+        }}
         onError={handleError}
         src={src}
         onClick={togglePlay}
@@ -199,53 +218,82 @@ const VideoPlayer = ({
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Button
+                  onClick={() => skipTime(-10)}
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-[#111111d1] hover:text-white"
+                >
+                  <SkipBack className="h-5 w-5" />
+                </Button>
+              </motion.div>
+              
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Button
+                  onClick={togglePlay}
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-[#111111d1] hover:text-white"
+                >
+                  {isPlaying ? (
+                    <Pause className="h-5 w-5" />
+                  ) : (
+                    <Play className="h-5 w-5" />
+                  )}
+                </Button>
+              </motion.div>
+              
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Button
+                  onClick={() => skipTime(10)}
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-[#111111d1] hover:text-white"
+                >
+                  <SkipForward className="h-5 w-5" />
+                </Button>
+              </motion.div>
+              
+              <div className="flex items-center gap-x-1">
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
                   <Button
-                    onClick={togglePlay}
+                    onClick={toggleMute}
                     variant="ghost"
                     size="icon"
                     className="text-white hover:bg-[#111111d1] hover:text-white"
                   >
-                    {isPlaying ? (
-                      <Pause className="h-5 w-5" />
+                    {isMuted ? (
+                      <VolumeX className="h-5 w-5" />
+                    ) : volume > 0.5 ? (
+                      <Volume2 className="h-5 w-5" />
                     ) : (
-                      <Play className="h-5 w-5" />
+                      <Volume1 className="h-5 w-5" />
                     )}
                   </Button>
                 </motion.div>
-                <div className="flex items-center gap-x-1">
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Button
-                      onClick={toggleMute}
-                      variant="ghost"
-                      size="icon"
-                      className="text-white hover:bg-[#111111d1] hover:text-white"
-                    >
-                      {isMuted ? (
-                        <VolumeX className="h-5 w-5" />
-                      ) : volume > 0.5 ? (
-                        <Volume2 className="h-5 w-5" />
-                      ) : (
-                        <Volume1 className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </motion.div>
 
-                  <div className="w-24">
-                    <CustomSlider
-                      value={volume * 100}
-                      onChange={handleVolumeChange}
-                    />
-                  </div>
+                <div className="w-24">
+                  <CustomSlider
+                    value={volume * 100}
+                    onChange={handleVolumeChange}
+                  />
                 </div>
               </div>
+            </div>
 
               <div className="flex items-center gap-2">
                 {[0.5, 1, 1.5, 2].map((speed) => (
