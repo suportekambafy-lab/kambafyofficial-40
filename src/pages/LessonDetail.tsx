@@ -4,23 +4,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { 
   ArrowLeft, 
-  Play, 
   Clock, 
-  Star,
-  MessageCircle,
-  Send,
+  BookOpen,
   ChevronLeft,
-  ChevronRight,
-  BookOpen
+  ChevronRight
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/hooks/use-toast';
 import { MemberAreaAuthProvider, useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { useLessonProgress } from '@/hooks/useLessonProgress';
 import VideoPlayer from '@/components/ui/video-player';
+import { LessonSidebar } from '@/components/LessonSidebar';
 import { useState, useEffect } from 'react';
 import type { Lesson } from '@/types/memberArea';
 
@@ -262,132 +258,55 @@ function LessonDetailContent() {
             <Card className="mt-6">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div>
+                  <div className="flex-1">
                     <h2 className="text-2xl font-bold text-foreground mb-2">{lesson.title}</h2>
                     {lesson.description && (
                       <p className="text-muted-foreground">{lesson.description}</p>
                     )}
                   </div>
-                  <Badge variant="secondary" className="flex items-center gap-1">
+                  <Badge variant="secondary" className="flex items-center gap-1 ml-4">
                     <Clock className="w-3 h-3" />
                     {lesson.duration || 5} min
                   </Badge>
                 </div>
-
-                {/* Rating */}
-                <div className="flex items-center gap-4 pt-4 border-t border-border">
-                  <span className="text-sm font-medium text-foreground">Avalie esta aula:</span>
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={`w-5 h-5 cursor-pointer transition-colors ${
-                          i < userRating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground hover:text-yellow-400'
-                        }`}
-                        onClick={() => handleRating(i + 1)}
+                
+                {/* Progress indicator */}
+                {lessonProgress[lesson.id]?.progress_percentage > 0 && (
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+                      <span>Progresso da aula</span>
+                      <span>{lessonProgress[lesson.id].progress_percentage}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${lessonProgress[lesson.id].progress_percentage}%` }}
                       />
-                    ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Comments Sidebar */}
-          <div className="space-y-6">
-            {/* Add Comment */}
-            {student && (
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5" />
-                    Comentários
-                  </h3>
-                  <div className="space-y-4">
-                    <Textarea
-                      placeholder="Adicione um comentário sobre esta aula..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      rows={3}
-                      className="resize-none"
-                    />
-                    <Button 
-                      onClick={handleSubmitComment}
-                      disabled={!newComment.trim()}
-                      size="sm"
-                      className="w-full"
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      Enviar Comentário
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Comments List */}
-            <Card>
-              <CardContent className="p-6">
-                <h4 className="font-medium text-foreground mb-4">
-                  Comentários ({comments[lesson.id]?.length || 0})
-                </h4>
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {comments[lesson.id]?.map((comment) => (
-                    <div key={comment.id} className="p-4 bg-muted rounded-lg">
-                      <div className="flex items-start justify-between mb-2">
-                        <span className="font-medium text-foreground text-sm">
-                          {comment.user_name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(comment.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm text-foreground">{comment.comment}</p>
-                    </div>
-                  )) || (
-                    <p className="text-center text-muted-foreground text-sm py-8">
-                      Nenhum comentário ainda. Seja o primeiro a comentar!
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Lesson Navigation */}
-            <Card>
-              <CardContent className="p-6">
-                <h4 className="font-medium text-foreground mb-4">Navegação</h4>
-                <div className="space-y-2">
-                  {previousLesson && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/area/${areaId}/lesson/${previousLesson.id}`)}
-                      className="w-full justify-start gap-2"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      <div className="text-left">
-                        <div className="text-xs text-muted-foreground">Anterior</div>
-                        <div className="truncate">{previousLesson.title}</div>
-                      </div>
-                    </Button>
-                  )}
-                  {nextLesson && (
-                    <Button
-                      size="sm"
-                      onClick={() => navigate(`/area/${areaId}/lesson/${nextLesson.id}`)}
-                      className="w-full justify-start gap-2"
-                    >
-                      <div className="text-left flex-1">
-                        <div className="text-xs text-primary-foreground/80">Próxima</div>
-                        <div className="truncate">{nextLesson.title}</div>
-                      </div>
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+          {/* Lesson Sidebar */}
+          <div>
+            <LessonSidebar
+              lesson={lesson}
+              allLessons={allLessons}
+              comments={comments[lesson.id] || []}
+              newComment={newComment}
+              setNewComment={setNewComment}
+              userRating={userRating}
+              lessonProgress={lessonProgress}
+              onSubmitComment={handleSubmitComment}
+              onRating={handleRating}
+              onNavigateToLesson={(lessonId) => navigate(`/area/${areaId}/lesson/${lessonId}`)}
+              onNavigateToPrevious={() => previousLesson && navigate(`/area/${areaId}/lesson/${previousLesson.id}`)}
+              onNavigateToNext={() => nextLesson && navigate(`/area/${areaId}/lesson/${nextLesson.id}`)}
+              hasNextLesson={!!nextLesson}
+              hasPreviousLesson={!!previousLesson}
+            />
           </div>
         </div>
       </div>
