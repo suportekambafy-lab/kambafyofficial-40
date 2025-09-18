@@ -64,7 +64,12 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       if (currentPath === '/' || currentPath === '') {
         shouldRedirect = true;
         targetSubdomain = 'main';
-      } else if (restrictedFromApp.some(route => currentPath.startsWith(route))) {
+      } 
+      // Permitir rotas de área de membros (login e área)
+      else if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
+        return; // Manter no subdomínio app
+      } 
+      else if (restrictedFromApp.some(route => currentPath.startsWith(route))) {
         shouldRedirect = true;
         if (currentPath.startsWith('/admin')) {
           targetSubdomain = 'admin';
