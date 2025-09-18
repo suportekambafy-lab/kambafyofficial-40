@@ -3,14 +3,14 @@ import { MemberAreaAuthProvider } from "@/contexts/MemberAreaAuthContext";
 import MemberAreaLogin from "./MemberAreaLogin";
 
 export default function MemberAreaLoginWrapper() {
-  const { areaId } = useParams<{ areaId: string }>();
+  const { id } = useParams<{ id: string }>();
 
-  if (!areaId) {
+  if (!id) {
     return <div>Area ID não encontrado</div>;
   }
 
   return (
-    <MemberAreaAuthProvider memberAreaId={areaId}>
+    <MemberAreaAuthProvider memberAreaId={id}>
       <MemberAreaLogin />
     </MemberAreaAuthProvider>
   );
