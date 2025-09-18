@@ -17,10 +17,27 @@ import {
 import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { useState } from 'react';
 import { SEO } from '@/components/SEO';
+import { useNavigate, useParams } from 'react-router-dom';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function MemberAreaHelp() {
-  const { memberArea } = useMemberAreaAuth();
+  const { student, memberArea, loading } = useMemberAreaAuth();
+  const navigate = useNavigate();
+  const { id: areaId } = useParams();
   const [searchTerm, setSearchTerm] = useState('');
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!student || !memberArea) {
+    navigate(`/login/${areaId}`);
+    return null;
+  }
 
   const helpCategories = [
     {

@@ -8,9 +8,13 @@ import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SEO } from '@/components/SEO';
+import { useNavigate, useParams } from 'react-router-dom';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function MemberAreaSupport() {
-  const { student, memberArea } = useMemberAreaAuth();
+  const { student, memberArea, loading } = useMemberAreaAuth();
+  const navigate = useNavigate();
+  const { id: areaId } = useParams();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -18,6 +22,19 @@ export default function MemberAreaSupport() {
     message: '',
     priority: 'normal'
   });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!student || !memberArea) {
+    navigate(`/login/${areaId}`);
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -6,12 +6,27 @@ import { BookOpen, Play, Clock, CheckCircle, Trophy, Star } from 'lucide-react';
 import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function MemberAreaMyCourses() {
-  const { student, memberArea } = useMemberAreaAuth();
+  const { student, memberArea, loading } = useMemberAreaAuth();
   const navigate = useNavigate();
+  const { id: areaId } = useParams();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!student || !memberArea) {
+    navigate(`/login/${areaId}`);
+    return null;
+  }
 
   const { data: lessons = [] } = useQuery({
     queryKey: ['lessons', memberArea?.id],
@@ -127,7 +142,7 @@ export default function MemberAreaMyCourses() {
                 <CardContent>
                   {lessons.slice(0, 3).map((lesson, index) => (
                     <div key={lesson.id} className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted/50 cursor-pointer"
-                         onClick={() => navigate(`/member-area/${memberArea?.id}/lesson/${lesson.id}`)}>
+                     onClick={() => navigate(`/area/${memberArea?.id}/lesson/${lesson.id}`)}>
                       <div className="w-16 h-12 bg-muted rounded flex items-center justify-center">
                         <Play className="w-6 h-6" />
                       </div>

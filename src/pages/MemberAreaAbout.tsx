@@ -3,9 +3,26 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, Users, Star, Award, BookOpen, Target } from 'lucide-react';
 import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { SEO } from '@/components/SEO';
+import { useNavigate, useParams } from 'react-router-dom';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function MemberAreaAbout() {
-  const { memberArea } = useMemberAreaAuth();
+  const { student, memberArea, loading } = useMemberAreaAuth();
+  const navigate = useNavigate();
+  const { id: areaId } = useParams();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!student || !memberArea) {
+    navigate(`/login/${areaId}`);
+    return null;
+  }
 
   const courseStats = [
     { label: "Duração Total", value: "12 horas", icon: Clock },

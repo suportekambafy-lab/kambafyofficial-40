@@ -5,9 +5,26 @@ import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SEO } from '@/components/SEO';
+import { useNavigate, useParams } from 'react-router-dom';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function MemberAreaSupportMaterials() {
-  const { memberArea } = useMemberAreaAuth();
+  const { student, memberArea, loading } = useMemberAreaAuth();
+  const navigate = useNavigate();
+  const { id: areaId } = useParams();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!student || !memberArea) {
+    navigate(`/login/${areaId}`);
+    return null;
+  }
 
   // Simulando materiais de apoio - em produção viriam do banco
   const supportMaterials = [

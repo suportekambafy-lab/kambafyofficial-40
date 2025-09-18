@@ -4,12 +4,27 @@ import { BookOpen, Play, Clock, CheckCircle } from 'lucide-react';
 import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function MemberAreaContent() {
-  const { student, memberArea } = useMemberAreaAuth();
+  const { student, memberArea, loading } = useMemberAreaAuth();
   const navigate = useNavigate();
+  const { id: areaId } = useParams();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!student || !memberArea) {
+    navigate(`/login/${areaId}`);
+    return null;
+  }
 
   const { data: modules = [] } = useQuery({
     queryKey: ['modules', memberArea?.id],
@@ -65,7 +80,7 @@ export default function MemberAreaContent() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {modules.map((module) => (
                   <Card key={module.id} className="hover:shadow-lg transition-shadow cursor-pointer"
-                        onClick={() => navigate(`/member-area/${memberArea?.id}/module/${module.id}`)}>
+                        onClick={() => navigate(`/area/${memberArea?.id}/module/${module.id}`)}>
                     <CardHeader>
                       {module.cover_image_url && (
                         <img 
@@ -101,7 +116,7 @@ export default function MemberAreaContent() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {lessons.filter(l => !l.module_id).map((lesson) => (
                   <Card key={lesson.id} className="hover:shadow-lg transition-shadow cursor-pointer"
-                        onClick={() => navigate(`/member-area/${memberArea?.id}/lesson/${lesson.id}`)}>
+                        onClick={() => navigate(`/area/${memberArea?.id}/lesson/${lesson.id}`)}>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Play className="w-5 h-5" />

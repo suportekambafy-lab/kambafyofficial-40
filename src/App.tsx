@@ -81,16 +81,16 @@ const App = () => {
                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                         
                          {/* Member Area Routes - Modern Authentication System */}
-                         <Route path="/area/:areaId" element={<OptimizedRoutes.MemberArea />} />
-                         <Route path="/area/:areaId/content" element={<OptimizedRoutes.MemberAreaContent />} />
-                         <Route path="/area/:areaId/support-materials" element={<OptimizedRoutes.MemberAreaSupportMaterials />} />
-                         <Route path="/area/:areaId/about" element={<OptimizedRoutes.MemberAreaAbout />} />
-                         <Route path="/area/:areaId/my-courses" element={<OptimizedRoutes.MemberAreaMyCourses />} />
-                         <Route path="/area/:areaId/support" element={<OptimizedRoutes.MemberAreaSupport />} />
-                         <Route path="/area/:areaId/help" element={<OptimizedRoutes.MemberAreaHelp />} />
-                         <Route path="/login/:areaId" element={<OptimizedRoutes.MemberAreaLoginWrapper />} />
-                         <Route path="/area/:areaId/module/:moduleId" element={<OptimizedRoutes.ModuleDetail />} />
-                         <Route path="/area/:areaId/lesson/:lessonId" element={<OptimizedRoutes.LessonDetail />} />
+                         <Route path="/area/:id" element={<OptimizedRoutes.MemberArea />} />
+                         <Route path="/area/:id/content" element={<OptimizedRoutes.MemberAreaContent />} />
+                         <Route path="/area/:id/support-materials" element={<OptimizedRoutes.MemberAreaSupportMaterials />} />
+                         <Route path="/area/:id/about" element={<OptimizedRoutes.MemberAreaAbout />} />
+                         <Route path="/area/:id/my-courses" element={<OptimizedRoutes.MemberAreaMyCourses />} />
+                         <Route path="/area/:id/support" element={<OptimizedRoutes.MemberAreaSupport />} />
+                         <Route path="/area/:id/help" element={<OptimizedRoutes.MemberAreaHelp />} />
+                         <Route path="/login/:id" element={<OptimizedRoutes.MemberAreaLoginWrapper />} />
+                         <Route path="/area/:id/module/:moduleId" element={<OptimizedRoutes.ModuleDetail />} />
+                         <Route path="/area/:id/lesson/:lessonId" element={<OptimizedRoutes.LessonDetail />} />
                        <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                         <Route path="/kambapay" element={<OptimizedRoutes.KambaPay />} />
                         <Route path="/recuperacao-vendas" element={<OptimizedRoutes.SalesRecovery />} />
