@@ -60,6 +60,12 @@ const SalesRecovery = createLazyWithRetry(() => import('@/pages/SalesRecovery'),
 
 // Member Area routes
 const MemberArea = createLazyWithRetry(() => import('@/pages/MemberArea'), "MemberArea");
+const MemberAreaContent = createLazyWithRetry(() => import('@/pages/MemberAreaContent'), "MemberAreaContent");
+const MemberAreaSupportMaterials = createLazyWithRetry(() => import('@/pages/MemberAreaSupportMaterials'), "MemberAreaSupportMaterials");
+const MemberAreaAbout = createLazyWithRetry(() => import('@/pages/MemberAreaAbout'), "MemberAreaAbout");
+const MemberAreaMyCourses = createLazyWithRetry(() => import('@/pages/MemberAreaMyCourses'), "MemberAreaMyCourses");
+const MemberAreaSupport = createLazyWithRetry(() => import('@/pages/MemberAreaSupport'), "MemberAreaSupport");
+const MemberAreaHelp = createLazyWithRetry(() => import('@/pages/MemberAreaHelp'), "MemberAreaHelp");
 const MemberAreaLogin = createLazyWithRetry(() => import('@/pages/MemberAreaLogin'), "MemberAreaLogin");
 const MemberAreaLoginWrapper = createLazyWithRetry(() => import('@/pages/MemberAreaLoginWrapper'), "MemberAreaLoginWrapper");
 const ModuleDetail = createLazyWithRetry(() => import('@/pages/ModuleDetail'), "ModuleDetail");
@@ -171,6 +177,12 @@ export const OptimizedRoutes = {
   
   // Member Area pages
   MemberArea: withLazyLoading(MemberArea, 'member-area'),
+  MemberAreaContent: withLazyLoading(MemberAreaContent, 'member-area'),
+  MemberAreaSupportMaterials: withLazyLoading(MemberAreaSupportMaterials, 'member-area'),
+  MemberAreaAbout: withLazyLoading(MemberAreaAbout, 'member-area'),
+  MemberAreaMyCourses: withLazyLoading(MemberAreaMyCourses, 'member-area'),
+  MemberAreaSupport: withLazyLoading(MemberAreaSupport, 'member-area'),
+  MemberAreaHelp: withLazyLoading(MemberAreaHelp, 'member-area'),
   MemberAreaLogin: withLazyLoading(MemberAreaLogin, 'member-area'),
   MemberAreaLoginWrapper: withLazyLoading(MemberAreaLoginWrapper, 'member-area'),
   ModuleDetail: withLazyLoading(ModuleDetail, 'member-area'),

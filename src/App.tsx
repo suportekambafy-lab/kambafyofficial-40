@@ -82,6 +82,12 @@ const App = () => {
                         
                          {/* Member Area Routes - Modern Authentication System */}
                          <Route path="/area/:areaId" element={<OptimizedRoutes.MemberArea />} />
+                         <Route path="/area/:areaId/content" element={<OptimizedRoutes.MemberAreaContent />} />
+                         <Route path="/area/:areaId/support-materials" element={<OptimizedRoutes.MemberAreaSupportMaterials />} />
+                         <Route path="/area/:areaId/about" element={<OptimizedRoutes.MemberAreaAbout />} />
+                         <Route path="/area/:areaId/my-courses" element={<OptimizedRoutes.MemberAreaMyCourses />} />
+                         <Route path="/area/:areaId/support" element={<OptimizedRoutes.MemberAreaSupport />} />
+                         <Route path="/area/:areaId/help" element={<OptimizedRoutes.MemberAreaHelp />} />
                          <Route path="/login/:areaId" element={<OptimizedRoutes.MemberAreaLoginWrapper />} />
                          <Route path="/area/:areaId/module/:moduleId" element={<OptimizedRoutes.ModuleDetail />} />
                          <Route path="/area/:areaId/lesson/:lessonId" element={<OptimizedRoutes.LessonDetail />} />

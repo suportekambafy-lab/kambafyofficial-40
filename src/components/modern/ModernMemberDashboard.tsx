@@ -100,15 +100,27 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
             <Home className="w-4 h-4" />
             Início
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-white/10">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-white/10"
+            onClick={() => navigate(`/area/${memberArea?.id}/my-courses`)}
+          >
             <BookOpen className="w-4 h-4" />
             Meus Cursos
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-white/10">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-white/10"
+            onClick={() => navigate(`/area/${memberArea?.id}/support`)}
+          >
             <MessageCircle className="w-4 h-4" />
             Suporte
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-white/10">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-white/10"
+            onClick={() => navigate(`/area/${memberArea?.id}/help`)}
+          >
             <HelpCircle className="w-4 h-4" />
             Ajuda
           </Button>
@@ -329,9 +341,24 @@ export default function ModernMemberDashboard({ memberArea, lessons, modules }: 
                 <h1 className="text-white font-bold text-xl">{memberArea.name}</h1>
                 <nav className="hidden md:flex items-center gap-6 text-sm">
                   <span className="text-white font-medium border-b-2 border-white pb-1">Continuar Assistindo</span>
-                  <span className="text-gray-300 hover:text-white cursor-pointer">Conteúdos</span>
-                  <span className="text-gray-300 hover:text-white cursor-pointer">Materiais de apoio</span>
-                  <span className="text-gray-300 hover:text-white cursor-pointer">Sobre</span>
+                  <span 
+                    className="text-gray-300 hover:text-white cursor-pointer"
+                    onClick={() => navigate(`/area/${memberArea?.id}/content`)}
+                  >
+                    Conteúdos
+                  </span>
+                  <span 
+                    className="text-gray-300 hover:text-white cursor-pointer"
+                    onClick={() => navigate(`/area/${memberArea?.id}/support-materials`)}
+                  >
+                    Materiais de apoio
+                  </span>
+                  <span 
+                    className="text-gray-300 hover:text-white cursor-pointer"
+                    onClick={() => navigate(`/area/${memberArea?.id}/about`)}
+                  >
+                    Sobre
+                  </span>
                 </nav>
               </div>
               <div className="flex items-center gap-3">
