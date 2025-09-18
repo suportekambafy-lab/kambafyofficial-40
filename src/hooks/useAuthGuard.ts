@@ -25,6 +25,11 @@ export function useAuthGuard() {
         return;
       }
       
+      // Não interferir nas rotas de área de membros - elas têm sua própria proteção
+      if (window.location.pathname.includes('/area/') || window.location.pathname.includes('/login/')) {
+        return;
+      }
+      
       // Se não há usuário ou sessão válida, redirecionar para login
       if (!user || !session) {
         console.log('🔒 useAuthGuard: Usuário não autenticado, redirecionando para /auth');
