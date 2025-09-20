@@ -17,6 +17,13 @@ export default function PaymentMethodsSelector({ selectedMethods, onMethodsChang
   const currentMethods = selectedMethods.length > 0 ? selectedMethods : allMethods;
 
   const handleMethodToggle = (methodId: string, enabled: boolean) => {
+    // Verificar se o método está disponível no PAYMENT_METHODS
+    const globalMethod = allMethods.find(m => m.id === methodId);
+    if (globalMethod?.enabled === false) {
+      // Se o método está marcado como indisponível globalmente, não permitir alteração
+      return;
+    }
+    
     const updatedMethods = currentMethods.map(method =>
       method.id === methodId ? { ...method, enabled } : method
     );
@@ -54,39 +61,57 @@ export default function PaymentMethodsSelector({ selectedMethods, onMethodsChang
             
             <div className="space-y-2">
               {methods.map((method) => (
-                <div key={method.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      id={method.id}
-                      checked={method.enabled}
-                      onCheckedChange={(checked) => handleMethodToggle(method.id, checked as boolean)}
-                    />
-                    <div className="flex items-center gap-3">
-                      {method.image && (
-                        <img
-                          src={method.image}
-                          alt={method.name}
-                          className="w-8 h-8 object-contain"
-                        />
-                      )}
-                      <div>
-                        <Label htmlFor={method.id} className="font-medium cursor-pointer text-sm">
-                          {method.name}
-                        </Label>
-                        <div className="flex items-center gap-1 mt-1">
-                          <span className="text-xs">{method.countryFlag}</span>
-                          <span className="text-xs text-gray-500">{method.countryName}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {method.enabled && (
-                    <Badge variant="default" className="text-xs bg-green-100 text-green-800">
-                      Ativo
-                    </Badge>
-                  )}
-                </div>
+                 <div key={method.id} className={`flex items-center justify-between p-3 border rounded-lg ${
+                   // Verificar se o método está habilitado no PAYMENT_METHODS (não apenas no formData)
+                   allMethods.find(m => m.id === method.id)?.enabled === false 
+                     ? 'bg-gray-50 opacity-60' 
+                     : 'hover:bg-gray-50'
+                 }`}>
+                   <div className="flex items-center gap-3">
+                     <Checkbox
+                       id={method.id}
+                       checked={method.enabled && allMethods.find(m => m.id === method.id)?.enabled !== false}
+                       onCheckedChange={(checked) => handleMethodToggle(method.id, checked as boolean)}
+                       disabled={allMethods.find(m => m.id === method.id)?.enabled === false}
+                     />
+                     <div className="flex items-center gap-3">
+                       {method.image && (
+                         <img
+                           src={method.image}
+                           alt={method.name}
+                           className={`w-8 h-8 object-contain ${
+                             allMethods.find(m => m.id === method.id)?.enabled === false ? 'grayscale' : ''
+                           }`}
+                         />
+                       )}
+                       <div>
+                         <Label 
+                           htmlFor={method.id} 
+                           className={`font-medium cursor-pointer text-sm ${
+                             allMethods.find(m => m.id === method.id)?.enabled === false ? 'text-gray-400' : ''
+                           }`}
+                         >
+                           {method.name}
+                         </Label>
+                         <div className="flex items-center gap-1 mt-1">
+                           <span className="text-xs">{method.countryFlag}</span>
+                           <span className="text-xs text-gray-500">{method.countryName}</span>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                   
+                   {/* Mostrar status baseado no PAYMENT_METHODS, não no formData */}
+                   {allMethods.find(m => m.id === method.id)?.enabled === false ? (
+                     <Badge variant="destructive" className="text-xs bg-red-100 text-red-800">
+                       Indisponível
+                     </Badge>
+                   ) : method.enabled ? (
+                     <Badge variant="default" className="text-xs bg-green-100 text-green-800">
+                       Ativo
+                     </Badge>
+                   ) : null}
+                 </div>
               ))}
             </div>
           </div>
@@ -96,13 +121,13 @@ export default function PaymentMethodsSelector({ selectedMethods, onMethodsChang
         <div className="bg-muted/50 p-4 rounded-lg">
           <p className="text-sm font-medium mb-3">Métodos ativos no checkout:</p>
           <div className="flex flex-wrap gap-2">
-            {currentMethods.filter(m => m.enabled).length === 0 ? (
+            {currentMethods.filter(m => m.enabled && allMethods.find(am => am.id === m.id)?.enabled !== false).length === 0 ? (
               <Badge variant="destructive" className="text-xs">
                 Nenhum método ativo - Selecione pelo menos um método
               </Badge>
             ) : (
               currentMethods
-                .filter(method => method.enabled)
+                .filter(method => method.enabled && allMethods.find(am => am.id === method.id)?.enabled !== false)
                 .map(method => (
                   <Badge key={method.id} variant="default" className="text-xs flex items-center gap-1">
                     <span>{method.countryFlag}</span>
