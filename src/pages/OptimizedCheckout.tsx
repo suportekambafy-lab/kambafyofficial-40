@@ -413,13 +413,13 @@ const OptimizedCheckout = () => {
             </Suspense>
           )}
 
-          {/* Order Bumps - Produto Extra e Extensão de Acesso */}
-          {(productExtraBump || accessExtensionBump) && (
+          {/* Order Bumps ANTES dos métodos de pagamento */}
+          {(productExtraBump?.position === 'before_payment_method' || accessExtensionBump?.position === 'before_payment_method') && (
             <Card className="mb-6">
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {/* Produto Extra Order Bump */}
-                  {productExtraBump && (
+                  {/* Produto Extra Order Bump - Before Payment */}
+                  {productExtraBump?.position === 'before_payment_method' && (
                     <div className="p-4 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-950">
                       <div className="flex items-start gap-3">
                         <input
@@ -443,8 +443,8 @@ const OptimizedCheckout = () => {
                     </div>
                   )}
                   
-                  {/* Extensão de Acesso Order Bump */}
-                  {accessExtensionBump && (
+                  {/* Extensão de Acesso Order Bump - Before Payment */}
+                  {accessExtensionBump?.position === 'before_payment_method' && (
                     <div className="p-4 border-2 border-dashed border-orange-200 rounded-lg bg-orange-50 dark:bg-orange-950">
                       <div className="flex items-start gap-3">
                         <input
@@ -578,6 +578,62 @@ const OptimizedCheckout = () => {
                       <div><strong>Product exists:</strong> {product ? 'SIM' : 'NÃO'}</div>
                     </div>
                   </div>
+
+                  {/* Order Bumps DEPOIS dos métodos de pagamento */}
+                  {(productExtraBump?.position === 'after_payment_method' || accessExtensionBump?.position === 'after_payment_method') && (
+                    <Card className="mt-6 mb-6">
+                      <CardContent className="p-6">
+                        <div className="space-y-4">
+                          {/* Produto Extra Order Bump - After Payment */}
+                          {productExtraBump?.position === 'after_payment_method' && (
+                            <div className="p-4 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-950">
+                              <div className="flex items-start gap-3">
+                                <input
+                                  type="checkbox"
+                                  id="productExtraBumpAfter"
+                                  onChange={(e) => handleProductExtraToggle(e.target.checked, productExtraBump)}
+                                  className="mt-1"
+                                />
+                                <div className="flex-1">
+                                  <label htmlFor="productExtraBumpAfter" className="font-medium text-blue-900 dark:text-blue-100 cursor-pointer">
+                                    {productExtraBump.title} - {formatPrice(parseFloat(productExtraBump.bump_product_price))}
+                                  </label>
+                                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                                    {productExtraBump.bump_product_name}
+                                  </p>
+                                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                    {productExtraBump.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Extensão de Acesso Order Bump - After Payment */}
+                          {accessExtensionBump?.position === 'after_payment_method' && (
+                            <div className="p-4 border-2 border-dashed border-orange-200 rounded-lg bg-orange-50 dark:bg-orange-950">
+                              <div className="flex items-start gap-3">
+                                <input
+                                  type="checkbox"
+                                  id="accessExtensionBumpAfter"
+                                  onChange={(e) => handleAccessExtensionToggle(e.target.checked, accessExtensionBump)}
+                                  className="mt-1"
+                                />
+                                <div className="flex-1">
+                                  <label htmlFor="accessExtensionBumpAfter" className="font-medium text-orange-900 dark:text-orange-100 cursor-pointer">
+                                    {accessExtensionBump.bump_product_name} - {formatPrice(parseFloat(accessExtensionBump.bump_product_price))}
+                                  </label>
+                                  <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                                    {accessExtensionBump.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* Renderização condicional dos componentes de pagamento */}
                   {selectedPayment && finalPaymentMethods.find(m => m.id === selectedPayment) && (
