@@ -23,6 +23,7 @@ export const CountryPriceConfig: React.FC<CountryPriceConfigProps> = ({
   onCustomPricesChange
 }) => {
   console.log('🎯 CountryPriceConfig rendered', { basePrice, customPrices });
+  console.log('🔍 EnableCustomPricing inicial:', Object.keys(customPrices || {}).length > 0);
   
   const [enableCustomPricing, setEnableCustomPricing] = useState(
     Object.keys(customPrices || {}).length > 0
@@ -37,9 +38,12 @@ export const CountryPriceConfig: React.FC<CountryPriceConfigProps> = ({
   }, [enableCustomPricing, onCustomPricesChange]);
 
   const handlePriceChange = (countryCode: string, value: string) => {
+    console.log('💰 Alterando preço:', { countryCode, value });
     const newPrices = { ...prices, [countryCode]: value };
+    console.log('📝 Preços atualizados localmente:', newPrices);
     setPrices(newPrices);
     onCustomPricesChange(newPrices);
+    console.log('✅ onCustomPricesChange chamado com:', newPrices);
   };
 
   const resetToAutomatic = () => {

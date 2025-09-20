@@ -124,6 +124,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
   }, [editingProduct, selectedType]);
 
   const handleInputChange = (field: string, value: string | Record<string, string>) => {
+    console.log('🔄 ProductForm handleInputChange:', { field, value });
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -509,12 +510,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
               )}
             </div>
 
-            {/* Seção de preços customizados por país */}
-            <CountryPriceConfig
-              basePrice={formData.price}
-              customPrices={formData.customPrices}
-              onCustomPricesChange={(prices) => handleInputChange("customPrices", prices)}
-            />
+            {/* Seção de preços customizados por país - REMOVIDO DUPLICATA */}
 
             {/* Nova seção: Métodos de Pagamento */}
             <PaymentMethodsSelector
