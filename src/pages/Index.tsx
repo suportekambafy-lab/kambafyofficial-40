@@ -15,8 +15,8 @@ const Index = () => {
 
   // Removido console.log desnecessário
 
-  // Se for mobile subdomain, mostrar interface mobile específica
-  if (currentSubdomain === 'mobile') {
+  // Se for mobile ou app subdomain, mostrar interface mobile específica
+  if (currentSubdomain === 'mobile' || currentSubdomain === 'app') {
     return <Mobile />;
   }
 
