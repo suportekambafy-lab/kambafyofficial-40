@@ -36,8 +36,19 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
   const getMemberAreaLink = () => {
     const memberAreaId = product.member_area_id || product.member_areas?.id;
     if (memberAreaId) {
-      return memberAreaLinks.getMemberAreaUrl(memberAreaId);
+      const url = memberAreaLinks.getMemberAreaUrl(memberAreaId);
+      console.log('🔗 ProductShareDialog - Gerando URL da área de membros:', {
+        memberAreaId,
+        generatedUrl: url,
+        product
+      });
+      return url;
     }
+    console.log('❌ ProductShareDialog - Não foi possível gerar URL da área de membros:', {
+      product,
+      member_area_id: product.member_area_id,
+      member_areas: product.member_areas
+    });
     return '';
   };
 

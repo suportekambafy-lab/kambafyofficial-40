@@ -52,12 +52,25 @@ export function createMemberAreaLinks() {
   const hostname = window.location.hostname;
   const baseDomain = hostname.replace(/^(app\.|pay\.|admin\.|membros\.)/, '');
   
+  console.log('🏗️ createMemberAreaLinks - Detectando ambiente:', {
+    hostname,
+    baseDomain,
+    isLocalhost: hostname.includes('localhost'),
+    isLovable: hostname.includes('lovable.app')
+  });
+  
   // Para desenvolvimento/preview, usar as rotas diretas
   if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
+    console.log('🛠️ createMemberAreaLinks - Usando ambiente de desenvolvimento');
     return {
-      getMemberAreaLoginUrl: (memberAreaId: string) => `/login/${memberAreaId}`,
+      getMemberAreaLoginUrl: (memberAreaId: string) => {
+        const url = `/login/${memberAreaId}`;
+        console.log('🔗 Dev - getMemberAreaLoginUrl:', { memberAreaId, url });
+        return url;
+      },
       getMemberAreaUrl: (memberAreaId: string, path: string = '') => {
         const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
+        console.log('🔗 Dev - getMemberAreaUrl:', { memberAreaId, path, fullPath });
         return fullPath;
       },
       getMemberAreaLessonUrl: (memberAreaId: string, lessonId: string) => `/area/${memberAreaId}/lesson/${lessonId}`,
@@ -68,12 +81,23 @@ export function createMemberAreaLinks() {
   // Para produção, usar subdomínio membros
   const membersHostname = `membros.${baseDomain}`;
   const protocol = window.location.protocol;
+  
+  console.log('🌐 createMemberAreaLinks - Usando ambiente de produção:', {
+    membersHostname,
+    protocol
+  });
 
   return {
-    getMemberAreaLoginUrl: (memberAreaId: string) => `${protocol}//${membersHostname}/login/${memberAreaId}`,
+    getMemberAreaLoginUrl: (memberAreaId: string) => {
+      const url = `${protocol}//${membersHostname}/login/${memberAreaId}`;
+      console.log('🔗 Prod - getMemberAreaLoginUrl:', { memberAreaId, url });
+      return url;
+    },
     getMemberAreaUrl: (memberAreaId: string, path: string = '') => {
       const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
-      return `${protocol}//${membersHostname}${fullPath}`;
+      const url = `${protocol}//${membersHostname}${fullPath}`;
+      console.log('🔗 Prod - getMemberAreaUrl:', { memberAreaId, path, fullPath, url });
+      return url;
     },
     getMemberAreaLessonUrl: (memberAreaId: string, lessonId: string) => 
       `${protocol}//${membersHostname}/area/${memberAreaId}/lesson/${lessonId}`,

@@ -1167,6 +1167,11 @@ export default function Members() {
                           size="sm" 
                           onClick={() => {
                             const memberAreaUrl = createMemberAreaLinks().getMemberAreaLoginUrl(selectedArea.id);
+                            console.log('🔗 Members - URL gerada para área de membros:', {
+                              selectedAreaId: selectedArea.id,
+                              generatedUrl: memberAreaUrl,
+                              selectedArea
+                            });
                             navigator.clipboard.writeText(memberAreaUrl);
                             toast({
                               title: "Link copiado!",

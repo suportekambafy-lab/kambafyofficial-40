@@ -135,12 +135,25 @@ export default function MinhasCompras() {
   };
 
   const handleAccessProduct = (product: any) => {
+    console.log('🚀 MinhasCompras - Tentando acessar produto:', {
+      product,
+      productType: product.type,
+      memberAreaId: product.member_areas?.id
+    });
+    
     // Para cursos, usar a nova rota protegida moderna
     if (product.type === 'Curso' && product.member_areas?.id) {
-      window.location.href = memberAreaLinks.getMemberAreaUrl(product.member_areas.id);
+      const memberAreaUrl = memberAreaLinks.getMemberAreaUrl(product.member_areas.id);
+      console.log('🔗 MinhasCompras - Navegando para área de membros:', {
+        memberAreaId: product.member_areas.id,
+        generatedUrl: memberAreaUrl
+      });
+      window.location.href = memberAreaUrl;
     } else if (product.share_link) {
+      console.log('🔗 MinhasCompras - Abrindo share_link:', product.share_link);
       window.open(product.share_link, '_blank');
     } else {
+      console.log('❌ MinhasCompras - Nenhum link de acesso disponível');
       alert('Link de acesso não disponível para este produto.');
     }
   };
