@@ -434,9 +434,9 @@ const OptimizedCheckout = () => {
                           className="mt-1"
                         />
                         <div className="flex-1">
-                          <label htmlFor="productExtraBump" className="font-medium text-blue-900 dark:text-blue-100 cursor-pointer">
-                            {productExtraBump.title} - {formatPrice(parseFloat(productExtraBump.bump_product_price))}
-                          </label>
+                           <label htmlFor="productExtraBump" className="font-medium text-blue-900 dark:text-blue-100 cursor-pointer">
+                             {productExtraBump.title} - {formatPrice(parseFloat(productExtraBump.bump_product_price), userCountry, productExtraBump.bump_product_custom_prices)}
+                           </label>
                           <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
                             {productExtraBump.bump_product_name}
                           </p>
@@ -459,9 +459,9 @@ const OptimizedCheckout = () => {
                           className="mt-1"
                         />
                         <div className="flex-1">
-                          <label htmlFor="accessExtensionBump" className="font-medium text-orange-900 dark:text-orange-100 cursor-pointer">
-                            {accessExtensionBump.bump_product_name} - {formatPrice(parseFloat(accessExtensionBump.bump_product_price))}
-                          </label>
+                           <label htmlFor="accessExtensionBump" className="font-medium text-orange-900 dark:text-orange-100 cursor-pointer">
+                             {accessExtensionBump.bump_product_name} - {formatPrice(parseFloat(accessExtensionBump.bump_product_price), userCountry, accessExtensionBump.bump_product_custom_prices)}
+                           </label>
                           <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
                             {accessExtensionBump.description}
                           </p>

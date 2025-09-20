@@ -28,6 +28,8 @@ interface OrderBumpData {
   access_extension_type?: string;
   access_extension_value?: number;
   access_extension_description?: string;
+  // Preços personalizados do produto do order bump
+  bump_product_custom_prices?: Record<string, string>;
 }
 
 interface OrderBumpProps {
@@ -35,7 +37,7 @@ interface OrderBumpProps {
   position: "before_payment_method" | "after_payment_method" | "after_customer_info";
   onToggle?: (isSelected: boolean, bumpData: OrderBumpData | null) => void;
   userCountry: CountryInfo;
-  formatPrice: (priceInKZ: number, targetCountry?: CountryInfo) => string;
+  formatPrice: (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>) => string;
 }
 
 export function OrderBump({ productId, position, onToggle, userCountry, formatPrice }: OrderBumpProps) {
@@ -76,10 +78,13 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
       // Usar o ID real do produto para buscar o order bump
       const actualProductId = productData.id;
 
-      // Buscar order bump apenas do mesmo vendedor
+      // Buscar order bump com preços personalizados do produto do bump
       const { data, error } = await supabase
         .from('order_bump_settings')
-        .select('*')
+        .select(`
+          *,
+          bump_product:products!order_bump_settings_bump_product_id_fkey(custom_prices)
+        `)
         .eq('product_id', actualProductId)
         .eq('enabled', true)
         .eq('position', position)
@@ -94,14 +99,31 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
       }
 
       if (data) {
-        console.log(`✅ OrderBump: Order bump encontrado:`, data);
+        // Extrair custom_prices do produto do bump se existir
+        const bumpProduct = Array.isArray(data.bump_product) ? data.bump_product[0] : data.bump_product;
+        
+        // Converter custom_prices para o tipo correto
+        let bumpProductCustomPrices: Record<string, string> = {};
+        if (bumpProduct?.custom_prices && typeof bumpProduct.custom_prices === 'object') {
+          bumpProductCustomPrices = bumpProduct.custom_prices as Record<string, string>;
+        }
+        
+        // Adicionar custom_prices ao objeto de dados
+        const orderBumpWithCustomPrices: OrderBumpData = {
+          ...data,
+          bump_product_custom_prices: bumpProductCustomPrices
+        };
+        
+        console.log(`✅ OrderBump: Order bump encontrado:`, orderBumpWithCustomPrices);
         console.log(`📋 Tipo do bump:`, data.bump_type);
         console.log(`⏰ Extensão - Tipo:`, data.access_extension_type, `Valor:`, data.access_extension_value);
+        console.log(`💰 Custom Prices:`, bumpProductCustomPrices);
+        
+        setOrderBump(orderBumpWithCustomPrices);
       } else {
         console.log(`❌ OrderBump: Nenhum order bump encontrado para produto ${productId} na posição ${position}`);
+        setOrderBump(null);
       }
-
-      setOrderBump(data);
     } catch (error) {
       console.error('Error fetching order bump:', error);
     } finally {
@@ -127,12 +149,12 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
 
   const getDisplayPrice = (originalPrice: string, discount: number): string => {
     const priceInKZ = calculateDiscountedPriceInKZ(originalPrice, discount);
-    return formatPrice(priceInKZ, userCountry);
+    return formatPrice(priceInKZ, userCountry, orderBump?.bump_product_custom_prices);
   };
 
   const getOriginalPrice = (originalPrice: string): string => {
     const numericPrice = parseFloat(originalPrice.replace(/[^\d,]/g, '').replace(',', '.'));
-    return formatPrice(numericPrice, userCountry);
+    return formatPrice(numericPrice, userCountry, orderBump?.bump_product_custom_prices);
   };
 
   if (loading) {
