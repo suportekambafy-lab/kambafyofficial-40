@@ -210,6 +210,16 @@ const OptimizedCheckout = () => {
     fetchBalanceByEmail
   } = useOptimizedCheckout({ productId: productId || '' });
 
+  console.log('🔍 HOOK RETORNOU PRODUCT:', {
+    productName: product?.name,
+    productId: product?.id,
+    hasCustomPrices: !!(product?.custom_prices),
+    customPricesValue: product?.custom_prices,
+    customPricesType: typeof product?.custom_prices,
+    customPricesKeys: product?.custom_prices ? Object.keys(product.custom_prices) : 'N/A',
+    fullProduct: product
+  });
+
   // Hook para métodos de pagamento específicos por país
   console.log('🚨 ANTES DE CHAMAR usePaymentMethods:', userCountry?.code, productPaymentMethods?.length);
   const { availablePaymentMethods: countryPaymentMethods } = usePaymentMethods(userCountry?.code, productPaymentMethods);

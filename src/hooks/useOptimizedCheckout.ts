@@ -150,7 +150,21 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
           setProductNotFound(true);
         }, 2000);
       } else {
+        console.log('🔍 ANTES DE setProduct - productData:', {
+          name: productData.name,
+          id: productData.id,
+          hasCustomPrices: !!(productData?.custom_prices),
+          customPricesValue: productData?.custom_prices,
+          customPricesKeys: productData?.custom_prices ? Object.keys(productData.custom_prices) : 'N/A'
+        });
+        
         setProduct(productData);
+        
+        console.log('✅ DEPOIS DE setProduct - confirmando:', {
+          productData: productData,
+          customPricesConfirmation: productData?.custom_prices
+        });
+        
         setError("");
         setLoading(false); // Definir loading como false quando produto carregar
         
