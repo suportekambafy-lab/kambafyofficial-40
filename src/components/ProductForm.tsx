@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import EbookUploader from "./EbookUploader";
 import PaymentMethodsSelector from "./PaymentMethodsSelector";
+import { CountryPriceConfig } from "./CountryPriceConfig";
 import { PaymentMethod } from "@/utils/paymentMethods";
 
 interface ProductFormProps {
@@ -48,7 +49,8 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
     tags: [] as string[],
     memberAreaId: "",
     paymentMethods: [] as PaymentMethod[],
-    fantasyName: ""
+    fantasyName: "",
+    customPrices: {} as Record<string, string>
   });
 
   const [newTag, setNewTag] = useState("");
@@ -99,7 +101,8 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         tags: editingProduct.tags || [],
         memberAreaId: editingProduct.member_area_id || "",
         paymentMethods: editingProduct.payment_methods || [],
-        fantasyName: editingProduct.fantasy_name || ""
+        fantasyName: editingProduct.fantasy_name || "",
+        customPrices: editingProduct.custom_prices || {}
       });
     } else {
       setFormData({
@@ -113,12 +116,13 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         tags: [],
         memberAreaId: "",
         paymentMethods: [],
-        fantasyName: ""
+        fantasyName: "",
+        customPrices: {}
       });
     }
   }, [editingProduct, selectedType]);
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | Record<string, string>) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -229,6 +233,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         member_area_id: formData.type === "Curso" ? formData.memberAreaId : null,
         payment_methods: formData.paymentMethods as any,
         fantasy_name: formData.fantasyName || null,
+        custom_prices: formData.customPrices,
         user_id: user.id,
         status: "Ativo"
       };
@@ -281,7 +286,8 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
             tags: [],
             memberAreaId: "",
             paymentMethods: [],
-            fantasyName: ""
+            fantasyName: "",
+            customPrices: {}
           });
         }
       }
@@ -418,6 +424,12 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
               />
             </div>
 
+            <CountryPriceConfig
+              basePrice={formData.price}
+              customPrices={formData.customPrices}
+              onCustomPricesChange={(prices) => handleInputChange("customPrices", prices as any)}
+            />
+
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
               <Textarea
@@ -494,6 +506,13 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
                 </div>
               )}
             </div>
+
+            {/* Seção de preços customizados por país */}
+            <CountryPriceConfig
+              basePrice={formData.price}
+              customPrices={formData.customPrices}
+              onCustomPricesChange={(prices) => handleInputChange("customPrices", prices)}
+            />
 
             {/* Nova seção: Métodos de Pagamento */}
             <PaymentMethodsSelector

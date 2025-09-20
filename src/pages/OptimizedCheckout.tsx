@@ -60,7 +60,7 @@ const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
 
   const getDisplayPrice = (priceInKZ: number): string => {
     // Sempre mostrar preço para evitar flash
-    return formatPrice(priceInKZ);
+    return formatPrice(priceInKZ, userCountry, product?.custom_prices);
   };
 
   return (
@@ -635,8 +635,8 @@ const OptimizedCheckout = () => {
                             productId={productId || ''}
                             processing={processing}
                             setProcessing={setProcessing}
-                            displayPrice={formatPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice)}
-                            convertedAmount={convertPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice)}
+                            displayPrice={formatPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice, userCountry, product?.custom_prices)}
+                            convertedAmount={convertPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice, userCountry, product?.custom_prices)}
                           />
                         </Suspense>
                       )}

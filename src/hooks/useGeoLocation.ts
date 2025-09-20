@@ -166,13 +166,39 @@ export const useGeoLocation = () => {
     }
   };
 
-  const convertPrice = (priceInKZ: number, targetCountry?: CountryInfo): number => {
+  const convertPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): number => {
     const country = targetCountry || userCountry;
+    
+    // Verificar se há preço customizado para o país
+    if (customPrices && customPrices[country.code]) {
+      const customPrice = parseFloat(customPrices[country.code]);
+      if (!isNaN(customPrice)) {
+        return customPrice;
+      }
+    }
+    
     return Math.round(priceInKZ * country.exchangeRate * 100) / 100;
   };
 
-  const formatPrice = (priceInKZ: number, targetCountry?: CountryInfo): string => {
+  const formatPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): string => {
     const country = targetCountry || userCountry;
+    
+    // Verificar se há preço customizado para o país
+    if (customPrices && customPrices[country.code]) {
+      const customPrice = parseFloat(customPrices[country.code]);
+      if (!isNaN(customPrice)) {
+        switch (country.currency) {
+          case 'EUR':
+            return `€${customPrice.toFixed(2)}`;
+          case 'MZN':
+            return `${customPrice.toFixed(2)} MZN`;
+          case 'KZ':
+          default:
+            return `${parseFloat(customPrice.toString()).toLocaleString('pt-BR')} KZ`;
+        }
+      }
+    }
+    
     const convertedPrice = convertPrice(priceInKZ, country);
     
     switch (country.currency) {
@@ -180,10 +206,6 @@ export const useGeoLocation = () => {
         return `€${convertedPrice.toFixed(2)}`;
       case 'MZN':
         return `${convertedPrice.toFixed(2)} MZN`;
-      case 'ARS':
-        return `$${convertedPrice.toFixed(2)} ARS`;
-      case 'USD':
-        return `$${convertedPrice.toFixed(2)} USD`;
       case 'KZ':
       default:
         return `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;

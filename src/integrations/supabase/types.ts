@@ -1269,6 +1269,7 @@ export type Database = {
           commission: string | null
           cover: string | null
           created_at: string
+          custom_prices: Json | null
           description: string | null
           fantasy_name: string | null
           id: string
@@ -1304,6 +1305,7 @@ export type Database = {
           commission?: string | null
           cover?: string | null
           created_at?: string
+          custom_prices?: Json | null
           description?: string | null
           fantasy_name?: string | null
           id?: string
@@ -1339,6 +1341,7 @@ export type Database = {
           commission?: string | null
           cover?: string | null
           created_at?: string
+          custom_prices?: Json | null
           description?: string | null
           fantasy_name?: string | null
           id?: string
