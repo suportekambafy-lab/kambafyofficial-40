@@ -8,14 +8,20 @@ export function useSubdomain() {
     let subdomain: 'main' | 'app' | 'pay' | 'admin' | 'mobile' | 'membros' = 'main';
     
     // Para desenvolvimento/preview, sempre considerar como 'main' a não ser que seja especificado
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
+    const isLovableEnvironment = hostname.includes('localhost') || 
+                                 hostname.includes('127.0.0.1') || 
+                                 hostname.includes('lovable.app') ||
+                                 (hostname.includes('kambafy.com') && !hostname.includes('app.') && !hostname.includes('admin.') && !hostname.includes('pay.') && !hostname.includes('membros.'));
+    
+    if (isLovableEnvironment) {
       const path = window.location.pathname;
       
       // 🔍 Debug logging da detecção de subdomínio
-      console.log('🔍 useSubdomain: Detectando subdomínio', {
+      console.log('🔍 useSubdomain: Detectando subdomínio (Lovable)', {
         hostname,
         path,
-        isDevelopment: true
+        isLovableEnvironment: true,
+        message: 'Usando detecção por path para ambiente Lovable'
       });
       
       if (path.startsWith('/mobile')) {
@@ -60,7 +66,18 @@ export function useSubdomain() {
       }
       
       // Para desenvolvimento/preview, navegar dentro do mesmo domínio
-      if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
+      const isLovableEnvironment = hostname.includes('localhost') || 
+                                   hostname.includes('127.0.0.1') || 
+                                   hostname.includes('lovable.app') ||
+                                   (hostname.includes('kambafy.com') && !hostname.includes('app.') && !hostname.includes('admin.') && !hostname.includes('pay.') && !hostname.includes('membros.'));
+      
+      if (isLovableEnvironment) {
+        console.log('🔧 getSubdomainUrl: Ambiente Lovable - usando rota relativa', {
+          targetSubdomain,
+          currentPath,
+          hostname,
+          isLovableEnvironment
+        });
         return currentPath;
       }
       
