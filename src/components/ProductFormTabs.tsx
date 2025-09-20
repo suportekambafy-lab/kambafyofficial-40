@@ -162,6 +162,9 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
 
   const handleInputChange = (field: string, value: string | boolean | Record<string, string>) => {
     console.log('🔄 ProductFormTabs handleInputChange:', { field, value });
+    if (field === 'customPrices') {
+      console.log('🔥 SALVANDO CUSTOM PRICES:', value);
+    }
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -373,6 +376,8 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       };
 
       console.log('Saving product data:', productData);
+      console.log('🔍 CUSTOM PRICES ANTES DE SALVAR:', formData.customPrices);
+      console.log('🔍 PRODUCT DATA CUSTOM PRICES:', productData.custom_prices);
 
       let error;
       if (editingProduct) {
@@ -385,13 +390,21 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
           .eq('user_id', user.id);
         error = updateError;
         console.log('Update result error:', error);
+        if (error) {
+          console.error('🚨 ERRO AO ATUALIZAR:', error);
+        }
       } else {
         console.log('Creating new product');
-        const { error: insertError } = await supabase
+        console.log('🔥 INSERINDO DADOS:', productData);
+        const { data, error: insertError } = await supabase
           .from('products')
-          .insert(productData);
+          .insert(productData)
+          .select();
         error = insertError;
-        console.log('Insert result error:', error);
+        console.log('🔥 RESULTADO INSERT:', { data, error });
+        if (error) {
+          console.error('🚨 ERRO AO INSERIR:', error);
+        }
       }
 
       if (error) {

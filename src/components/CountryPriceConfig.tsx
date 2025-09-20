@@ -30,7 +30,9 @@ export default function CountryPriceConfig({
   const [prices, setPrices] = useState(customPrices || {});
 
   useEffect(() => {
+    console.log('🔄 CountryPriceConfig useEffect - enableCustomPricing:', enableCustomPricing);
     if (!enableCustomPricing) {
+      console.log('🔄 Limpando preços personalizados');
       setPrices({});
       onCustomPricesChange({});
     }
@@ -76,7 +78,10 @@ export default function CountryPriceConfig({
           <Switch
             id="enable-custom-pricing"
             checked={enableCustomPricing}
-            onCheckedChange={setEnableCustomPricing}
+            onCheckedChange={(checked) => {
+              console.log('🔄 Switch mudou para:', checked);
+              setEnableCustomPricing(checked);
+            }}
           />
           <Label htmlFor="enable-custom-pricing" className="text-sm font-medium">
             Ativar preços personalizados por país
