@@ -203,27 +203,17 @@ const OptimizedCheckout = () => {
   const { availablePaymentMethods: countryPaymentMethods } = usePaymentMethods(userCountry?.code, productPaymentMethods);
   console.log('🚨 DEPOIS DE CHAMAR usePaymentMethods:', countryPaymentMethods?.length);
 
-  // FORÇA MÉTODOS DE CARTÃO PARA PAÍSES ESPECÍFICOS (Argentina, España, US)
-  const cardOnlyCountries = ['AR', 'ES', 'US'];
-  const isCardOnlyCountry = cardOnlyCountries.includes(userCountry?.code || '');
-  
-  const finalPaymentMethods = isCardOnlyCountry ? [{
-    id: 'card_international',
-    name: 'Cartão Internacional (Stripe)',
-    image: '/payment-logos/card-logo.png',
-    enabled: true
-  }] : (countryPaymentMethods || productPaymentMethods || []);
+  // Usar métodos normais para todos os países suportados
+  const finalPaymentMethods = countryPaymentMethods || productPaymentMethods || [];
   
   console.log('🎯 FINAL PAYMENT METHODS:', {
     userCountry: userCountry?.code,
-    isCardOnly: isCardOnlyCountry,
     finalMethods: finalPaymentMethods.map(m => m.id),
     length: finalPaymentMethods.length
   });
 
   console.log('🛒 Checkout Debug Info:', {
     userCountry: userCountry?.code,
-    isCardOnlyCountry,
     countryPaymentMethods: countryPaymentMethods?.map(m => m.id) || [],
     productPaymentMethods: productPaymentMethods?.length || 0,
     geoReady,
@@ -233,15 +223,8 @@ const OptimizedCheckout = () => {
   // FORÇA EXECUÇÃO DO HOOK - SEMPRE
   console.log('🚨 CHECKOUT - País detectado:', userCountry?.code);
   console.log('🚨 CHECKOUT - Product methods length:', productPaymentMethods?.length);
-  console.log('🚨 CHECKOUT - É país apenas cartão?', isCardOnlyCountry);
   console.log('🚨 CHECKOUT - Métodos disponíveis:', countryPaymentMethods?.length, countryPaymentMethods?.map(m => m.id));
   console.log('🚨 CHECKOUT - Método selecionado:', selectedPayment);
-  
-  // FORÇA RE-CALL DO HOOK se necessário
-  const forceCardMethods = userCountry?.code === 'US' && (!countryPaymentMethods || countryPaymentMethods.length === 0);
-  if (forceCardMethods) {
-    console.log('🚨 FORÇANDO CARTÃO PARA US - hook não retornou métodos');
-  }
 
   // Detectar se estamos no US e forçar cartão se necessário
   const forceCardForUS = userCountry?.code === 'US';
@@ -528,10 +511,7 @@ const OptimizedCheckout = () => {
                           supportedCountries={{
                             AO: { code: 'AO', name: 'Angola', currency: 'KZ', flag: '🇦🇴', exchangeRate: 1 },
                             PT: { code: 'PT', name: 'Portugal', currency: 'EUR', flag: '🇵🇹', exchangeRate: 0.0015 },
-                            MZ: { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿', exchangeRate: 0.096 },
-                            AR: { code: 'AR', name: 'Argentina', currency: 'ARS', flag: '🇦🇷', exchangeRate: 0.85 },
-                            ES: { code: 'ES', name: 'Espanha', currency: 'EUR', flag: '🇪🇸', exchangeRate: 0.0015 },
-                            US: { code: 'US', name: 'Estados Unidos', currency: 'USD', flag: '🇺🇸', exchangeRate: 0.0011 }
+                            MZ: { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿', exchangeRate: 0.096 }
                           }}
                         />
                       </div>
@@ -567,7 +547,7 @@ const OptimizedCheckout = () => {
                     <div className="font-bold text-yellow-800 mb-2">🔍 DEBUG - Informações de Pagamento:</div>
                     <div className="text-yellow-700 space-y-1">
                       <div><strong>País detectado:</strong> {userCountry?.code || 'Não detectado'}</div>
-                      <div><strong>É país apenas cartão:</strong> {isCardOnlyCountry ? 'SIM' : 'NÃO'}</div>
+                      <div><strong>Métodos padrão aplicados</strong></div>
                       <div><strong>Métodos disponíveis:</strong> {finalPaymentMethods?.length || 0}</div>
                       <div><strong>Lista de métodos:</strong> {finalPaymentMethods?.map(m => m.id).join(', ') || 'Nenhum'}</div>
                       <div><strong>Método selecionado:</strong> {selectedPayment || 'Nenhum'}</div>
@@ -638,35 +618,9 @@ const OptimizedCheckout = () => {
                   {/* Renderização condicional dos componentes de pagamento */}
                   {selectedPayment && finalPaymentMethods.find(m => m.id === selectedPayment) && (
                     <div className="mt-6">
-                      {/* Stripe para países específicos (Argentina, Espanha, Estados Unidos) */}
-                      {isCardOnlyCountry && (selectedPayment === 'card_international' || selectedPayment === 'card') && (
+                      {/* Métodos tradicionais para Portugal e Moçambique */}
+                      {!['AO'].includes(userCountry?.code || '') && ['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && (
                         <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded"></div>}>
-                          <StripePaymentForm
-                            product={product}
-                            customerInfo={formData}
-                            amount={convertPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice)}
-                            currency={userCountry?.currency || 'KZ'}
-                            formatPrice={(amount) => {
-                              // Para Stripe, formatear na moeda local
-                              if (userCountry?.currency === 'ARS') {
-                                return `$${amount.toFixed(2)} ARS`;
-                              } else if (userCountry?.currency === 'USD') {
-                                return `$${amount.toFixed(2)} USD`;
-                              } else if (userCountry?.currency === 'EUR') {
-                                return `€${amount.toFixed(2)}`;
-                              }
-                              return formatPrice(amount);
-                            }}
-                            isSubmitting={processing}
-                            setIsSubmitting={setProcessing}
-                            t={isTranslationReady ? t : undefined}
-                          />
-                        </Suspense>
-                      )}
-
-                      {/* Métodos tradicionais para outros países */}
-                      {!isCardOnlyCountry && ['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && (
-                        <Suspense fallback={<div />}>
                           <StripeCardPayment
                             paymentMethod={selectedPayment}
                             amount={parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice}
@@ -686,20 +640,27 @@ const OptimizedCheckout = () => {
                           />
                         </Suspense>
                       )}
-
-                      {/* KambaPay para Angola */}
-                      {!isCardOnlyCountry && selectedPayment === 'kambapay' && (
-                        <Suspense fallback={<div />}>
-                          <KambaPayCheckoutOption
-                            productPrice={parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice}
-                            currency={userCountry?.currency}
-                            onPaymentSuccess={() => {/* lógica de sucesso */}}
-                            onSelect={() => {}}
-                            selected={true}
-                          />
-                        </Suspense>
+                      
+                      {/* Para outros métodos tradicionais (express, reference, transfer) */}
+                      {['express', 'reference', 'transfer'].includes(selectedPayment) && (
+                        <div className="text-center text-sm text-muted-foreground">
+                          Método de pagamento selecionado: {finalPaymentMethods.find(m => m.id === selectedPayment)?.name}
+                        </div>
                       )}
                     </div>
+                  )}
+                  
+                  {/* KambaPay para Angola */}
+                  {userCountry?.code === 'AO' && selectedPayment === 'kambapay' && (
+                    <Suspense fallback={<div />}>
+                      <KambaPayCheckoutOption
+                        productPrice={parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice}
+                        currency={userCountry?.currency}
+                        onPaymentSuccess={() => {/* lógica de sucesso */}}
+                        onSelect={() => {}}
+                        selected={true}
+                      />
+                    </Suspense>
                   )}
                 </div>
               </div>

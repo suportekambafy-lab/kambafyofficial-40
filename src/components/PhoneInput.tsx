@@ -12,17 +12,8 @@ interface Country {
 
 const countries: Country[] = [
   { code: "AO", name: "Angola", flag: "🇦🇴", dialCode: "+244" },
-  { code: "BR", name: "Brasil", flag: "🇧🇷", dialCode: "+55" },
   { code: "PT", name: "Portugal", flag: "🇵🇹", dialCode: "+351" },
-  { code: "US", name: "Estados Unidos", flag: "🇺🇸", dialCode: "+1" },
-  { code: "GB", name: "Reino Unido", flag: "🇬🇧", dialCode: "+44" },
-  { code: "ES", name: "Espanha", flag: "🇪🇸", dialCode: "+34" },
-  { code: "FR", name: "França", flag: "🇫🇷", dialCode: "+33" },
-  { code: "IT", name: "Itália", flag: "🇮🇹", dialCode: "+39" },
-  { code: "DE", name: "Alemanha", flag: "🇩🇪", dialCode: "+49" },
-  { code: "MZ", name: "Moçambique", flag: "🇲🇿", dialCode: "+258" },
-  { code: "CV", name: "Cabo Verde", flag: "🇨🇻", dialCode: "+238" },
-  { code: "ST", name: "São Tomé e Príncipe", flag: "🇸🇹", dialCode: "+239" },
+  { code: "MZ", name: "Moçambique", flag: "🇲🇿", dialCode: "+258" }
 ];
 
 interface PhoneInputProps {

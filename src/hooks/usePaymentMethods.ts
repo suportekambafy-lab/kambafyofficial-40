@@ -1,17 +1,10 @@
 import { useMemo } from 'react';
 
-// Países que devem usar apenas pagamento por cartão (Stripe)
-const CARD_ONLY_COUNTRIES = ['AR', 'ES', 'US'];
+// Países que devem usar apenas pagamento por cartão (Stripe) - removido
+const CARD_ONLY_COUNTRIES: string[] = [];
 
 // Métodos de pagamento por cartão para países específicos
-const CARD_PAYMENT_METHODS = [
-  {
-    id: 'card_international',
-    name: 'Cartão Internacional (Stripe)',
-    image: '/payment-logos/card-logo.png',
-    enabled: true
-  }
-];
+const CARD_PAYMENT_METHODS: never[] = [];
 
 // Métodos de pagamento padrão (Angola, Portugal, Moçambique)
 const DEFAULT_PAYMENT_METHODS = [

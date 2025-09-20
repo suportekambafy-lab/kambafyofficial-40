@@ -72,14 +72,11 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
       
       const countryMethods = enabledMethods.filter((method: any) => {
         if (userCountry.code === 'AO') {
+          // Angola usa KambaPay e métodos tradicionais
           return ['express', 'reference', 'transfer', 'kambapay'].includes(method.id);
-        } else if (userCountry.code === 'MZ') {
-          return ['emola', 'epesa', 'kambapay'].includes(method.id);
-        } else if (userCountry.code === 'PT') {
-          return ['card', 'klarna', 'multibanco', 'apple_pay', 'kambapay'].includes(method.id);
-        } else if (['AR', 'ES', 'US'].includes(userCountry.code)) {
-          // Para países internacionais, verificar se tem cartão internacional habilitado
-          return ['card_international', 'kambapay'].includes(method.id);
+        } else if (['PT', 'MZ'].includes(userCountry.code)) {
+          // Portugal e Moçambique usam métodos tradicionais
+          return ['express', 'reference', 'transfer', 'multibanco', 'card'].includes(method.id);
         }
         return false;
       });
@@ -90,17 +87,8 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     // Fallback: usar métodos baseados no país selecionado
     const countryMethods = getPaymentMethodsByCountry(userCountry.code);
     
-    // Para países internacionais (AR, ES, US), retornar apenas cartão se não configurado
-    if (['AR', 'ES', 'US'].includes(userCountry.code)) {
-      return [
-        {
-          id: "card_international",
-          name: "Cartão Internacional (Stripe)",
-          image: "/payment-logos/card-logo.png",
-          enabled: true
-        }
-      ];
-    }
+    // Não há países que usam apenas Stripe
+    return [];
     
     // Adicionar KambaPay a outros países
     const kambaPayMethod = {
@@ -256,9 +244,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
   const handleCountryChange = useCallback((countryCode: string) => {
     changeCountry(countryCode);
     const phoneCodes: Record<string, string> = {
-      'AO': '+244', 'PT': '+351', 'MZ': '+258', 'BR': '+55',
-      'US': '+1', 'GB': '+44', 'ES': '+34', 'FR': '+33',
-      'IT': '+39', 'DE': '+49', 'CV': '+238', 'ST': '+239'
+      'AO': '+244', 'PT': '+351', 'MZ': '+258'
     };
     const phoneCode = phoneCodes[countryCode] || '+244';
     

@@ -30,27 +30,6 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
     currency: 'MZN',
     flag: '🇲🇿',
     exchangeRate: 0.0697 // Fallback rate based on your example: 39000 KZ = 2720.22 MZN
-  },
-  AR: {
-    code: 'AR',
-    name: 'Argentina',
-    currency: 'ARS',
-    flag: '🇦🇷',
-    exchangeRate: 0.85 // Fallback rate
-  },
-  ES: {
-    code: 'ES',
-    name: 'Espanha',
-    currency: 'EUR',
-    flag: '🇪🇸',
-    exchangeRate: 0.0012 // Same as Portugal
-  },
-  US: {
-    code: 'US',
-    name: 'Estados Unidos',
-    currency: 'USD',
-    flag: '🇺🇸',
-    exchangeRate: 0.0011 // Fallback rate
   }
 };
 
@@ -58,16 +37,7 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
 const COUNTRY_LANGUAGES: Record<string, string> = {
   'AO': 'pt', // Angola - Português
   'PT': 'pt', // Portugal - Português
-  'MZ': 'pt', // Moçambique - Português
-  'BR': 'pt', // Brasil - Português
-  'ES': 'es', // Espanha - Espanhol
-  'US': 'en', // Estados Unidos - Inglês
-  'GB': 'en', // Reino Unido - Inglês
-  'FR': 'fr', // França - Francês
-  'DE': 'de', // Alemanha - Alemão
-  'IT': 'it', // Itália - Italiano
-  'CV': 'pt', // Cabo Verde - Português
-  'ST': 'pt'  // São Tomé e Príncipe - Português
+  'MZ': 'pt'  // Moçambique - Português
 };
 
 // Margem de segurança para preservar valor (5% a mais)
@@ -100,7 +70,6 @@ export const useGeoLocation = () => {
       // Update EUR rate with safety margin
       if (data.rates.EUR) {
         updatedCountries.PT.exchangeRate = data.rates.EUR * SAFETY_MARGIN;
-        updatedCountries.ES.exchangeRate = data.rates.EUR * SAFETY_MARGIN;
         console.log(`Updated EUR rate with safety margin: 1 KZ = ${updatedCountries.PT.exchangeRate} EUR (original: ${data.rates.EUR})`);
       }
       
@@ -110,26 +79,13 @@ export const useGeoLocation = () => {
         console.log(`Updated MZN rate with safety margin: 1 KZ = ${updatedCountries.MZ.exchangeRate} MZN (original: ${data.rates.MZN})`);
       }
 
-      // Update ARS rate with safety margin
-      if (data.rates.ARS) {
-        updatedCountries.AR.exchangeRate = data.rates.ARS * SAFETY_MARGIN;
-        console.log(`Updated ARS rate with safety margin: 1 KZ = ${updatedCountries.AR.exchangeRate} ARS (original: ${data.rates.ARS})`);
-      }
-
-      // Update USD rate with safety margin
-      if (data.rates.USD) {
-        updatedCountries.US.exchangeRate = data.rates.USD * SAFETY_MARGIN;
-        console.log(`Updated USD rate with safety margin: 1 KZ = ${updatedCountries.US.exchangeRate} USD (original: ${data.rates.USD})`);
-      }
       
       setSupportedCountries(updatedCountries);
       
       // Salvar taxas para evitar flash na próxima visita
       localStorage.setItem('exchangeRates', JSON.stringify({
         EUR: updatedCountries.PT.exchangeRate,
-        MZN: updatedCountries.MZ.exchangeRate,
-        ARS: updatedCountries.AR.exchangeRate,
-        USD: updatedCountries.US.exchangeRate
+        MZN: updatedCountries.MZ.exchangeRate
       }));
       localStorage.setItem('ratesLastUpdate', Date.now().toString());
       
