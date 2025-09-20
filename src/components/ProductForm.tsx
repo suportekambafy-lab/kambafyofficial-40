@@ -123,6 +123,13 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
     }
   }, [editingProduct, selectedType]);
 
+  // Logs de debug para entender o estado
+  console.log('🔥 ProductForm renderizado - formData:', {
+    price: formData.price,
+    customPrices: formData.customPrices,
+    open: open
+  });
+
   const handleInputChange = (field: string, value: string | Record<string, string>) => {
     console.log('🔄 ProductForm handleInputChange:', { field, value });
     setFormData(prev => ({

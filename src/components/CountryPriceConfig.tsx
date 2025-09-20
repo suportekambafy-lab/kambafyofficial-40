@@ -17,12 +17,12 @@ const countries = [
   { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿' }
 ];
 
-export const CountryPriceConfig: React.FC<CountryPriceConfigProps> = ({
-  basePrice = "",
-  customPrices = {},
-  onCustomPricesChange
-}) => {
-  console.log('🎯 CountryPriceConfig rendered', { basePrice, customPrices });
+export default function CountryPriceConfig({ 
+  basePrice = "", 
+  customPrices = {}, 
+  onCustomPricesChange 
+}: CountryPriceConfigProps) {
+  console.log('🚨🚨🚨 CountryPriceConfig RENDERIZADO!!!', { basePrice, customPrices });
   console.log('🔍 EnableCustomPricing inicial:', Object.keys(customPrices || {}).length > 0);
   
   const [enableCustomPricing, setEnableCustomPricing] = useState(
@@ -143,5 +143,3 @@ export const CountryPriceConfig: React.FC<CountryPriceConfigProps> = ({
     </Card>
   );
 };
-
-export default CountryPriceConfig;
