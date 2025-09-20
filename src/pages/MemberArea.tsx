@@ -3,6 +3,7 @@ import { MemberAreaAuthProvider } from "@/contexts/MemberAreaAuthContext";
 import MemberAreaContent from "@/components/MemberAreaContent";
 import { useMemberAreaAuth } from "@/contexts/MemberAreaAuthContext";
 import { useEffect } from "react";
+import { useSubdomain } from "@/hooks/useSubdomain";
 
 export default function MemberAreaPage() {
   const { id: areaId } = useParams<{ id: string }>();
@@ -25,6 +26,8 @@ export default function MemberAreaPage() {
 function MemberAreaContentWrapper() {
   const { student, memberArea, loading, isAuthenticated } = useMemberAreaAuth();
   const { id: areaId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { currentSubdomain } = useSubdomain();
 
   console.log('MemberAreaContentWrapper state:', { 
     student, 
@@ -36,11 +39,19 @@ function MemberAreaContentWrapper() {
   // Redirect to login if not authenticated (after loading is complete)
   useEffect(() => {
     if (!loading && (!student || !memberArea || !isAuthenticated) && areaId) {
-      const loginUrl = `https://membros.kambafy.com/login/${areaId}`;
-      console.log('Redirecting to login:', loginUrl);
-      window.location.href = loginUrl;
+      // Para desenvolvimento/localhost, usar navigate do React Router
+      const hostname = window.location.hostname;
+      if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
+        console.log('Development: Navigating to login:', `/login/${areaId}`);
+        navigate(`/login/${areaId}`, { replace: true });
+      } else {
+        // Para produção, usar redirecionamento completo para o subdomínio correto
+        const loginUrl = `https://membros.kambafy.com/login/${areaId}`;
+        console.log('Production: Redirecting to login:', loginUrl);
+        window.location.href = loginUrl;
+      }
     }
-  }, [loading, student, memberArea, isAuthenticated, areaId]);
+  }, [loading, student, memberArea, isAuthenticated, areaId, navigate]);
 
   if (loading) {
     return (
