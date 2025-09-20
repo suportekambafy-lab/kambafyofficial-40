@@ -35,8 +35,13 @@ export const AccessExtensionBump = ({
   };
 
   const formatExtensionTime = () => {
-    if (extensionType === 'lifetime') return 'Acesso Vitalício';
+    if (extensionType === 'lifetime') return '🔥 Acesso Vitalício';
     
+    // Opções predefinidas mais claras
+    if (extensionType === 'months' && extensionValue === 6) return '+6 Meses de Acesso';
+    if (extensionType === 'years' && extensionValue === 1) return '+1 Ano de Acesso';
+    
+    // Fallback para casos antigos
     const unit = extensionType === 'days' ? 'dia' : extensionType === 'months' ? 'mês' : 'ano';
     const unitPlural = extensionType === 'days' ? 'dias' : extensionType === 'months' ? 'meses' : 'anos';
     

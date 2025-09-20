@@ -82,6 +82,8 @@ export const AccessExtensionConfigurator = ({
     setLocalBumpType(bumpType || 'product');
     setLocalProductName(bumpProductName || '');
     setLocalProductPrice(bumpProductPrice || '');
+    
+    // Valores padrão para extensão - sempre começar com 6 meses se não especificado
     setLocalExtensionType(extensionType || 'months');
     setLocalExtensionValue(extensionValue || 6);
     setLocalExtensionDescription(extensionDescription || '');
@@ -134,12 +136,15 @@ export const AccessExtensionConfigurator = ({
   };
 
   const generateExtensionDescription = (type: string, value: number): string => {
-    if (type === 'lifetime') return 'Extensão para acesso vitalício';
+    if (type === 'lifetime') return 'Acesso Vitalício';
+    if (type === 'months' && value === 6) return 'Extensão de 6 meses';
+    if (type === 'years' && value === 1) return 'Extensão de 1 ano';
     
+    // Fallback para casos antigos ou customizados
     const unit = type === 'days' ? 'dia' : type === 'months' ? 'mês' : 'ano';
     const unitPlural = type === 'days' ? 'dias' : type === 'months' ? 'meses' : 'anos';
     
-    return `Extensão de ${value} ${value === 1 ? unit : unitPlural} de acesso`;
+    return `Extensão de ${value} ${value === 1 ? unit : unitPlural}`;
   };
 
   const updateConfig = () => {
@@ -171,21 +176,6 @@ export const AccessExtensionConfigurator = ({
   const handleBumpTypeChange = (newType: string) => {
     setLocalBumpType(newType);
     setTimeout(updateConfig, 0);
-  };
-
-  const handleExtensionTypeChange = (newType: string) => {
-    setLocalExtensionType(newType);
-    const newValue = newType === 'lifetime' ? 0 : localExtensionValue;
-    setLocalExtensionValue(newValue);
-    setTimeout(updateConfig, 0);
-  };
-
-  const handleExtensionValueChange = (newValue: string) => {
-    const numValue = parseInt(newValue);
-    if (!isNaN(numValue) && numValue > 0) {
-      setLocalExtensionValue(numValue);
-      setTimeout(updateConfig, 0);
-    }
   };
 
   const handleProductSelect = (product: Product) => {
@@ -295,38 +285,53 @@ export const AccessExtensionConfigurator = ({
         {/* Configuração para Extensão de Acesso */}
         {localBumpType === 'access_extension' && (
           <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
-            <h4 className="font-medium">Extensão de Tempo de Acesso</h4>
+            <div>
+              <h4 className="font-medium flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-600" />
+                Extensão de Tempo (Opções Predefinidas)
+              </h4>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Escolha uma das opções de extensão mais populares para seus clientes
+              </p>
+            </div>
             
             <div>
-              <Label htmlFor="extension-type">Tipo de Extensão</Label>
-              <Select value={localExtensionType} onValueChange={handleExtensionTypeChange}>
+              <Label htmlFor="extension-type">Opções de Extensão</Label>
+              <Select 
+                value={`${localExtensionType}-${localExtensionValue}`} 
+                onValueChange={(value) => {
+                  const [type, valueStr] = value.split('-');
+                  const numValue = valueStr === 'lifetime' ? 0 : parseInt(valueStr);
+                  setLocalExtensionType(type);
+                  setLocalExtensionValue(numValue);
+                  setTimeout(updateConfig, 0);
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="days">Dias</SelectItem>
-                  <SelectItem value="months">Meses</SelectItem>
-                  <SelectItem value="years">Anos</SelectItem>
-                  <SelectItem value="lifetime">Vitalício</SelectItem>
+                  <SelectItem value="months-6">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      +6 Meses
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="years-1">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      +1 Ano
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="lifetime-0">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      🔥 Acesso Vitalício
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            {localExtensionType !== 'lifetime' && (
-              <div>
-                <Label htmlFor="extension-value">
-                  Quantidade de {localExtensionType === 'days' ? 'Dias' : localExtensionType === 'months' ? 'Meses' : 'Anos'}
-                </Label>
-                <Input
-                  id="extension-value"
-                  type="number"
-                  min="1"
-                  value={localExtensionValue}
-                  onChange={(e) => handleExtensionValueChange(e.target.value)}
-                  placeholder="Ex: 6"
-                />
-              </div>
-            )}
 
             <div>
               <Label htmlFor="extension-price">Preço da Extensão (KZ)</Label>
@@ -366,10 +371,15 @@ export const AccessExtensionConfigurator = ({
               </p>
               <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                 {localExtensionType === 'lifetime' 
-                  ? 'Converte o acesso para vitalício'
-                  : `Adiciona ${localExtensionValue} ${localExtensionType === 'days' ? 'dias' : localExtensionType === 'months' ? 'meses' : 'anos'} ao tempo atual de acesso`
+                  ? 'Converte o acesso para vitalício - cliente nunca mais perde acesso'
+                  : `Adiciona ${localExtensionValue} ${localExtensionType === 'months' ? 'meses' : 'anos'} ao tempo atual de acesso`
                 }
               </p>
+              {localExtensionType === 'lifetime' && (
+                <div className="mt-2 text-xs text-orange-600 dark:text-orange-400 font-medium">
+                  ⚠️ Recomendado: Defina um preço premium para acesso vitalício
+                </div>
+              )}
             </div>
           </div>
         )}
