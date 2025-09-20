@@ -64,7 +64,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "card",
     name: "Pagamento com cartão",
     image: getPaymentMethodImage("card"),
-    enabled: false,
+    enabled: true,
     isPortugal: true,
     countryFlag: "🇵🇹",
     countryName: "Portugal"
@@ -73,7 +73,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "klarna",
     name: "Klarna",
     image: getPaymentMethodImage("klarna"),
-    enabled: false,
+    enabled: true,
     isPortugal: true,
     countryFlag: "🇵🇹",
     countryName: "Portugal"
@@ -82,7 +82,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "multibanco",
     name: "Multibanco",
     image: getPaymentMethodImage("multibanco"),
-    enabled: false,
+    enabled: true,
     isPortugal: true,
     countryFlag: "🇵🇹",
     countryName: "Portugal"
