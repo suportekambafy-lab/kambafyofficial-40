@@ -38,7 +38,7 @@ interface OrderBumpProps {
   position: "before_payment_method" | "after_payment_method" | "after_customer_info";
   onToggle?: (isSelected: boolean, bumpData: OrderBumpData | null) => void;
   userCountry: CountryInfo;
-  formatPrice: (priceInKZ: number, targetCountry?: CountryInfo) => string;
+  formatPrice: (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>) => string;
 }
 
 export function OrderBump({ productId, position, onToggle, userCountry, formatPrice }: OrderBumpProps) {
@@ -100,9 +100,33 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
         console.log(`✅ OrderBump: Order bump encontrado:`, data);
         console.log(`📋 Tipo do bump:`, data.bump_type);
         console.log(`⏰ Extensão - Tipo:`, data.access_extension_type, `Valor:`, data.access_extension_value);
-        console.log(`💰 OrderBump: Preços personalizados não disponíveis - dados armazenados como texto`);
         
-        setOrderBump(data);
+        // Se o bump tem um produto associado, buscar seus preços personalizados
+        if (data.bump_product_id) {
+          console.log(`💰 Buscando preços personalizados do produto:`, data.bump_product_id);
+          const { data: bumpProductData, error: bumpProductError } = await supabase
+            .from('products')
+            .select('custom_prices')
+            .eq('id', data.bump_product_id)
+            .maybeSingle();
+          
+          if (!bumpProductError && bumpProductData?.custom_prices) {
+            console.log(`💰 Custom Prices encontrados para produto do bump:`, bumpProductData.custom_prices);
+            
+            // Adicionar custom_prices ao order bump
+            const orderBumpWithCustomPrices = {
+              ...data,
+              bump_product_custom_prices: bumpProductData.custom_prices as Record<string, string>
+            };
+            setOrderBump(orderBumpWithCustomPrices);
+          } else {
+            console.log(`💰 Nenhum preço personalizado encontrado para produto do bump`);
+            setOrderBump(data);
+          }
+        } else {
+          console.log(`💰 Order bump não tem produto referenciado - usando conversão automática`);
+          setOrderBump(data);
+        }
       } else {
         console.log(`❌ OrderBump: Nenhum order bump encontrado para produto ${productId} na posição ${position}`);
         setOrderBump(null);
@@ -132,12 +156,13 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
 
   const getDisplayPrice = (originalPrice: string, discount: number): string => {
     const priceInKZ = calculateDiscountedPriceInKZ(originalPrice, discount);
-    return formatPrice(priceInKZ, userCountry);
+    console.log(`💰 OrderBump Display Price - Original: ${originalPrice}, Discounted: ${priceInKZ}, Country: ${userCountry?.code}, Custom Prices:`, orderBump?.bump_product_custom_prices);
+    return formatPrice(priceInKZ, userCountry, orderBump?.bump_product_custom_prices);
   };
 
   const getOriginalPrice = (originalPrice: string): string => {
     const numericPrice = parseFloat(originalPrice.replace(/[^\d,]/g, '').replace(',', '.'));
-    return formatPrice(numericPrice, userCountry);
+    return formatPrice(numericPrice, userCountry, orderBump?.bump_product_custom_prices);
   };
 
   if (loading) {

@@ -207,7 +207,7 @@ export function AppsTabLayout() {
         .from('order_bump_settings')
         .select(`
           *,
-          products!inner(name)
+          main_product:products!order_bump_settings_product_id_fkey(name)
         `)
         .eq('user_id', user.id);
 
@@ -226,7 +226,7 @@ export function AppsTabLayout() {
             active: orderBump.enabled || false,
             createdAt: new Date(orderBump.created_at || '').toLocaleDateString(),
             icon: <Settings className="w-5 h-5 text-purple-600" />,
-            productName: orderBump.products?.name || 'Produto não encontrado',
+            productName: orderBump.main_product?.name || 'Produto não encontrado',
             productId: orderBump.product_id
           });
         });

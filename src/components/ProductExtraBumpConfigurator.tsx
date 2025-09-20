@@ -120,6 +120,7 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess }: Produ
           title: settingsData.title,
           description: settingsData.description,
           position: settingsData.position,
+          selectedProductId: settingsData.bump_product_id, // Carregar ID do produto selecionado
           selectedProductName: settingsData.bump_product_name,
           selectedProductPrice: settingsData.bump_product_price,
           selectedProductImage: settingsData.bump_product_image || undefined,
@@ -158,20 +159,21 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess }: Produ
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      const orderBumpData = {
-        user_id: user.id,
-        product_id: productId,
-        bump_category: 'product_extra',
-        enabled: settings.enabled,
-        title: settings.title,
-        description: settings.description,
-        position: settings.position,
-        bump_type: 'product',
-        bump_product_name: settings.selectedProductName,
-        bump_product_price: settings.selectedProductPrice,
-        bump_product_image: settings.selectedProductImage || null,
-        discount: settings.discount
-      };
+        const orderBumpData = {
+          user_id: user.id,
+          product_id: productId,
+          bump_category: 'product_extra',
+          enabled: settings.enabled,
+          title: settings.title,
+          description: settings.description,
+          position: settings.position,
+          bump_type: 'product',
+          bump_product_id: settings.selectedProductId, // Adicionar referência ao produto
+          bump_product_name: settings.selectedProductName,
+          bump_product_price: settings.selectedProductPrice,
+          bump_product_image: settings.selectedProductImage || null,
+          discount: settings.discount
+        };
 
       const { error } = await supabase
         .from('order_bump_settings')

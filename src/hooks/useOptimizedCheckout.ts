@@ -218,18 +218,33 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         setCheckoutSettings(data.settings);
       }
 
-      // Buscar order bump de produto extra
+      // Buscar order bump de produto extra com preços personalizados
       const { data: productExtraData, error: productExtraError } = await supabase
         .from('order_bump_settings')
-        .select('*')
+        .select(`
+          *,
+          bump_product:products!order_bump_settings_bump_product_id_fkey(custom_prices)
+        `)
         .eq('product_id', actualProductId)
         .eq('bump_category', 'product_extra')
         .eq('enabled', true)
         .maybeSingle();
 
       if (!productExtraError && productExtraData) {
-        console.log('✅ Product Extra Bump found:', productExtraData);
-        setProductExtraBump(productExtraData);
+        // Extrair custom_prices do produto do bump se existir
+        let bumpProductCustomPrices: Record<string, string> = {};
+        if (productExtraData.bump_product && productExtraData.bump_product.custom_prices) {
+          bumpProductCustomPrices = productExtraData.bump_product.custom_prices as Record<string, string>;
+          console.log('✅ Custom prices encontrados para product extra bump:', bumpProductCustomPrices);
+        }
+        
+        const productExtraWithCustomPrices = {
+          ...productExtraData,
+          bump_product_custom_prices: bumpProductCustomPrices
+        };
+        
+        console.log('✅ Product Extra Bump found:', productExtraWithCustomPrices);
+        setProductExtraBump(productExtraWithCustomPrices);
       } else {
         console.log('❌ No Product Extra Bump found or error:', productExtraError);
       }
