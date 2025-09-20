@@ -60,15 +60,12 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         }
       }
     } else if (currentSubdomain === 'app') {
-      // app.kambafy.com: redirecionar landing page principal para o domínio main
-      if (currentPath === '/' || currentPath === '') {
-        shouldRedirect = true;
-        targetSubdomain = 'main';
-      } 
-      // Permitir rotas de área de membros (login e área)
-      else if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
+      // app.kambafy.com: permitir página inicial e rotas de área de membros
+      if (currentPath === '/' || currentPath === '' || 
+          currentPath.startsWith('/login/') || 
+          currentPath.startsWith('/area/')) {
         return; // Manter no subdomínio app
-      } 
+      }
       else if (restrictedFromApp.some(route => currentPath.startsWith(route))) {
         shouldRedirect = true;
         if (currentPath.startsWith('/admin')) {
