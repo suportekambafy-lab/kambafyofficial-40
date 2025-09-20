@@ -7,7 +7,7 @@ export const memberAreaDebugLogger = {
       memberAreaId,
       type,
       url,
-      isDevelopment: window.location.hostname.includes('localhost') || window.location.hostname.includes('lovable.app')
+      isDevelopment: window.location.hostname.includes('localhost') || window.location.hostname.includes('lovable.app') || window.location.hostname.includes('lovableproject.com')
     });
   },
 

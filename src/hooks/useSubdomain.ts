@@ -7,15 +7,16 @@ export function useSubdomain() {
     // Detect current subdomain
     let subdomain: 'main' | 'app' | 'pay' | 'admin' | 'mobile' | 'membros' = 'main';
     
-    // Para desenvolvimento/preview, sempre considerar como 'main' a não ser que seja especificado
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
+    // Para desenvolvimento/preview, detectar subdomínio baseado no path
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
       const path = window.location.pathname;
       
       // 🔍 Debug logging da detecção de subdomínio
-      console.log('🔍 useSubdomain: Detectando subdomínio', {
+      console.log('🔍 useSubdomain: DESENVOLVIMENTO - Detectando subdomínio', {
         hostname,
         path,
-        isDevelopment: true
+        isDevelopment: true,
+        isLovableProject: hostname.includes('lovableproject.com')
       });
       
       if (path.startsWith('/mobile')) {
@@ -28,12 +29,19 @@ export function useSubdomain() {
         subdomain = 'app';
       } else if (path.startsWith('/login/') || path.startsWith('/area/')) {
         subdomain = 'membros';
-        console.log('🎓 useSubdomain: Detectado subdomínio MEMBROS para rota', path);
+        console.log('🎓 useSubdomain: MEMBROS detectado para rota', {
+          path,
+          message: 'Em desenvolvimento, área de membros funciona localmente'
+        });
       } else {
         subdomain = 'main'; // Padrão para desenvolvimento
       }
       
-      console.log('🎯 useSubdomain: Subdomínio detectado:', subdomain);
+      console.log('🎯 useSubdomain: Subdomínio final detectado:', {
+        subdomain,
+        path,
+        hostname
+      });
     } else {
       // Para produção com domínios customizados
       if (hostname.startsWith('mobile.')) {
@@ -60,7 +68,13 @@ export function useSubdomain() {
       }
       
       // Para desenvolvimento/preview, navegar dentro do mesmo domínio
-      if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
+      if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
+        console.log('🔗 getSubdomainUrl DEV: Retornando path local', {
+          currentPath,
+          targetSubdomain,
+          hostname,
+          message: 'Em desenvolvimento, não há redirecionamento de domínio'
+        });
         return currentPath;
       }
       

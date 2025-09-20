@@ -30,21 +30,28 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     }
     
     // Para desenvolvimento/preview, fazer verificações mas sem redirecionamentos
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
-      console.log('🔧 SubdomainGuard: Ambiente de desenvolvimento', {
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
+      console.log('🔧 SubdomainGuard: Ambiente de desenvolvimento detectado', {
         currentSubdomain,
         currentPath,
-        message: 'Verificando rotas mas sem redirecionamentos forçados'
+        hostname,
+        message: 'TODAS as rotas são permitidas em desenvolvimento'
       });
       
-      // Em desenvolvimento, apenas fazer log das verificações
-      if (currentSubdomain === 'membros') {
-        if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
-          console.log('✅ SubdomainGuard DEV: Rota de área de membros válida', currentPath);
-        } else {
-          console.log('⚠️ SubdomainGuard DEV: Rota inválida para subdomínio membros', currentPath);
-        }
+      // Em desenvolvimento, TODAS as rotas são permitidas - sem redirecionamentos
+      if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
+        console.log('🎓 SubdomainGuard DEV: Rota de área de membros PERMITIDA', {
+          currentPath,
+          currentSubdomain,
+          message: 'Área de membros funciona em desenvolvimento'
+        });
       }
+      
+      console.log('✅ SubdomainGuard DEV: PERMITINDO acesso', {
+        currentPath,
+        hostname,
+        message: 'Nenhum redirecionamento em desenvolvimento'
+      });
       return;
     }
     
