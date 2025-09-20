@@ -23,7 +23,6 @@ export default function CountryPriceConfig({
   onCustomPricesChange 
 }: CountryPriceConfigProps) {
   console.log('🚨🚨🚨 CountryPriceConfig RENDERIZADO!!!', { basePrice, customPrices });
-  console.log('🔍 EnableCustomPricing inicial:', Object.keys(customPrices || {}).length > 0);
   
   const [enableCustomPricing, setEnableCustomPricing] = useState(
     Object.keys(customPrices || {}).length > 0
@@ -63,10 +62,11 @@ export default function CountryPriceConfig({
 
   const automaticPrices = getExchangeRates();
 
+  // SEMPRE RENDERIZAR O COMPONENTE
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Preços por País</CardTitle>
+        <CardTitle>💰 Preços por País</CardTitle>
         <CardDescription>
           Configure preços específicos para cada país ou use a conversão automática
         </CardDescription>
@@ -74,16 +74,16 @@ export default function CountryPriceConfig({
       <CardContent className="space-y-4">
         <div className="flex items-center space-x-2">
           <Switch
-            id="custom-pricing"
+            id="enable-custom-pricing"
             checked={enableCustomPricing}
             onCheckedChange={setEnableCustomPricing}
           />
-          <Label htmlFor="custom-pricing">
+          <Label htmlFor="enable-custom-pricing" className="text-sm font-medium">
             Ativar preços personalizados por país
           </Label>
         </div>
 
-        {enableCustomPricing && (
+        {enableCustomPricing ? (
           <div className="space-y-4">
             <div className="flex justify-end">
               <Button variant="outline" size="sm" onClick={resetToAutomatic}>
@@ -119,12 +119,10 @@ export default function CountryPriceConfig({
               ))}
             </div>
           </div>
-        )}
-
-        {!enableCustomPricing && (
+        ) : (
           <div className="grid gap-3">
             <p className="text-sm text-muted-foreground mb-2">
-              Conversão automática baseada no preço base ({basePrice} KZ):
+              Conversão automática baseada no preço base ({basePrice || 0} KZ):
             </p>
             {countries.map((country) => (
               <div key={country.code} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
