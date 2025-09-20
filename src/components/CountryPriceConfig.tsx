@@ -104,7 +104,13 @@ export default function CountryPriceConfig({
           </Label>
         </div>
 
-        {enableCustomPricing ? (
+        {!enableCustomPricing && (
+          <p className="text-sm text-muted-foreground">
+            Use a conversão automática baseada nas taxas de câmbio atuais
+          </p>
+        )}
+
+        {enableCustomPricing && (
           <div className="space-y-4">
             <div className="flex justify-end">
               <Button variant="outline" size="sm" onClick={resetToAutomatic}>
@@ -139,23 +145,6 @@ export default function CountryPriceConfig({
                 </div>
               ))}
             </div>
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            <p className="text-sm text-muted-foreground mb-2">
-              Conversão automática baseada no preço base ({basePrice || 0} KZ):
-            </p>
-            {countries.map((country) => (
-              <div key={country.code} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg">{country.flag}</span>
-                  <span className="font-medium">{country.name}</span>
-                </div>
-                <span className="font-mono text-sm">
-                  {automaticPrices[country.code]} {country.currency}
-                </span>
-              </div>
-            ))}
           </div>
         )}
       </CardContent>
