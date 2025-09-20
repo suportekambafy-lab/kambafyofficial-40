@@ -128,6 +128,14 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         .eq(isUUID ? 'id' : 'slug', productId)
         .maybeSingle();
 
+      console.log('🔍 DEBUGGING PRODUCT QUERY RESULT:', {
+        productData,
+        hasCustomPrices: !!(productData?.custom_prices),
+        customPricesValue: productData?.custom_prices,
+        customPricesType: typeof productData?.custom_prices,
+        productError
+      });
+
       if (productError) {
         setError(`Erro ao carregar produto: ${productError.message}`);
         setTimeout(() => setProductNotFound(true), 2000);

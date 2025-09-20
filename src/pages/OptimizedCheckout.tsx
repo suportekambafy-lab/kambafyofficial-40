@@ -64,8 +64,11 @@ const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
       priceInKZ,
       userCountry: userCountry?.code,
       userCountryName: userCountry?.name,
+      productName: product?.name,
       customPrices: product?.custom_prices,
-      hasCustomPrices: !!(product?.custom_prices && Object.keys(product?.custom_prices).length > 0)
+      customPricesType: typeof product?.custom_prices,
+      hasCustomPrices: !!(product?.custom_prices && Object.keys(product?.custom_prices).length > 0),
+      productId: product?.id
     });
     
     // Sempre mostrar preço para evitar flash
