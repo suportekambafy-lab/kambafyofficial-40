@@ -89,24 +89,6 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
         .eq('user_id', productData.user_id) // Garantir que seja do mesmo vendedor
         .maybeSingle();
 
-      // TEMPORÁRIO: Se o order bump não tem produto referenciado, usar um produto padrão com preços personalizados
-      if (data && !data.bump_product_id) {
-        console.log(`🔧 TEMP FIX: Order bump sem produto referenciado, usando produto padrão com preços personalizados`);
-        const { data: defaultProduct } = await supabase
-          .from('products')
-          .select('id, custom_prices')
-          .eq('user_id', productData.user_id)
-          .not('custom_prices', 'is', null)
-          .neq('custom_prices', '{}')
-          .limit(1)
-          .maybeSingle();
-        
-        if (defaultProduct) {
-          console.log(`🔧 TEMP FIX: Usando produto ${defaultProduct.id} com preços personalizados`);
-          data.bump_product_id = defaultProduct.id;
-        }
-      }
-
       console.log(`📊 OrderBump: Resultado da busca:`, { data, error, productId, position, enabled: true });
 
       if (error && error.code !== 'PGRST116') {
