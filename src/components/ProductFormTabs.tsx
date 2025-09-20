@@ -99,6 +99,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
   useEffect(() => {
     console.log('ProductForm - editingProduct changed:', editingProduct);
     if (editingProduct) {
+      console.log('🔍 DEBUGGING editingProduct.custom_prices:', editingProduct.custom_prices);
+      console.log('🔍 TYPE of editingProduct.custom_prices:', typeof editingProduct.custom_prices);
+      console.log('🔍 IS ARRAY?:', Array.isArray(editingProduct.custom_prices));
+      
       setFormData({
         name: editingProduct.name || "",
         type: editingProduct.type || selectedType || "E-book",
