@@ -22,7 +22,7 @@ export default function CountryPriceConfig({
   customPrices = {}, 
   onCustomPricesChange 
 }: CountryPriceConfigProps) {
-  console.log('🚨🚨🚨 CountryPriceConfig RENDERIZADO!!!', { basePrice, customPrices });
+  console.log('🚨 CountryPriceConfig carregado - basePrice:', basePrice, 'customPrices:', Object.keys(customPrices));
   
   const [enableCustomPricing, setEnableCustomPricing] = useState(
     Object.keys(customPrices || {}).length > 0
@@ -36,7 +36,7 @@ export default function CountryPriceConfig({
       setPrices({});
       onCustomPricesChange({});
     }
-  }, [enableCustomPricing, onCustomPricesChange]);
+  }, [enableCustomPricing]); // Removido onCustomPricesChange da dependência
 
   const handlePriceChange = (countryCode: string, value: string) => {
     console.log('💰 Alterando preço:', { countryCode, value });

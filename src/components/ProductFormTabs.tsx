@@ -154,14 +154,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     }));
   };
 
-  // Logs de debug
-  console.log('🚨🚨🚨 ProductFormTabs renderizado!!!', { 
-    price: formData.price, 
-    customPrices: formData.customPrices 
-  });
+  // Removido logs para evitar loop infinito
 
   const handleInputChange = (field: string, value: string | boolean | Record<string, string>) => {
-    console.log('🔄 ProductFormTabs handleInputChange:', { field, value });
+    // Log apenas para customPrices para evitar spam
     if (field === 'customPrices') {
       console.log('🔥 SALVANDO CUSTOM PRICES:', value);
     }
