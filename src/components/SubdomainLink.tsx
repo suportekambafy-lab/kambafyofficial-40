@@ -15,9 +15,11 @@ export function SubdomainLink({ to, children, className, onClick }: SubdomainLin
   const { currentSubdomain, getSubdomainUrl } = useSubdomain();
   
   // Determine qual subdomínio esta rota deveria usar
-  const getTargetSubdomain = (path: string): 'main' | 'app' | 'pay' | 'mobile' => {
+  const getTargetSubdomain = (path: string): 'main' | 'app' | 'pay' | 'mobile' | 'membros' => {
     if (path.startsWith('/mobile')) {
       return 'mobile';
+    } else if (path.startsWith('/area/') || path.startsWith('/login/')) {
+      return 'membros';
     } else if (path.startsWith('/auth') || path.startsWith('/vendedor') || path.startsWith('/apps') || path.startsWith('/minhas-compras')) {
       return 'app';
     } else if (path.startsWith('/checkout') || path.startsWith('/obrigado')) {

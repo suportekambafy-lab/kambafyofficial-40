@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { X, Copy, Share, Link } from "lucide-react";
+import { X, Copy, Share, Link, Users } from "lucide-react";
+import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 
 interface ProductShareDialogProps {
   product: any;
@@ -14,6 +15,7 @@ interface ProductShareDialogProps {
 
 export default function ProductShareDialog({ product, open, onOpenChange }: ProductShareDialogProps) {
   const { toast } = useToast();
+  const memberAreaLinks = createMemberAreaLinks();
 
   if (!open) return null;
 
@@ -72,6 +74,12 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
             <p className="text-sm text-muted-foreground">
               Preço: {product.price} KZ
             </p>
+            {product.member_area_id && (
+              <p className="text-sm text-blue-600 mt-1 flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                Inclui acesso à área de membros
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -109,6 +117,28 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
                 </div>
               )}
             </div>
+
+            {product.member_area_id && (
+              <div className="border-t pt-4">
+                <Label className="mb-2 block">Link da Área de Membros</Label>
+                <div className="flex gap-2 mb-2">
+                  <Input 
+                    value={memberAreaLinks.getMemberAreaUrl(product.member_area_id)} 
+                    readOnly 
+                    className="font-mono text-xs"
+                  />
+                  <Button 
+                    size="sm" 
+                    onClick={() => copyToClipboard(memberAreaLinks.getMemberAreaUrl(product.member_area_id), "Link da área de membros")}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Link direto para acessar a área de membros após a compra.
+                </p>
+              </div>
+            )}
 
             <div className="border-t pt-4">
               <Label className="mb-3 block">Compartilhar nas Redes Sociais</Label>

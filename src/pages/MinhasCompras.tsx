@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HighlightedCard, HighlightedCardHeader, HighlightedCardTitle, HighlightedCardContent } from "@/components/ui/highlighted-card";
-import { Badge } from "@/components/ui/badge";
+import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ShoppingBag, Calendar, Eye, User, LogOut, Settings, ExternalLink, BookOpen, TrendingUp, Wallet } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -43,6 +44,7 @@ interface Order {
 
 export default function MinhasCompras() {
   const navigate = useNavigate();
+  const memberAreaLinks = createMemberAreaLinks();
   const { user, signOut } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +137,7 @@ export default function MinhasCompras() {
   const handleAccessProduct = (product: any) => {
     // Para cursos, usar a nova rota protegida moderna
     if (product.type === 'Curso' && product.member_areas?.id) {
-      navigate(`/area/${product.member_areas.id}`);
+      window.location.href = memberAreaLinks.getMemberAreaUrl(product.member_areas.id);
     } else if (product.share_link) {
       window.open(product.share_link, '_blank');
     } else {
