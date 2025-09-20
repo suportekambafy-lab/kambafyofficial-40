@@ -3,18 +3,11 @@ import { logger } from './productionLogger';
 
 export const memberAreaDebugLogger = {
   logLinkGeneration: (memberAreaId: string, type: 'login' | 'area', url: string) => {
-    const hostname = window.location.hostname;
-    const isLovableEnvironment = hostname.includes('localhost') || 
-                                 hostname.includes('lovable.app') || 
-                                 (hostname.includes('kambafy.com') && !hostname.includes('app.') && !hostname.includes('admin.') && !hostname.includes('pay.'));
-    
     console.log('🏗️ MemberAreaLinks: Gerando link', {
       memberAreaId,
       type,
       url,
-      hostname,
-      isLovableEnvironment,
-      environment: isLovableEnvironment ? 'Lovable/Dev' : 'Produção'
+      isDevelopment: window.location.hostname.includes('localhost') || window.location.hostname.includes('lovable.app')
     });
   },
 

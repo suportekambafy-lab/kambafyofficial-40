@@ -29,28 +29,21 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       return;
     }
     
-    // Para ambiente Lovable/desenvolvimento, permitir rotas de membros no domínio principal
-    const isLovableEnvironment = hostname.includes('localhost') || 
-                                 hostname.includes('127.0.0.1') || 
-                                 hostname.includes('lovable.app') ||
-                                 (hostname.includes('kambafy.com') && !hostname.includes('app.') && !hostname.includes('admin.') && !hostname.includes('pay.'));
-    
-    if (isLovableEnvironment) {
-      console.log('🔧 SubdomainGuard: Ambiente Lovable/desenvolvimento detectado', {
+    // Para desenvolvimento/preview, fazer verificações mas sem redirecionamentos
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
+      console.log('🔧 SubdomainGuard: Ambiente de desenvolvimento', {
         currentSubdomain,
         currentPath,
-        hostname,
-        isLovableEnvironment,
-        message: 'Permitindo rotas de membros no domínio principal'
+        message: 'Verificando rotas mas sem redirecionamentos forçados'
       });
       
-      // Em ambiente Lovable, permitir rotas de área de membros no domínio principal
-      if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
-        console.log('✅ SubdomainGuard LOVABLE: Rota de área de membros permitida no domínio principal', {
-          currentPath,
-          currentSubdomain,
-          hostname
-        });
+      // Em desenvolvimento, apenas fazer log das verificações
+      if (currentSubdomain === 'membros') {
+        if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
+          console.log('✅ SubdomainGuard DEV: Rota de área de membros válida', currentPath);
+        } else {
+          console.log('⚠️ SubdomainGuard DEV: Rota inválida para subdomínio membros', currentPath);
+        }
       }
       return;
     }

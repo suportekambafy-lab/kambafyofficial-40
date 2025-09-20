@@ -67,28 +67,17 @@ export function createMemberAreaLinks() {
   });
   
   // Para desenvolvimento/preview, usar as rotas diretas
-  const isLovableEnvironment = hostname.includes('localhost') || 
-                               hostname.includes('127.0.0.1') || 
-                               hostname.includes('lovable.app') ||
-                               (hostname.includes('kambafy.com') && !hostname.includes('app.') && !hostname.includes('admin.') && !hostname.includes('pay.') && !hostname.includes('membros.'));
-  
-  if (isLovableEnvironment) {
-    console.log('🛠️ createMemberAreaLinks - Usando ambiente Lovable/desenvolvimento', {
-      hostname,
-      isLovableEnvironment,
-      message: 'Rotas de membros funcionarão no domínio principal'
-    });
+  if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
+    console.log('🛠️ createMemberAreaLinks - Usando ambiente de desenvolvimento');
     return {
       getMemberAreaLoginUrl: (memberAreaId: string) => {
         const url = `/login/${memberAreaId}`;
-        console.log('🔗 Lovable - getMemberAreaLoginUrl:', { memberAreaId, url, hostname });
-        memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'login', url);
+        console.log('🔗 Dev - getMemberAreaLoginUrl:', { memberAreaId, url });
         return url;
       },
       getMemberAreaUrl: (memberAreaId: string, path: string = '') => {
         const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
-        console.log('🔗 Lovable - getMemberAreaUrl:', { memberAreaId, path, fullPath, hostname });
-        memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'area', fullPath);
+        console.log('🔗 Dev - getMemberAreaUrl:', { memberAreaId, path, fullPath });
         return fullPath;
       },
       getMemberAreaLessonUrl: (memberAreaId: string, lessonId: string) => `/area/${memberAreaId}/lesson/${lessonId}`,
