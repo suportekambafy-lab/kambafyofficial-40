@@ -455,11 +455,8 @@ const OptimizedCheckout = () => {
                         />
                         <div className="flex-1">
                           <label htmlFor="accessExtensionBump" className="font-medium text-orange-900 dark:text-orange-100 cursor-pointer">
-                            {accessExtensionBump.title} - {formatPrice(parseFloat(accessExtensionBump.bump_product_price))}
+                            {accessExtensionBump.bump_product_name} - {formatPrice(parseFloat(accessExtensionBump.bump_product_price))}
                           </label>
-                          <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
-                            {accessExtensionBump.bump_product_name}
-                          </p>
                           <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
                             {accessExtensionBump.description}
                           </p>
