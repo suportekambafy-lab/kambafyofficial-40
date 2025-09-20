@@ -6,6 +6,7 @@ import { useMemberAreaAuth } from '@/contexts/MemberAreaAuthContext';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import ModernMemberDashboard from '@/components/modern/ModernMemberDashboard';
 import type { Lesson, Module, MemberArea } from '@/types/memberArea';
+import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 
 interface MemberAreaContentProps {
   memberArea: MemberArea;
@@ -14,13 +15,14 @@ interface MemberAreaContentProps {
 export default function MemberAreaContent({ memberArea }: MemberAreaContentProps) {
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useMemberAreaAuth();
+  const memberAreaLinks = createMemberAreaLinks();
 
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate(`/login/${memberArea.id}`);
+      window.location.href = memberAreaLinks.getMemberAreaLoginUrl(memberArea.id);
     }
-  }, [authLoading, isAuthenticated, navigate, memberArea.id]);
+  }, [authLoading, isAuthenticated, memberArea.id]);
 
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons', memberArea.id],

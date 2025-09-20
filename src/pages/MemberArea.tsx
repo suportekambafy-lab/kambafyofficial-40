@@ -22,10 +22,34 @@ export default function MemberAreaPage() {
 }
 
 function MemberAreaContentWrapper() {
-  const { student, memberArea, loading } = useMemberAreaAuth();
+  const { student, memberArea, loading, isAuthenticated } = useMemberAreaAuth();
 
-  if (loading || !student || !memberArea) {
-    return null; // ProtectedMemberAreaRoute vai lidar com redirecionamento
+  console.log('MemberAreaContentWrapper state:', { 
+    student, 
+    memberArea, 
+    loading, 
+    isAuthenticated 
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Carregando área de membros...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!student || !memberArea || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p>Redirecionando para login...</p>
+        </div>
+      </div>
+    );
   }
 
   // Criar objeto MemberArea com propriedades mínimas necessárias
