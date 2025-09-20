@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Clock, Infinity } from "lucide-react";
 
 interface AccessDurationSelectorProps {
@@ -18,34 +16,39 @@ export const AccessDurationSelector = ({
   durationDescription,
   onDurationChange
 }: AccessDurationSelectorProps) => {
-  const [localType, setLocalType] = useState(durationType || 'lifetime');
-  const [localValue, setLocalValue] = useState(durationValue || 1);
-  const [localDescription, setLocalDescription] = useState(durationDescription || '');
+  const [selectedOption, setSelectedOption] = useState(() => {
+    if (durationType === 'lifetime') return 'lifetime';
+    if (durationType === 'months' && durationValue === 6) return '6months';
+    if (durationType === 'years' && durationValue === 1) return '1year';
+    return 'lifetime'; // fallback
+  });
 
-  const updateDuration = (newType: string, newValue?: number) => {
-    const value = newType === 'lifetime' ? null : (newValue || localValue);
-    const description = generateDescription(newType, value);
+  const handleOptionChange = (option: string) => {
+    setSelectedOption(option);
     
-    setLocalType(newType);
-    if (newValue !== undefined) setLocalValue(newValue);
-    setLocalDescription(description);
-    
-    onDurationChange(newType, value, description);
+    switch (option) {
+      case '6months':
+        onDurationChange('months', 6, 'Acesso por 6 meses');
+        break;
+      case '1year':
+        onDurationChange('years', 1, 'Acesso por 1 ano');
+        break;
+      case 'lifetime':
+      default:
+        onDurationChange('lifetime', null, 'Acesso vitalício');
+        break;
+    }
   };
 
-  const generateDescription = (type: string, value: number | null): string => {
-    if (type === 'lifetime') return 'Acesso vitalício';
-    
-    const unit = type === 'days' ? 'dia' : type === 'months' ? 'mês' : 'ano';
-    const unitPlural = type === 'days' ? 'dias' : type === 'months' ? 'meses' : 'anos';
-    
-    return `Acesso por ${value} ${value === 1 ? unit : unitPlural}`;
-  };
-
-  const handleValueChange = (newValue: string) => {
-    const numValue = parseInt(newValue);
-    if (!isNaN(numValue) && numValue > 0) {
-      updateDuration(localType, numValue);
+  const getDescription = (option: string) => {
+    switch (option) {
+      case '6months':
+        return 'Os clientes terão acesso por 6 meses';
+      case '1year':
+        return 'Os clientes terão acesso por 1 ano';
+      case 'lifetime':
+      default:
+        return 'Os clientes terão acesso permanente ao produto';
     }
   };
 
@@ -58,51 +61,40 @@ export const AccessDurationSelector = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div>
-          <Label htmlFor="duration-type">Tipo de Acesso</Label>
-          <Select value={localType} onValueChange={(value) => updateDuration(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o tipo de acesso" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="lifetime">
-                <div className="flex items-center gap-2">
-                  <Infinity className="w-4 h-4" />
-                  Acesso Vitalício
-                </div>
-              </SelectItem>
-              <SelectItem value="days">Dias</SelectItem>
-              <SelectItem value="months">Meses</SelectItem>
-              <SelectItem value="years">Anos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {localType !== 'lifetime' && (
-          <div>
-            <Label htmlFor="duration-value">
-              Quantidade de {localType === 'days' ? 'Dias' : localType === 'months' ? 'Meses' : 'Anos'}
-            </Label>
-            <Input
-              id="duration-value"
-              type="number"
-              min="1"
-              value={localValue}
-              onChange={(e) => handleValueChange(e.target.value)}
-              placeholder="Ex: 6"
-            />
-          </div>
-        )}
+        <Select value={selectedOption} onValueChange={handleOptionChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione a duração de acesso" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="lifetime">
+              <div className="flex items-center gap-2">
+                <Infinity className="w-4 h-4" />
+                Acesso Vitalício
+              </div>
+            </SelectItem>
+            <SelectItem value="6months">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                6 Meses
+              </div>
+            </SelectItem>
+            <SelectItem value="1year">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                1 Ano
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
         <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
           <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-            {localDescription}
+            {selectedOption === '6months' && 'Acesso por 6 meses'}
+            {selectedOption === '1year' && 'Acesso por 1 ano'}
+            {selectedOption === 'lifetime' && 'Acesso vitalício'}
           </p>
           <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-            {localType === 'lifetime' 
-              ? 'Os clientes terão acesso permanente ao produto'
-              : 'Os clientes terão acesso limitado pelo período especificado'
-            }
+            {getDescription(selectedOption)}
           </p>
         </div>
       </CardContent>

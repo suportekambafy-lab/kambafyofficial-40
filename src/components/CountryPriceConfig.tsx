@@ -84,7 +84,7 @@ export default function CountryPriceConfig({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>💰 Preços por País</CardTitle>
+        <CardTitle>Preços por País</CardTitle>
         <CardDescription>
           Configure preços específicos para cada país ou use a conversão automática
         </CardDescription>
