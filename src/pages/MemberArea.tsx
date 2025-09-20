@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { MemberAreaAuthProvider } from "@/contexts/MemberAreaAuthContext";
 import MemberAreaContent from "@/components/MemberAreaContent";
 import { useMemberAreaAuth } from "@/contexts/MemberAreaAuthContext";
+import { useEffect } from "react";
 
 export default function MemberAreaPage() {
   const { id: areaId } = useParams<{ id: string }>();
@@ -23,6 +24,7 @@ export default function MemberAreaPage() {
 
 function MemberAreaContentWrapper() {
   const { student, memberArea, loading, isAuthenticated } = useMemberAreaAuth();
+  const { id: areaId } = useParams<{ id: string }>();
 
   console.log('MemberAreaContentWrapper state:', { 
     student, 
@@ -30,6 +32,15 @@ function MemberAreaContentWrapper() {
     loading, 
     isAuthenticated 
   });
+
+  // Redirect to login if not authenticated (after loading is complete)
+  useEffect(() => {
+    if (!loading && (!student || !memberArea || !isAuthenticated) && areaId) {
+      const loginUrl = `https://membros.kambafy.com/login/${areaId}`;
+      console.log('Redirecting to login:', loginUrl);
+      window.location.href = loginUrl;
+    }
+  }, [loading, student, memberArea, isAuthenticated, areaId]);
 
   if (loading) {
     return (
@@ -46,6 +57,7 @@ function MemberAreaContentWrapper() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Redirecionando para login...</p>
         </div>
       </div>
