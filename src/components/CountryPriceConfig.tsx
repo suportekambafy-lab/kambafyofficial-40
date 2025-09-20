@@ -104,12 +104,6 @@ export default function CountryPriceConfig({
           </Label>
         </div>
 
-        {!enableCustomPricing && (
-          <p className="text-sm text-muted-foreground">
-            Use a conversão automática baseada nas taxas de câmbio atuais
-          </p>
-        )}
-
         {enableCustomPricing && (
           <div className="space-y-4">
             <div className="flex justify-end">
