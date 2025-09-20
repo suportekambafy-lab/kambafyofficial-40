@@ -89,6 +89,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
 
   useEffect(() => {
     console.log('ProductForm - editingProduct changed:', editingProduct);
+    console.log('ProductForm - formData:', formData);
     if (editingProduct) {
       setFormData({
         name: editingProduct.name || "",
@@ -425,13 +426,11 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
             </div>
 
             {/* Configuração de preços por país */}
-            {formData.price && (
-              <CountryPriceConfig
-                basePrice={formData.price}
-                customPrices={formData.customPrices}
-                onCustomPricesChange={(prices) => handleInputChange("customPrices", prices)}
-              />
-            )}
+            <CountryPriceConfig
+              basePrice={formData.price}
+              customPrices={formData.customPrices}
+              onCustomPricesChange={(prices) => handleInputChange("customPrices", prices)}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>

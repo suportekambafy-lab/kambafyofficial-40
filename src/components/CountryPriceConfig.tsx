@@ -18,16 +18,16 @@ const countries = [
 ];
 
 export const CountryPriceConfig: React.FC<CountryPriceConfigProps> = ({
-  basePrice,
-  customPrices,
+  basePrice = "",
+  customPrices = {},
   onCustomPricesChange
 }) => {
   console.log('🎯 CountryPriceConfig rendered', { basePrice, customPrices });
   
   const [enableCustomPricing, setEnableCustomPricing] = useState(
-    Object.keys(customPrices).length > 0
+    Object.keys(customPrices || {}).length > 0
   );
-  const [prices, setPrices] = useState(customPrices);
+  const [prices, setPrices] = useState(customPrices || {});
 
   useEffect(() => {
     if (!enableCustomPricing) {
