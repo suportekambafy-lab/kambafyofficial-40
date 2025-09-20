@@ -143,3 +143,5 @@ export const CountryPriceConfig: React.FC<CountryPriceConfigProps> = ({
     </Card>
   );
 };
+
+export default CountryPriceConfig;

@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import EbookUploader from "./EbookUploader";
 import PaymentMethodsSelector from "./PaymentMethodsSelector";
-import { CountryPriceConfig } from "./CountryPriceConfig";
+import CountryPriceConfig from "./CountryPriceConfig";
 import { PaymentMethod } from "@/utils/paymentMethods";
 
 interface ProductFormProps {
