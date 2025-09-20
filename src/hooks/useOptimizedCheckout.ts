@@ -221,30 +221,15 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
       // Buscar order bump de produto extra
       const { data: productExtraData, error: productExtraError } = await supabase
         .from('order_bump_settings')
-        .select(`
-          *,
-          bump_product:products!order_bump_settings_bump_product_id_fkey(custom_prices)
-        `)
+        .select('*')
         .eq('product_id', actualProductId)
         .eq('bump_category', 'product_extra')
         .eq('enabled', true)
         .maybeSingle();
 
       if (!productExtraError && productExtraData) {
-        // Extrair custom_prices do produto do bump
-        const bumpProduct = Array.isArray(productExtraData.bump_product) ? productExtraData.bump_product[0] : productExtraData.bump_product;
-        let bumpProductCustomPrices: Record<string, string> = {};
-        if (bumpProduct?.custom_prices && typeof bumpProduct.custom_prices === 'object') {
-          bumpProductCustomPrices = bumpProduct.custom_prices as Record<string, string>;
-        }
-        
-        const productExtraWithCustomPrices = {
-          ...productExtraData,
-          bump_product_custom_prices: bumpProductCustomPrices
-        };
-        
-        console.log('✅ Product Extra Bump found:', productExtraWithCustomPrices);
-        setProductExtraBump(productExtraWithCustomPrices);
+        console.log('✅ Product Extra Bump found:', productExtraData);
+        setProductExtraBump(productExtraData);
       } else {
         console.log('❌ No Product Extra Bump found or error:', productExtraError);
       }
@@ -252,30 +237,15 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
       // Buscar order bump de extensão de acesso
       const { data: accessExtensionData, error: accessExtensionError } = await supabase
         .from('order_bump_settings')
-        .select(`
-          *,
-          bump_product:products!order_bump_settings_bump_product_id_fkey(custom_prices)
-        `)
+        .select('*')
         .eq('product_id', actualProductId)
         .eq('bump_category', 'access_extension')
         .eq('enabled', true)
         .maybeSingle();
 
       if (!accessExtensionError && accessExtensionData) {
-        // Extrair custom_prices do produto do bump
-        const bumpProduct = Array.isArray(accessExtensionData.bump_product) ? accessExtensionData.bump_product[0] : accessExtensionData.bump_product;
-        let bumpProductCustomPrices: Record<string, string> = {};
-        if (bumpProduct?.custom_prices && typeof bumpProduct.custom_prices === 'object') {
-          bumpProductCustomPrices = bumpProduct.custom_prices as Record<string, string>;
-        }
-        
-        const accessExtensionWithCustomPrices = {
-          ...accessExtensionData,
-          bump_product_custom_prices: bumpProductCustomPrices
-        };
-        
-        console.log('✅ Access Extension Bump found:', accessExtensionWithCustomPrices);
-        setAccessExtensionBump(accessExtensionWithCustomPrices);
+        console.log('✅ Access Extension Bump found:', accessExtensionData);
+        setAccessExtensionBump(accessExtensionData);
       } else {
         console.log('❌ No Access Extension Bump found or error:', accessExtensionError);
       }
