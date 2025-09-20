@@ -218,7 +218,10 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         .maybeSingle();
 
       if (!productExtraError && productExtraData) {
+        console.log('✅ Product Extra Bump found:', productExtraData);
         setProductExtraBump(productExtraData);
+      } else {
+        console.log('❌ No Product Extra Bump found or error:', productExtraError);
       }
 
       // Buscar order bump de extensão de acesso
@@ -231,7 +234,10 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         .maybeSingle();
 
       if (!accessExtensionError && accessExtensionData) {
+        console.log('✅ Access Extension Bump found:', accessExtensionData);
         setAccessExtensionBump(accessExtensionData);
+      } else {
+        console.log('❌ No Access Extension Bump found or error:', accessExtensionError);
       }
     } catch (error) {
       console.error('Error loading checkout settings:', error);

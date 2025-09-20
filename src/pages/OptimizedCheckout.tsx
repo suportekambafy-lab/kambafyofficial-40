@@ -469,6 +469,17 @@ const OptimizedCheckout = () => {
             </Card>
           )}
 
+          {/* DEBUG: Order Bumps Info */}
+          <div className="bg-green-100 p-4 text-sm mb-4 rounded border-2 border-green-400">
+            <div className="font-bold text-green-800 mb-2">🔍 DEBUG - Order Bumps:</div>
+            <div className="text-green-700 space-y-1">
+              <div><strong>Product Extra Bump:</strong> {productExtraBump ? `✅ ${productExtraBump.title}` : '❌ Não encontrado'}</div>
+              <div><strong>Access Extension Bump:</strong> {accessExtensionBump ? `✅ ${accessExtensionBump.title}` : '❌ Não encontrado'}</div>
+              <div><strong>Product Extra Position:</strong> {productExtraBump?.position || 'N/A'}</div>
+              <div><strong>Access Extension Position:</strong> {accessExtensionBump?.position || 'N/A'}</div>
+            </div>
+          </div>
+
           {/* Formulário principal */}
           <Card className="mb-8">
             <CardContent className="p-6">
