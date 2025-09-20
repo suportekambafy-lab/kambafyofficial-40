@@ -1,17 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { MobileLoginChoice } from '@/components/mobile/MobileLoginChoice';
+import { SignInPage } from '@/components/ui/sign-in-flow-1';
 import { MobileDashboard } from '@/components/mobile/MobileDashboard';
-import Auth from './Auth';
-import MinhasCompras from './MinhasCompras';
+import MinhasCompras from '@/pages/MinhasCompras';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { supabase } from '@/integrations/supabase/client';
 
 const Mobile = () => {
   const [userType, setUserType] = useState<'customer' | 'seller' | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
-  const { user, loading } = useAuth();
+  const [selectedUserType, setSelectedUserType] = useState<'customer' | 'seller' | null>(null);
+  const { user, loading, signIn } = useAuth();
   const { authReady, isAuthenticated } = useAuthGuard();
 
   useEffect(() => {
@@ -24,6 +24,50 @@ const Mobile = () => {
       }
     }
   }, [isAuthenticated, user]);
+
+  const handleUserTypeSelect = (type: 'customer' | 'seller' | null) => {
+    setSelectedUserType(type);
+    if (type) {
+      localStorage.setItem('userType', type);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!selectedUserType) {
+      return;
+    }
+    
+    try {
+      localStorage.setItem('userType', selectedUserType);
+      localStorage.setItem('googleAuthMode', 'signin');
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/mobile`,
+        },
+      });
+
+      if (error) {
+        console.error('Erro no login com Google:', error);
+      }
+    } catch (error) {
+      console.error('Erro no login com Google:', error);
+    }
+  };
+
+  const handleSignIn = async (email: string, password: string) => {
+    if (!selectedUserType) {
+      throw new Error('Tipo de usuário não selecionado');
+    }
+
+    localStorage.setItem('userType', selectedUserType);
+    const result = await signIn(email, password);
+    
+    if (result.error) {
+      throw result.error;
+    }
+  };
 
   // Loading enquanto verifica autenticação
   if (loading || !authReady) {
@@ -39,26 +83,19 @@ const Mobile = () => {
     );
   }
 
-  // Se não está autenticado, mostra escolha de tipo de usuário
+  // Se não está autenticado, mostra o novo componente de login
   if (!isAuthenticated) {
-    if (!userType) {
-      return (
-        <MobileLoginChoice 
-          onChoice={(type) => {
-            setUserType(type);
-            setShowAuth(true);
-          }} 
-        />
-      );
-    }
-
-    if (showAuth) {
-      return <Auth />;
-    }
+    return (
+      <SignInPage
+        selectedUserType={selectedUserType}
+        onUserTypeSelect={handleUserTypeSelect}
+        onSignIn={handleSignIn}
+        onGoogleSignIn={handleGoogleSignIn}
+      />
+    );
   }
 
   // Se está autenticado, mostra a interface baseada no tipo de usuário
-  // SEMPRE usar as interfaces mobile quando estiver no mobile
   if (userType === 'seller') {
     return <MobileDashboard />;
   } else if (userType === 'customer') {
@@ -67,11 +104,11 @@ const Mobile = () => {
 
   // Fallback
   return (
-    <MobileLoginChoice 
-      onChoice={(type) => {
-        setUserType(type);
-        setShowAuth(true);
-      }} 
+    <SignInPage
+      selectedUserType={selectedUserType}
+      onUserTypeSelect={handleUserTypeSelect}
+      onSignIn={handleSignIn}
+      onGoogleSignIn={handleGoogleSignIn}
     />
   );
 };
