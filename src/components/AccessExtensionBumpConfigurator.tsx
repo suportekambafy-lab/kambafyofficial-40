@@ -19,7 +19,6 @@ interface AccessExtensionBumpConfiguratorProps {
 interface AccessExtensionSettings {
   id?: string;
   enabled: boolean;
-  title: string;
   description: string;
   position: string;
   extensionType: string;
@@ -34,7 +33,6 @@ export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess }: Ac
   
   const [settings, setSettings] = useState<AccessExtensionSettings>({
     enabled: false,
-    title: "⏰ Estenda seu Acesso - Oferta Limitada",
     description: "Garante mais tempo para estudar:",
     position: "after_payment_method",
     extensionType: "months",
@@ -62,7 +60,6 @@ export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess }: Ac
         setSettings({
           id: settingsData.id,
           enabled: settingsData.enabled,
-          title: settingsData.title,
           description: settingsData.description,
           position: settingsData.position,
           extensionType: settingsData.access_extension_type || 'months',
@@ -118,7 +115,7 @@ export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess }: Ac
         product_id: productId,
         bump_category: 'access_extension',
         enabled: settings.enabled,
-        title: settings.title,
+        title: "Extensão de Acesso",
         description: settings.description,
         position: settings.position,
         bump_type: 'access_extension',
@@ -174,17 +171,6 @@ export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess }: Ac
             onCheckedChange={(enabled) => setSettings(prev => ({ ...prev, enabled }))}
           />
           <Label htmlFor="enabled">Ativar Order Bump de Extensão de Acesso</Label>
-        </div>
-
-        {/* Título */}
-        <div className="space-y-2">
-          <Label htmlFor="title">Título</Label>
-          <Input
-            id="title"
-            value={settings.title}
-            onChange={(e) => setSettings(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="⏰ Estenda seu Acesso - Oferta Limitada"
-          />
         </div>
 
         {/* Descrição */}
@@ -258,7 +244,7 @@ export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess }: Ac
                 <SelectItem value="lifetime-0">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    🔥 Acesso Vitalício
+                    Acesso Vitalício
                   </div>
                 </SelectItem>
               </SelectContent>

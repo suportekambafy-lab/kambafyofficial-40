@@ -214,7 +214,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
                 <div className="mb-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded">
                   <p className="text-xs text-blue-800 dark:text-blue-200 font-medium">
                     {orderBump.access_extension_type === 'lifetime' 
-                      ? '🔥 Acesso Vitalício'
+                      ? 'Acesso Vitalício'
                       : `⏰ +${orderBump.access_extension_value} ${
                           orderBump.access_extension_type === 'days' 
                             ? (orderBump.access_extension_value === 1 ? 'dia' : 'dias')

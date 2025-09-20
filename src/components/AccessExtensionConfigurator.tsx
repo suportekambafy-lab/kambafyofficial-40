@@ -326,7 +326,7 @@ export const AccessExtensionConfigurator = ({
                   <SelectItem value="lifetime-0">
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4" />
-                      🔥 Acesso Vitalício
+                      Acesso Vitalício
                     </div>
                   </SelectItem>
                 </SelectContent>
