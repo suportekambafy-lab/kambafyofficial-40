@@ -19,9 +19,10 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       return;
     }
     
-    // Para desenvolvimento/preview, não fazer redirecionamentos
+    // Para desenvolvimento/preview, não fazer NENHUM redirecionamento
     const hostname = window.location.hostname;
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
+      console.log('SubdomainGuard: Development environment - skipping all redirections');
       return;
     }
     
