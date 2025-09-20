@@ -32,6 +32,24 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
     });
   };
 
+  // Função para obter o link correto da área de membros
+  const getMemberAreaLink = () => {
+    // Priorizar URL customizada se existir
+    if (product.member_areas?.url) {
+      return product.member_areas.url.startsWith('http') 
+        ? product.member_areas.url 
+        : `https://${product.member_areas.url}`;
+    }
+    
+    // Usar ID da área de membros com geração padronizada
+    const memberAreaId = product.member_area_id || product.member_areas?.id;
+    if (memberAreaId) {
+      return memberAreaLinks.getMemberAreaUrl(memberAreaId);
+    }
+    
+    return '';
+  };
+
   // Use pay.kambafy.com for checkout links
   const checkoutBaseUrl = window.location.origin.includes('localhost') 
     ? 'http://localhost:3000' // Local development should use port 3000
@@ -74,7 +92,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
             <p className="text-sm text-muted-foreground">
               Preço: {product.price} KZ
             </p>
-            {product.member_area_id && (
+            {(product.member_area_id || product.member_areas?.id) && (
               <p className="text-sm text-blue-600 mt-1 flex items-center gap-1">
                 <Users className="h-4 w-4" />
                 Inclui acesso à área de membros
@@ -118,18 +136,18 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
               )}
             </div>
 
-            {product.member_area_id && (
+            {(product.member_area_id || product.member_areas?.id) && (
               <div className="border-t pt-4">
                 <Label className="mb-2 block">Link da Área de Membros</Label>
                 <div className="flex gap-2 mb-2">
                   <Input 
-                    value={memberAreaLinks.getMemberAreaUrl(product.member_area_id)} 
+                    value={getMemberAreaLink()} 
                     readOnly 
                     className="font-mono text-xs"
                   />
                   <Button 
                     size="sm" 
-                    onClick={() => copyToClipboard(memberAreaLinks.getMemberAreaUrl(product.member_area_id), "Link da área de membros")}
+                    onClick={() => copyToClipboard(getMemberAreaLink(), "Link da área de membros")}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
