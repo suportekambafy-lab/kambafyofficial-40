@@ -1,3 +1,4 @@
+
 import CustomToaster from "@/components/ui/toast";
 import { setGlobalToasterRef } from "@/hooks/useCustomToast";
 import { useRef, useEffect } from "react";
@@ -62,8 +63,6 @@ const App = () => {
                       <Route path="/" element={<OptimizedRoutes.Index />} />
                       <Route path="/auth" element={<OptimizedRoutes.Auth />} />
                       <Route path="/checkout/:productId" element={<OptimizedRoutes.Checkout />} />
-                      <Route path="/produto/:productId" element={<OptimizedRoutes.Checkout />} />
-                      <Route path="/p/:productId" element={<OptimizedRoutes.Checkout />} />
                       <Route path="/checkout/:productId/success" element={<OptimizedRoutes.CheckoutSuccess />} />
                       <Route path="/obrigado" element={<OptimizedRoutes.ThankYou />} />
                       <Route path="/como-funciona" element={<OptimizedRoutes.HowItWorks />} />

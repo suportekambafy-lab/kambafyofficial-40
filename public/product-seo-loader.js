@@ -1,15 +1,12 @@
 // Detecta productId na URL e busca dados do produto imediatamente
 (function() {
-  // Verifica se estamos numa página de produto ou checkout
+  // Verifica se estamos numa página de checkout
   const path = window.location.pathname;
   const checkoutMatch = path.match(/\/checkout\/([a-f0-9-]{36})/);
-  const productMatch = path.match(/\/produto\/([a-f0-9-]{36})/);
   
-  const match = checkoutMatch || productMatch;
-  if (match) {
-    const productId = match[1];
-    const isCheckout = !!checkoutMatch;
-    console.log('🔍 Detected product page:', productId, isCheckout ? '(checkout)' : '(product)');
+  if (checkoutMatch) {
+    const productId = checkoutMatch[1];
+    console.log('🔍 Detected checkout page for product:', productId);
     
     // Função para aplicar SEO imediatamente
     const applyProductSEO = (product) => {

@@ -1,13 +1,13 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { X, Copy, Share, Link } from "lucide-react";
-import { generateProductSEOLink, copyProductLink, shareProduct, type ProductSEOData } from "@/utils/productSEO";
 
 interface ProductShareDialogProps {
-  product: ProductSEOData;
+  product: any;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -22,47 +22,36 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
   console.log('Product for sharing:', product);
   console.log('Product ID:', product.id, 'Type:', typeof product.id);
 
-  // Gerar URLs amigáveis do próprio domínio Kambafy
-  const productSEOLink = generateProductSEOLink(product.id, 'product'); // kambafy.com/p/id
-  const checkoutSEOLink = generateProductSEOLink(product.id, 'checkout'); // pay.kambafy.com/checkout/id
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copiado!",
+      description: `${type} copiado para a área de transferência.`
+    });
+  };
 
-  // Links de compartilhamento para redes sociais
+  // Use pay.kambafy.com for checkout links
+  const checkoutBaseUrl = window.location.origin.includes('localhost') 
+    ? 'http://localhost:3000' // Local development should use port 3000
+    : 'https://pay.kambafy.com';
+    
+  const checkoutLink = `${checkoutBaseUrl}/checkout/${product.id}`;
+  // Use the same checkout link for preview to maintain consistency
+  const previewLink = checkoutLink;
+  console.log('Generated checkout link:', checkoutLink);
+  
+  // Cache-bust preview for WhatsApp to force re-scrape
+  const whatsappPreview = `${previewLink}?v=${Date.now()}`;
+  
   const shareLinks = {
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(`Confira este produto incrível: ${product.name}\n\n${productSEOLink}`)}`,
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productSEOLink)}`,
-    telegram: `https://t.me/share/url?url=${encodeURIComponent(productSEOLink)}&text=${encodeURIComponent(product.name)}`
-  };
-
-  const handleCopyLink = async () => {
-    const success = await copyProductLink(product.id, 'product');
-    if (success) {
-      toast({
-        title: "Copiado!",
-        description: "Link SEO otimizado copiado para a área de transferência."
-      });
-    } else {
-      toast({
-        title: "Erro",
-        description: "Não foi possível copiar o link.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleNativeShare = async () => {
-    const success = await shareProduct(product);
-    if (!success) {
-      // Fallback para cópia
-      handleCopyLink();
-    }
+    checkout: checkoutLink,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(whatsappPreview)}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewLink)}`,
+    telegram: `https://t.me/share/url?url=${encodeURIComponent(previewLink)}&text=${encodeURIComponent(product.name)}`
   };
 
   const openCheckoutInNewTab = () => {
-    // Para o teste do checkout, usar o link direto sem prerender
-    const directCheckoutUrl = window.location.origin.includes('localhost') 
-      ? `http://localhost:3000/checkout/${product.id}`
-      : `https://pay.kambafy.com/checkout/${product.id}`;
-    window.open(directCheckoutUrl, '_blank');
+    window.open(checkoutLink, '_blank');
   };
 
   return (
@@ -90,40 +79,35 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
               <Label>Link do Produto</Label>
               <div className="flex gap-2">
                 <Input 
-                  value={productSEOLink} 
+                  value={previewLink} 
                   readOnly 
                   className="font-mono text-xs"
                 />
                 <Button 
                   size="sm" 
-                  onClick={handleCopyLink}
+                  onClick={() => copyToClipboard(previewLink, "Link com preview")}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Link amigável (kambafy.com/p/id) com SEO otimizado para redes sociais.
+                Link para compartilhar o produto. Funciona em todas as redes sociais e aplicativos de mensagem.
               </p>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleNativeShare}
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <Share className="h-4 w-4 mr-2" />
-                  Compartilhar
-                </Button>
-                <Button 
-                  onClick={openCheckoutInNewTab}
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <Link className="h-4 w-4 mr-2" />
-                  Testar Checkout
-                </Button>
-              </div>
+              <Button 
+                onClick={openCheckoutInNewTab}
+                className="w-full mt-2"
+                variant="outline"
+              >
+                <Link className="h-4 w-4 mr-2" />
+                Testar Checkout
+              </Button>
+              {window.location.origin.includes('localhost') && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                  <p className="text-xs text-blue-800">
+                    <strong>Desenvolvimento:</strong> Em produção, este link usará pay.kambafy.com para o checkout.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="border-t pt-4">
@@ -156,7 +140,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
 
           <div className="bg-muted p-3 rounded-md">
             <p className="text-sm">
-              <strong>✨ Links Inteligentes:</strong> URLs amigáveis (kambafy.com/p/id) que detectam automaticamente se é um bot/rede social e mostram as informações corretas do produto.
+              <strong>Dica:</strong> O link de checkout será aberto no subdomínio pay.kambafy.com, dedicado aos pagamentos.
             </p>
           </div>
         </CardContent>
