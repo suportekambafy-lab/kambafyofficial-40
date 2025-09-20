@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, Calendar, Package, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building } from "lucide-react";
-import { getPaymentMethodName } from "@/utils/paymentMethods";
+import { getPaymentMethodName, getCountryByPaymentMethod } from "@/utils/paymentMethods";
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 
 interface Sale {
@@ -56,12 +56,6 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
         <div className="font-bold text-checkout-green">
           {paidAmount.toLocaleString('pt-BR')} KZ
         </div>
-        {sale.currency.toUpperCase() !== 'KZ' && (
-          <div className="text-xs text-gray-500 flex items-center gap-1 justify-end">
-            <span>{currencyInfo.flag}</span>
-            <span>{currencyInfo.name}</span>
-          </div>
-        )}
       </div>
     );
   };
@@ -137,11 +131,11 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
             <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
             <span className="text-xs flex items-center gap-1">
               {(() => {
-                const currencyInfo = getCurrencyInfo(sale.currency);
+                const countryInfo = getCountryByPaymentMethod(sale.payment_method);
                 return (
                   <>
-                    <span>{currencyInfo.flag}</span>
-                    <span>{currencyInfo.name}</span>
+                    <span>{countryInfo.flag}</span>
+                    <span>{countryInfo.name}</span>
                   </>
                 );
               })()}

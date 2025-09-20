@@ -107,6 +107,32 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   }
 ];
 
+// Mapear método de pagamento para país
+export const getCountryByPaymentMethod = (paymentMethod: string) => {
+  const paymentToCountry: Record<string, { code: string; name: string; flag: string }> = {
+    // Angola
+    'express': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
+    'reference': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
+    'transfer': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
+    'kambapay': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
+    
+    // Portugal  
+    'card': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    'stripe': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    'paypal': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    'multibanco': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    'klarna': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    'apple_pay': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    
+    // Moçambique
+    'mpesa': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
+    'emola': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
+    'epesa': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
+  };
+  
+  return paymentToCountry[paymentMethod] || { code: 'AO', name: 'Angola', flag: '🇦🇴' };
+};
+
 export const getPaymentMethodName = (method: string): string => {
   const paymentMethod = PAYMENT_METHODS.find(pm => pm.id === method);
   return paymentMethod?.name || method || 'N/A';

@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
+import { getCountryByPaymentMethod } from "@/utils/paymentMethods";
 
 interface RecentSale {
   id: string;
@@ -16,6 +17,7 @@ interface RecentSale {
   amount: string;
   currency: string;
   created_at: string;
+  payment_method?: string;
   product_name?: string;
   sale_type?: 'own' | 'affiliate' | 'recovered';
   earning_amount?: number;
@@ -109,6 +111,7 @@ export function ModernRecentSales() {
               customer_name,
               customer_email,
               customer_phone,
+              payment_method,
               amount,
               currency,
               created_at,
@@ -137,6 +140,7 @@ export function ModernRecentSales() {
               customer_name,
               customer_email,
               customer_phone,
+              payment_method,
               amount,
               currency,
               created_at,
@@ -216,6 +220,7 @@ export function ModernRecentSales() {
         customer_name: order.customer_name,
         customer_email: order.customer_email,
         customer_phone: order.customer_phone,
+        payment_method: order.payment_method,
         amount: order.amount,
         currency: order.currency || 'KZ',
         created_at: order.created_at,
@@ -335,11 +340,11 @@ export function ModernRecentSales() {
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         {(() => {
-                          const currencyInfo = getCurrencyInfo(sale.currency);
+                          const countryInfo = getCountryByPaymentMethod(sale.payment_method || '');
                           return (
                             <>
-                              <span>{currencyInfo.flag}</span>
-                              <span>{currencyInfo.name}</span>
+                              <span>{countryInfo.flag}</span>
+                              <span>{countryInfo.name}</span>
                             </>
                           );
                         })()}

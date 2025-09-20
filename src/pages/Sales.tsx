@@ -31,7 +31,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import professionalManImage from "@/assets/professional-man.jpg";
-import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods } from "@/utils/paymentMethods";
+import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod } from "@/utils/paymentMethods";
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 
 interface Sale {
@@ -226,12 +226,6 @@ export default function Sales() {
         <div className="font-bold text-checkout-green">
           {paidAmount.toLocaleString('pt-BR')} KZ
         </div>
-        {sale.currency.toUpperCase() !== 'KZ' && (
-          <div className="text-xs text-gray-500 flex items-center gap-1 justify-end">
-            <span>{currencyInfo.flag}</span>
-            <span>{currencyInfo.name}</span>
-          </div>
-        )}
       </div>
     );
   };
@@ -551,11 +545,11 @@ export default function Sales() {
                               </Badge>
                             ) : null}
                             {(() => {
-                              const currencyInfo = getCurrencyInfo(sale.currency);
+                              const countryInfo = getCountryByPaymentMethod(sale.payment_method);
                               return (
                                 <Badge variant="outline" className="text-xs">
-                                  <span className="mr-1">{currencyInfo.flag}</span>
-                                  {currencyInfo.name}
+                                  <span className="mr-1">{countryInfo.flag}</span>
+                                  {countryInfo.name}
                                 </Badge>
                               );
                             })()}
