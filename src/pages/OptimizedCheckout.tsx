@@ -172,8 +172,10 @@ const OptimizedCheckout = () => {
     error,
     productNotFound,
     checkoutSettings,
-    orderBump,
-    orderBumpPrice,
+    productExtraBump,
+    accessExtensionBump,
+    productExtraPrice,
+    accessExtensionPrice,
     formData,
     userCountry,
     geoLoading,
@@ -191,7 +193,8 @@ const OptimizedCheckout = () => {
     availablePaymentMethods: productPaymentMethods,
     handleInputChange,
     handleCountryChange,
-    handleOrderBumpToggle,
+    handleProductExtraToggle,
+    handleAccessExtensionToggle,
     fetchBalanceByEmail
   } = useOptimizedCheckout({ productId: productId || '' });
 
@@ -416,7 +419,7 @@ const OptimizedCheckout = () => {
               <OptimizedOrderBump
                 productId={productId || ''}
                 position="before_payment_method"
-                onToggle={handleOrderBumpToggle}
+                onToggle={handleProductExtraToggle}
                 userCountry={userCountry}
                 formatPrice={formatPrice}
               />
@@ -531,7 +534,7 @@ const OptimizedCheckout = () => {
                           <StripePaymentForm
                             product={product}
                             customerInfo={formData}
-                            amount={convertPrice(parseFloat(product?.price || '0') + orderBumpPrice)}
+                            amount={convertPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice)}
                             currency={userCountry?.currency || 'KZ'}
                             formatPrice={(amount) => {
                               // Para Stripe, formatear na moeda local
@@ -556,7 +559,7 @@ const OptimizedCheckout = () => {
                         <Suspense fallback={<div />}>
                           <StripeCardPayment
                             paymentMethod={selectedPayment}
-                            amount={parseFloat(product?.price || '0') + orderBumpPrice}
+                            amount={parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice}
                             currency={userCountry?.currency || 'KZ'}
                             customerData={{ 
                               name: formData.fullName,
@@ -568,8 +571,8 @@ const OptimizedCheckout = () => {
                             productId={productId || ''}
                             processing={processing}
                             setProcessing={setProcessing}
-                            displayPrice={formatPrice(parseFloat(product?.price || '0') + orderBumpPrice)}
-                            convertedAmount={convertPrice(parseFloat(product?.price || '0') + orderBumpPrice)}
+                            displayPrice={formatPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice)}
+                            convertedAmount={convertPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice)}
                           />
                         </Suspense>
                       )}
@@ -578,7 +581,7 @@ const OptimizedCheckout = () => {
                       {!isCardOnlyCountry && selectedPayment === 'kambapay' && (
                         <Suspense fallback={<div />}>
                           <KambaPayCheckoutOption
-                            productPrice={parseFloat(product?.price || '0') + orderBumpPrice}
+                            productPrice={parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice}
                             currency={userCountry?.currency}
                             onPaymentSuccess={() => {/* lógica de sucesso */}}
                             onSelect={() => {}}

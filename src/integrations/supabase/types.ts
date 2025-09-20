@@ -968,6 +968,7 @@ export type Database = {
           access_extension_description: string | null
           access_extension_type: string | null
           access_extension_value: number | null
+          bump_category: string | null
           bump_product_image: string | null
           bump_product_name: string
           bump_product_price: string
@@ -987,6 +988,7 @@ export type Database = {
           access_extension_description?: string | null
           access_extension_type?: string | null
           access_extension_value?: number | null
+          bump_category?: string | null
           bump_product_image?: string | null
           bump_product_name: string
           bump_product_price: string
@@ -1006,6 +1008,7 @@ export type Database = {
           access_extension_description?: string | null
           access_extension_type?: string | null
           access_extension_value?: number | null
+          bump_category?: string | null
           bump_product_image?: string | null
           bump_product_name?: string
           bump_product_price?: string
@@ -1025,7 +1028,7 @@ export type Database = {
           {
             foreignKeyName: "order_bump_settings_product_id_fkey"
             columns: ["product_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },

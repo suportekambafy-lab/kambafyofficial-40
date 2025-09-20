@@ -17,8 +17,10 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [checkoutSettings, setCheckoutSettings] = useState<any>(null);
-  const [orderBump, setOrderBump] = useState<any>(null);
-  const [orderBumpPrice, setOrderBumpPrice] = useState(0);
+  const [productExtraBump, setProductExtraBump] = useState<any>(null);
+  const [accessExtensionBump, setAccessExtensionBump] = useState<any>(null);
+  const [productExtraPrice, setProductExtraPrice] = useState(0);
+  const [accessExtensionPrice, setAccessExtensionPrice] = useState(0);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -48,8 +50,8 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
 
   // Hook para detectar carrinhos abandonados - memoizado
   const totalAmountForDetection = useMemo(() => 
-    product ? parseFloat(product.price) + orderBumpPrice : 0, 
-    [product, orderBumpPrice]
+    product ? parseFloat(product.price) + productExtraPrice + accessExtensionPrice : 0, 
+    [product, productExtraPrice, accessExtensionPrice]
   );
 
   const { markAsRecovered, hasDetected, abandonedPurchaseId } = useAbandonedPurchaseDetection({
@@ -195,6 +197,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         }
       }
       
+      // Buscar configurações do checkout
       const { data, error } = await supabase
         .from('checkout_customizations')
         .select('*')
@@ -203,6 +206,32 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
 
       if (!error && data?.settings) {
         setCheckoutSettings(data.settings);
+      }
+
+      // Buscar order bump de produto extra
+      const { data: productExtraData, error: productExtraError } = await supabase
+        .from('order_bump_settings')
+        .select('*')
+        .eq('product_id', actualProductId)
+        .eq('bump_category', 'product_extra')
+        .eq('enabled', true)
+        .maybeSingle();
+
+      if (!productExtraError && productExtraData) {
+        setProductExtraBump(productExtraData);
+      }
+
+      // Buscar order bump de extensão de acesso
+      const { data: accessExtensionData, error: accessExtensionError } = await supabase
+        .from('order_bump_settings')
+        .select('*')
+        .eq('product_id', actualProductId)
+        .eq('bump_category', 'access_extension')
+        .eq('enabled', true)
+        .maybeSingle();
+
+      if (!accessExtensionError && accessExtensionData) {
+        setAccessExtensionBump(accessExtensionData);
       }
     } catch (error) {
       console.error('Error loading checkout settings:', error);
@@ -234,18 +263,27 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     }));
   }, [changeCountry]);
 
-  // Função otimizada para order bump
-  const handleOrderBumpToggle = useCallback((isSelected: boolean, bumpData: any) => {
+  // Função otimizada para order bumps
+  const handleProductExtraToggle = useCallback((isSelected: boolean, bumpData: any) => {
     if (isSelected && bumpData) {
-      setOrderBump(bumpData);
+      setProductExtraBump(bumpData);
       const originalPrice = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
       const discountedPriceInKZ = bumpData.discount > 0 
         ? originalPrice * (1 - bumpData.discount / 100)
         : originalPrice;
-      setOrderBumpPrice(discountedPriceInKZ);
+      setProductExtraPrice(discountedPriceInKZ);
     } else {
-      setOrderBump(null);
-      setOrderBumpPrice(0);
+      setProductExtraPrice(0);
+    }
+  }, []);
+
+  const handleAccessExtensionToggle = useCallback((isSelected: boolean, bumpData: any) => {
+    if (isSelected && bumpData) {
+      setAccessExtensionBump(bumpData);
+      const originalPrice = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
+      setAccessExtensionPrice(originalPrice);
+    } else {
+      setAccessExtensionPrice(0);
     }
   }, []);
 
@@ -286,8 +324,10 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     error,
     productNotFound,
     checkoutSettings,
-    orderBump,
-    orderBumpPrice,
+    productExtraBump,
+    accessExtensionBump,
+    productExtraPrice,
+    accessExtensionPrice,
     formData,
     
     // Geolocalização
@@ -315,7 +355,8 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     // Funções
     handleInputChange,
     handleCountryChange,
-    handleOrderBumpToggle,
+    handleProductExtraToggle,
+    handleAccessExtensionToggle,
     fetchBalanceByEmail
   };
 };

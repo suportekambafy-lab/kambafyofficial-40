@@ -216,9 +216,12 @@ export const OptimizedPaymentMethods = memo(({
   isSubmitting,
   onSubmit,
   formatPrice,
-  orderBumpSettings,
-  includeOrderBump,
-  setIncludeOrderBump,
+  productExtraBump,
+  accessExtensionBump,
+  includeProductExtra,
+  setIncludeProductExtra,
+  includeAccessExtension,
+  setIncludeAccessExtension,
   checkoutCustomizations,
   t
 }: any) => {
@@ -242,8 +245,11 @@ export const OptimizedPaymentMethods = memo(({
 
   const calculateTotal = () => {
     let total = parseFloat(product?.price || '0');
-    if (includeOrderBump && orderBumpSettings?.bump_product_price) {
-      total += parseFloat(orderBumpSettings.bump_product_price);
+    if (includeProductExtra && productExtraBump?.bump_product_price) {
+      total += parseFloat(productExtraBump.bump_product_price);
+    }
+    if (includeAccessExtension && accessExtensionBump?.bump_product_price) {
+      total += parseFloat(accessExtensionBump.bump_product_price);
     }
     return total;
   };
@@ -253,26 +259,60 @@ export const OptimizedPaymentMethods = memo(({
       <CardContent className="p-6">
         <h2 className="text-xl font-semibold mb-6">{t('payment.title')}</h2>
         
-        {/* Order Bump */}
-        {orderBumpSettings && (
-          <div className="mb-6 p-4 border-2 border-dashed border-gray-200 rounded-lg">
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                id="orderBump"
-                checked={includeOrderBump}
-                onChange={(e) => setIncludeOrderBump(e.target.checked)}
-                className="mt-1"
-              />
-              <div className="flex-1">
-                <label htmlFor="orderBump" className="font-medium text-gray-900 cursor-pointer">
-                  {t('orderbump.title')} - {formatPrice(parseFloat(orderBumpSettings.bump_product_price))}
-                </label>
-                <p className="text-sm text-gray-600 mt-1">
-                  {orderBumpSettings.bump_product_name}
-                </p>
+        {/* Order Bumps */}
+        {(productExtraBump || accessExtensionBump) && (
+          <div className="mb-6 space-y-4">
+            {/* Produto Extra Order Bump */}
+            {productExtraBump && (
+              <div className="p-4 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-950">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="productExtraBump"
+                    checked={includeProductExtra}
+                    onChange={(e) => setIncludeProductExtra(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="productExtraBump" className="font-medium text-blue-900 dark:text-blue-100 cursor-pointer">
+                      {productExtraBump.title} - {formatPrice(parseFloat(productExtraBump.bump_product_price))}
+                    </label>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                      {productExtraBump.bump_product_name}
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      {productExtraBump.description}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+            
+            {/* Extensão de Acesso Order Bump */}
+            {accessExtensionBump && (
+              <div className="p-4 border-2 border-dashed border-orange-200 rounded-lg bg-orange-50 dark:bg-orange-950">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="accessExtensionBump"
+                    checked={includeAccessExtension}
+                    onChange={(e) => setIncludeAccessExtension(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="accessExtensionBump" className="font-medium text-orange-900 dark:text-orange-100 cursor-pointer">
+                      {accessExtensionBump.title} - {formatPrice(parseFloat(accessExtensionBump.bump_product_price))}
+                    </label>
+                    <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
+                      {accessExtensionBump.bump_product_name}
+                    </p>
+                    <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                      {accessExtensionBump.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
         
