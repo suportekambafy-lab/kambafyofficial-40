@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import EbookUploader from "./EbookUploader";
 import PaymentMethodsSelector from "./PaymentMethodsSelector";
+import CountryPriceConfig from "./CountryPriceConfig";
 import { PaymentMethod } from "@/utils/paymentMethods";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
 import { AccessDurationSelector } from "./AccessDurationSelector";
@@ -51,6 +52,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     memberAreaId: "",
     paymentMethods: [] as PaymentMethod[],
     fantasyName: "",
+    customPrices: {} as Record<string, string>,
     allowAffiliates: false,
     category: "",
     supportEmail: "",
@@ -109,6 +111,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         memberAreaId: editingProduct.member_area_id || "",
         paymentMethods: editingProduct.payment_methods || [],
         fantasyName: editingProduct.fantasy_name || "",
+        customPrices: editingProduct.custom_prices || {},
         allowAffiliates: editingProduct.allow_affiliates || false,
         category: editingProduct.category || "",
         supportEmail: editingProduct.support_email || "",
@@ -130,6 +133,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         memberAreaId: "",
         paymentMethods: [],
         fantasyName: "",
+        customPrices: {},
         allowAffiliates: false,
         category: "",
         supportEmail: "",
@@ -150,7 +154,14 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     }));
   };
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  // Logs de debug
+  console.log('🚨🚨🚨 ProductFormTabs renderizado!!!', { 
+    price: formData.price, 
+    customPrices: formData.customPrices 
+  });
+
+  const handleInputChange = (field: string, value: string | boolean | Record<string, string>) => {
+    console.log('🔄 ProductFormTabs handleInputChange:', { field, value });
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -349,7 +360,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         tags: formData.tags,
         member_area_id: (formData.type === "Curso" && formData.memberAreaId) ? formData.memberAreaId : null,
         payment_methods: isDraft ? [] as any : (formData.paymentMethods as any), // Para rascunho, array vazio é ok
-        fantasy_name: formData.fantasyName || null,
+        custom_prices: formData.customPrices,
         allow_affiliates: formData.allowAffiliates,
         category: isDraft ? (formData.category || null) : formData.category, // Para rascunho, categoria pode ser null
         support_email: formData.supportEmail || null,
@@ -420,6 +431,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
             memberAreaId: "",
             paymentMethods: [],
             fantasyName: "",
+            customPrices: {},
             allowAffiliates: false,
             category: "",
             supportEmail: "",
@@ -568,6 +580,13 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
           placeholder="Ex: 5000"
         />
       </div>
+
+      {/* Configuração de preços por país */}
+      <CountryPriceConfig
+        basePrice={formData.price}
+        customPrices={formData.customPrices}
+        onCustomPricesChange={(prices) => handleInputChange("customPrices", prices)}
+      />
 
       <div className="space-y-2">
         <Label htmlFor="description">Descrição</Label>
