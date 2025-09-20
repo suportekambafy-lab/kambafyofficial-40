@@ -413,17 +413,63 @@ const OptimizedCheckout = () => {
             </Suspense>
           )}
 
-          {/* Order Bump - Antes dos métodos de pagamento */}
-          {checkoutSettings?.orderBump?.enabled && (
-            <Suspense fallback={<div />}>
-              <OptimizedOrderBump
-                productId={productId || ''}
-                position="before_payment_method"
-                onToggle={handleProductExtraToggle}
-                userCountry={userCountry}
-                formatPrice={formatPrice}
-              />
-            </Suspense>
+          {/* Order Bumps - Produto Extra e Extensão de Acesso */}
+          {(productExtraBump || accessExtensionBump) && (
+            <Card className="mb-6">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {/* Produto Extra Order Bump */}
+                  {productExtraBump && (
+                    <div className="p-4 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-950">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id="productExtraBump"
+                          onChange={(e) => handleProductExtraToggle(e.target.checked, productExtraBump)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <label htmlFor="productExtraBump" className="font-medium text-blue-900 dark:text-blue-100 cursor-pointer">
+                            {productExtraBump.title} - {formatPrice(parseFloat(productExtraBump.bump_product_price))}
+                          </label>
+                          <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                            {productExtraBump.bump_product_name}
+                          </p>
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                            {productExtraBump.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Extensão de Acesso Order Bump */}
+                  {accessExtensionBump && (
+                    <div className="p-4 border-2 border-dashed border-orange-200 rounded-lg bg-orange-50 dark:bg-orange-950">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id="accessExtensionBump"
+                          onChange={(e) => handleAccessExtensionToggle(e.target.checked, accessExtensionBump)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <label htmlFor="accessExtensionBump" className="font-medium text-orange-900 dark:text-orange-100 cursor-pointer">
+                            {accessExtensionBump.title} - {formatPrice(parseFloat(accessExtensionBump.bump_product_price))}
+                          </label>
+                          <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
+                            {accessExtensionBump.bump_product_name}
+                          </p>
+                          <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                            {accessExtensionBump.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Formulário principal */}
