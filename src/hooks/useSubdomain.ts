@@ -6,7 +6,7 @@ export function useSubdomain() {
     const hostname = window.location.hostname;
     
     // Detect current subdomain
-    let subdomain: 'main' | 'app' | 'pay' | 'admin' | 'mobile' = 'main';
+    let subdomain: 'main' | 'app' | 'pay' | 'admin' | 'mobile' | 'membros' = 'main';
     
     // Para desenvolvimento/preview, sempre considerar como 'main' a não ser que seja especificado
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
@@ -19,6 +19,8 @@ export function useSubdomain() {
         subdomain = 'pay';
       } else if (path.startsWith('/auth') || path.startsWith('/vendedor') || path.startsWith('/apps') || path.startsWith('/minhas-compras')) {
         subdomain = 'app';
+      } else if (path.startsWith('/login/') || path.startsWith('/area/')) {
+        subdomain = 'membros';
       } else {
         subdomain = 'main'; // Padrão para desenvolvimento
       }
@@ -26,6 +28,8 @@ export function useSubdomain() {
       // Para produção com domínios customizados
       if (hostname.startsWith('mobile.')) {
         subdomain = 'mobile';
+      } else if (hostname.startsWith('membros.')) {
+        subdomain = 'membros';
       } else if (hostname.startsWith('app.')) {
         subdomain = 'app';
       } else if (hostname.startsWith('pay.')) {
@@ -37,7 +41,7 @@ export function useSubdomain() {
       }
     }
     
-    const getSubdomainUrl = (targetSubdomain: 'main' | 'app' | 'pay' | 'admin' | 'mobile', path?: string) => {
+    const getSubdomainUrl = (targetSubdomain: 'main' | 'app' | 'pay' | 'admin' | 'mobile' | 'membros', path?: string) => {
       const currentPath = path || window.location.pathname + window.location.search + window.location.hash;
       
       // MOBILE É ISOLADO - nunca redireciona para outro subdomínio
@@ -51,12 +55,15 @@ export function useSubdomain() {
       }
       
       // Para produção com domínios customizados (exceto mobile)
-      const baseDomain = hostname.replace(/^(app\.|pay\.|admin\.)/, '');
+      const baseDomain = hostname.replace(/^(app\.|pay\.|admin\.|membros\.)/, '');
       
       let targetHostname;
       switch (targetSubdomain) {
         case 'mobile':
           targetHostname = hostname; // Fica onde está
+          break;
+        case 'membros':
+          targetHostname = `membros.${baseDomain}`;
           break;
         case 'app':
           targetHostname = `app.${baseDomain}`;

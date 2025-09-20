@@ -26,14 +26,14 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     }
     
     // Define quais rotas são RESTRITAS de cada subdomínio (não permitidas)
-    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin']; 
-    const restrictedFromApp = ['/checkout', '/obrigado', '/admin']; 
-    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin']; 
-    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/minhas-compras']; 
+    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/login/', '/area/']; 
+    const restrictedFromApp = ['/checkout', '/obrigado', '/admin', '/area/', '/login/']; 
+    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/area/', '/login/']; 
+    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/minhas-compras', '/area/', '/login/']; 
     
     // Verifica se a rota atual é restrita do subdomínio atual
     let shouldRedirect = false;
-    let targetSubdomain: 'main' | 'app' | 'pay' | 'admin' = 'main';
+    let targetSubdomain: 'main' | 'app' | 'pay' | 'admin' | 'membros' = 'main';
     
     if (currentSubdomain === 'main') {
       // kambafy.com: NÃO redirecionar página inicial (/) nem outras páginas públicas
@@ -55,23 +55,41 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         shouldRedirect = true;
         if (currentPath.startsWith('/admin')) {
           targetSubdomain = 'admin';
+        } else if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
+          targetSubdomain = 'membros';
         } else {
           targetSubdomain = 'app';
         }
       }
     } else if (currentSubdomain === 'app') {
-      // app.kambafy.com: permitir página inicial e rotas de área de membros
-      if (currentPath === '/' || currentPath === '' || 
-          currentPath.startsWith('/login/') || 
-          currentPath.startsWith('/area/')) {
-        return; // Manter no subdomínio app
-      }
+      // app.kambafy.com: redirecionar landing page principal para o domínio main
+      if (currentPath === '/' || currentPath === '') {
+        shouldRedirect = true;
+        targetSubdomain = 'main';
+      } 
       else if (restrictedFromApp.some(route => currentPath.startsWith(route))) {
         shouldRedirect = true;
         if (currentPath.startsWith('/admin')) {
           targetSubdomain = 'admin';
         } else if (currentPath.startsWith('/checkout') || currentPath.startsWith('/obrigado')) {
           targetSubdomain = 'pay';
+        } else if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/')) {
+          targetSubdomain = 'membros';
+        }
+      }
+    } else if (currentSubdomain === 'membros') {
+      // membros.kambafy.com: permitir apenas rotas de área de membros (/login/ e /area/)
+      if (!(currentPath.startsWith('/login/') || currentPath.startsWith('/area/'))) {
+        shouldRedirect = true;
+        if (currentPath.startsWith('/admin')) {
+          targetSubdomain = 'admin';
+        } else if (currentPath.startsWith('/checkout') || currentPath.startsWith('/obrigado')) {
+          targetSubdomain = 'pay';
+        } else if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || 
+            currentPath.startsWith('/apps') || currentPath.startsWith('/minhas-compras')) {
+          targetSubdomain = 'app';
+        } else {
+          targetSubdomain = 'main';
         }
       }
     } else if (currentSubdomain === 'pay') {
@@ -81,6 +99,8 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         if (restrictedFromPay.some(route => currentPath.startsWith(route))) {
           if (currentPath.startsWith('/admin')) {
             targetSubdomain = 'admin';
+          } else if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/')) {
+            targetSubdomain = 'membros';
           } else if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || 
               currentPath.startsWith('/apps') || currentPath.startsWith('/minhas-compras')) {
             targetSubdomain = 'app';
