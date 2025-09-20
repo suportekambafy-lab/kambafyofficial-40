@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 
 export function useSubdomain() {
@@ -11,6 +10,14 @@ export function useSubdomain() {
     // Para desenvolvimento/preview, sempre considerar como 'main' a não ser que seja especificado
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
       const path = window.location.pathname;
+      
+      // 🔍 Debug logging da detecção de subdomínio
+      console.log('🔍 useSubdomain: Detectando subdomínio', {
+        hostname,
+        path,
+        isDevelopment: true
+      });
+      
       if (path.startsWith('/mobile')) {
         subdomain = 'mobile';
       } else if (path.startsWith('/admin')) {
@@ -21,9 +28,12 @@ export function useSubdomain() {
         subdomain = 'app';
       } else if (path.startsWith('/login/') || path.startsWith('/area/')) {
         subdomain = 'membros';
+        console.log('🎓 useSubdomain: Detectado subdomínio MEMBROS para rota', path);
       } else {
         subdomain = 'main'; // Padrão para desenvolvimento
       }
+      
+      console.log('🎯 useSubdomain: Subdomínio detectado:', subdomain);
     } else {
       // Para produção com domínios customizados
       if (hostname.startsWith('mobile.')) {

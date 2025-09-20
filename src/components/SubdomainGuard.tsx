@@ -13,16 +13,38 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
 
   useEffect(() => {
     const currentPath = location.pathname + location.search + location.hash;
+    const hostname = window.location.hostname;
+    
+    // 🔍 Debug logging - Informações básicas
+    console.log('🔍 SubdomainGuard: Analisando rota', {
+      currentPath,
+      currentSubdomain,
+      hostname,
+      fullLocation: window.location.href
+    });
     
     // MOBILE É COMPLETAMENTE ISOLADO - sem redirecionamentos
     if (currentSubdomain === 'mobile') {
+      console.log('📱 SubdomainGuard: Subdomínio MOBILE - sem redirecionamentos');
       return;
     }
     
-    // Para desenvolvimento/preview, não fazer NENHUM redirecionamento
-    const hostname = window.location.hostname;
+    // Para desenvolvimento/preview, fazer verificações mas sem redirecionamentos
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
-      console.log('SubdomainGuard: Development environment - skipping all redirections');
+      console.log('🔧 SubdomainGuard: Ambiente de desenvolvimento', {
+        currentSubdomain,
+        currentPath,
+        message: 'Verificando rotas mas sem redirecionamentos forçados'
+      });
+      
+      // Em desenvolvimento, apenas fazer log das verificações
+      if (currentSubdomain === 'membros') {
+        if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
+          console.log('✅ SubdomainGuard DEV: Rota de área de membros válida', currentPath);
+        } else {
+          console.log('⚠️ SubdomainGuard DEV: Rota inválida para subdomínio membros', currentPath);
+        }
+      }
       return;
     }
     
@@ -80,7 +102,18 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       }
     } else if (currentSubdomain === 'membros') {
       // membros.kambafy.com: permitir apenas rotas de área de membros (/login/ e /area/)
+      console.log('🎓 SubdomainGuard: Verificando subdomínio MEMBROS', {
+        currentPath,
+        isLoginRoute: currentPath.startsWith('/login/'),
+        isAreaRoute: currentPath.startsWith('/area/'),
+        isValidMemberRoute: (currentPath.startsWith('/login/') || currentPath.startsWith('/area/'))
+      });
+      
       if (!(currentPath.startsWith('/login/') || currentPath.startsWith('/area/'))) {
+        console.log('❌ SubdomainGuard: Rota inválida para subdomínio membros', {
+          currentPath,
+          message: 'Redirecionando para subdomínio apropriado'
+        });
         shouldRedirect = true;
         if (currentPath.startsWith('/admin')) {
           targetSubdomain = 'admin';
@@ -92,6 +125,8 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         } else {
           targetSubdomain = 'main';
         }
+      } else {
+        console.log('✅ SubdomainGuard: Rota válida para área de membros', currentPath);
       }
     } else if (currentSubdomain === 'pay') {
       // pay.kambafy.com: permitir apenas checkout e obrigado
@@ -121,11 +156,21 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         return;
       }
     }
-    
     if (shouldRedirect) {
       const targetUrl = getSubdomainUrl(targetSubdomain, currentPath);
-      console.log('SubdomainGuard: Redirecting to:', targetUrl);
+      console.log('🔄 SubdomainGuard: REDIRECIONANDO', {
+        from: window.location.href,
+        to: targetUrl,
+        reason: `Subdomínio ${currentSubdomain} não permite rota ${currentPath}`,
+        targetSubdomain
+      });
       window.location.href = targetUrl;
+    } else {
+      console.log('✅ SubdomainGuard: Nenhum redirecionamento necessário', {
+        currentSubdomain,
+        currentPath,
+        message: 'Rota permitida no subdomínio atual'
+      });
     }
   }, [currentSubdomain, location, getSubdomainUrl]);
 

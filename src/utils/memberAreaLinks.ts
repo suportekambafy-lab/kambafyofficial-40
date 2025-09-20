@@ -1,4 +1,5 @@
 import { useSubdomain } from '@/hooks/useSubdomain';
+import { memberAreaDebugLogger } from '@/utils/memberAreaDebugLogger';
 
 /**
  * Utilitário para gerar links corretos da área de membros
@@ -8,12 +9,16 @@ export function useMemberAreaLinks() {
   const { getSubdomainUrl } = useSubdomain();
 
   const getMemberAreaLoginUrl = (memberAreaId: string) => {
-    return getSubdomainUrl('membros', `/login/${memberAreaId}`);
+    const url = getSubdomainUrl('membros', `/login/${memberAreaId}`);
+    memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'login', url);
+    return url;
   };
 
   const getMemberAreaUrl = (memberAreaId: string, path: string = '') => {
     const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
-    return getSubdomainUrl('membros', fullPath);
+    const url = getSubdomainUrl('membros', fullPath);
+    memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'area', url);
+    return url;
   };
 
   const getMemberAreaLessonUrl = (memberAreaId: string, lessonId: string) => {
@@ -26,11 +31,13 @@ export function useMemberAreaLinks() {
 
   const navigateToMemberArea = (memberAreaId: string, path: string = '') => {
     const url = getMemberAreaUrl(memberAreaId, path);
+    memberAreaDebugLogger.logRedirection(window.location.href, url, 'Navegação via hook para área de membros');
     window.location.href = url;
   };
 
   const navigateToMemberAreaLogin = (memberAreaId: string) => {
     const url = getMemberAreaLoginUrl(memberAreaId);
+    memberAreaDebugLogger.logRedirection(window.location.href, url, 'Navegação via hook para login da área de membros');
     window.location.href = url;
   };
 
