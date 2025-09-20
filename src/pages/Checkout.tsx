@@ -222,6 +222,15 @@ const Checkout = () => {
           .eq(isUUID ? 'id' : 'slug', productId)
           .maybeSingle();
 
+        console.log('🔍 DEBUGGING PRODUCT QUERY RESULT (CHECKOUT.TSX):', {
+          productData,
+          hasCustomPrices: !!(productData?.custom_prices),
+          customPricesValue: productData?.custom_prices,
+          customPricesType: typeof productData?.custom_prices,
+          customPricesKeys: productData?.custom_prices ? Object.keys(productData.custom_prices) : 'N/A',
+          productError
+        });
+
         console.log('Product query result:', { productData, productError });
 
         if (productError) {
