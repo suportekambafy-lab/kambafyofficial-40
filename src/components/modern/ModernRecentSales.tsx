@@ -12,6 +12,7 @@ interface RecentSale {
   id: string;
   customer_name: string;
   customer_email: string;
+  customer_phone: string;
   amount: string;
   currency: string;
   created_at: string;
@@ -107,6 +108,7 @@ export function ModernRecentSales() {
               order_id,
               customer_name,
               customer_email,
+              customer_phone,
               amount,
               currency,
               created_at,
@@ -134,6 +136,7 @@ export function ModernRecentSales() {
               id,
               customer_name,
               customer_email,
+              customer_phone,
               amount,
               currency,
               created_at,
@@ -212,6 +215,7 @@ export function ModernRecentSales() {
         id: order.id,
         customer_name: order.customer_name,
         customer_email: order.customer_email,
+        customer_phone: order.customer_phone,
         amount: order.amount,
         currency: order.currency || 'KZ',
         created_at: order.created_at,
@@ -316,32 +320,48 @@ export function ModernRecentSales() {
                     {getInitials(sale.customer_name)}
                   </span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {sale.customer_name}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-muted-foreground truncate">
-                      {sale.product_name || 'Produto'}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {sale.customer_name}
                     </p>
-                    {sale.sale_type === 'affiliate' && (
-                      <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-400">
-                        Afiliado
-                      </Badge>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {sale.customer_email}
+                    </p>
+                    {sale.customer_phone && (
+                      <p className="text-xs text-muted-foreground">
+                        📞 {sale.customer_phone}
+                      </p>
                     )}
-                    {sale.sale_type === 'recovered' && (
-                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400">
-                        Recuperado (20% taxa)
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        {(() => {
+                          const currencyInfo = getCurrencyInfo(sale.currency);
+                          return (
+                            <>
+                              <span>{currencyInfo.flag}</span>
+                              <span>{currencyInfo.name}</span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      {sale.sale_type === 'affiliate' && (
+                        <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-400">
+                          Afiliado
+                        </Badge>
+                      )}
+                      {sale.sale_type === 'recovered' && (
+                        <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400">
+                          Recuperado (20% taxa)
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(sale.created_at), { 
+                        addSuffix: true, 
+                        locale: ptBR 
+                      })}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(sale.created_at), { 
-                      addSuffix: true, 
-                      locale: ptBR 
-                    })}
-                  </p>
-                </div>
                 <div className="text-right">
                   <p className={`text-sm font-medium ${
                     sale.sale_type === 'affiliate' 
@@ -352,12 +372,6 @@ export function ModernRecentSales() {
                   }`}>
                     {formatAmount(sale).main}
                   </p>
-                  {formatAmount(sale).showCountry && (
-                    <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
-                      <span>{formatAmount(sale).flag}</span>
-                      <span>{formatAmount(sale).countryName}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}

@@ -10,6 +10,7 @@ interface Sale {
   order_id: string;
   customer_name: string;
   customer_email: string;
+  customer_phone: string;
   amount: string;
   currency: string;
   status: string;
@@ -116,7 +117,15 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="truncate">{sale.customer_name}</span>
+            <div className="space-y-1 min-w-0 flex-1">
+              <div className="truncate">{sale.customer_name}</div>
+              <div className="text-xs text-muted-foreground truncate">{sale.customer_email}</div>
+              {sale.customer_phone && (
+                <div className="text-xs text-muted-foreground">
+                  📞 {sale.customer_phone}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
@@ -126,8 +135,16 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
           
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="text-xs flex items-center">
-              {getPaymentMethodText(sale.payment_method)}
+            <span className="text-xs flex items-center gap-1">
+              {(() => {
+                const currencyInfo = getCurrencyInfo(sale.currency);
+                return (
+                  <>
+                    <span>{currencyInfo.flag}</span>
+                    <span>{currencyInfo.name}</span>
+                  </>
+                );
+              })()}
             </span>
           </div>
           

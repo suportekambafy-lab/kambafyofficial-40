@@ -465,18 +465,25 @@ export default function Sales() {
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 lg:gap-4">
-                        <div className="space-y-1">
-                          <h3 className="font-semibold text-sm md:text-base line-clamp-1">
-                            {sale.products?.name || 'Produto'}
-                          </h3>
-                          <p className="text-xs md:text-sm text-muted-foreground">
-                            Pedido #{sale.order_id}
+                           <div className="space-y-1">
+                            <h3 className="font-semibold text-sm md:text-base line-clamp-1">
+                              {sale.products?.name || 'Produto'}
+                            </h3>
+                            <p className="text-xs md:text-sm text-muted-foreground">
+                              Pedido #{sale.order_id}
                           </p>
                           <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                             <User className="h-3 w-3 md:h-4 md:w-4" />
                             <span>{sale.customer_name}</span>
                             <span>•</span>
-                            <span>{sale.customer_email}</span>
+                            <div className="space-y-1">
+                              <span>{sale.customer_email}</span>
+                              {sale.customer_phone && (
+                                <div className="text-xs text-muted-foreground">
+                                  📞 {sale.customer_phone}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                         
@@ -543,12 +550,15 @@ export default function Sales() {
                                 Com Afiliado
                               </Badge>
                             ) : null}
-                            {sale.products?.type && (
-                              <Badge variant="outline" className="text-xs">
-                                <Package className="h-3 w-3 mr-1" />
-                                {sale.products.type}
-                              </Badge>
-                            )}
+                            {(() => {
+                              const currencyInfo = getCurrencyInfo(sale.currency);
+                              return (
+                                <Badge variant="outline" className="text-xs">
+                                  <span className="mr-1">{currencyInfo.flag}</span>
+                                  {currencyInfo.name}
+                                </Badge>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>
