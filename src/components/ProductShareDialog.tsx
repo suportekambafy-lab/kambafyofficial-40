@@ -32,21 +32,12 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
     });
   };
 
-  // Função para obter o link correto da área de membros
+  // Função para obter o link correto da área de membros - sempre usar membros.kambafy.com
   const getMemberAreaLink = () => {
-    // Priorizar URL customizada se existir
-    if (product.member_areas?.url) {
-      return product.member_areas.url.startsWith('http') 
-        ? product.member_areas.url 
-        : `https://${product.member_areas.url}`;
-    }
-    
-    // Usar ID da área de membros com geração padronizada
     const memberAreaId = product.member_area_id || product.member_areas?.id;
     if (memberAreaId) {
       return memberAreaLinks.getMemberAreaUrl(memberAreaId);
     }
-    
     return '';
   };
 

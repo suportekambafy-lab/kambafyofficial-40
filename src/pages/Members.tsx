@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import type { Lesson, Module, MemberArea } from "@/types/memberArea";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
+import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 
 interface Product {
   id: string;
@@ -1158,14 +1159,15 @@ export default function Members() {
                       <Label className="text-xs md:text-sm font-medium">URL de Acesso dos Alunos</Label>
                       <div className="flex gap-2 mt-1">
                         <Input 
-                          value={`https://app.kambafy.com/login/${selectedArea.url}`} 
+                          value={createMemberAreaLinks().getMemberAreaLoginUrl(selectedArea.id)} 
                           disabled 
                           className="text-sm" 
                         />
                         <Button 
                           size="sm" 
                           onClick={() => {
-                            navigator.clipboard.writeText(`https://app.kambafy.com/login/${selectedArea.url}`);
+                            const memberAreaUrl = createMemberAreaLinks().getMemberAreaLoginUrl(selectedArea.id);
+                            navigator.clipboard.writeText(memberAreaUrl);
                             toast({
                               title: "Link copiado!",
                               description: "O link de acesso foi copiado para a área de transferência"
