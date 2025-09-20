@@ -23,11 +23,14 @@ interface OrderBumpData {
   bump_product_price: string;
   bump_product_image: string | null;
   user_id: string;
+  bump_product_id?: string;
   // Campos para extensões de acesso
   bump_type?: string;
   access_extension_type?: string;
   access_extension_value?: number;
   access_extension_description?: string;
+  // Preços personalizados do produto do order bump
+  bump_product_custom_prices?: Record<string, string>;
 }
 
 interface OrderBumpProps {
@@ -97,6 +100,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
         console.log(`✅ OrderBump: Order bump encontrado:`, data);
         console.log(`📋 Tipo do bump:`, data.bump_type);
         console.log(`⏰ Extensão - Tipo:`, data.access_extension_type, `Valor:`, data.access_extension_value);
+        console.log(`💰 OrderBump: Preços personalizados não disponíveis - dados armazenados como texto`);
         
         setOrderBump(data);
       } else {
