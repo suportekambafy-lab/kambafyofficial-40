@@ -22,9 +22,9 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
   console.log('Product for sharing:', product);
   console.log('Product ID:', product.id, 'Type:', typeof product.id);
 
-  // Gerar links com prerender SEO otimizado
-  const productSEOLink = generateProductSEOLink(product.id, 'product');
-  const checkoutSEOLink = generateProductSEOLink(product.id, 'checkout');
+  // Gerar URLs amigáveis do próprio domínio Kambafy
+  const productSEOLink = generateProductSEOLink(product.id, 'product'); // kambafy.com/p/id
+  const checkoutSEOLink = generateProductSEOLink(product.id, 'checkout'); // pay.kambafy.com/checkout/id
 
   // Links de compartilhamento para redes sociais
   const shareLinks = {
@@ -87,7 +87,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Link SEO Otimizado</Label>
+              <Label>Link do Produto</Label>
               <div className="flex gap-2">
                 <Input 
                   value={productSEOLink} 
@@ -102,7 +102,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Link otimizado para redes sociais com título, descrição e capa do produto.
+                Link amigável (kambafy.com/p/id) com SEO otimizado para redes sociais.
               </p>
               <div className="flex gap-2">
                 <Button 
@@ -156,7 +156,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
 
           <div className="bg-muted p-3 rounded-md">
             <p className="text-sm">
-              <strong>✨ SEO Otimizado:</strong> Links gerados automaticamente incluem título, descrição e capa do produto para melhor preview nas redes sociais.
+              <strong>✨ Links Inteligentes:</strong> URLs amigáveis (kambafy.com/p/id) que detectam automaticamente se é um bot/rede social e mostram as informações corretas do produto.
             </p>
           </div>
         </CardContent>

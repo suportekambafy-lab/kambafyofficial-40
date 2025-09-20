@@ -1,4 +1,4 @@
-import { getProductPrerenderUrl } from './checkoutPrerender';
+import { getProductShareUrl, getCheckoutUrl } from './checkoutPrerender';
 
 /**
  * Utility functions for product SEO optimization
@@ -19,13 +19,17 @@ export interface ProductSEOData {
 }
 
 /**
- * Gera link de produto otimizado para SEO
+ * Gera link de produto amigável para compartilhamento
+ * Usa URLs simples do próprio domínio kambafy.com
  */
 export const generateProductSEOLink = (
   productId: string, 
   context: 'checkout' | 'product' = 'product'
 ): string => {
-  return getProductPrerenderUrl(productId, context);
+  if (context === 'checkout') {
+    return getCheckoutUrl(productId);
+  }
+  return getProductShareUrl(productId);
 };
 
 /**
@@ -56,7 +60,7 @@ export const generateProductOGData = (product: ProductSEOData) => {
     title,
     description,
     image,
-    url: generateProductSEOLink(product.id),
+    url: getProductShareUrl(product.id), // Sempre usar URL de compartilhamento amigável
     type: 'product',
     siteName: 'Kambafy',
     imageAlt: product.image_alt || product.name,
@@ -87,7 +91,7 @@ export const generateProductStructuredData = (product: ProductSEOData) => {
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://pay.kambafy.com/checkout/${product.id}`,
+      "url": getCheckoutUrl(product.id),
       "priceCurrency": ogData.currency,
       "price": ogData.price,
       "availability": "https://schema.org/InStock",
@@ -112,11 +116,11 @@ export const generateProductStructuredData = (product: ProductSEOData) => {
 };
 
 /**
- * Copia link de produto para área de transferência com SEO otimizado
+ * Copia link de produto amigável para área de transferência
  */
 export const copyProductLink = async (productId: string, context: 'checkout' | 'product' = 'product'): Promise<boolean> => {
   try {
-    const link = generateProductSEOLink(productId, context);
+    const link = context === 'checkout' ? getCheckoutUrl(productId) : getProductShareUrl(productId);
     await navigator.clipboard.writeText(link);
     return true;
   } catch (error) {
