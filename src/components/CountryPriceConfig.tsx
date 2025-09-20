@@ -22,6 +22,8 @@ export const CountryPriceConfig: React.FC<CountryPriceConfigProps> = ({
   customPrices,
   onCustomPricesChange
 }) => {
+  console.log('🎯 CountryPriceConfig rendered', { basePrice, customPrices });
+  
   const [enableCustomPricing, setEnableCustomPricing] = useState(
     Object.keys(customPrices).length > 0
   );

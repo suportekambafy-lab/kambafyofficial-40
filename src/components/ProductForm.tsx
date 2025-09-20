@@ -424,11 +424,14 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
               />
             </div>
 
-            <CountryPriceConfig
-              basePrice={formData.price}
-              customPrices={formData.customPrices}
-              onCustomPricesChange={(prices) => handleInputChange("customPrices", prices as any)}
-            />
+            {/* Configuração de preços por país */}
+            {formData.price && (
+              <CountryPriceConfig
+                basePrice={formData.price}
+                customPrices={formData.customPrices}
+                onCustomPricesChange={(prices) => handleInputChange("customPrices", prices)}
+              />
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
