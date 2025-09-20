@@ -13,10 +13,14 @@ const Index = () => {
   const navigate = useNavigate();
   const { currentSubdomain } = useSubdomain();
 
-  // Removido console.log desnecessário
+  // Debug logs para investigar o problema
+  console.log('🔍 Index.tsx - currentSubdomain:', currentSubdomain);
+  console.log('🔍 Index.tsx - hostname:', window.location.hostname);
+  console.log('🔍 Index.tsx - pathname:', window.location.pathname);
 
   // Se for mobile ou app subdomain, mostrar interface mobile específica
   if (currentSubdomain === 'mobile' || currentSubdomain === 'app') {
+    console.log('✅ Redirecionando para Mobile component');
     return <Mobile />;
   }
 

@@ -14,6 +14,13 @@ const Mobile = () => {
   const { user, loading, signIn } = useAuth();
   const { authReady, isAuthenticated } = useAuthGuard();
 
+  // Debug logs
+  console.log('🔍 Mobile.tsx - Componente carregado');
+  console.log('🔍 Mobile.tsx - user:', user);
+  console.log('🔍 Mobile.tsx - loading:', loading);
+  console.log('🔍 Mobile.tsx - authReady:', authReady);
+  console.log('🔍 Mobile.tsx - isAuthenticated:', isAuthenticated);
+
   useEffect(() => {
     if (isAuthenticated && user) {
       const storedUserType = localStorage.getItem('userType') as 'customer' | 'business' | null;
