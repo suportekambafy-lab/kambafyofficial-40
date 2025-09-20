@@ -183,9 +183,24 @@ export const useGeoLocation = () => {
   const formatPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): string => {
     const country = targetCountry || userCountry;
     
+    console.log('🏷️ FORMAT PRICE DEBUG:', {
+      priceInKZ,
+      countryCode: country.code,
+      countryName: country.name,
+      customPrices,
+      hasCustomPriceForCountry: !!(customPrices && customPrices[country.code])
+    });
+    
     // Verificar se há preço customizado para o país
     if (customPrices && customPrices[country.code]) {
       const customPrice = parseFloat(customPrices[country.code]);
+      console.log('✅ USANDO PREÇO CUSTOMIZADO:', {
+        originalPrice: priceInKZ,
+        customPrice,
+        country: country.code,
+        currency: country.currency
+      });
+      
       if (!isNaN(customPrice)) {
         switch (country.currency) {
           case 'EUR':
@@ -199,6 +214,9 @@ export const useGeoLocation = () => {
       }
     }
     
+    console.log('⚠️ USANDO PREÇO CONVERTIDO AUTOMATICAMENTE (não tem customizado)');
+
+    // If no custom price, use automatic conversion
     const convertedPrice = convertPrice(priceInKZ, country);
     
     switch (country.currency) {
@@ -208,7 +226,7 @@ export const useGeoLocation = () => {
         return `${convertedPrice.toFixed(2)} MZN`;
       case 'KZ':
       default:
-        return `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;
+        return `${parseFloat(convertedPrice.toString()).toLocaleString('pt-BR')} KZ`;
     }
   };
 
@@ -244,11 +262,14 @@ export const useGeoLocation = () => {
   useEffect(() => {
     const initializeGeoLocation = async () => {
       console.log('🌍 Initializing geolocation hook...');
+      console.log('🌍 SUPPORTED COUNTRIES:', SUPPORTED_COUNTRIES);
       
       // Verificar se já temos dados salvos para evitar flash de loading
       const storedCountry = localStorage.getItem('userCountry');
       const storedRates = localStorage.getItem('exchangeRates');
       const lastUpdate = localStorage.getItem('ratesLastUpdate');
+      
+      console.log('💾 CACHED DATA:', { storedCountry, storedRates, lastUpdate });
       
       // Se temos dados recentes (menos de 1 hora), usar imediatamente
       const now = Date.now();
@@ -262,6 +283,7 @@ export const useGeoLocation = () => {
           
           if (countryData && rates) {
             console.log('🌍 Using cached data to prevent flash - checkout can now load immediately');
+            console.log('🌍 CACHED COUNTRY DATA:', countryData);
             setUserCountry(countryData);
             
             // Aplicar taxas salvas
@@ -288,6 +310,7 @@ export const useGeoLocation = () => {
       }
       
       // Se não temos dados em cache, fazer detecção normal
+      console.log('🌍 NO CACHED DATA - Starting fresh detection');
       await detectCountryByIP();
       await fetchExchangeRates();
       setIsReady(true);

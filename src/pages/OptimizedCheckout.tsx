@@ -59,6 +59,15 @@ const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
   };
 
   const getDisplayPrice = (priceInKZ: number): string => {
+    // Debug logs para verificar se os preços personalizados estão funcionando
+    console.log('🛒 CHECKOUT DEBUG:', {
+      priceInKZ,
+      userCountry: userCountry?.code,
+      userCountryName: userCountry?.name,
+      customPrices: product?.custom_prices,
+      hasCustomPrices: !!(product?.custom_prices && Object.keys(product?.custom_prices).length > 0)
+    });
+    
     // Sempre mostrar preço para evitar flash
     return formatPrice(priceInKZ, userCountry, product?.custom_prices);
   };
