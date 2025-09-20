@@ -150,7 +150,7 @@ const Checkout = () => {
 
   const getDisplayPrice = (priceInKZ: number): string => {
     // Sempre mostrar um preço para evitar flash - usar fallback se necessário
-    const displayPrice = formatPrice(priceInKZ);
+    const displayPrice = formatPrice(priceInKZ, userCountry, product?.custom_prices);
     console.log(`Displaying ${priceInKZ} KZ as ${displayPrice}`);
     return displayPrice;
   };
@@ -1968,7 +1968,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                           )}
                         </div>
                         <span className="font-medium">
-                          +{formatPrice(orderBumpPrice)}
+                          +{formatPrice(orderBumpPrice, userCountry, product?.custom_prices)}
                         </span>
                       </div>
                     )}
