@@ -11,11 +11,14 @@ interface CountryPriceConfigProps {
   onCustomPricesChange: (prices: Record<string, string>) => void;
 }
 
-const countries = [
+const allCountries = [
   { code: 'AO', name: 'Angola', currency: 'KZ', flag: '🇦🇴' },
   { code: 'PT', name: 'Portugal', currency: 'EUR', flag: '🇵🇹' },
   { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿' }
 ];
+
+// Filtrar Angola (moeda base) das opções de preços personalizados
+const countries = allCountries.filter(country => country.code !== 'AO');
 
 export default function CountryPriceConfig({ 
   basePrice = "", 
