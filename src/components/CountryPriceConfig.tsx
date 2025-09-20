@@ -29,6 +29,12 @@ export default function CountryPriceConfig({
   );
   const [prices, setPrices] = useState(customPrices || {});
 
+  // Sync local prices when customPrices prop changes
+  useEffect(() => {
+    console.log('🔄 Syncing customPrices to local state:', customPrices);
+    setPrices(customPrices || {});
+  }, [customPrices]);
+
   useEffect(() => {
     console.log('🔄 CountryPriceConfig useEffect - enableCustomPricing:', enableCustomPricing);
     if (!enableCustomPricing) {
