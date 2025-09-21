@@ -66,7 +66,9 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
       total,
       currency: userCountry?.currency,
       userCountry: userCountry?.code,
-      productCustomPrices: product?.custom_prices
+      productCustomPrices: product?.custom_prices,
+      hasOrderBump: productExtraPrice > 0,
+      hasExtension: accessExtensionPrice > 0
     });
     
     return total;
@@ -312,6 +314,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
 
   // Função otimizada para order bumps
   const handleProductExtraToggle = useCallback((isSelected: boolean, bumpData: any) => {
+    console.log(`🚨🚨🚨 HANDLE PRODUCT EXTRA TOGGLE - FUNCTION ENTRY:`, { isSelected, bumpData: !!bumpData });
     console.log(`🔥 HANDLE PRODUCT EXTRA TOGGLE - START:`, {
       isSelected,
       bumpData: bumpData ? {
@@ -324,26 +327,28 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     });
 
     if (isSelected && bumpData) {
+      console.log(`🚨 SETTING PRODUCT EXTRA BUMP DATA:`, bumpData);
       setProductExtraBump(bumpData);
       
       // Calcular preço considerando preços personalizados para o país do usuário
       const originalPriceKZ = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
       let finalPrice = originalPriceKZ;
       
-      // Verificar se há preços personalizados para o país atual
+      console.log(`🚨 CALCULATING ORDER BUMP PRICE:`, {
+        originalPriceKZ,
+        hasCustomPrices: !!(bumpData.bump_product_custom_prices),
+        userCountryCode: userCountry?.code,
+        customPriceForCountry: bumpData.bump_product_custom_prices?.[userCountry?.code || '']
+      });
+      
+      // SEMPRE usar preços personalizados se existirem
       if (bumpData.bump_product_custom_prices && userCountry?.code && bumpData.bump_product_custom_prices[userCountry.code]) {
-        const customPrice = parseFloat(bumpData.bump_product_custom_prices[userCountry.code]);
-        if (!isNaN(customPrice)) {
-          // Use o preço personalizado na moeda local, não converter para KZ
-          finalPrice = customPrice;
-          console.log(`🔥 Order bump usando preço personalizado: ${customPrice} ${userCountry.currency} (original: ${originalPriceKZ} KZ)`);
-        }
+        finalPrice = parseFloat(bumpData.bump_product_custom_prices[userCountry.code]);
+        console.log(`🚨 USANDO PREÇO PERSONALIZADO DO ORDER BUMP: ${finalPrice} ${userCountry.currency}`);
       } else {
-        // Se não há preço personalizado, converter o preço KZ para a moeda local
-        if (userCountry && userCountry.currency !== 'KZ') {
-          finalPrice = originalPriceKZ / userCountry.exchangeRate;
-        }
-        console.log(`🔥 Order bump usando conversão: ${finalPrice} ${userCountry?.currency} (original: ${originalPriceKZ} KZ)`);
+        // Fallback: converter KZ para moeda local
+        finalPrice = convertPrice(originalPriceKZ, userCountry);
+        console.log(`🚨 USANDO CONVERSÃO KZ: ${finalPrice} ${userCountry?.currency}`);
       }
       
       // Aplicar desconto ao preço final
@@ -363,8 +368,9 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     } else {
       console.log(`🔥 Order bump deselected, setting price to 0`);
       setProductExtraPrice(0);
+      setProductExtraBump(null);
     }
-  }, [userCountry]);
+  }, [userCountry, convertPrice, productExtraPrice]);
 
   const handleAccessExtensionToggle = useCallback((isSelected: boolean, bumpData: any) => {
     if (isSelected && bumpData) {

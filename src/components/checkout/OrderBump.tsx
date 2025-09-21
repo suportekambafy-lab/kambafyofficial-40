@@ -139,9 +139,12 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
   };
 
   const handleToggle = () => {
+    console.log(`🔥 ORDER BUMP HANDLE TOGGLE CALLED:`, { isSelected, orderBump: orderBump?.id });
     const newIsSelected = !isSelected;
     setIsSelected(newIsSelected);
+    console.log(`🔥 ORDER BUMP CALLING onToggle:`, { newIsSelected, hasOnToggle: !!onToggle, orderBumpData: newIsSelected ? orderBump : null });
     onToggle?.(newIsSelected, newIsSelected ? orderBump : null);
+    console.log(`🔥 ORDER BUMP onToggle CALLED SUCCESSFULLY`);
   };
 
   const calculateDiscountedPriceInKZ = (originalPrice: string, discount: number): number => {

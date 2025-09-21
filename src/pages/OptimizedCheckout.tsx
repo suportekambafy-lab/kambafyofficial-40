@@ -653,30 +653,40 @@ const OptimizedCheckout = () => {
                         <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded"></div>}>
                           <StripeCardPayment
                             paymentMethod={selectedPayment}
-                             amount={(() => {
-                               // Calcular o valor total na moeda do país
-                               const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
-                               const total = productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
-                               
-                                  console.log(`🔥 STRIPE AMOUNT CALCULATION - DEBUGGING:`, {
-                                    productPriceOriginal: parseFloat(product?.price || '0'),
-                                    productPrice: productPriceInTargetCurrency,
-                                    orderBumpPrice: productExtraPrice,
-                                    extensionPrice: accessExtensionPrice,
-                                    total,
-                                    currency: userCountry?.currency,
-                                    userCountryCode: userCountry?.code,
-                                    productCustomPrices: product?.custom_prices,
-                                    productExtraBump: productExtraBump ? {
-                                      title: productExtraBump.title,
-                                      price: productExtraBump.bump_product_price,
-                                      customPrices: productExtraBump.bump_product_custom_prices
-                                    } : null,
-                                    isOrderBumpSelected: !!productExtraPrice
-                                  });
+                              amount={(() => {
+                                console.log(`🔥 CALCULATING FINAL STRIPE AMOUNT:`);
                                 
-                                return total;
-                             })()}
+                                // Use custom prices directly instead of converting KZ
+                                let productPrice = parseFloat(product?.price || '0');
+                                if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
+                                  productPrice = parseFloat(product.custom_prices[userCountry.code]);
+                                  console.log(`💰 Using custom product price: ${productPrice} ${userCountry?.currency}`);
+                                } else {
+                                  productPrice = convertPrice(productPrice, userCountry, product?.custom_prices);
+                                  console.log(`💰 Using converted product price: ${productPrice} ${userCountry?.currency}`);
+                                }
+                                
+                                const total = productPrice + productExtraPrice + accessExtensionPrice;
+                                
+                                   console.log(`🔥 STRIPE AMOUNT CALCULATION - DEBUGGING:`, {
+                                     productPriceOriginal: parseFloat(product?.price || '0'),
+                                     productPriceFinal: productPrice,
+                                     orderBumpPrice: productExtraPrice,
+                                     extensionPrice: accessExtensionPrice,
+                                     total,
+                                     currency: userCountry?.currency,
+                                     userCountryCode: userCountry?.code,
+                                     productCustomPrices: product?.custom_prices,
+                                     productExtraBump: productExtraBump ? {
+                                       title: productExtraBump.title,
+                                       price: productExtraBump.bump_product_price,
+                                       customPrices: productExtraBump.bump_product_custom_prices
+                                     } : null,
+                                     isOrderBumpSelected: !!productExtraPrice
+                                   });
+                                 
+                                 return total;
+                              })()}
                             currency={userCountry?.currency || 'KZ'}
                             customerData={{ 
                               name: formData.fullName,
@@ -707,13 +717,21 @@ const OptimizedCheckout = () => {
                                 return formatPrice(total, userCountry);
                               })()}
                               convertedAmount={(() => {
-                                // Calcular o valor total considerando preços personalizados
-                                const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
-                                const total = productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
+                                console.log(`🔥 CALCULATING STRIPE TOTAL:`);
+                                
+                                // Use custom prices directly
+                                let productPrice = parseFloat(product?.price || '0');
+                                if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
+                                  productPrice = parseFloat(product.custom_prices[userCountry.code]);
+                                } else {
+                                  productPrice = convertPrice(productPrice, userCountry, product?.custom_prices);
+                                }
+                                
+                                const total = productPrice + productExtraPrice + accessExtensionPrice;
                                 
                                 console.log(`🔥 STRIPE TOTAL CALCULATION - DEBUGGING:`, {
                                   productPriceOriginal: parseFloat(product?.price || '0'),
-                                  productPrice: productPriceInTargetCurrency,
+                                  productPriceFinal: productPrice,
                                   orderBumpPrice: productExtraPrice,
                                   extensionPrice: accessExtensionPrice,
                                   total,
