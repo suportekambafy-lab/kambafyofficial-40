@@ -156,7 +156,12 @@ const Checkout = () => {
 
   // Função para converter preço - usando a conversão direta sem arredondamentos extras
   const getConvertedPrice = (priceInKZ: number): number => {
-    const converted = convertPrice(priceInKZ);
+    // Verificar se convertPrice está disponível antes de usar
+    if (!convertPrice || !userCountry) {
+      console.log(`Converting ${priceInKZ} KZ - geo not ready, returning original`);
+      return priceInKZ;
+    }
+    const converted = convertPrice(priceInKZ, userCountry);
     console.log(`Converting ${priceInKZ} KZ to ${converted} ${userCountry.currency}`);
     return converted;
   };
@@ -169,6 +174,12 @@ const Checkout = () => {
       return displayPrice;
     }
     
+    // Verificar se userCountry está disponível
+    if (!userCountry) {
+      console.log(`🚨 getDisplayPrice - GEO NOT READY: ${priceInKZ} KZ`);
+      return `${priceInKZ.toLocaleString()} KZ`;
+    }
+    
     // SEMPRE usar preços personalizados se disponíveis para o país do usuário
     if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code] && priceInKZ === originalPriceKZ) {
       const customPrice = parseFloat(product.custom_prices[userCountry.code]);
@@ -177,6 +188,12 @@ const Checkout = () => {
                          `${customPrice.toLocaleString()} KZ`;
       console.log(`🚨 getDisplayPrice - USANDO PREÇO PERSONALIZADO: ${priceInKZ} KZ -> ${displayPrice}`);
       return displayPrice;
+    }
+    
+    // Verificar se formatPrice está disponível antes de usar
+    if (!formatPrice || !userCountry) {
+      console.log(`🚨 getDisplayPrice - FORMAT NOT READY: ${priceInKZ} KZ`);
+      return `${priceInKZ.toLocaleString()} KZ`;
     }
     
     const displayPrice = formatPrice(priceInKZ, userCountry, product?.custom_prices);
@@ -519,8 +536,13 @@ const Checkout = () => {
         console.log(`🚨 CHECKOUT.TSX - USANDO PREÇO PERSONALIZADO: ${finalPrice} ${userCountry.currency}`);
       } else {
         // Fallback: converter KZ para moeda local
-        finalPrice = convertPrice(originalPriceKZ, userCountry);
-        console.log(`🚨 CHECKOUT.TSX - USANDO CONVERSÃO KZ: ${finalPrice} ${userCountry?.currency}`);
+        if (convertPrice && userCountry) {
+          finalPrice = convertPrice(originalPriceKZ, userCountry);
+          console.log(`🚨 CHECKOUT.TSX - USANDO CONVERSÃO KZ: ${finalPrice} ${userCountry?.currency}`);
+        } else {
+          console.log(`🚨 CHECKOUT.TSX - CONVERSION NOT READY: using original price ${originalPriceKZ} KZ`);
+          finalPrice = originalPriceKZ;
+        }
       }
       
       // Aplicar desconto ao preço final
