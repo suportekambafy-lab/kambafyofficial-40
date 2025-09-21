@@ -459,15 +459,50 @@ const Checkout = () => {
   };
 
   const handleOrderBumpToggle = (isSelected: boolean, bumpData: any) => {
+    console.log(`🚨 CHECKOUT.TSX - handleOrderBumpToggle CALLED:`, { 
+      isSelected, 
+      bumpData: bumpData ? {
+        id: bumpData.id,
+        bump_product_price: bumpData.bump_product_price,
+        bump_product_custom_prices: bumpData.bump_product_custom_prices,
+        discount: bumpData.discount
+      } : null,
+      userCountry: userCountry?.code 
+    });
+
     if (isSelected && bumpData) {
       setOrderBump(bumpData);
-      // Calcular o preço com desconto em KZ
-      const originalPrice = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
-      const discountedPriceInKZ = bumpData.discount > 0 
-        ? originalPrice * (1 - bumpData.discount / 100)
-        : originalPrice;
-      setOrderBumpPrice(discountedPriceInKZ);
+      
+      // Calcular preço considerando preços personalizados para o país do usuário
+      const originalPriceKZ = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
+      let finalPrice = originalPriceKZ;
+      
+      console.log(`🚨 CHECKOUT.TSX - CALCULATING ORDER BUMP PRICE:`, {
+        originalPriceKZ,
+        hasCustomPrices: !!(bumpData.bump_product_custom_prices),
+        userCountryCode: userCountry?.code,
+        customPriceForCountry: bumpData.bump_product_custom_prices?.[userCountry?.code || '']
+      });
+      
+      // SEMPRE usar preços personalizados se existirem
+      if (bumpData.bump_product_custom_prices && userCountry?.code && bumpData.bump_product_custom_prices[userCountry.code]) {
+        finalPrice = parseFloat(bumpData.bump_product_custom_prices[userCountry.code]);
+        console.log(`🚨 CHECKOUT.TSX - USANDO PREÇO PERSONALIZADO: ${finalPrice} ${userCountry.currency}`);
+      } else {
+        // Fallback: converter KZ para moeda local
+        finalPrice = convertPrice(originalPriceKZ, userCountry);
+        console.log(`🚨 CHECKOUT.TSX - USANDO CONVERSÃO KZ: ${finalPrice} ${userCountry?.currency}`);
+      }
+      
+      // Aplicar desconto ao preço final
+      const discountedPrice = bumpData.discount > 0 
+        ? finalPrice * (1 - bumpData.discount / 100)
+        : finalPrice;
+      
+      console.log(`🚨 CHECKOUT.TSX - Final order bump price: ${discountedPrice} ${userCountry?.currency}`);
+      setOrderBumpPrice(discountedPrice);
     } else {
+      console.log(`🚨 CHECKOUT.TSX - Order bump deselected, setting price to 0`);
       setOrderBump(null);
       setOrderBumpPrice(0);
     }
