@@ -98,8 +98,18 @@ const Checkout = () => {
     }
   }, []);
 
-  // Hook para detectar carrinhos abandonados
-  const totalAmountForDetection = product ? parseFloat(product.price) + orderBumpPrice : 0;
+  // Hook para detectar carrinhos abandonados - USAR VALORES CORRETOS
+  // Calcular o valor total usando preços finais (considerando personalizados)
+  const getProductFinalPrice = () => {
+    if (!product) return 0;
+    const originalPriceKZ = parseFloat(product.price);
+    if (product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
+      return parseFloat(product.custom_prices[userCountry.code]);
+    }
+    return getConvertedPrice(originalPriceKZ);
+  };
+  
+  const totalAmountForDetection = product ? getProductFinalPrice() + orderBumpPrice : 0;
   const { markAsRecovered, hasDetected, abandonedPurchaseId } = useAbandonedPurchaseDetection({
     product,
     formData,
@@ -141,6 +151,9 @@ const Checkout = () => {
     return phoneCodes[countryCode] || '+244';
   };
 
+  // Definir originalPriceKZ primeiro para usar em outras funções
+  const originalPriceKZ = product ? parseFloat(product.price) : 0;
+
   // Função para converter preço - usando a conversão direta sem arredondamentos extras
   const getConvertedPrice = (priceInKZ: number): number => {
     const converted = convertPrice(priceInKZ);
@@ -149,9 +162,18 @@ const Checkout = () => {
   };
 
   const getDisplayPrice = (priceInKZ: number): string => {
-    // Sempre mostrar um preço para evitar flash - usar fallback se necessário
+    // SEMPRE usar preços personalizados se disponíveis para o país do usuário
+    if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code] && priceInKZ === originalPriceKZ) {
+      const customPrice = parseFloat(product.custom_prices[userCountry.code]);
+      const displayPrice = userCountry.currency === 'EUR' ? `€${customPrice.toFixed(2)}` :
+                         userCountry.currency === 'MZN' ? `${customPrice.toFixed(2)} MZN` :
+                         `${customPrice.toLocaleString()} KZ`;
+      console.log(`🚨 getDisplayPrice - USANDO PREÇO PERSONALIZADO: ${priceInKZ} KZ -> ${displayPrice}`);
+      return displayPrice;
+    }
+    
     const displayPrice = formatPrice(priceInKZ, userCountry, product?.custom_prices);
-    console.log(`Displaying ${priceInKZ} KZ as ${displayPrice}`);
+    console.log(`🚨 getDisplayPrice - USANDO FORMATAÇÃO PADRÃO: ${priceInKZ} KZ -> ${displayPrice}`);
     return displayPrice;
   };
 
@@ -535,7 +557,7 @@ const Checkout = () => {
       try {
         console.log('🔔 Triggering webhooks for Stripe payment success...');
         
-        const totalAmountInKZ = parseFloat(product.price) + orderBumpPrice;
+        const totalAmountInKZ = finalProductPrice + orderBumpPrice;
         
         const webhookPayload = {
           event: 'payment.success',
@@ -601,7 +623,7 @@ const Checkout = () => {
         console.error('❌ Error triggering webhooks for Stripe payment:', webhookError);
       }
 
-      const totalAmountInKZ = parseFloat(product.price) + orderBumpPrice;
+      const totalAmountInKZ = finalProductPrice + orderBumpPrice;
       
       // Verificar se há upsell configurado
       const shouldRedirectToUpsell = checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link;
@@ -706,7 +728,7 @@ const Checkout = () => {
       }
 
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
-      const totalAmount = parseFloat(product.price) + orderBumpPrice;
+      const totalAmount = finalProductPrice + orderBumpPrice;
 
       // Calcular comissões se houver afiliado
       let affiliate_commission = null;
@@ -878,7 +900,7 @@ const Checkout = () => {
       setProcessing(true);
 
       try {
-        const totalAmount = parseFloat(product.price) + orderBumpPrice;
+        const totalAmount = finalProductPrice + orderBumpPrice;
         const merchantTransactionId = `TR${Date.now()}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
         
         const appyPayData = {
@@ -992,7 +1014,7 @@ ${JSON.stringify(appyPayData, null, 2)}
       setProcessing(true);
 
       try {
-        const totalAmount = parseFloat(product.price) + orderBumpPrice;
+        const totalAmount = finalProductPrice + orderBumpPrice;
         
         // Primeiro, enviar código 2FA para segurança da compra
         console.log('🔒 Enviando código 2FA para compra KambaPay...');
@@ -1191,7 +1213,7 @@ ${JSON.stringify(appyPayData, null, 2)}
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
-      const totalAmount = parseFloat(product.price) + orderBumpPrice;
+      const totalAmount = finalProductPrice + orderBumpPrice;
 
       // Calcular comissões se houver afiliado
       let affiliate_commission = null;
@@ -1582,16 +1604,33 @@ ${JSON.stringify(appyPayData, null, 2)}
     );
   }
 
-  const originalPrice = parseInt(product.price);
-  const convertedPrice = getConvertedPrice(originalPrice);
-  const totalPrice = originalPrice + orderBumpPrice;
-  const convertedTotalPrice = getConvertedPrice(totalPrice);
+  // CALCULAR PRECOS CORRETOS USANDO PREÇOS PERSONALIZADOS
+  
+  // 🔥 CALCULAR PREÇO FINAL DO PRODUTO PRINCIPAL (considerando preços personalizados)
+  let finalProductPrice = originalPriceKZ;
+  if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
+    finalProductPrice = parseFloat(product.custom_prices[userCountry.code]);
+    console.log(`🚨 PRODUTO PRINCIPAL - USANDO PREÇO PERSONALIZADO: ${finalProductPrice} ${userCountry.currency}`);
+  } else {
+    finalProductPrice = getConvertedPrice(originalPriceKZ);
+    console.log(`🚨 PRODUTO PRINCIPAL - USANDO CONVERSÃO: ${finalProductPrice} ${userCountry?.currency}`);
+  }
+  
+  // 🔥 CALCULAR TOTAL CORRETO (ambos na mesma moeda final)
+  const totalPrice = finalProductPrice + orderBumpPrice;
+  
+  console.log(`🚨 PREÇOS FINAIS PARA CHECKOUT:`);
+  console.log(`Product: ${product?.name}`);
+  console.log(`Original price KZ: ${originalPriceKZ} KZ`);
+  console.log(`Final product price: ${finalProductPrice} ${userCountry?.currency}`);
+  console.log(`Order bump price: ${orderBumpPrice} ${userCountry?.currency}`);
+  console.log(`TOTAL FINAL: ${totalPrice} ${userCountry?.currency}`);
+  console.log(`Display price: ${getDisplayPrice(originalPriceKZ)}`);
 
-  console.log(`Product: ${product.name}`);
-  console.log(`Original price: ${originalPrice} KZ`);
-  console.log(`Converted price: ${convertedPrice} ${userCountry.currency}`);
-  console.log(`Display price: ${getDisplayPrice(originalPrice)}`);
-  console.log(`Total converted price: ${convertedTotalPrice} ${userCountry.currency}`);
+  // Para compatibilidade com variáveis existentes
+  const originalPrice = originalPriceKZ;
+  const convertedPrice = finalProductPrice;
+  const convertedTotalPrice = totalPrice;
 
   return (
     <ThemeProvider forceLightMode={true}>
