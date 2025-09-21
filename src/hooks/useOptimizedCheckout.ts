@@ -52,7 +52,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
   const totalAmountForDetection = useMemo(() => {
     if (!product) return 0;
     
-    // Calcular preço do produto principal na moeda do país
+    // Calcular preço do produto principal na moeda do país usando preços personalizados
     const productPriceInTargetCurrency = convertPrice(parseFloat(product.price), userCountry, product?.custom_prices);
     
     // Somar order bumps (que já estão na moeda do país)
@@ -65,7 +65,8 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
       accessExtensionPrice,
       total,
       currency: userCountry?.currency,
-      userCountry: userCountry?.code
+      userCountry: userCountry?.code,
+      productCustomPrices: product?.custom_prices
     });
     
     return total;
@@ -350,7 +351,8 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         ? finalPrice * (1 - bumpData.discount / 100)
         : finalPrice;
       
-      console.log(`🔥 Order bump final price: ${discountedPrice} ${userCountry?.currency}`);
+     console.log(`🔥 Order bump final price: ${discountedPrice} ${userCountry?.currency}`);
+      console.log(`🔥 SETTING productExtraPrice TO: ${discountedPrice}`);
       setProductExtraPrice(discountedPrice);
     } else {
       console.log(`🔥 Order bump deselected, setting price to 0`);
