@@ -22,7 +22,15 @@ serve(async (req) => {
       orderId 
     } = await req.json();
 
-    console.log('Creating Stripe payment for:', { amount, currency, customerEmail, productName });
+    console.log('Creating Stripe payment for:', { 
+      amount, 
+      currency, 
+      customerEmail, 
+      productName,
+      orderId,
+      amountType: typeof amount,
+      currencyType: typeof currency
+    });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -61,6 +69,8 @@ serve(async (req) => {
       customerId = customer.id;
       console.log('New customer created:', customerId);
     }
+
+    console.log(`Final amount for Stripe: ${amountInCents} cents in ${currency.toLowerCase()}`);
 
     // Criar sessão de checkout
     const session = await stripe.checkout.sessions.create({

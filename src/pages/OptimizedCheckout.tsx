@@ -658,7 +658,18 @@ const OptimizedCheckout = () => {
                             processing={processing}
                             setProcessing={setProcessing}
                             displayPrice={formatPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice, userCountry, product?.custom_prices)}
-                            convertedAmount={convertPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice, userCountry, product?.custom_prices)}
+                             convertedAmount={(() => {
+                               // Calcular o valor total considerando preços personalizados
+                               const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
+                               console.log(`💰 STRIPE TOTAL CALCULATION:`, {
+                                 productPrice: productPriceInTargetCurrency,
+                                 orderBumpPrice: productExtraPrice,
+                                 extensionPrice: accessExtensionPrice,
+                                 total: productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice,
+                                 currency: userCountry?.currency
+                               });
+                               return productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
+                             })()}
                           />
                         </Suspense>
                       )}

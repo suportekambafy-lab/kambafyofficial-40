@@ -305,12 +305,14 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
       if (bumpData.bump_product_custom_prices && userCountry?.code && bumpData.bump_product_custom_prices[userCountry.code]) {
         const customPrice = parseFloat(bumpData.bump_product_custom_prices[userCountry.code]);
         if (!isNaN(customPrice)) {
-          // Converter preço personalizado para KZ se necessário
-          if (userCountry.currency !== 'KZ') {
-            finalPrice = customPrice * userCountry.exchangeRate;
-          } else {
-            finalPrice = customPrice;
-          }
+          // Use o preço personalizado na moeda local, não converter para KZ
+          finalPrice = customPrice;
+          console.log(`💰 Order bump usando preço personalizado: ${customPrice} ${userCountry.currency} (original: ${originalPriceKZ} KZ)`);
+        }
+      } else {
+        // Se não há preço personalizado, converter o preço KZ para a moeda local
+        if (userCountry && userCountry.currency !== 'KZ') {
+          finalPrice = originalPriceKZ / userCountry.exchangeRate;
         }
       }
       
@@ -319,6 +321,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         ? finalPrice * (1 - bumpData.discount / 100)
         : finalPrice;
       
+      console.log(`💰 Order bump final price: ${discountedPrice} ${userCountry?.currency}`);
       setProductExtraPrice(discountedPrice);
     } else {
       setProductExtraPrice(0);
@@ -328,12 +331,32 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
   const handleAccessExtensionToggle = useCallback((isSelected: boolean, bumpData: any) => {
     if (isSelected && bumpData) {
       setAccessExtensionBump(bumpData);
-      const originalPrice = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
-      setAccessExtensionPrice(originalPrice);
+      
+      // Calcular preço considerando preços personalizados para extensões de acesso
+      const originalPriceKZ = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
+      let finalPrice = originalPriceKZ;
+      
+      // Verificar se há preços personalizados para o país atual
+      if (bumpData.bump_product_custom_prices && userCountry?.code && bumpData.bump_product_custom_prices[userCountry.code]) {
+        const customPrice = parseFloat(bumpData.bump_product_custom_prices[userCountry.code]);
+        if (!isNaN(customPrice)) {
+          // Use o preço personalizado na moeda local
+          finalPrice = customPrice;
+          console.log(`💰 Access extension usando preço personalizado: ${customPrice} ${userCountry.currency} (original: ${originalPriceKZ} KZ)`);
+        }
+      } else {
+        // Se não há preço personalizado, converter o preço KZ para a moeda local
+        if (userCountry && userCountry.currency !== 'KZ') {
+          finalPrice = originalPriceKZ / userCountry.exchangeRate;
+        }
+      }
+      
+      console.log(`💰 Access extension final price: ${finalPrice} ${userCountry?.currency}`);
+      setAccessExtensionPrice(finalPrice);
     } else {
       setAccessExtensionPrice(0);
     }
-  }, []);
+  }, [userCountry]);
 
   // Effect otimizado - carregamento rápido
   useEffect(() => {
