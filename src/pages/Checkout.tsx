@@ -83,7 +83,7 @@ const Checkout = () => {
   const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
   const [bankTransferData, setBankTransferData] = useState<{file: File, bank: string} | null>(null);
   
-  // Hook para verificar KambaPay
+  // Hook para KambaPay
   const { fetchBalanceByEmail } = useKambaPayBalance();
 
   // Verificar se é um upsell de outro pedido
@@ -98,18 +98,41 @@ const Checkout = () => {
     }
   }, []);
 
-  // Hook para detectar carrinhos abandonados - USAR VALORES CORRETOS
+  // Definir todas as variáveis primeiro
+  const originalPriceKZ = useMemo(() => product ? parseFloat(product.price) : 0, [product]);
+
+  // Função para converter preço - usando a conversão direta sem arredondamentos extras
+  const getConvertedPrice = useCallback((priceInKZ: number): number => {
+    // Verificar se convertPrice está disponível antes de usar
+    if (!convertPrice || !userCountry) {
+      console.log(`Converting ${priceInKZ} KZ - geo not ready, returning original`);
+      return priceInKZ;
+    }
+    try {
+      const converted = convertPrice(priceInKZ, userCountry);
+      console.log(`Converting ${priceInKZ} KZ to ${converted} ${userCountry.currency}`);
+      return converted;
+    } catch (error) {
+      console.error('Error converting price:', error);
+      return priceInKZ;
+    }
+  }, [convertPrice, userCountry]);
+
   // Calcular o valor total usando preços finais (considerando personalizados)
-  const getProductFinalPrice = () => {
+  const getProductFinalPrice = useCallback(() => {
     if (!product) return 0;
-    const originalPriceKZ = parseFloat(product.price);
+    const productPriceKZ = originalPriceKZ;
     if (product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
       return parseFloat(product.custom_prices[userCountry.code]);
     }
-    return getConvertedPrice(originalPriceKZ);
-  };
+    return getConvertedPrice(productPriceKZ);
+  }, [product, originalPriceKZ, userCountry, getConvertedPrice]);
   
-  const totalAmountForDetection = product ? getProductFinalPrice() + orderBumpPrice : 0;
+  const totalAmountForDetection = useMemo(() => 
+    product ? getProductFinalPrice() + orderBumpPrice : 0, 
+    [product, getProductFinalPrice, orderBumpPrice]
+  );
+
   const { markAsRecovered, hasDetected, abandonedPurchaseId } = useAbandonedPurchaseDetection({
     product,
     formData,
@@ -151,22 +174,7 @@ const Checkout = () => {
     return phoneCodes[countryCode] || '+244';
   };
 
-  // Definir originalPriceKZ primeiro para usar em outras funções
-  const originalPriceKZ = product ? parseFloat(product.price) : 0;
-
-  // Função para converter preço - usando a conversão direta sem arredondamentos extras
-  const getConvertedPrice = (priceInKZ: number): number => {
-    // Verificar se convertPrice está disponível antes de usar
-    if (!convertPrice || !userCountry) {
-      console.log(`Converting ${priceInKZ} KZ - geo not ready, returning original`);
-      return priceInKZ;
-    }
-    const converted = convertPrice(priceInKZ, userCountry);
-    console.log(`Converting ${priceInKZ} KZ to ${converted} ${userCountry.currency}`);
-    return converted;
-  };
-
-  const getDisplayPrice = (priceInKZ: number, isAlreadyConverted = false): string => {
+  const getDisplayPrice = useCallback((priceInKZ: number, isAlreadyConverted = false): string => {
     // Se já é um valor convertido (total calculado), apenas formatar
     if (isAlreadyConverted && userCountry?.currency === 'EUR') {
       const displayPrice = `€${priceInKZ.toFixed(2)}`;
@@ -196,10 +204,15 @@ const Checkout = () => {
       return `${priceInKZ.toLocaleString()} KZ`;
     }
     
-    const displayPrice = formatPrice(priceInKZ, userCountry, product?.custom_prices);
-    console.log(`🚨 getDisplayPrice - USANDO FORMATAÇÃO PADRÃO: ${priceInKZ} KZ -> ${displayPrice}`);
-    return displayPrice;
-  };
+    try {
+      const displayPrice = formatPrice(priceInKZ, userCountry, product?.custom_prices);
+      console.log(`🚨 getDisplayPrice - USANDO FORMATAÇÃO PADRÃO: ${priceInKZ} KZ -> ${displayPrice}`);
+      return displayPrice;
+    } catch (error) {
+      console.error('Error formatting price:', error);
+      return `${priceInKZ.toLocaleString()} KZ`;
+    }
+  }, [product, userCountry, formatPrice, originalPriceKZ]);
 
   // Forçar modo claro sempre
   useEffect(() => {
