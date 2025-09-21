@@ -296,15 +296,34 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
   const handleProductExtraToggle = useCallback((isSelected: boolean, bumpData: any) => {
     if (isSelected && bumpData) {
       setProductExtraBump(bumpData);
-      const originalPrice = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
-      const discountedPriceInKZ = bumpData.discount > 0 
-        ? originalPrice * (1 - bumpData.discount / 100)
-        : originalPrice;
-      setProductExtraPrice(discountedPriceInKZ);
+      
+      // Calcular preço considerando preços personalizados para o país do usuário
+      const originalPriceKZ = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
+      let finalPrice = originalPriceKZ;
+      
+      // Verificar se há preços personalizados para o país atual
+      if (bumpData.bump_product_custom_prices && userCountry?.code && bumpData.bump_product_custom_prices[userCountry.code]) {
+        const customPrice = parseFloat(bumpData.bump_product_custom_prices[userCountry.code]);
+        if (!isNaN(customPrice)) {
+          // Converter preço personalizado para KZ se necessário
+          if (userCountry.currency !== 'KZ') {
+            finalPrice = customPrice * userCountry.exchangeRate;
+          } else {
+            finalPrice = customPrice;
+          }
+        }
+      }
+      
+      // Aplicar desconto ao preço final
+      const discountedPrice = bumpData.discount > 0 
+        ? finalPrice * (1 - bumpData.discount / 100)
+        : finalPrice;
+      
+      setProductExtraPrice(discountedPrice);
     } else {
       setProductExtraPrice(0);
     }
-  }, []);
+  }, [userCountry]);
 
   const handleAccessExtensionToggle = useCallback((isSelected: boolean, bumpData: any) => {
     if (isSelected && bumpData) {

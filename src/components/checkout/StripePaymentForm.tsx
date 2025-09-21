@@ -17,6 +17,10 @@ interface StripePaymentFormProps {
   formatPrice: (amount: number) => string;
   isSubmitting: boolean;
   setIsSubmitting: (submitting: boolean) => void;
+  userCountry?: {
+    code: string;
+    currency: string;
+  };
   t?: (key: string) => string;
 }
 
@@ -28,6 +32,7 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
   formatPrice,
   isSubmitting,
   setIsSubmitting,
+  userCountry,
   t = (key: string) => key
 }) => {
   const { toast } = useToast();
@@ -50,17 +55,31 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
       // Gerar ID único para o pedido
       const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+      // Calcular o preço correto considerando preços personalizados
+      let finalAmount = amount;
+      
+      // Verificar se há preços personalizados configurados para o país atual
+      if (product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
+        const customPrice = parseFloat(product.custom_prices[userCountry.code]);
+        if (!isNaN(customPrice)) {
+          console.log(`💰 Usando preço personalizado para ${userCountry.code}: ${customPrice} ${userCountry.currency}`);
+          finalAmount = customPrice;
+        }
+      }
+
       console.log('Iniciating Stripe payment:', {
-        amount,
+        originalAmount: amount,
+        finalAmount,
         currency,
         productName: product.name,
         customerEmail: customerInfo.email,
-        orderId
+        orderId,
+        hasCustomPrices: !!(product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code])
       });
 
       const { data, error } = await supabase.functions.invoke('create-stripe-payment', {
         body: {
-          amount,
+          amount: finalAmount,
           currency,
           productName: product.name,
           customerEmail: customerInfo.email,
