@@ -351,9 +351,15 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         ? finalPrice * (1 - bumpData.discount / 100)
         : finalPrice;
       
-     console.log(`🔥 Order bump final price: ${discountedPrice} ${userCountry?.currency}`);
+      console.log(`🔥 Order bump final price: ${discountedPrice} ${userCountry?.currency}`);
       console.log(`🔥 SETTING productExtraPrice TO: ${discountedPrice}`);
+      console.log(`🔥 BEFORE SET - Current productExtraPrice:`, productExtraPrice);
       setProductExtraPrice(discountedPrice);
+      
+      // Verificar se foi definido
+      setTimeout(() => {
+        console.log(`🔥 AFTER SET - productExtraPrice should be:`, discountedPrice);
+      }, 100);
     } else {
       console.log(`🔥 Order bump deselected, setting price to 0`);
       setProductExtraPrice(0);

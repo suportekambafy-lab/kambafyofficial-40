@@ -427,12 +427,16 @@ const OptimizedCheckout = () => {
                   {productExtraBump?.position === 'before_payment_method' && (
                     <div className="p-4 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-950">
                       <div className="flex items-start gap-3">
-                        <input
-                          type="checkbox"
-                          id="productExtraBump"
-                          onChange={(e) => handleProductExtraToggle(e.target.checked, productExtraBump)}
-                          className="mt-1"
-                        />
+                          <input
+                            type="checkbox"
+                            id="productExtraBump"
+                            onChange={(e) => {
+                              console.log(`🔥 CHECKBOX CLICKED - BEFORE:`, e.target.checked);
+                              handleProductExtraToggle(e.target.checked, productExtraBump);
+                              console.log(`🔥 CHECKBOX CLICKED - AFTER:`, e.target.checked);
+                            }}
+                            className="mt-1"
+                          />
                         <div className="flex-1">
                            <label htmlFor="productExtraBump" className="font-medium text-blue-900 dark:text-blue-100 cursor-pointer">
                              {productExtraBump.title} - {formatPrice(parseFloat(productExtraBump.bump_product_price), userCountry, productExtraBump.bump_product_custom_prices)}
@@ -590,12 +594,16 @@ const OptimizedCheckout = () => {
                           {productExtraBump?.position === 'after_payment_method' && (
                             <div className="p-4 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-950">
                               <div className="flex items-start gap-3">
-                                <input
-                                  type="checkbox"
-                                  id="productExtraBumpAfter"
-                                  onChange={(e) => handleProductExtraToggle(e.target.checked, productExtraBump)}
-                                  className="mt-1"
-                                />
+                                  <input
+                                    type="checkbox"
+                                    id="productExtraBumpAfter"
+                                    onChange={(e) => {
+                                      console.log(`🔥 CHECKBOX AFTER CLICKED - BEFORE:`, e.target.checked);
+                                      handleProductExtraToggle(e.target.checked, productExtraBump);
+                                      console.log(`🔥 CHECKBOX AFTER CLICKED - AFTER:`, e.target.checked);
+                                    }}
+                                    className="mt-1"
+                                  />
                                 <div className="flex-1">
                                   <label htmlFor="productExtraBumpAfter" className="font-medium text-blue-900 dark:text-blue-100 cursor-pointer">
                                     {productExtraBump.title} - {formatPrice(parseFloat(productExtraBump.bump_product_price), userCountry, productExtraBump.bump_product_custom_prices)}
@@ -650,17 +658,24 @@ const OptimizedCheckout = () => {
                                const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
                                const total = productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
                                
-                               console.log(`🔥 STRIPE AMOUNT CALCULATION - DEBUGGING:`, {
-                                 productPriceOriginal: parseFloat(product?.price || '0'),
-                                 productPrice: productPriceInTargetCurrency,
-                                 orderBumpPrice: productExtraPrice,
-                                 extensionPrice: accessExtensionPrice,
-                                 total,
-                                 currency: userCountry?.currency,
-                                 userCountryCode: userCountry?.code
-                               });
-                               
-                               return total;
+                                  console.log(`🔥 STRIPE AMOUNT CALCULATION - DEBUGGING:`, {
+                                    productPriceOriginal: parseFloat(product?.price || '0'),
+                                    productPrice: productPriceInTargetCurrency,
+                                    orderBumpPrice: productExtraPrice,
+                                    extensionPrice: accessExtensionPrice,
+                                    total,
+                                    currency: userCountry?.currency,
+                                    userCountryCode: userCountry?.code,
+                                    productCustomPrices: product?.custom_prices,
+                                    productExtraBump: productExtraBump ? {
+                                      title: productExtraBump.title,
+                                      price: productExtraBump.bump_product_price,
+                                      customPrices: productExtraBump.bump_product_custom_prices
+                                    } : null,
+                                    isOrderBumpSelected: !!productExtraPrice
+                                  });
+                                
+                                return total;
                              })()}
                             currency={userCountry?.currency || 'KZ'}
                             customerData={{ 

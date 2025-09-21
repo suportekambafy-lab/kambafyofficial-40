@@ -84,7 +84,7 @@ export const OptimizedOrderBump = memo(({
   position: "before_payment_method" | "after_payment_method" | "after_customer_info"; 
   onToggle: (isSelected: boolean, bumpData: any) => void;
   userCountry: any;
-  formatPrice: (price: number) => string;
+  formatPrice: (priceInKZ: number, targetCountry?: any, customPrices?: Record<string, string>) => string;
 }) => (
   <OptimizedSuspenseWrapper fallback={<div />}>
     <OrderBump
