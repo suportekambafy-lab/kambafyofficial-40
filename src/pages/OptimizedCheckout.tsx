@@ -645,7 +645,11 @@ const OptimizedCheckout = () => {
                         <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded"></div>}>
                           <StripeCardPayment
                             paymentMethod={selectedPayment}
-                            amount={parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice}
+                             amount={(() => {
+                               // Calcular o valor total na moeda do país
+                               const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
+                               return productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
+                             })()}
                             currency={userCountry?.currency || 'KZ'}
                             customerData={{ 
                               name: formData.fullName,
@@ -657,7 +661,21 @@ const OptimizedCheckout = () => {
                             productId={productId || ''}
                             processing={processing}
                             setProcessing={setProcessing}
-                            displayPrice={formatPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice, userCountry, product?.custom_prices)}
+                             displayPrice={(() => {
+                               // Calcular o valor total considerando preços personalizados
+                               const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
+                               const total = productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
+                               
+                               console.log(`💰 DISPLAY PRICE CALCULATION:`, {
+                                 productPrice: productPriceInTargetCurrency,
+                                 orderBumpPrice: productExtraPrice,
+                                 extensionPrice: accessExtensionPrice,
+                                 total,
+                                 currency: userCountry?.currency
+                               });
+                               
+                               return formatPrice(total, userCountry);
+                             })()}
                              convertedAmount={(() => {
                                // Calcular o valor total considerando preços personalizados
                                const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);

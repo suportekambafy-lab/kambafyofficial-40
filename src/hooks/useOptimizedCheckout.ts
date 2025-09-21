@@ -49,10 +49,25 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
   const { fetchBalanceByEmail } = useKambaPayBalance();
 
   // Hook para detectar carrinhos abandonados - memoizado
-  const totalAmountForDetection = useMemo(() => 
-    product ? parseFloat(product.price) + productExtraPrice + accessExtensionPrice : 0, 
-    [product, productExtraPrice, accessExtensionPrice]
-  );
+  const totalAmountForDetection = useMemo(() => {
+    if (!product) return 0;
+    
+    // Calcular preço do produto principal na moeda do país
+    const productPriceInTargetCurrency = convertPrice(parseFloat(product.price), userCountry, product?.custom_prices);
+    
+    // Somar order bumps (que já estão na moeda do país)
+    const total = productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
+    
+    console.log(`💰 TOTAL DETECTION AMOUNT:`, {
+      productPriceInTargetCurrency,
+      productExtraPrice,
+      accessExtensionPrice,
+      total,
+      currency: userCountry?.currency
+    });
+    
+    return total;
+  }, [product, productExtraPrice, accessExtensionPrice, userCountry, convertPrice]);
 
   const { markAsRecovered, hasDetected, abandonedPurchaseId } = useAbandonedPurchaseDetection({
     product,
