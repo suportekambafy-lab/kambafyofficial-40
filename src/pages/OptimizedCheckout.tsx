@@ -648,7 +648,19 @@ const OptimizedCheckout = () => {
                              amount={(() => {
                                // Calcular o valor total na moeda do país
                                const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
-                               return productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
+                               const total = productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
+                               
+                               console.log(`🔥 STRIPE AMOUNT CALCULATION - DEBUGGING:`, {
+                                 productPriceOriginal: parseFloat(product?.price || '0'),
+                                 productPrice: productPriceInTargetCurrency,
+                                 orderBumpPrice: productExtraPrice,
+                                 extensionPrice: accessExtensionPrice,
+                                 total,
+                                 currency: userCountry?.currency,
+                                 userCountryCode: userCountry?.code
+                               });
+                               
+                               return total;
                              })()}
                             currency={userCountry?.currency || 'KZ'}
                             customerData={{ 
@@ -661,33 +673,42 @@ const OptimizedCheckout = () => {
                             productId={productId || ''}
                             processing={processing}
                             setProcessing={setProcessing}
-                             displayPrice={(() => {
-                               // Calcular o valor total considerando preços personalizados
-                               const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
-                               const total = productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
-                               
-                               console.log(`💰 DISPLAY PRICE CALCULATION:`, {
-                                 productPrice: productPriceInTargetCurrency,
-                                 orderBumpPrice: productExtraPrice,
-                                 extensionPrice: accessExtensionPrice,
-                                 total,
-                                 currency: userCountry?.currency
-                               });
-                               
-                               return formatPrice(total, userCountry);
-                             })()}
-                             convertedAmount={(() => {
-                               // Calcular o valor total considerando preços personalizados
-                               const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
-                               console.log(`💰 STRIPE TOTAL CALCULATION:`, {
-                                 productPrice: productPriceInTargetCurrency,
-                                 orderBumpPrice: productExtraPrice,
-                                 extensionPrice: accessExtensionPrice,
-                                 total: productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice,
-                                 currency: userCountry?.currency
-                               });
-                               return productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
-                             })()}
+                              displayPrice={(() => {
+                                // Calcular o valor total considerando preços personalizados
+                                const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
+                                const total = productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
+                                
+                                console.log(`🔥 DISPLAY PRICE CALCULATION - DEBUGGING:`, {
+                                  productPriceOriginal: parseFloat(product?.price || '0'),
+                                  productPrice: productPriceInTargetCurrency,
+                                  orderBumpPrice: productExtraPrice,
+                                  extensionPrice: accessExtensionPrice,
+                                  total,
+                                  currency: userCountry?.currency,
+                                  userCountryCode: userCountry?.code,
+                                  productCustomPrices: product?.custom_prices
+                                });
+                                
+                                return formatPrice(total, userCountry);
+                              })()}
+                              convertedAmount={(() => {
+                                // Calcular o valor total considerando preços personalizados
+                                const productPriceInTargetCurrency = convertPrice(parseFloat(product?.price || '0'), userCountry, product?.custom_prices);
+                                const total = productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
+                                
+                                console.log(`🔥 STRIPE TOTAL CALCULATION - DEBUGGING:`, {
+                                  productPriceOriginal: parseFloat(product?.price || '0'),
+                                  productPrice: productPriceInTargetCurrency,
+                                  orderBumpPrice: productExtraPrice,
+                                  extensionPrice: accessExtensionPrice,
+                                  total,
+                                  currency: userCountry?.currency,
+                                  userCountryCode: userCountry?.code,
+                                  productCustomPrices: product?.custom_prices
+                                });
+                                
+                                return total;
+                              })()}
                           />
                         </Suspense>
                       )}
