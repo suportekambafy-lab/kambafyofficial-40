@@ -161,7 +161,14 @@ const Checkout = () => {
     return converted;
   };
 
-  const getDisplayPrice = (priceInKZ: number): string => {
+  const getDisplayPrice = (priceInKZ: number, isAlreadyConverted = false): string => {
+    // Se já é um valor convertido (total calculado), apenas formatar
+    if (isAlreadyConverted && userCountry?.currency === 'EUR') {
+      const displayPrice = `€${priceInKZ.toFixed(2)}`;
+      console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO: ${displayPrice}`);
+      return displayPrice;
+    }
+    
     // SEMPRE usar preços personalizados se disponíveis para o país do usuário
     if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code] && priceInKZ === originalPriceKZ) {
       const customPrice = parseFloat(product.custom_prices[userCountry.code]);
@@ -1883,7 +1890,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                     onError={handleCardPaymentError}
                     processing={processing}
                     setProcessing={setProcessing}
-                    displayPrice={getDisplayPrice(totalPrice)}
+                    displayPrice={getDisplayPrice(totalPrice, true)}
                     convertedAmount={convertedTotalPrice}
                   />
                 </div>
@@ -1930,7 +1937,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                         <div className="bg-white p-3 rounded-lg border border-orange-200">
                           <div className="text-sm text-gray-600 mb-1">Valor total</div>
                           <div className="text-lg font-bold text-orange-600">
-                            {getDisplayPrice(totalPrice)}
+                            {getDisplayPrice(totalPrice, true)}
                           </div>
                         </div>
                         
@@ -1954,7 +1961,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                               PROCESSANDO...
                             </div>
                           ) : (
-                            `FINALIZAR PAGAMENTO - ${getDisplayPrice(totalPrice)}`
+                            `FINALIZAR PAGAMENTO - ${getDisplayPrice(totalPrice, true)}`
                           )}
                         </Button>
                       </div>
@@ -1982,7 +1989,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                         <div className="bg-white p-3 rounded-lg border border-blue-200">
                           <div className="text-sm text-gray-600 mb-1">Valor total</div>
                           <div className="text-lg font-bold text-blue-600">
-                            {getDisplayPrice(totalPrice)}
+                            {getDisplayPrice(totalPrice, true)}
                           </div>
                         </div>
                         
@@ -2042,7 +2049,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                           )}
                         </div>
                         <span className="font-medium">
-                          +{formatPrice(orderBumpPrice, userCountry, product?.custom_prices)}
+                          +€{orderBumpPrice.toFixed(2)}
                         </span>
                       </div>
                     )}
@@ -2051,7 +2058,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Total</span>
                         <span className="text-2xl font-bold text-green-600">
-                          {getDisplayPrice(totalPrice)}
+                          {getDisplayPrice(totalPrice, true)}
                         </span>
                       </div>
                     </div>
@@ -2073,7 +2080,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                       PROCESSANDO...
                     </div>
                   ) : (
-                    `COMPRAR AGORA - ${getDisplayPrice(totalPrice)}`
+                    `COMPRAR AGORA - ${getDisplayPrice(totalPrice, true)}`
                   )}
                 </Button>
               )}
