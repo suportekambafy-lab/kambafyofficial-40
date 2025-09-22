@@ -2111,17 +2111,6 @@ ${JSON.stringify(appyPayData, null, 2)}
 
               {selectedPayment === 'transfer' && (
                 <div className="mt-6">
-                  <div className="text-left p-4 bg-blue-50 rounded-lg border border-blue-100 mb-4">
-                    <p className="text-sm font-medium text-gray-700 leading-relaxed mb-2">
-                      <span className="font-semibold">📝 Transferência Bancária:</span>
-                    </p>
-                    <div className="text-sm text-gray-600 leading-relaxed space-y-1">
-                      <p>1. Selecione seu banco na lista abaixo</p>
-                      <p>2. Realize a transferência com os dados fornecidos</p>
-                      <p>3. Envie o comprovativo de pagamento</p>
-                    </div>
-                  </div>
-                  
                   <BankTransferForm
                     totalAmount={totalPrice.toString()}
                     currency={userCountry.currency}
