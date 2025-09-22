@@ -99,7 +99,7 @@ export default function Sales() {
   const [statusFilter, setStatusFilter] = useState("todos");
   const [paymentFilter, setPaymentFilter] = useState("todos");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(100); // Mostrar todas as vendas (incluindo EUR)
+  const [itemsPerPage] = useState(200); // Mostrar todas as vendas
   const [showAllPaymentMethods, setShowAllPaymentMethods] = useState(false);
 
   const { loadOrdersWithStats, totalCount } = useStreamingQuery();
@@ -119,32 +119,18 @@ export default function Sales() {
       return;
     }
 
-    console.log('🚀🚀 PÁGINA VENDAS - loadSales EXECUTADA 🚀🚀');
-    console.log('📊 Usuário atual:', user.id);
     loadingRef.current = true;
 
     try {
       setLoading(true);
       setDataComplete(false);
       
-      console.log('📞 Chamando loadOrdersWithStats...');
       await loadOrdersWithStats(
         user.id,
         (stats) => {
-          console.log('📊 Stats recebidos:', stats);
           setSalesStats(stats);
         },
         (orders) => {
-          console.log('📋 Orders recebidos:', orders.length);
-          console.log('🔍 MOEDAS RECEBIDAS:', [...new Set(orders.map(o => o.currency))]);
-          console.log('🔍 PRIMEIRAS 5 VENDAS:', orders.slice(0, 5).map(o => ({
-            id: o.order_id,
-            customer: o.customer_name,
-            amount: o.amount,
-            currency: o.currency,
-            originalAmount: o.original_amount,
-            originalCurrency: o.original_currency
-          })));
           setSales(orders);
         }
       );
@@ -171,16 +157,6 @@ export default function Sales() {
   const filteredSales = useMemo(() => {
     let filtered = [...sales];
 
-    console.log('🔍 SALES ANTES DOS FILTROS:', {
-      total: sales.length,
-      moedas: [...new Set(sales.map(s => s.currency || s.original_currency))],
-      primeirasCinco: sales.slice(0, 5).map(s => ({ 
-        id: s.order_id, 
-        currency: s.currency, 
-        originalCurrency: s.original_currency 
-      }))
-    });
-
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(sale =>
@@ -199,28 +175,13 @@ export default function Sales() {
       filtered = filtered.filter(sale => sale.payment_method === paymentFilter);
     }
 
-    console.log('🔍 SALES APÓS FILTROS:', {
-      total: filtered.length,
-      moedas: [...new Set(filtered.map(s => s.currency || s.original_currency))]
-    });
-
     return filtered;
   }, [sales, searchTerm, statusFilter, paymentFilter]);
 
   // Paginação
   const paginatedSales = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginated = filteredSales.slice(startIndex, startIndex + itemsPerPage);
-    
-    console.log('📄 VENDAS PAGINADAS:', {
-      total: filteredSales.length,
-      currentPage,
-      startIndex,
-      paginatedCount: paginated.length,
-      moedas: [...new Set(paginated.map(s => s.currency || s.original_currency))]
-    });
-    
-    return paginated;
+    return filteredSales.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredSales, currentPage, itemsPerPage]);
 
   const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
@@ -261,16 +222,6 @@ export default function Sales() {
     
     // Usar o valor original preservado
     const paidAmount = parseFloat(originalAmount);
-    
-    // Debug das vendas carregadas na página
-    console.log(`🚀 VENDA CARREGADA NA PÁGINA:`, {
-      saleId: sale.id,
-      customer: sale.customer_name,
-      amount: sale.amount,
-      currency: sale.currency,
-      originalAmount: sale.original_amount,
-      originalCurrency: sale.original_currency
-    });
     
     return (
       <div className="text-right">
