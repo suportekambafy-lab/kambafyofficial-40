@@ -231,10 +231,19 @@ const Checkout = () => {
     }
   }, [userCountry]);
 
-  // Forçar modo claro sempre
+  // Forçar modo claro sempre e resetar order bumps quando país muda
   useEffect(() => {
     setTheme('light');
   }, [setTheme]);
+
+  // Resetar order bumps quando país muda para evitar conflitos de preço
+  useEffect(() => {
+    if (userCountry) {
+      console.log('🌍 País mudou, resetando order bumps selecionados para evitar conflitos de preço');
+      setOrderBump(null);
+      setOrderBumpPrice(0);
+    }
+  }, [userCountry?.code]);
 
   useEffect(() => {
     console.log('Checkout page loaded with productId:', productId);
