@@ -19,8 +19,18 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
   const [checkoutSettings, setCheckoutSettings] = useState<any>(null);
   const [productExtraBump, setProductExtraBump] = useState<any>(null);
   const [accessExtensionBump, setAccessExtensionBump] = useState<any>(null);
-  const [productExtraPrice, setProductExtraPrice] = useState(0);
+  const [selectedOrderBumps, setSelectedOrderBumps] = useState<Map<string, { data: any; price: number }>>(new Map());
   const [accessExtensionPrice, setAccessExtensionPrice] = useState(0);
+
+  // Calculate total order bump price from all selected bumps
+  const productExtraPrice = useMemo(() => {
+    let total = 0;
+    selectedOrderBumps.forEach(({ price }) => {
+      total += price;
+    });
+    console.log(`🔥 TOTAL ORDER BUMP PRICE:`, total, 'from', selectedOrderBumps.size, 'bumps');
+    return total;
+  }, [selectedOrderBumps]);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -312,29 +322,19 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     }));
   }, [changeCountry]);
 
-  // Função otimizada para order bumps
+  // Função otimizada para order bumps - agora suporta múltiplos bumps
   const handleProductExtraToggle = useCallback((isSelected: boolean, bumpData: any) => {
     console.log(`🚨🚨🚨 HANDLE PRODUCT EXTRA TOGGLE - FUNCTION ENTRY:`, { isSelected, bumpData: !!bumpData });
-    console.log(`🔥 HANDLE PRODUCT EXTRA TOGGLE - START:`, {
-      isSelected,
-      bumpData: bumpData ? {
-        id: bumpData.id,
-        bump_product_price: bumpData.bump_product_price,
-        bump_product_custom_prices: bumpData.bump_product_custom_prices,
-        discount: bumpData.discount
-      } : null,
-      userCountry: userCountry?.code
-    });
-
+    
     if (isSelected && bumpData) {
-      console.log(`🚨 SETTING PRODUCT EXTRA BUMP DATA:`, bumpData);
-      setProductExtraBump(bumpData);
+      console.log(`🚨 ADDING ORDER BUMP:`, bumpData.id);
       
       // Calcular preço considerando preços personalizados para o país do usuário
       const originalPriceKZ = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
       let finalPrice = originalPriceKZ;
       
       console.log(`🚨 CALCULATING ORDER BUMP PRICE:`, {
+        bumpId: bumpData.id,
         originalPriceKZ,
         hasCustomPrices: !!(bumpData.bump_product_custom_prices),
         userCountryCode: userCountry?.code,
@@ -357,20 +357,36 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         : finalPrice;
       
       console.log(`🔥 Order bump final price: ${discountedPrice} ${userCountry?.currency}`);
-      console.log(`🔥 SETTING productExtraPrice TO: ${discountedPrice}`);
-      console.log(`🔥 BEFORE SET - Current productExtraPrice:`, productExtraPrice);
-      setProductExtraPrice(discountedPrice);
       
-      // Verificar se foi definido
-      setTimeout(() => {
-        console.log(`🔥 AFTER SET - productExtraPrice should be:`, discountedPrice);
-      }, 100);
-    } else {
-      console.log(`🔥 Order bump deselected, setting price to 0`);
-      setProductExtraPrice(0);
-      setProductExtraBump(null);
+      // Adicionar ao mapa de order bumps selecionados
+      setSelectedOrderBumps(prev => {
+        const newMap = new Map(prev);
+        newMap.set(bumpData.id, { data: bumpData, price: discountedPrice });
+        console.log(`🔥 ADDING BUMP TO MAP:`, bumpData.id, discountedPrice, 'Total bumps:', newMap.size);
+        return newMap;
+      });
+      
+      // Para compatibilidade com o código existente, definir o primeiro bump como principal
+      if (!productExtraBump) {
+        setProductExtraBump(bumpData);
+      }
+    } else if (!isSelected && bumpData) {
+      console.log(`🔥 REMOVING ORDER BUMP:`, bumpData.id);
+      
+      // Remover do mapa de order bumps selecionados
+      setSelectedOrderBumps(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(bumpData.id);
+        console.log(`🔥 REMOVING BUMP FROM MAP:`, bumpData.id, 'Remaining bumps:', newMap.size);
+        return newMap;
+      });
+      
+      // Se era o bump principal, limpar
+      if (productExtraBump && productExtraBump.id === bumpData.id) {
+        setProductExtraBump(null);
+      }
     }
-  }, [userCountry, convertPrice, productExtraPrice]);
+  }, [userCountry, convertPrice, productExtraBump]);
 
   const handleAccessExtensionToggle = useCallback((isSelected: boolean, bumpData: any) => {
     if (isSelected && bumpData) {
@@ -443,6 +459,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     accessExtensionBump,
     productExtraPrice,
     accessExtensionPrice,
+    selectedOrderBumps,
     formData,
     
     // Geolocalização
