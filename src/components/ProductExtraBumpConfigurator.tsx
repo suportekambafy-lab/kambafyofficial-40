@@ -20,6 +20,7 @@ interface Product {
   status: string;
   price: string;
   cover?: string;
+  description?: string;
 }
 
 interface OrderBumpSettings {
@@ -71,7 +72,7 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess, editing
   
   const [settings, setSettings] = useState<ProductExtraSettings>({
     enabled: false,
-    title: "🎁 Oferta Especial - Produto Extra",
+    title: "Adicione também",
     description: "Adicione este produto extra por apenas mais:",
     position: "after_payment_method",
     selectedProductName: "",
@@ -118,7 +119,7 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess, editing
 
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, type, status, price, cover')
+        .select('id, name, type, status, price, cover, description')
         .eq('status', 'Ativo')
         .eq('user_id', sellerId)
         .neq('id', productId)
@@ -146,6 +147,11 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess, editing
       selectedProductName: product.name,
       selectedProductPrice: product.price,
       selectedProductImage: product.cover || undefined,
+      // Usar a descrição do produto selecionado como padrão, mas manter a atual se já foi editada
+      description: prev.description === "Adicione este produto extra por apenas mais:" || 
+                  prev.description === "" ? 
+                  (product.description || "Adicione este produto extra por apenas mais:") : 
+                  prev.description
     }));
     setShowProductSelector(false);
   };
@@ -256,7 +262,7 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess, editing
             id="title"
             value={settings.title}
             onChange={(e) => setSettings(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="🎁 Oferta Especial - Produto Extra"
+            placeholder="Adicione também"
           />
         </div>
 
