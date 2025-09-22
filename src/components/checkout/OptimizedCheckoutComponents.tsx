@@ -78,13 +78,15 @@ export const OptimizedOrderBump = memo(({
   position, 
   onToggle, 
   userCountry, 
-  formatPrice 
+  formatPrice,
+  resetSelection
 }: { 
   productId: string; 
   position: "before_payment_method" | "after_payment_method" | "after_customer_info"; 
   onToggle: (isSelected: boolean, bumpData: any) => void;
   userCountry: any;
   formatPrice: (priceInKZ: number, targetCountry?: any, customPrices?: Record<string, string>) => string;
+  resetSelection?: boolean;
 }) => (
   <OptimizedSuspenseWrapper fallback={<div />}>
     <OrderBump
@@ -93,6 +95,7 @@ export const OptimizedOrderBump = memo(({
       onToggle={onToggle}
       userCountry={userCountry}
       formatPrice={formatPrice}
+      resetSelection={resetSelection}
     />
   </OptimizedSuspenseWrapper>
 ));

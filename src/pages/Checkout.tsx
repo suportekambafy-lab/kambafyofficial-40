@@ -79,7 +79,8 @@ const Checkout = () => {
   const [selectedPayment, setSelectedPayment] = useState("");
   const [checkoutSettings, setCheckoutSettings] = useState<any>(null);
   const [orderBump, setOrderBump] = useState<any>(null);
-  const [orderBumpPrice, setOrderBumpPrice] = useState(0);
+  const [orderBumpPrice, setOrderBumpPrice] = useState(0);  
+  const [resetOrderBumps, setResetOrderBumps] = useState(false);
   const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
   const [bankTransferData, setBankTransferData] = useState<{file: File, bank: string} | null>(null);
   
@@ -242,6 +243,10 @@ const Checkout = () => {
       console.log('🌍 País mudou, resetando order bumps selecionados para evitar conflitos de preço');
       setOrderBump(null);
       setOrderBumpPrice(0);
+      setResetOrderBumps(true);
+      
+      // Reset do flag após um pequeno delay para garantir que os components recebam a prop
+      setTimeout(() => setResetOrderBumps(false), 100);
     }
   }, [userCountry?.code]);
 
@@ -1867,6 +1872,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                 onToggle={handleOrderBumpToggle}
                 userCountry={userCountry}
                 formatPrice={formatPrice}
+                resetSelection={resetOrderBumps}
               />
 
               {availablePaymentMethods.length > 0 ? (
@@ -1938,6 +1944,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                 onToggle={handleOrderBumpToggle}
                 userCountry={userCountry}
                 formatPrice={formatPrice}
+                resetSelection={resetOrderBumps}
               />
 
               {(['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment)) && (

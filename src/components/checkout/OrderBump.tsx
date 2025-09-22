@@ -39,9 +39,10 @@ interface OrderBumpProps {
   onToggle?: (isSelected: boolean, bumpData: OrderBumpData | null) => void;
   userCountry: CountryInfo;
   formatPrice: (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>) => string;
+  resetSelection?: boolean;
 }
 
-export function OrderBump({ productId, position, onToggle, userCountry, formatPrice }: OrderBumpProps) {
+export function OrderBump({ productId, position, onToggle, userCountry, formatPrice, resetSelection }: OrderBumpProps) {
   const [orderBump, setOrderBump] = useState<OrderBumpData | null>(null);
   const [isSelected, setIsSelected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -49,6 +50,14 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
   useEffect(() => {
     fetchOrderBump();
   }, [productId]);
+
+  // Reset selection when country changes
+  useEffect(() => {
+    if (resetSelection) {
+      console.log('🔄 OrderBump: Resetando seleção devido a mudança de país');
+      setIsSelected(false);
+    }
+  }, [userCountry?.code, resetSelection]);
 
   const fetchOrderBump = async () => {
     try {
