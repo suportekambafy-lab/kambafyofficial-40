@@ -1,7 +1,7 @@
 // Imagens reais dos métodos de pagamento
 export const PAYMENT_METHOD_IMAGES = {
   // Angola - Imagens reais já existentes
-  express: "/lovable-uploads/e9a7b374-3f3c-4e2b-ad03-9cdefa7be8a8.png",
+  express: "/lovable-uploads/multicaixa-express-logo.svg",
   reference: "/lovable-uploads/d8b7629c-9a63-44ac-a6a8-dbb0d773d76b.png", 
   transfer: "/lovable-uploads/809ca111-22ef-4df7-92fc-ebe47ba15021.png",
   
