@@ -746,8 +746,36 @@ const OptimizedCheckout = () => {
                         </Suspense>
                       )}
                       
-                      {/* Para outros métodos tradicionais (express, reference, transfer) */}
-                      {['express', 'reference', 'transfer'].includes(selectedPayment) && (
+                      {/* Formulário para Multicaixa Express */}
+                      {selectedPayment === 'express' && (
+                        <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-blue-900">
+                              ATENÇÃO: Após clicar no botão <strong>Comprar Agora</strong>
+                            </p>
+                            <p className="text-sm text-blue-800">
+                              → abra o aplicativo Multicaixa Express, e encontre o botão → <span className="text-red-600 font-bold">Operação por Autorizar</span> clica no botão, selecione o pagamento pendente e <strong>finalize o pagamento.</strong>
+                            </p>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Por favor, insira o número de telefone ativo do Multicaixa Express.
+                            </label>
+                            <PhoneInput
+                              value={formData.phone}
+                              onChange={(value) => handleInputChange('phone', value)}
+                              placeholder="Digite seu telefone"
+                              selectedCountry="AO"
+                              className="w-full"
+                            />
+                            <p className="text-sm text-red-600">Telefone é obrigatório</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Para outros métodos tradicionais (reference, transfer) */}
+                      {['reference', 'transfer'].includes(selectedPayment) && (
                         <div className="text-center text-sm text-muted-foreground">
                           Método de pagamento selecionado: {finalPaymentMethods.find(m => m.id === selectedPayment)?.name}
                         </div>
