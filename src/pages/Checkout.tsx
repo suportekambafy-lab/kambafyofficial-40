@@ -1954,56 +1954,6 @@ ${JSON.stringify(appyPayData, null, 2)}
                 </div>
               )}
 
-              {selectedPayment === 'reference' && (
-                <div className="mt-6">
-                  <Card className="border-orange-200 bg-orange-50">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg bg-orange-600 flex items-center justify-center">
-                          <Receipt className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-orange-900">Pagamento por Referência</h3>
-                          <p className="text-sm text-orange-700">Pague com referência bancária via AppyPay</p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="bg-white p-3 rounded-lg border border-orange-200">
-                          <div className="text-sm text-gray-600 mb-1">Valor total</div>
-                          <div className="text-lg font-bold text-orange-600">
-                            {getDisplayPrice(totalPrice, true)}
-                          </div>
-                        </div>
-                        
-                        <div className="text-xs text-orange-600 bg-orange-100 p-2 rounded">
-                          <p><strong>💡 Como funciona:</strong></p>
-                          <p>1. Clique em "Finalizar Pagamento"</p>
-                          <p>2. Você receberá uma referência de pagamento</p>
-                          <p>3. Use a referência para pagar em qualquer banco ou ATM</p>
-                        </div>
-
-                        <Button
-                          onClick={handlePurchase}
-                          disabled={!formData.fullName || !formData.email || !formData.phone || processing}
-                          className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white font-semibold"
-                        >
-                          {processing ? (
-                            <div className="flex items-center justify-center">
-                              <div className="w-6 h-6 rounded bg-orange-700 flex items-center justify-center mr-2">
-                                <span className="text-xs font-bold text-white animate-bounce">⟳</span>
-                              </div>
-                              PROCESSANDO...
-                            </div>
-                          ) : (
-                            `FINALIZAR PAGAMENTO - ${getDisplayPrice(totalPrice, true)}`
-                          )}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
 
 
               {selectedPayment === 'kambapay' && (
@@ -2125,11 +2075,26 @@ ${JSON.stringify(appyPayData, null, 2)}
                         </div>
                       </div>
                     )}
+
+                    {selectedPayment === 'reference' && (
+                      <div className="mt-4 space-y-4">
+                        <div className="text-left p-4 bg-orange-50 rounded-lg border border-orange-100">
+                          <p className="text-sm font-medium text-gray-700 leading-relaxed mb-2">
+                            <span className="font-semibold">💡 Como funciona:</span>
+                          </p>
+                          <div className="text-sm text-gray-600 leading-relaxed space-y-1">
+                            <p>1. Clique em "Gerar Referência"</p>
+                            <p>2. Você receberá uma referência de pagamento</p>
+                            <p>3. Use a referência para pagar em qualquer banco ou ATM</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer', 'reference'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
+              {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
                 <Button
                   onClick={handlePurchase}
                   disabled={!formData.fullName || !formData.email || !formData.phone || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
@@ -2142,6 +2107,8 @@ ${JSON.stringify(appyPayData, null, 2)}
                       </div>
                       PROCESSANDO...
                     </div>
+                  ) : selectedPayment === 'reference' ? (
+                    `GERAR REFERÊNCIA - ${getDisplayPrice(totalPrice, true)}`
                   ) : (
                     `COMPRAR AGORA - ${getDisplayPrice(totalPrice, true)}`
                   )}
