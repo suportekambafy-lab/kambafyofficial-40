@@ -2124,16 +2124,7 @@ export type Database = {
       }
     }
     Views: {
-      admin_dashboard_stats: {
-        Row: {
-          pending_withdrawals: number | null
-          total_paid_out: number | null
-          total_products: number | null
-          total_transactions: number | null
-          total_users: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       admin_approve_product: {
@@ -2212,6 +2203,16 @@ export type Database = {
       generate_api_key: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_admin_dashboard_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          pending_withdrawals: number
+          total_paid_out: number
+          total_products: number
+          total_transactions: number
+          total_users: number
+        }[]
       }
       get_all_identity_verifications_for_admin: {
         Args: Record<PropertyKey, never>
