@@ -972,8 +972,8 @@ export type Database = {
           bump_order: number | null
           bump_product_id: string | null
           bump_product_image: string | null
-          bump_product_name: string
-          bump_product_price: string
+          bump_product_name: string | null
+          bump_product_price: string | null
           bump_type: string | null
           created_at: string
           description: string
@@ -994,8 +994,8 @@ export type Database = {
           bump_order?: number | null
           bump_product_id?: string | null
           bump_product_image?: string | null
-          bump_product_name: string
-          bump_product_price: string
+          bump_product_name?: string | null
+          bump_product_price?: string | null
           bump_type?: string | null
           created_at?: string
           description?: string
@@ -1016,8 +1016,8 @@ export type Database = {
           bump_order?: number | null
           bump_product_id?: string | null
           bump_product_image?: string | null
-          bump_product_name?: string
-          bump_product_price?: string
+          bump_product_name?: string | null
+          bump_product_price?: string | null
           bump_type?: string | null
           created_at?: string
           description?: string

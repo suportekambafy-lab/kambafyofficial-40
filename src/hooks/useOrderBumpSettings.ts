@@ -130,7 +130,10 @@ export const useOrderBumpSettings = (productId?: string) => {
         position: orderBumpData.position,
         bump_type: orderBumpData.bump_type || null,
         bump_product_id: orderBumpData.bump_product_id || null,
-        bump_product_name: orderBumpData.bump_product_name || null,
+        bump_product_name: orderBumpData.bump_product_name || 
+          (orderBumpData.bump_category === 'access_extension' ? 
+            orderBumpData.access_extension_description || 'Extensão de Acesso' : 
+            null),
         bump_product_price: orderBumpData.bump_product_price || null,
         bump_product_image: orderBumpData.bump_product_image || null,
         discount: orderBumpData.discount || 0,
@@ -138,6 +141,8 @@ export const useOrderBumpSettings = (productId?: string) => {
         access_extension_value: orderBumpData.access_extension_value || null,
         access_extension_description: orderBumpData.access_extension_description || null
       };
+
+      console.log('Salvando order bump:', settingsData);
 
       let result;
       if (editingId) {
