@@ -136,6 +136,15 @@ export default function Sales() {
         },
         (orders) => {
           console.log('📋 Orders recebidos:', orders.length);
+          console.log('🔍 MOEDAS RECEBIDAS:', [...new Set(orders.map(o => o.currency))]);
+          console.log('🔍 PRIMEIRAS 5 VENDAS:', orders.slice(0, 5).map(o => ({
+            id: o.order_id,
+            customer: o.customer_name,
+            amount: o.amount,
+            currency: o.currency,
+            originalAmount: o.original_amount,
+            originalCurrency: o.original_currency
+          })));
           setSales(orders);
         }
       );
@@ -162,6 +171,16 @@ export default function Sales() {
   const filteredSales = useMemo(() => {
     let filtered = [...sales];
 
+    console.log('🔍 SALES ANTES DOS FILTROS:', {
+      total: sales.length,
+      moedas: [...new Set(sales.map(s => s.currency || s.original_currency))],
+      primeirasCinco: sales.slice(0, 5).map(s => ({ 
+        id: s.order_id, 
+        currency: s.currency, 
+        originalCurrency: s.original_currency 
+      }))
+    });
+
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(sale =>
@@ -180,13 +199,28 @@ export default function Sales() {
       filtered = filtered.filter(sale => sale.payment_method === paymentFilter);
     }
 
+    console.log('🔍 SALES APÓS FILTROS:', {
+      total: filtered.length,
+      moedas: [...new Set(filtered.map(s => s.currency || s.original_currency))]
+    });
+
     return filtered;
   }, [sales, searchTerm, statusFilter, paymentFilter]);
 
   // Paginação
   const paginatedSales = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredSales.slice(startIndex, startIndex + itemsPerPage);
+    const paginated = filteredSales.slice(startIndex, startIndex + itemsPerPage);
+    
+    console.log('📄 VENDAS PAGINADAS:', {
+      total: filteredSales.length,
+      currentPage,
+      startIndex,
+      paginatedCount: paginated.length,
+      moedas: [...new Set(paginated.map(s => s.currency || s.original_currency))]
+    });
+    
+    return paginated;
   }, [filteredSales, currentPage, itemsPerPage]);
 
   const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
