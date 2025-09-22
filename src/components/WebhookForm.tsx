@@ -31,7 +31,7 @@ export function WebhookForm({ productId, onSaveSuccess }: WebhookFormProps) {
     testWebhook,
     testLoading,
     loading 
-  } = useWebhookSettings();
+  } = useWebhookSettings(productId);
 
   const handleEventChange = (eventId: string, checked: boolean) => {
     setSettings(prev => ({
@@ -64,8 +64,13 @@ export function WebhookForm({ productId, onSaveSuccess }: WebhookFormProps) {
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-2">Configurar Webhook</h2>
         <p className="text-muted-foreground">
-          Selecione eventos personalizados e receba notificações em tempo real
+          Selecione eventos personalizados e receba notificações em tempo real para este produto
         </p>
+        {productId && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Este webhook será específico para o produto selecionado
+          </p>
+        )}
       </div>
 
       <Card>

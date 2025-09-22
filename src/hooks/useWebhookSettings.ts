@@ -15,7 +15,7 @@ interface WebhookSettings {
   product_id?: string;
 }
 
-export const useWebhookSettings = () => {
+export const useWebhookSettings = (productId?: string) => {
   const [settings, setSettings] = useState<WebhookSettings>({
     url: '',
     events: [],
@@ -24,18 +24,31 @@ export const useWebhookSettings = () => {
     headers: {},
     timeout: 30,
     retries: 3,
-    product_id: ''
+    product_id: productId || ''
   });
   const [loading, setLoading] = useState(true);
   const [testLoading, setTestLoading] = useState(false);
   const { toast } = useToast();
 
-  const fetchSettings = async () => {
+  const fetchSettings = async (targetProductId?: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      let query = supabase
         .from('webhook_settings')
         .select('*')
-        .maybeSingle();
+        .eq('user_id', user.id);
+
+      // Se temos um productId específico, buscar apenas para esse produto
+      if (targetProductId || productId) {
+        query = query.eq('product_id', targetProductId || productId);
+      }
+
+      const { data, error } = await query.maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;
@@ -50,7 +63,20 @@ export const useWebhookSettings = () => {
           active: data.active,
           headers: (data.headers as Record<string, string>) || {},
           timeout: data.timeout || 30,
-          retries: data.retries || 3
+          retries: data.retries || 3,
+          product_id: data.product_id
+        });
+      } else {
+        // Reset settings se não encontrar dados
+        setSettings({
+          url: '',
+          events: [],
+          secret: '',
+          active: true,
+          headers: {},
+          timeout: 30,
+          retries: 3,
+          product_id: targetProductId || productId || ''
         });
       }
     } catch (error) {
@@ -65,9 +91,9 @@ export const useWebhookSettings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Buscar o primeiro produto do usuário se não tiver product_id
-      let productId = newSettings.product_id;
-      if (!productId) {
+      // Usar o productId fornecido ou o padrão
+      let targetProductId = newSettings.product_id || productId;
+      if (!targetProductId) {
         const { data: products } = await supabase
           .from('products')
           .select('id')
@@ -75,7 +101,7 @@ export const useWebhookSettings = () => {
           .limit(1);
         
         if (products && products.length > 0) {
-          productId = products[0].id;
+          targetProductId = products[0].id;
         }
       }
 
@@ -88,13 +114,14 @@ export const useWebhookSettings = () => {
         headers: newSettings.headers || {},
         timeout: newSettings.timeout || 30,
         retries: newSettings.retries || 3,
-        product_id: productId
+        product_id: targetProductId
       };
 
-      console.log('Saving webhook settings:', settingsData);
+      console.log('Saving webhook settings for product:', targetProductId, settingsData);
 
       let result;
       if (settings.id) {
+        // Update existing webhook
         result = await supabase
           .from('webhook_settings')
           .update(settingsData)
@@ -102,11 +129,30 @@ export const useWebhookSettings = () => {
           .select()
           .single();
       } else {
-        result = await supabase
+        // Check if webhook already exists for this product
+        const { data: existingWebhook } = await supabase
           .from('webhook_settings')
-          .insert(settingsData)
-          .select()
-          .single();
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('product_id', targetProductId)
+          .maybeSingle();
+
+        if (existingWebhook) {
+          // Update existing webhook for this product
+          result = await supabase
+            .from('webhook_settings')
+            .update(settingsData)
+            .eq('id', existingWebhook.id)
+            .select()
+            .single();
+        } else {
+          // Create new webhook for this product
+          result = await supabase
+            .from('webhook_settings')
+            .insert(settingsData)
+            .select()
+            .single();
+        }
       }
 
       if (result.error) throw result.error;
@@ -116,7 +162,7 @@ export const useWebhookSettings = () => {
       setSettings({
         id: result.data.id,
         ...newSettings,
-        product_id: productId
+        product_id: targetProductId
       });
 
       toast({
@@ -126,7 +172,7 @@ export const useWebhookSettings = () => {
 
       // Disparar evento para atualizar a lista de integrações
       window.dispatchEvent(new CustomEvent('integrationCreated', {
-        detail: { type: 'webhook' }
+        detail: { type: 'webhook', productId: targetProductId }
       }));
 
       return true;
@@ -302,12 +348,12 @@ export const useWebhookSettings = () => {
   };
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    fetchSettings(productId);
+  }, [productId]);
 
-  const refetchSettings = () => {
+  const refetchSettings = (targetProductId?: string) => {
     setLoading(true);
-    fetchSettings();
+    fetchSettings(targetProductId || productId);
   };
 
   return {
