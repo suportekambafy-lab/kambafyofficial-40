@@ -2034,7 +2034,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                           )}
                         </div>
                         <span className="font-medium">
-                          +€{orderBumpPrice.toFixed(2)}
+                          +{getDisplayPrice(orderBumpPrice)}
                         </span>
                       </div>
                     )}
