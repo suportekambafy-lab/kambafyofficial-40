@@ -24,11 +24,13 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
 
   // Calculate total order bump price from all selected bumps
   const productExtraPrice = useMemo(() => {
-    let total = 0;
-    selectedOrderBumps.forEach(({ price }) => {
-      total += price;
+    const allPrices = Array.from(selectedOrderBumps.values());
+    const total = allPrices.reduce((sum, { price }) => sum + price, 0);
+    console.log(`🔥 TOTAL ORDER BUMP PRICE CALCULATION:`, {
+      selectedBumpsCount: selectedOrderBumps.size,
+      allPrices: allPrices.map(({ data, price }) => ({ id: data.id, name: data.bump_product_name, price })),
+      total
     });
-    console.log(`🔥 TOTAL ORDER BUMP PRICE:`, total, 'from', selectedOrderBumps.size, 'bumps');
     return total;
   }, [selectedOrderBumps]);
 
@@ -326,7 +328,13 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
 
   // Função otimizada para order bumps - agora suporta múltiplos bumps
   const handleProductExtraToggle = useCallback((isSelected: boolean, bumpData: any) => {
-    console.log(`🚨🚨🚨 HANDLE PRODUCT EXTRA TOGGLE - FUNCTION ENTRY:`, { isSelected, bumpData: !!bumpData });
+    console.log(`🚨🚨🚨 HANDLE PRODUCT EXTRA TOGGLE - FUNCTION ENTRY:`, { 
+      isSelected, 
+      bumpId: bumpData?.id,
+      bumpName: bumpData?.bump_product_name,
+      currentMapSize: selectedOrderBumps.size,
+      currentTotal: productExtraPrice
+    });
     
     if (isSelected && bumpData) {
       console.log(`🚨 ADDING ORDER BUMP:`, bumpData.id);
@@ -364,7 +372,13 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
       setSelectedOrderBumps(prev => {
         const newMap = new Map(prev);
         newMap.set(bumpData.id, { data: bumpData, price: discountedPrice });
-        console.log(`🔥 ADDING BUMP TO MAP:`, bumpData.id, discountedPrice, 'Total bumps:', newMap.size);
+        console.log(`🔥 ADDING BUMP TO MAP:`, {
+          bumpId: bumpData.id,
+          bumpName: bumpData.bump_product_name,
+          price: discountedPrice,
+          totalBumpsAfterAdd: newMap.size,
+          allBumpsInMap: Array.from(newMap.entries()).map(([id, { data, price }]) => ({ id, name: data.bump_product_name, price }))
+        });
         return newMap;
       });
       
@@ -378,8 +392,14 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
       // Remover do mapa de order bumps selecionados
       setSelectedOrderBumps(prev => {
         const newMap = new Map(prev);
-        newMap.delete(bumpData.id);
-        console.log(`🔥 REMOVING BUMP FROM MAP:`, bumpData.id, 'Remaining bumps:', newMap.size);
+        const wasRemoved = newMap.delete(bumpData.id);
+        console.log(`🔥 REMOVING BUMP FROM MAP:`, {
+          bumpId: bumpData.id,
+          bumpName: bumpData.bump_product_name,
+          wasRemoved,
+          remainingBumps: newMap.size,
+          allBumpsInMap: Array.from(newMap.entries()).map(([id, { data, price }]) => ({ id, name: data.bump_product_name, price }))
+        });
         return newMap;
       });
       
