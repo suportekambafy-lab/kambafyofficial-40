@@ -13,6 +13,7 @@ import { SubdomainGuard } from "./components/SubdomainGuard";
 import { OptimizedRoutes } from "./components/OptimizedRoutes";
 import { EnhancedErrorBoundary } from "./components/ui/enhanced-error-boundary";
 import { Suspense } from "react";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
 
 // QueryClient otimizado para performance
@@ -97,16 +98,16 @@ const App = () => {
                        
                       {/* Admin Routes */}
                       <Route path="/admin/login" element={<OptimizedRoutes.AdminLogin />} />
-                      <Route path="/admin" element={<OptimizedRoutes.AdminDashboard />} />
-                      <Route path="/admin/withdrawals" element={<OptimizedRoutes.AdminWithdrawals />} />
-                      <Route path="/admin/products" element={<OptimizedRoutes.AdminProducts />} />
-                      <Route path="/admin/users" element={<OptimizedRoutes.AdminUsers />} />
-                       <Route path="/admin/logs" element={<OptimizedRoutes.AdminLogs />} />
-                       <Route path="/admin/sellers" element={<OptimizedRoutes.AdminSellers />} />
-                       <Route path="/admin/identity" element={<OptimizedRoutes.AdminIdentityVerification />} />
-                       <Route path="/admin/partners" element={<OptimizedRoutes.AdminPartners />} />
-                       <Route path="/admin/seller-reports" element={<OptimizedRoutes.AdminSellerReports />} />
-                       <Route path="/admin/payment-approvals" element={<OptimizedRoutes.AdminPaymentApprovals />} />
+                      <Route path="/admin" element={<AdminProtectedRoute><OptimizedRoutes.AdminDashboard /></AdminProtectedRoute>} />
+                      <Route path="/admin/withdrawals" element={<AdminProtectedRoute><OptimizedRoutes.AdminWithdrawals /></AdminProtectedRoute>} />
+                      <Route path="/admin/products" element={<AdminProtectedRoute><OptimizedRoutes.AdminProducts /></AdminProtectedRoute>} />
+                      <Route path="/admin/users" element={<AdminProtectedRoute><OptimizedRoutes.AdminUsers /></AdminProtectedRoute>} />
+                       <Route path="/admin/logs" element={<AdminProtectedRoute><OptimizedRoutes.AdminLogs /></AdminProtectedRoute>} />
+                       <Route path="/admin/sellers" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellers /></AdminProtectedRoute>} />
+                       <Route path="/admin/identity" element={<AdminProtectedRoute><OptimizedRoutes.AdminIdentityVerification /></AdminProtectedRoute>} />
+                       <Route path="/admin/partners" element={<AdminProtectedRoute><OptimizedRoutes.AdminPartners /></AdminProtectedRoute>} />
+                       <Route path="/admin/seller-reports" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellerReports /></AdminProtectedRoute>} />
+                       <Route path="/admin/payment-approvals" element={<AdminProtectedRoute><OptimizedRoutes.AdminPaymentApprovals /></AdminProtectedRoute>} />
                       
                       {/* Partner Routes */}
                       <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />
