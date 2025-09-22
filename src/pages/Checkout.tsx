@@ -2017,7 +2017,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                           )}
                         </div>
                         <span className="font-medium">
-                          +{formatPrice(orderBumpPrice, userCountry)}
+                          +{getDisplayPrice(orderBumpPrice)}
                         </span>
                       </div>
                     )}
