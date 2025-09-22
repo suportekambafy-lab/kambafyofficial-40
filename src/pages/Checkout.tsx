@@ -214,21 +214,12 @@ const Checkout = () => {
     }
   }, [product, userCountry, formatPrice, originalPriceKZ]);
 
-  // Função específica para order bump - não aplica preços personalizados do produto principal
+  // Função específica para order bump - usa formatação correta com conversão
   const getOrderBumpDisplayPrice = useCallback((price: number): string => {
-    if (!userCountry) {
-      return `${price.toLocaleString()} KZ`;
-    }
-    
-    // Simplesmente formatar o preço sem aplicar preços personalizados do produto principal
-    if (userCountry.currency === 'EUR') {
-      return `€${price.toFixed(2)}`;
-    } else if (userCountry.currency === 'MZN') {
-      return `${price.toFixed(2)} MZN`;
-    } else {
-      return `${price.toLocaleString()} KZ`;
-    }
-  }, [userCountry]);
+    // O price já vem no valor correto para o país (seja KZ original ou EUR personalizado)
+    // Usar a função formatPrice normal que vai fazer a conversão correta
+    return formatPrice(price, userCountry);
+  }, [userCountry, formatPrice]);
 
   // Forçar modo claro sempre
   useEffect(() => {
