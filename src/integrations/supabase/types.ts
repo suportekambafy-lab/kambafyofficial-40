@@ -2262,6 +2262,10 @@ export type Database = {
         Args: { user_email: string }
         Returns: boolean
       }
+      is_current_user_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_suspicious_ip: {
         Args: { _ip_address: string; _user_id: string }
         Returns: boolean
