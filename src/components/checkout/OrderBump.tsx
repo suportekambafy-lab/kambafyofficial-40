@@ -88,7 +88,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
       // Usar o ID real do produto para buscar o order bump
       const actualProductId = productData.id;
 
-      // Buscar order bump com preços personalizados do produto do bump
+      // Buscar order bumps (podem ser múltiplos por posição)
       const { data, error } = await supabase
         .from('order_bump_settings')
         .select('*, bump_product_id')
@@ -96,7 +96,8 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
         .eq('enabled', true)
         .eq('position', position)
         .eq('user_id', productData.user_id) // Garantir que seja do mesmo vendedor
-        .maybeSingle();
+        .order('bump_order', { ascending: true })
+        .limit(1); // Por enquanto, pegar apenas o primeiro por ordem de prioridade
 
       console.log(`📊 OrderBump: Resultado da busca:`, { data, error, productId, position, enabled: true });
 
@@ -105,18 +106,19 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
         return;
       }
 
-      if (data) {
-        console.log(`✅ OrderBump: Order bump encontrado:`, data);
-        console.log(`📋 Tipo do bump:`, data.bump_type);
-        console.log(`⏰ Extensão - Tipo:`, data.access_extension_type, `Valor:`, data.access_extension_value);
+      const orderBumpData = data?.[0]; // Pegar o primeiro da lista
+      if (orderBumpData) {
+        console.log(`✅ OrderBump: Order bump encontrado:`, orderBumpData);
+        console.log(`📋 Tipo do bump:`, orderBumpData.bump_type);
+        console.log(`⏰ Extensão - Tipo:`, orderBumpData.access_extension_type, `Valor:`, orderBumpData.access_extension_value);
         
         // Se o bump tem um produto associado, buscar seus preços personalizados
-        if (data.bump_product_id) {
-          console.log(`💰 Buscando preços personalizados do produto:`, data.bump_product_id);
+        if (orderBumpData.bump_product_id) {
+          console.log(`💰 Buscando preços personalizados do produto:`, orderBumpData.bump_product_id);
           const { data: bumpProductData, error: bumpProductError } = await supabase
             .from('products')
             .select('custom_prices')
-            .eq('id', data.bump_product_id)
+            .eq('id', orderBumpData.bump_product_id)
             .maybeSingle();
           
           if (!bumpProductError && bumpProductData?.custom_prices) {
@@ -124,17 +126,17 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
             
             // Adicionar custom_prices ao order bump
             const orderBumpWithCustomPrices = {
-              ...data,
+              ...orderBumpData,
               bump_product_custom_prices: bumpProductData.custom_prices as Record<string, string>
             };
             setOrderBump(orderBumpWithCustomPrices);
           } else {
             console.log(`💰 Nenhum preço personalizado encontrado para produto do bump`);
-            setOrderBump(data);
+            setOrderBump(orderBumpData);
           }
         } else {
           console.log(`💰 Order bump não tem produto referenciado - usando conversão automática`);
-          setOrderBump(data);
+          setOrderBump(orderBumpData);
         }
       } else {
         console.log(`❌ OrderBump: Nenhum order bump encontrado para produto ${productId} na posição ${position}`);
