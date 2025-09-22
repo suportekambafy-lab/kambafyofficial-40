@@ -21,19 +21,29 @@ export const useFacebookPixelSettings = (productId?: string) => {
     try {
       console.log('🔍 Fetching pixel settings for productId:', productId);
       
-      let query = supabase.from('facebook_pixel_settings').select('*');
-      
-      if (productId) {
-        // Busca específica para o produto
-        query = query.eq('product_id', productId);
-        console.log('📦 Searching for product-specific settings');
-      } else {
-        // Busca configurações globais (sem product_id)
-        query = query.is('product_id', null);
-        console.log('🌍 Searching for global settings');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
       }
-      
-      const { data, error } = await query.maybeSingle();
+
+      // Sempre buscar por produto específico se fornecido
+      if (!productId) {
+        // Se não há produto específico, resetar configurações
+        setSettings({
+          pixelId: '',
+          enabled: false
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('facebook_pixel_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+        .maybeSingle();
 
       console.log('📊 Pixel settings query result:', { data, error });
 
@@ -41,17 +51,17 @@ export const useFacebookPixelSettings = (productId?: string) => {
         throw error;
       }
 
-      // Sempre manter campos vazios - não pré-preencher
+      // Carregar dados reais se existirem
       if (data) {
         console.log('✅ Found pixel settings:', data);
         setSettings({
           id: data.id,
-          pixelId: '', // Campo vazio para o usuário inserir
-          enabled: false // Sempre começar desabilitado
+          pixelId: data.pixel_id,
+          enabled: data.enabled
         });
       } else {
         console.log('❌ No pixel settings found');
-        // Manter campos vazios
+        // Configurações vazias para novo produto
         setSettings({
           pixelId: '',
           enabled: false
@@ -81,7 +91,9 @@ export const useFacebookPixelSettings = (productId?: string) => {
       console.log('📝 Settings data to save:', settingsData);
 
       let result;
-      if (settings.id) {
+      // Verificar se existe um pixel já carregado E se é para o mesmo produto
+      if (settings.id && productId) {
+        // Update existing pixel for the same product
         result = await supabase
           .from('facebook_pixel_settings')
           .update(settingsData)
@@ -89,11 +101,30 @@ export const useFacebookPixelSettings = (productId?: string) => {
           .select()
           .single();
       } else {
-        result = await supabase
+        // Check if pixel already exists for this product
+        const { data: existingPixel } = await supabase
           .from('facebook_pixel_settings')
-          .insert(settingsData)
-          .select()
-          .single();
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('product_id', productId || null)
+          .maybeSingle();
+
+        if (existingPixel) {
+          // Update existing pixel for this product
+          result = await supabase
+            .from('facebook_pixel_settings')
+            .update(settingsData)
+            .eq('id', existingPixel.id)
+            .select()
+            .single();
+        } else {
+          // Create new pixel for this product
+          result = await supabase
+            .from('facebook_pixel_settings')
+            .insert(settingsData)
+            .select()
+            .single();
+        }
       }
 
       if (result.error) throw result.error;
@@ -109,6 +140,11 @@ export const useFacebookPixelSettings = (productId?: string) => {
         title: "Pixel do Facebook salvo",
         description: "Configurações do pixel foram salvas com sucesso"
       });
+
+      // Disparar evento para atualizar a lista de integrações
+      window.dispatchEvent(new CustomEvent('integrationCreated', {
+        detail: { type: 'facebook-pixel', productId: productId }
+      }));
 
       return true;
     } catch (error) {
