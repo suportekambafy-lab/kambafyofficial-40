@@ -485,6 +485,23 @@ const Checkout = () => {
     }
   };
 
+  // Função para validar campo individual quando perde o foco
+  const handleFieldBlur = (field: string) => {
+    const errors = { ...fieldErrors };
+    
+    if (field === 'fullName' && !formData.fullName) {
+      errors.fullName = "Seu nome completo é obrigatório";
+    }
+    if (field === 'email' && !formData.email) {
+      errors.email = "Email é obrigatório";
+    }
+    if (field === 'phone' && !formData.phone && selectedPayment !== 'express') {
+      errors.phone = "Telefone é obrigatório";
+    }
+    
+    setFieldErrors(errors);
+  };
+
   const handleCountryChange = (countryCode: string) => {
     changeCountry(countryCode);
     const phoneCode = getPhoneCodeByCountry(countryCode);
@@ -970,12 +987,13 @@ const Checkout = () => {
       expressPhone: !expressPhone && selectedPayment === 'express' ? "Telefone é obrigatório" : ""
     };
     
+    console.log('🔍 Field validation errors:', errors);
     setFieldErrors(errors);
 
     if (!formData.fullName || !formData.email || !requiredPhone || !selectedPayment) {
       console.log('❌ Validation failed - missing required fields');
       toast({
-        title: "Erro",
+        title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios.",
         variant: "destructive"
       });
@@ -1851,10 +1869,11 @@ ${JSON.stringify(appyPayData, null, 2)}
                   placeholder="Digite seu nome completo"
                   value={formData.fullName}
                   onChange={(e) => handleInputChange("fullName", e.target.value)}
+                  onBlur={() => handleFieldBlur("fullName")}
                   className={`h-12 focus:border-green-500 ${fieldErrors.fullName ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {fieldErrors.fullName && (
-                  <p className="text-red-500 text-sm mt-1">{fieldErrors.fullName}</p>
+                  <p className="text-red-500 text-sm mt-1 font-medium">{fieldErrors.fullName}</p>
                 )}
               </div>
 
@@ -1868,10 +1887,11 @@ ${JSON.stringify(appyPayData, null, 2)}
                   placeholder="Digite seu e-mail para receber a compra"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
+                  onBlur={() => handleFieldBlur("email")}
                   className={`h-12 focus:border-green-500 ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {fieldErrors.email && (
-                  <p className="text-red-500 text-sm mt-1">{fieldErrors.email}</p>
+                  <p className="text-red-500 text-sm mt-1 font-medium">{fieldErrors.email}</p>
                 )}
               </div>
 
@@ -1888,7 +1908,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                   className={`h-12 ${fieldErrors.phone ? 'border-red-500' : ''}`}
                 />
                 {fieldErrors.phone && (
-                  <p className="text-red-500 text-sm mt-1">{fieldErrors.phone}</p>
+                  <p className="text-red-500 text-sm mt-1 font-medium">{fieldErrors.phone}</p>
                 )}
               </div>
 
@@ -2129,7 +2149,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                             className={`w-full ${fieldErrors.expressPhone ? 'border-red-500' : ''}`}
                           />
                           {fieldErrors.expressPhone && (
-                            <p className="text-red-500 text-sm mt-1">{fieldErrors.expressPhone}</p>
+                            <p className="text-red-500 text-sm mt-1 font-medium">{fieldErrors.expressPhone}</p>
                           )}
                         </div>
                       </div>
