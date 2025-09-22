@@ -2123,9 +2123,9 @@ ${JSON.stringify(appyPayData, null, 2)}
                       PROCESSANDO...
                     </div>
                   ) : selectedPayment === 'reference' ? (
-                    `GERAR REFERÊNCIA - ${getDisplayPrice(totalPrice, true)}`
+                    'GERAR REFERÊNCIA'
                   ) : (
-                    `COMPRAR AGORA - ${getDisplayPrice(totalPrice, true)}`
+                    'COMPRAR AGORA'
                   )}
                 </Button>
               )}
