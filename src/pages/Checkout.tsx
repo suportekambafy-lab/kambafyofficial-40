@@ -811,6 +811,31 @@ const Checkout = () => {
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
       const totalAmount = finalProductPrice + orderBumpPrice;
 
+      // Upload do comprovativo para o storage
+      console.log('📤 Uploading payment proof to storage...');
+      const fileExtension = proofFile.name.split('.').pop();
+      const fileName = `${orderId}-${Date.now()}.${fileExtension}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('payment-proofs')
+        .upload(fileName, proofFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('❌ Error uploading payment proof:', uploadError);
+        toast({
+          title: "Erro no upload",
+          description: "Erro ao carregar comprovativo. Tente novamente.",
+          variant: "destructive"
+        });
+        setProcessing(false);
+        return;
+      }
+
+      console.log('✅ Payment proof uploaded successfully:', uploadData);
+
       // Calcular comissões se houver afiliado
       let affiliate_commission = null;
       let seller_commission = null;
@@ -853,7 +878,7 @@ const Checkout = () => {
         amount: totalAmount.toString(),
         currency: userCountry.currency,
         payment_method: 'transfer',
-        status: 'pending', // Status padrão para transferência
+        status: 'pending', // Status padrão para transferência - fica pendente até aprovação
         user_id: null,
         affiliate_code: hasAffiliate ? affiliateCode : null,
         affiliate_commission: affiliate_commission,
@@ -868,6 +893,7 @@ const Checkout = () => {
         payment_proof_data: JSON.stringify({
           bank: selectedBank,
           proof_file_name: proofFile.name,
+          proof_file_path: uploadData.path,
           upload_timestamp: new Date().toISOString()
         })
       };
@@ -893,18 +919,7 @@ const Checkout = () => {
 
       console.log('✅ Bank transfer order saved successfully:', insertedOrder);
 
-      // Atualizar contagem de vendas
-      const newSalesCount = (product.sales || 0) + 1;
-      await supabase
-        .from('products')
-        .update({ sales: newSalesCount })
-        .eq('id', product.id);
-
-      setProduct(prev => ({ ...prev, sales: newSalesCount }));
-
-      // Não marcar como recuperado aqui - será feito na seção de transferência bancária se necessário
-
-      // Navegar para página de sucesso
+      // Navegar para página de agradecimento COM STATUS PENDING
       const params = new URLSearchParams({
         order_id: orderId,
         customer_name: formData.fullName.trim(),
@@ -916,6 +931,7 @@ const Checkout = () => {
         seller_id: product.user_id,
         base_product_price: product.price,
         payment_method: 'transfer',
+        status: 'pending', // IMPORTANTE: Manter como pending
         ...(orderBump && {
           order_bump_name: orderBump.bump_product_name,
           order_bump_price: orderBump.bump_product_price,

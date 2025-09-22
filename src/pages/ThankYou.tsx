@@ -484,6 +484,46 @@ const ThankYou = () => {
           </Card>
         )}
 
+        {/* Bank Transfer Payment Details */}
+        {orderDetails.paymentMethod === 'transfer' && orderStatus === 'pending' && (
+          <Card className="mb-8 border-blue-200 bg-blue-50">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-semibold text-blue-800">Pagamento por Transferência Bancária</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <p className="text-green-700 font-medium">Comprovativo enviado com sucesso!</p>
+                  </div>
+                  <p className="text-green-600 text-sm">
+                    Recebemos o seu comprovativo de transferência bancária. 
+                    O pedido está agora em análise pela nossa equipe.
+                  </p>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-3">Status do Pagamento</h4>
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-yellow-700">Aguardando Confirmação</span>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-blue-700 space-y-2">
+                  <p>• <strong>Próximos passos:</strong> Nossa equipe analisará o comprovativo em até 24 horas</p>
+                  <p>• <strong>Confirmação:</strong> Você receberá um e-mail quando o pagamento for confirmado</p>
+                  <p>• <strong>Acesso:</strong> O produto será liberado automaticamente após a aprovação</p>
+                  <p>• <strong>Dúvidas:</strong> Entre em contato conosco se precisar de ajuda</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Order Details Card */}
         <Card className="mb-8">
           <CardContent className="p-6">

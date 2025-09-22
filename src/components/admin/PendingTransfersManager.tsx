@@ -162,24 +162,78 @@ export function PendingTransfersManager() {
   };
 
   const viewProof = (proofData: any) => {
-    setSelectedProof(proofData);
-    setShowProofDialog(true);
+    try {
+      const data = typeof proofData === 'string' ? JSON.parse(proofData) : proofData;
+      
+      if (data.proof_file_path) {
+        // Novo formato com arquivo no storage
+        const { data: { publicUrl } } = supabase.storage
+          .from('payment-proofs')
+          .getPublicUrl(data.proof_file_path);
+        
+        setSelectedProof({
+          url: publicUrl,
+          fileName: data.proof_file_name || 'Comprovativo',
+          bank: data.bank || 'N/A',
+          uploadedAt: data.upload_timestamp
+        });
+      } else {
+        // Formato antigo (fallback)
+        setSelectedProof({
+          url: data.file || '',
+          fileName: data.proof_file_name || 'Comprovativo',
+          bank: data.bank || 'N/A',
+          uploadedAt: data.upload_timestamp
+        });
+      }
+      
+      setProofModalOpen(true);
+    } catch (error) {
+      console.error('Erro ao visualizar comprovativo:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível visualizar o comprovativo",
+        variant: "destructive"
+      });
+    }
   };
 
   const downloadProof = (proofData: any, orderNumber: string) => {
     try {
-      if (proofData.file) {
-        // Se for um arquivo base64
+      const data = typeof proofData === 'string' ? JSON.parse(proofData) : proofData;
+      
+      if (data.proof_file_path) {
+        // Novo formato com arquivo no storage
+        const { data: { publicUrl } } = supabase.storage
+          .from('payment-proofs')
+          .getPublicUrl(data.proof_file_path);
+        
         const link = document.createElement('a');
-        link.href = proofData.file;
-        link.download = `comprovativo_${orderNumber}.${proofData.fileType?.split('/')[1] || 'jpg'}`;
+        link.href = publicUrl;
+        link.download = `comprovativo-${orderNumber}.${data.proof_file_name?.split('.').pop() || 'pdf'}`;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+      } else if (data.file) {
+        // Formato antigo - arquivo base64
+        const link = document.createElement('a');
+        link.href = data.file;
+        link.download = `comprovativo_${orderNumber}.${data.fileType?.split('/')[1] || 'jpg'}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        toast({
+          title: "Erro",
+          description: "Arquivo não encontrado no sistema",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('❌ Erro ao fazer download:', error);
       toast({
         title: "Erro",
-        description: "Erro ao fazer download do comprovativo",
+        description: "Não foi possível fazer download do comprovativo",
         variant: "destructive"
       });
     }
