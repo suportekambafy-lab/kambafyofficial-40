@@ -148,7 +148,6 @@ export function BankTransferForm({
           </div>
           <div>
             <h3 className="font-semibold text-blue-900">Transferência Bancária</h3>
-            <p className="text-sm text-blue-700">Realize a transferência e envie o comprovativo</p>
           </div>
         </div>
 
@@ -243,11 +242,6 @@ export function BankTransferForm({
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>
-
-                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <span className="text-sm font-medium text-green-700">Valor a transferir:</span>
-                  <div className="text-2xl font-bold text-green-600">{formattedAmount}</div>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -309,6 +303,11 @@ export function BankTransferForm({
               </p>
             </div>
           )}
+        </div>
+
+        <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+          <span className="text-sm font-medium text-green-700">Valor a transferir:</span>
+          <div className="text-2xl font-bold text-green-600">{formattedAmount}</div>
         </div>
 
         <Button
