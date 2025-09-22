@@ -2005,39 +2005,6 @@ ${JSON.stringify(appyPayData, null, 2)}
                 </div>
               )}
 
-              {selectedPayment === 'express' && (
-                <div className="mt-6">
-                  <Card className="border-blue-200 bg-blue-50">
-                    <CardContent className="p-4">
-                      <div className="space-y-4">
-                        <div className="text-center p-3 bg-blue-100 rounded-lg">
-                          <p className="text-sm font-medium text-blue-900">
-                            ATENÇÃO: Após clicar no botão <strong>Comprar Agora</strong>
-                          </p>
-                          <p className="text-sm text-blue-800">
-                            → abra o aplicativo Multicaixa Express, e encontre o botão → <span className="text-red-600 font-bold">Operação por Autorizar</span> clica no botão, selecione o pagamento pendente e <strong>finalize o pagamento.</strong>
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Por favor, insira o número de telefone ativo do Multicaixa Express.
-                          </label>
-                          <PhoneInput
-                            value={formData.phone}
-                            onChange={(value) => handleInputChange('phone', value)}
-                            placeholder="Digite seu telefone"
-                            selectedCountry="AO"
-                            allowedCountries={["AO"]}
-                            className="w-full"
-                          />
-                          <p className="text-sm text-red-600">Telefone é obrigatório</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
 
               {selectedPayment === 'kambapay' && (
                 <div className="mt-6">
@@ -2130,6 +2097,34 @@ ${JSON.stringify(appyPayData, null, 2)}
                         </span>
                       </div>
                     </div>
+                    
+                    {selectedPayment === 'express' && (
+                      <div className="mt-4 space-y-4">
+                        <div className="text-center p-3 bg-blue-100 rounded-lg">
+                          <p className="text-sm font-medium text-blue-900">
+                            ATENÇÃO: Após clicar no botão <strong>Comprar Agora</strong>
+                          </p>
+                          <p className="text-sm text-blue-800">
+                            → abra o aplicativo Multicaixa Express, e encontre o botão → <span className="text-red-600 font-bold">Operação por Autorizar</span> clica no botão, selecione o pagamento pendente e <strong>finalize o pagamento.</strong>
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Por favor, insira o número de telefone ativo do Multicaixa Express.
+                          </label>
+                          <PhoneInput
+                            value={formData.phone}
+                            onChange={(value) => handleInputChange('phone', value)}
+                            placeholder="Digite seu telefone"
+                            selectedCountry="AO"
+                            allowedCountries={["AO"]}
+                            className="w-full"
+                          />
+                          <p className="text-sm text-red-600">Telefone é obrigatório</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
