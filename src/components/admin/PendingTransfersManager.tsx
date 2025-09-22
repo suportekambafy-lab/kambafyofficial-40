@@ -187,7 +187,7 @@ export function PendingTransfersManager() {
         });
       }
       
-      setProofModalOpen(true);
+      setShowProofDialog(true);
     } catch (error) {
       console.error('Erro ao visualizar comprovativo:', error);
       toast({
