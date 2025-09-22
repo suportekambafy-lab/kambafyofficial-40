@@ -118,7 +118,7 @@ export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess, edit
         product_id: productId,
         bump_category: 'access_extension',
         enabled: settings.enabled,
-        title: "Extensão de Acesso",
+        title: settings.description || 'Extensão de Acesso',
         description: settings.description,
         position: settings.position,
         bump_type: 'access_extension',

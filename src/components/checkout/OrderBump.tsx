@@ -230,11 +230,8 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
             onClick={() => handleToggle(orderBump.id)}
           >
             <div className="bg-gradient-to-r from-orange-100 to-orange-50 dark:from-orange-950/20 dark:to-orange-900/10 p-2">
-              {/* Header com título e botão */}
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                  {orderBump.title}
-                </h3>
+              {/* Header sem título, só com botão */}
+              <div className="flex items-center justify-end mb-1">
                 <Button
                   size="sm"
                   variant="outline"
@@ -265,10 +262,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
                 )}
                 
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-sm mb-0.5 text-gray-900 dark:text-gray-100 line-clamp-1">
-                    {orderBump.bump_product_name}
-                  </h4>
-                  <p className="text-gray-600 dark:text-gray-400 text-xs mb-1 line-clamp-1">
+                  <p className="font-semibold text-sm mb-1 text-gray-900 dark:text-gray-100 line-clamp-2">
                     {orderBump.description}
                   </p>
 
