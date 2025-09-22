@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ProductSelector } from "@/components/ProductSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useOrderBumpSettings } from "@/hooks/useOrderBumpSettings";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Package, Plus, Trash2 } from "lucide-react";
 
@@ -21,9 +22,30 @@ interface Product {
   cover?: string;
 }
 
+interface OrderBumpSettings {
+  id?: string;
+  enabled: boolean;
+  title: string;
+  description: string;
+  position: string;
+  bump_category: string;
+  bump_type?: string;
+  bump_product_id?: string;
+  bump_product_name?: string;
+  bump_product_price?: string;
+  bump_product_image?: string;
+  discount?: number;
+  access_extension_type?: string;
+  access_extension_value?: number;
+  access_extension_description?: string;
+  product_id?: string;
+  bump_order?: number;
+}
+
 interface ProductExtraBumpConfiguratorProps {
   productId: string;
   onSaveSuccess: () => void;
+  editingOrderBump?: OrderBumpSettings | null;
 }
 
 interface ProductExtraSettings {
@@ -39,8 +61,9 @@ interface ProductExtraSettings {
   discount: number;
 }
 
-export function ProductExtraBumpConfigurator({ productId, onSaveSuccess }: ProductExtraBumpConfiguratorProps) {
+export function ProductExtraBumpConfigurator({ productId, onSaveSuccess, editingOrderBump }: ProductExtraBumpConfiguratorProps) {
   const { toast } = useToast();
+  const { saveOrderBump } = useOrderBumpSettings(productId);
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -57,9 +80,22 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess }: Produ
   });
 
   useEffect(() => {
-    fetchExistingSettings();
+    if (editingOrderBump) {
+      // Load existing data for editing
+      setSettings({
+        enabled: editingOrderBump.enabled,
+        title: editingOrderBump.title,
+        description: editingOrderBump.description,
+        position: editingOrderBump.position,
+        selectedProductId: editingOrderBump.bump_product_id,
+        selectedProductName: editingOrderBump.bump_product_name || "",
+        selectedProductPrice: editingOrderBump.bump_product_price || "",
+        selectedProductImage: editingOrderBump.bump_product_image,
+        discount: editingOrderBump.discount || 0,
+      });
+    }
     fetchProducts();
-  }, [productId]);
+  }, [editingOrderBump, productId]);
 
   const fetchProducts = async () => {
     try {
@@ -102,35 +138,6 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess }: Produ
     }
   };
 
-  const fetchExistingSettings = async () => {
-    try {
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('order_bump_settings')
-        .select('*')
-        .eq('product_id', productId)
-        .eq('bump_category', 'product_extra')
-        .maybeSingle();
-
-      if (settingsError && settingsError.code !== 'PGRST116') throw settingsError;
-
-      if (settingsData) {
-        setSettings({
-          id: settingsData.id,
-          enabled: settingsData.enabled,
-          title: settingsData.title,
-          description: settingsData.description,
-          position: settingsData.position,
-          selectedProductId: settingsData.bump_product_id, // Carregar ID do produto selecionado
-          selectedProductName: settingsData.bump_product_name,
-          selectedProductPrice: settingsData.bump_product_price,
-          selectedProductImage: settingsData.bump_product_image || undefined,
-          discount: settingsData.discount || 0,
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching product extra settings:', error);
-    }
-  };
 
   const handleProductSelect = (product: Product) => {
     setSettings(prev => ({
@@ -156,39 +163,26 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess }: Produ
         return;
       }
 
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      const orderBumpData = {
+        product_id: productId,
+        bump_category: 'product_extra',
+        enabled: settings.enabled,
+        title: settings.title,
+        description: settings.description,
+        position: settings.position,
+        bump_type: 'product',
+        bump_product_id: settings.selectedProductId,
+        bump_product_name: settings.selectedProductName,
+        bump_product_price: settings.selectedProductPrice,
+        bump_product_image: settings.selectedProductImage || null,
+        discount: settings.discount
+      };
 
-        const orderBumpData = {
-          user_id: user.id,
-          product_id: productId,
-          bump_category: 'product_extra',
-          enabled: settings.enabled,
-          title: settings.title,
-          description: settings.description,
-          position: settings.position,
-          bump_type: 'product',
-          bump_product_id: settings.selectedProductId, // Adicionar referência ao produto
-          bump_product_name: settings.selectedProductName,
-          bump_product_price: settings.selectedProductPrice,
-          bump_product_image: settings.selectedProductImage || null,
-          discount: settings.discount
-        };
-
-      const { error } = await supabase
-        .from('order_bump_settings')
-        .upsert(orderBumpData, { 
-          onConflict: 'product_id,bump_category'
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso!",
-        description: "Order bump de produto extra salvo com sucesso",
-      });
-
-      onSaveSuccess();
+      const success = await saveOrderBump(orderBumpData, editingOrderBump?.id);
+      
+      if (success) {
+        onSaveSuccess();
+      }
     } catch (error) {
       console.error('Error saving product extra settings:', error);
       toast({

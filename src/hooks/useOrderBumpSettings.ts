@@ -19,21 +19,15 @@ interface OrderBumpSettings {
   access_extension_value?: number;
   access_extension_description?: string;
   product_id?: string;
+  bump_order?: number;
 }
 
-export const useOrderBumpSettings = (productId?: string, category?: string) => {
-  const [settings, setSettings] = useState<OrderBumpSettings>({
-    enabled: false,
-    title: '',
-    description: '',
-    position: 'after_payment_method',
-    bump_category: category || 'product_extra',
-    product_id: productId || ''
-  });
+export const useOrderBumpSettings = (productId?: string) => {
+  const [orderBumps, setOrderBumps] = useState<OrderBumpSettings[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchSettings = async (targetProductId?: string, targetCategory?: string) => {
+  const fetchOrderBumps = async (targetProductId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -41,20 +35,10 @@ export const useOrderBumpSettings = (productId?: string, category?: string) => {
         return;
       }
 
-      // Sempre buscar por produto específico se fornecido
       const finalProductId = targetProductId || productId;
-      const finalCategory = targetCategory || category;
       
-      if (!finalProductId || !finalCategory) {
-        // Se não há produto específico ou categoria, resetar configurações
-        setSettings({
-          enabled: false,
-          title: '',
-          description: '',
-          position: 'after_payment_method',
-          bump_category: finalCategory || 'product_extra',
-          product_id: finalProductId || ''
-        });
+      if (!finalProductId) {
+        setOrderBumps([]);
         setLoading(false);
         return;
       }
@@ -64,57 +48,64 @@ export const useOrderBumpSettings = (productId?: string, category?: string) => {
         .select('*')
         .eq('user_id', user.id)
         .eq('product_id', finalProductId)
-        .eq('bump_category', finalCategory)
-        .maybeSingle();
+        .order('bump_order', { ascending: true });
 
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
-      if (data) {
-        setSettings({
-          id: data.id,
-          enabled: data.enabled,
-          title: data.title,
-          description: data.description,
-          position: data.position,
-          bump_category: data.bump_category,
-          bump_type: data.bump_type,
-          bump_product_id: data.bump_product_id,
-          bump_product_name: data.bump_product_name,
-          bump_product_price: data.bump_product_price,
-          bump_product_image: data.bump_product_image,
-          discount: data.discount,
-          access_extension_type: data.access_extension_type,
-          access_extension_value: data.access_extension_value,
-          access_extension_description: data.access_extension_description,
-          product_id: data.product_id
-        });
-      } else {
-        // Reset settings se não encontrar dados
-        setSettings({
-          enabled: false,
-          title: '',
-          description: '',
-          position: 'after_payment_method',
-          bump_category: finalCategory,
-          product_id: finalProductId
-        });
-      }
+      const formattedBumps: OrderBumpSettings[] = (data || []).map(item => ({
+        id: item.id,
+        enabled: item.enabled,
+        title: item.title,
+        description: item.description,
+        position: item.position,
+        bump_category: item.bump_category || 'product_extra',
+        bump_type: item.bump_type,
+        bump_product_id: item.bump_product_id,
+        bump_product_name: item.bump_product_name,
+        bump_product_price: item.bump_product_price,
+        bump_product_image: item.bump_product_image,
+        discount: item.discount || 0,
+        access_extension_type: item.access_extension_type,
+        access_extension_value: item.access_extension_value,
+        access_extension_description: item.access_extension_description,
+        product_id: item.product_id,
+        bump_order: item.bump_order || 1
+      }));
+
+      setOrderBumps(formattedBumps);
     } catch (error) {
       console.error('Error fetching order bump settings:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao carregar order bumps",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const saveSettings = async (newSettings: Omit<OrderBumpSettings, 'id'>) => {
+  const saveOrderBump = async (orderBumpData: Omit<OrderBumpSettings, 'id'>, editingId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Usar o productId fornecido ou o padrão
-      let targetProductId = newSettings.product_id || productId;
+      // Verificar limite de 3 order bumps ativos por produto
+      if (orderBumpData.enabled && !editingId) {
+        const activeCount = orderBumps.filter(bump => bump.enabled && bump.id !== editingId).length;
+        if (activeCount >= 3) {
+          toast({
+            title: "Limite atingido",
+            description: "Você pode ter no máximo 3 order bumps ativos por produto",
+            variant: "destructive"
+          });
+          return false;
+        }
+      }
+
+      let targetProductId = orderBumpData.product_id || productId;
       if (!targetProductId) {
         const { data: products } = await supabase
           .from('products')
@@ -124,82 +115,57 @@ export const useOrderBumpSettings = (productId?: string, category?: string) => {
         
         if (products && products.length > 0) {
           targetProductId = products[0].id;
+        } else {
+          throw new Error('No product found');
         }
       }
 
       const settingsData = {
         user_id: user.id,
         product_id: targetProductId,
-        bump_category: newSettings.bump_category,
-        enabled: newSettings.enabled,
-        title: newSettings.title,
-        description: newSettings.description,
-        position: newSettings.position,
-        bump_type: newSettings.bump_type || null,
-        bump_product_id: newSettings.bump_product_id || null,
-        bump_product_name: newSettings.bump_product_name || null,
-        bump_product_price: newSettings.bump_product_price || null,
-        bump_product_image: newSettings.bump_product_image || null,
-        discount: newSettings.discount || 0,
-        access_extension_type: newSettings.access_extension_type || null,
-        access_extension_value: newSettings.access_extension_value || null,
-        access_extension_description: newSettings.access_extension_description || null
+        bump_category: orderBumpData.bump_category,
+        enabled: orderBumpData.enabled,
+        title: orderBumpData.title,
+        description: orderBumpData.description,
+        position: orderBumpData.position,
+        bump_type: orderBumpData.bump_type || null,
+        bump_product_id: orderBumpData.bump_product_id || null,
+        bump_product_name: orderBumpData.bump_product_name || null,
+        bump_product_price: orderBumpData.bump_product_price || null,
+        bump_product_image: orderBumpData.bump_product_image || null,
+        discount: orderBumpData.discount || 0,
+        access_extension_type: orderBumpData.access_extension_type || null,
+        access_extension_value: orderBumpData.access_extension_value || null,
+        access_extension_description: orderBumpData.access_extension_description || null
       };
 
-      console.log('Saving order bump settings for product:', targetProductId, settingsData);
-
       let result;
-      // Verificar se existe um order bump já carregado E se é para o mesmo produto e categoria
-      if (settings.id && settings.product_id === targetProductId && settings.bump_category === newSettings.bump_category) {
-        // Update existing order bump for the same product and category
+      if (editingId) {
+        // Update existing order bump
         result = await supabase
           .from('order_bump_settings')
           .update(settingsData)
-          .eq('id', settings.id)
+          .eq('id', editingId)
           .select()
           .single();
       } else {
-        // Check if order bump already exists for this product and category
-        const { data: existingOrderBump } = await supabase
+        // Create new order bump
+        result = await supabase
           .from('order_bump_settings')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('product_id', targetProductId)
-          .eq('bump_category', newSettings.bump_category)
-          .maybeSingle();
-
-        if (existingOrderBump) {
-          // Update existing order bump for this product and category
-          result = await supabase
-            .from('order_bump_settings')
-            .update(settingsData)
-            .eq('id', existingOrderBump.id)
-            .select()
-            .single();
-        } else {
-          // Create new order bump for this product and category
-          result = await supabase
-            .from('order_bump_settings')
-            .insert(settingsData)
-            .select()
-            .single();
-        }
+          .insert(settingsData)
+          .select()
+          .single();
       }
 
       if (result.error) throw result.error;
 
-      console.log('Order bump settings saved successfully:', result.data);
-
-      setSettings({
-        id: result.data.id,
-        ...newSettings,
-        product_id: targetProductId
-      });
-
       toast({
-        title: "Order bump salvo",
-        description: "Configurações do order bump foram salvas com sucesso"
+        title: "Sucesso!",
+        description: `Order bump ${editingId ? 'atualizado' : 'criado'} com sucesso`
       });
+
+      // Refresh the order bumps list
+      await fetchOrderBumps(targetProductId);
 
       // Disparar evento para atualizar a lista de integrações
       window.dispatchEvent(new CustomEvent('integrationCreated', {
@@ -208,10 +174,39 @@ export const useOrderBumpSettings = (productId?: string, category?: string) => {
 
       return true;
     } catch (error) {
-      console.error('Error saving order bump settings:', error);
+      console.error('Error saving order bump:', error);
       toast({
         title: "Erro",
-        description: "Falha ao salvar configurações do order bump",
+        description: `Falha ao ${editingId ? 'atualizar' : 'criar'} order bump`,
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const deleteOrderBump = async (orderBumpId: string) => {
+    try {
+      const { error } = await supabase
+        .from('order_bump_settings')
+        .delete()
+        .eq('id', orderBumpId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: "Order bump deletado com sucesso"
+      });
+
+      // Refresh the list
+      await fetchOrderBumps(productId);
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting order bump:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao deletar order bump",
         variant: "destructive"
       });
       return false;
@@ -219,19 +214,21 @@ export const useOrderBumpSettings = (productId?: string, category?: string) => {
   };
 
   useEffect(() => {
-    fetchSettings(productId, category);
-  }, [productId, category]);
+    fetchOrderBumps(productId);
+  }, [productId]);
 
-  const refetchSettings = (targetProductId?: string, targetCategory?: string) => {
+  const refetchOrderBumps = (targetProductId?: string) => {
     setLoading(true);
-    fetchSettings(targetProductId || productId, targetCategory || category);
+    fetchOrderBumps(targetProductId || productId);
   };
 
   return {
-    settings,
-    setSettings,
+    orderBumps,
+    setOrderBumps,
     loading,
-    saveSettings,
-    refetchSettings
+    saveOrderBump,
+    deleteOrderBump,
+    refetchOrderBumps,
+    fetchOrderBumps
   };
 };

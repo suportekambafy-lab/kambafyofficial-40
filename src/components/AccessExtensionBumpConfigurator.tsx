@@ -8,12 +8,34 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useOrderBumpSettings } from "@/hooks/useOrderBumpSettings";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Clock, Plus } from "lucide-react";
+
+interface OrderBumpSettings {
+  id?: string;
+  enabled: boolean;
+  title: string;
+  description: string;
+  position: string;
+  bump_category: string;
+  bump_type?: string;
+  bump_product_id?: string;
+  bump_product_name?: string;
+  bump_product_price?: string;
+  bump_product_image?: string;
+  discount?: number;
+  access_extension_type?: string;
+  access_extension_value?: number;
+  access_extension_description?: string;
+  product_id?: string;
+  bump_order?: number;
+}
 
 interface AccessExtensionBumpConfiguratorProps {
   productId: string;
   onSaveSuccess: () => void;
+  editingOrderBump?: OrderBumpSettings | null;
 }
 
 interface AccessExtensionSettings {
@@ -27,8 +49,9 @@ interface AccessExtensionSettings {
   extensionDescription: string;
 }
 
-export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess }: AccessExtensionBumpConfiguratorProps) {
+export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess, editingOrderBump }: AccessExtensionBumpConfiguratorProps) {
   const { toast } = useToast();
+  const { saveOrderBump } = useOrderBumpSettings(productId);
   const [loading, setLoading] = useState(false);
   
   const [settings, setSettings] = useState<AccessExtensionSettings>({
@@ -42,36 +65,20 @@ export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess }: Ac
   });
 
   useEffect(() => {
-    fetchExistingSettings();
-  }, [productId]);
-
-  const fetchExistingSettings = async () => {
-    try {
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('order_bump_settings')
-        .select('*')
-        .eq('product_id', productId)
-        .eq('bump_category', 'access_extension')
-        .maybeSingle();
-
-      if (settingsError && settingsError.code !== 'PGRST116') throw settingsError;
-
-      if (settingsData) {
-        setSettings({
-          id: settingsData.id,
-          enabled: settingsData.enabled,
-          description: settingsData.description,
-          position: settingsData.position,
-          extensionType: settingsData.access_extension_type || 'months',
-          extensionValue: settingsData.access_extension_value || 6,
-          extensionPrice: settingsData.bump_product_price || '',
-          extensionDescription: settingsData.access_extension_description || '',
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching access extension settings:', error);
+    if (editingOrderBump) {
+      // Load existing data for editing
+      setSettings({
+        enabled: editingOrderBump.enabled,
+        description: editingOrderBump.description,
+        position: editingOrderBump.position,
+        extensionType: editingOrderBump.access_extension_type || 'months',
+        extensionValue: editingOrderBump.access_extension_value || 6,
+        extensionPrice: editingOrderBump.bump_product_price || '',
+        extensionDescription: editingOrderBump.access_extension_description || '',
+      });
     }
-  };
+  }, [editingOrderBump]);
+
 
   const generateExtensionDescription = (type: string, value: number): string => {
     if (type === 'lifetime') return 'Acesso Vitalício';
@@ -107,11 +114,7 @@ export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess }: Ac
         return;
       }
 
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
-
       const orderBumpData = {
-        user_id: user.id,
         product_id: productId,
         bump_category: 'access_extension',
         enabled: settings.enabled,
@@ -128,20 +131,11 @@ export function AccessExtensionBumpConfigurator({ productId, onSaveSuccess }: Ac
         discount: 0
       };
 
-      const { error } = await supabase
-        .from('order_bump_settings')
-        .upsert(orderBumpData, { 
-          onConflict: 'product_id,bump_category'
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso!",
-        description: "Order bump de extensão de acesso salvo com sucesso",
-      });
-
-      onSaveSuccess();
+      const success = await saveOrderBump(orderBumpData, editingOrderBump?.id);
+      
+      if (success) {
+        onSaveSuccess();
+      }
     } catch (error) {
       console.error('Error saving access extension settings:', error);
       toast({

@@ -1,8 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ProductExtraBumpConfigurator } from "./ProductExtraBumpConfigurator";
-import { AccessExtensionBumpConfigurator } from "./AccessExtensionBumpConfigurator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Clock } from "lucide-react";
+import { MultipleOrderBumpManager } from "./MultipleOrderBumpManager";
 
 interface OrderBumpConfiguratorProps {
   productId: string;
@@ -18,42 +14,9 @@ export function OrderBumpConfigurator({ productId, onSaveSuccess }: OrderBumpCon
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Bumps - Configure Ofertas Extras</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Você pode ativar ambos os tipos de order bump simultaneamente para maximizar suas vendas.
-          </p>
-        </CardHeader>
-      </Card>
-
-      <Tabs defaultValue="product-extra" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="product-extra" className="flex items-center gap-2">
-            <Package className="w-4 h-4" />
-            Produto Extra
-          </TabsTrigger>
-          <TabsTrigger value="access-extension" className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Extensão de Acesso
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="product-extra">
-          <ProductExtraBumpConfigurator
-            productId={productId}
-            onSaveSuccess={handleSaveSuccess}
-          />
-        </TabsContent>
-
-        <TabsContent value="access-extension">
-          <AccessExtensionBumpConfigurator
-            productId={productId}
-            onSaveSuccess={handleSaveSuccess}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+    <MultipleOrderBumpManager
+      productId={productId}
+      onSaveSuccess={handleSaveSuccess}
+    />
   );
 }
