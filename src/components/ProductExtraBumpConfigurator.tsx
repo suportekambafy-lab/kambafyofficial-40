@@ -51,7 +51,6 @@ interface ProductExtraBumpConfiguratorProps {
 interface ProductExtraSettings {
   id?: string;
   enabled: boolean;
-  title: string;
   description: string;
   position: string;
   selectedProductId?: string;
@@ -71,7 +70,6 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess, editing
   
   const [settings, setSettings] = useState<ProductExtraSettings>({
     enabled: false,
-    title: "🎁 Oferta Especial - Produto Extra",
     description: "Adicione este produto extra por apenas mais:",
     position: "after_payment_method",
     selectedProductName: "",
@@ -84,7 +82,6 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess, editing
       // Load existing data for editing
       setSettings({
         enabled: editingOrderBump.enabled,
-        title: editingOrderBump.title,
         description: editingOrderBump.description,
         position: editingOrderBump.position,
         selectedProductId: editingOrderBump.bump_product_id,
@@ -167,7 +164,7 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess, editing
         product_id: productId,
         bump_category: 'product_extra',
         enabled: settings.enabled,
-        title: settings.title,
+        title: "Produto Extra",
         description: settings.description,
         position: settings.position,
         bump_type: 'product',
@@ -247,17 +244,6 @@ export function ProductExtraBumpConfigurator({ productId, onSaveSuccess, editing
             onCheckedChange={(enabled) => setSettings(prev => ({ ...prev, enabled }))}
           />
           <Label htmlFor="enabled">Ativar Order Bump de Produto Extra</Label>
-        </div>
-
-        {/* Título */}
-        <div className="space-y-2">
-          <Label htmlFor="title">Título</Label>
-          <Input
-            id="title"
-            value={settings.title}
-            onChange={(e) => setSettings(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="🎁 Oferta Especial - Produto Extra"
-          />
         </div>
 
         {/* Descrição */}
