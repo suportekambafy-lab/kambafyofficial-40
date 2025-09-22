@@ -54,7 +54,8 @@ export const useAdminAuthHook = () => {
       const { error } = await supabase.functions.invoke('send-2fa-code', {
         body: {
           email,
-          context: 'admin_login'
+          event_type: 'admin_login',
+          user_email: email
         }
       });
       

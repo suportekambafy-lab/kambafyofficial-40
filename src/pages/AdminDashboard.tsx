@@ -191,35 +191,18 @@ export default function AdminDashboard() {
     try {
       console.log('Carregando estatísticas...');
       
-      // Primeiro tenta carregar da tabela agregada admin_dashboard_stats
-      let usersResult: { count: number } = { count: 0 };
-      let productsResult: { count: number } = { count: 0 };
-      let ordersResult: { count: number } = { count: 0 };
-      let withdrawalsResult: { count: number } = { count: 0 };
+      // Carregar estatísticas individuais
+      const [usersRes, productsRes, ordersRes, withdrawalsRes] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact' }),
+        supabase.from('products').select('*', { count: 'exact' }),
+        supabase.from('orders').select('*', { count: 'exact' }),
+        supabase.from('withdrawal_requests').select('*', { count: 'exact' }).eq('status', 'pendente')
+      ]);
 
-      const { data: dashboardRow, error: dashboardError } = await supabase
-        .from('admin_dashboard_stats')
-        .select('*')
-        .maybeSingle();
-
-      if (dashboardRow && !dashboardError) {
-        usersResult.count = Number(dashboardRow.total_users) || 0;
-        productsResult.count = Number(dashboardRow.total_products) || 0;
-        ordersResult.count = Number(dashboardRow.total_transactions) || 0;
-        withdrawalsResult.count = Number(dashboardRow.pending_withdrawals) || 0;
-      } else {
-        const [usersRes, productsRes, ordersRes, withdrawalsRes] = await Promise.all([
-          supabase.from('profiles').select('*', { count: 'exact' }),
-          supabase.from('products').select('*', { count: 'exact' }),
-          supabase.from('orders').select('*', { count: 'exact' }),
-          supabase.from('withdrawal_requests').select('*', { count: 'exact' }).eq('status', 'pendente')
-        ]);
-
-        usersResult.count = usersRes.count || 0;
-        productsResult.count = productsRes.count || 0;
-        ordersResult.count = ordersRes.count || 0;
-        withdrawalsResult.count = withdrawalsRes.count || 0;
-      }
+      const usersResult = { count: usersRes.count || 0 };
+      const productsResult = { count: productsRes.count || 0 };
+      const ordersResult = { count: ordersRes.count || 0 };
+      const withdrawalsResult = { count: withdrawalsRes.count || 0 };
 
       // Carregar dados por país
       const { data: profilesData } = await supabase
