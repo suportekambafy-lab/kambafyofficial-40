@@ -65,24 +65,26 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     // Calcular preço do produto principal na moeda do país usando preços personalizados
     const productPriceInTargetCurrency = convertPrice(parseFloat(product.price), userCountry, product?.custom_prices);
     
-    // Somar order bumps (que já estão na moeda do país)
-    const total = productPriceInTargetCurrency + productExtraPrice + accessExtensionPrice;
+    // Somar order bumps (que já estão na moeda do país) - usar o cálculo atualizado
+    const totalOrderBumpPrice = Array.from(selectedOrderBumps.values()).reduce((sum, { price }) => sum + price, 0);
+    const total = productPriceInTargetCurrency + totalOrderBumpPrice + accessExtensionPrice;
     
     console.log(`🔥 TOTAL AMOUNT DETECTION - DEBUGGING:`, {
       productPrice: parseFloat(product.price),
       productPriceInTargetCurrency,
-      productExtraPrice,
+      totalOrderBumpPrice,
+      selectedOrderBumpsCount: selectedOrderBumps.size,
       accessExtensionPrice,
       total,
       currency: userCountry?.currency,
       userCountry: userCountry?.code,
       productCustomPrices: product?.custom_prices,
-      hasOrderBump: productExtraPrice > 0,
+      hasOrderBump: totalOrderBumpPrice > 0,
       hasExtension: accessExtensionPrice > 0
     });
     
     return total;
-  }, [product, productExtraPrice, accessExtensionPrice, userCountry, convertPrice]);
+  }, [product, selectedOrderBumps, accessExtensionPrice, userCountry, convertPrice]);
 
   const { markAsRecovered, hasDetected, abandonedPurchaseId } = useAbandonedPurchaseDetection({
     product,

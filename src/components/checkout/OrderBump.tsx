@@ -161,7 +161,7 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
     if (newSelectedBumps.has(bumpId)) {
       newSelectedBumps.delete(bumpId);
       console.log(`🔥 ORDER BUMP CALLING onToggle: DESELECTED`, { bump });
-      onToggle?.(false, null);
+      onToggle?.(false, bump || null);
     } else {
       newSelectedBumps.add(bumpId);
       console.log(`🔥 ORDER BUMP CALLING onToggle: SELECTED`, { bump });
