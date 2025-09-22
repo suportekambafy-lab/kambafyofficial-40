@@ -99,7 +99,7 @@ export default function Sales() {
   const [statusFilter, setStatusFilter] = useState("todos");
   const [paymentFilter, setPaymentFilter] = useState("todos");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(50); // Aumentar para mostrar vendas EUR
+  const [itemsPerPage] = useState(100); // Mostrar todas as vendas (incluindo EUR)
   const [showAllPaymentMethods, setShowAllPaymentMethods] = useState(false);
 
   const { loadOrdersWithStats, totalCount } = useStreamingQuery();
