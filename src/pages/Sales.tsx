@@ -121,7 +121,6 @@ export default function Sales() {
 
     console.log('🚀🚀 PÁGINA VENDAS - loadSales EXECUTADA 🚀🚀');
     console.log('📊 Usuário atual:', user.id);
-    console.log('🚀 Iniciando carregamento de vendas para:', user.id);
     loadingRef.current = true;
 
     try {
@@ -229,16 +228,14 @@ export default function Sales() {
     // Usar o valor original preservado
     const paidAmount = parseFloat(originalAmount);
     
-    // Debug detalhado da venda
-    console.log(`🔍 VENDA DEBUG:`, {
+    // Debug das vendas carregadas na página
+    console.log(`🚀 VENDA CARREGADA NA PÁGINA:`, {
       saleId: sale.id,
       customer: sale.customer_name,
       amount: sale.amount,
       currency: sale.currency,
       originalAmount: sale.original_amount,
-      originalCurrency: sale.original_currency,
-      calculatedAmount: paidAmount,
-      calculatedCurrency: originalCurrency
+      originalCurrency: sale.original_currency
     });
     
     return (

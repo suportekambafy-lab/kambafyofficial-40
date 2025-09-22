@@ -237,6 +237,15 @@ export const useStreamingQuery = () => {
           // Verificar se é venda recuperada
           const isRecovered = recoveredOrderIds.has(order.order_id);
           
+          // Debug detalhado da venda antes de processar
+          console.log(`🔍 VENDA RAW DO BANCO:`, {
+            orderId: order.order_id,
+            customer: order.customer_name,
+            amount: order.amount,
+            currency: order.currency,
+            tipo: 'própria'
+          });
+          
           return {
             ...order,
             // Preservar moeda e valor originais para exibição
@@ -317,13 +326,24 @@ export const useStreamingQuery = () => {
           console.log(`✅ Vendas como afiliado: ${affiliateOrders.length} vendas carregadas`);
           
           // Marcar como vendas de afiliado
-          const affiliateOrdersWithType = affiliateOrders.map(order => ({
-            ...order,
-            // Preservar moeda e valor originais para exibição
-            original_amount: order.amount,
-            original_currency: order.currency,
-            sale_type: 'affiliate' // Marcar como venda de afiliado
-          }));
+          const affiliateOrdersWithType = affiliateOrders.map(order => {
+            // Debug detalhado da venda de afiliado
+            console.log(`🔍 VENDA AFILIADO RAW:`, {
+              orderId: order.order_id,
+              customer: order.customer_name,
+              amount: order.amount,
+              currency: order.currency,
+              tipo: 'afiliado'
+            });
+            
+            return {
+              ...order,
+              // Preservar moeda e valor originais para exibição
+              original_amount: order.amount,
+              original_currency: order.currency,
+              sale_type: 'affiliate' // Marcar como venda de afiliado
+            };
+          });
 
           allOrders.push(...affiliateOrdersWithType);
         }
