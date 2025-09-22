@@ -161,18 +161,23 @@ export function PendingTransfersManager() {
     }
   };
 
-  const viewProof = (proofData: any) => {
+  const viewProof = async (proofData: any) => {
     try {
       const data = typeof proofData === 'string' ? JSON.parse(proofData) : proofData;
       
       if (data.proof_file_path) {
-        // Novo formato com arquivo no storage
-        const { data: { publicUrl } } = supabase.storage
+        // Novo formato com arquivo no storage - usar signed URL para bucket privado
+        const { data: signedUrlData, error } = await supabase.storage
           .from('payment-proofs')
-          .getPublicUrl(data.proof_file_path);
+          .createSignedUrl(data.proof_file_path, 3600); // URL válida por 1 hora
+        
+        if (error) {
+          console.error('Erro ao criar signed URL:', error);
+          throw error;
+        }
         
         setSelectedProof({
-          url: publicUrl,
+          url: signedUrlData.signedUrl,
           fileName: data.proof_file_name || 'Comprovativo',
           bank: data.bank || 'N/A',
           uploadedAt: data.upload_timestamp,
@@ -200,18 +205,23 @@ export function PendingTransfersManager() {
     }
   };
 
-  const downloadProof = (proofData: any, orderNumber: string) => {
+  const downloadProof = async (proofData: any, orderNumber: string) => {
     try {
       const data = typeof proofData === 'string' ? JSON.parse(proofData) : proofData;
       
       if (data.proof_file_path) {
-        // Novo formato com arquivo no storage
-        const { data: { publicUrl } } = supabase.storage
+        // Novo formato com arquivo no storage - usar signed URL para download
+        const { data: signedUrlData, error } = await supabase.storage
           .from('payment-proofs')
-          .getPublicUrl(data.proof_file_path);
+          .createSignedUrl(data.proof_file_path, 3600);
+        
+        if (error) {
+          console.error('Erro ao criar signed URL para download:', error);
+          throw error;
+        }
         
         const link = document.createElement('a');
-        link.href = publicUrl;
+        link.href = signedUrlData.signedUrl;
         link.download = `comprovativo-${orderNumber}.${data.proof_file_name?.split('.').pop() || 'pdf'}`;
         document.body.appendChild(link);
         link.click();
