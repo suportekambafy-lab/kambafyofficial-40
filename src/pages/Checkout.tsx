@@ -76,6 +76,7 @@ const Checkout = () => {
     phone: "",
     phoneCountry: "AO"
   });
+  const [expressPhone, setExpressPhone] = useState("");
   const [selectedPayment, setSelectedPayment] = useState("");
   const [checkoutSettings, setCheckoutSettings] = useState<any>(null);
   const [orderBump, setOrderBump] = useState<any>(null);
@@ -790,11 +791,13 @@ const Checkout = () => {
     setProcessing(true);
 
     try {
-      if (!formData.fullName || !formData.email || !formData.phone) {
+      const requiredPhone = selectedPayment === 'express' ? expressPhone : formData.phone;
+      
+      if (!formData.fullName || !formData.email || !requiredPhone) {
         console.error('🏦 Missing required fields:', { 
           fullName: !!formData.fullName, 
           email: !!formData.email, 
-          phone: !!formData.phone 
+          phone: !!requiredPhone 
         });
         toast({
           title: "Campos obrigatórios",
@@ -946,7 +949,9 @@ const Checkout = () => {
       availablePaymentMethods: availablePaymentMethods.map(m => m.id)
     });
 
-    if (!formData.fullName || !formData.email || !formData.phone || !selectedPayment) {
+    const requiredPhone = selectedPayment === 'express' ? expressPhone : formData.phone;
+
+    if (!formData.fullName || !formData.email || !requiredPhone || !selectedPayment) {
       console.log('❌ Validation failed - missing required fields');
       toast({
         title: "Erro",
@@ -988,7 +993,7 @@ const Checkout = () => {
           merchantTransactionId: merchantTransactionId,
           paymentMethod: "REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f",
           customerName: formData.fullName,
-          customerPhone: formData.phone,
+          customerPhone: expressPhone,
           customerEmail: formData.email
         };
 
@@ -2080,8 +2085,8 @@ ${JSON.stringify(appyPayData, null, 2)}
                             Por favor, insira o número de telefone ativo do Multicaixa Express.
                           </label>
                           <PhoneInput
-                            value={formData.phone}
-                            onChange={(value) => handleInputChange('phone', value)}
+                            value={expressPhone}
+                            onChange={(value) => setExpressPhone(value)}
                             placeholder="Digite seu telefone"
                             selectedCountry="AO"
                             allowedCountries={["AO"]}
@@ -2147,7 +2152,7 @@ ${JSON.stringify(appyPayData, null, 2)}
               {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
                 <Button
                   onClick={handlePurchase}
-                  disabled={!formData.fullName || !formData.email || !formData.phone || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
+                  disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
                   className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-semibold relative"
                 >
                   {processing ? (
