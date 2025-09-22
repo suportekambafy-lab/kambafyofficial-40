@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Eye, EyeOff, Activity, BarChart3, Code, Settings } from "lucide-react";
 import { SEO } from "@/components/SEO";
-import { LogoIcon } from "@/components/PaymentMethodIcon";
 
 export default function PartnersPortal() {
   const [apiKey, setApiKey] = useState("");
@@ -41,7 +40,7 @@ export default function PartnersPortal() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <LogoIcon type="full" height={32} />
+              <img src="/kambafy-logo.png" alt="KambaPay" className="h-8" />
               <span className="text-xl font-bold text-primary">Portal de Parceiros</span>
             </div>
             <div className="flex items-center space-x-4">

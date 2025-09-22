@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { supabase } from "@/integrations/supabase/client";
-import { PaymentMethodIcon } from "@/components/PaymentMethodIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 import { CountrySelector } from "@/components/checkout/CountrySelector";
@@ -1911,12 +1910,13 @@ ${JSON.stringify(appyPayData, null, 2)}
                           </div>
                         )}
                         <div className="w-12 h-12 rounded-xl overflow-hidden mb-2 flex items-center justify-center">
-                 <PaymentMethodIcon
-                   methodId={method.id}
-                   width={32}
-                   height={32}
-                   className="rounded border"
-                 />
+                          <img
+                            src={method.image}
+                            alt={method.name}
+                            className={`w-10 h-10 object-contain transition-all ${
+                              selectedPayment === method.id ? '' : 'opacity-60 saturate-50'
+                            }`}
+                          />
                         </div>
                         <p className="text-xs text-gray-700 text-center leading-tight">
                           {method.name}

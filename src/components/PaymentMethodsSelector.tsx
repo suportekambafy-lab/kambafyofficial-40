@@ -1,11 +1,11 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Checkbox } from './ui/checkbox';
-import { Badge } from './ui/badge';
-import { Separator } from './ui/separator';
-import { PaymentMethod, getAllPaymentMethods } from '../utils/paymentMethods';
-import { PaymentMethodIcon } from './PaymentMethodIcon';
-import { CreditCard } from 'lucide-react';
+
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { CreditCard } from "lucide-react";
+import { getAllPaymentMethods, PaymentMethod } from "@/utils/paymentMethods";
 
 interface PaymentMethodsSelectorProps {
   selectedMethods: PaymentMethod[];
@@ -75,15 +75,28 @@ export default function PaymentMethodsSelector({ selectedMethods, onMethodsChang
                        disabled={allMethods.find(m => m.id === method.id)?.enabled === false}
                      />
                      <div className="flex items-center gap-3">
-                       <PaymentMethodIcon
-                         methodId={method.id}
-                         width={32}
-                         height={32}
-                         className="rounded border"
-                       />
-                       <div className="flex flex-col">
-                         <span className="font-medium text-sm">{method.name}</span>
-                         <span className="text-xs text-gray-500">{method.countryFlag} {method.countryName}</span>
+                       {method.image && (
+                         <img
+                           src={method.image}
+                           alt={method.name}
+                           className={`w-8 h-8 object-contain ${
+                             allMethods.find(m => m.id === method.id)?.enabled === false ? 'grayscale' : ''
+                           }`}
+                         />
+                       )}
+                       <div>
+                         <Label 
+                           htmlFor={method.id} 
+                           className={`font-medium cursor-pointer text-sm ${
+                             allMethods.find(m => m.id === method.id)?.enabled === false ? 'text-gray-400' : ''
+                           }`}
+                         >
+                           {method.name}
+                         </Label>
+                         <div className="flex items-center gap-1 mt-1">
+                           <span className="text-xs">{method.countryFlag}</span>
+                           <span className="text-xs text-gray-500">{method.countryName}</span>
+                         </div>
                        </div>
                      </div>
                    </div>
