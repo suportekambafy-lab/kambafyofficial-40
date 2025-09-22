@@ -1870,10 +1870,19 @@ ${JSON.stringify(appyPayData, null, 2)}
                   value={formData.fullName}
                   onChange={(e) => handleInputChange("fullName", e.target.value)}
                   onBlur={() => handleFieldBlur("fullName")}
-                  className={`h-12 focus:border-green-500 ${fieldErrors.fullName ? 'border-red-500' : 'border-gray-300'}`}
+                  className={`h-12 focus:border-green-500 ${fieldErrors.fullName ? 'border-red-500 border-2' : 'border-gray-300'}`}
                 />
+                {/* Debug: mostra sempre durante teste */}
                 {fieldErrors.fullName && (
-                  <p className="text-red-500 text-sm mt-1 font-medium">{fieldErrors.fullName}</p>
+                  <div className="bg-red-100 border border-red-500 p-2 rounded mt-1">
+                    <p className="text-red-600 text-sm font-semibold">{fieldErrors.fullName}</p>
+                  </div>
+                )}
+                {/* Fallback para debug */}
+                {!formData.fullName && (
+                  <div className="bg-yellow-100 border border-yellow-500 p-1 rounded mt-1">
+                    <p className="text-yellow-600 text-xs">DEBUG: Campo vazio</p>
+                  </div>
                 )}
               </div>
 
@@ -1888,10 +1897,17 @@ ${JSON.stringify(appyPayData, null, 2)}
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   onBlur={() => handleFieldBlur("email")}
-                  className={`h-12 focus:border-green-500 ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'}`}
+                  className={`h-12 focus:border-green-500 ${fieldErrors.email ? 'border-red-500 border-2' : 'border-gray-300'}`}
                 />
                 {fieldErrors.email && (
-                  <p className="text-red-500 text-sm mt-1 font-medium">{fieldErrors.email}</p>
+                  <div className="bg-red-100 border border-red-500 p-2 rounded mt-1">
+                    <p className="text-red-600 text-sm font-semibold">{fieldErrors.email}</p>
+                  </div>
+                )}
+                {!formData.email && (
+                  <div className="bg-yellow-100 border border-yellow-500 p-1 rounded mt-1">
+                    <p className="text-yellow-600 text-xs">DEBUG: Campo vazio</p>
+                  </div>
                 )}
               </div>
 
@@ -1905,10 +1921,17 @@ ${JSON.stringify(appyPayData, null, 2)}
                   selectedCountry={formData.phoneCountry}
                   onCountryChange={handleCountryChange}
                   placeholder="Digite seu telefone"
-                  className={`h-12 ${fieldErrors.phone ? 'border-red-500' : ''}`}
+                  className={`h-12 ${fieldErrors.phone ? 'border-red-500 border-2' : ''}`}
                 />
                 {fieldErrors.phone && (
-                  <p className="text-red-500 text-sm mt-1 font-medium">{fieldErrors.phone}</p>
+                  <div className="bg-red-100 border border-red-500 p-2 rounded mt-1">
+                    <p className="text-red-600 text-sm font-semibold">{fieldErrors.phone}</p>
+                  </div>
+                )}
+                {!formData.phone && (
+                  <div className="bg-yellow-100 border border-yellow-500 p-1 rounded mt-1">
+                    <p className="text-yellow-600 text-xs">DEBUG: Telefone vazio</p>
+                  </div>
                 )}
               </div>
 
