@@ -79,6 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log('=== FETCHING SELLER AND PRODUCT DATA ===');
+    console.log('Product type detected:', productData?.type);
     
     let sellerProfile = null;
     let productData = null;
@@ -98,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (productId) {
       const { data: product, error: productError } = await supabase
         .from('products')
-        .select('sales')
+        .select('sales, type')
         .eq('id', productId)
         .single();
 
@@ -127,7 +128,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Create access link
     let accessInfo = '';
-    if (memberAreaId && memberAreaUrl) {
+    const productType = productData?.type;
+    
+    // Para produtos do tipo "Link de Pagamento", não incluir informações de acesso
+    if (productType === 'Link de Pagamento') {
+      // Para Link de Pagamento, não incluir seção de acesso
+      accessInfo = '';
+    } else if (memberAreaId && memberAreaUrl) {
       accessInfo = `
         <div style="background-color: #16a34a; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: white; margin: 0 0 10px 0;">🎓 Acesso ao Curso Liberado!</h3>
@@ -187,7 +194,81 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     }
 
-    const customerEmailHtml = `
+    // Criar email diferente para produtos do tipo "Link de Pagamento"  
+    let customerEmailHtml = '';
+    
+    if (productType === 'Link de Pagamento') {
+      // Email simples para Link de Pagamento
+      customerEmailHtml = `
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Confirmação de Compra - Kambafy</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <div style="background-color: #16a34a; color: white; width: 60px; height: 60px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+              <span style="font-size: 24px; font-weight: bold;">K</span>
+            </div>
+            <div style="background-color: #16a34a; color: white; padding: 20px; border-radius: 8px;">
+              <h1 style="margin: 0; font-size: 24px;">✅ Compra Confirmada!</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px; color: white;">Obrigado pela sua compra, ${customerName}!</p>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <h2 style="color: #16a34a; margin: 0 0 15px 0;">Você comprou: ${productName}</h2>
+            <p style="font-size: 18px; color: #666; margin: 0;">de ${sellerProfile?.full_name || 'Kambafy'}</p>
+          </div>
+
+          <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
+            <h3 style="color: #16a34a; margin: 0 0 15px 0;">Detalhes do Pedido</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Número do Pedido:</td>
+                <td style="padding: 8px 0;">${orderId}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Valor Pago:</td>
+                <td style="padding: 8px 0; font-size: 18px; color: #16a34a; font-weight: bold;">${amount} ${currency}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Data:</td>
+                <td style="padding: 8px 0;">${new Date().toLocaleDateString('pt-BR')}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+            <h3 style="color: #16a34a; margin: 0 0 15px 0;">💚 Muito obrigado por comprar com a Kambafy!</h3>
+            <p style="margin: 0; color: #16a34a; font-size: 16px;">
+              Sua confiança em nós é o que nos motiva a continuar oferecendo os melhores produtos digitais.
+            </p>
+          </div>
+
+          <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #856404; margin: 0 0 10px 0;">📞 Precisa de Ajuda?</h3>
+            <p style="margin: 0; color: #856404;">
+              Se tiver alguma dúvida, entre em contato conosco:
+            </p>
+            <p style="margin: 10px 0 0 0; color: #856404;">
+              <strong>Email:</strong> suporte@kambafy.com<br>
+              <strong>WhatsApp:</strong> (+244) 900 000 000
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="margin: 0; color: #666;">
+              <strong>Kambafy</strong><br>
+              Obrigado por confiar em nós!
+            </p>
+          </div>
+        </body>
+        </html>
+      `;
+    } else {
+      // Email completo para Cursos e E-books (template original)
+      customerEmailHtml = `
       <html>
       <head>
         <meta charset="utf-8">
