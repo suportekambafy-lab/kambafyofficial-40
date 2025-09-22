@@ -33,6 +33,7 @@ import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod } from "@/utils/paymentMethods";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
+import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 
 interface Sale {
   id: string;
@@ -74,6 +75,7 @@ interface SalesStats {
 export default function Sales() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getCurrencyInfo } = useCurrencyToCountry();
   const [sales, setSales] = useState<Sale[]>([]);
   const [salesStats, setSalesStats] = useState<SalesStats>({
     paid: 0,
@@ -215,14 +217,25 @@ export default function Sales() {
   };
 
   const formatPrice = (sale: Sale) => {
+    const currencyInfo = getCurrencyInfo(sale.currency);
+    
     // Usar o valor efetivamente pago pelo cliente (amount da ordem)
     const paidAmount = parseFloat(sale.amount);
+    
+    // Log para debug da venda individual
+    console.log(`💰 Venda individual: ${paidAmount} ${sale.currency} (cliente: ${sale.customer_name})`);
     
     return (
       <div className="text-right">
         <div className="font-bold text-checkout-green">
           {formatPriceForSeller(paidAmount, sale.currency)}
         </div>
+        {sale.currency !== 'KZ' && (
+          <div className="text-xs text-gray-500 flex items-center gap-1">
+            <span>{currencyInfo.flag}</span>
+            <span>{currencyInfo.name}</span>
+          </div>
+        )}
       </div>
     );
   };
