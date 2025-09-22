@@ -76,6 +76,13 @@ export const formatPriceForSeller = (
   currency: string = 'KZ',
   useToLocaleString: boolean = true
 ): string => {
+  // Debug detalhado
+  console.log(`🔄 formatPriceForSeller INÍCIO:`, {
+    amount,
+    currency,
+    useToLocaleString
+  });
+  
   // Se não é KZ, converter para KZ
   let amountInKZ = amount;
   
@@ -88,11 +95,19 @@ export const formatPriceForSeller = (
     
     const rate = exchangeRates[currency.toUpperCase()] || 1;
     amountInKZ = Math.round(amount * rate);
+    
+    console.log(`💱 CONVERSÃO:`, {
+      originalAmount: amount,
+      originalCurrency: currency,
+      rate,
+      convertedAmount: amountInKZ
+    });
   }
   
   const result = useToLocaleString 
     ? `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`
     : `${amountInKZ.toLocaleString()} KZ`;
     
+  console.log(`✅ RESULTADO formatPriceForSeller:`, result);
   return result;
 };
