@@ -32,7 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod } from "@/utils/paymentMethods";
-import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
+import { formatPriceForSeller } from '@/utils/priceFormatting';
 
 interface Sale {
   id: string;
@@ -74,7 +74,6 @@ interface SalesStats {
 export default function Sales() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { getCurrencyInfo, convertToKZ } = useCurrencyToCountry();
   const [sales, setSales] = useState<Sale[]>([]);
   const [salesStats, setSalesStats] = useState<SalesStats>({
     paid: 0,
@@ -216,15 +215,13 @@ export default function Sales() {
   };
 
   const formatPrice = (sale: Sale) => {
-    const currencyInfo = getCurrencyInfo(sale.currency);
-    
     // Usar o valor efetivamente pago pelo cliente (amount da ordem)
     const paidAmount = parseFloat(sale.amount);
     
     return (
       <div className="text-right">
         <div className="font-bold text-checkout-green">
-          {paidAmount.toLocaleString('pt-BR')} KZ
+          {formatPriceForSeller(paidAmount, sale.currency)}
         </div>
       </div>
     );
@@ -259,8 +256,8 @@ export default function Sales() {
     );
   };
 
-  const formatCurrency = (amount: number) => {
-    return `${amount.toLocaleString()} KZ`;
+  const formatCurrency = (amount: number, currency: string = 'KZ') => {
+    return formatPriceForSeller(amount, currency);
   };
 
   return (
@@ -494,14 +491,14 @@ export default function Sales() {
                                    </div>
                                 </div>
                               ) : sale.sale_type === 'recovered' ? (
-                                <div>
-                                  <div className="font-bold text-base md:text-lg text-green-600">
-                                    {formatCurrency(parseFloat(sale.amount) * 0.8)}
-                                  </div>
-                                   <div className="text-xs text-muted-foreground">
-                                     {formatPrice(sale)}
+                                 <div>
+                                   <div className="font-bold text-base md:text-lg text-green-600">
+                                     {formatCurrency(parseFloat(sale.amount) * 0.8, sale.currency)}
                                    </div>
-                                </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {formatPrice(sale)}
+                                    </div>
+                                 </div>
                               ) : sale.affiliate_code && sale.seller_commission ? (
                                 <div>
                                   <div className="font-bold text-base md:text-lg text-green-600">

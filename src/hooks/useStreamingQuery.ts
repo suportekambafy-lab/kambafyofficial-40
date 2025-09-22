@@ -109,16 +109,26 @@ export const useStreamingQuery = () => {
           acc.paidTotal += affiliateCommission;
           acc.totalAffiliateCommissions += affiliateCommission;
         } else {
-          // ✅ Para vendedores, usar seller_commission que já vem em KZ original da base de dados
+          // Para vendedores, converter para KZ se necessário
           let sellerCommission = parseFloat(order.seller_commission?.toString() || '0');
           if (sellerCommission === 0) {
-            // CORREÇÃO: Para vendas antigas sem seller_commission, converter de volta para KZ
+            // Para vendas antigas sem seller_commission, converter para KZ
             if (order.currency === 'EUR') {
-              sellerCommission = amount * 1053; // Taxa EUR->KZ aproximada
+              sellerCommission = amount * 1053; // Taxa EUR->KZ
             } else if (order.currency === 'MZN') {
-              sellerCommission = amount * 13; // Taxa MZN->KZ aproximada
+              sellerCommission = amount * 14.3; // Taxa MZN->KZ
             } else {
               sellerCommission = amount; // Se já está em KZ
+            }
+          } else {
+            // Se há seller_commission mas pode estar em moeda personalizada, converter
+            if (order.currency && order.currency !== 'KZ') {
+              const exchangeRates: Record<string, number> = {
+                'EUR': 1053, // 1 EUR = ~1053 KZ
+                'MZN': 14.3  // 1 MZN = ~14.3 KZ
+              };
+              const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+              sellerCommission = Math.round(sellerCommission * rate);
             }
           }
           
@@ -129,11 +139,11 @@ export const useStreamingQuery = () => {
           
           if (order.status === 'completed') {
             acc.paid++;
-            acc.paidTotal += sellerCommission; // Usar comissão do vendedor em KZ
+            acc.paidTotal += sellerCommission; // Usar valor convertido
             acc.totalSellerEarnings += sellerCommission;
           } else if (order.status === 'pending') {
             acc.pending++;
-            acc.pendingTotal += sellerCommission; // Usar comissão também para pending
+            acc.pendingTotal += sellerCommission; // Usar valor convertido também para pending
           } else if (order.status === 'failed' || order.status === 'cancelled') {
             acc.cancelled++;
             acc.cancelledTotal += sellerCommission;

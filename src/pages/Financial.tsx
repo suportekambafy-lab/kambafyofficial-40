@@ -173,7 +173,7 @@ export default function Financial() {
       // Buscar vendas dos produtos do usuário
       const { data: ownOrders, error: ordersError } = await supabase
         .from('orders')
-        .select('order_id, amount, created_at, status, affiliate_commission, seller_commission, product_id')
+        .select('order_id, amount, currency, created_at, status, affiliate_commission, seller_commission, product_id')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
@@ -202,7 +202,7 @@ export default function Financial() {
       if (userAffiliateCodes.length > 0) {
         const { data: affiliateData, error: affiliateError } = await supabase
           .from('orders')
-          .select('order_id, amount, created_at, status, affiliate_commission, seller_commission, affiliate_code')
+          .select('order_id, amount, currency, created_at, status, affiliate_commission, seller_commission, affiliate_code')
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
           .eq('status', 'completed')
@@ -224,6 +224,16 @@ export default function Financial() {
           ...(ownOrders || []).map(order => {
             const isRecovered = recoveredOrderIds.has(order.order_id);
             let earning = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+            
+            // Converter para KZ se necessário
+            if (order.currency && order.currency !== 'KZ') {
+              const exchangeRates: Record<string, number> = {
+                'EUR': 1053, // 1 EUR = ~1053 KZ
+                'MZN': 14.3  // 1 MZN = ~14.3 KZ
+              };
+              const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+              earning = Math.round(earning * rate);
+            }
             
             // Aplicar desconto de 20% se for venda recuperada
             if (isRecovered) {
