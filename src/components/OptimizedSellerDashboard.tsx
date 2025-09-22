@@ -43,8 +43,19 @@ const OptimizedSellerDashboard = memo(() => {
   // Estatísticas calculadas
   const stats = {
     totalSales: sellerData?.orders?.length || 0,
-    totalRevenue: sellerData?.orders?.reduce((sum: number, order: any) => 
-      sum + parseFloat(order.amount), 0) || 0,
+    totalRevenue: sellerData?.orders?.reduce((sum: number, order: any) => {
+      let amount = parseFloat(order.amount) || 0;
+      // Converter para KZ se necessário
+      if (order.currency && order.currency !== 'KZ') {
+        const exchangeRates: Record<string, number> = {
+          'EUR': 1053, // 1 EUR = ~1053 KZ
+          'MZN': 14.3  // 1 MZN = ~14.3 KZ
+        };
+        const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+        amount = Math.round(amount * rate);
+      }
+      return sum + amount;
+    }, 0) || 0,
     totalProducts: sellerData?.products?.length || 0,
     totalCustomers: new Set(sellerData?.orders?.map((order: any) => order.customer_email))?.size || 0
   };
@@ -114,14 +125,26 @@ const OptimizedSellerDashboard = memo(() => {
       {/* Tabela virtual de vendas otimizada */}
       <AnimatedWrapper delay={300}>
         <OptimizedVirtualTable
-          items={sellerData?.orders?.map((order: any) => ({
-            id: order.id,
-            name: `Pedido #${order.id.slice(0, 8)}`,
-            sales: 1,
-            price: parseFloat(order.amount),
-            status: order.status === 'completed' ? 'Concluído' : 'Pendente',
-            created_at: order.created_at
-          })) || []}
+          items={sellerData?.orders?.map((order: any) => {
+            let amount = parseFloat(order.amount) || 0;
+            // Converter para KZ se necessário
+            if (order.currency && order.currency !== 'KZ') {
+              const exchangeRates: Record<string, number> = {
+                'EUR': 1053, // 1 EUR = ~1053 KZ
+                'MZN': 14.3  // 1 MZN = ~14.3 KZ
+              };
+              const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+              amount = Math.round(amount * rate);
+            }
+            return {
+              id: order.id,
+              name: `Pedido #${order.id.slice(0, 8)}`,
+              sales: 1,
+              price: amount,
+              status: order.status === 'completed' ? 'Concluído' : 'Pendente',
+              created_at: order.created_at
+            };
+          }) || []}
           loading={isLoading}
           onView={handleOrderView}
           title="Vendas Recentes"

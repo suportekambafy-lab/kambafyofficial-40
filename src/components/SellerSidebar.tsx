@@ -325,7 +325,7 @@ export function TopBar() {
       // Carregar receita total
       const { data: allOrders, error: ordersError } = await supabase
         .from('orders')
-        .select('amount')
+        .select('amount, currency')
         .eq('user_id', user.id)
         .eq('status', 'completed');
 
@@ -335,7 +335,16 @@ export function TopBar() {
       }
 
       const totalRevenue = allOrders?.reduce((sum, order) => {
-        const amount = parseFloat(order.amount) || 0;
+        let amount = parseFloat(order.amount) || 0;
+        // Converter para KZ se necessário
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053, // 1 EUR = ~1053 KZ
+            'MZN': 14.3  // 1 MZN = ~14.3 KZ
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          amount = Math.round(amount * rate);
+        }
         return sum + amount;
       }, 0) || 0;
 

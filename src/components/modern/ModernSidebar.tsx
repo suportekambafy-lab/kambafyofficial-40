@@ -99,7 +99,7 @@ export function ModernSidebar({
       // Buscar vendas usando product_id
       const { data: allOrders, error: ordersError } = await supabase
         .from('orders')
-        .select('amount, seller_commission')
+        .select('amount, seller_commission, currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed');
 
@@ -110,7 +110,16 @@ export function ModernSidebar({
 
       const totalRevenue = allOrders?.reduce((sum, order) => {
         // Usar seller_commission se disponível, senão usar amount
-        const amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        // Converter para KZ se necessário
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053, // 1 EUR = ~1053 KZ
+            'MZN': 14.3  // 1 MZN = ~14.3 KZ
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          amount = Math.round(amount * rate);
+        }
         return sum + amount;
       }, 0) || 0;
 

@@ -113,6 +113,15 @@ export function ModernSalesChart() {
         const dayKey = orderDate.toISOString().split('T')[0];
         
         let amount = parseFloat(order.amount || '0');
+        // Converter para KZ se necessário
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053, // 1 EUR = ~1053 KZ
+            'MZN': 14.3  // 1 MZN = ~14.3 KZ
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          amount = Math.round(amount * rate);
+        }
         const currency = order.currency || 'KZ';
         
         // Aplicar desconto de 20% se for venda recuperada

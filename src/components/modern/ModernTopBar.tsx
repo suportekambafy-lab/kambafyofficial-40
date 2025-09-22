@@ -133,6 +133,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
         .from('orders')
         .select(`
           amount,
+          currency,
           products!inner(
             user_id
           )
@@ -146,7 +147,16 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
       }
 
       const totalRevenue = allOrders?.reduce((sum, order) => {
-        const amount = parseFloat(order.amount) || 0;
+        let amount = parseFloat(order.amount) || 0;
+        // Converter para KZ se necessário
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053, // 1 EUR = ~1053 KZ
+            'MZN': 14.3  // 1 MZN = ~14.3 KZ
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          amount = Math.round(amount * rate);
+        }
         return sum + amount;
       }, 0) || 0;
 

@@ -77,13 +77,14 @@ export function MobileSalesChart() {
         const dayKey = orderDate.toISOString().split('T')[0];
         
         let amount = parseFloat(order.amount || '0');
-        const currency = order.currency || 'KZ';
-        
-        // Converter para KZ
-        if (currency === 'EUR') {
-          amount *= 833;
-        } else if (currency === 'MZN') {
-          amount *= 13;
+        // Converter para KZ se necessário
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053, // 1 EUR = ~1053 KZ
+            'MZN': 14.3  // 1 MZN = ~14.3 KZ
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          amount = Math.round(amount * rate);
         }
         
         if (salesByDay[dayKey] !== undefined) {

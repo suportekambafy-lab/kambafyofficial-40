@@ -114,7 +114,7 @@ export function ComparativeSalesChart({ dateFilter }: ComparativeSalesChartProps
       // Buscar dados do período atual - usando product_id
       const { data: currentOrders, error: currentError } = await supabase
         .from('orders')
-        .select('amount, created_at, status, product_id')
+        .select('amount, created_at, status, product_id, currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', currentStart.toISOString())
@@ -124,7 +124,7 @@ export function ComparativeSalesChart({ dateFilter }: ComparativeSalesChartProps
       // Buscar dados do período anterior - usando product_id
       const { data: previousOrders, error: previousError } = await supabase
         .from('orders')
-        .select('amount, created_at, status, product_id')
+        .select('amount, created_at, status, product_id, currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', previousStart.toISOString())
@@ -162,7 +162,17 @@ export function ComparativeSalesChart({ dateFilter }: ComparativeSalesChartProps
         const orderDate = new Date(order.created_at).toISOString().split('T')[0];
         if (chartData[orderDate]) {
           chartData[orderDate].currentPeriod += 1;
-          chartData[orderDate].revenue += parseFloat(order.amount) || 0;
+          let amount = parseFloat(order.amount) || 0;
+          // Converter para KZ se necessário
+          if (order.currency && order.currency !== 'KZ') {
+            const exchangeRates: Record<string, number> = {
+              'EUR': 1053, // 1 EUR = ~1053 KZ
+              'MZN': 14.3  // 1 MZN = ~14.3 KZ
+            };
+            const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+            amount = Math.round(amount * rate);
+          }
+          chartData[orderDate].revenue += amount;
         }
       });
 

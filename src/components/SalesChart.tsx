@@ -95,7 +95,7 @@ export function SalesChart({ dateFilter }: SalesChartProps) {
       // Buscar pedidos do período usando product_id
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('amount, created_at, status, product_id, order_id')
+        .select('amount, created_at, status, product_id, order_id, currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', startDate.toISOString())
@@ -124,6 +124,15 @@ export function SalesChart({ dateFilter }: SalesChartProps) {
           salesByDate[orderDate].sales += 1; // Cada pedido é uma venda
           
           let amount = parseFloat(order.amount) || 0;
+          // Se não é KZ, converter para KZ usando as taxas corretas
+          if (order.currency && order.currency !== 'KZ') {
+            const exchangeRates: Record<string, number> = {
+              'EUR': 1053, // 1 EUR = ~1053 KZ
+              'MZN': 14.3  // 1 MZN = ~14.3 KZ
+            };
+            const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+            amount = Math.round(amount * rate);
+          }
           // Aplicar desconto de 20% se for venda recuperada
           const isRecovered = recoveredOrderIds.has(order.order_id);
           if (isRecovered) {
