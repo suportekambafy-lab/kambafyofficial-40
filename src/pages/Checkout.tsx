@@ -84,12 +84,6 @@ const Checkout = () => {
   const [resetOrderBumps, setResetOrderBumps] = useState(false);
   const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
   const [bankTransferData, setBankTransferData] = useState<{file: File, bank: string} | null>(null);
-  const [fieldErrors, setFieldErrors] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    expressPhone: ""
-  });
   
   // Hook para KambaPay
   const { fetchBalanceByEmail } = useKambaPayBalance();
@@ -468,11 +462,6 @@ const Checkout = () => {
       [field]: value
     }));
     
-    // Limpar erro do campo quando o usuário começar a digitar
-    if (fieldErrors[field as keyof typeof fieldErrors]) {
-      setFieldErrors(prev => ({ ...prev, [field]: "" }));
-    }
-    
     // Se o email mudou e KambaPay está selecionado, verificar novamente
     if (field === 'email' && selectedPayment === 'kambapay' && value) {
       // Usar timeout para evitar muitas chamadas enquanto digita
@@ -483,23 +472,6 @@ const Checkout = () => {
       // Limpar erro do KambaPay quando email mudar
       setKambaPayEmailError(null);
     }
-  };
-
-  // Função para validar campo individual quando perde o foco
-  const handleFieldBlur = (field: string) => {
-    const errors = { ...fieldErrors };
-    
-    if (field === 'fullName' && !formData.fullName) {
-      errors.fullName = "Seu nome completo é obrigatório";
-    }
-    if (field === 'email' && !formData.email) {
-      errors.email = "Email é obrigatório";
-    }
-    if (field === 'phone' && !formData.phone && selectedPayment !== 'express') {
-      errors.phone = "Telefone é obrigatório";
-    }
-    
-    setFieldErrors(errors);
   };
 
   const handleCountryChange = (countryCode: string) => {
@@ -978,25 +950,9 @@ const Checkout = () => {
     });
 
     const requiredPhone = selectedPayment === 'express' ? expressPhone : formData.phone;
-    
-    // Validar campos e definir erros
-    const errors = {
-      fullName: !formData.fullName ? "Seu nome completo é obrigatório" : "",
-      email: !formData.email ? "Email é obrigatório" : "",
-      phone: !formData.phone && selectedPayment !== 'express' ? "Telefone é obrigatório" : "",
-      expressPhone: !expressPhone && selectedPayment === 'express' ? "Telefone é obrigatório" : ""
-    };
-    
-    console.log('🔍 Field validation errors:', errors);
-    setFieldErrors(errors);
 
     if (!formData.fullName || !formData.email || !requiredPhone || !selectedPayment) {
       console.log('❌ Validation failed - missing required fields');
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
       return;
     }
 
@@ -1869,21 +1825,8 @@ ${JSON.stringify(appyPayData, null, 2)}
                   placeholder="Digite seu nome completo"
                   value={formData.fullName}
                   onChange={(e) => handleInputChange("fullName", e.target.value)}
-                  onBlur={() => handleFieldBlur("fullName")}
-                  className={`h-12 focus:border-green-500 ${fieldErrors.fullName ? 'border-red-500 border-2' : 'border-gray-300'}`}
+                  className="h-12 border-gray-300 focus:border-green-500"
                 />
-                {/* Debug: mostra sempre durante teste */}
-                {fieldErrors.fullName && (
-                  <div className="bg-red-100 border border-red-500 p-2 rounded mt-1">
-                    <p className="text-red-600 text-sm font-semibold">{fieldErrors.fullName}</p>
-                  </div>
-                )}
-                {/* Fallback para debug */}
-                {!formData.fullName && (
-                  <div className="bg-yellow-100 border border-yellow-500 p-1 rounded mt-1">
-                    <p className="text-yellow-600 text-xs">DEBUG: Campo vazio</p>
-                  </div>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -1896,19 +1839,8 @@ ${JSON.stringify(appyPayData, null, 2)}
                   placeholder="Digite seu e-mail para receber a compra"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  onBlur={() => handleFieldBlur("email")}
-                  className={`h-12 focus:border-green-500 ${fieldErrors.email ? 'border-red-500 border-2' : 'border-gray-300'}`}
+                  className="h-12 border-gray-300 focus:border-green-500"
                 />
-                {fieldErrors.email && (
-                  <div className="bg-red-100 border border-red-500 p-2 rounded mt-1">
-                    <p className="text-red-600 text-sm font-semibold">{fieldErrors.email}</p>
-                  </div>
-                )}
-                {!formData.email && (
-                  <div className="bg-yellow-100 border border-yellow-500 p-1 rounded mt-1">
-                    <p className="text-yellow-600 text-xs">DEBUG: Campo vazio</p>
-                  </div>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -1921,18 +1853,8 @@ ${JSON.stringify(appyPayData, null, 2)}
                   selectedCountry={formData.phoneCountry}
                   onCountryChange={handleCountryChange}
                   placeholder="Digite seu telefone"
-                  className={`h-12 ${fieldErrors.phone ? 'border-red-500 border-2' : ''}`}
+                  className="h-12"
                 />
-                {fieldErrors.phone && (
-                  <div className="bg-red-100 border border-red-500 p-2 rounded mt-1">
-                    <p className="text-red-600 text-sm font-semibold">{fieldErrors.phone}</p>
-                  </div>
-                )}
-                {!formData.phone && (
-                  <div className="bg-yellow-100 border border-yellow-500 p-1 rounded mt-1">
-                    <p className="text-yellow-600 text-xs">DEBUG: Telefone vazio</p>
-                  </div>
-                )}
               </div>
 
               {/* Indicador de detecção de carrinho abandonado - apenas para debug */}
@@ -2159,21 +2081,12 @@ ${JSON.stringify(appyPayData, null, 2)}
                           </label>
                           <PhoneInput
                             value={expressPhone}
-                            onChange={(value) => {
-                              setExpressPhone(value);
-                              // Limpar erro do campo express phone quando o usuário digitar
-                              if (fieldErrors.expressPhone) {
-                                setFieldErrors(prev => ({ ...prev, expressPhone: "" }));
-                              }
-                            }}
+                            onChange={(value) => setExpressPhone(value)}
                             placeholder="Digite seu telefone"
                             selectedCountry="AO"
                             allowedCountries={["AO"]}
-                            className={`w-full ${fieldErrors.expressPhone ? 'border-red-500' : ''}`}
+                            className="w-full"
                           />
-                          {fieldErrors.expressPhone && (
-                            <p className="text-red-500 text-sm mt-1 font-medium">{fieldErrors.expressPhone}</p>
-                          )}
                         </div>
                       </div>
                     )}
