@@ -223,9 +223,9 @@ const ThankYou = () => {
     loadProduct();
   }, [orderDetails.productId, user, orderDetails]);
 
-  // Verificar o status do pedido periodicamente para pagamentos pendentes
+  // Verificar o status do pedido periodicamente para pagamentos pendentes + real-time updates
   useEffect(() => {
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'bank_transfer', 'transferencia'].includes(orderDetails.paymentMethod)) {
       console.log('🔄 Iniciando verificação periódica do status do pedido...');
       
       // Verificar imediatamente
@@ -240,6 +240,43 @@ const ThankYou = () => {
       };
     }
   }, [orderStatus, orderDetails.paymentMethod, orderDetails.orderId]);
+
+  // Real-time updates para pagamentos por transferência
+  useEffect(() => {
+    if (!orderDetails.orderId || orderStatus !== 'pending') return;
+
+    console.log('🔴 Configurando real-time updates para pedido:', orderDetails.orderId);
+    
+    const channel = supabase
+      .channel(`order-status-${orderDetails.orderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `order_id=eq.${orderDetails.orderId}`
+        },
+        (payload) => {
+          console.log('🔄 Atualização real-time recebida:', payload);
+          const newOrder = payload.new as any;
+          
+          if (newOrder && newOrder.status !== orderStatus) {
+            console.log('✅ Status do pedido atualizado via real-time:', newOrder.status);
+            setOrderStatus(newOrder.status);
+            setOrderDetails(prev => ({ ...prev, status: newOrder.status }));
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Status da subscrição real-time:', status);
+      });
+
+    return () => {
+      console.log('🔌 Desconectando real-time updates');
+      supabase.removeChannel(channel);
+    };
+  }, [orderDetails.orderId, orderStatus]);
 
   const fetchMultibancoData = async () => {
     console.log('🏦 ThankYou: Buscando dados do Multibanco do Stripe...');
