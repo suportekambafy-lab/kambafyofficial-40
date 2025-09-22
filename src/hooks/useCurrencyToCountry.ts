@@ -17,7 +17,7 @@ export const useCurrencyToCountry = () => {
     // Taxas de conversão aproximadas (inverso das taxas do hook useGeoLocation)
     const exchangeRates: Record<string, number> = {
       'KZ': 1, // Base currency
-      'EUR': 1048, // 1 EUR = ~1048 KZ (aproximado)
+      'EUR': 1053, // 1 EUR = ~1053 KZ (aproximado)
       'MZN': 14.3 // 1 MZN = ~14.3 KZ (aproximado)
     };
 
