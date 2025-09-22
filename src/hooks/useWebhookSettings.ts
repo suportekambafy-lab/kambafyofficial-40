@@ -38,17 +38,31 @@ export const useWebhookSettings = (productId?: string) => {
         return;
       }
 
-      let query = supabase
-        .from('webhook_settings')
-        .select('*')
-        .eq('user_id', user.id);
-
-      // Se temos um productId específico, buscar apenas para esse produto
-      if (targetProductId || productId) {
-        query = query.eq('product_id', targetProductId || productId);
+      // Sempre buscar por produto específico se fornecido
+      const finalProductId = targetProductId || productId;
+      
+      if (!finalProductId) {
+        // Se não há produto específico, resetar configurações
+        setSettings({
+          url: '',
+          events: [],
+          secret: '',
+          active: true,
+          headers: {},
+          timeout: 30,
+          retries: 3,
+          product_id: ''
+        });
+        setLoading(false);
+        return;
       }
 
-      const { data, error } = await query.maybeSingle();
+      const { data, error } = await supabase
+        .from('webhook_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('product_id', finalProductId)
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;
@@ -120,8 +134,9 @@ export const useWebhookSettings = (productId?: string) => {
       console.log('Saving webhook settings for product:', targetProductId, settingsData);
 
       let result;
-      if (settings.id) {
-        // Update existing webhook
+      // Verificar se existe um webhook já carregado E se é para o mesmo produto
+      if (settings.id && settings.product_id === targetProductId) {
+        // Update existing webhook for the same product
         result = await supabase
           .from('webhook_settings')
           .update(settingsData)
