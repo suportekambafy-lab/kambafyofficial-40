@@ -2144,28 +2144,15 @@ ${JSON.stringify(appyPayData, null, 2)}
               )}
 
               {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
-                <div className="space-y-2">
-                  {/* Debug da condição do botão */}
-                  <div className="bg-blue-50 p-2 rounded text-xs">
-                    <p>DEBUG Botão:</p>
-                    <p>fullName: {formData.fullName ? '✓' : '✗'}</p>
-                    <p>email: {formData.email ? '✓' : '✗'}</p>
-                    <p>phone: {formData.phone ? '✓' : '✗'}</p>
-                    <p>expressPhone: {expressPhone ? '✓' : '✗'}</p>
-                    <p>selectedPayment: {selectedPayment ? '✓' : '✗'}</p>
-                    <p>processing: {processing ? '✓' : '✗'}</p>
-                    <p>Botão deve estar: {(!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing) ? 'DESABILITADO' : 'HABILITADO'}</p>
-                  </div>
-                  
-                  <Button
-                    onClick={handlePurchase}
-                    disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
-                    className={`w-full h-12 font-semibold relative transition-all ${
-                      (!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError))
-                        ? 'bg-gray-400 cursor-not-allowed text-gray-600'
-                        : 'bg-green-600 hover:bg-green-700 text-white'
-                    }`}
-                  >
+                <Button
+                  onClick={handlePurchase}
+                  disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
+                  className={`w-full h-12 font-semibold relative transition-all ${
+                    (!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError))
+                      ? 'bg-gray-400 cursor-not-allowed text-gray-600'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                >
                   {processing ? (
                     <div className="flex items-center justify-center">
                       <div className="w-6 h-6 rounded bg-green-700 flex items-center justify-center mr-2">
@@ -2178,8 +2165,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                   ) : (
                     'COMPRAR AGORA'
                   )}
-                 </Button>
-                </div>
+                </Button>
               )}
             </div>
           </div>

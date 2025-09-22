@@ -518,8 +518,12 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
       <Button
         type="submit"
-        disabled={!stripe || processing}
-        className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-semibold"
+        disabled={!stripe || processing || !customerData.name || !customerData.email || !customerData.phone}
+        className={`w-full h-12 font-semibold ${
+          (!stripe || processing || !customerData.name || !customerData.email || !customerData.phone)
+            ? 'bg-gray-400 cursor-not-allowed text-gray-600'
+            : 'bg-green-600 hover:bg-green-700 text-white'
+        }`}
       >
         {processing ? (
           <div className="flex items-center justify-center">
