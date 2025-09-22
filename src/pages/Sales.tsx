@@ -43,6 +43,8 @@ interface Sale {
   customer_phone: string;
   amount: string;
   currency: string;
+  original_amount?: string; // Valor original preservado
+  original_currency?: string; // Moeda original preservada
   status: string;
   payment_method: string;
   created_at: string;
@@ -217,20 +219,20 @@ export default function Sales() {
   };
 
   const formatPrice = (sale: Sale) => {
-    const currencyInfo = getCurrencyInfo(sale.currency);
+    // Usar valores originais preservados se disponível, senão usar valores atuais
+    const originalAmount = sale.original_amount || sale.amount;
+    const originalCurrency = sale.original_currency || sale.currency;
+    const currencyInfo = getCurrencyInfo(originalCurrency);
     
-    // Usar o valor efetivamente pago pelo cliente (amount da ordem)
-    const paidAmount = parseFloat(sale.amount);
-    
-    // Log para debug da venda individual
-    console.log(`💰 Venda individual: ${paidAmount} ${sale.currency} (cliente: ${sale.customer_name})`);
+    // Usar o valor original preservado
+    const paidAmount = parseFloat(originalAmount);
     
     return (
       <div className="text-right">
         <div className="font-bold text-checkout-green">
-          {formatPriceForSeller(paidAmount, sale.currency)}
+          {formatPriceForSeller(paidAmount, originalCurrency)}
         </div>
-        {sale.currency !== 'KZ' && (
+        {originalCurrency !== 'KZ' && (
           <div className="text-xs text-gray-500 flex items-center gap-1">
             <span>{currencyInfo.flag}</span>
             <span>{currencyInfo.name}</span>
