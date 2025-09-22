@@ -9,8 +9,9 @@ const corsHeaders = {
 
 interface Send2FARequest {
   email: string;
-  event_type: string;
-  user_email: string;
+  event_type?: string;
+  user_email?: string;
+  context?: string; // Legacy support
   purchase_data?: {
     product_id: string;
     amount: number;
@@ -31,15 +32,25 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const resend = new Resend(resendApiKey);
 
-    const { email, event_type, user_email, purchase_data }: Send2FARequest = await req.json();
+    const requestBody: Send2FARequest = await req.json();
+    const { email, event_type, user_email, context, purchase_data } = requestBody;
 
-    console.log('Enviando código 2FA:', { email, event_type, user_email });
+    // Support legacy format and new format
+    const finalEventType = event_type || context || 'admin_login';
+    const finalUserEmail = user_email || email;
 
-    if (!email || !event_type) {
+    console.log('Enviando código 2FA:', { 
+      email, 
+      event_type: finalEventType, 
+      user_email: finalUserEmail,
+      body: requestBody 
+    });
+
+    if (!email) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: 'Email e tipo de evento são obrigatórios' 
+          message: 'Email é obrigatório' 
         }),
         {
           status: 400,
@@ -55,9 +66,9 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: insertError } = await supabase
       .from('two_factor_codes')
       .insert({
-        user_email: email,
+        user_email: finalUserEmail,
         code: code,
-        event_type: event_type,
+        event_type: finalEventType,
         used: false,
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutos
       });
@@ -80,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
     let subject = '';
     let htmlContent = '';
 
-    switch (event_type) {
+    switch (finalEventType) {
       case 'signup':
         subject = 'Código de verificação - Confirmação de cadastro';
         htmlContent = `
@@ -121,6 +132,31 @@ const handler = async (req: Request): Promise<Response> => {
         break;
       
       case 'kambapay_purchase':
+        const amount = purchase_data?.amount || 0;
+        subject = 'Código de verificação - Compra com KambaPay';
+        htmlContent = `
+          <h1>Confirmação de compra</h1>
+          <p>Para sua segurança, confirme sua compra de <strong>${amount.toLocaleString()} KZ</strong> com o código:</p>
+          <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
+          <p>Este código é válido por 10 minutos.</p>
+          <p>Se você não fez esta compra, não compartilhe este código.</p>
+          <br>
+          <p>Equipe Kambafy</p>
+        `;
+        break;
+      
+      case 'admin_login':
+        subject = 'Código de verificação - Login Admin';
+        htmlContent = `
+          <h1>Código de verificação para Admin</h1>
+          <p>Seu código de verificação para login administrativo é:</p>
+          <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
+          <p>Este código é válido por 10 minutos.</p>
+          <p>Se você não solicitou este login, ignore este email e entre em contato conosco.</p>
+          <br>
+          <p>Equipe Kambafy</p>
+        `;
+        break;
         const amount = purchase_data?.amount || 0;
         subject = 'Código de verificação - Compra com KambaPay';
         htmlContent = `

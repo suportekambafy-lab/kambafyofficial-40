@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -63,7 +63,7 @@ const TwoFactorVerification = ({
       const { error } = await supabase.functions.invoke('send-2fa-code', {
         body: {
           email: email,
-          code: newCode,
+          event_type: context === 'login' ? 'admin_login' : context,
           context: context
         }
       });
@@ -91,15 +91,19 @@ const TwoFactorVerification = ({
     } finally {
       setResendLoading(false);
     }
-  }, [email, context, generateCode, toast, resendLoading]);
+  }, [email, context, generateCode, toast]);
 
-  // Envio inicial do código
+  // Envio inicial do código - usando useRef para evitar loop
+  const hasInitialSendRun = useRef(false);
+  
   useEffect(() => {
-    if (!initialSendComplete && !skipInitialSend) {
+    if (!initialSendComplete && !skipInitialSend && !hasInitialSendRun.current) {
       console.log('🔒 TwoFactorVerification mount - enviando código inicial');
+      hasInitialSendRun.current = true;
       sendVerificationCode();
-    } else if (skipInitialSend) {
+    } else if (skipInitialSend && !hasInitialSendRun.current) {
       console.log('🔒 TwoFactorVerification - pulando envio inicial (sessão restaurada)');
+      hasInitialSendRun.current = true;
       setCodeAlreadySent(true);
       setInitialSendComplete(true);
       
@@ -121,7 +125,7 @@ const TwoFactorVerification = ({
         }
       }
     }
-  }, [skipInitialSend, initialSendComplete, sendVerificationCode]);
+  }, [skipInitialSend, initialSendComplete]); // Removido sendVerificationCode das dependências
 
   // Countdown timer
   useEffect(() => {
