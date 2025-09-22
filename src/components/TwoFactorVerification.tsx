@@ -149,26 +149,24 @@ const TwoFactorVerification = ({
     try {
       console.log('🔍 Verificando código:', code);
       
-      // Verificar código armazenado localmente
-      const storedData = localStorage.getItem('2fa_code');
-      if (!storedData) {
-        throw new Error('Código expirado');
+      // Usar a edge function para verificar o código
+      const { data, error } = await supabase.functions.invoke('verify-2fa-code', {
+        body: {
+          email: email,
+          code: code,
+          event_type: context === 'login' ? 'admin_login' : context
+        }
+      });
+
+      if (error) {
+        throw error;
       }
 
-      const { code: validCode, email: validEmail, timestamp } = JSON.parse(storedData);
-      
-      // Verificar se o código não expirou (5 minutos)
-      if (Date.now() - timestamp > 300000) {
-        localStorage.removeItem('2fa_code');
-        throw new Error('Código expirado');
+      if (!data || !data.valid) {
+        throw new Error(data?.message || 'Código incorreto');
       }
 
-      // Verificar se o código e email coincidem
-      if (code !== validCode || email !== validEmail) {
-        throw new Error('Código incorreto');
-      }
-
-      // Limpar código armazenado
+      // Limpar código armazenado localmente se existir
       localStorage.removeItem('2fa_code');
       
       console.log('✅ Código verificado com sucesso');
@@ -183,10 +181,8 @@ const TwoFactorVerification = ({
       console.error('❌ Erro na verificação 2FA:', error);
       let message = "Código incorreto ou expirado.";
       
-      if (error.message === 'Código expirado') {
-        message = "Código expirado. Solicite um novo código.";
-      } else if (error.message === 'Código incorreto') {
-        message = "Código incorreto. Verifique e tente novamente.";
+      if (error.message?.includes('inválido') || error.message?.includes('expirado')) {
+        message = error.message;
       }
 
       toast({
