@@ -1931,28 +1931,6 @@ ${JSON.stringify(appyPayData, null, 2)}
                 </div>
               )}
 
-              {selectedPayment === 'transfer' && (
-                <div className="mt-6">
-                  <BankTransferForm
-                    totalAmount={totalPrice.toString()}
-                    currency={userCountry.currency}
-                    onPaymentComplete={async (file, bank) => {
-                      setBankTransferData({ file, bank });
-                      console.log('🏦 Bank transfer proof uploaded:', { fileName: file.name, bank });
-                      
-                      try {
-                        console.log('🏦 Starting bank transfer purchase process...');
-                        // Processar compra por transferência imediatamente
-                        await handleBankTransferPurchase(file, bank);
-                        console.log('🏦 Bank transfer purchase completed successfully');
-                      } catch (error) {
-                        console.error('🏦 Error in bank transfer purchase:', error);
-                      }
-                    }}
-                    disabled={processing}
-                  />
-                </div>
-              )}
 
 
 
@@ -2017,7 +1995,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumo do pedido</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Produto principal</span>
+                      <span className="text-gray-700">{product?.name || 'Produto'}</span>
                       <span className="font-medium text-gray-900">
                         {getDisplayPrice(originalPrice)}
                       </span>
@@ -2090,11 +2068,48 @@ ${JSON.stringify(appyPayData, null, 2)}
                         </div>
                       </div>
                     )}
+                    {selectedPayment === 'transfer' && (
+                      <div className="mt-4 space-y-4">
+                        <div className="text-left p-4 bg-blue-50 rounded-lg border border-blue-100">
+                          <p className="text-sm font-medium text-gray-700 leading-relaxed mb-2">
+                            <span className="font-semibold">📝 Transferência Bancária:</span>
+                          </p>
+                          <div className="text-sm text-gray-600 leading-relaxed space-y-1">
+                            <p>1. Selecione seu banco na lista abaixo</p>
+                            <p>2. Realize a transferência com os dados fornecidos</p>
+                            <p>3. Envie o comprovativo de pagamento</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
+              {selectedPayment === 'transfer' && (
+                <div className="mt-6">
+                  <BankTransferForm
+                    totalAmount={totalPrice.toString()}
+                    currency={userCountry.currency}
+                    onPaymentComplete={async (file, bank) => {
+                      setBankTransferData({ file, bank });
+                      console.log('🏦 Bank transfer proof uploaded:', { fileName: file.name, bank });
+                      
+                      try {
+                        console.log('🏦 Starting bank transfer purchase process...');
+                        // Processar compra por transferência imediatamente
+                        await handleBankTransferPurchase(file, bank);
+                        console.log('🏦 Bank transfer purchase completed successfully');
+                      } catch (error) {
+                        console.error('🏦 Error in bank transfer purchase:', error);
+                      }
+                    }}
+                    disabled={processing}
+                  />
+                </div>
+              )}
+
+              {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
                 <Button
                   onClick={handlePurchase}
                   disabled={!formData.fullName || !formData.email || !formData.phone || !selectedPayment || processing || (selectedPayment === 'kambapay' && !!kambaPayEmailError)}
