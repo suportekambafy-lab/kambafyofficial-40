@@ -2100,17 +2100,17 @@ ${JSON.stringify(appyPayData, null, 2)}
                     
                     {selectedPayment === 'express' && (
                       <div className="mt-4 space-y-4">
-                        <div className="text-center p-3 bg-blue-100 rounded-lg">
-                          <p className="text-sm font-medium text-blue-900">
-                            ATENÇÃO: Após clicar no botão <strong>Comprar Agora</strong>
+                        <div className="text-left p-4 bg-blue-50 rounded-lg border border-blue-100">
+                          <p className="text-sm font-medium text-gray-700 leading-relaxed">
+                            <span className="font-semibold">ATENÇÃO:</span> Após clicar no botão <span className="font-semibold">Comprar Agora</span>
                           </p>
-                          <p className="text-sm text-blue-800">
-                            → abra o aplicativo Multicaixa Express, e encontre o botão → <span className="text-red-600 font-bold">Operação por Autorizar</span> clica no botão, selecione o pagamento pendente e <strong>finalize o pagamento.</strong>
+                          <p className="text-sm text-gray-600 leading-relaxed mt-1">
+                            → abra o aplicativo Multicaixa Express, e encontre o botão → <span className="text-red-500 font-semibold">Operação por Autorizar</span> clica no botão, selecione o pagamento pendente e <span className="font-semibold">finalize o pagamento.</span>
                           </p>
                         </div>
                         
                         <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
+                          <label className="block text-sm font-medium text-gray-600">
                             Por favor, insira o número de telefone ativo do Multicaixa Express.
                           </label>
                           <PhoneInput
@@ -2121,7 +2121,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                             allowedCountries={["AO"]}
                             className="w-full"
                           />
-                          <p className="text-sm text-red-600">Telefone é obrigatório</p>
+                          <p className="text-xs text-red-500">Telefone é obrigatório</p>
                         </div>
                       </div>
                     )}
