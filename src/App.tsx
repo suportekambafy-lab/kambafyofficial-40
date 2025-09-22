@@ -63,6 +63,7 @@ const App = () => {
                     <Routes>
                       <Route path="/" element={<OptimizedRoutes.Index />} />
                       <Route path="/auth" element={<OptimizedRoutes.Auth />} />
+                      <Route path="/reset-password" element={<OptimizedRoutes.ResetPassword />} />
                       <Route path="/checkout/:productId" element={<OptimizedRoutes.Checkout />} />
                       <Route path="/checkout/:productId/success" element={<OptimizedRoutes.CheckoutSuccess />} />
                       <Route path="/obrigado" element={<OptimizedRoutes.ThankYou />} />

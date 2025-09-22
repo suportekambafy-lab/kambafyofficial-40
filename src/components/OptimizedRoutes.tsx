@@ -51,6 +51,7 @@ const Privacy = createLazyWithRetry(() => import('@/pages/Privacy'), "Privacy");
 const Terms = createLazyWithRetry(() => import('@/pages/Terms'), "Terms");
 const Cookies = createLazyWithRetry(() => import('@/pages/Cookies'), "Cookies");
 const Apps = createLazyWithRetry(() => import('@/pages/Apps'), "Apps");
+const ResetPassword = createLazyWithRetry(() => import('@/pages/ResetPassword'), "ResetPassword");
 const MinhasCompras = createLazyWithRetry(() => import('@/pages/MinhasCompras'), "MinhasCompras");
 const MeusAfiliados = createLazyWithRetry(() => import('@/pages/MeusAfiliados'), "MeusAfiliados");
 const UserIdentity = createLazyWithRetry(() => import('@/pages/UserIdentity'), "UserIdentity");
@@ -150,6 +151,7 @@ export const OptimizedRoutes = {
   Terms: withLazyLoading(Terms),
   Cookies: withLazyLoading(Cookies),
   Apps: withLazyLoading(Apps, 'settings'),
+  ResetPassword: withLazyLoading(ResetPassword, 'settings'),
   MinhasCompras: withLazyLoading(MinhasCompras, 'dashboard'),
   MeusAfiliados: withLazyLoading(MeusAfiliados, 'dashboard'),
   UserIdentity: withLazyLoading(UserIdentity, 'settings'),
