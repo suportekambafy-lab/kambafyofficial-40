@@ -167,9 +167,9 @@ export function BankTransferForm({
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Clica para selecionar" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white dark:bg-gray-800 z-50 border border-gray-200 shadow-lg">
               {BANKS.map((bank) => (
-                <SelectItem key={bank.id} value={bank.id}>
+                <SelectItem key={bank.id} value={bank.id} className="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700">
                   <div className="flex items-center justify-between w-full">
                     <span>{bank.name}</span>
                     <span className={`text-xs px-2 py-1 rounded ml-2 ${
