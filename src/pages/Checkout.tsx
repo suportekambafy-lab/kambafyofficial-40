@@ -214,6 +214,22 @@ const Checkout = () => {
     }
   }, [product, userCountry, formatPrice, originalPriceKZ]);
 
+  // Função específica para order bump - não aplica preços personalizados do produto principal
+  const getOrderBumpDisplayPrice = useCallback((price: number): string => {
+    if (!userCountry) {
+      return `${price.toLocaleString()} KZ`;
+    }
+    
+    // Simplesmente formatar o preço sem aplicar preços personalizados do produto principal
+    if (userCountry.currency === 'EUR') {
+      return `€${price.toFixed(2)}`;
+    } else if (userCountry.currency === 'MZN') {
+      return `${price.toFixed(2)} MZN`;
+    } else {
+      return `${price.toLocaleString()} KZ`;
+    }
+  }, [userCountry]);
+
   // Forçar modo claro sempre
   useEffect(() => {
     setTheme('light');
@@ -2017,7 +2033,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                           )}
                         </div>
                         <span className="font-medium">
-                          +{getDisplayPrice(orderBumpPrice)}
+                          +{getOrderBumpDisplayPrice(orderBumpPrice)}
                         </span>
                       </div>
                     )}
