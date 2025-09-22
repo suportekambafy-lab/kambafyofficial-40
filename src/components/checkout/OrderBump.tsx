@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,26 +42,26 @@ interface OrderBumpProps {
 }
 
 export function OrderBump({ productId, position, onToggle, userCountry, formatPrice, resetSelection }: OrderBumpProps) {
-  const [orderBump, setOrderBump] = useState<OrderBumpData | null>(null);
-  const [isSelected, setIsSelected] = useState(false);
+  const [orderBumps, setOrderBumps] = useState<OrderBumpData[]>([]);
+  const [selectedBumps, setSelectedBumps] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchOrderBump();
+    fetchOrderBumps();
   }, [productId]);
 
   // Reset selection when country changes
   useEffect(() => {
     if (resetSelection) {
       console.log('🔄 OrderBump: Resetando seleção devido a mudança de país');
-      setIsSelected(false);
+      setSelectedBumps(new Set());
     }
   }, [userCountry?.code, resetSelection]);
 
-  const fetchOrderBump = async () => {
+  const fetchOrderBumps = async () => {
     try {
       setLoading(true);
-      console.log(`🔍 OrderBump: Buscando order bump para produto ${productId}, posição ${position}`);
+      console.log(`🔍 OrderBump: Buscando order bumps para produto ${productId}, posição ${position}`);
       
       // Verificar se é UUID ou slug
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -85,10 +84,10 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
         return;
       }
 
-      // Usar o ID real do produto para buscar o order bump
+      // Usar o ID real do produto para buscar os order bumps
       const actualProductId = productData.id;
 
-      // Buscar order bumps (podem ser múltiplos por posição)
+      // Buscar TODOS os order bumps para a posição (removido o limit)
       const { data, error } = await supabase
         .from('order_bump_settings')
         .select('*, bump_product_id')
@@ -96,65 +95,80 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
         .eq('enabled', true)
         .eq('position', position)
         .eq('user_id', productData.user_id) // Garantir que seja do mesmo vendedor
-        .order('bump_order', { ascending: true })
-        .limit(1); // Por enquanto, pegar apenas o primeiro por ordem de prioridade
+        .order('bump_order', { ascending: true });
 
       console.log(`📊 OrderBump: Resultado da busca:`, { data, error, productId, position, enabled: true });
 
       if (error && error.code !== 'PGRST116') {
-        console.error('❌ OrderBump: Erro ao buscar order bump:', error);
+        console.error('❌ OrderBump: Erro ao buscar order bumps:', error);
         return;
       }
 
-      const orderBumpData = data?.[0]; // Pegar o primeiro da lista
-      if (orderBumpData) {
-        console.log(`✅ OrderBump: Order bump encontrado:`, orderBumpData);
-        console.log(`📋 Tipo do bump:`, orderBumpData.bump_type);
-        console.log(`⏰ Extensão - Tipo:`, orderBumpData.access_extension_type, `Valor:`, orderBumpData.access_extension_value);
+      if (data && data.length > 0) {
+        console.log(`✅ OrderBump: ${data.length} order bump(s) encontrado(s):`, data);
         
-        // Se o bump tem um produto associado, buscar seus preços personalizados
-        if (orderBumpData.bump_product_id) {
-          console.log(`💰 Buscando preços personalizados do produto:`, orderBumpData.bump_product_id);
-          const { data: bumpProductData, error: bumpProductError } = await supabase
-            .from('products')
-            .select('custom_prices')
-            .eq('id', orderBumpData.bump_product_id)
-            .maybeSingle();
+        // Processar cada order bump para buscar preços personalizados se necessário
+        const processedBumps: OrderBumpData[] = [];
+        
+        for (const orderBumpData of data) {
+          console.log(`📋 Processando bump:`, orderBumpData.title, `Tipo:`, orderBumpData.bump_type);
           
-          if (!bumpProductError && bumpProductData?.custom_prices) {
-            console.log(`💰 Custom Prices encontrados para produto do bump:`, bumpProductData.custom_prices);
+          // Se o bump tem um produto associado, buscar seus preços personalizados
+          if (orderBumpData.bump_product_id) {
+            console.log(`💰 Buscando preços personalizados do produto:`, orderBumpData.bump_product_id);
+            const { data: bumpProductData, error: bumpProductError } = await supabase
+              .from('products')
+              .select('custom_prices')
+              .eq('id', orderBumpData.bump_product_id)
+              .maybeSingle();
             
-            // Adicionar custom_prices ao order bump
-            const orderBumpWithCustomPrices = {
-              ...orderBumpData,
-              bump_product_custom_prices: bumpProductData.custom_prices as Record<string, string>
-            };
-            setOrderBump(orderBumpWithCustomPrices);
+            if (!bumpProductError && bumpProductData?.custom_prices) {
+              console.log(`💰 Custom Prices encontrados para produto do bump:`, bumpProductData.custom_prices);
+              
+              // Adicionar custom_prices ao order bump
+              const orderBumpWithCustomPrices = {
+                ...orderBumpData,
+                bump_product_custom_prices: bumpProductData.custom_prices as Record<string, string>
+              };
+              processedBumps.push(orderBumpWithCustomPrices);
+            } else {
+              console.log(`💰 Nenhum preço personalizado encontrado para produto do bump`);
+              processedBumps.push(orderBumpData);
+            }
           } else {
-            console.log(`💰 Nenhum preço personalizado encontrado para produto do bump`);
-            setOrderBump(orderBumpData);
+            console.log(`💰 Order bump não tem produto referenciado - usando conversão automática`);
+            processedBumps.push(orderBumpData);
           }
-        } else {
-          console.log(`💰 Order bump não tem produto referenciado - usando conversão automática`);
-          setOrderBump(orderBumpData);
         }
+        
+        setOrderBumps(processedBumps);
       } else {
         console.log(`❌ OrderBump: Nenhum order bump encontrado para produto ${productId} na posição ${position}`);
-        setOrderBump(null);
+        setOrderBumps([]);
       }
     } catch (error) {
-      console.error('Error fetching order bump:', error);
+      console.error('Error fetching order bumps:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggle = () => {
-    console.log(`🔥 ORDER BUMP HANDLE TOGGLE CALLED:`, { isSelected, orderBump: orderBump?.id });
-    const newIsSelected = !isSelected;
-    setIsSelected(newIsSelected);
-    console.log(`🔥 ORDER BUMP CALLING onToggle:`, { newIsSelected, hasOnToggle: !!onToggle, orderBumpData: newIsSelected ? orderBump : null });
-    onToggle?.(newIsSelected, newIsSelected ? orderBump : null);
+  const handleToggle = (bumpId: string) => {
+    console.log(`🔥 ORDER BUMP HANDLE TOGGLE CALLED:`, { bumpId });
+    const newSelectedBumps = new Set(selectedBumps);
+    const bump = orderBumps.find(b => b.id === bumpId);
+    
+    if (newSelectedBumps.has(bumpId)) {
+      newSelectedBumps.delete(bumpId);
+      console.log(`🔥 ORDER BUMP CALLING onToggle: DESELECTED`, { bump });
+      onToggle?.(false, null);
+    } else {
+      newSelectedBumps.add(bumpId);
+      console.log(`🔥 ORDER BUMP CALLING onToggle: SELECTED`, { bump });
+      onToggle?.(true, bump || null);
+    }
+    
+    setSelectedBumps(newSelectedBumps);
     console.log(`🔥 ORDER BUMP onToggle CALLED SUCCESSFULLY`);
   };
 
@@ -168,15 +182,15 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
     return discountedPrice;
   };
 
-  const getDisplayPrice = (originalPrice: string, discount: number): string => {
+  const getDisplayPrice = (originalPrice: string, discount: number, customPrices?: Record<string, string>): string => {
     const priceInKZ = calculateDiscountedPriceInKZ(originalPrice, discount);
-    console.log(`💰 OrderBump Display Price - Original: ${originalPrice}, Discounted: ${priceInKZ}, Country: ${userCountry?.code}, Custom Prices:`, orderBump?.bump_product_custom_prices);
-    return formatPrice(priceInKZ, userCountry, orderBump?.bump_product_custom_prices);
+    console.log(`💰 OrderBump Display Price - Original: ${originalPrice}, Discounted: ${priceInKZ}, Country: ${userCountry?.code}, Custom Prices:`, customPrices);
+    return formatPrice(priceInKZ, userCountry, customPrices);
   };
 
-  const getOriginalPrice = (originalPrice: string): string => {
+  const getOriginalPrice = (originalPrice: string, customPrices?: Record<string, string>): string => {
     const numericPrice = parseFloat(originalPrice.replace(/[^\d,]/g, '').replace(',', '.'));
-    return formatPrice(numericPrice, userCountry, orderBump?.bump_product_custom_prices);
+    return formatPrice(numericPrice, userCountry, customPrices);
   };
 
   if (loading) {
@@ -184,16 +198,16 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
     return null;
   }
   
-  if (!orderBump) {
+  if (!orderBumps || orderBumps.length === 0) {
     console.log(`❌ OrderBump: Nenhum order bump para renderizar (produto ${productId}, posição ${position})`);
     return null;
   }
   
-  console.log(`✅ OrderBump: Renderizando order bump:`, orderBump);
+  console.log(`✅ OrderBump: Renderizando ${orderBumps.length} order bump(s):`, orderBumps);
 
   return (
     <div className="space-y-3">
-      {/* Ofertas limitadas header */}
+      {/* Ofertas limitadas header - aparece apenas uma vez */}
       <div className="flex items-center gap-2">
         <div className="bg-gray-700 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
           <span>🏷️</span>
@@ -201,111 +215,118 @@ export function OrderBump({ productId, position, onToggle, userCountry, formatPr
         </div>
       </div>
       
-      {/* Order Bump Card */}
-      <div 
-        className={`border-2 border-dashed rounded-lg transition-all cursor-pointer overflow-hidden max-w-md ${
-          isSelected 
-            ? 'border-orange-400 bg-orange-50 dark:bg-orange-950/10 shadow-lg' 
-            : 'border-orange-200 bg-white dark:bg-gray-900 hover:border-orange-300 hover:shadow-md'
-        }`}
-        onClick={handleToggle}
-      >
-        <div className="bg-gradient-to-r from-orange-100 to-orange-50 dark:from-orange-950/20 dark:to-orange-900/10 p-2">
-          {/* Header com título e botão */}
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-              {orderBump.title}
-            </h3>
-            <Button
-              size="sm"
-              variant="outline"
-              className={`transition-all border-2 ${
-                isSelected 
-                  ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90' 
-                  : 'bg-card text-muted-foreground border-border hover:bg-accent'
-              }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleToggle();
-              }}
-            >
-              {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            </Button>
-          </div>
-          
-          {/* Conteúdo principal */}
-          <div className="flex items-center gap-3">
-            {orderBump.bump_product_image && orderBump.bump_type !== 'access_extension' && (
-              <div className="w-12 h-12 bg-white rounded-md overflow-hidden flex-shrink-0 shadow-sm border">
-                <img 
-                  src={orderBump.bump_product_image} 
-                  alt={orderBump.bump_product_name}
-                  className="w-full h-full object-cover"
-                />
+      {/* Renderizar todos os order bumps */}
+      {orderBumps.map((orderBump) => {
+        const isSelected = selectedBumps.has(orderBump.id);
+        
+        return (
+          <div 
+            key={orderBump.id}
+            className={`border-2 border-dashed rounded-lg transition-all cursor-pointer overflow-hidden max-w-md ${
+              isSelected 
+                ? 'border-orange-400 bg-orange-50 dark:bg-orange-950/10 shadow-lg' 
+                : 'border-orange-200 bg-white dark:bg-gray-900 hover:border-orange-300 hover:shadow-md'
+            }`}
+            onClick={() => handleToggle(orderBump.id)}
+          >
+            <div className="bg-gradient-to-r from-orange-100 to-orange-50 dark:from-orange-950/20 dark:to-orange-900/10 p-2">
+              {/* Header com título e botão */}
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  {orderBump.title}
+                </h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={`transition-all border-2 ${
+                    isSelected 
+                      ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90' 
+                      : 'bg-card text-muted-foreground border-border hover:bg-accent'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggle(orderBump.id);
+                  }}
+                >
+                  {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                </Button>
               </div>
-            )}
-            
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-sm mb-0.5 text-gray-900 dark:text-gray-100 line-clamp-1">
-                {orderBump.bump_product_name}
-              </h4>
-              <p className="text-gray-600 dark:text-gray-400 text-xs mb-1 line-clamp-1">
-                {orderBump.description}
-              </p>
-
-              {/* Mostrar detalhes da extensão se for do tipo access_extension */}
-              {orderBump.bump_type === 'access_extension' && (
-                <div className="mb-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded">
-                  <p className="text-xs text-blue-800 dark:text-blue-200 font-medium">
-                    {orderBump.access_extension_type === 'lifetime' 
-                      ? 'Acesso Vitalício'
-                      : `⏰ +${orderBump.access_extension_value} ${
-                          orderBump.access_extension_type === 'days' 
-                            ? (orderBump.access_extension_value === 1 ? 'dia' : 'dias')
-                            : orderBump.access_extension_type === 'months' 
-                            ? (orderBump.access_extension_value === 1 ? 'mês' : 'meses')
-                            : (orderBump.access_extension_value === 1 ? 'ano' : 'anos')
-                        } de tempo de acesso`
-                    }
-                  </p>
-                </div>
-              )}
               
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                    {getDisplayPrice(orderBump.bump_product_price, orderBump.discount)}
-                  </span>
-                  {orderBump.discount > 0 && (
-                    <>
-                      <span className="text-gray-500 line-through text-xs">
-                        {getOriginalPrice(orderBump.bump_product_price)}
-                      </span>
-                      <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                        -{orderBump.discount}% OFF
-                      </span>
-                    </>
-                  )}
-                </div>
-                
-                {/* Botão "Adicionar também" ao lado do preço */}
-                {!isSelected && (
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggle();
-                    }}
-                    size="sm"
-                    className="bg-checkout-orange hover:bg-checkout-orange/90 text-white px-3 py-1 text-xs font-medium transition-all"
-                  >
-                    Adicionar
-                  </Button>
+              {/* Conteúdo principal */}
+              <div className="flex items-center gap-3">
+                {orderBump.bump_product_image && orderBump.bump_type !== 'access_extension' && (
+                  <div className="w-12 h-12 bg-white rounded-md overflow-hidden flex-shrink-0 shadow-sm border">
+                    <img 
+                      src={orderBump.bump_product_image} 
+                      alt={orderBump.bump_product_name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
+                
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-sm mb-0.5 text-gray-900 dark:text-gray-100 line-clamp-1">
+                    {orderBump.bump_product_name}
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-400 text-xs mb-1 line-clamp-1">
+                    {orderBump.description}
+                  </p>
+
+                  {/* Mostrar detalhes da extensão se for do tipo access_extension */}
+                  {orderBump.bump_type === 'access_extension' && (
+                    <div className="mb-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded">
+                      <p className="text-xs text-blue-800 dark:text-blue-200 font-medium">
+                        {orderBump.access_extension_type === 'lifetime' 
+                          ? 'Acesso Vitalício'
+                          : `⏰ +${orderBump.access_extension_value} ${
+                              orderBump.access_extension_type === 'days' 
+                                ? (orderBump.access_extension_value === 1 ? 'dia' : 'dias')
+                                : orderBump.access_extension_type === 'months' 
+                                ? (orderBump.access_extension_value === 1 ? 'mês' : 'meses')
+                                : (orderBump.access_extension_value === 1 ? 'ano' : 'anos')
+                            } de tempo de acesso`
+                        }
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                        {getDisplayPrice(orderBump.bump_product_price, orderBump.discount, orderBump.bump_product_custom_prices)}
+                      </span>
+                      {orderBump.discount > 0 && (
+                        <>
+                          <span className="text-gray-500 line-through text-xs">
+                            {getOriginalPrice(orderBump.bump_product_price, orderBump.bump_product_custom_prices)}
+                          </span>
+                          <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                            -{orderBump.discount}% OFF
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* Botão "Adicionar também" ao lado do preço */}
+                    {!isSelected && (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggle(orderBump.id);
+                        }}
+                        size="sm"
+                        className="bg-checkout-orange hover:bg-checkout-orange/90 text-white px-3 py-1 text-xs font-medium transition-all"
+                      >
+                        Adicionar
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        );
+      })}
     </div>
   );
 }
