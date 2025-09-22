@@ -120,6 +120,19 @@ export const useOrderBumpSettings = (productId?: string) => {
         }
       }
 
+      // Calculate next available bump_order for new order bumps
+      let bumpOrder = orderBumpData.bump_order;
+      if (!editingId && !bumpOrder) {
+        const { data: existingBumps } = await supabase
+          .from('order_bump_settings')
+          .select('bump_order')
+          .eq('product_id', targetProductId)
+          .order('bump_order', { ascending: false })
+          .limit(1);
+        
+        bumpOrder = (existingBumps?.[0]?.bump_order || 0) + 1;
+      }
+
       const settingsData = {
         user_id: user.id,
         product_id: targetProductId,
@@ -139,7 +152,8 @@ export const useOrderBumpSettings = (productId?: string) => {
         discount: orderBumpData.discount || 0,
         access_extension_type: orderBumpData.access_extension_type || null,
         access_extension_value: orderBumpData.access_extension_value || null,
-        access_extension_description: orderBumpData.access_extension_description || null
+        access_extension_description: orderBumpData.access_extension_description || null,
+        bump_order: bumpOrder
       };
 
       console.log('Salvando order bump:', settingsData);
