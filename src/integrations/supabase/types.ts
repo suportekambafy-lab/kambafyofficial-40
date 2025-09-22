@@ -969,6 +969,7 @@ export type Database = {
           access_extension_type: string | null
           access_extension_value: number | null
           bump_category: string | null
+          bump_order: number | null
           bump_product_id: string | null
           bump_product_image: string | null
           bump_product_name: string
@@ -990,6 +991,7 @@ export type Database = {
           access_extension_type?: string | null
           access_extension_value?: number | null
           bump_category?: string | null
+          bump_order?: number | null
           bump_product_id?: string | null
           bump_product_image?: string | null
           bump_product_name: string
@@ -1011,6 +1013,7 @@ export type Database = {
           access_extension_type?: string | null
           access_extension_value?: number | null
           bump_category?: string | null
+          bump_order?: number | null
           bump_product_id?: string | null
           bump_product_image?: string | null
           bump_product_name?: string
