@@ -2009,16 +2009,6 @@ ${JSON.stringify(appyPayData, null, 2)}
                 <div className="mt-6">
                   <Card className="border-blue-200 bg-blue-50">
                     <CardContent className="p-4">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-                          <Wallet className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-blue-900">Multicaixa Express</h3>
-                          <p className="text-sm text-blue-700">Pagamento via aplicativo Multicaixa Express</p>
-                        </div>
-                      </div>
-                      
                       <div className="space-y-4">
                         <div className="text-center p-3 bg-blue-100 rounded-lg">
                           <p className="text-sm font-medium text-blue-900">
@@ -2038,6 +2028,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                             onChange={(value) => handleInputChange('phone', value)}
                             placeholder="Digite seu telefone"
                             selectedCountry="AO"
+                            allowedCountries={["AO"]}
                             className="w-full"
                           />
                           <p className="text-sm text-red-600">Telefone é obrigatório</p>

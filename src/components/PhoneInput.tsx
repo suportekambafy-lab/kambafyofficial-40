@@ -24,6 +24,7 @@ interface PhoneInputProps {
   onCountryChange?: (country: string) => void;
   className?: string;
   disabled?: boolean;
+  allowedCountries?: string[];
 }
 
 export function PhoneInput({ 
@@ -33,12 +34,16 @@ export function PhoneInput({
   selectedCountry = "AO",
   onCountryChange,
   className = "",
-  disabled = false
+  disabled = false,
+  allowedCountries
 }: PhoneInputProps) {
-  const currentCountry = countries.find(c => c.code === selectedCountry) || countries[0];
+  const availableCountries = allowedCountries ? 
+    countries.filter(c => allowedCountries.includes(c.code)) : 
+    countries;
+  const currentCountry = availableCountries.find(c => c.code === selectedCountry) || availableCountries[0];
 
   const handleCountryChange = (countryCode: string) => {
-    const newCountry = countries.find(c => c.code === countryCode) || countries[0];
+    const newCountry = availableCountries.find(c => c.code === countryCode) || availableCountries[0];
     
     // Limpar o campo de telefone e adicionar o novo código do país
     const dialCode = newCountry.dialCode;
@@ -60,7 +65,7 @@ export function PhoneInput({
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {countries.map((country) => (
+          {availableCountries.map((country) => (
             <SelectItem key={country.code} value={country.code}>
               <div className="flex items-center gap-2">
                 <span className="text-lg">{country.flag}</span>
