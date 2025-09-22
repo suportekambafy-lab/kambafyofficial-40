@@ -521,7 +521,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
         disabled={!stripe || processing || !customerData.name || !customerData.email || !customerData.phone}
         className={`w-full h-12 font-semibold ${
           (!stripe || processing || !customerData.name || !customerData.email || !customerData.phone)
-            ? 'bg-gray-400 cursor-not-allowed text-gray-600'
+            ? 'bg-green-600/50 cursor-not-allowed text-white/70'
             : 'bg-green-600 hover:bg-green-700 text-white'
         }`}
       >
