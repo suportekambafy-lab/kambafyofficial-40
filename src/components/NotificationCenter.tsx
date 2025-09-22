@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { useToast } from '@/hooks/use-toast';
 
 interface Notification {
@@ -77,7 +78,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
             id: `sale-${sale.id}`,
             type: 'high_value_sale',
             title: 'Venda de Alto Valor! 🎉',
-            message: `Venda de ${amount.toLocaleString('pt-AO')} KZ por ${sale.customer_name}`,
+            message: `Venda de ${formatPriceForSeller(amount, sale.currency)} por ${sale.customer_name}`,
             amount,
             timestamp: sale.created_at,
             read: false
@@ -182,7 +183,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
             id: `sale-${newOrder.id}`,
             type: 'high_value_sale',
             title: 'Venda de Alto Valor! 🎉',
-            message: `Venda de ${amount.toLocaleString('pt-AO')} KZ por ${newOrder.customer_name}`,
+            message: `Venda de ${formatPriceForSeller(amount, newOrder.currency)} por ${newOrder.customer_name}`,
             amount,
             timestamp: newOrder.created_at,
             read: false
@@ -193,7 +194,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           
           toast({
             title: "🎉 Venda de Alto Valor!",
-            description: `${amount.toLocaleString('pt-AO')} KZ por ${newOrder.customer_name}`,
+            description: `${formatPriceForSeller(amount, newOrder.currency)} por ${newOrder.customer_name}`,
           });
         }
       })

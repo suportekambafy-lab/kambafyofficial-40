@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Progress } from "@/components/ui/progress";
+import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { Menu } from 'lucide-react';
 
 interface MobileDashboardHeaderProps {
@@ -10,8 +11,8 @@ interface MobileDashboardHeaderProps {
 }
 
 export function MobileDashboardHeader({ goal, totalRevenue, progressPercentage }: MobileDashboardHeaderProps) {
-  const formatPrice = (amount: number): string => {
-    return `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`;
+  const formatPrice = (amount: number, currency: string = 'KZ'): string => {
+    return formatPriceForSeller(amount, currency);
   };
 
   return (

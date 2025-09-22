@@ -70,13 +70,28 @@ export const formatPriceFromString = (
   return formatPrice(priceNumber, targetCountry, useToLocaleString, customPrices);
 };
 
-// Função específica para vendedores - sempre mostra em KZ original
+// Função específica para vendedores - sempre mostra em KZ original ou convertido
 export const formatPriceForSeller = (
-  originalAmountKZ: number,
+  amount: number,
+  currency: string = 'KZ',
   useToLocaleString: boolean = true
 ): string => {
-  if (useToLocaleString) {
-    return `${parseFloat(originalAmountKZ.toString()).toLocaleString('pt-BR')} KZ`;
+  // Se não é KZ, converter para KZ
+  let amountInKZ = amount;
+  
+  if (currency.toUpperCase() !== 'KZ') {
+    // Taxas de conversão para KZ (inverso das taxas do useGeoLocation)
+    const exchangeRates: Record<string, number> = {
+      'EUR': 1053, // 1 EUR = ~1053 KZ (aproximado)
+      'MZN': 14.3  // 1 MZN = ~14.3 KZ (aproximado)
+    };
+    
+    const rate = exchangeRates[currency.toUpperCase()] || 1;
+    amountInKZ = Math.round(amount * rate);
   }
-  return `${originalAmountKZ.toLocaleString()} KZ`;
+  
+  if (useToLocaleString) {
+    return `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`;
+  }
+  return `${amountInKZ.toLocaleString()} KZ`;
 };

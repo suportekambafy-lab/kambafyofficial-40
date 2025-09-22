@@ -8,6 +8,7 @@ import { MobileFilters } from './MobileFilters';
 import { MobileProfile } from './MobileProfile';
 import { MobileSalesChart } from './MobileSalesChart';
 import { Button } from "@/components/ui/button";
+import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { Home, BarChart3, User } from 'lucide-react';
 
 interface Order {
@@ -193,8 +194,8 @@ export function MobileDashboard() {
     }
   }, [user, loadAllOrders]);
 
-  const formatPrice = (amount: number): string => {
-    return `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`;
+  const formatPrice = (amount: number, currency: string = 'KZ'): string => {
+    return formatPriceForSeller(amount, currency);
   };
 
   const goal = 1000000;

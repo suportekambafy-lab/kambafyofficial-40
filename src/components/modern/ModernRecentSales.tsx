@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
+import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { getCountryByPaymentMethod } from "@/utils/paymentMethods";
 
 interface RecentSale {
@@ -240,9 +241,10 @@ export function ModernRecentSales() {
   };
 
   const formatAmount = (sale: RecentSale) => {
-    // ✅ Para vendedores, usar seller_commission que já vem em KZ da base de dados
+    // Para vendedores, usar seller_commission que já vem em KZ da base de dados
     // Se for venda de afiliado, usar affiliate_commission
     let amount = 0;
+    let currency = sale.currency;
     
     if (sale.sale_type === 'affiliate') {
       amount = sale.affiliate_commission || 0;
@@ -250,15 +252,11 @@ export function ModernRecentSales() {
       // Para vendas próprias, usar seller_commission ou converter de volta se for venda antiga
       amount = sale.seller_commission || 0;
       if (amount === 0) {
-        const amountValue = parseFloat(sale.amount);
-        // CORREÇÃO: Converter vendas antigas de volta para KZ
-        if (sale.currency === 'EUR') {
-          amount = amountValue * 1053; // Taxa EUR->KZ aproximada
-        } else if (sale.currency === 'MZN') {
-          amount = amountValue * 13; // Taxa MZN->KZ aproximada  
-        } else {
-          amount = amountValue; // Se já está em KZ
-        }
+        // Venda antiga sem comissão registrada - usar valor original da venda
+        amount = parseFloat(sale.amount);
+      } else {
+        // Se seller_commission existe, já está em KZ
+        currency = 'KZ';
       }
     }
     
@@ -267,14 +265,14 @@ export function ModernRecentSales() {
       amount = amount * 0.8;
     }
     
-    const currencyInfo = getCurrencyInfo(sale.currency);
+    const currencyInfo = getCurrencyInfo(currency);
     
-    // ✅ Sempre mostrar valor original em KZ + bandeira do país
+    // Usar a função formatPriceForSeller que faz a conversão adequada
     return {
-      main: `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`,
+      main: formatPriceForSeller(amount, currency),
       flag: currencyInfo.flag,
       countryName: currencyInfo.name,
-      showCountry: sale.currency.toUpperCase() !== 'KZ'
+      showCountry: currency.toUpperCase() !== 'KZ'
     };
   };
 

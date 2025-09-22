@@ -12,6 +12,7 @@ import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-per
 import { DollarSign, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { formatPriceForSeller } from '@/utils/priceFormatting';
 
 interface Order {
   id: string;
@@ -126,20 +127,18 @@ export function ModernDashboardHome() {
         // Vendas próprias - usar comissão do vendedor ou converter vendas antigas
         ...(ownOrders || []).map((order: any) => {
           let earning_amount = parseFloat(order.seller_commission?.toString() || '0');
+          let earning_currency = 'KZ'; // seller_commission sempre está em KZ
+          
           if (earning_amount === 0) {
-            const amountValue = parseFloat(order.amount || '0');
-            // CORREÇÃO: Converter vendas antigas de volta para KZ
-            if (order.currency === 'EUR') {
-              earning_amount = amountValue * 1053; // Taxa EUR->KZ aproximada
-            } else if (order.currency === 'MZN') {
-              earning_amount = amountValue * 13; // Taxa MZN->KZ aproximada
-            } else {
-              earning_amount = amountValue; // Se já está em KZ
-            }
+            // Venda antiga sem comissão registrada - usar valor original
+            earning_amount = parseFloat(order.amount || '0');
+            earning_currency = order.currency;
           }
+          
           return {
             ...order,
             earning_amount,
+            earning_currency,
             order_type: 'own'
           };
         }),

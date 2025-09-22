@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { User, Calendar, Package, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building } from "lucide-react";
 import { getPaymentMethodName, getCountryByPaymentMethod } from "@/utils/paymentMethods";
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
+import { formatPriceForSeller } from '@/utils/priceFormatting';
 
 interface Sale {
   id: string;
@@ -54,8 +55,14 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
     return (
       <div className="text-right">
         <div className="font-bold text-checkout-green">
-          {paidAmount.toLocaleString('pt-BR')} KZ
+          {formatPriceForSeller(paidAmount, sale.currency)}
         </div>
+        {sale.currency !== 'KZ' && (
+          <div className="text-xs text-gray-500 flex items-center gap-1">
+            <span>{currencyInfo.flag}</span>
+            <span>{currencyInfo.name}</span>
+          </div>
+        )}
       </div>
     );
   };
