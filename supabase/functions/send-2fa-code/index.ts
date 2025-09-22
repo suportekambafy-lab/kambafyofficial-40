@@ -5,6 +5,7 @@ import { Resend } from "npm:resend@2.0.0";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 interface Send2FARequest {
@@ -153,18 +154,6 @@ const handler = async (req: Request): Promise<Response> => {
           <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
           <p>Este código é válido por 10 minutos.</p>
           <p>Se você não solicitou este login, ignore este email e entre em contato conosco.</p>
-          <br>
-          <p>Equipe Kambafy</p>
-        `;
-        break;
-        const amount = purchase_data?.amount || 0;
-        subject = 'Código de verificação - Compra com KambaPay';
-        htmlContent = `
-          <h1>Confirmação de compra</h1>
-          <p>Para sua segurança, confirme sua compra de <strong>${amount.toLocaleString()} KZ</strong> com o código:</p>
-          <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
-          <p>Este código é válido por 10 minutos.</p>
-          <p>Se você não fez esta compra, não compartilhe este código.</p>
           <br>
           <p>Equipe Kambafy</p>
         `;
