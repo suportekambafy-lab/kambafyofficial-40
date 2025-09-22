@@ -80,7 +80,19 @@ const Checkout = () => {
   const [selectedPayment, setSelectedPayment] = useState("");
   const [checkoutSettings, setCheckoutSettings] = useState<any>(null);
   const [orderBump, setOrderBump] = useState<any>(null);
-  const [orderBumpPrice, setOrderBumpPrice] = useState(0);  
+  const [selectedOrderBumps, setSelectedOrderBumps] = useState<Map<string, { data: any; price: number }>>(new Map());
+
+  // Calculate total order bump price from all selected bumps
+  const totalOrderBumpPrice = useMemo(() => {
+    const allPrices = Array.from(selectedOrderBumps.values());
+    const total = allPrices.reduce((sum, { price }) => sum + price, 0);
+    console.log(`🔥 TOTAL ORDER BUMP PRICE CALCULATION:`, {
+      selectedBumpsCount: selectedOrderBumps.size,
+      allPrices: allPrices.map(({ data, price }) => ({ id: data.id, name: data.bump_product_name, price })),
+      total
+    });
+    return total;
+  }, [selectedOrderBumps]);
   const [resetOrderBumps, setResetOrderBumps] = useState(false);
   const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
   const [bankTransferData, setBankTransferData] = useState<{file: File, bank: string} | null>(null);
@@ -131,8 +143,8 @@ const Checkout = () => {
   }, [product, originalPriceKZ, userCountry, getConvertedPrice]);
   
   const totalAmountForDetection = useMemo(() => 
-    product ? getProductFinalPrice() + orderBumpPrice : 0, 
-    [product, getProductFinalPrice, orderBumpPrice]
+    product ? getProductFinalPrice() + totalOrderBumpPrice : 0, 
+    [product, getProductFinalPrice, totalOrderBumpPrice]
   );
 
   const { markAsRecovered, hasDetected, abandonedPurchaseId } = useAbandonedPurchaseDetection({
@@ -243,7 +255,6 @@ const Checkout = () => {
     if (userCountry) {
       console.log('🌍 País mudou, resetando order bumps selecionados para evitar conflitos de preço');
       setOrderBump(null);
-      setOrderBumpPrice(0);
       setResetOrderBumps(true);
       
       // Reset do flag após um pequeno delay para garantir que os components recebam a prop
@@ -600,12 +611,10 @@ const Checkout = () => {
         ? finalPrice * (1 - bumpData.discount / 100)
         : finalPrice;
       
-      console.log(`🚨 CHECKOUT.TSX - Final order bump price: ${discountedPrice} ${userCountry?.currency}`);
-      setOrderBumpPrice(discountedPrice);
+      console.log(`🔥 Order bump final price: ${discountedPrice} ${userCountry?.currency}`);
     } else {
-      console.log(`🚨 CHECKOUT.TSX - Order bump deselected, setting price to 0`);
+      console.log(`🔥 Order bump deselected`);
       setOrderBump(null);
-      setOrderBumpPrice(0);
     }
   };
 
@@ -636,7 +645,7 @@ const Checkout = () => {
       try {
         console.log('🔔 Triggering webhooks for Stripe payment success...');
         
-        const totalAmountInKZ = finalProductPrice + orderBumpPrice;
+        const totalAmountInKZ = finalProductPrice + totalOrderBumpPrice;
         
         const webhookPayload = {
           event: 'payment.success',
@@ -655,7 +664,7 @@ const Checkout = () => {
               bump_product_name: orderBump.bump_product_name,
               bump_product_price: orderBump.bump_product_price,
               discount: orderBump.discount,
-              discounted_price: orderBumpPrice
+              discounted_price: totalOrderBumpPrice
             } : null
           },
           user_id: product.user_id,
@@ -702,7 +711,7 @@ const Checkout = () => {
         console.error('❌ Error triggering webhooks for Stripe payment:', webhookError);
       }
 
-      const totalAmountInKZ = finalProductPrice + orderBumpPrice;
+      const totalAmountInKZ = finalProductPrice + totalOrderBumpPrice;
       
       // Verificar se há upsell configurado
       const shouldRedirectToUpsell = checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link;
@@ -727,7 +736,7 @@ const Checkout = () => {
             order_bump_name: orderBump.bump_product_name,
             order_bump_price: orderBump.bump_product_price,
             order_bump_discount: orderBump.discount.toString(),
-            order_bump_discounted_price: orderBumpPrice.toString()
+            order_bump_discounted_price: totalOrderBumpPrice.toString()
           })
         });
         
@@ -753,7 +762,7 @@ const Checkout = () => {
           order_bump_name: orderBump.bump_product_name,
           order_bump_price: orderBump.bump_product_price,
           order_bump_discount: orderBump.discount.toString(),
-          order_bump_discounted_price: orderBumpPrice.toString()
+          order_bump_discounted_price: totalOrderBumpPrice.toString()
         })
       });
 
@@ -809,7 +818,7 @@ const Checkout = () => {
       }
 
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
-      const totalAmount = finalProductPrice + orderBumpPrice;
+      const totalAmount = finalProductPrice + totalOrderBumpPrice;
 
       // Upload do comprovativo para o storage
       console.log('📤 Uploading payment proof to storage...');
@@ -888,7 +897,7 @@ const Checkout = () => {
           bump_product_price: orderBump.bump_product_price,
           bump_product_image: orderBump.bump_product_image,
           discount: orderBump.discount,
-          discounted_price: orderBumpPrice
+          discounted_price: totalOrderBumpPrice
         }) : null,
         payment_proof_data: JSON.stringify({
           bank: selectedBank,
@@ -936,7 +945,7 @@ const Checkout = () => {
           order_bump_name: orderBump.bump_product_name,
           order_bump_price: orderBump.bump_product_price,
           order_bump_discount: orderBump.discount.toString(),
-          order_bump_discounted_price: orderBumpPrice.toString()
+          order_bump_discounted_price: totalOrderBumpPrice.toString()
         })
       });
 
@@ -994,7 +1003,7 @@ const Checkout = () => {
       setProcessing(true);
 
       try {
-        const totalAmount = finalProductPrice + orderBumpPrice;
+        const totalAmount = finalProductPrice + totalOrderBumpPrice;
         const merchantTransactionId = `TR${Date.now()}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
         
         const appyPayData = {
@@ -1108,7 +1117,7 @@ ${JSON.stringify(appyPayData, null, 2)}
       setProcessing(true);
 
       try {
-        const totalAmount = finalProductPrice + orderBumpPrice;
+        const totalAmount = finalProductPrice + totalOrderBumpPrice;
         
         // Primeiro, enviar código 2FA para segurança da compra
         console.log('🔒 Enviando código 2FA para compra KambaPay...');
@@ -1181,7 +1190,7 @@ ${JSON.stringify(appyPayData, null, 2)}
             bump_product_name: orderBump.bump_product_name,
             bump_product_price: orderBump.bump_product_price,
             discount: orderBump.discount,
-            discounted_price: orderBumpPrice
+            discounted_price: totalOrderBumpPrice
           } : null
         };
 
@@ -1228,7 +1237,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                 order_bump_name: orderBump.bump_product_name,
                 order_bump_price: orderBump.bump_product_price,
                 order_bump_discount: orderBump.discount.toString(),
-                order_bump_discounted_price: orderBumpPrice.toString()
+                order_bump_discounted_price: totalOrderBumpPrice.toString()
               })
             });
             
@@ -1255,7 +1264,7 @@ ${JSON.stringify(appyPayData, null, 2)}
               order_bump_name: orderBump.bump_product_name,
               order_bump_price: orderBump.bump_product_price,
               order_bump_discount: orderBump.discount.toString(),
-              order_bump_discounted_price: orderBumpPrice.toString()
+              order_bump_discounted_price: totalOrderBumpPrice.toString()
             })
           });
 
@@ -1307,7 +1316,7 @@ ${JSON.stringify(appyPayData, null, 2)}
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
-      const totalAmount = finalProductPrice + orderBumpPrice;
+      const totalAmount = finalProductPrice + totalOrderBumpPrice;
 
       // Calcular comissões se houver afiliado
       let affiliate_commission = null;
@@ -1373,7 +1382,7 @@ ${JSON.stringify(appyPayData, null, 2)}
           bump_product_price: orderBump.bump_product_price,
           bump_product_image: orderBump.bump_product_image,
           discount: orderBump.discount,
-          discounted_price: orderBumpPrice
+          discounted_price: totalOrderBumpPrice
         }) : null
       };
 
@@ -1441,7 +1450,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                   bump_product_name: orderBump.bump_product_name,
                   bump_product_price: orderBump.bump_product_price,
                   discount: orderBump.discount,
-                  discounted_price: orderBumpPrice
+                  discounted_price: totalOrderBumpPrice
                 } : null
               },
               user_id: product.user_id,
@@ -1511,7 +1520,7 @@ ${JSON.stringify(appyPayData, null, 2)}
             bump_product_price: orderBump.bump_product_price,
             bump_product_image: orderBump.bump_product_image,
             discount: orderBump.discount,
-            discounted_price: orderBumpPrice
+            discounted_price: totalOrderBumpPrice
           } : null,
           baseProductPrice: product.price
         };
@@ -1543,7 +1552,7 @@ ${JSON.stringify(appyPayData, null, 2)}
           order_bump_name: orderBump.bump_product_name,
           order_bump_price: orderBump.bump_product_price,
           order_bump_discount: orderBump.discount.toString(),
-          order_bump_discounted_price: orderBumpPrice.toString()
+          order_bump_discounted_price: totalOrderBumpPrice.toString()
         })
       });
 
@@ -1711,13 +1720,13 @@ ${JSON.stringify(appyPayData, null, 2)}
   }
   
   // 🔥 CALCULAR TOTAL CORRETO (ambos na mesma moeda final)
-  const totalPrice = finalProductPrice + orderBumpPrice;
+  const totalPrice = finalProductPrice + totalOrderBumpPrice;
   
   console.log(`🚨 PREÇOS FINAIS PARA CHECKOUT:`);
   console.log(`Product: ${product?.name}`);
   console.log(`Original price KZ: ${originalPriceKZ} KZ`);
   console.log(`Final product price: ${finalProductPrice} ${userCountry?.currency}`);
-  console.log(`Order bump price: ${orderBumpPrice} ${userCountry?.currency}`);
+  console.log(`Order bump price: ${totalOrderBumpPrice} ${userCountry?.currency}`);
   console.log(`TOTAL FINAL: ${totalPrice} ${userCountry?.currency}`);
   console.log(`Display price: ${getDisplayPrice(originalPriceKZ)}`);
 
@@ -2066,7 +2075,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                           )}
                         </div>
                         <span className="font-medium">
-                          +{getOrderBumpDisplayPrice(orderBumpPrice)}
+                          +{getOrderBumpDisplayPrice(totalOrderBumpPrice)}
                         </span>
                       </div>
                     )}
