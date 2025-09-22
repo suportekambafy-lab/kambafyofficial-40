@@ -578,8 +578,6 @@ const Checkout = () => {
     });
 
     if (isSelected && bumpData) {
-      setOrderBump(bumpData);
-      
       // Calcular preço considerando preços personalizados para o país do usuário
       const originalPriceKZ = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
       let finalPrice = originalPriceKZ;
@@ -611,10 +609,44 @@ const Checkout = () => {
         ? finalPrice * (1 - bumpData.discount / 100)
         : finalPrice;
       
-      console.log(`🔥 Order bump final price: ${discountedPrice} ${userCountry?.currency}`);
+      console.log(`🚨 CHECKOUT.TSX - Final order bump price: ${discountedPrice} KZ`);
+      
+      // Adicionar ao Map de order bumps selecionados
+      setSelectedOrderBumps(prev => {
+        const updated = new Map(prev);
+        updated.set(bumpData.id, { data: bumpData, price: discountedPrice });
+        console.log(`🚨 CHECKOUT.TSX - Added to selectedOrderBumps:`, {
+          bumpId: bumpData.id,
+          bumpName: bumpData.bump_product_name,
+          price: discountedPrice,
+          totalBumps: updated.size
+        });
+        return updated;
+      });
+      
+      // Manter compatibilidade com código legado
+      setOrderBump(bumpData);
     } else {
-      console.log(`🔥 Order bump deselected`);
-      setOrderBump(null);
+      console.log(`🚨 CHECKOUT.TSX - Order bump deselected, setting price to 0`);
+      
+      // Remover do Map de order bumps selecionados
+      if (bumpData?.id) {
+        setSelectedOrderBumps(prev => {
+          const updated = new Map(prev);
+          updated.delete(bumpData.id);
+          console.log(`🚨 CHECKOUT.TSX - Removed from selectedOrderBumps:`, {
+            bumpId: bumpData.id,
+            bumpName: bumpData.bump_product_name,
+            remainingBumps: updated.size
+          });
+          return updated;
+        });
+      }
+      
+      // Se não há mais bumps selecionados, limpar o estado legado também
+      if (selectedOrderBumps.size <= 1) {
+        setOrderBump(null);
+      }
     }
   };
 
@@ -2064,21 +2096,21 @@ ${JSON.stringify(appyPayData, null, 2)}
                       </span>
                     </div>
                     
-                    {orderBump && (
-                      <div className="flex justify-between items-center text-green-600">
+                    {Array.from(selectedOrderBumps.values()).map(({ data: bump, price }) => (
+                      <div key={bump.id} className="flex justify-between items-center text-green-600">
                         <div className="flex-1">
-                          <span className="text-sm">{orderBump.bump_product_name}</span>
-                          {orderBump.discount > 0 && (
+                          <span className="text-sm">{bump.bump_product_name}</span>
+                          {bump.discount > 0 && (
                             <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded ml-2">
-                              -{orderBump.discount}%
+                              -{bump.discount}%
                             </span>
                           )}
                         </div>
                         <span className="font-medium">
-                          +{getOrderBumpDisplayPrice(totalOrderBumpPrice)}
+                          +{getOrderBumpDisplayPrice(price)}
                         </span>
                       </div>
-                    )}
+                    ))}
                     
                     <div className="border-t pt-3">
                       <div className="flex justify-between items-center">
