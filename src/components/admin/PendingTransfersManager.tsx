@@ -214,6 +214,30 @@ export function PendingTransfersManager() {
 
           // 3. Enviar email de confirmação
           console.log('📧 Enviando email de confirmação...');
+          
+          // Processar dados do order bump se existirem
+          let orderBumpData = null;
+          if (orderData.order_bump_data) {
+            try {
+              const bumpData = typeof orderData.order_bump_data === 'string' 
+                ? JSON.parse(orderData.order_bump_data) 
+                : orderData.order_bump_data;
+              
+              orderBumpData = {
+                bump_product_name: bumpData.bump_product_name,
+                bump_product_price: bumpData.bump_product_price,
+                bump_product_image: bumpData.bump_product_image,
+                discount: bumpData.discount || 0,
+                discounted_price: bumpData.discounted_price || 0,
+                bump_product_id: bumpData.bump_product_id,
+                bump_share_link: bumpData.bump_share_link,
+                bump_member_area_id: bumpData.bump_member_area_id
+              };
+            } catch (error) {
+              console.error('❌ Erro ao processar dados do order bump:', error);
+            }
+          }
+          
           const confirmationPayload = {
             customerName: orderData.customer_name,
             customerEmail: orderData.customer_email,
@@ -224,17 +248,20 @@ export function PendingTransfersManager() {
             productId: orderData.product_id,
             shareLink: product?.share_link,
             memberAreaId: product?.member_area_id,
-            sellerId: product?.user_id
+            sellerId: product?.user_id,
+            orderBump: orderBumpData,
+            baseProductPrice: orderData.amount
           };
 
-          const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
+          // Usar nova função de processo de registro que inclui criação de conta
+          const { error: emailError } = await supabase.functions.invoke('process-customer-registration', {
             body: confirmationPayload
           });
 
           if (emailError) {
-            console.error('❌ Erro ao enviar email:', emailError);
+            console.error('❌ Erro ao processar registro do cliente:', emailError);
           } else {
-            console.log('✅ Email de confirmação enviado');
+            console.log('✅ Processo de registro do cliente concluído');
           }
 
         } catch (postApprovalError) {
