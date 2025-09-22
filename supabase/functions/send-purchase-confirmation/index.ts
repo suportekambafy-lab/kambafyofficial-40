@@ -79,7 +79,6 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log('=== FETCHING SELLER AND PRODUCT DATA ===');
-    console.log('Product type detected:', productData?.type);
     
     let sellerProfile = null;
     let productData = null;
@@ -105,6 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (!productError && product) {
         productData = product;
+        console.log('Product type detected:', product.type);
       }
     }
 
@@ -130,11 +130,15 @@ const handler = async (req: Request): Promise<Response> => {
     let accessInfo = '';
     const productType = productData?.type;
     
+    console.log('=== CREATING ACCESS INFO ===');
+    console.log('Product type:', productType);
+    
     // Para produtos do tipo "Link de Pagamento", não incluir informações de acesso
     if (productType === 'Link de Pagamento') {
-      // Para Link de Pagamento, não incluir seção de acesso
+      console.log('Product is Payment Link - skipping access info');
       accessInfo = '';
     } else if (memberAreaId && memberAreaUrl) {
+      console.log('Product has member area - adding course access');
       accessInfo = `
         <div style="background-color: #16a34a; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: white; margin: 0 0 10px 0;">🎓 Acesso ao Curso Liberado!</h3>
@@ -145,7 +149,8 @@ const handler = async (req: Request): Promise<Response> => {
           </a>
         </div>
       `;
-    } else if (shareLink) {
+    } else if (shareLink && productType !== 'Link de Pagamento') {
+      console.log('Product has share link (not payment link) - adding product access');
       accessInfo = `
         <div style="background-color: #16a34a; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: white; margin: 0 0 10px 0;">📱 Acesso ao Produto</h3>
@@ -480,6 +485,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log('=== SENDING CUSTOMER EMAIL ===');
+    console.log('Using email template for product type:', productType);
     
     // Send confirmation email to customer
     const { data: customerEmailResponse, error: customerEmailError } = await resend.emails.send({

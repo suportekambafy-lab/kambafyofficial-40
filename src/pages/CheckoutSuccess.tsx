@@ -50,10 +50,10 @@ const CheckoutSuccess = () => {
           <div className="space-y-3">
             <Button 
               className="w-full" 
-              onClick={() => window.location.href = '/'}
+              onClick={() => window.location.href = '/minhas-compras'}
             >
               <ArrowRight className="w-4 h-4 mr-2" />
-              Voltar ao Início
+              Ver Minhas Compras
             </Button>
             
             <Button 

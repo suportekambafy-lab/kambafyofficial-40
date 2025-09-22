@@ -598,67 +598,86 @@ const ThankYou = () => {
           </CardContent>
         </Card>
 
-        {/* Access Section */}
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-checkout-text mb-4 flex items-center gap-2">
-              <ExternalLink className="w-5 h-5" />
-              Acesso ao Produto
-            </h3>
-            
-            {orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod) ? (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                <p className="text-yellow-800 text-sm mb-2">
-                  <strong>Pendente:</strong> O acesso ao produto será liberado após a confirmação do pagamento.
-                </p>
-                <p className="text-yellow-700 text-sm">
-                  Você receberá um e-mail de confirmação assim que o pagamento for processado.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-blue-800 text-sm mb-2">
-                  <strong>Entrega Instantânea:</strong> Seu produto digital está disponível imediatamente!
-                </p>
-                {product?.type === 'Curso' && product?.member_areas ? (
-                  <p className="text-blue-700 text-sm">
-                    Seu acesso ao curso <strong>{product.member_areas.name}</strong> foi liberado automaticamente. 
-                    Clique no botão abaixo para acessar as aulas.
+        {/* Access Section - Only show for Courses and E-books, not for Payment Links */}
+        {product?.type !== 'Link de Pagamento' && (
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-checkout-text mb-4 flex items-center gap-2">
+                <ExternalLink className="w-5 h-5" />
+                Acesso ao Produto
+              </h3>
+              
+              {orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod) ? (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-yellow-800 text-sm mb-2">
+                    <strong>Pendente:</strong> O acesso ao produto será liberado após a confirmação do pagamento.
                   </p>
-                ) : (
-                  <p className="text-blue-700 text-sm">
-                    {orderDetails.customerEmail ? 
-                      `Instruções de acesso foram enviadas para ${orderDetails.customerEmail}` :
-                      'Clique no botão abaixo para acessar seu produto.'
-                    }
+                  <p className="text-yellow-700 text-sm">
+                    Você receberá um e-mail de confirmação assim que o pagamento for processado.
                   </p>
-                )}
-              </div>
-            )}
-            
-            <Button 
-              onClick={handleAccessProduct}
-              className={`w-full md:w-auto ${
-                orderStatus === 'pending' 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-checkout-green hover:bg-checkout-green/90'
-              }`}
-              disabled={orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod)}
-            >
-              {product?.type === 'Curso' && product?.member_areas ? (
-                <>
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  {orderStatus === 'pending' ? 'Pendente' : 'Acessar Curso'}
-                </>
+                </div>
               ) : (
-                <>
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  {orderStatus === 'pending' ? 'Pendente' : 'Acessar Produto'}
-                </>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <p className="text-blue-800 text-sm mb-2">
+                    <strong>Entrega Instantânea:</strong> Seu produto digital está disponível imediatamente!
+                  </p>
+                  {product?.type === 'Curso' && product?.member_areas ? (
+                    <p className="text-blue-700 text-sm">
+                      Seu acesso ao curso <strong>{product.member_areas.name}</strong> foi liberado automaticamente. 
+                      Clique no botão abaixo para acessar as aulas.
+                    </p>
+                  ) : (
+                    <p className="text-blue-700 text-sm">
+                      {orderDetails.customerEmail ? 
+                        `Instruções de acesso foram enviadas para ${orderDetails.customerEmail}` :
+                        'Clique no botão abaixo para acessar seu produto.'
+                      }
+                    </p>
+                  )}
+                </div>
               )}
-            </Button>
-          </CardContent>
-        </Card>
+              
+              <Button 
+                onClick={handleAccessProduct}
+                className={`w-full md:w-auto ${
+                  orderStatus === 'pending' 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-checkout-green hover:bg-checkout-green/90'
+                }`}
+                disabled={orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod)}
+              >
+                {product?.type === 'Curso' && product?.member_areas ? (
+                  <>
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    {orderStatus === 'pending' ? 'Pendente' : 'Acessar Curso'}
+                  </>
+                ) : (
+                  <>
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    {orderStatus === 'pending' ? 'Pendente' : 'Acessar Produto'}
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Thank you message for Payment Links */}
+        {product?.type === 'Link de Pagamento' && (
+          <Card className="mb-8">
+            <CardContent className="p-6 text-center">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-green-800 mb-2">
+                  Muito obrigado por comprar com a Kambafy!
+                </h3>
+                <p className="text-green-700">
+                  Sua confiança em nós é o que nos motiva a continuar oferecendo os melhores produtos digitais.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Support Section */}
         <Card className="mb-8">
