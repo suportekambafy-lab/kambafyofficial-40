@@ -6,7 +6,7 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle, XCircle, Download, Eye } from 'lucide-react';
+import { CheckCircle, XCircle, Download, Eye, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -175,15 +175,17 @@ export function PendingTransfersManager() {
           url: publicUrl,
           fileName: data.proof_file_name || 'Comprovativo',
           bank: data.bank || 'N/A',
-          uploadedAt: data.upload_timestamp
+          uploadedAt: data.upload_timestamp,
+          hasFile: true
         });
       } else {
-        // Formato antigo (fallback)
+        // Formato antigo - arquivo não disponível no storage
         setSelectedProof({
-          url: data.file || '',
+          url: null,
           fileName: data.proof_file_name || 'Comprovativo',
           bank: data.bank || 'N/A',
-          uploadedAt: data.upload_timestamp
+          uploadedAt: data.upload_timestamp,
+          hasFile: false
         });
       }
       
@@ -214,18 +216,10 @@ export function PendingTransfersManager() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-      } else if (data.file) {
-        // Formato antigo - arquivo base64
-        const link = document.createElement('a');
-        link.href = data.file;
-        link.download = `comprovativo_${orderNumber}.${data.fileType?.split('/')[1] || 'jpg'}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
       } else {
         toast({
-          title: "Erro",
-          description: "Arquivo não encontrado no sistema",
+          title: "Arquivo não disponível",
+          description: "Este comprovativo foi enviado antes da implementação do sistema de arquivos",
           variant: "destructive"
         });
       }
@@ -325,16 +319,25 @@ export function PendingTransfersManager() {
                           Ver Comprovativo
                         </Button>
                         
-                        {transfer.payment_proof_data?.file && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => downloadProof(transfer.payment_proof_data, transfer.order_id)}
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Download
-                          </Button>
-                        )}
+                        {(() => {
+                          try {
+                            const data = typeof transfer.payment_proof_data === 'string' 
+                              ? JSON.parse(transfer.payment_proof_data) 
+                              : transfer.payment_proof_data;
+                            return data?.proof_file_path && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => downloadProof(transfer.payment_proof_data, transfer.order_id)}
+                              >
+                                <Download className="h-4 w-4 mr-1" />
+                                Download
+                              </Button>
+                            );
+                          } catch {
+                            return null;
+                          }
+                        })()}
                       </div>
                     </div>
 
@@ -378,27 +381,34 @@ export function PendingTransfersManager() {
           <div className="space-y-4">
             {selectedProof && (
               <>
-                {selectedProof.file && (
+                {selectedProof.hasFile && selectedProof.url ? (
                   <div className="border rounded p-2">
                     <img 
-                      src={selectedProof.file} 
+                      src={selectedProof.url} 
                       alt="Comprovativo de transferência"
                       className="max-w-full h-auto rounded"
+                      onError={(e) => {
+                        console.error('Erro ao carregar imagem:', e);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   </div>
-                )}
-                
-                {selectedProof.description && (
-                  <div>
-                    <label className="text-sm font-medium">Descrição:</label>
-                    <p className="text-sm text-muted-foreground mt-1">{selectedProof.description}</p>
+                ) : (
+                  <div className="border rounded p-4 text-center text-muted-foreground">
+                    <FileText className="h-8 w-8 mx-auto mb-2" />
+                    <p>Arquivo não disponível para visualização</p>
+                    <p className="text-sm">Este comprovativo foi enviado antes da implementação do sistema de arquivos</p>
                   </div>
                 )}
                 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <label className="font-medium">Tipo de arquivo:</label>
-                    <p className="text-muted-foreground">{selectedProof.fileType || 'N/A'}</p>
+                    <label className="font-medium">Nome do arquivo:</label>
+                    <p className="text-muted-foreground">{selectedProof.fileName || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="font-medium">Banco:</label>
+                    <p className="text-muted-foreground">{selectedProof.bank || 'N/A'}</p>
                   </div>
                   <div>
                     <label className="font-medium">Data de upload:</label>
@@ -409,6 +419,12 @@ export function PendingTransfersManager() {
                           locale: ptBR 
                         }) : 'N/A'
                       }
+                    </p>
+                  </div>
+                  <div>
+                    <label className="font-medium">Status do arquivo:</label>
+                    <p className="text-muted-foreground">
+                      {selectedProof.hasFile ? 'Disponível no storage' : 'Não disponível'}
                     </p>
                   </div>
                 </div>
