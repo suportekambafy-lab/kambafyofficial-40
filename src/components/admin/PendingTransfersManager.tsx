@@ -83,7 +83,7 @@ export function PendingTransfersManager() {
             name
           )
         `)
-        .in('status', ['pending', 'pending_verification'])
+        .in('status', ['pending'])
         .in('payment_method', ['transfer', 'bank_transfer', 'transferencia'])
         .not('payment_proof_data', 'is', null)
         .order('created_at', { ascending: false });

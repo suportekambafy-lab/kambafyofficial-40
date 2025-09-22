@@ -225,7 +225,7 @@ const ThankYou = () => {
 
   // Verificar o status do pedido periodicamente para pagamentos pendentes
   useEffect(() => {
-    if (['pending', 'pending_verification'].includes(orderStatus) && ['multibanco', 'apple_pay'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay'].includes(orderDetails.paymentMethod)) {
       console.log('🔄 Iniciando verificação periódica do status do pedido...');
       
       // Verificar imediatamente
@@ -300,7 +300,7 @@ const ThankYou = () => {
 
   const handleAccessProduct = () => {
     // Usar o status atual em vez do status inicial
-    if (['pending', 'pending_verification'].includes(orderStatus) && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
       const methodName = orderDetails.paymentMethod === 'multibanco' ? 'Multibanco' : 
                         orderDetails.paymentMethod === 'apple_pay' ? 'Apple Pay' : 'Transferência Bancária';
       alert(`O acesso ao produto será liberado após a confirmação do pagamento por ${methodName}.`);
@@ -317,7 +317,7 @@ const ThankYou = () => {
   };
 
   const getStatusBadge = () => {
-    if (['pending', 'pending_verification'].includes(orderStatus) && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
       return (
         <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
           <Clock className="w-3 h-3 mr-1" />
@@ -334,7 +334,7 @@ const ThankYou = () => {
   };
 
   const getSuccessMessage = () => {
-    if (['pending', 'pending_verification'].includes(orderStatus) && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
       return {
         title: "Pedido Criado com Sucesso!",
         subtitle: "Complete o pagamento para ter acesso ao produto"
@@ -362,15 +362,15 @@ const ThankYou = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className={`text-white py-4 ${['pending', 'pending_verification'].includes(orderStatus) ? 'bg-yellow-600' : 'bg-checkout-green'}`}>
+      <div className={`text-white py-4 ${orderStatus === 'pending' ? 'bg-yellow-600' : 'bg-checkout-green'}`}>
         <div className="max-w-4xl mx-auto px-4 flex items-center justify-center gap-3">
-          {['pending', 'pending_verification'].includes(orderStatus) ? (
+          {orderStatus === 'pending' ? (
             <Clock className="w-6 h-6" />
           ) : (
             <CheckCircle className="w-6 h-6" />
           )}
           <span className="text-lg font-semibold">
-            {['pending', 'pending_verification'].includes(orderStatus) ? 'PENDENTE' : 'COMPRA REALIZADA COM SUCESSO'}
+            {orderStatus === 'pending' ? 'PENDENTE' : 'COMPRA REALIZADA COM SUCESSO'}
           </span>
         </div>
       </div>
@@ -379,10 +379,10 @@ const ThankYou = () => {
         {/* Success Message */}
         <div className="text-center mb-8">
           <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${
-            ['pending', 'pending_verification'].includes(orderStatus) ? 'bg-yellow-100' : 'bg-green-100'
+            orderStatus === 'pending' ? 'bg-yellow-100' : 'bg-green-100'
           }`}>
-            {['pending', 'pending_verification'].includes(orderStatus) ? (
-              <Clock className={`w-12 h-12 ${['pending', 'pending_verification'].includes(orderStatus) ? 'text-yellow-600' : 'text-green-600'}`} />
+            {orderStatus === 'pending' ? (
+              <Clock className={`w-12 h-12 ${orderStatus === 'pending' ? 'text-yellow-600' : 'text-green-600'}`} />
             ) : (
               <CheckCircle className="w-12 h-12 text-green-600" />
             )}
@@ -396,7 +396,7 @@ const ThankYou = () => {
         </div>
 
         {/* Multibanco Payment Details */}
-        {orderDetails.paymentMethod === 'multibanco' && ['pending', 'pending_verification'].includes(orderStatus) && (
+        {orderDetails.paymentMethod === 'multibanco' && orderStatus === 'pending' && (
           <Card className="mb-8 border-yellow-200 bg-yellow-50">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
@@ -608,7 +608,7 @@ const ThankYou = () => {
                 Acesso ao Produto
               </h3>
               
-              {['pending', 'pending_verification'].includes(orderStatus) && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod) ? (
+              {orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod) ? (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-yellow-800 text-sm mb-2">
                     <strong>Pendente:</strong> O acesso ao produto será liberado após a confirmação do pagamento.
@@ -641,21 +641,21 @@ const ThankYou = () => {
               <Button 
                 onClick={handleAccessProduct}
                 className={`w-full md:w-auto ${
-                  ['pending', 'pending_verification'].includes(orderStatus) 
+                  orderStatus === 'pending' 
                     ? 'bg-gray-400 cursor-not-allowed' 
                     : 'bg-checkout-green hover:bg-checkout-green/90'
                 }`}
-                disabled={['pending', 'pending_verification'].includes(orderStatus) && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod)}
+                disabled={orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod)}
               >
                 {product?.type === 'Curso' && product?.member_areas ? (
                   <>
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    {['pending', 'pending_verification'].includes(orderStatus) ? 'Pendente' : 'Acessar Curso'}
+                    {orderStatus === 'pending' ? 'Pendente' : 'Acessar Curso'}
                   </>
                 ) : (
                   <>
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    {['pending', 'pending_verification'].includes(orderStatus) ? 'Pendente' : 'Acessar Produto'}
+                    {orderStatus === 'pending' ? 'Pendente' : 'Acessar Produto'}
                   </>
                 )}
               </Button>

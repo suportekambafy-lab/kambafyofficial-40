@@ -853,7 +853,7 @@ const Checkout = () => {
         amount: totalAmount.toString(),
         currency: userCountry.currency,
         payment_method: 'transfer',
-        status: 'pending_verification', // Status específico para transferência
+        status: 'pending', // Status padrão para transferência
         user_id: null,
         affiliate_code: hasAffiliate ? affiliateCode : null,
         affiliate_commission: affiliate_commission,
