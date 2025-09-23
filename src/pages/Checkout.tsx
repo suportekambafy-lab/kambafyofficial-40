@@ -23,7 +23,7 @@ import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
-import ExpressPaymentCountdown from "@/components/checkout/ExpressPaymentCountdown";
+import ExpressPaymentModal from "@/components/checkout/ExpressPaymentModal";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 
 // Importar componentes otimizados
@@ -71,8 +71,7 @@ const Checkout = () => {
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [showExpressCountdown, setShowExpressCountdown] = useState(false);
-  const [expressPaymentExpired, setExpressPaymentExpired] = useState(false);
+  const [showExpressModal, setShowExpressModal] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -1050,19 +1049,13 @@ const Checkout = () => {
 
   const handleExpressPaymentTimeout = () => {
     console.log('⏰ Express payment timeout - stopping processing');
-    setExpressPaymentExpired(true);
     setProcessing(false);
-    toast({
-      title: "Tempo esgotado",
-      description: "O tempo para confirmar o pagamento expirou. Inicie um novo pagamento.",
-      variant: "destructive"
-    });
+    // Modal já mostra mensagem de expirado automaticamente
   };
 
   const handleExpressPaymentRestart = () => {
     console.log('🔄 Restarting express payment');
-    setShowExpressCountdown(false);
-    setExpressPaymentExpired(false);
+    setShowExpressModal(false);
     setProcessing(false);
     
     toast({
@@ -1428,10 +1421,9 @@ ${JSON.stringify(appyPayData, null, 2)}
 
     console.log('✅ Processing local payment method:', selectedPayment);
     
-    // Para pagamento express, iniciar countdown
+    // Para pagamento express, abrir modal de countdown
     if (selectedPayment === 'express') {
-      setShowExpressCountdown(true);
-      setExpressPaymentExpired(false);
+      setShowExpressModal(true);
     }
     
     setProcessing(true);
@@ -1728,6 +1720,11 @@ ${JSON.stringify(appyPayData, null, 2)}
         upsellUrl.searchParams.append('customer_email', formData.email);
         upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
         window.location.href = upsellUrl.toString();
+      } else if (selectedPayment === 'express') {
+        console.log('🏠 Pagamento Express - aguardando confirmação no modal');
+        // Para pagamento express, não redirecionar - o modal já está aberto aguardando confirmação
+        // O redirecionamento só acontecerá quando o webhook confirmar o pagamento
+        setProcessing(false);
       } else {
         console.log('🏠 Redirecionando para página de agradecimento');
         // Disparar evento para Facebook Pixel
@@ -2246,18 +2243,8 @@ ${JSON.stringify(appyPayData, null, 2)}
                     
                     {selectedPayment === 'express' && (
                       <div className="mt-4 space-y-4">
-                        {/* Countdown quando pagamento está ativo */}
-                        {showExpressCountdown && !expressPaymentExpired && (
-                          <ExpressPaymentCountdown
-                            onTimeExpired={handleExpressPaymentTimeout}
-                            onRestart={handleExpressPaymentRestart}
-                            isActive={showExpressCountdown}
-                            totalSeconds={60}
-                          />
-                        )}
-                        
-                        {/* Instrução padrão quando countdown não está ativo */}
-                        {!showExpressCountdown && !processing && (
+                        {/* Instrução para pagamento express */}
+                        {!processing && (
                           <div className="text-left p-4 bg-blue-50 rounded-lg border border-blue-100">
                             <p className="text-sm font-medium text-gray-700 leading-relaxed">
                               <span className="font-semibold">ATENÇÃO:</span> Após clicar no botão <span className="font-semibold">Comprar Agora</span>
@@ -2266,16 +2253,6 @@ ${JSON.stringify(appyPayData, null, 2)}
                               → abra o aplicativo Multicaixa Express, e encontre o botão → <span className="text-red-500 font-semibold">Operação por Autorizar</span> clica no botão, selecione o pagamento pendente e <span className="font-semibold">finalize o pagamento.</span>
                             </p>
                           </div>
-                        )}
-                        
-                        {/* Mensagem de erro se expirado */}
-                        {expressPaymentExpired && (
-                          <ExpressPaymentCountdown
-                            onTimeExpired={handleExpressPaymentTimeout}
-                            onRestart={handleExpressPaymentRestart}
-                            isActive={false}
-                            totalSeconds={60}
-                          />
                         )}
                         
                         <div className="space-y-2">
@@ -2344,8 +2321,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                     !(selectedPayment === 'express' ? expressPhone : formData.phone) || 
                     !selectedPayment || 
                     processing || 
-                    (selectedPayment === 'kambapay' && !!kambaPayEmailError) ||
-                    (selectedPayment === 'express' && expressPaymentExpired)
+                    (selectedPayment === 'kambapay' && !!kambaPayEmailError)
                   }
                   className={`w-full h-12 font-semibold relative transition-all ${
                     (!formData.fullName || 
@@ -2353,8 +2329,7 @@ ${JSON.stringify(appyPayData, null, 2)}
                      !(selectedPayment === 'express' ? expressPhone : formData.phone) || 
                      !selectedPayment || 
                      processing || 
-                     (selectedPayment === 'kambapay' && !!kambaPayEmailError) ||
-                     (selectedPayment === 'express' && expressPaymentExpired)
+                     (selectedPayment === 'kambapay' && !!kambaPayEmailError)
                     )
                       ? 'bg-green-600/50 cursor-not-allowed text-white/70'
                       : 'bg-green-600 hover:bg-green-700 text-white'
@@ -2409,6 +2384,17 @@ ${JSON.stringify(appyPayData, null, 2)}
           </div>
         </div>
       </div>
+      
+      {/* Modal de countdown para pagamento express */}
+      <ExpressPaymentModal
+        isOpen={showExpressModal}
+        onClose={() => setShowExpressModal(false)}
+        onTimeExpired={handleExpressPaymentTimeout}
+        onRestart={handleExpressPaymentRestart}
+        totalSeconds={60}
+        orderTotal={getDisplayPrice(finalProductPrice + totalOrderBumpPrice, true)}
+        productName={product?.name || "Produto Digital"}
+      />
     </ThemeProvider>
   );
 };
