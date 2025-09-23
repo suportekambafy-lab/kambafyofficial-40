@@ -109,6 +109,7 @@ export default function AdminLogin() {
               context="login"
               onVerificationSuccess={handle2FASuccess}
               onBack={handle2FACancel}
+              skipInitialSend={true}
             />
           </CardContent>
         </Card>
