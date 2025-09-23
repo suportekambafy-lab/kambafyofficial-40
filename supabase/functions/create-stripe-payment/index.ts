@@ -19,7 +19,8 @@ serve(async (req) => {
       customerEmail, 
       customerName,
       productId,
-      orderId 
+      orderId,
+      hasCustomPrices = false
     } = await req.json();
 
     console.log('Creating Stripe payment for:', { 
@@ -100,6 +101,7 @@ serve(async (req) => {
         customer_email: customerEmail,
         original_amount: amount.toString(), // Valor original antes da conversão para centavos
         original_currency: currency.toUpperCase(), // Moeda original
+        has_custom_prices: hasCustomPrices.toString() // Indicar se usa preço personalizado
       },
       payment_intent_data: {
         metadata: {
@@ -108,6 +110,7 @@ serve(async (req) => {
           customer_email: customerEmail,
           original_amount: amount.toString(), // Valor original antes da conversão para centavos
           original_currency: currency.toUpperCase(), // Moeda original
+          has_custom_prices: hasCustomPrices.toString() // Indicar se usa preço personalizado
         }
       }
     });

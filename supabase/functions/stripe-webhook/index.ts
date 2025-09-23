@@ -190,24 +190,42 @@ serve(async (req) => {
       if (orderId) {
         console.log('🔄 Updating order status for order_id:', orderId);
         
-        // Atualizar status do pedido para "completed" e garantir seller_commission
-        const originalAmount = parseFloat(paymentIntent.metadata.original_amount || (paymentIntent.amount / 100).toString());
-        const originalCurrency = paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase();
+        // Buscar dados do produto para calcular comissão correta
+        const { data: productData, error: productError } = await supabase
+          .from('products')
+          .select('price')
+          .eq('id', paymentIntent.metadata.product_id)
+          .single();
+
+        if (productError) {
+          console.error('❌ Error fetching product data:', productError);
+          throw productError;
+        }
+
+        const hasCustomPrices = paymentIntent.metadata.has_custom_prices === 'true';
+        const paidAmount = paymentIntent.amount / 100;
+        const paidCurrency = paymentIntent.currency.toUpperCase();
         
-        // Converter para KZ se a moeda original não for KZ
-        let sellerCommissionInKZ = originalAmount;
-        if (originalCurrency !== 'KZ') {
-          // Taxas de conversão para KZ (mesmas do sistema)
+        let sellerCommissionInKZ: number;
+        
+        if (hasCustomPrices) {
+          // PREÇO PERSONALIZADO: Vendedor recebe o equivalente em KZ do que foi pago
           const exchangeRates: Record<string, number> = {
             'EUR': 1053, // 1 EUR = ~1053 KZ
             'MZN': 14.3, // 1 MZN = ~14.3 KZ
-            'USD': 825   // 1 USD = ~825 KZ (aproximado)
+            'USD': 825   // 1 USD = ~825 KZ
           };
           
-          const rate = exchangeRates[originalCurrency] || 1;
-          sellerCommissionInKZ = Math.round(originalAmount * rate);
+          const rate = exchangeRates[paidCurrency] || 1;
+          sellerCommissionInKZ = Math.round(paidAmount * rate);
           
-          console.log(`💱 Converting seller commission: ${originalAmount} ${originalCurrency} = ${sellerCommissionInKZ} KZ (rate: ${rate})`);
+          console.log(`💰 PREÇO PERSONALIZADO: Cliente pagou ${paidAmount} ${paidCurrency}, vendedor recebe ${sellerCommissionInKZ} KZ (taxa: ${rate})`);
+        } else {
+          // PREÇO CONVERTIDO: Vendedor recebe o valor original em KZ
+          const originalPriceKZ = parseFloat(productData.price.replace(/[^\d,]/g, '').replace(',', '.'));
+          sellerCommissionInKZ = originalPriceKZ;
+          
+          console.log(`💰 PREÇO CONVERTIDO: Cliente pagou ${paidAmount} ${paidCurrency}, vendedor recebe ${sellerCommissionInKZ} KZ (preço original)`);
         }
         
         const { data: orderData, error: updateError } = await supabase

@@ -78,6 +78,8 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
         userCountry: userCountry?.code
       });
 
+      const hasCustomPrices = !!(product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]);
+
       const { data, error } = await supabase.functions.invoke('create-stripe-payment', {
         body: {
           amount: finalAmount,
@@ -86,7 +88,8 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
           customerEmail: customerInfo.email,
           customerName: customerInfo.fullName,
           productId: product.id,
-          orderId
+          orderId,
+          hasCustomPrices // Informar se está usando preço personalizado
         }
       });
 
