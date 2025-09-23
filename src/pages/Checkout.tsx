@@ -1099,6 +1099,14 @@ const Checkout = () => {
       return;
     }
 
+    // Para pagamento express, não criar pedido aqui - apenas mostrar modal
+    if (selectedPayment === 'express') {
+      console.log('🔄 Pagamento Express - apenas abrir modal, não criar pedido');
+      setShowExpressModal(true);
+      setProcessing(false);
+      return;
+    }
+
     // Para pagamento por referência, enviar para AppyPay
     if (selectedPayment === 'reference') {
       console.log('🏦 Pagamento por referência selecionado - enviando para AppyPay');
@@ -1721,9 +1729,9 @@ ${JSON.stringify(appyPayData, null, 2)}
         upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
         window.location.href = upsellUrl.toString();
       } else if (selectedPayment === 'express') {
-        console.log('🏠 Pagamento Express - aguardando confirmação no modal');
-        // Para pagamento express, não redirecionar - o modal já está aberto aguardando confirmação
-        // O redirecionamento só acontecerá quando o webhook confirmar o pagamento
+        console.log('🏠 Pagamento Express - NÃO criar pedido aqui, aguardar webhook');
+        // Para pagamento express, NÃO processar o pedido aqui
+        // O pedido só será criado quando o webhook confirmar o pagamento
         setProcessing(false);
       } else {
         console.log('🏠 Redirecionando para página de agradecimento');

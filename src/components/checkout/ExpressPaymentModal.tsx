@@ -74,7 +74,7 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
     setTimeLeft(totalSeconds);
   };
 
-  const circumference = 2 * Math.PI * 45; // raio de 45
+  const circumference = 2 * Math.PI * 90; // raio de 90 (maior)
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
@@ -82,18 +82,7 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Resumo do pedido</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-700 font-medium">Total</span>
-                <span className="text-green-600 font-bold text-lg">{orderTotal}</span>
-              </div>
-            </div>
-
+          <div className="space-y-6 p-6 text-center">
             <Alert className="border-red-300 bg-red-50">
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
@@ -106,22 +95,13 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
               </AlertDescription>
             </Alert>
 
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleRestart}
-                className="flex-1"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Repetir Pagamento
-              </Button>
-              <Button 
-                onClick={onClose}
-                variant="outline"
-                className="flex-1"
-              >
-                Cancelar
-              </Button>
-            </div>
+            <Button 
+              onClick={handleRestart}
+              className="w-full"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Repetir Pagamento
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -130,83 +110,64 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">Resumo do pedido</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6">
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700 font-medium">Total</span>
-              <span className="text-green-600 font-bold text-lg">{orderTotal}</span>
+      <DialogContent className="sm:max-w-lg">        
+        <div className="space-y-8 p-6">
+          <div className="text-center space-y-6">
+            <p className="text-gray-900 font-semibold text-xl">
+              Confirme o pagamento no seu telemóvel
+            </p>
+            
+            {/* Círculo de countdown - maior */}
+            <div className="relative inline-flex items-center justify-center">
+              <svg 
+                width="200" 
+                height="200" 
+                className="transform -rotate-90"
+              >
+                {/* Círculo de fundo */}
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="90"
+                  stroke="#e5e7eb"
+                  strokeWidth="12"
+                  fill="transparent"
+                />
+                {/* Círculo de progresso */}
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="90"
+                  stroke={getProgressColor()}
+                  strokeWidth="12"
+                  fill="transparent"
+                  strokeLinecap="round"
+                  strokeDasharray={strokeDasharray}
+                  strokeDashoffset={strokeDashoffset}
+                  style={{
+                    transition: 'stroke-dashoffset 1s ease-in-out, stroke 1s ease-in-out'
+                  }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-sm text-gray-500 mb-2">Tempo Restante</span>
+                <span className="text-4xl font-bold text-gray-900">{timeLeft}</span>
+                <span className="text-sm text-gray-500 mt-1">segundos</span>
+              </div>
             </div>
-          </div>
-
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-            <div className="text-center space-y-4">
-              <p className="text-gray-900 font-medium text-lg">
-                Confirme o pagamento no seu telemóvel.
+            
+            <div className="space-y-3 text-base text-gray-700 max-w-md mx-auto">
+              <p className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold mt-0.5">→</span>
+                Abra o aplicativo <strong>Multicaixa Express</strong> e procure por{' '}
+                <span className="text-red-600 font-bold">"Operação por Autorizar"</span>
               </p>
-              
-              {/* Círculo de countdown */}
-              <div className="relative inline-flex items-center justify-center">
-                <svg 
-                  width="120" 
-                  height="120" 
-                  className="transform -rotate-90"
-                >
-                  {/* Círculo de fundo */}
-                  <circle
-                    cx="60"
-                    cy="60"
-                    r="45"
-                    stroke="#e5e7eb"
-                    strokeWidth="8"
-                    fill="transparent"
-                  />
-                  {/* Círculo de progresso */}
-                  <circle
-                    cx="60"
-                    cy="60"
-                    r="45"
-                    stroke={getProgressColor()}
-                    strokeWidth="8"
-                    fill="transparent"
-                    strokeLinecap="round"
-                    strokeDasharray={strokeDasharray}
-                    strokeDashoffset={strokeDashoffset}
-                    style={{
-                      transition: 'stroke-dashoffset 1s ease-in-out, stroke 1s ease-in-out'
-                    }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-xs text-gray-500 mb-1">Tempo Restante</span>
-                  <span className="text-2xl font-bold text-gray-900">{timeLeft}</span>
-                  <span className="text-xs text-gray-500">segundos</span>
-                </div>
-              </div>
-              
-              <div className="space-y-2 text-sm text-gray-600">
-                <p>
-                  → Abra o aplicativo <strong>Multicaixa Express</strong> e procure por{' '}
-                  <span className="text-red-600 font-bold">"Operação por Autorizar"</span>
-                </p>
-                <p>
-                  → Selecione o pagamento pendente e <strong>confirme a transação</strong>
-                </p>
-              </div>
+              <p className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold mt-0.5">→</span>
+                Selecione o pagamento pendente e <strong>confirme a transação</strong>
+              </p>
             </div>
           </div>
-
-          <Button 
-            onClick={onClose}
-            variant="outline"
-            className="w-full"
-          >
-            Cancelar
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
