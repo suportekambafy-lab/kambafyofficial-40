@@ -177,19 +177,23 @@ export const useGeoLocation = () => {
       }
     }
     
-    return Math.round(priceInKZ * country.exchangeRate * 100) / 100;
+    // API retorna taxa: 1 KZ = X EUR, então multiplicamos para converter
+    const convertedValue = priceInKZ * country.exchangeRate;
+    return Math.round(convertedValue * 100) / 100;
   };
 
   const formatPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): string => {
     const country = targetCountry || userCountry;
     
-    console.log('🏷️ FORMAT PRICE DEBUG:', {
-      priceInKZ,
-      countryCode: country.code,
-      countryName: country.name,
-      customPrices,
-      hasCustomPriceForCountry: !!(customPrices && customPrices[country.code])
-    });
+      console.log('🏷️ FORMAT PRICE DEBUG - DETAILED:', {
+        priceInKZ,
+        countryCode: country?.code,
+        countryName: country?.name,
+        countryCurrency: country?.currency,
+        exchangeRate: country?.exchangeRate,
+        customPrices,
+        hasCustomPriceForCountry: !!(customPrices && customPrices[country?.code])
+      });
     
     // Verificar se há preço customizado para o país
     if (customPrices && customPrices[country.code]) {
@@ -219,7 +223,14 @@ export const useGeoLocation = () => {
     // If no custom price, use automatic conversion
     const convertedPrice = convertPrice(priceInKZ, country);
     
-    switch (country.currency) {
+    console.log('🔢 CONVERSION RESULT:', {
+      originalPriceKZ: priceInKZ,
+      convertedPrice,
+      exchangeRate: country?.exchangeRate,
+      finalCurrency: country?.currency
+    });
+    
+    switch (country?.currency) {
       case 'EUR':
         return `€${convertedPrice.toFixed(2)}`;
       case 'MZN':
