@@ -453,11 +453,11 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
           {/* 3. Compra Segura (será adicionado no checkout) */}
           <div className="text-white py-3 px-4 text-center" style={{ backgroundColor: '#1b2f1a' }}>
             <span className="font-semibold flex items-center justify-center gap-2">
-              <div className="relative inline-flex items-center justify-center w-6 h-6 rounded-lg overflow-hidden">
+              <div className="relative inline-flex items-center justify-center w-6 h-6 bg-white rounded-lg overflow-hidden">
                 <img 
-                  src="/src/assets/kambafy-secure-icon.png" 
+                  src="/kambafy-secure-icon.png" 
                   alt="Kambafy Secure" 
-                  className="w-full h-full object-contain filter brightness-0 invert"
+                  className="w-5 h-5 object-contain"
                 />
               </div>
               COMPRA 100% SEGURA

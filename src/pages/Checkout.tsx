@@ -1912,11 +1912,11 @@ ${JSON.stringify(appyPayData, null, 2)}
         <div className="bg-checkout-secure text-white py-3">
           <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="relative inline-flex items-center justify-center w-8 h-8 rounded-lg overflow-hidden">
+              <div className="relative inline-flex items-center justify-center w-8 h-8 bg-white rounded-lg overflow-hidden">
                 <img 
-                  src="/src/assets/kambafy-secure-icon.png" 
+                  src="/kambafy-secure-icon.png" 
                   alt="Kambafy Secure" 
-                  className="w-full h-full object-contain"
+                  className="w-6 h-6 object-contain"
                 />
               </div>
               <span className="font-bold text-lg">COMPRA 100% SEGURA</span>
