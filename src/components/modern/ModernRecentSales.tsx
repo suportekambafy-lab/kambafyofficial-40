@@ -310,31 +310,21 @@ export function ModernRecentSales() {
         ) : (
           <div className="space-y-3">
             {recentSales.map((sale, index) => (
-              <div key={sale.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+              <div key={sale.id} className="flex items-center justify-between py-3">
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {sale.product_name || 'Produto'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
                     #{(index + 101).toString().padStart(3, '0')}
-                  </div>
-                  <div className="flex flex-col">
-                    <p className="text-sm font-medium text-foreground/90">
-                      {sale.order_id?.substring(0, 12)}...
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-lg">{sale.country_flag}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {sale.country_name}
-                      </span>
-                    </div>
-                  </div>
+                  </p>
                 </div>
                 
-                <div className="text-right">
+                <div className="flex items-center gap-3">
                   <p className="text-sm font-semibold text-foreground">
                     {formatAmount(sale).main}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(sale.created_at), { addSuffix: true, locale: ptBR })}
-                  </p>
+                  <span className="text-2xl">{sale.country_flag}</span>
                 </div>
               </div>
             ))}
