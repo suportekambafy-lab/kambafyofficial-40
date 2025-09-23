@@ -43,15 +43,9 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
         if (prev <= 1) {
           // Mostrar toast e fechar modal quando tempo esgotar
           toast({
-            title: "Tempo esgotado!",
-            message: "O tempo para confirmar o pagamento expirou. Por favor, reinicie o processo para gerar uma nova solicitação de pagamento.",
+            message: "O tempo para concluir o pagamento esgotou. Por favor, retaça o pagamento com rapidez.",
             variant: "error",
-            duration: 8000,
-            actions: {
-              label: "Repetir Pagamento",
-              onClick: onRestart,
-              variant: "default"
-            }
+            duration: 8000
           });
           onTimeExpired();
           onClose();
