@@ -278,35 +278,25 @@ export function ModernRecentSales() {
       }
     }
     
-    // SEMPRE converter para KZ se não for KZ (para vendedores angolanos)
-    if (currency.toUpperCase() !== 'KZ') {
-      const originalAmount = amount;
-      amount = convertToKZ(amount, currency);
-      currency = 'KZ';
-      console.log('🔄 Convertido para KZ:', { 
-        originalAmount, 
-        originalCurrency: sale.currency,
-        convertedAmount: amount,
-        newCurrency: currency 
-      });
-    }
-    
-    // Aplicar desconto de 20% para vendas recuperadas
+    // Aplicar desconto de 20% para vendas recuperadas ANTES da formatação
     if (sale.sale_type === 'recovered') {
       amount = amount * 0.8;
       console.log('📉 Aplicado desconto de recuperação (20%):', { amount });
     }
     
+    // A função formatPriceForSeller já faz a conversão automaticamente
+    const formattedPrice = formatPriceForSeller(amount, currency);
+    
     console.log('💰 Valor final formatado:', {
-      amount,
-      currency,
-      formatted: formatPriceForSeller(amount, currency)
+      originalAmount: amount,
+      originalCurrency: currency,
+      formatted: formattedPrice
     });
     
-    const currencyInfo = getCurrencyInfo(currency);
+    const currencyInfo = getCurrencyInfo('KZ'); // Sempre mostrar flag de Angola
     
     return {
-      main: formatPriceForSeller(amount, currency),
+      main: formattedPrice,
       flag: currencyInfo.flag,
       countryName: currencyInfo.name,
       showCountry: false // Sempre mostrar como KZ para vendedores
