@@ -12,6 +12,7 @@ import { getCountryByPaymentMethod } from "@/utils/paymentMethods";
 
 interface RecentSale {
   id: string;
+  order_id: string;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
@@ -24,6 +25,8 @@ interface RecentSale {
   earning_amount?: number;
   affiliate_commission?: number;
   seller_commission?: number;
+  country_flag?: string;
+  country_name?: string;
 }
 
 export function ModernRecentSales() {
@@ -216,21 +219,27 @@ export function ModernRecentSales() {
       allOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       const recentOrders = allOrders.slice(0, 5);
 
-      const formattedSales: RecentSale[] = recentOrders.map(order => ({
-        id: order.id,
-        customer_name: order.customer_name,
-        customer_email: order.customer_email,
-        customer_phone: order.customer_phone,
-        payment_method: order.payment_method,
-        amount: order.amount,
-        currency: order.currency || 'KZ',
-        created_at: order.created_at,
-        product_name: (order.products as any)?.name,
-        sale_type: order.sale_type,
-        earning_amount: order.earning_amount,
-        affiliate_commission: order.affiliate_commission,
-        seller_commission: order.seller_commission
-      }));
+      const formattedSales: RecentSale[] = recentOrders.map(order => {
+        const countryInfo = getCountryByPaymentMethod(order.payment_method || '');
+        return {
+          id: order.id,
+          order_id: order.order_id,
+          customer_name: order.customer_name,
+          customer_email: order.customer_email,
+          customer_phone: order.customer_phone,
+          payment_method: order.payment_method,
+          amount: order.amount,
+          currency: order.currency || 'KZ',
+          created_at: order.created_at,
+          product_name: (order.products as any)?.name,
+          sale_type: order.sale_type,
+          earning_amount: order.earning_amount,
+          affiliate_commission: order.affiliate_commission,
+          seller_commission: order.seller_commission,
+          country_flag: countryInfo.flag,
+          country_name: countryInfo.name
+        };
+      });
 
       setRecentSales(formattedSales);
     } catch (error) {
@@ -276,10 +285,6 @@ export function ModernRecentSales() {
     };
   };
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
   return (
     <Card className="rounded-2xl shadow-sm">
       <CardHeader>
@@ -303,75 +308,32 @@ export function ModernRecentSales() {
             <p>Nenhuma venda recente</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {recentSales.map((sale) => (
-              <div key={sale.id} className="flex items-center space-x-4">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                  sale.sale_type === 'affiliate' 
-                    ? 'bg-purple-100 dark:bg-purple-900/20' 
-                    : sale.sale_type === 'recovered'
-                    ? 'bg-green-100 dark:bg-green-900/20'
-                    : 'bg-primary/10'
-                }`}>
-                  <span className={`font-medium text-sm ${
-                    sale.sale_type === 'affiliate'
-                      ? 'text-purple-600 dark:text-purple-400'
-                      : sale.sale_type === 'recovered'
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-primary'
-                  }`}>
-                    {getInitials(sale.customer_name)}
-                  </span>
-                </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-foreground">
-                      <span>{sale.customer_name}</span>
-                      {sale.customer_email && (
-                        <span className="font-normal text-muted-foreground"> • {sale.customer_email}</span>
-                      )}
-                      {sale.customer_phone && (
-                        <span className="font-normal text-muted-foreground"> • {sale.customer_phone}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        {(() => {
-                          const countryInfo = getCountryByPaymentMethod(sale.payment_method || '');
-                          return (
-                            <>
-                              <span>{countryInfo.flag}</span>
-                              <span>{countryInfo.name}</span>
-                            </>
-                          );
-                        })()}
-                      </div>
-                      {sale.sale_type === 'affiliate' && (
-                        <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-400">
-                          Afiliado
-                        </Badge>
-                      )}
-                      {sale.sale_type === 'recovered' && (
-                        <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400">
-                          Recuperado (20% taxa)
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(sale.created_at), { 
-                        addSuffix: true, 
-                        locale: ptBR 
-                      })}
-                    </p>
+          <div className="space-y-3">
+            {recentSales.map((sale, index) => (
+              <div key={sale.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                    #{(index + 101).toString().padStart(3, '0')}
                   </div>
+                  <div className="flex flex-col">
+                    <p className="text-sm font-medium text-foreground/90">
+                      {sale.order_id?.substring(0, 12)}...
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-lg">{sale.country_flag}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {sale.country_name}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="text-right">
-                  <p className={`text-sm font-medium ${
-                    sale.sale_type === 'affiliate' 
-                      ? 'text-purple-600 dark:text-purple-400' 
-                      : sale.sale_type === 'recovered'
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-foreground'
-                  }`}>
+                  <p className="text-sm font-semibold text-foreground">
                     {formatAmount(sale).main}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(sale.created_at), { addSuffix: true, locale: ptBR })}
                   </p>
                 </div>
               </div>
