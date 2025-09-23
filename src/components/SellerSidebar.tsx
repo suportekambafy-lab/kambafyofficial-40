@@ -161,16 +161,11 @@ function MobileBottomNav() {
 const KambafyLogo = () => {
   return (
     <div className="font-normal flex space-x-2 items-center text-sm py-1 relative z-20">
-      <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-        <span className="text-checkout-green font-bold text-lg">K</span>
-      </div>
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="font-semibold text-xl text-white whitespace-pre"
-      >
-        Kambafy
-      </motion.span>
+      <img 
+        src="/kambafy-logo-new.svg" 
+        alt="Kambafy" 
+        className="h-8 w-auto brightness-0 invert"
+      />
     </div>
   );
 };
