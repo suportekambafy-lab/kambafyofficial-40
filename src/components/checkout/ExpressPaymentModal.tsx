@@ -3,6 +3,7 @@ import { Timer, AlertTriangle, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useCustomToast } from '@/hooks/useCustomToast';
 
 interface ExpressPaymentModalProps {
   isOpen: boolean;
@@ -24,25 +25,36 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
   productName
 }) => {
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
-  const [isExpired, setIsExpired] = useState(false);
+  const { toast } = useCustomToast();
 
   // Reiniciar contador quando modal abre
   useEffect(() => {
     if (isOpen) {
       setTimeLeft(totalSeconds);
-      setIsExpired(false);
     }
   }, [isOpen, totalSeconds]);
 
   // Contador principal
   useEffect(() => {
-    if (!isOpen || isExpired) return;
+    if (!isOpen) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          setIsExpired(true);
+          // Mostrar toast e fechar modal quando tempo esgotar
+          toast({
+            title: "Tempo esgotado!",
+            message: "O tempo para confirmar o pagamento expirou. Por favor, reinicie o processo para gerar uma nova solicitação de pagamento.",
+            variant: "error",
+            duration: 8000,
+            actions: {
+              label: "Repetir Pagamento",
+              onClick: onRestart,
+              variant: "default"
+            }
+          });
           onTimeExpired();
+          onClose();
           return 0;
         }
         return prev - 1;
@@ -50,7 +62,7 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen, isExpired, onTimeExpired]);
+  }, [isOpen, onTimeExpired, onClose, onRestart, toast]);
 
   // Calcular progresso (0 a 100, onde 100 é tempo esgotado)
   const progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
@@ -68,45 +80,9 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
     }
   };
 
-  const handleRestart = () => {
-    onRestart();
-    setIsExpired(false);
-    setTimeLeft(totalSeconds);
-  };
-
   const circumference = 2 * Math.PI * 90; // raio de 90 (maior)
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-  if (isExpired) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
-          <div className="space-y-6 p-6 text-center">
-            <Alert className="border-red-300 bg-red-50">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                <div className="space-y-3">
-                  <p className="font-semibold">Tempo esgotado!</p>
-                  <p className="text-sm">
-                    O tempo para confirmar o pagamento expirou. Por favor, reinicie o processo para gerar uma nova solicitação de pagamento.
-                  </p>
-                </div>
-              </AlertDescription>
-            </Alert>
-
-            <Button 
-              onClick={handleRestart}
-              className="w-full"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Repetir Pagamento
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

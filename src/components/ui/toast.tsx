@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Toaster as SonnerToaster,
@@ -81,6 +81,41 @@ const toastAnimation = {
   exit: { opacity: 0, y: 50, scale: 0.95 },
 };
 
+// Progress bar component for error toasts
+const ToastProgressBar = ({ duration, variant }: { duration: number; variant: Variant }) => {
+  const [progress, setProgress] = useState(100);
+
+  useEffect(() => {
+    if (variant !== 'error' || duration <= 0) return;
+
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, duration - elapsed);
+      const newProgress = (remaining / duration) * 100;
+      
+      setProgress(newProgress);
+      
+      if (remaining <= 0) {
+        clearInterval(interval);
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [duration, variant]);
+
+  if (variant !== 'error') return null;
+
+  return (
+    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 rounded-b-xl overflow-hidden">
+      <div 
+        className="h-full bg-destructive transition-all duration-75 ease-linear"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
+};
+
 const Toaster = forwardRef<ToasterRef, { defaultPosition?: Position }>(
   ({ defaultPosition = 'bottom-right' }, ref) => {
     const toastReference = useRef<ReturnType<typeof sonnerToast.custom> | null>(null);
@@ -107,7 +142,7 @@ const Toaster = forwardRef<ToasterRef, { defaultPosition?: Position }>(
               exit="exit"
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className={cn(
-                'flex items-center justify-between w-full max-w-xs p-3 rounded-xl border shadow-md',
+                'relative flex items-center justify-between w-full max-w-xs p-3 rounded-xl border shadow-md overflow-hidden',
                 variantStyles[variant]
               )}
             >
@@ -164,6 +199,8 @@ const Toaster = forwardRef<ToasterRef, { defaultPosition?: Position }>(
                   <X className="h-3 w-3 text-muted-foreground" />
                 </button>
               </div>
+              
+              <ToastProgressBar duration={duration} variant={variant} />
             </motion.div>
           ),
           { duration, position }
