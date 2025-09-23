@@ -206,20 +206,25 @@ serve(async (req) => {
         const paidAmount = paymentIntent.amount / 100;
         const paidCurrency = paymentIntent.currency.toUpperCase();
         
+        // Taxa de conversão para KZ
+        const exchangeRates: Record<string, number> = {
+          'EUR': 1053, // 1 EUR = ~1053 KZ
+          'MZN': 14.3, // 1 MZN = ~14.3 KZ
+          'USD': 825   // 1 USD = ~825 KZ
+        };
+        
         let sellerCommissionInKZ: number;
+        let amountInKZ: number;
+        
+        // SEMPRE converter para KZ para vendedores angolanos
+        const rate = exchangeRates[paidCurrency] || 1;
+        amountInKZ = Math.round(paidAmount * rate);
         
         if (hasCustomPrices) {
           // PREÇO PERSONALIZADO: Vendedor recebe o equivalente em KZ do que foi pago
-          const exchangeRates: Record<string, number> = {
-            'EUR': 1053, // 1 EUR = ~1053 KZ
-            'MZN': 14.3, // 1 MZN = ~14.3 KZ
-            'USD': 825   // 1 USD = ~825 KZ
-          };
+          sellerCommissionInKZ = amountInKZ;
           
-          const rate = exchangeRates[paidCurrency] || 1;
-          sellerCommissionInKZ = Math.round(paidAmount * rate);
-          
-          console.log(`💰 PREÇO PERSONALIZADO: Cliente pagou ${paidAmount} ${paidCurrency}, vendedor recebe ${sellerCommissionInKZ} KZ (taxa: ${rate})`);
+          console.log(`💰 PREÇO PERSONALIZADO: Cliente pagou ${paidAmount} ${paidCurrency}, convertido para ${amountInKZ} KZ`);
         } else {
           // PREÇO CONVERTIDO: Vendedor recebe o valor original em KZ
           const originalPriceKZ = parseFloat(productData.price.replace(/[^\d,]/g, '').replace(',', '.'));
@@ -228,16 +233,17 @@ serve(async (req) => {
           console.log(`💰 PREÇO CONVERTIDO: Cliente pagou ${paidAmount} ${paidCurrency}, vendedor recebe ${sellerCommissionInKZ} KZ (preço original)`);
         }
         
+        console.log(`💱 Conversão: ${paidAmount} ${paidCurrency} → ${amountInKZ} KZ (taxa: ${rate})`);
+        
         const { data: orderData, error: updateError } = await supabase
           .from('orders')
           .update({ 
             status: 'completed',
             updated_at: new Date().toISOString(),
-            // CORREÇÃO: Usar valor convertido para KZ para o vendedor
+            // SEMPRE salvar em KZ para vendedores angolanos
             seller_commission: sellerCommissionInKZ,
-            // Preservar valores originais para referência
-            amount: originalAmount.toString(),
-            currency: originalCurrency
+            amount: amountInKZ.toString(), // Valor convertido para KZ
+            currency: 'KZ' // Sempre KZ no banco
           })
           .eq('order_id', orderId)
           .select('*')
