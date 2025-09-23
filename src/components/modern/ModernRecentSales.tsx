@@ -263,30 +263,38 @@ export function ModernRecentSales() {
     
     if (sale.sale_type === 'affiliate') {
       amount = sale.affiliate_commission || 0;
-      // Para afiliados, sempre converter para KZ se necessário
-      if (currency !== 'KZ') {
-        amount = convertToKZ(amount, currency);
-        currency = 'KZ';
-      }
+      console.log('💡 Processando comissão de afiliado:', { amount, currency });
     } else {
       // Para vendas próprias, verificar se há seller_commission
       if (sale.seller_commission && sale.seller_commission > 0) {
         // seller_commission já deveria estar em KZ
         amount = sale.seller_commission;
         currency = 'KZ';
+        console.log('💡 Usando seller_commission (já em KZ):', { amount });
       } else {
-        // Venda antiga - usar valor original e converter se necessário
+        // Venda antiga - usar valor original da venda
         amount = parseFloat(sale.amount);
-        if (currency !== 'KZ') {
-          amount = convertToKZ(amount, currency);
-          currency = 'KZ';
-        }
+        console.log('💡 Usando valor original da venda:', { amount, currency });
       }
+    }
+    
+    // SEMPRE converter para KZ se não for KZ (para vendedores angolanos)
+    if (currency.toUpperCase() !== 'KZ') {
+      const originalAmount = amount;
+      amount = convertToKZ(amount, currency);
+      currency = 'KZ';
+      console.log('🔄 Convertido para KZ:', { 
+        originalAmount, 
+        originalCurrency: sale.currency,
+        convertedAmount: amount,
+        newCurrency: currency 
+      });
     }
     
     // Aplicar desconto de 20% para vendas recuperadas
     if (sale.sale_type === 'recovered') {
       amount = amount * 0.8;
+      console.log('📉 Aplicado desconto de recuperação (20%):', { amount });
     }
     
     console.log('💰 Valor final formatado:', {
