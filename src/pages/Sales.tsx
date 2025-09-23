@@ -477,15 +477,12 @@ export default function Sales() {
                           <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                             <User className="h-3 w-3 md:h-4 md:w-4" />
                             <span>{sale.customer_name}</span>
-                            <span>•</span>
-                            <div className="space-y-1">
-                              <span>{sale.customer_email}</span>
-                              {sale.customer_phone && (
-                                <div className="text-xs text-muted-foreground">
-                                  📞 {sale.customer_phone}
-                                </div>
-                              )}
-                            </div>
+                            {sale.customer_email && (
+                              <span> • {sale.customer_email}</span>
+                            )}
+                            {sale.customer_phone && (
+                              <span> • {sale.customer_phone}</span>
+                            )}
                           </div>
                         </div>
                         
