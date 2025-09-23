@@ -171,10 +171,38 @@ serve(async (req) => {
     // Salvar ordem no banco com status "pending" para todos os métodos Stripe
     const orderStatus = 'pending';
     
-    // CORREÇÃO CRÍTICA: Vendedor SEMPRE deve ver o valor original em KZ que ele definiu
-    // independente de como o cliente pagou (EUR, USD, etc.)
-    const finalAmount = (originalAmount || (amount / 100)).toString();
-    const finalCurrency = (originalCurrency || 'KZ');
+    // CORREÇÃO CRÍTICA: SEMPRE converter valores para KZ antes de salvar no banco
+    // Taxas de conversão para KZ
+    const exchangeRates: Record<string, number> = {
+      'EUR': 1053, // 1 EUR = ~1053 KZ
+      'MZN': 14.3, // 1 MZN = ~14.3 KZ
+      'USD': 825   // 1 USD = ~825 KZ
+    };
+    
+    let finalAmount: string;
+    let finalCurrency: string = 'KZ'; // SEMPRE KZ no banco
+    
+    // Se temos originalAmount em KZ, usar esse valor
+    if (originalCurrency === 'KZ' && originalAmount) {
+      finalAmount = originalAmount.toString();
+      console.log(`💰 Valor já em KZ: ${finalAmount} KZ`);
+    } 
+    // Se temos originalAmount em outra moeda, converter para KZ
+    else if (originalAmount && originalCurrency && originalCurrency !== 'KZ') {
+      const rate = exchangeRates[originalCurrency] || 1;
+      const convertedValue = Math.round(originalAmount * rate);
+      finalAmount = convertedValue.toString();
+      console.log(`💱 Convertendo: ${originalAmount} ${originalCurrency} → ${finalAmount} KZ (taxa: ${rate})`);
+    }
+    // Fallback: converter do amount do Stripe para KZ
+    else {
+      const stripeAmount = amount / 100; // Converter de centavos
+      const stripeCurrency = currency.toUpperCase();
+      const rate = exchangeRates[stripeCurrency] || 1;
+      const convertedValue = Math.round(stripeAmount * rate);
+      finalAmount = convertedValue.toString();
+      console.log(`💱 Fallback - Convertendo: ${stripeAmount} ${stripeCurrency} → ${finalAmount} KZ (taxa: ${rate})`);
+    }
     
     const orderData = {
       product_id: productId,
