@@ -250,10 +250,12 @@ export function ModernRecentSales() {
   };
 
   const formatAmount = (sale: RecentSale) => {
+    console.log('🚀 INICIANDO formatAmount para venda:', sale.id);
+    
     let amount = 0;
     let currency = sale.currency;
     
-    console.log('🔄 Formatando venda:', {
+    console.log('🔄 Dados da venda:', {
       saleType: sale.sale_type,
       originalAmount: sale.amount,
       originalCurrency: sale.currency,
@@ -263,7 +265,7 @@ export function ModernRecentSales() {
     
     if (sale.sale_type === 'affiliate') {
       amount = sale.affiliate_commission || 0;
-      console.log('💡 Processando comissão de afiliado:', { amount, currency });
+      console.log('💡 Usando comissão de afiliado:', { amount, currency });
     } else {
       // Para vendas próprias, verificar se há seller_commission
       if (sale.seller_commission && sale.seller_commission > 0) {
@@ -284,10 +286,12 @@ export function ModernRecentSales() {
       console.log('📉 Aplicado desconto de recuperação (20%):', { amount });
     }
     
+    console.log('📊 Valor antes da formatação:', { amount, currency });
+    
     // A função formatPriceForSeller já faz a conversão automaticamente
     const formattedPrice = formatPriceForSeller(amount, currency);
     
-    console.log('💰 Valor final formatado:', {
+    console.log('💰 Valor formatado final:', {
       originalAmount: amount,
       originalCurrency: currency,
       formatted: formattedPrice
