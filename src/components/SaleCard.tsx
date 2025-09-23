@@ -118,14 +118,16 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <div className="space-y-1 min-w-0 flex-1">
-              <div className="truncate">{sale.customer_name}</div>
-              <div className="text-xs text-muted-foreground truncate">{sale.customer_email}</div>
-              {sale.customer_phone && (
-                <div className="text-xs text-muted-foreground">
-                  📞 {sale.customer_phone}
-                </div>
-              )}
+            <div className="min-w-0 flex-1">
+              <div className="text-sm">
+                <span>{sale.customer_name}</span>
+                {sale.customer_email && (
+                  <span className="text-muted-foreground"> • {sale.customer_email}</span>
+                )}
+                {sale.customer_phone && (
+                  <span className="text-muted-foreground"> • {sale.customer_phone}</span>
+                )}
+              </div>
             </div>
           </div>
           
