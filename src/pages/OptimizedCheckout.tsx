@@ -87,7 +87,11 @@ const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
         </div>
         <div className="w-full md:w-2/3">
           <div className="flex items-center gap-2 mb-2">
-            <Shield className="w-4 h-4 text-checkout-secure" />
+            <img 
+              src="/kambafy-secure-icon.png" 
+              alt="Secure checkout"
+              className="w-4 h-4 rounded-sm"
+            />
             <span className="text-xs text-checkout-secure font-medium">100% Seguro</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
