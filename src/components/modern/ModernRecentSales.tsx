@@ -326,15 +326,13 @@ export function ModernRecentSales() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
                       {sale.customer_name}
+                      {sale.customer_email && (
+                        <span className="font-normal text-muted-foreground"> • {sale.customer_email}</span>
+                      )}
+                      {sale.customer_phone && (
+                        <span className="font-normal text-muted-foreground"> • {sale.customer_phone}</span>
+                      )}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {sale.customer_email}
-                    </p>
-                    {sale.customer_phone && (
-                      <p className="text-xs text-muted-foreground">
-                        📞 {sale.customer_phone}
-                      </p>
-                    )}
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         {(() => {
