@@ -40,7 +40,7 @@ All colors MUST be HSL.
     /* New Kambafy colors - priorizando o segundo verde */
     --checkout-green: 120 100% 25%;  /* Segundo verde (mais escuro) como principal */
     --checkout-green-light: 120 100% 75%;  /* Primeiro verde (mais claro) como secundário */
-    --checkout-secure: 121 26% 15%; /* #1b2f1a - cor para compra 100% segura */
+    --checkout-secure: 121 26% 22%; /* #1b2f1a mais claro - cor para compra 100% segura */
     --checkout-orange: 25 95% 53%;
     --checkout-gray: 0 0% 45%;  /* Gray from the palette */
     --checkout-text: 0 0% 5%;  /* Very dark/black from the palette */
@@ -108,7 +108,7 @@ All colors MUST be HSL.
     /* Dark mode versions - verde escuro como base */
     --checkout-green: 120 100% 25%;  /* Verde escuro nos cards */
     --checkout-green-light: 120 100% 75%;
-    --checkout-secure: 121 26% 15%; /* #1b2f1a - cor para compra 100% segura */
+    --checkout-secure: 121 26% 22%; /* #1b2f1a mais claro - cor para compra 100% segura */
     --checkout-orange: 25 85% 50%;
     --checkout-gray: 220 10% 40%;
     --checkout-text: 220 10% 90%;
