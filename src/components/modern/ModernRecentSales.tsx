@@ -250,22 +250,37 @@ export function ModernRecentSales() {
   };
 
   const formatAmount = (sale: RecentSale) => {
-    // Para vendedores, usar seller_commission que já vem em KZ da base de dados
-    // Se for venda de afiliado, usar affiliate_commission
     let amount = 0;
     let currency = sale.currency;
     
+    console.log('🔄 Formatando venda:', {
+      saleType: sale.sale_type,
+      originalAmount: sale.amount,
+      originalCurrency: sale.currency,
+      sellerCommission: sale.seller_commission,
+      affiliateCommission: sale.affiliate_commission
+    });
+    
     if (sale.sale_type === 'affiliate') {
       amount = sale.affiliate_commission || 0;
-    } else {
-      // Para vendas próprias, usar seller_commission ou converter de volta se for venda antiga
-      amount = sale.seller_commission || 0;
-      if (amount === 0) {
-        // Venda antiga sem comissão registrada - usar valor original da venda
-        amount = parseFloat(sale.amount);
-      } else {
-        // Se seller_commission existe, já está em KZ
+      // Para afiliados, sempre converter para KZ se necessário
+      if (currency !== 'KZ') {
+        amount = convertToKZ(amount, currency);
         currency = 'KZ';
+      }
+    } else {
+      // Para vendas próprias, verificar se há seller_commission
+      if (sale.seller_commission && sale.seller_commission > 0) {
+        // seller_commission já deveria estar em KZ
+        amount = sale.seller_commission;
+        currency = 'KZ';
+      } else {
+        // Venda antiga - usar valor original e converter se necessário
+        amount = parseFloat(sale.amount);
+        if (currency !== 'KZ') {
+          amount = convertToKZ(amount, currency);
+          currency = 'KZ';
+        }
       }
     }
     
@@ -274,14 +289,19 @@ export function ModernRecentSales() {
       amount = amount * 0.8;
     }
     
+    console.log('💰 Valor final formatado:', {
+      amount,
+      currency,
+      formatted: formatPriceForSeller(amount, currency)
+    });
+    
     const currencyInfo = getCurrencyInfo(currency);
     
-    // Usar a função formatPriceForSeller que faz a conversão adequada
     return {
       main: formatPriceForSeller(amount, currency),
       flag: currencyInfo.flag,
       countryName: currencyInfo.name,
-      showCountry: currency.toUpperCase() !== 'KZ'
+      showCountry: false // Sempre mostrar como KZ para vendedores
     };
   };
 
