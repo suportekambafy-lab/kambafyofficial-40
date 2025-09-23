@@ -117,7 +117,7 @@ const ToastProgressBar = ({ duration, variant }: { duration: number; variant: Va
 };
 
 const Toaster = forwardRef<ToasterRef, { defaultPosition?: Position }>(
-  ({ defaultPosition = 'bottom-right' }, ref) => {
+  ({ defaultPosition = 'top-center' }, ref) => {
     const toastReference = useRef<ReturnType<typeof sonnerToast.custom> | null>(null);
 
     useImperativeHandle(ref, () => ({

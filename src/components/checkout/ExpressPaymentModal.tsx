@@ -81,9 +81,9 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">        
-        <div className="space-y-8 p-6">
-          <div className="text-center space-y-6">
-            <p className="text-gray-900 font-semibold text-xl">
+        <div className="space-y-6 p-4">
+          <div className="text-center space-y-4">
+            <p className="text-gray-900 font-medium text-lg">
               Confirme o pagamento no seu telemóvel
             </p>
             
@@ -126,15 +126,18 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
               </div>
             </div>
             
-            <div className="space-y-3 text-base text-gray-700 max-w-md mx-auto">
+            <div className="space-y-2 text-sm text-gray-600 max-w-xs mx-auto">
               <p className="flex items-start gap-2">
                 <span className="text-blue-600 font-bold mt-0.5">→</span>
-                Abra o aplicativo <strong>Multicaixa Express</strong> e procure por{' '}
-                <span className="text-red-600 font-bold">"Operação por Autorizar"</span>
+                Abra o <strong>Multicaixa Express</strong>
               </p>
               <p className="flex items-start gap-2">
                 <span className="text-blue-600 font-bold mt-0.5">→</span>
-                Selecione o pagamento pendente e <strong>confirme a transação</strong>
+                Procure por <span className="text-red-600 font-bold">"Operação por Autorizar"</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold mt-0.5">→</span>
+                <strong>Confirme a transação</strong>
               </p>
             </div>
           </div>
