@@ -250,52 +250,28 @@ export function ModernRecentSales() {
   };
 
   const formatAmount = (sale: RecentSale) => {
-    console.log('🚀 INICIANDO formatAmount para venda:', sale.id);
-    
     let amount = 0;
-    let currency = sale.currency;
-    
-    console.log('🔄 Dados da venda:', {
-      saleType: sale.sale_type,
-      originalAmount: sale.amount,
-      originalCurrency: sale.currency,
-      sellerCommission: sale.seller_commission,
-      affiliateCommission: sale.affiliate_commission
-    });
+    let currency = 'KZ'; // Sempre KZ pois agora salvamos convertido no banco
     
     if (sale.sale_type === 'affiliate') {
       amount = sale.affiliate_commission || 0;
-      console.log('💡 Usando comissão de afiliado:', { amount, currency });
     } else {
       // Para vendas próprias, verificar se há seller_commission
       if (sale.seller_commission && sale.seller_commission > 0) {
-        // seller_commission já deveria estar em KZ
         amount = sale.seller_commission;
-        currency = 'KZ';
-        console.log('💡 Usando seller_commission (já em KZ):', { amount });
       } else {
         // Venda antiga - usar valor original da venda
         amount = parseFloat(sale.amount);
-        console.log('💡 Usando valor original da venda:', { amount, currency });
       }
     }
     
-    // Aplicar desconto de 20% para vendas recuperadas ANTES da formatação
+    // Aplicar desconto de 20% para vendas recuperadas
     if (sale.sale_type === 'recovered') {
       amount = amount * 0.8;
-      console.log('📉 Aplicado desconto de recuperação (20%):', { amount });
     }
-    
-    console.log('📊 Valor antes da formatação:', { amount, currency });
     
     // A função formatPriceForSeller já faz a conversão automaticamente
     const formattedPrice = formatPriceForSeller(amount, currency);
-    
-    console.log('💰 Valor formatado final:', {
-      originalAmount: amount,
-      originalCurrency: currency,
-      formatted: formattedPrice
-    });
     
     const currencyInfo = getCurrencyInfo('KZ'); // Sempre mostrar flag de Angola
     

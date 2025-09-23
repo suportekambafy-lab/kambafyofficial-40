@@ -931,20 +931,40 @@ const Checkout = () => {
         seller_commission = totalAmount;
       }
 
+      // Converter valores para KZ para vendedores angolanos
+      const totalAmountInKZ = userCountry.currency !== 'KZ' 
+        ? Math.round(totalAmount * userCountry.exchangeRate)  
+        : totalAmount;
+
+      const affiliate_commission_kz = affiliate_commission 
+        ? (userCountry.currency !== 'KZ' ? Math.round(affiliate_commission * userCountry.exchangeRate) : affiliate_commission)
+        : null;
+        
+      const seller_commission_kz = seller_commission 
+        ? (userCountry.currency !== 'KZ' ? Math.round(seller_commission * userCountry.exchangeRate) : seller_commission)
+        : null;
+
+      console.log('🏦 Conversão de moeda para transferência:', {
+        originalAmount: totalAmount,
+        originalCurrency: userCountry.currency,
+        convertedAmount: totalAmountInKZ,
+        exchangeRate: userCountry.exchangeRate
+      });
+
       const orderData = {
         product_id: product.id,
         order_id: orderId,
         customer_name: formData.fullName,
         customer_email: formData.email,
         customer_phone: formData.phone,
-        amount: totalAmount.toString(),
-        currency: userCountry.currency,
+        amount: totalAmountInKZ.toString(), // Sempre em KZ
+        currency: 'KZ', // Sempre salvar como KZ
         payment_method: 'transfer',
         status: 'pending', // Status padrão para transferência - fica pendente até aprovação
         user_id: null,
         affiliate_code: hasAffiliate ? affiliateCode : null,
-        affiliate_commission: affiliate_commission,
-        seller_commission: seller_commission,
+        affiliate_commission: affiliate_commission_kz,
+        seller_commission: seller_commission_kz,
         order_bump_data: orderBump ? JSON.stringify({
           bump_product_name: orderBump.bump_product_name,
           bump_product_price: orderBump.bump_product_price,
@@ -1436,20 +1456,40 @@ ${JSON.stringify(appyPayData, null, 2)}
         seller_commission = totalAmount;
       }
 
+      // Converter valores para KZ para vendedores angolanos
+      const totalAmountInKZ = userCountry.currency !== 'KZ' 
+        ? Math.round(totalAmount * userCountry.exchangeRate)  
+        : totalAmount;
+
+      const affiliate_commission_kz = affiliate_commission 
+        ? (userCountry.currency !== 'KZ' ? Math.round(affiliate_commission * userCountry.exchangeRate) : affiliate_commission)
+        : null;
+        
+      const seller_commission_kz = seller_commission 
+        ? (userCountry.currency !== 'KZ' ? Math.round(seller_commission * userCountry.exchangeRate) : seller_commission)
+        : null;
+
+      console.log('💱 Conversão de moeda:', {
+        originalAmount: totalAmount,
+        originalCurrency: userCountry.currency,
+        convertedAmount: totalAmountInKZ,
+        exchangeRate: userCountry.exchangeRate
+      });
+
       const orderData = {
         product_id: product.id,
         order_id: orderId,
         customer_name: formData.fullName,
         customer_email: formData.email,
         customer_phone: formData.phone,
-        amount: totalAmount.toString(),
-        currency: userCountry.currency,
+        amount: totalAmountInKZ.toString(), // Sempre em KZ
+        currency: 'KZ', // Sempre salvar como KZ
         payment_method: selectedPayment,
         status: 'pending', // Angola payment methods should start as pending
         user_id: null, // Always null for checkout page orders (guest orders)
         affiliate_code: hasAffiliate ? affiliateCode : null,
-        affiliate_commission: affiliate_commission,
-        seller_commission: seller_commission,
+        affiliate_commission: affiliate_commission_kz,
+        seller_commission: seller_commission_kz,
         order_bump_data: orderBump ? JSON.stringify({
           bump_product_name: orderBump.bump_product_name,
           bump_product_price: orderBump.bump_product_price,
