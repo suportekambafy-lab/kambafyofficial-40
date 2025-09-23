@@ -1912,11 +1912,10 @@ ${JSON.stringify(appyPayData, null, 2)}
         <div className="bg-checkout-secure text-white py-3">
           <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img 
-                src="/kambafy-secure-icon.png" 
-                alt="Secure checkout"
-                className="w-5 h-5 rounded-sm"
-              />
+              <div className="relative inline-flex items-center justify-center">
+                <Shield className="w-5 h-5" />
+                <Check className="w-2.5 h-2.5 absolute inset-0 m-auto text-white" />
+              </div>
               <span className="font-bold text-lg">COMPRA 100% SEGURA</span>
             </div>
             <CountrySelector
@@ -2319,7 +2318,7 @@ ${JSON.stringify(appyPayData, null, 2)}
           <div className="mt-12 text-center space-y-4">
             <div className="flex flex-col items-center space-y-3">
               <img 
-                src="/lovable-uploads/451d9e0e-6608-409a-910a-ec955cb5223c.png" 
+                src="/kambafy-secure-icon.png" 
                 alt="Kambafy"
                 className="w-16 h-16 rounded-lg"
               />
