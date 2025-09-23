@@ -34,6 +34,7 @@ import professionalManImage from "@/assets/professional-man.jpg";
 import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod } from "@/utils/paymentMethods";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
+import { useCorrectSalesDisplay } from "@/hooks/useCorrectSalesDisplay";
 
 interface Sale {
   id: string;
@@ -78,6 +79,7 @@ export default function Sales() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { getCurrencyInfo } = useCurrencyToCountry();
+  const { correctSalesData } = useCorrectSalesDisplay();
   const [sales, setSales] = useState<Sale[]>([]);
   const [salesStats, setSalesStats] = useState<SalesStats>({
     paid: 0,
@@ -131,7 +133,9 @@ export default function Sales() {
           setSalesStats(stats);
         },
         (orders) => {
-          setSales(orders);
+          const correctedOrders = correctSalesData(orders);
+          console.log(`🔧 Aplicando correções automáticas em ${correctedOrders.length} vendas`);
+          setSales(correctedOrders);
         }
       );
       
