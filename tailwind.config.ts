@@ -59,6 +59,7 @@ export default {
 				checkout: {
 					green: 'hsl(var(--checkout-green))',
 					'green-light': 'hsl(var(--checkout-green-light))',
+					secure: 'hsl(var(--checkout-secure))',
 					orange: 'hsl(var(--checkout-orange))',
 					gray: 'hsl(var(--checkout-gray))',
 					text: 'hsl(var(--checkout-text))'

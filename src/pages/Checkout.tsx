@@ -1909,7 +1909,7 @@ ${JSON.stringify(appyPayData, null, 2)}
           />
         )}
 
-        <div className="bg-green-600 text-white py-3">
+        <div className="bg-checkout-secure text-white py-3">
           <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="relative inline-flex items-center justify-center">
