@@ -109,7 +109,7 @@ export const useStreamingQuery = () => {
           acc.paidTotal += affiliateCommission;
           acc.totalAffiliateCommissions += affiliateCommission;
         } else {
-          // Para vendedores, converter para KZ se necessário
+          // Para vendedores - seller_commission já vem em KZ do backend após as correções
           let sellerCommission = parseFloat(order.seller_commission?.toString() || '0');
           if (sellerCommission === 0) {
             // Para vendas antigas sem seller_commission, converter para KZ
@@ -120,17 +120,8 @@ export const useStreamingQuery = () => {
             } else {
               sellerCommission = amount; // Se já está em KZ
             }
-          } else {
-            // Se há seller_commission mas pode estar em moeda personalizada, converter
-            if (order.currency && order.currency !== 'KZ') {
-              const exchangeRates: Record<string, number> = {
-                'EUR': 1053, // 1 EUR = ~1053 KZ
-                'MZN': 14.3  // 1 MZN = ~14.3 KZ
-              };
-              const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-              sellerCommission = Math.round(sellerCommission * rate);
-            }
           }
+          // REMOVIDO: Conversão dupla - seller_commission já está em KZ
           
           // Aplicar desconto de 20% se for venda recuperada
           if (isRecovered) {

@@ -191,15 +191,35 @@ serve(async (req) => {
         console.log('🔄 Updating order status for order_id:', orderId);
         
         // Atualizar status do pedido para "completed" e garantir seller_commission
-        const originalAmount = parseFloat(paymentIntent.metadata.originalAmount || (paymentIntent.amount / 100).toString());
+        const originalAmount = parseFloat(paymentIntent.metadata.original_amount || (paymentIntent.amount / 100).toString());
+        const originalCurrency = paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase();
+        
+        // Converter para KZ se a moeda original não for KZ
+        let sellerCommissionInKZ = originalAmount;
+        if (originalCurrency !== 'KZ') {
+          // Taxas de conversão para KZ (mesmas do sistema)
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053, // 1 EUR = ~1053 KZ
+            'MZN': 14.3, // 1 MZN = ~14.3 KZ
+            'USD': 825   // 1 USD = ~825 KZ (aproximado)
+          };
+          
+          const rate = exchangeRates[originalCurrency] || 1;
+          sellerCommissionInKZ = Math.round(originalAmount * rate);
+          
+          console.log(`💱 Converting seller commission: ${originalAmount} ${originalCurrency} = ${sellerCommissionInKZ} KZ (rate: ${rate})`);
+        }
         
         const { data: orderData, error: updateError } = await supabase
           .from('orders')
           .update({ 
             status: 'completed',
             updated_at: new Date().toISOString(),
-            // CORREÇÃO: Garantir que seller_commission seja populado com valor original
-            seller_commission: originalAmount
+            // CORREÇÃO: Usar valor convertido para KZ para o vendedor
+            seller_commission: sellerCommissionInKZ,
+            // Preservar valores originais para referência
+            amount: originalAmount.toString(),
+            currency: originalCurrency
           })
           .eq('order_id', orderId)
           .select('*')
@@ -268,8 +288,8 @@ serve(async (req) => {
                   productName: product?.name,
                   orderId: orderId,
                   // CORREÇÃO: Usar valor original do metadata ao invés do valor convertido do Stripe
-                  amount: paymentIntent.metadata.originalAmount || (paymentIntent.amount / 100).toString(),
-                  currency: paymentIntent.metadata.originalCurrency || paymentIntent.currency.toUpperCase(),
+                  amount: paymentIntent.metadata.original_amount || (paymentIntent.amount / 100).toString(),
+                  currency: paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase(),
                   productId: order.product_id,
                   sellerId: product?.user_id
                 };
@@ -325,8 +345,8 @@ serve(async (req) => {
                     customer_email: order.customer_email,
                     customer_name: order.customer_name,
                     // CORREÇÃO: Usar valor original do metadata
-                    price: paymentIntent.metadata.originalAmount || (paymentIntent.amount / 100).toString(),
-                    currency: paymentIntent.metadata.originalCurrency || paymentIntent.currency.toUpperCase(),
+                    price: paymentIntent.metadata.original_amount || (paymentIntent.amount / 100).toString(),
+                    currency: paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase(),
                     timestamp: new Date().toISOString()
                   },
                   user_id: product?.user_id,

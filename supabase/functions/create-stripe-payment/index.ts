@@ -98,6 +98,17 @@ serve(async (req) => {
         product_id: productId,
         order_id: orderId,
         customer_email: customerEmail,
+        original_amount: amount.toString(), // Valor original antes da conversão para centavos
+        original_currency: currency.toUpperCase(), // Moeda original
+      },
+      payment_intent_data: {
+        metadata: {
+          product_id: productId,
+          order_id: orderId,
+          customer_email: customerEmail,
+          original_amount: amount.toString(), // Valor original antes da conversão para centavos
+          original_currency: currency.toUpperCase(), // Moeda original
+        }
       }
     });
 
