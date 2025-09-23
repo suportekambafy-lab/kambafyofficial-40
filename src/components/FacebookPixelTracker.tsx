@@ -138,12 +138,22 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
     }, 1000);
 
     // Listen for purchase completion events
-    const handlePurchaseComplete = () => {
+    const handlePurchaseComplete = (event: any) => {
+      console.log('🎯 Facebook Pixel - Purchase event received:', event.detail);
+      
       if (window.fbq) {
-        window.fbq('track', 'Purchase', {
+        const purchaseData = {
           content_ids: [productId],
-          content_type: 'product'
-        });
+          content_type: 'product',
+          value: event.detail?.amount || 0,
+          currency: event.detail?.currency || 'EUR'
+        };
+        
+        console.log('📤 Facebook Pixel - Sending Purchase event:', purchaseData);
+        
+        window.fbq('track', 'Purchase', purchaseData);
+      } else {
+        console.log('❌ Facebook Pixel - fbq not available');
       }
     };
 

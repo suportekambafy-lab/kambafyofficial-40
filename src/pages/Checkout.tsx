@@ -284,8 +284,14 @@ const Checkout = () => {
           status: 'completed'
         });
         // Disparar evento para Facebook Pixel
+        const currentParams = new URLSearchParams(window.location.search);
         window.dispatchEvent(new CustomEvent('purchase-completed', {
-          detail: { productId, orderId }
+          detail: { 
+            productId, 
+            orderId,
+            amount: parseFloat(currentParams.get('amount') || '0'),
+            currency: currentParams.get('currency') || 'EUR'
+          }
         }));
 
         navigate(`/obrigado?${params.toString()}`);
@@ -807,7 +813,12 @@ const Checkout = () => {
 
       // Disparar evento para Facebook Pixel
       window.dispatchEvent(new CustomEvent('purchase-completed', {
-        detail: { productId, orderId }
+        detail: { 
+          productId, 
+          orderId,
+          amount: totalAmountInKZ,
+          currency: 'KZ'
+        }
       }));
 
       navigate(`/obrigado?${params.toString()}`);
@@ -993,7 +1004,12 @@ const Checkout = () => {
 
       // Disparar evento para Facebook Pixel
       window.dispatchEvent(new CustomEvent('purchase-completed', {
-        detail: { productId, orderId }
+        detail: { 
+          productId, 
+          orderId,
+          amount: totalAmount,
+          currency: userCountry.currency
+        }
       }));
 
       navigate(`/obrigado?${params.toString()}`);
@@ -1319,7 +1335,12 @@ ${JSON.stringify(appyPayData, null, 2)}
 
           // Disparar evento para Facebook Pixel
           window.dispatchEvent(new CustomEvent('purchase-completed', {
-            detail: { productId, orderId: data.orderId }
+            detail: { 
+              productId, 
+              orderId: data.orderId,
+              amount: totalAmount,
+              currency: userCountry.currency
+            }
           }));
 
           navigate(`/obrigado?${params.toString()}`);
@@ -1638,7 +1659,12 @@ ${JSON.stringify(appyPayData, null, 2)}
         console.log('🏠 Redirecionando para página de agradecimento');
         // Disparar evento para Facebook Pixel
         window.dispatchEvent(new CustomEvent('purchase-completed', {
-          detail: { productId, orderId }
+          detail: { 
+            productId, 
+            orderId,
+            amount: totalAmount,
+            currency: userCountry.currency
+          }
         }));
         navigate(`/obrigado?${params.toString()}`);
       }
