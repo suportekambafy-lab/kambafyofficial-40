@@ -316,14 +316,19 @@ export function ModernRecentSales() {
                     {sale.product_name || 'Produto'}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    #{(index + 101).toString().padStart(3, '0')}
+                    #{(recentSales.length - index + 100).toString().padStart(3, '0')}
                   </p>
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <p className="text-sm font-semibold text-foreground">
-                    {formatAmount(sale).main}
-                  </p>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-foreground">
+                      {formatAmount(sale).main}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(sale.created_at), { addSuffix: true, locale: ptBR })}
+                    </p>
+                  </div>
                   <span className="text-2xl">{sale.country_flag}</span>
                 </div>
               </div>
