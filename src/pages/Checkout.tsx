@@ -283,6 +283,11 @@ const Checkout = () => {
           payment_intent_id: paymentIntentId || '',
           status: 'completed'
         });
+        // Disparar evento para Facebook Pixel
+        window.dispatchEvent(new CustomEvent('purchase-completed', {
+          detail: { productId, orderId }
+        }));
+
         navigate(`/obrigado?${params.toString()}`);
         return;
       } else if (redirectStatus === 'failed') {
@@ -800,6 +805,11 @@ const Checkout = () => {
 
       // Não marcar como recuperado aqui - será feito na seção de transferência bancária se necessário
 
+      // Disparar evento para Facebook Pixel
+      window.dispatchEvent(new CustomEvent('purchase-completed', {
+        detail: { productId, orderId }
+      }));
+
       navigate(`/obrigado?${params.toString()}`);
     } catch (error) {
       console.error('Erro ao processar sucesso do pagamento:', error);
@@ -980,6 +990,11 @@ const Checkout = () => {
           order_bump_discounted_price: totalOrderBumpPrice.toString()
         })
       });
+
+      // Disparar evento para Facebook Pixel
+      window.dispatchEvent(new CustomEvent('purchase-completed', {
+        detail: { productId, orderId }
+      }));
 
       navigate(`/obrigado?${params.toString()}`);
 
@@ -1302,6 +1317,11 @@ ${JSON.stringify(appyPayData, null, 2)}
 
           // Não marcar como recuperado aqui - será feito na seção de transferência bancária se necessário
 
+          // Disparar evento para Facebook Pixel
+          window.dispatchEvent(new CustomEvent('purchase-completed', {
+            detail: { productId, orderId: data.orderId }
+          }));
+
           navigate(`/obrigado?${params.toString()}`);
           return;
         } else {
@@ -1616,6 +1636,10 @@ ${JSON.stringify(appyPayData, null, 2)}
         window.location.href = upsellUrl.toString();
       } else {
         console.log('🏠 Redirecionando para página de agradecimento');
+        // Disparar evento para Facebook Pixel
+        window.dispatchEvent(new CustomEvent('purchase-completed', {
+          detail: { productId, orderId }
+        }));
         navigate(`/obrigado?${params.toString()}`);
       }
     } catch (error) {
