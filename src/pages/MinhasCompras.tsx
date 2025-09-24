@@ -177,11 +177,12 @@ export default function MinhasCompras() {
         <header className="bg-gradient-to-r from-green-400 to-green-500 text-white p-4 border-b shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
-                <span className="text-green-500 font-bold text-xl">K</span>
-              </div>
+              <img 
+                src="/kambafy-logo-new.svg" 
+                alt="Kambafy" 
+                className="h-12 w-auto brightness-0 invert"
+              />
               <div>
-                <span className="text-xl font-bold">Kambafy</span>
                 <p className="text-green-100 text-sm">Suas compras</p>
               </div>
             </div>
