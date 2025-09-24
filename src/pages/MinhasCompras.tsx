@@ -188,17 +188,6 @@ export default function MinhasCompras() {
             </div>
             
             <div className="flex items-center space-x-3">
-              <CustomerBalanceModal>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-white border-white/20 border hover:bg-white/10"
-                >
-                  <Wallet className="w-4 h-4 mr-2" />
-                  Saldo: {balance ? `${balance.balance.toLocaleString()} KZ` : '0 KZ'}
-                </Button>
-              </CustomerBalanceModal>
-              
               <Button
                 variant="ghost"
                 size="icon"
@@ -218,7 +207,7 @@ export default function MinhasCompras() {
 
         <div className="p-4 md:p-6 space-y-6">
           {/* Modern Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <HighlightedCard highlightColor="blue">
               <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <HighlightedCardTitle className="text-sm font-medium">Total de Compras</HighlightedCardTitle>
@@ -229,28 +218,6 @@ export default function MinhasCompras() {
                 <p className="text-xs text-muted-foreground">
                   {totalCompras === 0 ? 'Nenhuma compra realizada' : `${totalCompras} compra${totalCompras > 1 ? 's' : ''} realizada${totalCompras > 1 ? 's' : ''}`}
                 </p>
-              </HighlightedCardContent>
-            </HighlightedCard>
-            
-            <HighlightedCard highlightColor="green">
-              <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <HighlightedCardTitle className="text-sm font-medium">Cursos Disponíveis</HighlightedCardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </HighlightedCardHeader>
-              <HighlightedCardContent>
-                <div className="text-2xl font-bold">{cursosDisponiveis}</div>
-                <p className="text-xs text-muted-foreground">Cursos para acessar</p>
-              </HighlightedCardContent>
-            </HighlightedCard>
-
-            <HighlightedCard highlightColor="purple">
-              <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <HighlightedCardTitle className="text-sm font-medium">Ebooks Disponíveis</HighlightedCardTitle>
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
-              </HighlightedCardHeader>
-              <HighlightedCardContent>
-                <div className="text-2xl font-bold">{ebooksDisponiveis}</div>
-                <p className="text-xs text-muted-foreground">Ebooks para baixar</p>
               </HighlightedCardContent>
             </HighlightedCard>
           </div>
