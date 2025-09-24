@@ -174,7 +174,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         error: "Erro interno do servidor",
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       }),
       {
         status: 500,

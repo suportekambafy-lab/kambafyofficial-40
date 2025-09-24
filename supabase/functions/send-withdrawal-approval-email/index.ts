@@ -353,7 +353,7 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ 
         success: true,
         warning: 'Erro ao enviar email',
-        message: `Saque processado, mas erro ao enviar email: ${emailError.message}`,
+        message: `Saque processado, mas erro ao enviar email: ${emailError instanceof Error ? emailError.message : 'Unknown error'}`,
         recipient: sellerEmail
       }), {
         status: 200,

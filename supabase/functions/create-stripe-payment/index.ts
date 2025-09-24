@@ -128,7 +128,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Stripe payment error:', error);
     return new Response(JSON.stringify({ 
-      error: error.message 
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

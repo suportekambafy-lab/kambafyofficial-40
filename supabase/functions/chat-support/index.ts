@@ -130,7 +130,7 @@ serve(async (req) => {
     console.error('Error in chat-support function:', error);
     
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       reply: 'Desculpe, ocorreu um erro técnico. Vou te conectar com nosso suporte humano para resolver isso rapidamente. 🤝',
       shouldTransfer: true,
       timestamp: new Date().toISOString()

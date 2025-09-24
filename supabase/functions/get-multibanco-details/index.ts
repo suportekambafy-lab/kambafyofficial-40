@@ -172,7 +172,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Erro ao buscar dados do Multibanco:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       details: 'Erro interno ao processar dados do Multibanco'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
