@@ -36,21 +36,25 @@ serve(async (req) => {
     // Buscar credenciais da AppyPay dos secrets
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
+    const authBaseUrl = Deno.env.get('APPYPAY_AUTH_BASE_URL');
+    const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
     const resource = "bee57785-7a19-4f1c-9c8d-aa03f2f0e333";
     
     console.log('🔐 Verificando credenciais:', {
       hasClientId: !!clientId,
       hasClientSecret: !!clientSecret,
+      hasAuthBaseUrl: !!authBaseUrl,
+      hasApiBaseUrl: !!apiBaseUrl,
       clientIdLength: clientId?.length || 0,
       resource
     });
     
-    if (!clientId || !clientSecret) {
+    if (!clientId || !clientSecret || !authBaseUrl || !apiBaseUrl) {
       console.error('❌ Credenciais AppyPay não encontradas');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Credenciais AppyPay não configuradas (CLIENT_ID ou CLIENT_SECRET)'
+          error: 'Credenciais AppyPay não configuradas completamente'
         }),
         { 
           status: 400,
@@ -62,7 +66,7 @@ serve(async (req) => {
     // --- GERAR TOKEN AUTOMATICAMENTE ---
     console.log('🔐 Gerando token de acesso automaticamente...');
     
-    const tokenResponse = await fetch('https://gwy-api.appypay.co.ao/v2.0/token', {
+    const tokenResponse = await fetch(`${authBaseUrl}/v2.0/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -160,7 +164,7 @@ serve(async (req) => {
 
     console.log('📤 Payload da cobrança:', JSON.stringify(chargePayload, null, 2));
 
-    const chargeResponse = await fetch('https://gwy-api.appypay.co.ao/v2/charges', {
+    const chargeResponse = await fetch(`${apiBaseUrl}/v2/charges`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
