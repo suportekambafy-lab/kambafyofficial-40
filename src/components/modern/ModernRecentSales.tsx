@@ -326,7 +326,7 @@ export function ModernRecentSales() {
                     {sale.product_name || 'Produto'}
                   </p>
                    <p className="text-xs text-muted-foreground">
-                     #{(totalSalesCount - index).toString().padStart(4, '0')}
+                     #{(totalSalesCount - index + 1000).toString().padStart(4, '0')}
                    </p>
                 </div>
                 
