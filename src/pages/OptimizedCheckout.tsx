@@ -774,8 +774,8 @@ const OptimizedCheckout = () => {
                         </div>
                       )}
                       
-                      {/* Para outros métodos tradicionais (reference, transfer) */}
-                      {['reference', 'transfer'].includes(selectedPayment) && (
+                      {/* Para outros métodos tradicionais (transfer) */}
+                      {['transfer'].includes(selectedPayment) && (
                         <div className="text-center text-sm text-muted-foreground">
                           Método de pagamento selecionado: {finalPaymentMethods.find(m => m.id === selectedPayment)?.name}
                         </div>

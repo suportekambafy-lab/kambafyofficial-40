@@ -24,7 +24,6 @@ import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetec
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import ExpressPaymentModal from "@/components/checkout/ExpressPaymentModal";
-import { AppyPayReferencePayment } from "@/components/checkout/AppyPayReferencePayment";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 
 // Importar componentes otimizados
@@ -537,7 +536,7 @@ const Checkout = () => {
       
       const countryMethods = enabledMethods.filter((method: any) => {
         if (userCountry.code === 'AO') {
-          return ['express', 'reference', 'transfer', 'appypay', 'kambapay'].includes(method.id);
+          return ['express', 'transfer', 'kambapay'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
           return ['emola', 'epesa', 'kambapay'].includes(method.id);
         } else if (userCountry.code === 'PT') {
@@ -2207,44 +2206,7 @@ const Checkout = () => {
                 </div>
               )}
 
-              {selectedPayment === 'reference' && (
-                <div className="mt-6">
-                  <AppyPayReferencePayment
-                    productId={productId || ''}
-                    customerData={{
-                      name: formData.fullName,
-                      email: formData.email,
-                      phone: formData.phone
-                    }}
-                    amount={totalPrice}
-                    orderId={`ORDER_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`}
-                    onSuccess={async (paymentData) => {
-                      console.log('✅ AppyPay payment created:', paymentData);
-                      
-                      // Redirecionar para página de sucesso com dados do pagamento
-                      const params = new URLSearchParams();
-                      params.set('orderId', paymentData.orderId);
-                      params.set('referenceNumber', paymentData.referenceNumber);
-                      params.set('amount', paymentData.amount.toString());
-                      params.set('currency', paymentData.currency);
-                      params.set('paymentMethod', 'reference');
-                      navigate(`/obrigado?${params.toString()}`);
-                    }}
-                    onError={(error) => {
-                      console.error('❌ AppyPay payment error:', error);
-                      toast({
-                        title: "Erro",
-                        description: error,
-                        variant: "destructive"
-                      });
-                    }}
-                    processing={processing}
-                    setProcessing={setProcessing}
-                  />
-                </div>
-              )}
-
-              {!['card', 'klarna', 'multibanco', 'apple_pay', 'reference'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
+              {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
                 <Button
                   onClick={handlePurchase}
                   disabled={
@@ -2274,10 +2236,6 @@ const Checkout = () => {
                       </div>
                       PROCESSANDO...
                     </div>
-                  ) : selectedPayment === 'reference' ? (
-                    'GERAR REFERÊNCIA'
-                  ) : selectedPayment === 'appypay' ? (
-                    'GERAR REFERÊNCIA APPYPAY'
                   ) : (
                     'COMPRAR AGORA'
                   )}
