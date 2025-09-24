@@ -148,7 +148,17 @@ export default function MinhasCompras() {
         memberAreaId: product.member_areas.id,
         generatedUrl: memberAreaUrl
       });
-      window.location.href = memberAreaUrl;
+      
+      // Em desenvolvimento, usar navegação por React Router
+      const hostname = window.location.hostname;
+      if (hostname.includes('localhost') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
+        console.log('🛠️ Desenvolvimento detectado - usando React Router');
+        navigate(`/area/${product.member_areas.id}`);
+      } else {
+        // Em produção, navegar para o subdomínio membros
+        console.log('🌐 Produção detectada - navegando para subdomínio membros');
+        window.location.href = memberAreaUrl;
+      }
     } else if (product.share_link) {
       console.log('🔗 MinhasCompras - Abrindo share_link:', product.share_link);
       window.open(product.share_link, '_blank');
