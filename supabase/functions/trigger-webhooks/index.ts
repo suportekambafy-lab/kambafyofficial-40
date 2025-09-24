@@ -194,7 +194,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('❌ Error in trigger-webhooks:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       details: 'Failed to process webhooks'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

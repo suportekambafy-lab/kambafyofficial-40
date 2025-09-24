@@ -62,7 +62,7 @@ serve(async (req) => {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
       console.log('✅ Webhook event constructed successfully:', event.type);
     } catch (err) {
-      console.error('❌ Webhook signature verification failed:', err.message);
+      console.error('❌ Webhook signature verification failed:', err instanceof Error ? err.message : 'Unknown error');
       
       // Em caso de erro de verificação, ainda processar se for um evento conhecido
       // (isso é temporário para debugar)
@@ -78,7 +78,7 @@ serve(async (req) => {
           throw new Error('Event type not supported for bypass: ' + eventData.type);
         }
       } catch (parseErr) {
-        console.error('❌ Could not parse event body:', parseErr.message);
+        console.error('❌ Could not parse event body:', parseErr instanceof Error ? parseErr.message : 'Unknown error');
         throw new Error('Invalid webhook signature and unparseable body');
       }
     }
@@ -382,6 +382,74 @@ serve(async (req) => {
                   body: productPurchasePayload
                 });
 
+                // Processar webhooks para order bumps se houver
+                if (paymentIntent.metadata.order_bump_data) {
+                  try {
+                    console.log('🔔 Processing order bump webhooks...');
+                    const orderBumpData = JSON.parse(paymentIntent.metadata.order_bump_data);
+                    
+                    if (Array.isArray(orderBumpData)) {
+                      for (const bump of orderBumpData) {
+                        if (bump.bump_product_id) {
+                          console.log(`🎯 Triggering webhook for order bump: ${bump.bump_product_name}`);
+                          
+                          const bumpPaymentPayload = {
+                            event: 'payment.success',
+                            data: {
+                              order_id: `${orderId}-BUMP-${bump.bump_product_id}`,
+                              amount: bump.discounted_price > 0 ? bump.discounted_price : parseFloat(bump.bump_product_price.replace(/[^\d.,]/g, '').replace(',', '.')),
+                              currency: paymentIntent.currency,
+                              customer_email: order.customer_email,
+                              customer_name: order.customer_name,
+                              product_id: bump.bump_product_id,
+                              product_name: bump.bump_product_name,
+                              payment_method: paymentIntent.payment_method_types[0],
+                              is_order_bump: true,
+                              main_order_id: orderId,
+                              timestamp: new Date().toISOString()
+                            },
+                            user_id: product?.user_id,
+                            order_id: `${orderId}-BUMP-${bump.bump_product_id}`,
+                            product_id: bump.bump_product_id
+                          };
+
+                          await supabase.functions.invoke('trigger-webhooks', {
+                            body: bumpPaymentPayload
+                          });
+
+                          // Disparar evento de produto comprado para o order bump
+                          const bumpPurchasePayload = {
+                            event: 'product.purchased',
+                            data: {
+                              order_id: `${orderId}-BUMP-${bump.bump_product_id}`,
+                              product_id: bump.bump_product_id,
+                              product_name: bump.bump_product_name,
+                              customer_email: order.customer_email,
+                              customer_name: order.customer_name,
+                              price: bump.discounted_price > 0 ? bump.discounted_price.toString() : bump.bump_product_price,
+                              currency: paymentIntent.currency,
+                              is_order_bump: true,
+                              main_order_id: orderId,
+                              timestamp: new Date().toISOString()
+                            },
+                            user_id: product?.user_id,
+                            order_id: `${orderId}-BUMP-${bump.bump_product_id}`,
+                            product_id: bump.bump_product_id
+                          };
+
+                          await supabase.functions.invoke('trigger-webhooks', {
+                            body: bumpPurchasePayload
+                          });
+
+                          console.log(`✅ Order bump webhook triggered for: ${bump.bump_product_name}`);
+                        }
+                      }
+                    }
+                  } catch (bumpError) {
+                    console.error('❌ Error processing order bump webhooks:', bumpError);
+                  }
+                }
+
                 console.log('✅ Webhooks triggered successfully');
 
               } catch (webhookError) {
@@ -406,7 +474,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('💥 Webhook error:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
