@@ -49,10 +49,10 @@ serve(async (req) => {
     const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
     const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
     const authBaseUrl = Deno.env.get('APPYPAY_AUTH_BASE_URL');
-    // Para OAuth2 v2.0, a scope deve ser o Application ID URI do AppyPay
-    const appId = Deno.env.get('APPYPAY_APPLICATION_ID') || clientId; // Fallback para client_id se não especificado
+    // Para OAuth2 v2.0, usar o Application ID URI configurado ou fallback para api://client_id
+    const applicationIdUri = Deno.env.get('APPYPAY_APPLICATION_ID_URI') || `api://${clientId}`;
 
-    if (!clientId || !clientSecret || !appId || !authBaseUrl) {
+    if (!clientId || !clientSecret || !authBaseUrl) {
       throw new Error('Credenciais AppyPay não configuradas');
     }
 
@@ -69,7 +69,7 @@ serve(async (req) => {
     formData.append('client_id', clientId);
     formData.append('client_secret', clientSecret);
     // OAuth2 v2.0 uses 'scope' instead of 'resource'
-    formData.append('scope', `${appId}/.default`);
+    formData.append('scope', `${applicationIdUri}/.default`);
 
     logStep("Solicitando token OAuth2", { tokenUrl });
 
