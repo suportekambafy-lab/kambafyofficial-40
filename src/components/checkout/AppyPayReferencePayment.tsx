@@ -46,6 +46,8 @@ export const AppyPayReferencePayment = ({
         orderId
       });
 
+      console.log('🔄 Chamando função create-appypay-payment...');
+      
       const { data, error } = await supabase.functions.invoke('create-appypay-payment', {
         body: {
           productId,
@@ -57,13 +59,16 @@ export const AppyPayReferencePayment = ({
         }
       });
 
+      console.log('📥 Resposta da função:', { data, error });
+
       if (error) {
         console.error('❌ Erro ao gerar referência:', error);
         throw new Error(error.message || 'Erro ao gerar referência de pagamento');
       }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Falha ao gerar referência');
+      if (!data || !data.success) {
+        console.error('❌ Resposta inválida:', data);
+        throw new Error(data?.error || 'Falha ao gerar referência');
       }
 
       console.log('✅ Referência gerada com sucesso:', data);
@@ -78,6 +83,7 @@ export const AppyPayReferencePayment = ({
 
     } catch (error: any) {
       console.error('❌ Erro completo:', error);
+      console.error('❌ Stack trace:', error.stack);
       const errorMessage = error.message || 'Erro ao gerar referência de pagamento';
       onError(errorMessage);
       
