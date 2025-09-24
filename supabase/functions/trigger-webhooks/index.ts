@@ -40,9 +40,15 @@ Deno.serve(async (req) => {
       .select('*')
       .eq('active', true);
 
-    // Se temos user_id, buscar webhooks do usuário
-    if (user_id) {
-      query = query.eq('user_id', user_id);
+    // Se temos product_id, buscar webhooks específicos do produto
+    if (payload.product_id) {
+      query = query.eq('product_id', payload.product_id);
+      console.log('🎯 Filtering webhooks by product_id:', payload.product_id);
+    }
+    // Se não tem product_id mas tem user_id, buscar webhooks globais do usuário (sem product_id)
+    else if (user_id) {
+      query = query.eq('user_id', user_id).is('product_id', null);
+      console.log('🌐 Filtering webhooks by user_id (global):', user_id);
     }
 
     const { data: webhooks, error: webhookError } = await query;
