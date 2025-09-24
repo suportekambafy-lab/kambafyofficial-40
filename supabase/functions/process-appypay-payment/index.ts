@@ -14,47 +14,52 @@ serve(async (req) => {
     const { 
       amount, 
       currency, 
-      description, 
-      merchantTransactionId, 
-      paymentMethod,
       customerName,
+      customerEmail,
       customerPhone,
-      customerEmail 
+      reference,
+      redirectUrl
     } = await req.json();
 
     console.log('📤 Dados recebidos:', {
       amount,
       currency,
-      description,
-      merchantTransactionId,
-      paymentMethod,
       customerName,
+      customerEmail,
       customerPhone,
-      customerEmail
+      reference,
+      redirectUrl
     });
 
+    if (!amount || !currency || !customerName || !customerEmail || !customerPhone || !reference || !redirectUrl) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Dados obrigatórios ausentes'
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     // Buscar credenciais da AppyPay dos secrets
-    const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
-    const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
-    const authBaseUrl = Deno.env.get('APPYPAY_AUTH_BASE_URL');
+    const apiKey = Deno.env.get('APPYPAY_API_KEY');
     const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
-    const resource = "bee57785-7a19-4f1c-9c8d-aa03f2f0e333";
     
     console.log('🔐 Verificando credenciais:', {
-      hasClientId: !!clientId,
-      hasClientSecret: !!clientSecret,
-      hasAuthBaseUrl: !!authBaseUrl,
+      hasApiKey: !!apiKey,
       hasApiBaseUrl: !!apiBaseUrl,
-      clientIdLength: clientId?.length || 0,
-      resource
+      apiKeyLength: apiKey?.length || 0
     });
     
-    if (!clientId || !clientSecret || !authBaseUrl || !apiBaseUrl) {
+    if (!apiKey || !apiBaseUrl) {
       console.error('❌ Credenciais AppyPay não encontradas');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Credenciais AppyPay não configuradas completamente'
+          error: 'Credenciais AppyPay não configuradas (API_KEY ou API_BASE_URL)'
         }),
         { 
           status: 400,
@@ -62,115 +67,30 @@ serve(async (req) => {
         }
       );
     }
-
-    // --- GERAR TOKEN AUTOMATICAMENTE ---
-    console.log('🔐 Gerando token de acesso automaticamente...');
-    
-    const tokenResponse = await fetch(`${authBaseUrl}/v2.0/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        'grant_type': 'client_credentials',
-        'client_id': clientId,
-        'client_secret': clientSecret,
-        'resource': resource
-      })
-    });
-
-    console.log('🔐 Resposta do token:', {
-      status: tokenResponse.status,
-      statusText: tokenResponse.statusText
-    });
-
-    const tokenText = await tokenResponse.text();
-    console.log('🔐 Corpo da resposta do token:', tokenText.substring(0, 300));
-
-    if (!tokenResponse.ok) {
-      console.error('❌ Erro ao obter token:', {
-        status: tokenResponse.status,
-        statusText: tokenResponse.statusText,
-        response: tokenText
-      });
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Erro ao obter token AppyPay: ${tokenResponse.status} ${tokenResponse.statusText}`,
-          details: tokenText
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    let tokenData;
-    try {
-      tokenData = JSON.parse(tokenText);
-    } catch (parseError) {
-      console.error('❌ Erro ao analisar resposta do token:', parseError);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Resposta do token AppyPay inválida',
-          details: tokenText
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    const accessToken = tokenData.access_token;
-    if (!accessToken) {
-      console.error('❌ Token de acesso não encontrado na resposta:', tokenData);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Token de acesso não encontrado na resposta da AppyPay',
-          details: tokenData
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    console.log('✅ Token gerado com sucesso:', {
-      hasToken: !!accessToken,
-      tokenLength: accessToken.length,
-      tokenPrefix: accessToken.substring(0, 20) + '...'
-    });
 
     // --- CRIAR COBRANÇA ---
     console.log('💳 Criando cobrança na AppyPay...');
+
     
     const chargePayload = {
       amount: parseFloat(amount),
-      currency: currency || "AOA",
-      description: description,
-      merchantTransactionId: merchantTransactionId,
-      paymentMethod: paymentMethod,
-      options: {
-        SmartcardNumber: customerPhone || "Smart_card_Number",
-        MerchantOrigin: "Kambafy_Checkout"
-      }
+      currency: currency,
+      customer: {
+        name: customerName,
+        email: customerEmail,
+        phone: customerPhone
+      },
+      reference: reference,
+      redirect_url: redirectUrl
     };
 
     console.log('📤 Payload da cobrança:', JSON.stringify(chargePayload, null, 2));
 
-    const chargeResponse = await fetch(`${apiBaseUrl}/v2/charges`, {
+    const chargeResponse = await fetch(`${apiBaseUrl}/v2.0/charges`, {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
-        'Accept-Language': 'pt-AO',
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-API-KEY': apiKey
       },
       body: JSON.stringify(chargePayload)
     });
@@ -220,12 +140,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        data: chargeData,
-        message: 'Cobrança AppyPay criada com sucesso',
-        chargeId: chargeData.id || chargeData.chargeId,
-        status: chargeData.status,
-        amount: chargeData.amount,
-        currency: chargeData.currency
+        result: chargeData
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
