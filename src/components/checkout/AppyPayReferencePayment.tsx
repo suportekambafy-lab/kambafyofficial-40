@@ -181,20 +181,32 @@ export const AppyPayReferencePayment = ({
           {/* Reference Number */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
             <div className="text-center space-y-3">
-              <p className="text-sm font-medium text-blue-900">NÚMERO DE REFERÊNCIA</p>
-              <div className="flex items-center justify-center space-x-2">
-                <span className="text-2xl font-bold text-blue-800 tracking-wider">
-                  {paymentData.referenceNumber}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(paymentData.referenceNumber)}
-                  className="p-2"
-                >
-                  <Copy className="w-4 h-4" />
-                </Button>
+              <p className="text-sm font-medium text-blue-900">DADOS DO PAGAMENTO</p>
+              
+              {paymentData.entity && (
+                <div className="mb-3">
+                  <p className="text-xs text-blue-700 mb-1">ENTIDADE</p>
+                  <span className="text-lg font-bold text-blue-800">{paymentData.entity}</span>
+                </div>
+              )}
+              
+              <div>
+                <p className="text-xs text-blue-700 mb-1">REFERÊNCIA</p>
+                <div className="flex items-center justify-center space-x-2">
+                  <span className="text-2xl font-bold text-blue-800 tracking-wider">
+                    {paymentData.referenceNumber}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(paymentData.referenceNumber)}
+                    className="p-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
+              
               <p className="text-sm text-blue-700">
                 Valor: <span className="font-semibold">{paymentData.amount} KZ</span>
               </p>
@@ -216,8 +228,10 @@ export const AppyPayReferencePayment = ({
               <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                 <div className="w-6 h-6 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center mt-0.5">2</div>
                 <div>
-                  <p className="font-medium text-sm">Informe a referência</p>
-                  <p className="text-xs text-gray-600">Digite ou mostre o número: {paymentData.referenceNumber}</p>
+                  <p className="font-medium text-sm">Informe os dados</p>
+                  <p className="text-xs text-gray-600">
+                    {paymentData.entity ? `Entidade: ${paymentData.entity} | ` : ''}Referência: {paymentData.referenceNumber}
+                  </p>
                 </div>
               </div>
               

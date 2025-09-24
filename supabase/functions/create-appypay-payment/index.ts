@@ -125,10 +125,12 @@ serve(async (req) => {
     const appypayResponse = await appypayApiResponse.json();
     logStep("Resposta da API AppyPay", appypayResponse);
 
-    // Extrair dados relevantes da resposta
-    const transactionId = appypayResponse.id || appypayResponse.transactionId || merchantTransactionId;
-    const referenceNumber = appypayResponse.referenceNumber || appypayResponse.reference || `REF${Math.floor(100000 + Math.random() * 900000)}`;
+    // Extrair dados relevantes da resposta real da AppyPay
+    const transactionId = appypayResponse.id || merchantTransactionId;
+    const referenceNumber = appypayResponse.reference?.reference || `REF${Math.floor(100000 + Math.random() * 900000)}`;
+    const entity = appypayResponse.reference?.entity || "99999";
     const status = appypayResponse.status || 'pending';
+    const apiExpiresAt = appypayResponse.reference?.expiresAt || expiresAt.toISOString();
 
     // Armazenar pagamento na base de dados
     const { data: paymentRecord, error: dbError } = await supabase
@@ -161,10 +163,11 @@ serve(async (req) => {
       success: true,
       paymentId: paymentRecord.id,
       referenceNumber: referenceNumber,
+      entity: entity,
       transactionId: transactionId,
       amount: parseFloat(amount),
       currency: 'KZ',
-      expiresAt: expiresAt.toISOString(),
+      expiresAt: apiExpiresAt,
       instructions: 'Use o número de referência para fazer o pagamento em qualquer banco ou agente AppyPay',
       message: 'Pagamento por referência criado com sucesso'
     }), {
