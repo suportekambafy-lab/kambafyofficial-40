@@ -70,34 +70,65 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24);
 
-    // Preparar dados para a API AppyPay
+    // Preparar dados para a API AppyPay no formato correto
+    const merchantTransactionId = `KAMBAFY_${orderId}`;
     const paymentData = {
       amount: parseFloat(amount),
-      currency: 'AOA', // Moeda de Angola
-      description: `Pagamento para produto ${productId}`,
-      customer: {
-        name: customerName,
-        email: customerEmail,
-        phone: customerPhone || null
+      currency: "AOA", // Moeda de Angola
+      description: `Pagamento Kambafy - Produto ${productId}`,
+      merchantTransactionId: merchantTransactionId,
+      paymentMethod: "REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f", // Método de referência
+      options: {
+        SmartcardNumber: "",
+        MerchantOrigin: "Kambafy"
       },
-      orderId: orderId,
-      expiresAt: expiresAt.toISOString()
+      notify: {
+        name: customerName,
+        telephone: customerPhone || "",
+        email: customerEmail,
+        smsNotification: true,
+        emailNotification: true
+      }
     };
 
-    logStep("Criando cobrança na API AppyPay", paymentData);
+    logStep("Preparando cobrança AppyPay", paymentData);
 
-    // TODO: Chamar API real do AppyPay quando o endpoint estiver disponível
-    // Por enquanto, simular resposta para desenvolvimento
-    const appypayResponse = {
-      success: true,
-      transactionId: `APY_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
-      referenceNumber: `REF${Math.floor(100000 + Math.random() * 900000)}`,
-      status: 'pending',
-      amount: paymentData.amount,
-      expiresAt: paymentData.expiresAt
-    };
+    // Chamar API real do AppyPay
+    const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
+    if (!apiBaseUrl) {
+      throw new Error('APPYPAY_API_BASE_URL não configurada');
+    }
 
-    logStep("Resposta simulada da API AppyPay", appypayResponse);
+    const chargesUrl = `${apiBaseUrl}/v2.0/charges`;
+    logStep("Enviando cobrança para AppyPay", { url: chargesUrl });
+
+    const appypayApiResponse = await fetch(chargesUrl, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${authData.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(paymentData),
+    });
+
+    if (!appypayApiResponse.ok) {
+      const errorText = await appypayApiResponse.text();
+      logStep("Erro da API AppyPay", { 
+        status: appypayApiResponse.status, 
+        statusText: appypayApiResponse.statusText,
+        error: errorText
+      });
+      throw new Error(`Erro da API AppyPay: ${appypayApiResponse.status} - ${errorText}`);
+    }
+
+    const appypayResponse = await appypayApiResponse.json();
+    logStep("Resposta da API AppyPay", appypayResponse);
+
+    // Extrair dados relevantes da resposta
+    const transactionId = appypayResponse.id || appypayResponse.transactionId || merchantTransactionId;
+    const referenceNumber = appypayResponse.referenceNumber || appypayResponse.reference || `REF${Math.floor(100000 + Math.random() * 900000)}`;
+    const status = appypayResponse.status || 'pending';
 
     // Armazenar pagamento na base de dados
     const { data: paymentRecord, error: dbError } = await supabase
@@ -110,9 +141,9 @@ serve(async (req) => {
         customer_phone: customerPhone,
         amount: parseFloat(amount),
         currency: 'KZ', // Kz é a moeda usada no sistema
-        reference_number: appypayResponse.referenceNumber,
-        appypay_transaction_id: appypayResponse.transactionId,
-        status: 'pending',
+        reference_number: referenceNumber,
+        appypay_transaction_id: transactionId,
+        status: status,
         expires_at: expiresAt.toISOString(),
         webhook_data: appypayResponse
       })
@@ -129,8 +160,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       paymentId: paymentRecord.id,
-      referenceNumber: appypayResponse.referenceNumber,
-      transactionId: appypayResponse.transactionId,
+      referenceNumber: referenceNumber,
+      transactionId: transactionId,
       amount: parseFloat(amount),
       currency: 'KZ',
       expiresAt: expiresAt.toISOString(),
