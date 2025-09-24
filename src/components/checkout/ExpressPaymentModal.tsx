@@ -45,7 +45,8 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
           toast({
             message: "O tempo para concluir o pagamento esgotou. Por favor, retaça o pagamento com rapidez.",
             variant: "error",
-            duration: 8000
+            duration: 8000,
+            position: "top-center"
           });
           onTimeExpired();
           onClose();
