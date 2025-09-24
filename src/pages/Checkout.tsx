@@ -1156,7 +1156,7 @@ const Checkout = () => {
     // Para pagamento express, não criar pedido aqui - apenas mostrar countdown
     if (selectedPayment === 'express') {
       console.log('🔄 Pagamento Express - iniciar countdown');
-      setProcessing(false);
+      setProcessing(true); // Manter como true para mostrar o countdown visual
       return;
     }
 
