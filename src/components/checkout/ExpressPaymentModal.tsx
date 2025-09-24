@@ -62,16 +62,16 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
   // Calcular progresso (0 a 100, onde 100 é tempo esgotado)
   const progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
   
-  // Calcular cor baseada no tempo restante - de azul para vermelho
+  // Calcular cor baseada no tempo restante - mudanças mais dramáticas nos últimos segundos
   const getProgressColor = () => {
-    const percentage = (timeLeft / totalSeconds) * 100;
-    
-    if (percentage > 60) {
-      return '#2563eb'; // Azul
-    } else if (percentage > 30) {
-      return '#f59e0b'; // Amarelo/Laranja
+    if (timeLeft > 20) {
+      return 'hsl(var(--primary))'; // Azul Kambafy para maior parte do tempo
+    } else if (timeLeft > 10) {
+      return 'hsl(45, 93%, 47%)'; // Amarelo nos últimos 20 segundos
+    } else if (timeLeft > 5) {
+      return 'hsl(25, 95%, 53%)'; // Laranja nos últimos 10 segundos
     } else {
-      return '#dc2626'; // Vermelho
+      return 'hsl(0, 84%, 60%)'; // Vermelho nos últimos 5 segundos
     }
   };
 
