@@ -15,3 +15,11 @@ verify_jwt = false
 [functions.member-area-logout]
 verify_jwt = false
 
+[functions.appypay-auth]
+verify_jwt = false
+
+[functions.create-appypay-payment]
+verify_jwt = false
+
+[functions.appypay-webhook]
+verify_jwt = false

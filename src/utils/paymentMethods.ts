@@ -43,6 +43,15 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     countryName: "Angola"
   },
   {
+    id: "appypay",
+    name: "AppyPay Referência",
+    image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzE0N0JFRSIvPgo8cGF0aCBkPSJNMTIgMTJIMjhWMjhIMTJWMTJaIiBmaWxsPSJ3aGl0ZSIvPgo8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSI0IiBmaWxsPSIjMTQ3QkVFIi8+CjxwYXRoIGQ9Ik0xNiAxNkgyNFYyNEgxNlYxNloiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzE0N0JFRSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+",
+    enabled: true,
+    isAngola: true,
+    countryFlag: "🇦🇴",
+    countryName: "Angola"
+  },
+  {
     id: "emola",
     name: "e-Mola",
     image: getPaymentMethodImage("emola"),
@@ -114,6 +123,7 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     'express': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
     'reference': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
     'transfer': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
+    'appypay': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
     'kambapay': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
     
     // Portugal  
