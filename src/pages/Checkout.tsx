@@ -23,7 +23,7 @@ import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
 import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
-import ExpressPaymentModal from "@/components/checkout/ExpressPaymentModal";
+
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 
 // Importar componentes otimizados
@@ -71,7 +71,7 @@ const Checkout = () => {
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [showExpressModal, setShowExpressModal] = useState(false);
+  
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -1050,12 +1050,15 @@ const Checkout = () => {
   const handleExpressPaymentTimeout = () => {
     console.log('⏰ Express payment timeout - stopping processing');
     setProcessing(false);
-    // Modal já mostra mensagem de expirado automaticamente
+    toast({
+      title: "Tempo Esgotado",
+      description: "O tempo para concluir o pagamento esgotou. Por favor, retaça o pagamento com rapidez.",
+      variant: "destructive",
+    });
   };
 
   const handleExpressPaymentRestart = () => {
     console.log('🔄 Restarting express payment');
-    setShowExpressModal(false);
     setProcessing(false);
     
     toast({
@@ -1099,10 +1102,9 @@ const Checkout = () => {
       return;
     }
 
-    // Para pagamento express, não criar pedido aqui - apenas mostrar modal
+    // Para pagamento express, não criar pedido aqui - apenas mostrar countdown
     if (selectedPayment === 'express') {
-      console.log('🔄 Pagamento Express - apenas abrir modal, não criar pedido');
-      setShowExpressModal(true);
+      console.log('🔄 Pagamento Express - iniciar countdown');
       setProcessing(false);
       return;
     }
@@ -1315,9 +1317,22 @@ const Checkout = () => {
 
     console.log('✅ Processing local payment method:', selectedPayment);
     
-    // Para pagamento express, abrir modal de countdown
+    // Para pagamento express, iniciar countdown
     if (selectedPayment === 'express') {
-      setShowExpressModal(true);
+      // Iniciar countdown de 60 segundos
+      let timeLeft = 60;
+      const timer = setInterval(() => {
+        timeLeft--;
+        const timerElement = document.getElementById('countdown-timer');
+        if (timerElement) {
+          timerElement.textContent = timeLeft.toString();
+        }
+        
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          handleExpressPaymentTimeout();
+        }
+      }, 1000);
     }
     
     setProcessing(true);
@@ -2135,19 +2150,17 @@ const Checkout = () => {
                       </div>
                     </div>
                     
-                    {selectedPayment === 'express' && (
+                    {selectedPayment === 'express' && !processing && (
                       <div className="mt-4 space-y-4">
                         {/* Instrução para pagamento express */}
-                        {!processing && (
-                          <div className="text-left p-4 bg-blue-50 rounded-lg border border-blue-100">
-                            <p className="text-sm font-medium text-gray-700 leading-relaxed">
-                              <span className="font-semibold">ATENÇÃO:</span> Após clicar no botão <span className="font-semibold">Comprar Agora</span>
-                            </p>
-                            <p className="text-sm text-gray-600 leading-relaxed mt-1">
-                              → abra o aplicativo Multicaixa Express, e encontre o botão → <span className="text-red-500 font-semibold">Operação por Autorizar</span> clica no botão, selecione o pagamento pendente e <span className="font-semibold">finalize o pagamento.</span>
-                            </p>
-                          </div>
-                        )}
+                        <div className="text-left p-4 bg-blue-50 rounded-lg border border-blue-100">
+                          <p className="text-sm font-medium text-gray-700 leading-relaxed">
+                            <span className="font-semibold">ATENÇÃO:</span> Após clicar no botão <span className="font-semibold">Comprar Agora</span>
+                          </p>
+                          <p className="text-sm text-gray-600 leading-relaxed mt-1">
+                            → abra o aplicativo Multicaixa Express, e encontre o botão → <span className="text-red-500 font-semibold">Operação por Autorizar</span> clica no botão, selecione o pagamento pendente e <span className="font-semibold">finalize o pagamento.</span>
+                          </p>
+                        </div>
                         
                         <div className="space-y-2">
                           <label className="block text-sm font-medium text-gray-600">
@@ -2161,6 +2174,70 @@ const Checkout = () => {
                             allowedCountries={["AO"]}
                             className="w-full"
                           />
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedPayment === 'express' && processing && (
+                      <div className="mt-4 space-y-4">
+                        <div className="text-center">
+                          <p className="text-gray-900 font-medium text-lg mb-4">
+                            Confirme o pagamento no seu telemóvel
+                          </p>
+                          
+                          {/* Círculo de countdown */}
+                          <div className="relative inline-flex items-center justify-center mb-6">
+                            <svg 
+                              width="200" 
+                              height="200" 
+                              className="transform -rotate-90"
+                            >
+                              {/* Círculo de fundo */}
+                              <circle
+                                cx="100"
+                                cy="100"
+                                r="90"
+                                stroke="#e5e7eb"
+                                strokeWidth="12"
+                                fill="transparent"
+                              />
+                              {/* Círculo de progresso */}
+                              <circle
+                                cx="100"
+                                cy="100"
+                                r="90"
+                                stroke="#2563eb"
+                                strokeWidth="12"
+                                fill="transparent"
+                                strokeLinecap="round"
+                                strokeDasharray={565.48}
+                                strokeDashoffset={565.48}
+                                style={{
+                                  animation: 'countdown-progress 60s linear forwards'
+                                }}
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                              <span className="text-sm text-gray-500 mb-2">Tempo Restante</span>
+                              <span className="text-4xl font-bold text-gray-900" id="countdown-timer">60</span>
+                              <span className="text-sm text-gray-500 mt-1">segundos</span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2 text-sm text-gray-600 max-w-xs mx-auto">
+                            <p className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold mt-0.5">→</span>
+                              Abra o <strong>Multicaixa Express</strong>
+                            </p>
+                            <p className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold mt-0.5">→</span>
+                              Procure por <span className="text-red-600 font-bold">"Operação por Autorizar"</span>
+                            </p>
+                            <p className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold mt-0.5">→</span>
+                              <strong>Confirme a transação</strong>
+                            </p>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -2276,17 +2353,6 @@ const Checkout = () => {
           </div>
         </div>
       </div>
-      
-      {/* Modal de countdown para pagamento express */}
-      <ExpressPaymentModal
-        isOpen={showExpressModal}
-        onClose={() => setShowExpressModal(false)}
-        onTimeExpired={handleExpressPaymentTimeout}
-        onRestart={handleExpressPaymentRestart}
-        totalSeconds={60}
-        orderTotal={getDisplayPrice(finalProductPrice + totalOrderBumpPrice, true)}
-        productName={product?.name || "Produto Digital"}
-      />
     </ThemeProvider>
   );
 };

@@ -455,3 +455,20 @@ html {
     transform: translateY(0);
   }
 }
+
+@keyframes countdown-progress {
+  from {
+    stroke-dashoffset: 565.48;
+    stroke: #2563eb;
+  }
+  60% {
+    stroke: #2563eb;
+  }
+  80% {
+    stroke: #f59e0b;
+  }
+  to {
+    stroke-dashoffset: 0;
+    stroke: #dc2626;
+  }
+}
