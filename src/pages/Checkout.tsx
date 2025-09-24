@@ -531,6 +531,11 @@ const Checkout = () => {
   const availablePaymentMethods = useMemo(() => {
     if (!userCountry) return [];
     
+    console.log('🔍 DEBUG PAYMENT METHODS:', {
+      userCountry: userCountry.code,
+      productPaymentMethods: product?.payment_methods
+    });
+    
     // Primeiro, verificar se o produto tem métodos de pagamento configurados
     if (product?.payment_methods && Array.isArray(product.payment_methods)) {
       const enabledMethods = product.payment_methods.filter((method: any) => method.enabled);
@@ -562,6 +567,8 @@ const Checkout = () => {
     
     return [...countryMethods, kambaPayMethod];
   }, [userCountry, product]);
+
+  console.log('🔍 AVAILABLE PAYMENT METHODS:', availablePaymentMethods.map(m => ({ id: m.id, name: m.name })));
 
   const getPaymentMethods = () => availablePaymentMethods;
 
@@ -2207,9 +2214,11 @@ const Checkout = () => {
                 </div>
               )}
 
-              {selectedPayment === 'appypay' && (
-                <div className="mt-6">
-                  <AppyPayReferencePayment
+              {selectedPayment === 'appypay' && (() => {
+                console.log('🏦 RENDERIZANDO APPYPAY COMPONENT:', { selectedPayment, totalPrice, productId });
+                return (
+                  <div className="mt-6">
+                    <AppyPayReferencePayment
                     productId={productId || ''}
                     customerData={{
                       name: formData.fullName,
@@ -2240,9 +2249,10 @@ const Checkout = () => {
                     }}
                     processing={processing}
                     setProcessing={setProcessing}
-                  />
-                </div>
-              )}
+                   />
+                 </div>
+                );
+              })()}
 
               {!['card', 'klarna', 'multibanco', 'apple_pay', 'appypay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
                 <Button
