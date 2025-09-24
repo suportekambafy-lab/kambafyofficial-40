@@ -34,6 +34,7 @@ export function ModernRecentSales() {
   const { getCurrencyInfo, convertToKZ } = useCurrencyToCountry();
   const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalSalesCount, setTotalSalesCount] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -90,6 +91,17 @@ export function ModernRecentSales() {
       if (affiliateError) throw affiliateError;
 
       const userAffiliateCodes = affiliateCodes?.map(a => a.affiliate_code) || [];
+
+      // Buscar total de vendas do vendedor para numeração
+      const { count: totalSales, error: countError } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .in('product_id', userProductIds.length > 0 ? userProductIds : [])
+        .eq('status', 'completed');
+
+      if (!countError && totalSales !== null) {
+        setTotalSalesCount(totalSales);
+      }
 
       const promises = [];
 
@@ -313,9 +325,9 @@ export function ModernRecentSales() {
                   <p className="text-sm font-medium text-foreground">
                     {sale.product_name || 'Produto'}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    #{(recentSales.length - index + 100).toString().padStart(3, '0')}
-                  </p>
+                   <p className="text-xs text-muted-foreground">
+                     #{(totalSalesCount - index).toString().padStart(4, '0')}
+                   </p>
                 </div>
                 
                 <div className="flex items-center gap-3">
