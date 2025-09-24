@@ -64,20 +64,25 @@ serve(async (req) => {
     // Preparar dados para solicitação do token
     // O authBaseUrl já inclui o path completo para o token endpoint
     const tokenUrl = authBaseUrl;
+    
+    // Tentar Basic Authentication (método mais comum para client_credentials)
+    const credentials = btoa(`${clientId}:${clientSecret}`);
     const formData = new URLSearchParams();
     formData.append('grant_type', 'client_credentials');
-    formData.append('client_id', clientId);
-    formData.append('client_secret', clientSecret);
-    // OAuth2 v2.0 uses 'scope' instead of 'resource'
     formData.append('scope', `${applicationIdUri}/.default`);
 
-    logStep("Solicitando token OAuth2", { tokenUrl });
+    logStep("Solicitando token OAuth2 com Basic Auth", { 
+      tokenUrl,
+      scope: `${applicationIdUri}/.default`,
+      clientId: clientId.substring(0, 8) + "..."
+    });
 
-    // Fazer solicitação para obter o token
+    // Fazer solicitação para obter o token usando Basic Authentication
     const response = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${credentials}`,
       },
       body: formData,
     });
