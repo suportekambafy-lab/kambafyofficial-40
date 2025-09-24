@@ -1,6 +1,23 @@
 import { useState, useEffect, useMemo, useCallback, memo, lazy, Suspense, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Shield, Check, AlertTriangle, CheckCircle, Wallet, Receipt } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+
+// Componentes de ícones do Kambafy
+const KambaSecureIcon = ({ className }: { className?: string }) => (
+  <img src="/kambafy-secure-icon.png" alt="Kambafy Secure" className={className} />
+);
+
+const KambaCheckIcon = ({ className }: { className?: string }) => (
+  <img src="/kambafy-icon.png" alt="Kambafy Check" className={className} />
+);
+
+const KambaWalletIcon = ({ className }: { className?: string }) => (
+  <img src="/kambafy-icon.png" alt="Kambafy Wallet" className={className} />
+);
+
+const KambaIcon = ({ className }: { className?: string }) => (
+  <img src="/kambafy-icon.png" alt="Kambafy" className={className} />
+);
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1903,8 +1920,8 @@ const Checkout = () => {
           <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="relative inline-flex items-center justify-center">
-                <Shield className="w-5 h-5" />
-                <Check className="w-2.5 h-2.5 absolute inset-0 m-auto text-white" />
+                <KambaSecureIcon className="w-5 h-5" />
+                <KambaCheckIcon className="w-2.5 h-2.5 absolute inset-0 m-auto" />
               </div>
               <span className="font-bold text-lg">COMPRA 100% SEGURA</span>
             </div>
@@ -1941,7 +1958,7 @@ const Checkout = () => {
                   <h2 className="text-xl font-bold text-gray-900">{product.name.toUpperCase()}</h2>
                   <div className="flex items-center gap-1 mt-1">
                     <span className="text-sm text-gray-600">Entrega instantânea</span>
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <KambaCheckIcon className="w-4 h-4 text-green-500" />
                   </div>
                   <div className="text-2xl font-bold text-green-600 mt-2">
                     {getDisplayPrice(originalPrice)}
@@ -2043,7 +2060,7 @@ const Checkout = () => {
                        >
                         {selectedPayment === method.id && (
                           <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                            <Check className="w-3 h-3 text-white" />
+                            <KambaCheckIcon className="w-3 h-3 text-white" />
                           </div>
                         )}
                         <div className="w-12 h-12 rounded-xl overflow-hidden mb-2 flex items-center justify-center">
@@ -2115,7 +2132,7 @@ const Checkout = () => {
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-                          <Wallet className="w-5 h-5 text-white" />
+                          <KambaWalletIcon className="w-5 h-5 text-white" />
                         </div>
                         <div>
                           <h3 className="font-semibold text-blue-900">Pagamento com KambaPay</h3>
@@ -2359,9 +2376,7 @@ const Checkout = () => {
                 >
                   {processing ? (
                     <div className="flex items-center justify-center">
-                      <div className="w-6 h-6 rounded bg-green-700 flex items-center justify-center mr-2">
-                        <span className="text-xs font-bold text-white animate-bounce">K</span>
-                      </div>
+                      <KambaIcon className="w-6 h-6 rounded flex items-center justify-center mr-2 animate-pulse" />
                       PROCESSANDO...
                     </div>
                   ) : (

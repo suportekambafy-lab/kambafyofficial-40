@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Timer, AlertTriangle, RefreshCw, X } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCustomToast } from '@/hooks/useCustomToast';
+
+// Componentes de ícones do Kambafy
+const KambaTimerIcon = ({ className }: { className?: string }) => (
+  <img src="/kambafy-icon.png" alt="Kambafy Timer" className={className} />
+);
+
+const KambaRefreshIcon = ({ className }: { className?: string }) => (
+  <img src="/kambafy-icon.png" alt="Kambafy Refresh" className={className} />
+);
+
+const KambaCloseIcon = ({ className }: { className?: string }) => (
+  <img src="/kambafy-icon.png" alt="Kambafy Close" className={className} />
+);
 
 interface ExpressPaymentModalProps {
   isOpen: boolean;
