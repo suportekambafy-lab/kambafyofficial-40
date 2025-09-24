@@ -15,5 +15,3 @@ verify_jwt = false
 [functions.member-area-logout]
 verify_jwt = false
 
-[functions.process-appypay-payment]
-verify_jwt = false
