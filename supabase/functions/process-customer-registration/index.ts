@@ -201,7 +201,7 @@ const handler = async (req: Request): Promise<Response> => {
             },
             user_id: requestData.sellerId,
             order_id: `${requestData.orderId}-BUMP`,
-            product_id: requestData.orderBump.bump_product_id
+            product_id: requestData.productId // Usar o produto principal para encontrar os webhooks
           };
 
           await supabase.functions.invoke('trigger-webhooks', {
@@ -227,7 +227,7 @@ const handler = async (req: Request): Promise<Response> => {
             },
             user_id: requestData.sellerId,
             order_id: `${requestData.orderId}-BUMP`,
-            product_id: requestData.orderBump.bump_product_id
+            product_id: requestData.productId // Usar o produto principal para encontrar os webhooks
           };
 
           await supabase.functions.invoke('trigger-webhooks', {

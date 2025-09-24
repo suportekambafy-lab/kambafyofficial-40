@@ -410,7 +410,7 @@ serve(async (req) => {
                             },
                             user_id: product?.user_id,
                             order_id: `${orderId}-BUMP-${bump.bump_product_id}`,
-                            product_id: bump.bump_product_id
+                            product_id: order.product_id // Usar o produto principal para encontrar os webhooks
                           };
 
                           await supabase.functions.invoke('trigger-webhooks', {
@@ -434,7 +434,7 @@ serve(async (req) => {
                             },
                             user_id: product?.user_id,
                             order_id: `${orderId}-BUMP-${bump.bump_product_id}`,
-                            product_id: bump.bump_product_id
+                            product_id: order.product_id // Usar o produto principal para encontrar os webhooks
                           };
 
                           await supabase.functions.invoke('trigger-webhooks', {
