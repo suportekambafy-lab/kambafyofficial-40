@@ -67,7 +67,8 @@ serve(async (req) => {
     formData.append('grant_type', 'client_credentials');
     formData.append('client_id', clientId);
     formData.append('client_secret', clientSecret);
-    formData.append('resource', resource);
+    // OAuth2 v2.0 uses 'scope' instead of 'resource'
+    formData.append('scope', `${resource}/.default`);
 
     logStep("Solicitando token OAuth2", { tokenUrl });
 
