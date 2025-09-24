@@ -176,72 +176,10 @@ const handler = async (req: Request): Promise<Response> => {
       } else {
         console.log('✅ Order bump confirmation sent');
       }
-
-      // Disparar webhooks para o order bump
-      if (requestData.orderBump.bump_product_id) {
-        try {
-          console.log('🔔 Triggering webhooks for order bump...');
-          
-          const bumpPaymentPayload = {
-            event: 'payment.success',
-            data: {
-              order_id: `${requestData.orderId}-BUMP`,
-              amount: requestData.orderBump.discounted_price > 0 
-                ? requestData.orderBump.discounted_price 
-                : parseFloat(requestData.orderBump.bump_product_price.replace(/[^\d.,]/g, '').replace(',', '.')),
-              currency: requestData.currency,
-              customer_email: requestData.customerEmail,
-              customer_name: requestData.customerName,
-              product_id: requestData.orderBump.bump_product_id,
-              product_name: requestData.orderBump.bump_product_name,
-              payment_method: 'order_bump',
-              is_order_bump: true,
-              main_order_id: requestData.orderId,
-              timestamp: new Date().toISOString()
-            },
-            user_id: requestData.sellerId,
-            order_id: `${requestData.orderId}-BUMP`,
-            product_id: requestData.productId // Usar o produto principal para encontrar os webhooks
-          };
-
-          await supabase.functions.invoke('trigger-webhooks', {
-            body: bumpPaymentPayload
-          });
-
-          // Também disparar evento de produto comprado para o order bump
-          const bumpPurchasePayload = {
-            event: 'product.purchased',
-            data: {
-              order_id: `${requestData.orderId}-BUMP`,
-              product_id: requestData.orderBump.bump_product_id,
-              product_name: requestData.orderBump.bump_product_name,
-              customer_email: requestData.customerEmail,
-              customer_name: requestData.customerName,
-              price: requestData.orderBump.discounted_price > 0 
-                ? requestData.orderBump.discounted_price.toString() 
-                : requestData.orderBump.bump_product_price,
-              currency: requestData.currency,
-              is_order_bump: true,
-              main_order_id: requestData.orderId,
-              timestamp: new Date().toISOString()
-            },
-            user_id: requestData.sellerId,
-            order_id: `${requestData.orderId}-BUMP`,
-            product_id: requestData.productId // Usar o produto principal para encontrar os webhooks
-          };
-
-          await supabase.functions.invoke('trigger-webhooks', {
-            body: bumpPurchasePayload
-          });
-
-          console.log('✅ Order bump webhooks triggered successfully');
-
-        } catch (webhookError) {
-          console.error('❌ Error triggering order bump webhooks:', webhookError);
-          // Não falhar o processo por causa dos webhooks
-        }
-      }
     }
+
+    // IMPORTANTE: Não disparar webhooks aqui! Eles devem ser disparados apenas quando o pagamento é confirmado
+    // Os webhooks serão disparados automaticamente quando o status do order mudar para 'completed'
 
     console.log('=== CUSTOMER REGISTRATION PROCESS COMPLETE ===');
 

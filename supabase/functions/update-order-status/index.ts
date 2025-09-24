@@ -1,0 +1,210 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { orderId, status } = await req.json();
+
+    if (!orderId || !status) {
+      return new Response(JSON.stringify({ 
+        error: 'orderId and status are required' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log(`🔄 Updating order ${orderId} status to: ${status}`);
+
+    // Buscar o order atual para obter dados
+    const { data: orderData, error: fetchError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('order_id', orderId)
+      .single();
+
+    if (fetchError || !orderData) {
+      console.error('Error fetching order:', fetchError);
+      throw new Error('Order not found');
+    }
+
+    // Atualizar status do order
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({ 
+        status: status,
+        updated_at: new Date().toISOString()
+      })
+      .eq('order_id', orderId);
+
+    if (updateError) {
+      console.error('Error updating order status:', updateError);
+      throw updateError;
+    }
+
+    console.log(`✅ Order ${orderId} status updated to: ${status}`);
+
+    // Se o status foi alterado para 'completed', disparar webhooks
+    if (status === 'completed' && orderData.status !== 'completed') {
+      console.log('🔔 Order completed, triggering webhooks...');
+
+      // Buscar dados do produto
+      const { data: product, error: productError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', orderData.product_id)
+        .single();
+
+      if (productError) {
+        console.error('Error fetching product:', productError);
+      } else {
+        // Webhook para o produto principal
+        const mainProductPayload = {
+          event: 'payment.success',
+          data: {
+            order_id: orderId,
+            amount: parseFloat(orderData.amount),
+            currency: orderData.currency,
+            customer_email: orderData.customer_email,
+            customer_name: orderData.customer_name,
+            product_id: orderData.product_id,
+            product_name: product.name,
+            payment_method: orderData.payment_method,
+            timestamp: new Date().toISOString()
+          },
+          user_id: product.user_id,
+          order_id: orderId,
+          product_id: orderData.product_id
+        };
+
+        await supabase.functions.invoke('trigger-webhooks', {
+          body: mainProductPayload
+        });
+
+        // Webhook de produto comprado
+        const purchasePayload = {
+          event: 'product.purchased',
+          data: {
+            order_id: orderId,
+            product_id: orderData.product_id,
+            product_name: product.name,
+            customer_email: orderData.customer_email,
+            customer_name: orderData.customer_name,
+            price: orderData.amount,
+            currency: orderData.currency,
+            timestamp: new Date().toISOString()
+          },
+          user_id: product.user_id,
+          order_id: orderId,
+          product_id: orderData.product_id
+        };
+
+        await supabase.functions.invoke('trigger-webhooks', {
+          body: purchasePayload
+        });
+
+        // Se há order bump, disparar webhooks para ele também
+        if (orderData.order_bump_data) {
+          try {
+            console.log('🔔 Processing order bump webhooks...');
+            const orderBumpData = JSON.parse(orderData.order_bump_data);
+            
+            const bumpPaymentPayload = {
+              event: 'payment.success',
+              data: {
+                order_id: `${orderId}-BUMP`,
+                amount: orderBumpData.discounted_price > 0 
+                  ? orderBumpData.discounted_price 
+                  : parseFloat(orderBumpData.bump_product_price.replace(/[^\d.,]/g, '').replace(',', '.')),
+                currency: orderData.currency,
+                customer_email: orderData.customer_email,
+                customer_name: orderData.customer_name,
+                product_id: orderBumpData.bump_product_id || 'order-bump',
+                product_name: orderBumpData.bump_product_name,
+                payment_method: orderData.payment_method,
+                is_order_bump: true,
+                main_order_id: orderId,
+                timestamp: new Date().toISOString()
+              },
+              user_id: product.user_id,
+              order_id: `${orderId}-BUMP`,
+              product_id: orderData.product_id // Usar produto principal para encontrar webhooks
+            };
+
+            await supabase.functions.invoke('trigger-webhooks', {
+              body: bumpPaymentPayload
+            });
+
+            // Webhook de produto comprado para order bump
+            const bumpPurchasePayload = {
+              event: 'product.purchased',
+              data: {
+                order_id: `${orderId}-BUMP`,
+                product_id: orderBumpData.bump_product_id || 'order-bump',
+                product_name: orderBumpData.bump_product_name,
+                customer_email: orderData.customer_email,
+                customer_name: orderData.customer_name,
+                price: orderBumpData.discounted_price > 0 
+                  ? orderBumpData.discounted_price.toString() 
+                  : orderBumpData.bump_product_price,
+                currency: orderData.currency,
+                is_order_bump: true,
+                main_order_id: orderId,
+                timestamp: new Date().toISOString()
+              },
+              user_id: product.user_id,
+              order_id: `${orderId}-BUMP`,
+              product_id: orderData.product_id // Usar produto principal para encontrar webhooks
+            };
+
+            await supabase.functions.invoke('trigger-webhooks', {
+              body: bumpPurchasePayload
+            });
+
+            console.log('✅ Order bump webhooks triggered successfully');
+          } catch (bumpError) {
+            console.error('❌ Error processing order bump webhooks:', bumpError instanceof Error ? bumpError.message : 'Unknown error');
+          }
+        }
+
+        console.log('✅ All webhooks triggered successfully');
+      }
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      orderId: orderId,
+      newStatus: status
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
+    });
+
+  } catch (error) {
+    console.error('Error in update-order-status:', error);
+    return new Response(JSON.stringify({ 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500
+    });
+  }
+});
