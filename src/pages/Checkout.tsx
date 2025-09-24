@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, memo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, memo, lazy, Suspense, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Shield, Check, AlertTriangle, CheckCircle, Wallet, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -98,6 +98,8 @@ const Checkout = () => {
   const [resetOrderBumps, setResetOrderBumps] = useState(false);
   const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
   const [bankTransferData, setBankTransferData] = useState<{file: File, bank: string} | null>(null);
+  const [expressCountdownTime, setExpressCountdownTime] = useState(60);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Hook para KambaPay
   const { fetchBalanceByEmail } = useKambaPayBalance();
@@ -113,6 +115,55 @@ const Checkout = () => {
       console.log('🎯 Detectado upsell do pedido:', upsellFrom);
     }
   }, []);
+
+  // Controlar countdown do Express Payment
+  useEffect(() => {
+    if (selectedPayment === 'express' && processing) {
+      // Iniciar countdown
+      setExpressCountdownTime(60);
+      
+      const interval = setInterval(() => {
+        setExpressCountdownTime((prevTime) => {
+          if (prevTime <= 1) {
+            // Tempo esgotado
+            clearInterval(interval);
+            handleExpressPaymentTimeout();
+            return 0;
+          }
+          
+          // Atualizar elemento do DOM se existir
+          const timerElement = document.getElementById('countdown-timer');
+          if (timerElement) {
+            timerElement.textContent = (prevTime - 1).toString();
+          }
+          
+          return prevTime - 1;
+        });
+      }, 1000);
+      
+      countdownIntervalRef.current = interval;
+    } else {
+      // Limpar countdown quando não é express ou não está processando
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      setExpressCountdownTime(60);
+      
+      // Resetar elemento do DOM
+      const timerElement = document.getElementById('countdown-timer');
+      if (timerElement) {
+        timerElement.textContent = '60';
+      }
+    }
+    
+    // Cleanup ao desmontar componente
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, [selectedPayment, processing]);
 
   // Definir todas as variáveis primeiro
   const originalPriceKZ = useMemo(() => product ? parseFloat(product.price) : 0, [product]);
@@ -2211,15 +2262,15 @@ const Checkout = () => {
                                 fill="transparent"
                                 strokeLinecap="round"
                                 strokeDasharray={565.48}
-                                strokeDashoffset={565.48}
+                                strokeDashoffset={565.48 * (expressCountdownTime / 60)}
                                 style={{
-                                  animation: 'countdown-progress 60s linear forwards'
+                                  transition: 'stroke-dashoffset 1s linear'
                                 }}
                               />
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                               <span className="text-sm text-gray-500 mb-2">Tempo Restante</span>
-                              <span className="text-4xl font-bold text-gray-900" id="countdown-timer">60</span>
+                              <span className="text-4xl font-bold text-gray-900" id="countdown-timer">{expressCountdownTime}</span>
                               <span className="text-sm text-gray-500 mt-1">segundos</span>
                             </div>
                           </div>
