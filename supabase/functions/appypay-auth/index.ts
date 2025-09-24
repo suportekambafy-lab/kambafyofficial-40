@@ -61,7 +61,8 @@ serve(async (req) => {
     });
 
     // Preparar dados para solicitação do token
-    const tokenUrl = `${authBaseUrl}/v2.0/token`;
+    // O authBaseUrl já inclui o path completo para o token endpoint
+    const tokenUrl = authBaseUrl;
     const formData = new URLSearchParams();
     formData.append('grant_type', 'client_credentials');
     formData.append('client_id', clientId);
