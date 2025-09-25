@@ -90,7 +90,7 @@ export function MemberAreaSlideMenu({
           </div>
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+      <SheetContent side="right" className="w-[400px] sm:w-[540px] bg-gray-950 text-white border-gray-800">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
@@ -103,15 +103,15 @@ export function MemberAreaSlideMenu({
 
         <div className="space-y-6 mt-6">
           {/* Progresso do Curso */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-4 rounded-lg border border-gray-700">
             <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="w-5 h-5 text-blue-600" />
-              <h3 className="font-semibold text-gray-900">Progresso do Curso</h3>
+              <BarChart3 className="w-5 h-5 text-emerald-400" />
+              <h3 className="font-semibold text-white">Progresso do Curso</h3>
             </div>
             
-            <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+            <div className="w-full bg-gray-700 rounded-full h-3 mb-2">
               <div 
-                className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out" 
+                className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-3 rounded-full transition-all duration-500 ease-out" 
                 style={{ 
                   width: `${getCourseProgress(totalLessonsCount)}%`
                 }}
@@ -119,27 +119,27 @@ export function MemberAreaSlideMenu({
             </div>
             
             <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-300">
                 {completedLessons} de {totalLessonsCount} aulas
               </p>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
                 {getCourseProgress(totalLessonsCount)}%
               </Badge>
             </div>
 
             {/* Estatísticas Adicionais */}
             <div className="grid grid-cols-3 gap-3 mt-4">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-lg font-bold text-gray-900">{totalLessonsCount}</p>
-                <p className="text-xs text-gray-600">Total</p>
+              <div className="text-center p-3 bg-gray-800 rounded-lg">
+                <p className="text-lg font-bold text-white">{totalLessonsCount}</p>
+                <p className="text-xs text-gray-400">Total</p>
               </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <p className="text-lg font-bold text-green-700">{completedLessons}</p>
-                <p className="text-xs text-green-600">Concluídas</p>
+              <div className="text-center p-3 bg-emerald-500/20 rounded-lg">
+                <p className="text-lg font-bold text-emerald-400">{completedLessons}</p>
+                <p className="text-xs text-emerald-300">Concluídas</p>
               </div>
-              <div className="text-center p-3 bg-purple-50 rounded-lg">
-                <p className="text-lg font-bold text-purple-700">{Math.round(totalDuration / 60)}h</p>
-                <p className="text-xs text-purple-600">Duração</p>
+              <div className="text-center p-3 bg-gray-800 rounded-lg">
+                <p className="text-lg font-bold text-white">{Math.round(totalDuration / 60)}h</p>
+                <p className="text-xs text-gray-400">Duração</p>
               </div>
             </div>
           </div>
@@ -147,8 +147,8 @@ export function MemberAreaSlideMenu({
           {/* Pesquisa de Aulas */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Search className="w-5 h-5 text-gray-600" />
-              <h3 className="font-semibold text-gray-900">Pesquisar Aulas</h3>
+              <Search className="w-5 h-5 text-emerald-400" />
+              <h3 className="font-semibold text-white">Pesquisar Aulas</h3>
             </div>
             
             <div className="relative">
@@ -157,12 +157,12 @@ export function MemberAreaSlideMenu({
                 placeholder="Digite o nome da aula..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
               />
             </div>
 
             {searchTerm && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-300">
                 {filteredLessons.length} resultado{filteredLessons.length !== 1 ? 's' : ''} encontrado{filteredLessons.length !== 1 ? 's' : ''}
               </div>
             )}
@@ -176,20 +176,20 @@ export function MemberAreaSlideMenu({
                   {/* Aulas de módulos */}
                   {Object.values(filteredLessonsByModule).map(({ module, lessons: moduleLessons }) => (
                     <div key={module.id} className="space-y-2">
-                      <h4 className="font-medium text-gray-700 text-sm px-2 py-1 bg-gray-100 rounded">
+                      <h4 className="font-medium text-emerald-400 text-sm px-2 py-1 bg-gray-800 rounded">
                         📁 {module.title}
                       </h4>
                       {moduleLessons.map((lesson) => (
                         <div
                           key={lesson.id}
                           onClick={() => handleLessonClick(lesson)}
-                          className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                          className="flex items-center gap-3 p-3 border border-gray-700 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors"
                         >
                           {getLessonStatusIcon(lesson)}
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-medium text-gray-900 truncate">{lesson.title}</h5>
+                            <h5 className="font-medium text-white truncate">{lesson.title}</h5>
                             {lesson.description && (
-                              <p className="text-xs text-gray-600 line-clamp-2">{lesson.description}</p>
+                              <p className="text-xs text-gray-400 line-clamp-2">{lesson.description}</p>
                             )}
                           </div>
                         </div>
@@ -201,7 +201,7 @@ export function MemberAreaSlideMenu({
                   {filteredLessonsWithoutModule.length > 0 && (
                     <div className="space-y-2">
                       {Object.keys(filteredLessonsByModule).length > 0 && (
-                        <h4 className="font-medium text-gray-700 text-sm px-2 py-1 bg-gray-100 rounded">
+                        <h4 className="font-medium text-emerald-400 text-sm px-2 py-1 bg-gray-800 rounded">
                           📄 Outras Aulas
                         </h4>
                       )}
@@ -209,13 +209,13 @@ export function MemberAreaSlideMenu({
                         <div
                           key={lesson.id}
                           onClick={() => handleLessonClick(lesson)}
-                          className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                          className="flex items-center gap-3 p-3 border border-gray-700 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors"
                         >
                           {getLessonStatusIcon(lesson)}
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-medium text-gray-900 truncate">{lesson.title}</h5>
+                            <h5 className="font-medium text-white truncate">{lesson.title}</h5>
                             {lesson.description && (
-                              <p className="text-xs text-gray-600 line-clamp-2">{lesson.description}</p>
+                              <p className="text-xs text-gray-400 line-clamp-2">{lesson.description}</p>
                             )}
                           </div>
                         </div>
@@ -224,15 +224,15 @@ export function MemberAreaSlideMenu({
                   )}
 
                   {filteredLessons.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <Search className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <div className="text-center py-8 text-gray-400">
+                      <Search className="w-8 h-8 mx-auto mb-2 text-gray-600" />
                       <p>Nenhuma aula encontrada</p>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Search className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <div className="text-center py-8 text-gray-400">
+                  <Search className="w-8 h-8 mx-auto mb-2 text-gray-600" />
                   <p className="text-sm">Digite algo para pesquisar aulas</p>
                 </div>
               )}
@@ -241,14 +241,14 @@ export function MemberAreaSlideMenu({
 
           {/* Botão de Logout */}
           {onLogout && (
-            <div className="mt-6 pt-4 border-t">
+            <div className="mt-6 pt-4 border-t border-gray-700">
               <Button
                 onClick={() => {
                   onLogout();
                   setOpen(false);
                 }}
                 variant="outline"
-                className="w-full flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                className="w-full flex items-center gap-2 text-red-400 border-red-400/50 bg-red-500/10 hover:bg-red-500/20 hover:border-red-400"
               >
                 <LogOut className="w-4 h-4" />
                 Sair da Área

@@ -198,7 +198,7 @@ export default function ModernMembersArea() {
         
         {/* Hero Image Background */}
         {memberArea?.hero_image_url && (
-          <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 opacity-20">
             <img 
               src={memberArea.hero_image_url} 
               alt={memberArea.name}
