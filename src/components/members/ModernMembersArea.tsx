@@ -85,21 +85,8 @@ export default function ModernMembersArea() {
           .eq('status', 'published')
           .order('order_number');
 
-        console.log('🔍 Raw lessonsData:', lessonsData);
-        console.log('🔍 lessonsError:', lessonsError);
-        console.log('🔍 Type of lessonsData:', typeof lessonsData);
-        console.log('🔍 Is Array:', Array.isArray(lessonsData));
-        
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
-          console.log('📊 Raw lessons array:', lessonsData);
-          
-          // Verificar cada item individualmente
-          lessonsData.forEach((lesson, index) => {
-            console.log(`🔍 Lesson ${index}:`, lesson);
-            console.log(`   - Type:`, typeof lesson);
-            console.log(`   - Keys:`, lesson ? Object.keys(lesson) : 'null/undefined');
-          });
           
           setLessons(lessonsData as Lesson[]);
         } else {
