@@ -178,6 +178,10 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
             currentPath.startsWith('/apps') || currentPath.startsWith('/minhas-compras')) {
           targetSubdomain = 'app';
         } else {
+          console.log('🚨 SubdomainGuard: MEMBROS - Redirecionando para MAIN', {
+            currentPath,
+            reason: 'Rota não reconhecida no subdomínio membros'
+          });
           targetSubdomain = 'main';
         }
       } else {
