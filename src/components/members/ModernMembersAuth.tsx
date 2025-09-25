@@ -61,15 +61,27 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
         const savedSession = localStorage.getItem('modernMembersSession');
         if (savedSession) {
           const sessionData = JSON.parse(savedSession);
-          console.log('📋 ModernAuth: Sessão encontrada:', { sessionData });
+          console.log('📋 ModernAuth: Sessão encontrada:', { 
+            sessionData,
+            expiresAt: sessionData.expiresAt,
+            currentTime: new Date().toISOString(),
+            isValid: new Date(sessionData.expiresAt) > new Date()
+          });
           
           // Verificar se a sessão não expirou
-          if (new Date(sessionData.expiresAt) > new Date()) {
+          const sessionExpiry = new Date(sessionData.expiresAt);
+          const currentTime = new Date();
+          
+          if (sessionExpiry > currentTime) {
             console.log('✅ ModernAuth: Sessão válida, carregando área...');
             await loadMemberArea(sessionData.memberAreaId);
             setSession(sessionData);
           } else {
-            console.log('❌ ModernAuth: Sessão expirada, removendo...');
+            console.log('❌ ModernAuth: Sessão expirada, removendo...', {
+              expiry: sessionExpiry.toISOString(),
+              current: currentTime.toISOString(),
+              diff: sessionExpiry.getTime() - currentTime.getTime()
+            });
             localStorage.removeItem('modernMembersSession');
           }
         } else {
@@ -83,8 +95,10 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
       }
     };
 
-    checkExistingSession();
-  }, []);
+    // Adicionar delay para evitar conflitos com login simultâneo
+    const timer = setTimeout(checkExistingSession, 100);
+    return () => clearTimeout(timer);
+  }, []); // Remover dependencies para evitar re-execução
 
   const loadMemberArea = async (memberAreaId: string) => {
     try {
@@ -153,14 +167,24 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
       // Carregar área de membros
       await loadMemberArea(memberAreaId);
 
+      // Criar sessão com tempo de expiração mais longo para debug
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 1); // 1 dia válido
+
       const newSession: MemberSession = {
-        id: sessionData.sessionId,
+        id: sessionData.data.sessionToken,
         memberAreaId,
         studentEmail: email,
         studentName: name,
-        sessionToken: sessionData.sessionToken,
-        expiresAt: sessionData.expiresAt
+        sessionToken: sessionData.data.sessionToken,
+        expiresAt: expiresAt.toISOString() // Usar nossa própria data de expiração
       };
+
+      console.log('💾 ModernAuth: Salvando sessão:', {
+        session: newSession,
+        expiresAt: newSession.expiresAt,
+        currentTime: new Date().toISOString()
+      });
 
       setSession(newSession);
       localStorage.setItem('modernMembersSession', JSON.stringify(newSession));

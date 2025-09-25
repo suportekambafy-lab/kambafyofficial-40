@@ -47,11 +47,14 @@ export default function ModernMembersArea() {
     authLoading 
   });
 
-  // Redirect para login se não autenticado
-  if (!authLoading && (!isAuthenticated || !session)) {
-    console.log('🔄 ModernMembersArea: Redirecionando para login - não autenticado');
-    return <Navigate to={`/members/login/${memberAreaId}`} replace />;
-  }
+  // Redirect para login se não autenticado - usar useEffect para evitar render condicional
+  useEffect(() => {
+    if (!authLoading && (!isAuthenticated || !session)) {
+      console.log('🔄 ModernMembersArea: Redirecionando para login - não autenticado');
+      // Usar window.location para evitar problemas de hooks
+      window.location.href = `/members/login/${memberAreaId}`;
+    }
+  }, [authLoading, isAuthenticated, session, memberAreaId]);
 
   // Carregar conteúdo da área
   useEffect(() => {
