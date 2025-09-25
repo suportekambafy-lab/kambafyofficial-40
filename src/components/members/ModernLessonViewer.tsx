@@ -154,8 +154,8 @@ export function ModernLessonViewer({
           </Button>
         </SheetTrigger>
         
-        <SheetContent side="right" className="w-[450px] sm:w-[600px] bg-gradient-to-b from-gray-950 to-gray-900 text-white border-gray-800">
-          <SheetHeader className="border-b border-gray-800 pb-4">
+        <SheetContent side="right" className="w-[450px] sm:w-[600px] bg-gray-950 text-white border-none">
+          <SheetHeader className="border-b border-gray-700/30 pb-4">
             <SheetTitle className="text-slate-50 text-xl font-bold">🎬 Lista de Aulas</SheetTitle>
             <SheetDescription className="text-slate-300">
               Navegue entre as aulas do curso • {lessons.length} aulas disponíveis
@@ -173,10 +173,10 @@ export function ModernLessonViewer({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-lg border border-emerald-500/30">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-900/60 rounded-lg border-none">
                     <BookOpen className="h-4 w-4 text-emerald-400" />
                     <h4 className="font-semibold text-emerald-400">{module.title}</h4>
-                    <Badge variant="secondary" className="ml-auto bg-emerald-500/20 text-emerald-300 text-xs">
+                    <Badge variant="secondary" className="ml-auto bg-gray-800/80 text-emerald-300 text-xs border-none">
                       {moduleLessons.length} aulas
                     </Badge>
                   </div>
@@ -188,16 +188,16 @@ export function ModernLessonViewer({
                         onClick={() => handleLessonSelect(moduleLesson)}
                         className={`group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
                           moduleLesson.id === lesson.id
-                            ? 'ring-2 ring-emerald-500 bg-emerald-500/10'
-                            : 'hover:bg-gray-800/50'
+                            ? 'bg-emerald-500/20 ring-1 ring-emerald-500/50'
+                            : 'hover:bg-gray-800/80'
                         }`}
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <div className="flex items-center gap-4 p-4 border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm">
+                        <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-900/80 backdrop-blur-sm">
                           {/* Thumbnail */}
                           <div className="relative flex-shrink-0">
-                            <div className="w-20 h-12 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg overflow-hidden">
+                            <div className="w-20 h-12 bg-gray-900 rounded-lg overflow-hidden">
                               <div className="w-full h-full flex items-center justify-center">
                                 <Play className="h-5 w-5 text-gray-400" />
                               </div>
@@ -226,15 +226,15 @@ export function ModernLessonViewer({
                               </p>
                             )}
                             <div className="flex items-center gap-3 mt-2">
-                              <Badge variant="outline" className="text-xs bg-gray-700/50 border-gray-600">
-                                <Clock className="h-3 w-3 mr-1" />
-                                {moduleLesson.duration} min
+                            <Badge variant="outline" className="text-xs bg-gray-900 border-none text-gray-400">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {moduleLesson.duration} min
+                            </Badge>
+                            {moduleLesson.id === lesson.id && (
+                              <Badge className="bg-emerald-500/30 text-emerald-300 border-none text-xs">
+                                Assistindo
                               </Badge>
-                              {moduleLesson.id === lesson.id && (
-                                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50 text-xs">
-                                  Assistindo
-                                </Badge>
-                              )}
+                            )}
                             </div>
                           </div>
 
@@ -243,7 +243,7 @@ export function ModernLessonViewer({
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                               moduleLesson.id === lesson.id
                                 ? 'bg-emerald-500 text-white'
-                                : 'bg-gray-700 text-gray-400 group-hover:bg-emerald-500 group-hover:text-white'
+                                : 'bg-gray-800 text-gray-400 group-hover:bg-emerald-500 group-hover:text-white'
                             }`}>
                               <Play className="h-4 w-4 ml-0.5" />
                             </div>
@@ -264,10 +264,10 @@ export function ModernLessonViewer({
                   transition={{ duration: 0.3, delay: 0.1 }}
                 >
                   {Object.keys(lessonsByModule).length > 0 && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-gray-700/20 to-gray-600/20 rounded-lg border border-gray-600/30">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-900/60 rounded-lg border-none">
                       <BookOpen className="h-4 w-4 text-gray-400" />
                       <h4 className="font-semibold text-gray-300">Outras Aulas</h4>
-                      <Badge variant="secondary" className="ml-auto bg-gray-600/20 text-gray-300 text-xs">
+                      <Badge variant="secondary" className="ml-auto bg-gray-800/80 text-gray-300 text-xs border-none">
                         {lessonsWithoutModule.length} aulas
                       </Badge>
                     </div>
@@ -280,16 +280,16 @@ export function ModernLessonViewer({
                         onClick={() => handleLessonSelect(otherLesson)}
                         className={`group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
                           otherLesson.id === lesson.id
-                            ? 'ring-2 ring-emerald-500 bg-emerald-500/10'
-                            : 'hover:bg-gray-800/50'
+                            ? 'bg-emerald-500/20 ring-1 ring-emerald-500/50'
+                            : 'hover:bg-gray-800/80'
                         }`}
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <div className="flex items-center gap-4 p-4 border border-gray-700/50 rounded-xl bg-gray-800/30 backdrop-blur-sm">
+                        <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-900/80 backdrop-blur-sm">
                           {/* Thumbnail */}
                           <div className="relative flex-shrink-0">
-                            <div className="w-20 h-12 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg overflow-hidden">
+                            <div className="w-20 h-12 bg-gray-900 rounded-lg overflow-hidden">
                               <div className="w-full h-full flex items-center justify-center">
                                 <Play className="h-5 w-5 text-gray-400" />
                               </div>
@@ -318,15 +318,15 @@ export function ModernLessonViewer({
                               </p>
                             )}
                             <div className="flex items-center gap-3 mt-2">
-                              <Badge variant="outline" className="text-xs bg-gray-700/50 border-gray-600">
-                                <Clock className="h-3 w-3 mr-1" />
-                                {otherLesson.duration} min
+                            <Badge variant="outline" className="text-xs bg-gray-900 border-none text-gray-400">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {otherLesson.duration} min
+                            </Badge>
+                            {otherLesson.id === lesson.id && (
+                              <Badge className="bg-emerald-500/30 text-emerald-300 border-none text-xs">
+                                Assistindo
                               </Badge>
-                              {otherLesson.id === lesson.id && (
-                                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50 text-xs">
-                                  Assistindo
-                                </Badge>
-                              )}
+                            )}
                             </div>
                           </div>
 
@@ -335,7 +335,7 @@ export function ModernLessonViewer({
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                               otherLesson.id === lesson.id
                                 ? 'bg-emerald-500 text-white'
-                                : 'bg-gray-700 text-gray-400 group-hover:bg-emerald-500 group-hover:text-white'
+                                : 'bg-gray-800 text-gray-400 group-hover:bg-emerald-500 group-hover:text-white'
                             }`}>
                               <Play className="h-4 w-4 ml-0.5" />
                             </div>
