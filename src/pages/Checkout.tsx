@@ -441,7 +441,7 @@ const Checkout = () => {
       }
       
       try {
-        console.log('🔍 Loading checkout settings for product:', productId);
+        console.log('🔍 DEBUG: Loading checkout settings for product:', productId);
         
         // Primeiro vamos verificar se a tabela existe
         const { data: tableExists } = await supabase
@@ -1893,14 +1893,21 @@ const Checkout = () => {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 py-8">
-          {checkoutSettings?.socialProof?.enabled && (
-            <OptimizedSocialProof
-              settings={{
-                totalSales: checkoutSettings.socialProof.totalSales,
-                position: checkoutSettings.socialProof.position,
-                enabled: checkoutSettings.socialProof.enabled
-              }}
-            />
+          {/* Debug: Always show social proof for now */}
+          <OptimizedSocialProof
+            settings={{
+              totalSales: checkoutSettings?.socialProof?.totalSales || 1247,
+              position: checkoutSettings?.socialProof?.position || 'bottom-right',
+              enabled: checkoutSettings?.socialProof?.enabled !== false // Mostrar por padrão
+            }}
+          />
+          
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="fixed top-0 left-0 bg-red-100 p-2 text-xs z-50">
+              CheckoutSettings: {checkoutSettings ? 'Loaded' : 'Not Loaded'}<br/>
+              SocialProof: {checkoutSettings?.socialProof?.enabled ? 'Enabled' : 'Default/Disabled'}
+            </div>
           )}
 
           <Card className="mb-8 shadow-sm">

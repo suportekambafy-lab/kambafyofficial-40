@@ -116,24 +116,24 @@ const SocialProof: React.FC<SocialProofProps> = ({
       setCurrentNotification(notification);
       setIsVisible(true);
       
-      // Esconder automaticamente após 6 segundos
+      // Esconder automaticamente após 10 segundos (mais tempo)
       setTimeout(() => {
         setIsVisible(false);
         setTimeout(() => {
           setCurrentNotification(null);
         }, 300);
-      }, 6000);
+      }, 10000);
     };
 
-    // Primeira notificação após 3 segundos
-    const initialTimeout = setTimeout(showNotification, 3000);
+    // Primeira notificação após 2 segundos (mais rápido)
+    const initialTimeout = setTimeout(showNotification, 2000);
     
-    // Notificações subsequentes a cada 15-25 segundos
+    // Notificações subsequentes a cada 10-15 segundos (mais frequente)
     const interval = setInterval(() => {
       if (!currentNotification && !isDismissed) {
         showNotification();
       }
-    }, Math.random() * 10000 + 15000); // 15-25 segundos
+    }, Math.random() * 5000 + 10000); // 10-15 segundos
 
     return () => {
       clearTimeout(initialTimeout);
