@@ -52,6 +52,7 @@ export function ModernLessonViewer({
       interval = setInterval(() => {
         setCurrentTime(prev => {
           const newTime = prev + 1;
+          // lesson.duration já está em minutos, então convertemos para segundos
           const newProgress = (newTime / (lesson.duration * 60)) * 100;
           setProgress(newProgress);
           
@@ -72,6 +73,7 @@ export function ModernLessonViewer({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // lesson.duration está em minutos, convertemos para segundos
   const totalSeconds = lesson.duration * 60;
 
   return (

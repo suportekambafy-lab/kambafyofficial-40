@@ -185,6 +185,7 @@ export default function ModernMembersArea() {
     );
   }
 
+  // Calcular duração total em minutos
   const totalDuration = lessons.reduce((sum, lesson) => sum + lesson.duration, 0);
   const completedLessons = Math.floor(lessons.length * 0.3); // Simulado
 
@@ -196,7 +197,7 @@ export default function ModernMembersArea() {
         modules={modules}
         lessonProgress={{}} // Você pode implementar o hook de progresso aqui depois
         getCourseProgress={(total) => Math.round((Math.floor(lessons.length * 0.3) / total) * 100) || 0}
-        totalDuration={lessons.reduce((sum, lesson) => sum + lesson.duration, 0)}
+        totalDuration={totalDuration}
         completedLessons={Math.floor(lessons.length * 0.3)}
         onLessonSelect={setSelectedLesson}
         onLogout={handleLogout}
