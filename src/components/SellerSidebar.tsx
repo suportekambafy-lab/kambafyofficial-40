@@ -432,8 +432,8 @@ export function TopBar() {
     }
   };
 
-  // Calcular progresso da meta (1M KZ = 1,000,000)
-  const metaTotal = 1000000;
+  // Calcular progresso da meta (5K KZ = 5,000)
+  const metaTotal = 5000;
   const progressPercent = Math.min((dashboardData.totalRevenue / metaTotal) * 100, 100);
 
   return (

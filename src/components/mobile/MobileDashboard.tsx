@@ -63,7 +63,8 @@ export function MobileDashboard() {
       const { data: orders, error } = await supabase
         .from('orders')
         .select('*')
-        .in('product_id', userProductIds);
+        .in('product_id', userProductIds)
+        .eq('status', 'completed');
 
       if (error) {
         console.error('Error fetching orders data:', error);
@@ -198,7 +199,7 @@ export function MobileDashboard() {
     return formatPriceForSeller(amount, currency);
   };
 
-  const goal = 1000000;
+  const goal = 5000;
   const progressPercentage = Math.min((totalSalesData.totalRevenue / goal) * 100, 100);
 
   const renderTabContent = () => {

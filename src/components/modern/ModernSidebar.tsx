@@ -147,8 +147,8 @@ export function ModernSidebar({
   };
 
   // Calcular próximo nível e progresso baseado nas metas Kamba
-  const kambaLevels = [1000000, 5000000, 15000000, 50000000, 100000000];
-  let nextGoal = 100000000; // Meta final
+  const kambaLevels = [5000, 100000, 500000, 1000000, 5000000];
+  let nextGoal = 5000000; // Meta final
   let currentGoal = 0;
   
   for (let i = 0; i < kambaLevels.length; i++) {
@@ -162,7 +162,13 @@ export function ModernSidebar({
   const progressPercent = Math.min((dashboardData.totalRevenue / nextGoal) * 100, 100);
 
   const formatCurrency = (value: number) => {
-    return `${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `${Math.round(value / 1000)}K`;
+    } else {
+      return `${Math.round(value)}`;
+    }
   };
 
   const handleItemClick = () => {
