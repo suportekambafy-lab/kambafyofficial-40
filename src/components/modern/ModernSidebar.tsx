@@ -211,8 +211,8 @@ export function ModernSidebar({
               <div className="px-4 py-2 border-b border-sidebar-border">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
-                    <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
-                    <span>{progressPercent.toFixed(0)}%</span>
+                    <span>{formatCurrency(dashboardData.totalRevenue)} KZ</span>
+                    <span>{formatCurrency(nextGoal)} KZ</span>
                   </div>
                   <div className="w-full h-1.5 bg-sidebar-accent rounded-full">
                     <div 
@@ -310,8 +310,8 @@ export function ModernSidebar({
         >
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
-              <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
-              <span>{progressPercent.toFixed(0)}%</span>
+              <span>{formatCurrency(dashboardData.totalRevenue)} KZ</span>
+              <span>{formatCurrency(nextGoal)} KZ</span>
             </div>
             <div className="w-full h-1.5 bg-sidebar-accent rounded-full">
               <div 
