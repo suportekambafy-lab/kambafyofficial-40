@@ -62,6 +62,8 @@ const KambaPay = createLazyWithRetry(() => import('@/pages/KambaPay'), "KambaPay
 // Nova estrutura moderna de área de membros
 const MembersLogin = createLazyWithRetry(() => import('@/pages/MembersLogin'), "MembersLogin");
 const MembersArea = createLazyWithRetry(() => import('@/pages/MembersArea'), "MembersArea");
+const ModernMembersLogin = createLazyWithRetry(() => import('@/pages/ModernMembersLogin'), "ModernMembersLogin");
+const ModernMembersArea = createLazyWithRetry(() => import('@/pages/ModernMembersArea'), "ModernMembersArea");
 
 
 // Páginas do painel vendedor - lazy load com preload e retry
@@ -176,4 +178,6 @@ export const OptimizedRoutes = {
   // Nova estrutura moderna de área de membros
   MembersLogin: withLazyLoading(MembersLogin, 'member-area'),
   MembersArea: withLazyLoading(MembersArea, 'member-area'),
+  ModernMembersLogin: withLazyLoading(ModernMembersLogin, 'member-area'),
+  ModernMembersArea: withLazyLoading(ModernMembersArea, 'member-area'),
 };

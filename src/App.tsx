@@ -126,14 +126,14 @@ const App = () => {
                         <Route path="/minhas-compras" element={<OptimizedRoutes.MinhasCompras />} />
                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                         
-                       {/* Member Area Routes - Modern Authentication System */}
-                           {/* Nova estrutura moderna de área de membros */}
-                           <Route path="/members/login/:id" element={<OptimizedRoutes.MembersLogin />} />
-                           <Route path="/members/area/:id" element={<OptimizedRoutes.MembersArea />} />
-                           
-                           {/* Rotas para subdomínio membros (sem prefixo /members) */}
-                           <Route path="/login/:id" element={<OptimizedRoutes.MembersLogin />} />
-                           <Route path="/area/:id" element={<OptimizedRoutes.MembersArea />} />
+                        {/* Member Area Routes - Modern Authentication System */}
+                            {/* Nova estrutura moderna de área de membros */}
+                            <Route path="/members/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
+                            <Route path="/members/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
+                            
+                            {/* Rotas para subdomínio membros (sem prefixo /members) */}
+                            <Route path="/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
+                            <Route path="/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
                        <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                         <Route path="/kambapay" element={<OptimizedRoutes.KambaPay />} />
                         
