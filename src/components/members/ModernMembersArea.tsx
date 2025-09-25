@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useModernMembersAuth } from './ModernMembersAuth';
 import { ModernLessonViewer } from './ModernLessonViewer';
+import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { Lesson, Module } from '@/types/memberArea';
 
 export default function ModernMembersArea() {
@@ -173,6 +174,14 @@ export default function ModernMembersArea() {
 
   return (
     <div className="min-h-screen bg-gray-950 dark text-white">
+      {/* Menu Slide Lateral */}
+      <MemberAreaSlideMenu
+        lessons={lessons}
+        modules={modules}
+        lessonProgress={{}} // Você pode implementar o hook de progresso aqui depois
+        getCourseProgress={() => 0} // Placeholder por enquanto
+        onLessonSelect={setSelectedLesson}
+      />
       
       {/* Hero Section - Estilo Hotmart/Kiwify */}
       <motion.section
