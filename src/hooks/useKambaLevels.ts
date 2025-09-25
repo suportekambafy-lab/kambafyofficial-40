@@ -16,7 +16,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     id: 'bronze',
     name: 'Kamba Bronze',
     emoji: '🟤',
-    threshold: 1000000,
+    threshold: 5000,
     color: '#8B5E3C',
     badge: '/lovable-uploads/9a3eb8d5-f7fb-4d71-9fa3-24b656365590.png',
     rewards: ['🎖 Selo no perfil', '📦 Placa física']
@@ -25,7 +25,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     id: 'zinga',
     name: 'Kamba Zinga',
     emoji: '🟠',
-    threshold: 5000000,
+    threshold: 100000,
     color: '#F58634',
     badge: '/lovable-uploads/ea32f463-fe2f-42a1-b0e2-3652f83cf956.png',
     rewards: ['🎖 Selo no perfil', '📦 Placa física']
@@ -34,7 +34,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     id: 'dikanza',
     name: 'Kamba Dikanza',
     emoji: '🟡',
-    threshold: 15000000,
+    threshold: 500000,
     color: '#FFCB05',
     badge: '/lovable-uploads/da32c56d-6a01-423e-a683-7d131bf39e52.png',
     rewards: ['🎖 Selo + Placa', '🎓 Acesso a mentorias', '🌐 Destaque no site']
@@ -43,7 +43,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     id: 'wakanda',
     name: 'Kamba Wakanda',
     emoji: '⚫',
-    threshold: 50000000,
+    threshold: 1000000,
     color: '#000000',
     badge: '/lovable-uploads/4cbb6857-ffc5-435f-8067-c6d7686af2a9.png',
     rewards: ['🎖 Selo + Placa', '🎁 Kit do Criador', '📩 Convite para eventos']
@@ -52,7 +52,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     id: 'diamante',
     name: 'Kamba Diamante',
     emoji: '💎',
-    threshold: 100000000,
+    threshold: 5000000,
     color: '#00CFFF',
     badge: '/lovable-uploads/0a88b024-7c04-4e5f-9caa-240ca5244cae.png',
     rewards: [
@@ -67,9 +67,9 @@ export const KAMBA_LEVELS: KambaLevel[] = [
 
 export const useKambaLevels = (totalRevenue: number) => {
   return useMemo(() => {
-    // Encontrar nível atual
-    let currentLevel = KAMBA_LEVELS[0];
-    let currentLevelIndex = 0;
+    // Encontrar nível atual - começar sem nível se não alcançou o primeiro
+    let currentLevel = KAMBA_LEVELS[0]; // Por padrão, primeiro nível
+    let currentLevelIndex = -1; // -1 significa que ainda não alcançou nenhum nível
     
     for (let i = 0; i < KAMBA_LEVELS.length; i++) {
       if (totalRevenue >= KAMBA_LEVELS[i].threshold) {
@@ -80,19 +80,22 @@ export const useKambaLevels = (totalRevenue: number) => {
       }
     }
 
-    // Encontrar próximo nível
-    const nextLevel = currentLevelIndex < KAMBA_LEVELS.length - 1 
-      ? KAMBA_LEVELS[currentLevelIndex + 1] 
-      : null;
+    // Encontrar próximo nível - sempre existe se não chegou ao máximo
+    let nextLevel = null;
+    if (currentLevelIndex < KAMBA_LEVELS.length - 1) {
+      nextLevel = KAMBA_LEVELS[currentLevelIndex + 1];
+    }
+    
+    // Se ainda não alcançou nenhum nível, o próximo é o primeiro
+    if (currentLevelIndex === -1) {
+      nextLevel = KAMBA_LEVELS[0];
+    }
 
-    // Calcular progresso
+    // Calcular progresso - sempre de 0 até a próxima meta
     let progress = 0;
     if (nextLevel) {
-      const currentThreshold = currentLevel.threshold;
-      const nextThreshold = nextLevel.threshold;
-      const progressAmount = totalRevenue - currentThreshold;
-      const totalNeeded = nextThreshold - currentThreshold;
-      progress = Math.min((progressAmount / totalNeeded) * 100, 100);
+      // Progresso de 0 até a próxima meta não alcançada
+      progress = Math.min((totalRevenue / nextLevel.threshold) * 100, 100);
     } else {
       // Se já está no nível máximo
       progress = 100;

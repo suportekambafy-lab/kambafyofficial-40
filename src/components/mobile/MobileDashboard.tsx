@@ -199,7 +199,18 @@ export function MobileDashboard() {
     return formatPriceForSeller(amount, currency);
   };
 
-  const goal = 5000;
+  // Calcular próxima meta não alcançada para mobile
+  const kambaLevels = [5000, 100000, 500000, 1000000, 5000000];
+  let goal = 5000; // Primeira meta por padrão
+  
+  // Encontrar a próxima meta não alcançada
+  for (let i = 0; i < kambaLevels.length; i++) {
+    if (totalSalesData.totalRevenue < kambaLevels[i]) {
+      goal = kambaLevels[i];
+      break;
+    }
+  }
+
   const progressPercentage = Math.min((totalSalesData.totalRevenue / goal) * 100, 100);
 
   const renderTabContent = () => {
