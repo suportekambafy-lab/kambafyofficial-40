@@ -11,6 +11,11 @@ interface UploadVideoRequest {
   title: string;
 }
 
+interface UploadVideoFileRequest {
+  videoId: string;
+  fileData: string; // base64 encoded file
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -40,6 +45,74 @@ serve(async (req) => {
     }
 
     if (req.method === 'POST') {
+      const contentType = req.headers.get('content-type') || '';
+      
+      // Handle multipart form data (file upload)
+      if (contentType.includes('multipart/form-data')) {
+        const formData = await req.formData();
+        const videoId = formData.get('videoId') as string;
+        const file = formData.get('file') as File;
+        
+        if (!videoId || !file) {
+          return new Response(
+            JSON.stringify({ error: 'Missing videoId or file' }),
+            { 
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
+        }
+
+        console.log('Uploading file to Bunny.net:', { videoId, fileName: file.name, fileSize: file.size });
+
+        // Upload file to Bunny.net
+        const uploadUrl = `https://video.bunnycdn.com/library/${bunnyLibraryId}/videos/${videoId}`;
+        
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'AccessKey': bunnyApiKey,
+            'Content-Type': 'application/octet-stream',
+          },
+          body: file,
+        });
+
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          console.error('Upload failed:', {
+            status: uploadResponse.status,
+            statusText: uploadResponse.statusText,
+            errorText: errorText
+          });
+          
+          return new Response(
+            JSON.stringify({ 
+              error: 'Failed to upload file to Bunny.net',
+              details: errorText,
+              status: uploadResponse.status
+            }),
+            { 
+              status: uploadResponse.status,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
+        }
+
+        console.log('File uploaded successfully to Bunny.net');
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            videoId: videoId,
+            embedUrl: `https://iframe.mediadelivery.net/embed/${bunnyLibraryId}/${videoId}`
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      // Handle JSON request (create video)
       const { fileName, title }: UploadVideoRequest = await req.json();
 
       console.log('Creating video in Bunny.net:', { fileName, title });
@@ -97,13 +170,9 @@ serve(async (req) => {
       const videoData = await createVideoResponse.json();
       console.log('Video created successfully:', videoData);
 
-      // Return the video data including upload URL
-      const uploadUrl = `https://video.bunnycdn.com/library/${bunnyLibraryId}/videos/${videoData.guid}`;
-      
       return new Response(
         JSON.stringify({
           videoId: videoData.guid,
-          uploadUrl: uploadUrl,
           embedUrl: `https://iframe.mediadelivery.net/embed/${bunnyLibraryId}/${videoData.guid}`,
           videoData: videoData
         }),

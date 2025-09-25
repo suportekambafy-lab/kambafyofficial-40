@@ -77,21 +77,22 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('Video created, starting upload:', videoData);
       setUploadProgress(10);
 
-      // Fazer upload do arquivo para a Bunny.net
-      const uploadResponse = await fetch(videoData.uploadUrl, {
-        method: 'PUT',
-        body: selectedFile,
-        headers: {
-          'Content-Type': 'application/octet-stream'
-        }
+      // Fazer upload do arquivo através da edge function
+      const formData = new FormData();
+      formData.append('videoId', videoData.videoId);
+      formData.append('file', selectedFile);
+
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('bunny-video-upload', {
+        body: formData
       });
 
-      if (!uploadResponse.ok) {
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError);
         throw new Error('Falha no upload do arquivo');
       }
 
       setUploadProgress(100);
-      console.log('Upload successful to Bunny.net');
+      console.log('Upload successful to Bunny.net:', uploadData);
 
       // Chamar callback com a URL do embed
       onVideoUploaded(videoData.embedUrl, videoData);
