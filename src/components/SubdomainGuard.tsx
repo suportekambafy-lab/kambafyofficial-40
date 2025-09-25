@@ -15,12 +15,6 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     const currentPath = location.pathname + location.search + location.hash;
     const hostname = window.location.hostname;
     
-    // Pular guard apenas para rotas de teste específicas
-    if (currentPath.includes('/teste')) {
-      console.log('🧪 TESTE: SubdomainGuard pulando verificação para rota de teste:', currentPath);
-      return;
-    }
-    
     // 🔍 Debug logging - Informações básicas
     console.log('🔍 SubdomainGuard: Analisando rota', {
       currentPath,
@@ -30,25 +24,26 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       isMemberAreaRoute: currentPath.startsWith('/area/') || currentPath.startsWith('/login/')
     });
     
-    // MOBILE É COMPLETAMENTE ISOLADO - sem redirecionamentos
-    if (currentSubdomain === 'mobile') {
-      console.log('📱 SubdomainGuard: Subdomínio MOBILE - sem redirecionamentos');
+    // PRIMEIRA VERIFICAÇÃO: Pular guard para rotas de teste
+    if (currentPath.includes('/teste')) {
+      console.log('🧪 TESTE: SubdomainGuard pulando verificação para rota de teste:', currentPath);
       return;
     }
     
-    // Para desenvolvimento/preview do Lovable, NUNCA fazer redirecionamentos
+    // SEGUNDA VERIFICAÇÃO: Para desenvolvimento/preview do Lovable, NUNCA fazer redirecionamentos
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
       console.log('🔧 SubdomainGuard: PRÉ-VISUALIZAÇÃO/DEV - Sem redirecionamentos', {
         currentSubdomain,
         currentPath,
         hostname,
         isLovablePreview: hostname.includes('lovable.app'),
+        isLovableProject: hostname.includes('lovableproject.com'),
         message: 'TODAS as rotas funcionam diretamente na pré-visualização'
       });
       
       // Na pré-visualização do Lovable, todas as rotas devem funcionar sem redirecionamentos
       if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
-        console.log('🎓 SubdomainGuard: Área de membros funcionando na pré-visualização', {
+        console.log('🎓 SubdomainGuard: ✅ Área de membros AUTORIZADA na pré-visualização', {
           currentPath,
           currentSubdomain,
           message: 'Login e área de membros funcionam diretamente'
@@ -56,21 +51,21 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       }
       
       if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || currentPath.startsWith('/apps')) {
-        console.log('🔐 SubdomainGuard: Rotas de autenticação funcionando na pré-visualização', {
+        console.log('🔐 SubdomainGuard: ✅ Rotas de autenticação AUTORIZADAS na pré-visualização', {
           currentPath,
           message: 'Autenticação funciona diretamente na pré-visualização'
         });
       }
       
-      console.log('✅ SubdomainGuard: ACESSO LIBERADO na pré-visualização', {
+      console.log('✅ SubdomainGuard: ACESSO TOTALMENTE LIBERADO na pré-visualização', {
         currentPath,
         hostname,
-        message: 'Todas as funcionalidades disponíveis diretamente'
+        message: 'NENHUM redirecionamento será feito - todas as funcionalidades disponíveis'
       });
       return;
     }
     
-    // Para domínios customizados (não kambafy.com), também não fazer redirecionamentos
+    // TERCEIRA VERIFICAÇÃO: Para domínios customizados (não kambafy.com), também não fazer redirecionamentos
     if (!hostname.includes('kambafy.com')) {
       console.log('🔧 SubdomainGuard: DOMÍNIO CUSTOMIZADO - Sem redirecionamentos', {
         currentSubdomain,
@@ -81,9 +76,15 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       return;
     }
     
-    // VERIFICAÇÃO ESPECIAL PARA ÁREA DE MEMBROS
+    // QUARTA VERIFICAÇÃO: MOBILE É COMPLETAMENTE ISOLADO - sem redirecionamentos
+    if (currentSubdomain === 'mobile') {
+      console.log('📱 SubdomainGuard: Subdomínio MOBILE - sem redirecionamentos');
+      return;
+    }
+    
+    // QUINTA VERIFICAÇÃO: ÁREA DE MEMBROS (apenas para produção kambafy.com)
     if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/')) {
-      console.log('🎓 SubdomainGuard: DETECTADA rota de área de membros', {
+      console.log('🎓 SubdomainGuard: DETECTADA rota de área de membros em PRODUÇÃO', {
         currentPath,
         currentSubdomain,
         hostname,

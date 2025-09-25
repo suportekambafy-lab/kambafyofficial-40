@@ -23,29 +23,24 @@ window.testMemberAreaLogin = () => {
     hostname: window.location.hostname,
     isLovablePreview: window.location.hostname.includes('lovable'),
     isLocalhost: window.location.hostname.includes('localhost'),
-    currentUrl: window.location.href
+    currentUrl: window.location.href,
+    note: 'CORREÇÃO APLICADA: SubdomainGuard não deve mais redirecionar na pré-visualização'
   });
   
-  console.log('🌐 Abrindo:', loginUrl);
+  // PRIMEIRO: Testar diretamente na mesma janela
+  const directPath = `/login/${memberAreaId}`;
+  console.log('🧪 TESTE 1: Navegando diretamente na mesma janela para:', directPath);
+  console.log('💡 Se isso funcionar, o problema foi corrigido!');
   
-  // Tenta abrir em nova aba
-  const newWindow = window.open(loginUrl, '_blank');
+  // Navegar diretamente
+  window.location.hash = '';
+  window.history.pushState({}, '', directPath);
   
-  if (!newWindow) {
-    console.log('⚠️ Pop-up bloqueado! Tentando abrir na mesma aba...');
-    window.location.href = loginUrl;
-  } else {
-    console.log('✅ Nova aba aberta com sucesso');
-    
-    // Adiciona um listener para verificar se a nova aba foi redirecionada
-    setTimeout(() => {
-      try {
-        console.log('🔍 Verificando URL da nova aba:', newWindow.location.href);
-      } catch (error) {
-        console.log('⚠️ Não foi possível verificar a URL da nova aba (pode ser CORS)');
-      }
-    }, 2000);
-  }
+  // Simular reload da página para ativar as rotas
+  setTimeout(() => {
+    console.log('✨ Simulando reload da página...');
+    window.location.reload();
+  }, 1000);
 };
 
 // Testa acesso direto à área de membros (deve redirecionar para login)
