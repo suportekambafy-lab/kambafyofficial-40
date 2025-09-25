@@ -186,6 +186,7 @@ export default function ModernMembersArea() {
         completedLessons={Math.floor(lessons.length * 0.3)}
         onLessonSelect={setSelectedLesson}
         onLogout={handleLogout}
+        selectedLesson={selectedLesson}
       />
       
       {/* Hero Section - Ocultar quando aula selecionada */}
