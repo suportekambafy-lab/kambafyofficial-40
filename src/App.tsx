@@ -57,11 +57,20 @@ const App = () => {
               <NotificationProvider>
             <TooltipProvider>
               <CustomToaster ref={toasterRef} />
-              <BrowserRouter>
-                <SubdomainGuard>
-                  <Suspense fallback={<div className="min-h-screen bg-background" />}>
-                    <Routes>
-                      <Route path="/" element={<OptimizedRoutes.Index />} />
+               <BrowserRouter>
+                 <SubdomainGuard>
+                   <Suspense fallback={<div className="min-h-screen bg-background" />}>
+                     <Routes>
+                       {(() => {
+                         console.log('🚦 App.tsx: Routes renderizando, URL atual:', {
+                           pathname: window.location.pathname,
+                           hostname: window.location.hostname,
+                           fullUrl: window.location.href,
+                           timestamp: new Date().toISOString()
+                         });
+                         return null;
+                       })()}
+                       <Route path="/" element={<OptimizedRoutes.Index />} />
                       <Route path="/auth" element={<OptimizedRoutes.Auth />} />
                       <Route path="/reset-password" element={<OptimizedRoutes.ResetPassword />} />
                       <Route path="/checkout/:productId" element={<OptimizedRoutes.Checkout />} />
@@ -82,17 +91,27 @@ const App = () => {
                         <Route path="/minhas-compras" element={<OptimizedRoutes.MinhasCompras />} />
                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                         
-                         {/* Member Area Routes - Modern Authentication System */}
-                         <Route path="/area/:id" element={<OptimizedRoutes.MemberArea />} />
-                         <Route path="/area/:id/content" element={<OptimizedRoutes.MemberAreaContent />} />
-                         <Route path="/area/:id/support-materials" element={<OptimizedRoutes.MemberAreaSupportMaterials />} />
-                         <Route path="/area/:id/about" element={<OptimizedRoutes.MemberAreaAbout />} />
-                         <Route path="/area/:id/my-courses" element={<OptimizedRoutes.MemberAreaMyCourses />} />
-                         <Route path="/area/:id/support" element={<OptimizedRoutes.MemberAreaSupport />} />
-                         <Route path="/area/:id/help" element={<OptimizedRoutes.MemberAreaHelp />} />
-                         <Route path="/login/:id" element={<OptimizedRoutes.MemberAreaLoginWrapper />} />
-                         <Route path="/area/:id/module/:moduleId" element={<OptimizedRoutes.ModuleDetail />} />
-                         <Route path="/area/:id/lesson/:lessonId" element={<OptimizedRoutes.LessonDetail />} />
+                      {/* Member Area Routes - Modern Authentication System */}
+                          <Route path="/area/:id" element={
+                            <div>
+                              <div className="p-4 border border-blue-500 bg-blue-50">
+                                <h2 className="font-bold text-blue-800">Rota /area/:id ativada!</h2>
+                                <p className="text-sm">Pathname: {window.location.pathname}</p>
+                              </div>
+                              <OptimizedRoutes.MemberArea />
+                            </div>
+                          } />
+                          <Route path="/login/:id" element={
+                            <div>
+                              <div className="p-4 border border-yellow-500 bg-yellow-50">
+                                <h2 className="font-bold text-yellow-800">Rota /login/:id ativada!</h2>
+                                <p className="text-sm">Pathname: {window.location.pathname}</p>
+                              </div>
+                              <OptimizedRoutes.MemberAreaLoginWrapper />
+                            </div>
+                          } />
+                          <Route path="/area/:id/module/:moduleId" element={<OptimizedRoutes.ModuleDetail />} />
+                          <Route path="/area/:id/lesson/:lessonId" element={<OptimizedRoutes.LessonDetail />} />
                        <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                         <Route path="/kambapay" element={<OptimizedRoutes.KambaPay />} />
                         
