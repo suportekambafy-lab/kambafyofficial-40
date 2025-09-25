@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, BarChart3, Play, CheckCircle, Clock, Menu, LogOut } from 'lucide-react';
+import { Search, BarChart3, Play, CheckCircle, Clock, LogOut } from 'lucide-react';
 import type { Lesson, Module } from '@/types/memberArea';
 
 interface MemberAreaSlideMenuProps {
@@ -72,12 +72,22 @@ export function MemberAreaSlideMenu({
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button 
-          variant="default" 
+          variant="ghost" 
           size="sm" 
-          className="fixed top-4 right-4 z-50 shadow-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border-0"
+          className="fixed top-4 right-4 z-50 shadow-lg bg-gray-900/80 backdrop-blur-sm hover:bg-gray-800/90 text-white border border-gray-700/50 hover:border-emerald-500/50 p-3 rounded-lg transition-all"
         >
-          <Menu className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">Menu</span>
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-1">
+              <div className="w-4 h-0.5 bg-current rounded-full"></div>
+              <div className="w-4 h-0.5 bg-current rounded-full"></div>
+              <div className="w-4 h-0.5 bg-current rounded-full"></div>
+            </div>
+            <img 
+              src="/kambafy-symbol.svg" 
+              alt="Kambafy" 
+              className="w-5 h-5 text-emerald-500"
+            />
+          </div>
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-[400px] sm:w-[540px]">
