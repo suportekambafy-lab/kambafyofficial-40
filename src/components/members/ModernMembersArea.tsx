@@ -21,7 +21,9 @@ import {
   CheckCircle2,
   PlayCircle,
   MoreVertical,
-  ArrowLeft
+  ArrowLeft,
+  Menu,
+  X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -29,6 +31,7 @@ import { useModernMembersAuth } from './ModernMembersAuth';
 import { ModernLessonViewer } from './ModernLessonViewer';
 import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { Lesson, Module } from '@/types/memberArea';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function ModernMembersArea() {
   const { id: memberAreaId } = useParams();
@@ -41,6 +44,8 @@ export default function ModernMembersArea() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const isMobile = useIsMobile();
 
   console.log('🎬 ModernMembersArea render:', { 
     memberAreaId, 
@@ -112,6 +117,15 @@ export default function ModernMembersArea() {
 
     loadContent();
   }, [session, memberAreaId, isAuthenticated]);
+
+  // Esconder sidebar automaticamente no mobile quando aula for selecionada
+  useEffect(() => {
+    if (selectedLesson && isMobile) {
+      setSidebarVisible(false);
+    } else if (!selectedLesson) {
+      setSidebarVisible(true);
+    }
+  }, [selectedLesson, isMobile]);
 
   const handleLogout = () => {
     logout();
@@ -283,6 +297,15 @@ export default function ModernMembersArea() {
               </div>
               
               <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebarVisible(!sidebarVisible)}
+                  className="text-white hover:text-emerald-400"
+                >
+                  {sidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                  {sidebarVisible ? 'Ocultar Lista' : 'Mostrar Lista'}
+                </Button>
                 <Badge variant="secondary" className="text-xs bg-gray-800">
                   <Clock className="h-3 w-3 mr-1" />
                   {selectedLesson.duration} min
@@ -299,7 +322,15 @@ export default function ModernMembersArea() {
           
           {/* Layout quando aula selecionada */}
           {selectedLesson ? (
-            <div className="flex min-h-screen">
+            <div className="flex min-h-screen relative">
+              {/* Overlay para mobile */}
+              {isMobile && sidebarVisible && (
+                <div 
+                  className="fixed inset-0 bg-black/50 z-40"
+                  onClick={() => setSidebarVisible(false)}
+                />
+              )}
+              
               {/* Área do vídeo */}
               <div className="flex-1 p-6">
                 <motion.div
@@ -330,14 +361,30 @@ export default function ModernMembersArea() {
                 </motion.div>
               </div>
 
-              {/* Sidebar com módulos e aulas */}
-              <div className="w-96 bg-gray-950 border-l border-gray-800 p-6 overflow-y-auto">
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="space-y-6"
-                >
+              {/* Sidebar com módulos e aulas - condicional */}
+              {sidebarVisible && (
+                <div className={`bg-gray-950 border-l border-gray-800 p-6 overflow-y-auto ${
+                  isMobile ? 'fixed top-0 right-0 h-full w-80 z-50 shadow-2xl' : 'w-96'
+                }`}>
+                  {isMobile && (
+                    <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-800">
+                      <h3 className="text-lg font-semibold text-white">Lista de Aulas</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSidebarVisible(false)}
+                        className="text-white hover:text-emerald-400"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="space-y-6"
+                  >
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <BookOpen className="h-5 w-5 text-emerald-400" />
@@ -423,8 +470,9 @@ export default function ModernMembersArea() {
                       </div>
                     );
                   })}
-                </motion.div>
-              </div>
+                 </motion.div>
+                </div>
+              )}
             </div>
           ) : (
             /* Layout normal - módulos */
