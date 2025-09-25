@@ -136,8 +136,24 @@ const App = () => {
                         {/* Developer Routes */}
                        <Route path="/dev-routes" element={<OptimizedRoutes.DevRoutes />} />
                        
-                        {/* Test Routes */}
-                      
+                         {/* Test Routes */}
+                      <Route path="/area/teste" element={
+                        <div className="p-8 border border-green-500 bg-green-50">
+                          <h1 className="text-2xl font-bold text-green-800">🧪 TESTE: Rota /area/teste Funcionando!</h1>
+                          <p className="text-green-600">Navegação interna do React Router funcionando sem reload</p>
+                          <p className="text-sm text-green-600">Pathname: {window.location.pathname}</p>
+                          <p className="text-sm text-green-600">Host: {window.location.hostname}</p>
+                        </div>
+                      } />
+                      <Route path="/login/teste" element={
+                        <div className="p-8 border border-blue-500 bg-blue-50">
+                          <h1 className="text-2xl font-bold text-blue-800">🧪 TESTE: Rota /login/teste Funcionando!</h1>
+                          <p className="text-blue-600">Navegação interna do React Router funcionando sem reload</p>
+                          <p className="text-sm text-blue-600">Pathname: {window.location.pathname}</p>
+                          <p className="text-sm text-blue-600">Host: {window.location.hostname}</p>
+                        </div>
+                      } />
+                       
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<OptimizedRoutes.NotFound />} />
                     </Routes>

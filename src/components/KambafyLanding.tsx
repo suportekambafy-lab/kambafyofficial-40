@@ -47,10 +47,6 @@ export function KambafyLanding() {
   useEffect(() => {
     (window as any).testAreaMembros = testMemberAreaNavigation;
     (window as any).testLogin = testLoginNavigation;
-    
-    console.log('🧪 TESTE: Funções de teste disponíveis no console:');
-    console.log('🧪 Digite: testAreaMembros() para testar /area/teste');
-    console.log('🧪 Digite: testLogin() para testar /login/teste');
   }, []);
   useEffect(() => {
     // Carregar apenas o script do Chatbase
