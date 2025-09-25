@@ -20,15 +20,13 @@ import {
   Target,
   CheckCircle2,
   PlayCircle,
-  MoreVertical,
-  Menu
+  MoreVertical
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useModernMembersAuth } from './ModernMembersAuth';
 import { ModernLessonViewer } from './ModernLessonViewer';
 import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
-import { useState as useSlideMenuState } from 'react';
 import { Lesson, Module } from '@/types/memberArea';
 
 export default function ModernMembersArea() {
@@ -41,7 +39,6 @@ export default function ModernMembersArea() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   console.log('🎬 ModernMembersArea render:', { 
     memberAreaId, 
@@ -187,8 +184,6 @@ export default function ModernMembersArea() {
         completedLessons={Math.floor(lessons.length * 0.3)}
         onLessonSelect={setSelectedLesson}
         onLogout={handleLogout}
-        isOpen={isMenuOpen}
-        onOpenChange={setIsMenuOpen}
       />
       
       {/* Hero Section - Estilo Netflix */}
@@ -218,7 +213,7 @@ export default function ModernMembersArea() {
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="flex justify-between items-center p-4 fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm"
+            className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10"
           >
             <div className="flex items-center gap-3">
               {memberArea?.logo_url ? (
@@ -240,21 +235,7 @@ export default function ModernMembersArea() {
             </div>
             
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setIsMenuOpen(true)}
-                className="shadow-lg bg-gray-900/80 backdrop-blur-sm hover:bg-gray-800/90 text-white border border-gray-700/50 hover:border-emerald-500/50 p-3 rounded-lg transition-all"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-col gap-1">
-                    <div className="w-4 h-0.5 bg-current rounded-full"></div>
-                    <div className="w-4 h-0.5 bg-current rounded-full"></div>
-                    <div className="w-4 h-0.5 bg-current rounded-full"></div>
-                  </div>
-                  <img src="/kambafy-symbol.svg" alt="Kambafy" className="w-5 h-5 text-emerald-500" />
-                </div>
-              </Button>
+              {/* Removido o botão de logout - agora está no menu slide */}
             </div>
           </motion.div>
 
