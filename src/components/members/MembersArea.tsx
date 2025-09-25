@@ -128,7 +128,7 @@ export default function MembersArea() {
     return null;
   }
 
-  const totalDuration = lessons.reduce((sum, lesson) => sum + lesson.duration, 0);
+  const totalDuration = Math.round(lessons.reduce((sum, lesson) => sum + lesson.duration, 0) / 60);
   const totalContent = lessons.length + modules.length;
 
   return (
@@ -265,7 +265,7 @@ export default function MembersArea() {
                               {lesson.duration > 0 && (
                                 <Badge variant="secondary" className="text-xs">
                                   <Clock className="h-3 w-3 mr-1" />
-                                  {lesson.duration} min
+                                  {Math.round(lesson.duration / 60)} min
                                 </Badge>
                               )}
                             </div>

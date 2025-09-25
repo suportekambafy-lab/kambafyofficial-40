@@ -225,7 +225,7 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
           modules={modules}
           lessonProgress={lessonProgress}
           getCourseProgress={getCourseProgress}
-          totalDuration={publishedLessons.reduce((sum, lesson) => sum + (lesson.duration || 0), 0)}
+          totalDuration={Math.round(publishedLessons.reduce((sum, lesson) => sum + (lesson.duration || 0), 0) / 60)}
           completedLessons={Object.values(lessonProgress).filter(p => p.completed).length}
           onLessonSelect={setSelectedLesson}
           onLogout={() => onOpenChange(false)} // Fechar modal quando sair

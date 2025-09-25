@@ -239,8 +239,8 @@ export default function ModernMembersArea() {
   }
 
   // Calcular duração total em minutos
-  const totalDuration = lessons.reduce((sum, lesson) => sum + lesson.duration, 0);
-  console.log('⏱️ Duração total calculada:', totalDuration, 'de', lessons.length, 'aulas');
+  const totalDuration = Math.round(lessons.reduce((sum, lesson) => sum + lesson.duration, 0) / 60);
+  console.log('⏱️ Duração total calculada:', totalDuration, 'minutos de', lessons.length, 'aulas');
   const completedLessons = Math.floor(lessons.length * 0.3); // Simulado
 
   return (
@@ -353,7 +353,7 @@ export default function ModernMembersArea() {
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="text-xs bg-gray-800">
                   <Clock className="h-3 w-3 mr-1" />
-                  {selectedLesson.duration > 0 ? `${selectedLesson.duration} min` : 'Duração não definida'}
+                  {selectedLesson.duration > 0 ? `${Math.round(selectedLesson.duration / 60)} min` : 'Duração não definida'}
                 </Badge>
                 <Button
                   variant="ghost"
@@ -507,7 +507,7 @@ export default function ModernMembersArea() {
                                       <div className="flex items-center gap-2 mt-1">
                                         <Clock className="h-3 w-3 text-gray-400" />
                                         <span className="text-xs text-gray-400">
-                                          {lesson.duration} min
+                                          {Math.round(lesson.duration / 60)} min
                                         </span>
                                         {lesson.id === selectedLesson.id && (
                                           <PlayCircle className="h-3 w-3 text-emerald-400" />
@@ -582,7 +582,7 @@ export default function ModernMembersArea() {
                                       </Badge>
                                       <Badge variant="outline" className="text-gray-400 border-gray-600">
                                         <Clock className="h-3 w-3 mr-1" />
-                                        {lesson.duration} min
+                                        {Math.round(lesson.duration / 60)} min
                                       </Badge>
                                     </div>
                                     <h4 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">

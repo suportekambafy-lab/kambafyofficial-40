@@ -129,7 +129,7 @@ export function LessonViewSidebar({
                               {lesson.duration && (
                                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                   <Clock className="w-3 h-3" />
-                                  {lesson.duration} min
+                                  {Math.round(lesson.duration / 60)} min
                                 </div>
                               )}
                               {progressPercentage > 0 && (
