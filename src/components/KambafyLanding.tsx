@@ -115,37 +115,6 @@ export function KambafyLanding() {
     window.location.href = `${window.location.protocol}//app.${window.location.hostname.replace(/^app\./, '')}${window.location.port ? ':' + window.location.port : ''}/auth?type=${userType}`;
   };
   return <div className="font-bricolage">
-      {/* BOTÕES DE TESTE - REMOVER EM PRODUÇÃO */}
-      <div className="fixed top-0 right-0 z-50 p-4 space-y-2 bg-red-100 border border-red-300 m-4 rounded">
-        <p className="text-xs text-red-800 font-bold">TESTE ÁREA DE MEMBROS</p>
-        <button 
-          onClick={testMemberAreaNavigation}
-          className="block w-full px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Testar /area/teste
-        </button>
-        <button 
-          onClick={testLoginNavigation}
-          className="block w-full px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600"
-        >
-          Testar /login/teste
-        </button>
-        <hr className="border-red-300" />
-        <p className="text-xs text-red-800 font-bold">ROTAS REAIS</p>
-        <button 
-          onClick={testRealMemberArea}
-          className="block w-full px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
-        >
-          Testar /area/123 (real)
-        </button>
-        <button 
-          onClick={testRealLogin}
-          className="block w-full px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
-        >
-          Testar /login/456 (real)
-        </button>
-      </div>
-      
       <Header onLoginOptionSelect={handleLoginOptionSelect} />
       <main className="overflow-hidden">
         <HeroSection />
