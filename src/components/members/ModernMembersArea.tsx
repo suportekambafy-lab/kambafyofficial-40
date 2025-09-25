@@ -20,7 +20,8 @@ import {
   Target,
   CheckCircle2,
   PlayCircle,
-  MoreVertical
+  MoreVertical,
+  ArrowLeft
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -39,6 +40,7 @@ export default function ModernMembersArea() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
 
   console.log('🎬 ModernMembersArea render:', { 
     memberAreaId, 
@@ -119,6 +121,14 @@ export default function ModernMembersArea() {
     setSelectedLesson(lesson);
   };
 
+  const handleModuleClick = (module: Module) => {
+    setSelectedModule(module);
+  };
+
+  const handleBackToModules = () => {
+    setSelectedModule(null);
+  };
+
   const handleNavigateLesson = (lessonId: string) => {
     const lesson = lessons.find(l => l.id === lessonId);
     if (lesson) {
@@ -127,6 +137,9 @@ export default function ModernMembersArea() {
   };
 
   const filteredLessons = lessons.filter(lesson => {
+    // Filtrar por módulo se um estiver selecionado
+    const matchesModule = !selectedModule || lesson.module_id === selectedModule.id;
+    
     const matchesSearch = lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          lesson.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -134,7 +147,7 @@ export default function ModernMembersArea() {
       (filterStatus === 'completed' && Math.random() > 0.5) || // Simulado
       (filterStatus === 'pending' && Math.random() <= 0.5);   // Simulado
       
-    return matchesSearch && matchesFilter;
+    return matchesModule && matchesSearch && matchesFilter;
   });
 
   // Loading state
@@ -233,10 +246,6 @@ export default function ModernMembersArea() {
                 <p className="text-sm text-gray-300">Olá, {session?.studentName}</p>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Removido o botão de logout - agora está no menu slide */}
-            </div>
           </motion.div>
 
           {/* Course Hero */}
@@ -265,7 +274,6 @@ export default function ModernMembersArea() {
       {/* Main Content Area */}
       <div className="bg-black min-h-screen">
         <div className="container mx-auto px-4 py-12">
-
           <div className="grid grid-cols-1 gap-8">
             
             {/* Módulos do Curso - Estilo Netflix */}
@@ -275,147 +283,217 @@ export default function ModernMembersArea() {
               transition={{ delay: 0.2 }}
             >
               <div className="mb-8">
-                <h2 className="text-3xl font-bold text-white mb-3">Módulos do Curso</h2>
-                <p className="text-gray-400 text-lg">Escolha um módulo para começar a aprender</p>
+                <h2 className="text-3xl font-bold text-white mb-3">
+                  {selectedModule ? selectedModule.title : 'Módulos do Curso'}
+                </h2>
+                <p className="text-gray-400 text-lg">
+                  {selectedModule ? selectedModule.description : 'Escolha um módulo para começar a aprender'}
+                </p>
               </div>
 
               {modules.length > 0 ? (
                 <div className="relative">
-                  {/* Netflix Style Horizontal Scroll */}
-                  <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide scroll-smooth">
-                    <div className="flex gap-6 min-w-max">
-                      {modules.map((module, index) => (
-                        <motion.div
-                          key={module.id}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.1 * index }}
-                          whileHover={{ scale: 1.05, y: -8 }}
-                          className="group cursor-pointer flex-shrink-0 w-80"
+                  {selectedModule ? (
+                    /* Aulas do Módulo Selecionado */
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-4 mb-6">
+                        <Button 
+                          variant="outline" 
+                          onClick={handleBackToModules}
+                          className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border-gray-600 text-white"
                         >
-                          <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 hover:border-emerald-500/50 transform-gpu">
-                            <div className="relative">
-                              {/* Module Cover - Netflix Style com orientação dinâmica */}
-                              <div className={`${
-                                (module as any).cover_orientation === 'vertical' 
-                                  ? 'aspect-[9/16]' 
-                                  : 'aspect-[16/9]'
-                              } bg-gradient-to-br from-gray-900 to-black relative overflow-hidden`}>
-                                {module.cover_image_url ? (
-                                  <>
-                                    <img 
-                                      src={module.cover_image_url} 
-                                      alt={module.title}
-                                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                                  </>
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-emerald-500 transition-colors duration-300" />
+                          <ArrowLeft className="h-4 w-4" />
+                          Voltar aos Módulos
+                        </Button>
+                      </div>
+
+                      <div className="grid gap-4">
+                        {filteredLessons.map((lesson, index) => (
+                          <motion.div
+                            key={lesson.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 * index }}
+                            className="group cursor-pointer"
+                            onClick={() => handleLessonClick(lesson)}
+                          >
+                            <Card className="bg-gray-900 hover:bg-gray-800 transition-all duration-300 border border-gray-800 hover:border-emerald-500/50">
+                              <div className="p-6 flex items-center gap-4">
+                                <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-lg flex items-center justify-center">
+                                  <Play className="h-8 w-8 text-emerald-400" />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                                      Aula {lesson.order_number}
+                                    </Badge>
+                                    <Badge variant="outline" className="text-gray-400 border-gray-600">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      {lesson.duration} min
+                                    </Badge>
                                   </div>
-                                )}
-                                
-                                {/* Module Number Badge */}
-                                <div className="absolute top-4 left-4">
-                                  <Badge className="bg-emerald-500/90 backdrop-blur-sm hover:bg-emerald-600 text-white font-bold px-3 py-1">
-                                    Módulo {module.order_number}
-                                  </Badge>
+                                  <h4 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                                    {lesson.title}
+                                  </h4>
+                                  {lesson.description && (
+                                    <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                                      {lesson.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Play className="h-6 w-6 text-emerald-400" />
+                                </div>
+                              </div>
+                            </Card>
+                          </motion.div>
+                        ))}
+
+                        {filteredLessons.length === 0 && (
+                          <div className="text-center py-12">
+                            <BookOpen className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-400 mb-2">
+                              Nenhuma aula neste módulo ainda
+                            </h3>
+                            <p className="text-gray-500">
+                              Novas aulas serão adicionadas em breve
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Netflix Style Horizontal Scroll */
+                    <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide scroll-smooth">
+                      <div className="flex gap-6 min-w-max">
+                        {modules.map((module, index) => (
+                          <motion.div
+                            key={module.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.1 * index }}
+                            whileHover={{ scale: 1.05, y: -8 }}
+                            className="group cursor-pointer flex-shrink-0 w-80"
+                            onClick={() => handleModuleClick(module)}
+                          >
+                            <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 hover:border-emerald-500/50 transform-gpu">
+                              <div className="relative">
+                                {/* Module Cover - Netflix Style com orientação dinâmica */}
+                                <div className={`${
+                                  (module as any).cover_orientation === 'vertical' 
+                                    ? 'aspect-[9/16]' 
+                                    : 'aspect-[16/9]'
+                                } bg-gradient-to-br from-gray-900 to-black relative overflow-hidden`}>
+                                  {module.cover_image_url ? (
+                                    <>
+                                      <img 
+                                        src={module.cover_image_url} 
+                                        alt={module.title}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                      />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                    </>
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-emerald-500 transition-colors duration-300" />
+                                    </div>
+                                  )}
+                                  
+                                  {/* Module Number Badge */}
+                                  <div className="absolute top-4 left-4">
+                                    <Badge className="bg-emerald-500/90 backdrop-blur-sm hover:bg-emerald-600 text-white font-bold px-3 py-1">
+                                      Módulo {module.order_number}
+                                    </Badge>
+                                  </div>
+                                  
+                                  {/* Progress Badge */}
+                                  <div className="absolute top-4 right-4">
+                                    <Badge variant="outline" className="text-emerald-400 border-emerald-500/50 bg-black/50 backdrop-blur-sm font-medium">
+                                      {Math.random() > 0.5 ? 'Em Progresso' : 'Novo'}
+                                    </Badge>
+                                  </div>
+                                  
+                                  {/* Play Overlay */}
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <div className="w-20 h-20 bg-emerald-500/80 backdrop-blur-sm rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                                      <Play className="h-10 w-10 text-white ml-1" />
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Bottom Gradient */}
+                                  <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-900 to-transparent" />
                                 </div>
                                 
-                                {/* Progress Badge */}
-                                <div className="absolute top-4 right-4">
-                                  <Badge variant="outline" className="text-emerald-400 border-emerald-500/50 bg-black/50 backdrop-blur-sm font-medium">
-                                    {Math.random() > 0.5 ? 'Em Progresso' : 'Novo'}
-                                  </Badge>
-                                </div>
-                                
-                                {/* Play Overlay */}
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                  <div className="w-20 h-20 bg-emerald-500/80 backdrop-blur-sm rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                                    <Play className="h-10 w-10 text-white ml-1" />
+                                {/* Module Info Overlay */}
+                                <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                  <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-emerald-400 transition-colors duration-300">
+                                    {module.title}
+                                  </h3>
+                                  
+                                  {module.description && (
+                                    <p className="text-gray-300 text-sm line-clamp-2 mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                                      {module.description}
+                                    </p>
+                                  )}
+                                  
+                                  {/* Module Stats */}
+                                  <div className="flex items-center gap-4 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">
+                                    <span className="flex items-center gap-1">
+                                      <PlayCircle className="h-3 w-3" />
+                                      {lessons.filter(l => l.module_id === module.id).length} aulas
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      {Math.floor(lessons.filter(l => l.module_id === module.id).reduce((sum, l) => sum + l.duration, 0) / 60)} min
+                                    </span>
                                   </div>
                                 </div>
-                                
-                                {/* Bottom Gradient */}
-                                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-900 to-transparent" />
                               </div>
                               
-                              {/* Module Info Overlay */}
-                              <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-emerald-400 transition-colors duration-300">
-                                  {module.title}
-                                </h3>
-                                
-                                {module.description && (
-                                  <p className="text-gray-300 text-sm line-clamp-2 mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
-                                    {module.description}
-                                  </p>
-                                )}
-                                
-                                {/* Module Stats */}
-                                <div className="flex items-center gap-4 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">
-                                  <span className="flex items-center gap-1">
-                                    <PlayCircle className="h-3 w-3" />
-                                    {Math.floor(Math.random() * 8) + 3} aulas
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {Math.floor(Math.random() * 120) + 60} min
+                              {/* Progress Bar at Bottom */}
+                              <div className="bg-gray-900 p-4">
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-xs text-gray-400">Progresso do Módulo</span>
+                                  <span className="text-xs font-medium text-emerald-400">
+                                    {Math.floor(Math.random() * 100)}%
                                   </span>
                                 </div>
+                                <div className="w-full bg-gray-800 rounded-full h-2">
+                                  <div 
+                                    className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-700 shadow-sm shadow-emerald-500/30"
+                                    style={{ width: `${Math.floor(Math.random() * 100)}%` }}
+                                  />
+                                </div>
                               </div>
-                            </div>
-                            
-                            {/* Progress Bar at Bottom */}
-                            <div className="bg-gray-900 p-4">
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="text-xs text-gray-400">Progresso do Módulo</span>
-                                <span className="text-xs font-medium text-emerald-400">
-                                  {Math.floor(Math.random() * 100)}%
-                                </span>
-                              </div>
-                              <div className="w-full bg-gray-800 rounded-full h-2">
-                                <div 
-                                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-700 shadow-sm shadow-emerald-500/30"
-                                  style={{ width: `${Math.floor(Math.random() * 100)}%` }}
-                                />
-                              </div>
-                            </div>
-                          </Card>
-                        </motion.div>
-                      ))}
+                            </Card>
+                          </motion.div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Scroll Indicators */}
-                  <div className="flex justify-center mt-4 gap-2">
-                    {modules.map((_, index) => (
-                      <div 
-                        key={index}
-                        className="w-2 h-2 rounded-full bg-gray-700 hover:bg-emerald-500 transition-colors cursor-pointer"
-                      />
-                    ))}
-                  </div>
+                  )}
                 </div>
               ) : (
-                <Card className="border-dashed border-2 border-gray-800 bg-gray-900/50">
-                  <CardContent className="p-12 text-center">
-                    <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-medium text-gray-300 mb-2">
-                      Nenhum módulo disponível
+                /* Sem módulos disponíveis */
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-20"
+                >
+                  <div className="bg-gray-900 rounded-2xl p-12 border border-gray-800">
+                    <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-6" />
+                    <h3 className="text-2xl font-bold text-white mb-4">
+                      Nenhum módulo disponível ainda
                     </h3>
-                    <p className="text-gray-500">
-                      Os módulos do curso serão adicionados em breve
+                    <p className="text-gray-400 text-lg max-w-md mx-auto">
+                      Novos módulos serão adicionados em breve. Fique atento!
                     </p>
-                  </CardContent>
-                </Card>
+                  </div>
+                </motion.div>
               )}
             </motion.div>
           </div>
         </div>
       </div>
-
     </div>
   );
 }
