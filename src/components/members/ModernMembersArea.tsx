@@ -198,17 +198,17 @@ export default function ModernMembersArea() {
         
         {/* Hero Image Background */}
         {memberArea?.hero_image_url && (
-          <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 opacity-40">
             <img 
               src={memberArea.hero_image_url} 
               alt={memberArea.name}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
           </div>
         )}
         
-        <div className="relative container mx-auto px-4 py-16">
+        <div className="relative container mx-auto px-4 py-20">
           {/* Header */}
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
