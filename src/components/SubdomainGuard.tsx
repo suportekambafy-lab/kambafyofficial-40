@@ -29,28 +29,36 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       return;
     }
     
-    // Para desenvolvimento/preview, fazer verificações mas sem redirecionamentos
+    // Para desenvolvimento/preview do Lovable, NUNCA fazer redirecionamentos
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
-      console.log('🔧 SubdomainGuard: Ambiente de desenvolvimento detectado', {
+      console.log('🔧 SubdomainGuard: PRÉ-VISUALIZAÇÃO/DEV - Sem redirecionamentos', {
         currentSubdomain,
         currentPath,
         hostname,
-        message: 'TODAS as rotas são permitidas em desenvolvimento'
+        isLovablePreview: hostname.includes('lovable.app'),
+        message: 'TODAS as rotas funcionam diretamente na pré-visualização'
       });
       
-      // Em desenvolvimento, TODAS as rotas são permitidas - sem redirecionamentos
+      // Na pré-visualização do Lovable, todas as rotas devem funcionar sem redirecionamentos
       if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
-        console.log('🎓 SubdomainGuard DEV: Rota de área de membros PERMITIDA', {
+        console.log('🎓 SubdomainGuard: Área de membros funcionando na pré-visualização', {
           currentPath,
           currentSubdomain,
-          message: 'Área de membros funciona em desenvolvimento'
+          message: 'Login e área de membros funcionam diretamente'
         });
       }
       
-      console.log('✅ SubdomainGuard DEV: PERMITINDO acesso', {
+      if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || currentPath.startsWith('/apps')) {
+        console.log('🔐 SubdomainGuard: Rotas de autenticação funcionando na pré-visualização', {
+          currentPath,
+          message: 'Autenticação funciona diretamente na pré-visualização'
+        });
+      }
+      
+      console.log('✅ SubdomainGuard: ACESSO LIBERADO na pré-visualização', {
         currentPath,
         hostname,
-        message: 'Nenhum redirecionamento em desenvolvimento'
+        message: 'Todas as funcionalidades disponíveis diretamente'
       });
       return;
     }

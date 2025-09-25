@@ -149,10 +149,14 @@ export default function MinhasCompras() {
         generatedUrl: memberAreaUrl
       });
       
-      // Em desenvolvimento, usar navegação por React Router
+      // Em desenvolvimento/pré-visualização, usar navegação por React Router
       const hostname = window.location.hostname;
       if (hostname.includes('localhost') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
-        console.log('🛠️ Desenvolvimento detectado - usando React Router');
+        console.log('🛠️ Pré-visualização/Dev detectado - usando React Router', {
+          hostname,
+          memberAreaUrl,
+          isLovablePreview: hostname.includes('lovable.app')
+        });
         navigate(`/area/${product.member_areas.id}`);
       } else {
         // Em produção, navegar para o subdomínio membros

@@ -7,40 +7,44 @@ export function useSubdomain() {
     // Detect current subdomain
     let subdomain: 'main' | 'app' | 'pay' | 'admin' | 'mobile' | 'membros' = 'main';
     
-    // Para desenvolvimento/preview, detectar subdomínio baseado no path
+    // Para desenvolvimento/preview, permitir TODAS as rotas sem restrições de subdomínio
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
       const path = window.location.pathname;
       
       // 🔍 Debug logging da detecção de subdomínio
-      console.log('🔍 useSubdomain: DESENVOLVIMENTO - Detectando subdomínio', {
+      console.log('🔍 useSubdomain: PRÉ-VISUALIZAÇÃO/DEV - Todas as rotas permitidas', {
         hostname,
         path,
+        isPreview: hostname.includes('lovable.app'),
         isDevelopment: true,
-        isLovableProject: hostname.includes('lovableproject.com')
+        message: 'Sem restrições de subdomínio na pré-visualização'
       });
       
+      // Na pré-visualização, detectar subdomínio apenas para funcionalidades internas,
+      // mas TODAS as rotas são permitidas
       if (path.startsWith('/mobile')) {
         subdomain = 'mobile';
       } else if (path.startsWith('/admin')) {
         subdomain = 'admin';
       } else if (path.startsWith('/checkout') || path.startsWith('/obrigado')) {
-        subdomain = 'pay';
+        subdomain = 'pay'; 
       } else if (path.startsWith('/auth') || path.startsWith('/vendedor') || path.startsWith('/apps') || path.startsWith('/minhas-compras')) {
         subdomain = 'app';
       } else if (path.startsWith('/login/') || path.startsWith('/area/')) {
         subdomain = 'membros';
-        console.log('🎓 useSubdomain: MEMBROS detectado para rota', {
+        console.log('🎓 useSubdomain: MEMBROS - Funcionando na pré-visualização', {
           path,
-          message: 'Em desenvolvimento, área de membros funciona localmente'
+          message: 'Área de membros funciona diretamente na pré-visualização'
         });
       } else {
         subdomain = 'main'; // Padrão para desenvolvimento
       }
       
-      console.log('🎯 useSubdomain: Subdomínio final detectado:', {
+      console.log('✅ useSubdomain: Subdomínio detectado na pré-visualização:', {
         subdomain,
         path,
-        hostname
+        hostname,
+        message: 'Todas as rotas funcionam sem redirecionamento'
       });
     } else {
       // Para produção com domínios customizados
