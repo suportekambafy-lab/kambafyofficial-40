@@ -37,6 +37,7 @@ const CARD_ELEMENT_OPTIONS = {
 
 interface StripeCardFormProps {
   amount: number;
+  originalAmountKZ: number;
   currency: string;
   productId: string;
   customerData: {
@@ -55,6 +56,7 @@ interface StripeCardFormProps {
 
 const ApplePayButton: React.FC<StripeCardFormProps> = ({
   convertedAmount,
+  originalAmountKZ,
   currency,
   productId,
   customerData,
@@ -132,8 +134,8 @@ const ApplePayButton: React.FC<StripeCardFormProps> = ({
             currency: stripeCurrency,
             productId,
             customerData,
-            originalAmount: convertedAmount,
-            originalCurrency: currency,
+            originalAmount: originalAmountKZ,
+            originalCurrency: 'KZ',
             convertedAmount: convertedAmount,
             targetCurrency: currency,
             paymentMethod: 'apple_pay',
@@ -219,6 +221,7 @@ const ApplePayButton: React.FC<StripeCardFormProps> = ({
 
 const StripeCardForm: React.FC<StripeCardFormProps> = ({
   amount,
+  originalAmountKZ,
   currency,
   productId,
   customerData,
@@ -271,7 +274,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
           currency: stripeCurrency,
           productId,
           customerData,
-          originalAmount: amount, // Valor original em KZ
+          originalAmount: originalAmountKZ, // Valor original em KZ
           originalCurrency: 'KZ', // Moeda original do sistema
           convertedAmount: convertedAmount, // Valor convertido para a moeda de destino
           targetCurrency: currency, // Moeda de destino (EUR, MZN, etc)
@@ -440,6 +443,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
               
               <ApplePayButton
                 amount={amount}
+                originalAmountKZ={originalAmountKZ}
                 currency={currency}
                 productId={productId}
                 customerData={customerData}
@@ -542,6 +546,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
 interface StripeCardPaymentProps {
   amount: number;
+  originalAmountKZ: number;
   currency: string;
   productId: string;
   customerData: {

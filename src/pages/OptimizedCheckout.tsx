@@ -649,6 +649,7 @@ const OptimizedCheckout = () => {
                         <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded"></div>}>
                           <StripeCardPayment
                             paymentMethod={selectedPayment}
+                            originalAmountKZ={parseFloat(product?.price || '0')}
                               amount={(() => {
                                 console.log(`🔥 CALCULATING FINAL STRIPE AMOUNT:`);
                                 

@@ -2063,6 +2063,7 @@ const Checkout = () => {
                 <div className="mt-6">
                   <OptimizedStripeCardPayment
                     amount={totalPrice}
+                    originalAmountKZ={originalPriceKZ}
                     currency={userCountry.currency}
                     productId={productId || ''}
                     customerData={{
