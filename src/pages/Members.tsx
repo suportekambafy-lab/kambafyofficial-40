@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Video, FileText, Users, MoreHorizontal, Edit, Trash2, Eye, Clock, BookOpen, Upload, Minimize2, Search, ChevronDown, ArrowLeft, ExternalLink, EyeOff, GripVertical, Mail, Save, Palette, Image, Type, Settings } from "lucide-react";
+import { Plus, Video, FileText, Users, MoreHorizontal, Edit, Trash2, Eye, Clock, BookOpen, Upload, Minimize2, Search, ChevronDown, ArrowLeft, ExternalLink, EyeOff, GripVertical, Mail, Save, Image, Type, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,11 +47,6 @@ interface CustomizationData {
   
   // Logo de Login (separado do logo principal)
   login_logo_url: string;
-  
-  // Configurações visuais
-  primary_color: string;
-  accent_color: string;
-  background_style: 'dark' | 'light' | 'gradient';
 }
 
 export default function Members() {
@@ -87,10 +82,7 @@ export default function Members() {
     hero_title: '',
     hero_description: '',
     logo_url: '',
-    login_logo_url: '',
-    primary_color: '#3b82f6',
-    accent_color: '#8b5cf6',
-    background_style: 'dark'
+    login_logo_url: ''
   });
   
   const [formData, setFormData] = useState({
@@ -146,10 +138,7 @@ export default function Members() {
         hero_title: selectedArea.hero_title || '',
         hero_description: selectedArea.hero_description || '',
         logo_url: selectedArea.logo_url || '',
-        login_logo_url: (selectedArea as any).login_logo_url || '',
-        primary_color: (selectedArea as any).primary_color || '#3b82f6',
-        accent_color: (selectedArea as any).accent_color || '#8b5cf6',
-        background_style: (selectedArea as any).background_style || 'dark'
+        login_logo_url: (selectedArea as any).login_logo_url || ''
       });
     }
   }, [selectedArea]);
@@ -172,9 +161,6 @@ export default function Members() {
 
       // Adicionar campos de personalização se existirem
       if (areaCustomizationData.login_logo_url) updateData.login_logo_url = areaCustomizationData.login_logo_url;
-      if (areaCustomizationData.primary_color) updateData.primary_color = areaCustomizationData.primary_color;
-      if (areaCustomizationData.accent_color) updateData.accent_color = areaCustomizationData.accent_color;
-      if (areaCustomizationData.background_style) updateData.background_style = areaCustomizationData.background_style;
 
       const { error } = await supabase
         .from('member_areas')
@@ -1272,7 +1258,7 @@ export default function Members() {
               </div>
 
               <Tabs value={customizationTab} onValueChange={setCustomizationTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="basics" className="flex items-center gap-2">
                     <Type className="w-4 h-4" />
                     <span className="hidden sm:inline">Básico</span>
@@ -1284,10 +1270,6 @@ export default function Members() {
                   <TabsTrigger value="modules" className="flex items-center gap-2">
                     <Settings className="w-4 h-4" />
                     <span className="hidden sm:inline">Módulos</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="style" className="flex items-center gap-2">
-                    <Palette className="w-4 h-4" />
-                    <span className="hidden sm:inline">Estilo</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -1448,100 +1430,6 @@ export default function Members() {
                           <p className="text-sm">Crie módulos primeiro para personalizar suas capas</p>
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="style" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Personalização Visual</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Configure cores e estilo visual da área
-                      </p>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid gap-4 md:grid-cols-3">
-                        <div className="space-y-2">
-                          <Label htmlFor="primary-color">Cor Primária</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              id="primary-color"
-                              type="color"
-                              value={areaCustomizationData.primary_color}
-                              onChange={(e) => setAreaCustomizationData(prev => ({ ...prev, primary_color: e.target.value }))}
-                              className="w-12 h-10 p-1 border rounded"
-                            />
-                            <Input
-                              value={areaCustomizationData.primary_color}
-                              onChange={(e) => setAreaCustomizationData(prev => ({ ...prev, primary_color: e.target.value }))}
-                              placeholder="#3b82f6"
-                              className="flex-1"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="accent-color">Cor de Destaque</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              id="accent-color"
-                              type="color"
-                              value={areaCustomizationData.accent_color}
-                              onChange={(e) => setAreaCustomizationData(prev => ({ ...prev, accent_color: e.target.value }))}
-                              className="w-12 h-10 p-1 border rounded"
-                            />
-                            <Input
-                              value={areaCustomizationData.accent_color}
-                              onChange={(e) => setAreaCustomizationData(prev => ({ ...prev, accent_color: e.target.value }))}
-                              placeholder="#8b5cf6"
-                              className="flex-1"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Estilo de Fundo</Label>
-                          <div className="flex gap-2">
-                            <Button
-                              type="button"
-                              variant={areaCustomizationData.background_style === 'dark' ? 'default' : 'outline'}
-                              size="sm"
-                              onClick={() => setAreaCustomizationData(prev => ({ ...prev, background_style: 'dark' }))}
-                              className="flex-1"
-                            >
-                              Escuro
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={areaCustomizationData.background_style === 'light' ? 'default' : 'outline'}
-                              size="sm"
-                              onClick={() => setAreaCustomizationData(prev => ({ ...prev, background_style: 'light' }))}
-                              className="flex-1"
-                            >
-                              Claro
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-muted rounded-lg">
-                        <h4 className="font-medium mb-2">Preview de Cores</h4>
-                        <div className="flex gap-4">
-                          <div 
-                            className="w-16 h-16 rounded-lg shadow-inner flex items-center justify-center text-white text-xs font-medium"
-                            style={{ backgroundColor: areaCustomizationData.primary_color }}
-                          >
-                            Primária
-                          </div>
-                          <div 
-                            className="w-16 h-16 rounded-lg shadow-inner flex items-center justify-center text-white text-xs font-medium"
-                            style={{ backgroundColor: areaCustomizationData.accent_color }}
-                          >
-                            Destaque
-                          </div>
-                        </div>
-                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
