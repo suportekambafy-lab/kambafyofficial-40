@@ -136,7 +136,7 @@ export function ModernKambaAchievements() {
                 style={{ '--progress-background': nextLevel.color } as React.CSSProperties}
               />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{formatCurrency(currentLevel.threshold)}</span>
+                <span>{formatCurrency(totalRevenue)}</span>
                 <span>{formatCurrency(nextLevel.threshold)}</span>
               </div>
             </div>
