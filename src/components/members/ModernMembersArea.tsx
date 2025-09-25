@@ -85,17 +85,22 @@ export default function ModernMembersArea() {
           .eq('status', 'published')
           .order('order_number');
 
+        console.log('🔍 Raw lessonsData:', lessonsData);
+        console.log('🔍 lessonsError:', lessonsError);
+        console.log('🔍 Type of lessonsData:', typeof lessonsData);
+        console.log('🔍 Is Array:', Array.isArray(lessonsData));
+        
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
-          console.log('📊 Dados das lessons:');
+          console.log('📊 Raw lessons array:', lessonsData);
+          
+          // Verificar cada item individualmente
           lessonsData.forEach((lesson, index) => {
-            console.log(`   Aula ${index + 1}:`, {
-              title: lesson.title,
-              duration: lesson.duration,
-              order_number: lesson.order_number,
-              id: lesson.id
-            });
+            console.log(`🔍 Lesson ${index}:`, lesson);
+            console.log(`   - Type:`, typeof lesson);
+            console.log(`   - Keys:`, lesson ? Object.keys(lesson) : 'null/undefined');
           });
+          
           setLessons(lessonsData as Lesson[]);
         } else {
           console.error('❌ ModernMembersArea: Erro ao carregar lessons:', lessonsError);
