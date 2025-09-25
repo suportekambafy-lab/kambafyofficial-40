@@ -76,7 +76,7 @@ export function ModernLessonViewer({
 
   return (
     <div className="space-y-6">
-      {/* Video Player - sozinho com sua borda */}
+      {/* Video Player - sozinho */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -114,70 +114,6 @@ export function ModernLessonViewer({
             </div>
           )}
         </Card>
-      </motion.div>
-
-      {/* Botões de navegação - separados do vídeo */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <div className="flex justify-between items-center">
-          <Button 
-            variant="ghost" 
-            disabled={!prevLesson}
-            onClick={() => prevLesson && onNavigateLesson(prevLesson.id)}
-            className="bg-muted/20 hover:bg-muted/30 text-foreground border-0"
-          >
-            <SkipBack className="h-4 w-4 mr-2" />
-            Anterior
-          </Button>
-          
-          <Button 
-            variant="ghost"
-            disabled={!nextLesson}
-            onClick={() => nextLesson && onNavigateLesson(nextLesson.id)}
-            className="bg-muted/20 hover:bg-muted/30 text-foreground border-0"
-          >
-            Próxima
-            <SkipForward className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
-      </motion.div>
-
-      {/* Avaliação da aula - separada dos botões */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-sm text-muted-foreground">Avalie esta aula</p>
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <motion.button
-                key={star}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setRating(star)}
-                className="transition-colors"
-              >
-                <Star 
-                  className={`h-5 w-5 ${
-                    star <= rating 
-                      ? 'text-yellow-500 fill-current' 
-                      : 'text-gray-400'
-                  }`} 
-                />
-              </motion.button>
-            ))}
-          </div>
-          {rating > 0 && (
-            <p className="text-xs text-muted-foreground">
-              Você avaliou com {rating} estrela{rating > 1 ? 's' : ''}
-            </p>
-          )}
-        </div>
       </motion.div>
     </div>
   );
