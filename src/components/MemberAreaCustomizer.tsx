@@ -47,7 +47,7 @@ export function MemberAreaCustomizer({ open, onOpenChange, memberArea, onSuccess
   const [modules, setModules] = useState<Module[]>([]);
   const [loadingModules, setLoadingModules] = useState(false);
   
-  console.log('MemberAreaCustomizer render:', { open, memberArea: memberArea?.name });
+  console.log('MemberAreaCustomizer render:', { open, memberArea: memberArea?.name, memberId: memberArea?.id });
   
   const [formData, setFormData] = useState<CustomizationData>({
     name: '',
@@ -61,6 +61,14 @@ export function MemberAreaCustomizer({ open, onOpenChange, memberArea, onSuccess
     accent_color: '#8b5cf6',
     background_style: 'dark'
   });
+
+  useEffect(() => {
+    console.log('MemberAreaCustomizer useEffect - props changed:', { 
+      open, 
+      memberAreaId: memberArea?.id, 
+      memberAreaName: memberArea?.name 
+    });
+  }, [open, memberArea]);
 
   useEffect(() => {
     if (memberArea && open) {

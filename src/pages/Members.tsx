@@ -858,7 +858,10 @@ export default function Members() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => {
                   console.log('Personalizar Área clicked');
+                  console.log('Current selectedArea:', selectedArea);
+                  console.log('Current customizerOpen:', customizerOpen);
                   setCustomizerOpen(true);
+                  console.log('Set customizerOpen to true');
                 }}>
                   <Edit className="h-3 w-3 mr-2" />
                   Personalizar Área
