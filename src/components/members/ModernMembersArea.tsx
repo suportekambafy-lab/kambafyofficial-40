@@ -175,15 +175,16 @@ export default function ModernMembersArea() {
   return (
     <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
-      <MemberAreaSlideMenu
-        lessons={lessons}
-        modules={modules}
-        lessonProgress={{}} // Você pode implementar o hook de progresso aqui depois
-        getCourseProgress={(total) => Math.round((Math.floor(lessons.length * 0.3) / total) * 100) || 0}
-        totalDuration={lessons.reduce((sum, lesson) => sum + lesson.duration, 0)}
-        completedLessons={Math.floor(lessons.length * 0.3)}
-        onLessonSelect={setSelectedLesson}
-      />
+        <MemberAreaSlideMenu
+          lessons={lessons}
+          modules={modules}
+          lessonProgress={{}} // Você pode implementar o hook de progresso aqui depois
+          getCourseProgress={(total) => Math.round((Math.floor(lessons.length * 0.3) / total) * 100) || 0}
+          totalDuration={lessons.reduce((sum, lesson) => sum + lesson.duration, 0)}
+          completedLessons={Math.floor(lessons.length * 0.3)}
+          onLessonSelect={setSelectedLesson}
+          onLogout={handleLogout}
+        />
       
       {/* Hero Section - Estilo Hotmart/Kiwify */}
       <motion.section
@@ -233,19 +234,13 @@ export default function ModernMembersArea() {
               </div>
             </div>
             
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleLogout}
-              className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Removido o botão de logout - agora está no menu slide */}
+            </div>
           </motion.div>
 
           {/* Course Hero */}
-          <motion.div 
+          <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}

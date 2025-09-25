@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, BarChart3, Play, CheckCircle, Clock, Menu } from 'lucide-react';
+import { Search, BarChart3, Play, CheckCircle, Clock, Menu, LogOut } from 'lucide-react';
 import type { Lesson, Module } from '@/types/memberArea';
 
 interface MemberAreaSlideMenuProps {
@@ -15,6 +15,7 @@ interface MemberAreaSlideMenuProps {
   totalDuration: number;
   completedLessons: number;
   onLessonSelect?: (lesson: Lesson) => void;
+  onLogout?: () => void;
 }
 
 export function MemberAreaSlideMenu({ 
@@ -24,7 +25,8 @@ export function MemberAreaSlideMenu({
   getCourseProgress,
   totalDuration,
   completedLessons,
-  onLessonSelect 
+  onLessonSelect,
+  onLogout 
 }: MemberAreaSlideMenuProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [open, setOpen] = useState(false);
@@ -226,6 +228,23 @@ export function MemberAreaSlideMenu({
               )}
             </div>
           </ScrollArea>
+
+          {/* Botão de Logout */}
+          {onLogout && (
+            <div className="mt-6 pt-4 border-t">
+              <Button
+                onClick={() => {
+                  onLogout();
+                  setOpen(false);
+                }}
+                variant="outline"
+                className="w-full flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair da Área
+              </Button>
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>

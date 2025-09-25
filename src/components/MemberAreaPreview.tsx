@@ -228,6 +228,7 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
           totalDuration={publishedLessons.reduce((sum, lesson) => sum + (lesson.duration || 0), 0)}
           completedLessons={Object.values(lessonProgress).filter(p => p.completed).length}
           onLessonSelect={setSelectedLesson}
+          onLogout={() => onOpenChange(false)} // Fechar modal quando sair
         />
         
         <div className="h-[90vh] bg-gray-50 flex flex-col">
