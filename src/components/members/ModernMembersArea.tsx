@@ -175,36 +175,36 @@ export default function ModernMembersArea() {
   return (
     <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
-        <MemberAreaSlideMenu
-          lessons={lessons}
-          modules={modules}
-          lessonProgress={{}} // Você pode implementar o hook de progresso aqui depois
-          getCourseProgress={(total) => Math.round((Math.floor(lessons.length * 0.3) / total) * 100) || 0}
-          totalDuration={lessons.reduce((sum, lesson) => sum + lesson.duration, 0)}
-          completedLessons={Math.floor(lessons.length * 0.3)}
-          onLessonSelect={setSelectedLesson}
-          onLogout={handleLogout}
-        />
+      <MemberAreaSlideMenu
+        lessons={lessons}
+        modules={modules}
+        lessonProgress={{}} // Você pode implementar o hook de progresso aqui depois
+        getCourseProgress={(total) => Math.round((Math.floor(lessons.length * 0.3) / total) * 100) || 0}
+        totalDuration={lessons.reduce((sum, lesson) => sum + lesson.duration, 0)}
+        completedLessons={Math.floor(lessons.length * 0.3)}
+        onLessonSelect={setSelectedLesson}
+        onLogout={handleLogout}
+      />
       
-      {/* Hero Section - Estilo Hotmart/Kiwify */}
+      {/* Hero Section - Estilo Netflix */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative bg-gradient-to-br from-gray-900 via-gray-950 to-black overflow-hidden"
+        className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden"
       >
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-950/90 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:40px_40px]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
         
         {/* Hero Image Background */}
         {memberArea?.hero_image_url && (
-          <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0 opacity-30">
             <img 
               src={memberArea.hero_image_url} 
               alt={memberArea.name}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/80 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
           </div>
         )}
         
@@ -217,19 +217,19 @@ export default function ModernMembersArea() {
           >
             <div className="flex items-center gap-3">
               {memberArea?.logo_url ? (
-                <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
+                <Avatar className="h-12 w-12 ring-2 ring-red-500/50">
                   <AvatarImage src={memberArea.logo_url} alt={memberArea.name} />
-                  <AvatarFallback className="bg-emerald-600">
+                  <AvatarFallback className="bg-red-600">
                     <GraduationCap className="h-6 w-6 text-white" />
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                <div className="h-12 w-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
+                <div className="h-12 w-12 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center">
                   <GraduationCap className="h-6 w-6 text-white" />
                 </div>
               )}
               <div className="text-white">
-                <p className="text-sm text-emerald-400">Área de Membros</p>
+                <p className="text-sm text-red-400">Área de Membros</p>
                 <p className="text-sm text-gray-300">Olá, {session?.studentName}</p>
               </div>
             </div>
@@ -246,7 +246,7 @@ export default function ModernMembersArea() {
             transition={{ delay: 0.1 }}
             className="text-center mb-12"
           >
-            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4">
+            <Badge className="bg-red-500/20 text-red-400 border-red-500/30 mb-4">
               <Trophy className="h-3 w-3 mr-1" />
               Curso Premium
             </Badge>
@@ -263,7 +263,7 @@ export default function ModernMembersArea() {
       </motion.section>
 
       {/* Main Content Area */}
-      <div className="bg-gray-900 min-h-screen">
+      <div className="bg-black min-h-screen">
         <div className="container mx-auto px-4 py-12">
 
           <div className="grid grid-cols-1 gap-8">
@@ -293,10 +293,10 @@ export default function ModernMembersArea() {
                           whileHover={{ scale: 1.05, y: -8 }}
                           className="group cursor-pointer flex-shrink-0 w-80"
                         >
-                          <Card className="overflow-hidden bg-gray-800 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-700 hover:border-emerald-500/50 transform-gpu">
+                          <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-red-500/20 transition-all duration-500 border border-gray-800 hover:border-red-500/50 transform-gpu">
                             <div className="relative">
                               {/* Module Cover - Netflix Style */}
-                              <div className="aspect-[16/9] bg-gradient-to-br from-gray-800 to-gray-950 relative overflow-hidden">
+                              <div className="aspect-[16/9] bg-gradient-to-br from-gray-900 to-black relative overflow-hidden">
                                 {module.cover_image_url ? (
                                   <>
                                     <img 
@@ -308,38 +308,38 @@ export default function ModernMembersArea() {
                                   </>
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center">
-                                    <BookOpen className="h-20 w-20 text-gray-500 group-hover:text-emerald-500 transition-colors duration-300" />
+                                    <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-red-500 transition-colors duration-300" />
                                   </div>
                                 )}
                                 
                                 {/* Module Number Badge */}
                                 <div className="absolute top-4 left-4">
-                                  <Badge className="bg-emerald-500/90 backdrop-blur-sm hover:bg-emerald-600 text-white font-bold px-3 py-1">
+                                  <Badge className="bg-red-600/90 backdrop-blur-sm hover:bg-red-700 text-white font-bold px-3 py-1">
                                     Módulo {module.order_number}
                                   </Badge>
                                 </div>
                                 
                                 {/* Progress Badge */}
                                 <div className="absolute top-4 right-4">
-                                  <Badge variant="outline" className="text-emerald-400 border-emerald-500/50 bg-black/50 backdrop-blur-sm font-medium">
+                                  <Badge variant="outline" className="text-red-400 border-red-500/50 bg-black/50 backdrop-blur-sm font-medium">
                                     {Math.random() > 0.5 ? 'Em Progresso' : 'Novo'}
                                   </Badge>
                                 </div>
                                 
                                 {/* Play Overlay */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                  <div className="w-20 h-20 bg-emerald-500/80 backdrop-blur-sm rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                                  <div className="w-20 h-20 bg-red-600/80 backdrop-blur-sm rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
                                     <Play className="h-10 w-10 text-white ml-1" />
                                   </div>
                                 </div>
                                 
                                 {/* Bottom Gradient */}
-                                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-800 to-transparent" />
+                                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-900 to-transparent" />
                               </div>
                               
                               {/* Module Info Overlay */}
                               <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-emerald-400 transition-colors duration-300">
+                                <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-red-400 transition-colors duration-300">
                                   {module.title}
                                 </h3>
                                 
@@ -364,16 +364,16 @@ export default function ModernMembersArea() {
                             </div>
                             
                             {/* Progress Bar at Bottom */}
-                            <div className="bg-gray-800 p-4">
+                            <div className="bg-gray-900 p-4">
                               <div className="flex justify-between items-center mb-2">
                                 <span className="text-xs text-gray-400">Progresso do Módulo</span>
-                                <span className="text-xs font-medium text-emerald-400">
+                                <span className="text-xs font-medium text-red-400">
                                   {Math.floor(Math.random() * 100)}%
                                 </span>
                               </div>
-                              <div className="w-full bg-gray-700 rounded-full h-2">
+                              <div className="w-full bg-gray-800 rounded-full h-2">
                                 <div 
-                                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-700 shadow-sm shadow-emerald-500/30"
+                                  className="bg-gradient-to-r from-red-600 to-red-500 h-2 rounded-full transition-all duration-700 shadow-sm shadow-red-500/30"
                                   style={{ width: `${Math.floor(Math.random() * 100)}%` }}
                                 />
                               </div>
@@ -389,15 +389,15 @@ export default function ModernMembersArea() {
                     {modules.map((_, index) => (
                       <div 
                         key={index}
-                        className="w-2 h-2 rounded-full bg-gray-600 hover:bg-emerald-500 transition-colors cursor-pointer"
+                        className="w-2 h-2 rounded-full bg-gray-700 hover:bg-red-500 transition-colors cursor-pointer"
                       />
                     ))}
                   </div>
                 </div>
               ) : (
-                <Card className="border-dashed border-2 border-gray-700 bg-gray-800/50">
+                <Card className="border-dashed border-2 border-gray-800 bg-gray-900/50">
                   <CardContent className="p-12 text-center">
-                    <BookOpen className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                    <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-4" />
                     <h3 className="text-xl font-medium text-gray-300 mb-2">
                       Nenhum módulo disponível
                     </h3>
