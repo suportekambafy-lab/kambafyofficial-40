@@ -203,10 +203,14 @@ All colors MUST be HSL.
   }
 }
 
-@layer components {
-  .g-button {
-    @apply rounded-[var(--radius)] border;
-    border-color: hsl(var(--btn-border));
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
 
