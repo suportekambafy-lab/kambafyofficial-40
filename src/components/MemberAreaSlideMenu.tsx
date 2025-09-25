@@ -80,7 +80,7 @@ export function MemberAreaSlideMenu({
       <SheetContent side="right" className="w-[400px] sm:w-[540px] bg-gray-950 text-white border-gray-800">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-slate-50">
-            <img src="/kambafy-logo-gray.svg" alt="Kambafy" className="w-5 h-5" />
+            <img src="/kambafy-logo-gray.svg" alt="Kambafy" className="w-8 h-8" />
           </SheetTitle>
           <SheetDescription className="text-slate-300">
             Acompanhe seu progresso e pesquise aulas
