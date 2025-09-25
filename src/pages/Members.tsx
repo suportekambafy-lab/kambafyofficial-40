@@ -19,6 +19,7 @@ import StudentsManager from "@/components/StudentsManager";
 import MemberAreaPreview from "@/components/MemberAreaPreview";
 import { ImageUploader } from "@/components/ImageUploader";
 import { MemberAreaCreationForm } from "@/components/MemberAreaCreationForm";
+import { MemberAreaCustomizer } from "@/components/MemberAreaCustomizer";
 import { useNavigate } from "react-router-dom";
 import type { Lesson, Module, MemberArea } from "@/types/memberArea";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -58,6 +59,7 @@ export default function Members() {
   const [draggedLesson, setDraggedLesson] = useState<Lesson | null>(null);
   const [draggedModule, setDraggedModule] = useState<Module | null>(null);
   const [selectedModuleForLesson, setSelectedModuleForLesson] = useState<string>('');
+  const [customizerOpen, setCustomizerOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -854,6 +856,10 @@ export default function Members() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setCustomizerOpen(true)}>
+                  <Edit className="h-3 w-3 mr-2" />
+                  Personalizar Área
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleDeleteArea(selectedArea.id)} className="text-destructive">
                   <Trash2 className="h-3 w-3 mr-2" />
                   Excluir Área
@@ -1482,6 +1488,13 @@ export default function Members() {
               <MemberAreaCreationForm
                 open={areaDialogOpen}
                 onOpenChange={setAreaDialogOpen}
+                onSuccess={loadData}
+              />
+              
+              <MemberAreaCustomizer
+                open={customizerOpen}
+                onOpenChange={setCustomizerOpen}
+                memberArea={selectedArea}
                 onSuccess={loadData}
               />
             </div>
