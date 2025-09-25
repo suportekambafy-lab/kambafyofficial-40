@@ -73,6 +73,10 @@ const ProtectedMemberAreaRoute = createLazyWithRetry(() => import('@/components/
 const ModuleDetail = createLazyWithRetry(() => import('@/pages/ModuleDetail'), "ModuleDetail");
 const LessonDetail = createLazyWithRetry(() => import('@/pages/LessonDetail'), "LessonDetail");
 
+// New simplified member area routes
+const NewMemberAreaLogin = createLazyWithRetry(() => import('@/pages/NewMemberAreaLogin'), "NewMemberAreaLogin");
+const NewMemberArea = createLazyWithRetry(() => import('@/pages/NewMemberArea'), "NewMemberArea");
+
 
 // Páginas do painel vendedor - lazy load com preload e retry
 const SellerDashboard = createLazyWithRetry(() => 
@@ -197,4 +201,8 @@ export const OptimizedRoutes = {
   ProtectedMemberAreaRoute: withLazyLoading(ProtectedMemberAreaRoute, 'member-area'),
   ModuleDetail: withLazyLoading(ModuleDetail, 'member-area'),
   LessonDetail: withLazyLoading(LessonDetail, 'member-area'),
+  
+  // New simplified member area pages
+  NewMemberAreaLogin: withLazyLoading(NewMemberAreaLogin, 'member-area'),
+  NewMemberArea: withLazyLoading(NewMemberArea, 'member-area'),
 };

@@ -144,9 +144,14 @@ const App = () => {
                               </div>
                               <OptimizedRoutes.MemberAreaLoginWrapper />
                             </div>
-                          } />
-                          <Route path="/area/:id/module/:moduleId" element={<OptimizedRoutes.ModuleDetail />} />
-                          <Route path="/area/:id/lesson/:lessonId" element={<OptimizedRoutes.LessonDetail />} />
+                           } />
+                           
+                           {/* Nova estrutura de área de membros - limpa e simples */}
+                          <Route path="/member-area-login/:id" element={<OptimizedRoutes.NewMemberAreaLogin />} />
+                          <Route path="/member-area/:id" element={<OptimizedRoutes.NewMemberArea />} />
+                          
+                           <Route path="/area/:id/module/:moduleId" element={<OptimizedRoutes.ModuleDetail />} />
+                           <Route path="/area/:id/lesson/:lessonId" element={<OptimizedRoutes.LessonDetail />} />
                        <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                         <Route path="/kambapay" element={<OptimizedRoutes.KambaPay />} />
                         
