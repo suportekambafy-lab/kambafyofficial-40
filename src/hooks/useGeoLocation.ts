@@ -169,9 +169,19 @@ export const useGeoLocation = () => {
   const convertPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): number => {
     const country = targetCountry || userCountry;
     
+    console.log('💰 CONVERT PRICE DEBUG:', {
+      priceInKZ,
+      country: country?.code,
+      currency: country?.currency,
+      exchangeRate: country?.exchangeRate,
+      customPrices,
+      hasCustomPrice: !!(customPrices && customPrices[country?.code])
+    });
+    
     // Verificar se há preço customizado para o país
     if (customPrices && customPrices[country.code]) {
       const customPrice = parseFloat(customPrices[country.code]);
+      console.log('💰 USING CUSTOM PRICE:', customPrice, 'for', country.code);
       if (!isNaN(customPrice)) {
         return customPrice;
       }
@@ -179,21 +189,28 @@ export const useGeoLocation = () => {
     
     // API retorna taxa: 1 KZ = X EUR, então multiplicamos para converter
     const convertedValue = priceInKZ * country.exchangeRate;
+    console.log('💰 CONVERSION CALCULATION:', {
+      priceInKZ,
+      exchangeRate: country?.exchangeRate,
+      convertedValue,
+      rounded: Math.round(convertedValue * 100) / 100
+    });
     return Math.round(convertedValue * 100) / 100;
   };
 
   const formatPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): string => {
     const country = targetCountry || userCountry;
     
-      console.log('🏷️ FORMAT PRICE DEBUG - DETAILED:', {
-        priceInKZ,
-        countryCode: country?.code,
-        countryName: country?.name,
-        countryCurrency: country?.currency,
-        exchangeRate: country?.exchangeRate,
-        customPrices,
-        hasCustomPriceForCountry: !!(customPrices && customPrices[country?.code])
-      });
+    console.log('🏷️ FORMAT PRICE DEBUG - DETAILED:', {
+      priceInKZ,
+      countryCode: country?.code,
+      countryName: country?.name,
+      countryCurrency: country?.currency,
+      exchangeRate: country?.exchangeRate,
+      customPrices,
+      hasCustomPriceForCountry: !!(customPrices && customPrices[country?.code]),
+      actualCustomPrice: customPrices?.[country?.code]
+    });
     
     // Verificar se há preço customizado para o país
     if (customPrices && customPrices[country.code]) {
@@ -202,17 +219,21 @@ export const useGeoLocation = () => {
         originalPrice: priceInKZ,
         customPrice,
         country: country.code,
-        currency: country.currency
+        currency: country.currency,
+        rawCustomValue: customPrices[country.code]
       });
       
       if (!isNaN(customPrice)) {
         switch (country.currency) {
           case 'EUR':
+            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: €${customPrice.toFixed(2)}`);
             return `€${customPrice.toFixed(2)}`;
           case 'MZN':
+            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: ${customPrice.toFixed(2)} MZN`);
             return `${customPrice.toFixed(2)} MZN`;
           case 'KZ':
           default:
+            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: ${parseFloat(customPrice.toString()).toLocaleString('pt-BR')} KZ`);
             return `${parseFloat(customPrice.toString()).toLocaleString('pt-BR')} KZ`;
         }
       }
@@ -232,11 +253,14 @@ export const useGeoLocation = () => {
     
     switch (country?.currency) {
       case 'EUR':
+        console.log(`🚨 getDisplayPrice - FORMATANDO CONVERSÃO FINAL: €${convertedPrice.toFixed(2)}`);
         return `€${convertedPrice.toFixed(2)}`;
       case 'MZN':
+        console.log(`🚨 getDisplayPrice - FORMATANDO CONVERSÃO FINAL: ${convertedPrice.toFixed(2)} MZN`);
         return `${convertedPrice.toFixed(2)} MZN`;
       case 'KZ':
       default:
+        console.log(`🚨 getDisplayPrice - FORMATANDO KZ FINAL: ${parseFloat(convertedPrice.toString()).toLocaleString('pt-BR')} KZ`);
         return `${parseFloat(convertedPrice.toString()).toLocaleString('pt-BR')} KZ`;
     }
   };
