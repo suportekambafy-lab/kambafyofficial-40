@@ -106,21 +106,25 @@ export function MemberAreaCustomizer({ open, onOpenChange, memberArea, onSuccess
 
     setIsUpdating(true);
     try {
+      const updateData: any = {
+        name: formData.name,
+        description: formData.description,
+        hero_image_url: formData.hero_image_url || null,
+        hero_title: formData.hero_title || null,
+        hero_description: formData.hero_description || null,
+        logo_url: formData.logo_url || null,
+        updated_at: new Date().toISOString()
+      };
+
+      // Adicionar campos de personalização se existirem
+      if (formData.login_logo_url) updateData.login_logo_url = formData.login_logo_url;
+      if (formData.primary_color) updateData.primary_color = formData.primary_color;
+      if (formData.accent_color) updateData.accent_color = formData.accent_color;
+      if (formData.background_style) updateData.background_style = formData.background_style;
+
       const { error } = await supabase
         .from('member_areas')
-        .update({
-          name: formData.name,
-          description: formData.description,
-          hero_image_url: formData.hero_image_url || null,
-          hero_title: formData.hero_title || null,
-          hero_description: formData.hero_description || null,
-          logo_url: formData.logo_url || null,
-          login_logo_url: formData.login_logo_url || null,
-          primary_color: formData.primary_color,
-          accent_color: formData.accent_color,
-          background_style: formData.background_style,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', memberArea.id);
 
       if (error) throw error;
@@ -132,7 +136,7 @@ export function MemberAreaCustomizer({ open, onOpenChange, memberArea, onSuccess
 
       onSuccess();
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating member area:', error);
       toast({
         title: "Erro",
