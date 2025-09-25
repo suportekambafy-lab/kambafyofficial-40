@@ -15,6 +15,8 @@ export interface Lesson {
   user_id: string;
   created_at: string;
   updated_at: string;
+  scheduled_at?: string | null;
+  is_scheduled?: boolean;
 }
 
 export interface Module {
@@ -29,6 +31,7 @@ export interface Module {
   updated_at: string;
   lessons_count?: number;
   cover_image_url?: string | null;
+  coming_soon?: boolean;
 }
 
 export interface MemberArea {

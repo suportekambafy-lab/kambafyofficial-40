@@ -23,8 +23,12 @@ import {
   MoreVertical,
   ArrowLeft,
   Menu,
-  X
+  X,
+  Lock,
+  AlertCircle
 } from 'lucide-react';
+import { CountdownTimer } from '@/components/ui/countdown-timer';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useModernMembersAuth } from './ModernMembersAuth';
@@ -194,10 +198,28 @@ export default function ModernMembersArea() {
   };
 
   const handleLessonClick = (lesson: Lesson) => {
+    if (!isLessonAccessible(lesson)) {
+      if (lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date()) {
+        toast.error("Aula agendada", {
+          description: `Esta aula será liberada em ${new Date(lesson.scheduled_at).toLocaleString()}`
+        });
+      } else {
+        toast.error("Aula não disponível", {
+          description: "Esta aula ainda não está liberada"
+        });
+      }
+      return;
+    }
     setSelectedLesson(lesson);
   };
 
   const handleModuleClick = (module: Module) => {
+    if (!isModuleAccessible(module)) {
+      toast.error("Módulo em breve", {
+        description: "Este módulo estará disponível em breve"
+      });
+      return;
+    }
     console.log('📚 Módulo selecionado:', module.title);
     setSelectedModule(module);
   };
@@ -211,6 +233,19 @@ export default function ModernMembersArea() {
     if (lesson) {
       setSelectedLesson(lesson);
     }
+  };
+
+  // Funções para verificar acessibilidade
+  const isLessonAccessible = (lesson: Lesson) => {
+    if (lesson.status !== 'published') return false;
+    if (lesson.is_scheduled && lesson.scheduled_at) {
+      return new Date(lesson.scheduled_at) <= new Date();
+    }
+    return true;
+  };
+
+  const isModuleAccessible = (module: Module) => {
+    return module.status === 'published' && !module.coming_soon;
   };
 
   const filteredLessons = lessons.filter(lesson => {
@@ -579,46 +614,114 @@ export default function ModernMembersArea() {
                         </div>
 
                         <div className="grid gap-4">
-                          {filteredLessons.map((lesson, index) => (
-                            <motion.div
-                              key={lesson.id}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.1 * index }}
-                              className="group cursor-pointer"
-                              onClick={() => handleLessonClick(lesson)}
-                            >
-                              <Card className="bg-gray-900 hover:bg-gray-800 transition-all duration-300 border border-gray-800 hover:border-emerald-500/50">
-                                <div className="p-6 flex items-center gap-4">
-                                  <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-lg flex items-center justify-center">
-                                    <Play className="h-8 w-8 text-emerald-400" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                                        Aula {lesson.order_number}
-                                      </Badge>
-                                      <Badge variant="outline" className="text-gray-400 border-gray-600">
-                                        <Clock className="h-3 w-3 mr-1" />
-                                        {Math.round(lesson.duration / 60)} min
-                                      </Badge>
+                          {filteredLessons.map((lesson, index) => {
+                            const currentProgress = lessonProgress[lesson.id];
+                            return (
+                              <motion.div
+                                key={lesson.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 * index }}
+                                className={`group transition-all duration-200 ${
+                                  isLessonAccessible(lesson) 
+                                    ? 'cursor-pointer' 
+                                    : 'cursor-not-allowed opacity-50'
+                                }`}
+                                onClick={() => handleLessonClick(lesson)}
+                              >
+                                <Card className={`bg-gray-900 transition-all duration-300 border border-gray-800 ${
+                                  isLessonAccessible(lesson)
+                                    ? 'hover:bg-gray-800 hover:border-emerald-500/50'
+                                    : 'opacity-75'
+                                }`}>
+                                  <div className="p-6 flex items-center gap-4">
+                                    <div className={`flex-shrink-0 w-16 h-16 rounded-lg flex items-center justify-center ${
+                                      isLessonAccessible(lesson)
+                                        ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20'
+                                        : 'bg-gray-800'
+                                    }`}>
+                                      {isLessonAccessible(lesson) ? (
+                                        currentProgress?.completed ? (
+                                          <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+                                        ) : (
+                                          <Play className="h-8 w-8 text-emerald-400" />
+                                        )
+                                      ) : (
+                                        <Lock className="h-8 w-8 text-gray-500" />
+                                      )}
                                     </div>
-                                    <h4 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">
-                                      {lesson.title}
-                                    </h4>
-                                    {lesson.description && (
-                                      <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                                        {lesson.description}
-                                      </p>
-                                    )}
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <Badge className={`${
+                                          isLessonAccessible(lesson)
+                                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                            : 'bg-gray-700 text-gray-400'
+                                        }`}>
+                                          Aula {lesson.order_number}
+                                        </Badge>
+                                        <Badge variant="outline" className="text-gray-400 border-gray-600">
+                                          <Clock className="h-3 w-3 mr-1" />
+                                          {Math.round(lesson.duration / 60)} min
+                                        </Badge>
+                                        {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && (
+                                          <Badge variant="outline" className="text-blue-400 border-blue-400">
+                                            <Clock className="h-3 w-3 mr-1" />
+                                            Agendada
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <h4 className={`text-lg font-semibold transition-colors ${
+                                        isLessonAccessible(lesson)
+                                          ? 'text-white group-hover:text-emerald-400'
+                                          : 'text-gray-500'
+                                      }`}>
+                                        {lesson.title}
+                                      </h4>
+                                      {lesson.description && (
+                                        <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                                          {lesson.description}
+                                        </p>
+                                      )}
+
+                                      {/* Countdown para aulas agendadas */}
+                                      {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && (
+                                        <div className="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                                          <div className="text-sm font-medium text-blue-400 mb-2">Aula será liberada em:</div>
+                                          <CountdownTimer
+                                            targetDate={lesson.scheduled_at}
+                                            className="justify-start"
+                                            onComplete={() => {
+                                              toast.success("Aula liberada!", {
+                                                description: `A aula "${lesson.title}" está agora disponível!`
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+
+                                      {/* Progress bar para aulas acessíveis */}
+                                      {isLessonAccessible(lesson) && currentProgress && (
+                                        <div className="mt-3">
+                                          <div className="flex justify-between text-xs text-gray-400 mb-1">
+                                            <span>Progresso</span>
+                                            <span>{currentProgress.progress_percentage}%</span>
+                                          </div>
+                                          <Progress value={currentProgress.progress_percentage} className="h-2" />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className={`flex-shrink-0 transition-opacity ${
+                                      isLessonAccessible(lesson) && !lesson.is_scheduled
+                                        ? 'opacity-0 group-hover:opacity-100'
+                                        : 'opacity-50'
+                                    }`}>
+                                      <Play className="h-6 w-6 text-emerald-400" />
+                                    </div>
                                   </div>
-                                  <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Play className="h-6 w-6 text-emerald-400" />
-                                  </div>
-                                </div>
-                              </Card>
-                            </motion.div>
-                          ))}
+                                </Card>
+                              </motion.div>
+                            );
+                          })}
 
                           {filteredLessons.length === 0 && (
                             <div className="text-center py-12">
@@ -644,10 +747,16 @@ export default function ModernMembersArea() {
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: 0.1 * index }}
                               whileHover={{ scale: 1.05, y: -8 }}
-                              className="group cursor-pointer flex-shrink-0 w-80"
+                              className={`group cursor-pointer flex-shrink-0 w-80 ${
+                                module.coming_soon ? 'opacity-75' : ''
+                              }`}
                               onClick={() => handleModuleClick(module)}
                             >
-                              <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 hover:border-emerald-500/50 transform-gpu">
+                              <Card className={`overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 ${
+                                module.coming_soon 
+                                  ? 'hover:border-amber-500/50' 
+                                  : 'hover:border-emerald-500/50'
+                              } transform-gpu`}>
                                 <div className="relative">
                                   {/* Module Cover - Netflix Style com orientação dinâmica */}
                                   <div className={`${
@@ -660,42 +769,75 @@ export default function ModernMembersArea() {
                                         <img 
                                           src={module.cover_image_url} 
                                           alt={module.title}
-                                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${
+                                            module.coming_soon ? 'grayscale' : ''
+                                          }`}
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                                       </>
                                     ) : (
                                       <div className="w-full h-full flex items-center justify-center">
-                                        <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-emerald-500 transition-colors duration-300" />
+                                        {module.coming_soon ? (
+                                          <AlertCircle className="h-20 w-20 text-amber-500 group-hover:text-amber-400 transition-colors duration-300" />
+                                        ) : (
+                                          <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-emerald-500 transition-colors duration-300" />
+                                        )}
                                       </div>
                                     )}
                                     
                                     {/* Module Number Badge */}
                                     <div className="absolute top-4 left-4">
-                                      <Badge className="bg-emerald-500/90 backdrop-blur-sm hover:bg-emerald-600 text-white font-bold px-3 py-1">
+                                      <Badge className={`backdrop-blur-sm font-bold px-3 py-1 ${
+                                        module.coming_soon 
+                                          ? 'bg-amber-500/90 hover:bg-amber-600 text-white'
+                                          : 'bg-emerald-500/90 hover:bg-emerald-600 text-white'
+                                      }`}>
                                         {module.order_number}
                                       </Badge>
                                     </div>
 
+                                    {/* Coming Soon Badge */}
+                                    {module.coming_soon && (
+                                      <div className="absolute top-4 right-4">
+                                        <Badge variant="outline" className="bg-amber-500/90 text-white border-amber-400">
+                                          <AlertCircle className="h-3 w-3 mr-1" />
+                                          Em Breve
+                                        </Badge>
+                                      </div>
+                                    )}
+
                                     {/* Progress Overlay */}
                                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                                      <h3 className="font-bold text-lg mb-1 leading-tight group-hover:text-emerald-300 transition-colors">
+                                      <h3 className={`font-bold text-lg mb-1 leading-tight transition-colors ${
+                                        module.coming_soon 
+                                          ? 'group-hover:text-amber-300' 
+                                          : 'group-hover:text-emerald-300'
+                                      }`}>
                                         {module.title}
                                       </h3>
                                       <div className="flex items-center gap-2 mb-3">
                                         <span className="text-sm text-gray-300">
                                           {lessons.filter(l => l.module_id === module.id).length} aulas
                                         </span>
-                                        <span className="text-xs font-medium text-emerald-400">
-                                          {Math.floor(Math.random() * 100)}%
-                                        </span>
+                                        {!module.coming_soon && (
+                                          <span className="text-xs font-medium text-emerald-400">
+                                            {Math.floor(Math.random() * 100)}%
+                                          </span>
+                                        )}
+                                        {module.coming_soon && (
+                                          <span className="text-xs font-medium text-amber-400">
+                                            Em Breve
+                                          </span>
+                                        )}
                                       </div>
-                                      <div className="w-full bg-gray-800 rounded-full h-2">
-                                        <div 
-                                          className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-700 shadow-sm shadow-emerald-500/30"
-                                          style={{ width: `${Math.floor(Math.random() * 100)}%` }}
-                                        />
-                                      </div>
+                                      {!module.coming_soon && (
+                                        <div className="w-full bg-gray-800 rounded-full h-2">
+                                          <div 
+                                            className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-700 shadow-sm shadow-emerald-500/30"
+                                            style={{ width: `${Math.floor(Math.random() * 100)}%` }}
+                                          />
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 </div>

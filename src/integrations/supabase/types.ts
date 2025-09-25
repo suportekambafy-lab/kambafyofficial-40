@@ -686,9 +686,11 @@ export type Database = {
           description: string | null
           duration: number
           id: string
+          is_scheduled: boolean | null
           member_area_id: string | null
           module_id: string | null
           order_number: number
+          scheduled_at: string | null
           status: string
           title: string
           updated_at: string
@@ -703,9 +705,11 @@ export type Database = {
           description?: string | null
           duration?: number
           id?: string
+          is_scheduled?: boolean | null
           member_area_id?: string | null
           module_id?: string | null
           order_number?: number
+          scheduled_at?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -720,9 +724,11 @@ export type Database = {
           description?: string | null
           duration?: number
           id?: string
+          is_scheduled?: boolean | null
           member_area_id?: string | null
           module_id?: string | null
           order_number?: number
+          scheduled_at?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -888,6 +894,7 @@ export type Database = {
       }
       modules: {
         Row: {
+          coming_soon: boolean | null
           cover_image_url: string | null
           cover_orientation: string | null
           created_at: string
@@ -901,6 +908,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          coming_soon?: boolean | null
           cover_image_url?: string | null
           cover_orientation?: string | null
           created_at?: string
@@ -914,6 +922,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          coming_soon?: boolean | null
           cover_image_url?: string | null
           cover_orientation?: string | null
           created_at?: string
