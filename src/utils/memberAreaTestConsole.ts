@@ -19,7 +19,18 @@ window.testMemberAreaLogin = () => {
     instructions: 'Use o email: victormuabi20@gmail.com'
   });
   
-  window.open(loginUrl, '_blank');
+  console.log('🔍 Verificando se a URL vai ser redirecionada...');
+  console.log('🌐 Abrindo:', loginUrl);
+  
+  // Tenta abrir em nova aba
+  const newWindow = window.open(loginUrl, '_blank');
+  
+  if (!newWindow) {
+    console.log('⚠️ Pop-up bloqueado! Tentando abrir na mesma aba...');
+    window.location.href = loginUrl;
+  } else {
+    console.log('✅ Nova aba aberta com sucesso');
+  }
 };
 
 // Testa acesso direto à área de membros (deve redirecionar para login)
