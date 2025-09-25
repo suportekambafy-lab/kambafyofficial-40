@@ -266,7 +266,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
       console.log(`Display price: ${displayPrice}`);
       console.log(`Converted amount: ${convertedAmount} ${stripeCurrency.toUpperCase()}`);
       console.log(`Stripe amount (cents): ${stripeAmount}`);
-      console.log(`Original amount (KZ): ${amount}`);
+      console.log(`Original amount (KZ): ${originalAmountKZ}`);
 
       const { data: paymentIntentData, error: paymentIntentError } = await supabase.functions.invoke('create-payment-intent', {
         body: {
