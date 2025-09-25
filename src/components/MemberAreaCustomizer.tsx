@@ -188,7 +188,7 @@ export function MemberAreaCustomizer({ open, onOpenChange, memberArea, onSuccess
     return null;
   }
 
-  console.log('MemberAreaCustomizer: Rendering dialog with open =', open);
+  console.log('MemberAreaCustomizer: Rendering dialog with open =', open, 'memberArea =', memberArea.name);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

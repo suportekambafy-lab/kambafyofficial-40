@@ -1711,6 +1711,7 @@ export default function Members() {
             </div>
 
             <MemberAreaCustomizer
+              key={selectedArea?.id} // Force re-render when area changes
               open={customizerOpen}
               onOpenChange={setCustomizerOpen}
               memberArea={selectedArea}
