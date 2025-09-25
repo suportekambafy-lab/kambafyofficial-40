@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
+import { Link } from "react-router-dom";
 import { CheckCircle, ArrowRight, Shield, Zap, Globe, BarChart3 } from "lucide-react";
 
 export default function PartnersApply() {
@@ -105,7 +106,7 @@ export default function PartnersApply() {
               <span className="text-xl font-bold text-primary">KambaPay Partners</span>
             </div>
             <Button variant="outline" asChild>
-              <a href="/">Voltar</a>
+              <Link to="/">Voltar</Link>
             </Button>
           </div>
         </div>

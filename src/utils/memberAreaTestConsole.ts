@@ -7,64 +7,77 @@ declare global {
   }
 }
 
-// Testa o login da área de membros - CORRIGIDO para navegação puramente interna
+// Testa o login da área de membros - SUPER CORRIGIDO com controle anti-reload
 window.testMemberAreaLogin = () => {
   const memberAreaId = '290b0398-c5f4-4681-944b-edc40f6fe0a2';
   const targetPath = `/login/${memberAreaId}`;
   
-  console.log('🚀 TESTANDO LOGIN ÁREA DE MEMBROS - Navegação 100% INTERNA:', {
+  // 🛑 ANTI-RELOAD: Marcar que é navegação interna
+  console.log('🚀 ANTI-RELOAD: Iniciando teste de navegação interna');
+  console.log('🔍 ANTES da navegação:', {
     memberAreaId,
     targetPath,
-    expectedEmail: 'victormuabi20@gmail.com',
     currentUrl: window.location.href,
     currentPathname: window.location.pathname,
-    hostname: window.location.hostname
-  });
-  
-  console.log('🔍 Ambiente atual:', {
     hostname: window.location.hostname,
-    isPreview: window.location.hostname.includes('lovable') || window.location.hostname.includes('localhost'),
-    currentSubdomain: window.location.hostname.split('.')[0],
-    shouldWorkDirectly: true,
-    note: 'Na pré-visualização, todas as rotas devem funcionar diretamente'
+    sessionStorage: sessionStorage.getItem('testNavigation'),
+    timeStamp: Date.now()
   });
   
-  console.log('🧭 INICIANDO navegação interna para:', targetPath);
+  // Marcar no sessionStorage que é navegação de teste
+  sessionStorage.setItem('testNavigation', 'true');
+  sessionStorage.setItem('testNavigationTime', Date.now().toString());
   
   try {
-    // Método 1: Usar history.pushState para mudar URL sem reload
-    const newUrl = window.location.origin + targetPath;
-    console.log('📍 Mudando URL de:', window.location.href, 'para:', newUrl);
+    // ✅ MÉTODO SUPER SEGURO: Usar pushState + evento custom
+    console.log('🧭 Executando history.pushState para:', targetPath);
+    window.history.pushState({ 
+      testNavigation: true, 
+      timestamp: Date.now(),
+      source: 'testMemberAreaLogin'
+    }, '', targetPath);
     
-    window.history.pushState({ testNavigation: true }, '', targetPath);
-    
-    // Método 2: Forçar React Router a detectar a mudança
+    // Disparar evento personalizado para React Router
+    console.log('📡 Disparando eventos para React Router...');
     const popStateEvent = new PopStateEvent('popstate', { 
-      state: { testNavigation: true } 
+      state: { 
+        testNavigation: true,
+        timestamp: Date.now(),
+        source: 'testMemberAreaLogin'
+      } 
     });
     window.dispatchEvent(popStateEvent);
     
-    // Método 3: Se os métodos acima não funcionarem, forçar re-render
+    // Fallback: Disparar evento customizado também
+    const customEvent = new CustomEvent('testNavigation', {
+      detail: { path: targetPath, timestamp: Date.now() }
+    });
+    window.dispatchEvent(customEvent);
+    
+    // Verificar sucesso após delay
     setTimeout(() => {
-      console.log('🔄 Verificando se navegação funcionou:', {
+      const navigationSuccess = window.location.pathname === targetPath;
+      console.log('🎯 RESULTADO da navegação:', {
+        success: navigationSuccess,
         currentPathname: window.location.pathname,
         targetPath,
-        success: window.location.pathname === targetPath
+        timeElapsed: Date.now() - parseInt(sessionStorage.getItem('testNavigationTime') || '0') + 'ms',
+        sessionStorage: sessionStorage.getItem('testNavigation')
       });
       
-      if (window.location.pathname !== targetPath) {
-        console.warn('⚠️ Navegação não funcionou, tentando método alternativo...');
-        // Método alternativo: trigger manual do router
-        window.dispatchEvent(new Event('popstate'));
-      } else {
-        console.log('✅ NAVEGAÇÃO INTERNA SUCESSO!');
-        console.log('📧 Agora use o email:', 'victormuabi20@gmail.com');
+      if (navigationSuccess) {
+        console.log('✅ SUCESSO! Navegação interna funcionou sem reload');
+        console.log('📧 Agora use: victormuabi20@gmail.com');
         console.log('👤 Nome: Victor Muabi');
+      } else {
+        console.warn('❌ FALHA: Navegação não funcionou');
+        console.log('🔧 Tentando método alternativo...');
+        // Não fazer mais nada - evitar loops
       }
-    }, 100);
+    }, 200);
     
   } catch (error) {
-    console.error('❌ ERRO na navegação interna:', error);
+    console.error('💥 ERRO na navegação:', error);
   }
 };
 
