@@ -1493,13 +1493,6 @@ export default function Members() {
                 onOpenChange={setAreaDialogOpen}
                 onSuccess={loadData}
               />
-              
-              <MemberAreaCustomizer
-                open={customizerOpen}
-                onOpenChange={setCustomizerOpen}
-                memberArea={selectedArea}
-                onSuccess={loadData}
-              />
             </div>
 
             <Card>
@@ -1712,8 +1705,15 @@ export default function Members() {
           </TabsContent>
 
         </Tabs>
-      </div>
-    </div>
-    </OptimizedPageWrapper>
-  );
+            </div>
+
+            <MemberAreaCustomizer
+              open={customizerOpen}
+              onOpenChange={setCustomizerOpen}
+              memberArea={selectedArea}
+              onSuccess={loadData}
+            />
+          </div>
+        </OptimizedPageWrapper>
+      );
 }
