@@ -99,6 +99,9 @@ const PartnersApply = createLazyWithRetry(() => import('@/pages/PartnersApply'),
 const PartnersPortal = createLazyWithRetry(() => import('@/pages/PartnersPortal'), "PartnersPortal");
 const AdminPartners = createLazyWithRetry(() => import('@/pages/AdminPartners'), "AdminPartners");
 
+// Developer Routes
+const DevRoutes = createLazyWithRetry(() => import('@/pages/DevRoutes'), "DevRoutes");
+
 // Fallback component otimizado
 const PageFallback = ({ variant = 'dashboard' }: { variant?: 'dashboard' | 'settings' | 'financial' | 'sales' }) => (
   <div className="min-h-screen bg-background">
@@ -175,6 +178,9 @@ export const OptimizedRoutes = {
   PartnersApply: withLazyLoading(PartnersApply, 'settings'),
   PartnersPortal: withLazyLoading(PartnersPortal, 'dashboard'),
   AdminPartners: withLazyLoading(AdminPartners, 'dashboard'),
+  
+  // Developer routes
+  DevRoutes: withLazyLoading(DevRoutes, 'dashboard'),
   
   // Test pages
   

@@ -110,11 +110,14 @@ const App = () => {
                        <Route path="/admin/seller-reports" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellerReports /></AdminProtectedRoute>} />
                        <Route path="/admin/payment-approvals" element={<AdminProtectedRoute><OptimizedRoutes.AdminPaymentApprovals /></AdminProtectedRoute>} />
                       
-                      {/* Partner Routes */}
-                      <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />
-                      <Route path="/partners/portal" element={<OptimizedRoutes.PartnersPortal />} />
-                      
-                       {/* Test Routes */}
+                       {/* Partner Routes */}
+                       <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />
+                       <Route path="/partners/portal" element={<OptimizedRoutes.PartnersPortal />} />
+                       
+                        {/* Developer Routes */}
+                       <Route path="/dev-routes" element={<OptimizedRoutes.DevRoutes />} />
+                       
+                        {/* Test Routes */}
                       
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<OptimizedRoutes.NotFound />} />

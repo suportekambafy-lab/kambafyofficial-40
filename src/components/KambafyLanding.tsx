@@ -495,6 +495,7 @@ const Footer = () => {
               <li><SubdomainLink to="/privacidade" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Privacidade</SubdomainLink></li>
               <li><SubdomainLink to="/termos" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Termos</SubdomainLink></li>
               <li><SubdomainLink to="/cookies" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Cookies</SubdomainLink></li>
+              <li><SubdomainLink to="/dev-routes" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">🚀 Dev Routes</SubdomainLink></li>
             </ul>
           </div>
         </div>
