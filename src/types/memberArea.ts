@@ -1,4 +1,18 @@
 
+export interface ComplementaryLink {
+  id: string;
+  title: string;
+  url: string;
+}
+
+export interface LessonMaterial {
+  id: string;
+  name: string;
+  url: string;
+  type: 'pdf' | 'doc' | 'docx' | 'txt' | 'image' | 'other';
+  size?: number;
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -17,6 +31,8 @@ export interface Lesson {
   updated_at: string;
   scheduled_at?: string | null;
   is_scheduled?: boolean;
+  complementary_links?: ComplementaryLink[];
+  lesson_materials?: LessonMaterial[];
 }
 
 export interface Module {

@@ -25,7 +25,10 @@ import {
   Menu,
   X,
   Lock,
-  AlertCircle
+  AlertCircle,
+  ExternalLink,
+  Download,
+  FileText
 } from 'lucide-react';
 import { CountdownTimer } from '@/components/ui/countdown-timer';
 import { Progress } from '@/components/ui/progress';
@@ -142,18 +145,31 @@ export default function ModernMembersArea() {
           .eq('status', 'published')
           .order('order_number');
 
-        if (!lessonsError && lessonsData) {
-          console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
-          
-          // Auto-detectar duração de vídeos que têm duration = 0
-          lessonsData.forEach(async (lesson) => {
-            if (lesson.duration === 0 && (lesson.video_url || lesson.bunny_embed_url)) {
-              console.log('🔍 Detectando duração para:', lesson.title);
-              await detectAndUpdateVideoDuration(lesson as Lesson);
-            }
-          });
-          
-          setLessons(lessonsData as Lesson[]);
+         if (!lessonsError && lessonsData) {
+           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
+           
+           // Processar dados das lessons para converter JSON para os tipos corretos
+           const processedLessons = lessonsData.map((lesson: any) => ({
+             ...lesson,
+             complementary_links: lesson.complementary_links ? 
+               (typeof lesson.complementary_links === 'string' ? 
+                 JSON.parse(lesson.complementary_links) : 
+                 lesson.complementary_links) : [],
+             lesson_materials: lesson.lesson_materials ? 
+               (typeof lesson.lesson_materials === 'string' ? 
+                 JSON.parse(lesson.lesson_materials) : 
+                 lesson.lesson_materials) : []
+           }));
+           
+           // Auto-detectar duração de vídeos que têm duration = 0
+           processedLessons.forEach(async (lesson) => {
+             if (lesson.duration === 0 && (lesson.video_url || lesson.bunny_embed_url)) {
+               console.log('🔍 Detectando duração para:', lesson.title);
+               await detectAndUpdateVideoDuration(lesson as Lesson);
+             }
+           });
+           
+           setLessons(processedLessons as Lesson[]);
         } else {
           console.error('❌ ModernMembersArea: Erro ao carregar lessons:', lessonsError);
         }

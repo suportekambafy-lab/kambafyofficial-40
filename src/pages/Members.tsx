@@ -20,10 +20,12 @@ import MemberAreaPreview from "@/components/MemberAreaPreview";
 import { ImageUploader } from "@/components/ImageUploader";
 import { MemberAreaCreationForm } from "@/components/MemberAreaCreationForm";
 import { useNavigate } from "react-router-dom";
-import type { Lesson, Module, MemberArea } from "@/types/memberArea";
+import type { Lesson, Module, MemberArea, ComplementaryLink, LessonMaterial } from "@/types/memberArea";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
+import { LessonLinksManager } from '@/components/LessonLinksManager';
+import { LessonMaterialsManager } from '@/components/LessonMaterialsManager';
 
 interface Product {
   id: string;
@@ -91,7 +93,9 @@ export default function Members() {
     video_url: '',
     duration: 0, // Duração em segundos
     status: 'draft' as 'draft' | 'published' | 'archived',
-    module_id: 'none'
+    module_id: 'none',
+    complementary_links: [] as ComplementaryLink[],
+    lesson_materials: [] as LessonMaterial[]
   });
   
   const [moduleFormData, setModuleFormData] = useState({
@@ -386,7 +390,19 @@ export default function Members() {
       }
       
       console.log('Setting lessons:', lessonsData);
-      setLessons((lessonsData || []) as Lesson[]);
+      const processedLessons = (lessonsData || []).map((lesson: any) => ({
+        ...lesson,
+        complementary_links: lesson.complementary_links ? 
+          (typeof lesson.complementary_links === 'string' ? 
+            JSON.parse(lesson.complementary_links) : 
+            lesson.complementary_links) : [],
+        lesson_materials: lesson.lesson_materials ? 
+          (typeof lesson.lesson_materials === 'string' ? 
+            JSON.parse(lesson.lesson_materials) : 
+            lesson.lesson_materials) : []
+      })) as Lesson[];
+      
+      setLessons(processedLessons);
       
     } catch (error) {
       console.error('Error in loadLessons:', error);
@@ -583,7 +599,9 @@ export default function Members() {
         user_id: user.id,
         member_area_id: selectedArea.id,
         module_id: (formData.module_id && formData.module_id !== 'none') ? formData.module_id : (selectedModuleForLesson || null),
-        order_number: editingLesson ? editingLesson.order_number : lessons.length + 1
+        order_number: editingLesson ? editingLesson.order_number : lessons.length + 1,
+        complementary_links: JSON.stringify(formData.complementary_links),
+        lesson_materials: JSON.stringify(formData.lesson_materials)
       };
 
       console.log('Lesson data to insert:', lessonData);
@@ -658,7 +676,9 @@ export default function Members() {
       video_url: lesson.video_url || '',
       duration: lesson.duration || 0,
       status: lesson.status,
-      module_id: lesson.module_id || ''
+      module_id: lesson.module_id || '',
+      complementary_links: lesson.complementary_links || [],
+      lesson_materials: lesson.lesson_materials || []
     });
     setSelectedModuleForLesson(''); // Reset this when editing
     setDialogOpen(true);
@@ -794,7 +814,9 @@ export default function Members() {
       video_url: '',
       duration: 0,
       status: 'draft',
-      module_id: 'none' // Garantir que nunca seja string vazia
+      module_id: 'none', // Garantir que nunca seja string vazia
+      complementary_links: [],
+      lesson_materials: []
     });
     setEditingLesson(null);
     setSelectedModuleForLesson('');
@@ -903,7 +925,9 @@ export default function Members() {
       video_url: '',
       duration: 0,
       status: 'draft',
-      module_id: moduleId || 'none' // Garantir que nunca seja string vazia
+      module_id: moduleId || 'none', // Garantir que nunca seja string vazia
+      complementary_links: [],
+      lesson_materials: []
     });
     setEditingLesson(null);
     setSelectedModuleForLesson(moduleId);
@@ -1752,9 +1776,21 @@ export default function Members() {
                     <SelectItem value="archived">Arquivado</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              
-              <DialogFooter>
+               </div>
+               
+               {/* Links Complementares */}
+               <LessonLinksManager 
+                 links={formData.complementary_links}
+                 onChange={(links) => setFormData(prev => ({ ...prev, complementary_links: links }))}
+               />
+               
+               {/* Materiais da Aula */}
+               <LessonMaterialsManager
+                 materials={formData.lesson_materials}
+                 onChange={(materials) => setFormData(prev => ({ ...prev, lesson_materials: materials }))}
+               />
+               
+               <DialogFooter>
                 <Button 
                   type="button" 
                   variant="outline" 

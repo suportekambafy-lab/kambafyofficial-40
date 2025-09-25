@@ -682,11 +682,13 @@ export type Database = {
         Row: {
           bunny_embed_url: string | null
           bunny_video_id: string | null
+          complementary_links: Json | null
           created_at: string
           description: string | null
           duration: number
           id: string
           is_scheduled: boolean | null
+          lesson_materials: Json | null
           member_area_id: string | null
           module_id: string | null
           order_number: number
@@ -701,11 +703,13 @@ export type Database = {
         Insert: {
           bunny_embed_url?: string | null
           bunny_video_id?: string | null
+          complementary_links?: Json | null
           created_at?: string
           description?: string | null
           duration?: number
           id?: string
           is_scheduled?: boolean | null
+          lesson_materials?: Json | null
           member_area_id?: string | null
           module_id?: string | null
           order_number?: number
@@ -720,11 +724,13 @@ export type Database = {
         Update: {
           bunny_embed_url?: string | null
           bunny_video_id?: string | null
+          complementary_links?: Json | null
           created_at?: string
           description?: string | null
           duration?: number
           id?: string
           is_scheduled?: boolean | null
+          lesson_materials?: Json | null
           member_area_id?: string | null
           module_id?: string | null
           order_number?: number
