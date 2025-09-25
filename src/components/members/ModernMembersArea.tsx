@@ -179,7 +179,9 @@ export default function ModernMembersArea() {
         lessons={lessons}
         modules={modules}
         lessonProgress={{}} // Você pode implementar o hook de progresso aqui depois
-        getCourseProgress={() => 0} // Placeholder por enquanto
+        getCourseProgress={(total) => Math.round((Math.floor(lessons.length * 0.3) / total) * 100) || 0}
+        totalDuration={lessons.reduce((sum, lesson) => sum + lesson.duration, 0)}
+        completedLessons={Math.floor(lessons.length * 0.3)}
         onLessonSelect={setSelectedLesson}
       />
       
@@ -261,38 +263,6 @@ export default function ModernMembersArea() {
             <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
               {memberArea?.hero_description || memberArea?.description}
             </p>
-
-            {/* Progress Overview */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto border border-gray-700/50">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-gray-200 font-semibold text-lg">Seu Progresso</span>
-                <span className="text-3xl font-bold text-emerald-400">
-                  {Math.round((completedLessons / lessons.length) * 100) || 0}%
-                </span>
-              </div>
-              
-              <div className="w-full bg-gray-700 rounded-full h-4 mb-6 overflow-hidden">
-                <div 
-                  className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-green-400 h-4 rounded-full transition-all duration-700 shadow-lg shadow-emerald-500/20"
-                  style={{ width: `${Math.round((completedLessons / lessons.length) * 100) || 0}%` }}
-                />
-              </div>
-              
-              <div className="grid grid-cols-3 gap-6 text-center">
-                <div className="bg-gray-700/30 rounded-xl p-4">
-                  <p className="text-3xl font-bold text-white mb-1">{lessons.length}</p>
-                  <p className="text-sm text-gray-400">Total de Aulas</p>
-                </div>
-                <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
-                  <p className="text-3xl font-bold text-emerald-400 mb-1">{completedLessons}</p>
-                  <p className="text-sm text-emerald-300">Concluídas</p>
-                </div>
-                <div className="bg-gray-700/30 rounded-xl p-4">
-                  <p className="text-3xl font-bold text-gray-200 mb-1">{Math.round(totalDuration / 60)}h</p>
-                  <p className="text-sm text-gray-400">Duração Total</p>
-                </div>
-              </div>
-            </div>
           </motion.div>
         </div>
       </motion.section>
@@ -301,14 +271,13 @@ export default function ModernMembersArea() {
       <div className="bg-gray-900 min-h-screen">
         <div className="container mx-auto px-4 py-12">
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8">
             
             {/* Módulos do Curso - Estilo Netflix */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="lg:col-span-2"
             >
               <div className="mb-8">
                 <h2 className="text-3xl font-bold text-white mb-3">Módulos do Curso</h2>
@@ -443,80 +412,6 @@ export default function ModernMembersArea() {
                   </CardContent>
                 </Card>
               )}
-            </motion.div>
-
-            {/* Aulas Sidebar */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="lg:col-span-1"
-            >
-              <div className="sticky top-8">
-                <Card className="bg-gray-800 shadow-xl border border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2 text-white">
-                      <PlayCircle className="h-5 w-5 text-emerald-500" />
-                      Todas as Aulas ({lessons.length})
-                    </CardTitle>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Buscar aulas..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:border-emerald-500"
-                      />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="max-h-96 overflow-y-auto">
-                    <div className="space-y-2">
-                      {filteredLessons.map((lesson, index) => (
-                        <motion.div
-                          key={lesson.id}
-                          initial={{ opacity: 0, x: 10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.05 * index }}
-                          whileHover={{ x: 4 }}
-                          className="group cursor-pointer p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-200"
-                          onClick={() => handleLessonClick(lesson)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex-shrink-0">
-                              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-lg flex items-center justify-center group-hover:from-emerald-500/30 group-hover:to-emerald-600/30 transition-all">
-                                <Play className="h-4 w-4 text-emerald-500 group-hover:text-emerald-400" />
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-200 line-clamp-1 group-hover:text-emerald-400 transition-colors">
-                                {lesson.title}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="text-xs border-gray-600 text-gray-400 bg-gray-700/50">
-                                  {lesson.order_number}
-                                </Badge>
-                                <span className="text-xs text-gray-500">{lesson.duration} min</span>
-                                {Math.random() > 0.5 && (
-                                  <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                    
-                    {filteredLessons.length === 0 && (
-                      <div className="text-center py-8">
-                        <Search className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-                        <p className="text-sm text-gray-400">
-                          Nenhuma aula encontrada
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
             </motion.div>
           </div>
         </div>

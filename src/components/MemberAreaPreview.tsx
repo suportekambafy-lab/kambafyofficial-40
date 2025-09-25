@@ -225,6 +225,8 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
           modules={modules}
           lessonProgress={lessonProgress}
           getCourseProgress={getCourseProgress}
+          totalDuration={publishedLessons.reduce((sum, lesson) => sum + (lesson.duration || 0), 0)}
+          completedLessons={Object.values(lessonProgress).filter(p => p.completed).length}
           onLessonSelect={setSelectedLesson}
         />
         

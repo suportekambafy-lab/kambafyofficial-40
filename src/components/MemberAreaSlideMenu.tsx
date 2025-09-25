@@ -12,6 +12,8 @@ interface MemberAreaSlideMenuProps {
   modules: Module[];
   lessonProgress: Record<string, any>;
   getCourseProgress: (totalLessons: number) => number;
+  totalDuration: number;
+  completedLessons: number;
   onLessonSelect?: (lesson: Lesson) => void;
 }
 
@@ -20,13 +22,15 @@ export function MemberAreaSlideMenu({
   modules, 
   lessonProgress, 
   getCourseProgress,
+  totalDuration,
+  completedLessons,
   onLessonSelect 
 }: MemberAreaSlideMenuProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [open, setOpen] = useState(false);
 
   const publishedLessons = lessons.filter(lesson => lesson.status === 'published');
-  const completedLessons = Object.values(lessonProgress).filter(p => p.completed).length;
+  const totalLessonsCount = publishedLessons.length;
 
   // Filtrar aulas baseado no termo de pesquisa
   const filteredLessons = publishedLessons.filter(lesson =>
@@ -97,18 +101,34 @@ export function MemberAreaSlideMenu({
               <div 
                 className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out" 
                 style={{ 
-                  width: `${getCourseProgress(publishedLessons.length)}%`
+                  width: `${getCourseProgress(totalLessonsCount)}%`
                 }}
               ></div>
             </div>
             
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-4">
               <p className="text-sm text-gray-600">
-                {completedLessons} de {publishedLessons.length} aulas
+                {completedLessons} de {totalLessonsCount} aulas
               </p>
               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                {getCourseProgress(publishedLessons.length)}%
+                {getCourseProgress(totalLessonsCount)}%
               </Badge>
+            </div>
+
+            {/* Estatísticas Adicionais */}
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <p className="text-lg font-bold text-gray-900">{totalLessonsCount}</p>
+                <p className="text-xs text-gray-600">Total</p>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <p className="text-lg font-bold text-green-700">{completedLessons}</p>
+                <p className="text-xs text-green-600">Concluídas</p>
+              </div>
+              <div className="text-center p-3 bg-purple-50 rounded-lg">
+                <p className="text-lg font-bold text-purple-700">{Math.round(totalDuration / 60)}h</p>
+                <p className="text-xs text-purple-600">Duração</p>
+              </div>
             </div>
           </div>
 
