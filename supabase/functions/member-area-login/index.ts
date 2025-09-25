@@ -21,13 +21,13 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { memberAreaId, email, name } = await req.json();
+    const { memberAreaId, studentEmail, studentName } = await req.json();
     
-    console.log('📋 Login attempt:', { memberAreaId, email, name });
+    console.log('📋 Login attempt:', { memberAreaId, studentEmail, studentName });
 
     // Validate required fields
-    if (!memberAreaId || !email || !name) {
-      throw new Error('Missing required fields: memberAreaId, email, name');
+    if (!memberAreaId || !studentEmail || !studentName) {
+      throw new Error('Missing required fields: memberAreaId, studentEmail, studentName');
     }
 
     // Check if member area exists
@@ -52,7 +52,7 @@ serve(async (req) => {
           member_area_id
         )
       `)
-      .eq('customer_email', email)
+      .eq('customer_email', studentEmail)
       .eq('status', 'completed')
       .eq('products.member_area_id', memberAreaId);
 
@@ -65,7 +65,7 @@ serve(async (req) => {
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
       .select('user_id, email')
-      .eq('email', email)
+      .eq('email', studentEmail)
       .eq('user_id', memberArea.user_id)
       .single();
 
@@ -99,15 +99,15 @@ serve(async (req) => {
       .from('member_area_sessions')
       .delete()
       .eq('member_area_id', memberAreaId)
-      .eq('student_email', email);
+      .eq('student_email', studentEmail);
 
     // Create new session
     const { data: session, error: sessionError } = await supabase
       .from('member_area_sessions')
       .insert({
         member_area_id: memberAreaId,
-        student_email: email,
-        student_name: name,
+        student_email: studentEmail,
+        student_name: studentName,
         session_token: sessionToken,
         expires_at: expiresAt.toISOString(),
         ip_address: ipAddress,
@@ -121,7 +121,7 @@ serve(async (req) => {
       throw new Error('Erro ao criar sessão');
     }
 
-    console.log('✅ Session created successfully for:', email);
+    console.log('✅ Session created successfully for:', studentEmail);
 
     return new Response(
       JSON.stringify({
