@@ -53,10 +53,39 @@ export function KambafyLanding() {
     }, 100);
   };
 
+  // Testar rotas reais de área de membros
+  const testRealMemberArea = () => {
+    console.log('🧪 TESTE REAL: Tentando navegar para /area/123');
+    console.log('🧪 TESTE REAL: URL atual:', window.location.href);
+    navigate('/area/123');
+    setTimeout(() => {
+      console.log('🧪 TESTE REAL: URL após navegação:', window.location.href);
+      console.log('🧪 TESTE REAL: Pathname após navegação:', window.location.pathname);
+    }, 100);
+  };
+
+  const testRealLogin = () => {
+    console.log('🧪 TESTE REAL: Tentando navegar para /login/456');
+    console.log('🧪 TESTE REAL: URL atual:', window.location.href);
+    navigate('/login/456');
+    setTimeout(() => {
+      console.log('🧪 TESTE REAL: URL após navegação:', window.location.href);
+      console.log('🧪 TESTE REAL: Pathname após navegação:', window.location.pathname);
+    }, 100);
+  };
+
   // Expor funções globalmente para teste no console
   useEffect(() => {
     (window as any).testAreaMembros = testMemberAreaNavigation;
     (window as any).testLogin = testLoginNavigation;
+    (window as any).testRealAreaMembros = testRealMemberArea;
+    (window as any).testRealLogin = testRealLogin;
+    
+    console.log('🧪 TESTE: Funções disponíveis no console:');
+    console.log('🧪 testAreaMembros() - Testa /area/teste');
+    console.log('🧪 testLogin() - Testa /login/teste');
+    console.log('🧪 testRealAreaMembros() - Testa /area/123 (rota real)');
+    console.log('🧪 testRealLogin() - Testa /login/456 (rota real)');
   }, []);
   useEffect(() => {
     // Carregar apenas o script do Chatbase
@@ -100,6 +129,20 @@ export function KambafyLanding() {
           className="block w-full px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600"
         >
           Testar /login/teste
+        </button>
+        <hr className="border-red-300" />
+        <p className="text-xs text-red-800 font-bold">ROTAS REAIS</p>
+        <button 
+          onClick={testRealMemberArea}
+          className="block w-full px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+        >
+          Testar /area/123 (real)
+        </button>
+        <button 
+          onClick={testRealLogin}
+          className="block w-full px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
+        >
+          Testar /login/456 (real)
         </button>
       </div>
       

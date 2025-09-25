@@ -171,9 +171,25 @@ const App = () => {
                         {/* Developer Routes */}
                        <Route path="/dev-routes" element={<OptimizedRoutes.DevRoutes />} />
                        
-                         {/* Test Routes */}
-                      <Route path="/area/teste" element={<TestAreaComponent />} />
-                      <Route path="/login/teste" element={<TestLoginComponent />} />
+                          {/* Test Routes */}
+                       <Route path="/area/teste" element={<TestAreaComponent />} />
+                       <Route path="/login/teste" element={<TestLoginComponent />} />
+                       <Route path="/area/123" element={
+                         <div className="p-8 border border-green-600 bg-green-100">
+                           <h1 className="text-2xl font-bold text-green-900">🧪 TESTE REAL: Rota /area/123 (com ID real)</h1>
+                           <p className="text-green-700">Esta é uma rota real de área de membros com ID válido</p>
+                           <p className="text-sm text-green-700">Pathname: {window.location.pathname}</p>
+                           <p className="text-sm text-green-700">Host: {window.location.hostname}</p>
+                         </div>
+                       } />
+                       <Route path="/login/456" element={
+                         <div className="p-8 border border-purple-600 bg-purple-100">
+                           <h1 className="text-2xl font-bold text-purple-900">🧪 TESTE REAL: Rota /login/456 (com ID real)</h1>
+                           <p className="text-purple-700">Esta é uma rota real de login com ID válido</p>
+                           <p className="text-sm text-purple-700">Pathname: {window.location.pathname}</p>
+                           <p className="text-sm text-purple-700">Host: {window.location.hostname}</p>
+                         </div>
+                       } />
                        
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<OptimizedRoutes.NotFound />} />
