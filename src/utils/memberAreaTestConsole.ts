@@ -7,45 +7,64 @@ declare global {
   }
 }
 
-// Testa o login da área de membros
+// Testa o login da área de membros - CORRIGIDO para navegação puramente interna
 window.testMemberAreaLogin = () => {
   const memberAreaId = '290b0398-c5f4-4681-944b-edc40f6fe0a2';
-  const directPath = `/login/${memberAreaId}`;
+  const targetPath = `/login/${memberAreaId}`;
   
-  console.log('🚀 CORRIGIDO: Testando login da área de membros (navegação interna):', {
+  console.log('🚀 TESTANDO LOGIN ÁREA DE MEMBROS - Navegação 100% INTERNA:', {
     memberAreaId,
-    directPath,
+    targetPath,
     expectedEmail: 'victormuabi20@gmail.com',
-    currentHost: window.location.hostname,
-    fullCurrentUrl: window.location.href
+    currentUrl: window.location.href,
+    currentPathname: window.location.pathname,
+    hostname: window.location.hostname
   });
   
-  console.log('🔍 Ambiente detectado:', {
+  console.log('🔍 Ambiente atual:', {
     hostname: window.location.hostname,
-    isLovablePreview: window.location.hostname.includes('lovable'),
-    isLocalhost: window.location.hostname.includes('localhost'),
-    isDevelopment: window.location.hostname.includes('lovableproject.com'),
-    note: 'Usando navegação INTERNA - sem redirecionamentos!'
+    isPreview: window.location.hostname.includes('lovable') || window.location.hostname.includes('localhost'),
+    currentSubdomain: window.location.hostname.split('.')[0],
+    shouldWorkDirectly: true,
+    note: 'Na pré-visualização, todas as rotas devem funcionar diretamente'
   });
   
-  console.log('🧪 NAVEGAÇÃO INTERNA: Mudando para:', directPath);
-  console.log('💡 Sem reload, sem URLs externos - apenas React Router!');
+  console.log('🧭 INICIANDO navegação interna para:', targetPath);
   
-  // NAVEGAÇÃO INTERNA PURA - sem reload!
   try {
-    // Usar apenas o history.pushState para navegação interna
-    window.history.pushState({}, '', directPath);
+    // Método 1: Usar history.pushState para mudar URL sem reload
+    const newUrl = window.location.origin + targetPath;
+    console.log('📍 Mudando URL de:', window.location.href, 'para:', newUrl);
     
-    // Disparar evento de mudança de rota para o React Router
-    const popStateEvent = new PopStateEvent('popstate', { state: {} });
+    window.history.pushState({ testNavigation: true }, '', targetPath);
+    
+    // Método 2: Forçar React Router a detectar a mudança
+    const popStateEvent = new PopStateEvent('popstate', { 
+      state: { testNavigation: true } 
+    });
     window.dispatchEvent(popStateEvent);
     
-    console.log('✅ Navegação interna realizada com sucesso!');
-    console.log('📍 Nova URL:', window.location.href);
-    console.log('📍 Pathname:', window.location.pathname);
+    // Método 3: Se os métodos acima não funcionarem, forçar re-render
+    setTimeout(() => {
+      console.log('🔄 Verificando se navegação funcionou:', {
+        currentPathname: window.location.pathname,
+        targetPath,
+        success: window.location.pathname === targetPath
+      });
+      
+      if (window.location.pathname !== targetPath) {
+        console.warn('⚠️ Navegação não funcionou, tentando método alternativo...');
+        // Método alternativo: trigger manual do router
+        window.dispatchEvent(new Event('popstate'));
+      } else {
+        console.log('✅ NAVEGAÇÃO INTERNA SUCESSO!');
+        console.log('📧 Agora use o email:', 'victormuabi20@gmail.com');
+        console.log('👤 Nome: Victor Muabi');
+      }
+    }, 100);
     
   } catch (error) {
-    console.error('❌ Erro na navegação interna:', error);
+    console.error('❌ ERRO na navegação interna:', error);
   }
 };
 
