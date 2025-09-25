@@ -191,23 +191,21 @@ serve(async (req) => {
       stripeCurrency: currency
     });
     
-    // LÓGICA CORRIGIDA:
-    // - Se targetCurrency é EUR/MZN/USD, significa que o cliente está pagando nessa moeda
-    // - Devemos converter o valor pago (convertedAmount) para KZ para salvar no banco
+    // LÓGICA CORRIGIDA - PRIORIDADE PARA CONVERSÃO DE MOEDA ESTRANGEIRA:
+    // 1. PRIMEIRA PRIORIDADE: Se há targetCurrency diferente de KZ E convertedAmount, usar conversão
     if (targetCurrency && targetCurrency !== 'KZ' && convertedAmount && convertedAmount > 0) {
-      // Cliente está pagando em moeda estrangeira (EUR, MZN, USD)
-      // Converter o valor pago para KZ
+      // Cliente está pagando em moeda estrangeira (EUR, MZN, USD) - CONVERTER PARA KZ
       const rate = exchangeRates[targetCurrency] || 1;
       const convertedValueToKZ = Math.round(convertedAmount * rate);
       finalAmount = convertedValueToKZ.toString();
       console.log(`💱 PAGAMENTO EM MOEDA ESTRANGEIRA: ${convertedAmount} ${targetCurrency} → ${finalAmount} KZ (taxa: ${rate})`);
     } 
-    // Cliente está pagando em KZ (sem conversão de moeda)
+    // 2. SEGUNDA PRIORIDADE: Cliente está pagando direto em KZ
     else if (originalCurrency === 'KZ' && originalAmount && (!targetCurrency || targetCurrency === 'KZ')) {
       finalAmount = originalAmount.toString();
       console.log(`💰 PAGAMENTO DIRETO EM KZ: ${finalAmount} KZ`);
     }
-    // Fallback: converter do amount do Stripe para KZ
+    // 3. FALLBACK: converter do amount do Stripe para KZ
     else {
       const stripeAmount = amount / 100; // Converter de centavos
       const stripeCurrency = currency.toUpperCase();
