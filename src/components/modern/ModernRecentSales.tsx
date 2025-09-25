@@ -132,7 +132,7 @@ export function ModernRecentSales() {
               )
             `)
             .in('product_id', userProductIds)
-            .in('status', ['completed', 'pending']) // Incluir vendas pendentes também
+            .eq('status', 'completed') // Apenas vendas pagas
             .order('created_at', { ascending: false })
             .limit(10)
         );
