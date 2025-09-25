@@ -145,7 +145,7 @@ export function ModernLessonViewer({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="fixed top-20 right-4 z-50 shadow-lg bg-gray-900/80 backdrop-blur-sm hover:bg-gray-800/90 text-white border border-gray-700/50 hover:border-emerald-500/50 p-3 rounded-lg transition-all"
+            className="fixed top-20 right-4 z-50 shadow-lg bg-gray-900/80 backdrop-blur-sm hover:bg-gray-800/90 text-white p-3 rounded-lg transition-all"
           >
             <div className="flex items-center gap-2">
               <List className="h-4 w-4" />
@@ -155,7 +155,7 @@ export function ModernLessonViewer({
         </SheetTrigger>
         
         <SheetContent side="right" className="w-[450px] sm:w-[600px] bg-gray-950 text-white border-none">
-          <SheetHeader className="border-b border-gray-700/30 pb-4">
+          <SheetHeader className="pb-4">
             <SheetTitle className="text-slate-50 text-xl font-bold">🎬 Lista de Aulas</SheetTitle>
             <SheetDescription className="text-slate-300">
               Navegue entre as aulas do curso • {lessons.length} aulas disponíveis
@@ -399,14 +399,14 @@ export function ModernLessonViewer({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="bg-gray-900/50 border-gray-700">
+          <Card className="bg-gray-900/50">
             <CardContent className="p-4">
               <div className="flex justify-between items-center">
                 <Button 
                   variant="outline" 
                   disabled={!prevLesson}
                   onClick={() => prevLesson && onNavigateLesson(prevLesson.id)}
-                  className="bg-gray-800 hover:bg-gray-700 border-gray-600 text-white flex items-center gap-2"
+                  className="bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-2"
                 >
                   <SkipBack className="h-4 w-4" />
                   <div className="text-left">
@@ -418,10 +418,10 @@ export function ModernLessonViewer({
                 </Button>
                 
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
+                   <Badge variant="outline" className="bg-emerald-500/20 text-emerald-400">
                     Aula {lesson.order_number}
                   </Badge>
-                  <Badge variant="outline" className="text-gray-400 border-gray-600">
+                  <Badge variant="outline" className="text-gray-400">
                     <Clock className="h-3 w-3 mr-1" />
                     {lesson.duration} min
                   </Badge>
@@ -431,7 +431,7 @@ export function ModernLessonViewer({
                   variant="outline"
                   disabled={!nextLesson}
                   onClick={() => nextLesson && onNavigateLesson(nextLesson.id)}
-                  className="bg-gray-800 hover:bg-gray-700 border-gray-600 text-white flex items-center gap-2"
+                  className="bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-2"
                 >
                   <div className="text-right">
                     <p className="text-xs text-gray-400">Próxima</p>
@@ -452,7 +452,7 @@ export function ModernLessonViewer({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="bg-gray-900/50 border-gray-700">
+          <Card className="bg-gray-900/50">
             <CardHeader>
               <CardTitle className="text-lg text-white flex items-center gap-2">
                 <Star className="h-5 w-5 text-yellow-500" />
@@ -498,10 +498,10 @@ export function ModernLessonViewer({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Card className="bg-gray-900/50 border-gray-700">
+          <Card className="bg-gray-900/50">
             <CardHeader>
               <CardTitle className="text-lg text-white flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-blue-500" />
+                <MessageCircle className="h-5 w-5 text-gray-400" />
                 Comentários ({comments.length})
               </CardTitle>
             </CardHeader>
@@ -516,7 +516,7 @@ export function ModernLessonViewer({
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="Adicione um comentário sobre esta aula..."
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg p-3 text-white placeholder:text-gray-400 resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full bg-gray-800 rounded-lg p-3 text-white placeholder:text-gray-400 resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     rows={3}
                   />
                   <div className="flex justify-end">
