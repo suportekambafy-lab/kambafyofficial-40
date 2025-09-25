@@ -20,7 +20,8 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       currentPath,
       currentSubdomain,
       hostname,
-      fullLocation: window.location.href
+      fullLocation: window.location.href,
+      isMemberAreaRoute: currentPath.startsWith('/area/') || currentPath.startsWith('/login/')
     });
     
     // MOBILE É COMPLETAMENTE ISOLADO - sem redirecionamentos
@@ -72,6 +73,28 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         message: 'TODAS as rotas funcionam diretamente em domínios customizados'
       });
       return;
+    }
+    
+    // VERIFICAÇÃO ESPECIAL PARA ÁREA DE MEMBROS
+    if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/')) {
+      console.log('🎓 SubdomainGuard: DETECTADA rota de área de membros', {
+        currentPath,
+        currentSubdomain,
+        hostname,
+        message: 'Verificando se deve redirecionar para subdomínio membros'
+      });
+      
+      // Se estamos em kambafy.com (não no subdomínio membros), redirecionar
+      if (currentSubdomain === 'main') {
+        const targetUrl = getSubdomainUrl('membros', currentPath);
+        console.log('🔄 SubdomainGuard: REDIRECIONANDO área de membros para subdomínio correto', {
+          from: window.location.href,
+          to: targetUrl,
+          reason: 'Área de membros deve estar no subdomínio membros'
+        });
+        window.location.href = targetUrl;
+        return;
+      }
     }
     
     // Define quais rotas são RESTRITAS de cada subdomínio (não permitidas)
