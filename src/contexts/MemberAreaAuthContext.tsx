@@ -48,9 +48,14 @@ export function MemberAreaAuthProvider({ children, memberAreaId }: MemberAreaAut
   // Load session from localStorage and verify
   useEffect(() => {
     const loadSession = async () => {
+      console.log('🔍 MemberAreaAuth - Carregando sessão para:', memberAreaId);
+      
       try {
         const savedSession = localStorage.getItem(`${STORAGE_KEY}_${memberAreaId}`);
+        console.log('🔍 MemberAreaAuth - Sessão salva encontrada:', !!savedSession);
+        
         if (!savedSession) {
+          console.log('❌ MemberAreaAuth - Nenhuma sessão salva encontrada');
           setLoading(false);
           return;
         }
@@ -58,23 +63,40 @@ export function MemberAreaAuthProvider({ children, memberAreaId }: MemberAreaAut
         const sessionData = JSON.parse(savedSession);
         const { sessionToken } = sessionData;
 
+        console.log('🔍 MemberAreaAuth - SessionToken encontrado:', !!sessionToken);
+
         if (!sessionToken) {
+          console.log('❌ MemberAreaAuth - SessionToken inválido, removendo');
           localStorage.removeItem(`${STORAGE_KEY}_${memberAreaId}`);
           setLoading(false);
           return;
         }
 
+        console.log('🔄 MemberAreaAuth - Verificando sessão com backend...');
+        
         // Verify session with backend
         const { data, error } = await supabase.functions.invoke('member-area-verify', {
           body: { sessionToken }
         });
 
+        console.log('🔍 MemberAreaAuth - Resposta da verificação:', { 
+          success: data?.success, 
+          hasError: !!error,
+          errorMessage: error?.message || data?.error 
+        });
+
         if (error || !data.success) {
-          console.log('Session verification failed:', error || data.error);
+          console.log('❌ MemberAreaAuth - Falha na verificação da sessão:', error || data.error);
           localStorage.removeItem(`${STORAGE_KEY}_${memberAreaId}`);
           setLoading(false);
           return;
         }
+
+        console.log('✅ MemberAreaAuth - Sessão válida, restaurando estado:', {
+          student: data.data.student,
+          memberArea: data.data.memberArea,
+          session: data.data.session
+        });
 
         // Session is valid, restore state
         setStudent(data.data.student);
@@ -90,9 +112,10 @@ export function MemberAreaAuthProvider({ children, memberAreaId }: MemberAreaAut
         }));
 
       } catch (error) {
-        console.error('Error loading session:', error);
+        console.error('❌ MemberAreaAuth - Erro ao carregar sessão:', error);
         localStorage.removeItem(`${STORAGE_KEY}_${memberAreaId}`);
       } finally {
+        console.log('🏁 MemberAreaAuth - Carregamento finalizado');
         setLoading(false);
       }
     };

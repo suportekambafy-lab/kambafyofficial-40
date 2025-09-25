@@ -9,12 +9,20 @@ export default function MemberAreaPage() {
   const { id: areaId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  console.log('MemberAreaPage - areaId:', areaId);
+  console.log('🔍 MemberAreaPage - Iniciando:', {
+    areaId,
+    currentPath: window.location.pathname,
+    hostname: window.location.hostname,
+    fullUrl: window.location.href
+  });
 
   if (!areaId) {
+    console.log('❌ MemberAreaPage - Sem areaId, redirecionando para /');
     navigate('/');
     return null;
   }
+
+  console.log('✅ MemberAreaPage - areaId encontrado, renderizando MemberAreaAuthProvider');
 
   return (
     <MemberAreaAuthProvider memberAreaId={areaId}>
@@ -29,30 +37,42 @@ function MemberAreaContentWrapper() {
   const navigate = useNavigate();
   const { currentSubdomain } = useSubdomain();
 
-  console.log('MemberAreaContentWrapper state:', { 
+  console.log('🔍 MemberAreaContentWrapper - Estado atual:', { 
+    areaId,
     student, 
     memberArea, 
     loading, 
-    isAuthenticated 
+    isAuthenticated,
+    currentPath: window.location.pathname,
+    hostname: window.location.hostname
   });
 
   // Redirect to login if not authenticated (after loading is complete)
   useEffect(() => {
+    console.log('🔍 MemberAreaContentWrapper - useEffect disparado:', {
+      loading,
+      student: !!student,
+      memberArea: !!memberArea,
+      isAuthenticated,
+      areaId,
+      shouldRedirect: !loading && (!student || !memberArea || !isAuthenticated) && areaId
+    });
+
     if (!loading && (!student || !memberArea || !isAuthenticated) && areaId) {
       // Para desenvolvimento/localhost/lovable, usar navigate do React Router
       const hostname = window.location.hostname;
       if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
-        console.log('Development: Navigating to login:', `/login/${areaId}`);
+        console.log('🔄 Development: Navigating to login:', `/login/${areaId}`);
         navigate(`/login/${areaId}`, { replace: true });
       } else {
         // Para produção, manter na mesma aplicação se não for kambafy.com
         if (hostname.includes('kambafy.com')) {
           const loginUrl = `https://membros.kambafy.com/login/${areaId}`;
-          console.log('Production kambafy.com: Redirecting to login:', loginUrl);
+          console.log('🔄 Production kambafy.com: Redirecting to login:', loginUrl);
           window.location.href = loginUrl;
         } else {
           // Para outros domínios, usar navigate local
-          console.log('Production other domain: Navigating to login:', `/login/${areaId}`);
+          console.log('🔄 Production other domain: Navigating to login:', `/login/${areaId}`);
           navigate(`/login/${areaId}`, { replace: true });
         }
       }
