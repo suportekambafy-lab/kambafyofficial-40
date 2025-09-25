@@ -311,6 +311,7 @@ export default function ModernMembersArea() {
                     <ModernLessonViewer
                       lesson={selectedLesson}
                       lessons={lessons}
+                      modules={modules}
                       onNavigateLesson={handleNavigateLesson}
                       onClose={() => setSelectedLesson(null)}
                     />
