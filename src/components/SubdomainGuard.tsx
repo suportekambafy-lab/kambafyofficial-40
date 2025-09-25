@@ -15,8 +15,8 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     const currentPath = location.pathname + location.search + location.hash;
     const hostname = window.location.hostname;
     
-    // TEMPORÁRIO: Pular guard para rotas de teste
-    if (currentPath.includes('/teste') || currentPath.startsWith('/area/123') || currentPath.startsWith('/login/456')) {
+    // TEMPORÁRIO: Pular guard apenas para rotas de teste específicas
+    if (currentPath.includes('/teste')) {
       console.log('🧪 TESTE: SubdomainGuard pulando verificação para rota de teste:', currentPath);
       return;
     }
