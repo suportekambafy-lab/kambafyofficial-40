@@ -172,303 +172,327 @@ export default function ModernMembersArea() {
   const completedLessons = Math.floor(lessons.length * 0.3); // Simulado
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+    <div className="min-h-screen bg-slate-900 dark">
       
-      {/* Header Moderno */}
-      <motion.header 
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="bg-card/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-50"
+      {/* Hero Section - Estilo Hotmart/Kiwify */}
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 overflow-hidden"
       >
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center space-x-4">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-grid-slate-700/[0.05] bg-[size:40px_40px]" />
+        
+        {/* Hero Image Background */}
+        {memberArea?.hero_image_url && (
+          <div className="absolute inset-0 opacity-20">
+            <img 
+              src={memberArea.hero_image_url} 
+              alt={memberArea.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent" />
+          </div>
+        )}
+        
+        <div className="relative container mx-auto px-4 py-12">
+          {/* Header */}
+          <motion.div 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="flex justify-between items-center mb-8"
+          >
+            <div className="flex items-center gap-3">
               {memberArea?.logo_url ? (
-                <Avatar className="h-12 w-12 ring-2 ring-primary/20">
+                <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
                   <AvatarImage src={memberArea.logo_url} alt={memberArea.name} />
-                  <AvatarFallback>
-                    <GraduationCap className="h-6 w-6" />
+                  <AvatarFallback className="bg-emerald-600">
+                    <GraduationCap className="h-6 w-6 text-white" />
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                <div className="h-12 w-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                <div className="h-12 w-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
                   <GraduationCap className="h-6 w-6 text-white" />
                 </div>
               )}
-              <div>
-                <h1 className="text-xl font-bold text-foreground">
-                  {memberArea?.hero_title || memberArea?.name}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {memberArea?.hero_description || memberArea?.description}
-                </p>
+              <div className="text-white">
+                <p className="text-sm text-emerald-300">Área de Membros</p>
+                <p className="text-sm text-slate-300">Olá, {session?.studentName}</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-                <Users className="h-4 w-4" />
-                Olá, {session?.studentName}
-              </div>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
-      </motion.header>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogout}
+              className="border-slate-600 text-slate-300 hover:bg-slate-800"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
+          </motion.div>
 
-      {/* Stats Dashboard */}
-      <motion.section 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="container mx-auto px-4 py-6"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 bg-primary/20 rounded-lg">
-                <PlayCircle className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total de Aulas</p>
-                <p className="text-2xl font-bold text-primary">{lessons.length}</p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-r from-green-500/10 to-green-500/5 border-green-500/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 bg-green-500/20 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Concluídas</p>
-                <p className="text-2xl font-bold text-green-600">{completedLessons}</p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-r from-accent/10 to-accent/5 border-accent/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 bg-accent/20 rounded-lg">
-                <Target className="h-6 w-6 text-accent-foreground" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Progresso</p>
-                <p className="text-2xl font-bold text-accent-foreground">
+          {/* Course Hero */}
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-center mb-12"
+          >
+            <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400/30 mb-4">
+              <Trophy className="h-3 w-3 mr-1" />
+              Curso Premium
+            </Badge>
+            
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+              {memberArea?.hero_title || memberArea?.name}
+            </h1>
+            
+            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+              {memberArea?.hero_description || memberArea?.description}
+            </p>
+
+            {/* Progress Overview */}
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 max-w-lg mx-auto">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-slate-300 font-medium">Seu Progresso</span>
+                <span className="text-2xl font-bold text-emerald-400">
                   {Math.round((completedLessons / lessons.length) * 100) || 0}%
-                </p>
+                </span>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-r from-secondary/10 to-secondary/5 border-secondary/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 bg-secondary/20 rounded-lg">
-                <Clock className="h-6 w-6 text-secondary-foreground" />
+              
+              <div className="w-full bg-slate-700 rounded-full h-3 mb-4">
+                <div 
+                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.round((completedLessons / lessons.length) * 100) || 0}%` }}
+                />
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Duração</p>
-                <p className="text-2xl font-bold text-secondary-foreground">
-                  {Math.round(totalDuration / 60)}h
-                </p>
+              
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-white">{lessons.length}</p>
+                  <p className="text-xs text-slate-400">Aulas</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-emerald-400">{completedLessons}</p>
+                  <p className="text-xs text-slate-400">Concluídas</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-300">{Math.round(totalDuration / 60)}h</p>
+                  <p className="text-xs text-slate-400">Duração</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
         </div>
       </motion.section>
 
-      {/* Content Area */}
-      <div className="container mx-auto px-4 pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
-          {/* Main Content - Lessons */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-3 space-y-6"
-          >
-            {/* Search & Filter */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar aulas..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    {['all', 'completed', 'pending'].map((status) => (
-                      <Button
-                        key={status}
-                        variant={filterStatus === status ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setFilterStatus(status as any)}
-                        className="text-xs"
-                      >
-                        {status === 'all' ? 'Todas' : 
-                         status === 'completed' ? 'Concluídas' : 'Pendentes'}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Main Content Area */}
+      <div className="bg-slate-100 min-h-screen">
+        <div className="container mx-auto px-4 py-8">
 
-            {/* Lessons Grid */}
-            <div className="space-y-4">
-              <AnimatePresence>
-                {filteredLessons.map((lesson, index) => (
-                  <motion.div
-                    key={lesson.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: 0.05 * index }}
-                    whileHover={{ scale: 1.02 }}
-                    className="group cursor-pointer"
-                    onClick={() => handleLessonClick(lesson)}
-                  >
-                    <Card className="hover:shadow-xl transition-all duration-300 border-l-4 border-l-primary/30 hover:border-l-primary overflow-hidden">
-                      <CardContent className="p-6">
-                        <div className="flex gap-4">
-                          {/* Thumbnail/Icon */}
-                          <div className="flex-shrink-0">
-                            <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center group-hover:from-primary/30 group-hover:to-accent/30 transition-all">
-                              <Play className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Módulos do Curso */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="lg:col-span-2"
+            >
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">Módulos do Curso</h2>
+                <p className="text-slate-600">Escolha um módulo para começar a aprender</p>
+              </div>
+
+              {modules.length > 0 ? (
+                <div className="grid gap-6">
+                  {modules.map((module, index) => (
+                    <motion.div
+                      key={module.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * index }}
+                      whileHover={{ y: -4 }}
+                      className="group cursor-pointer"
+                    >
+                      <Card className="overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 border-0">
+                        <div className="relative">
+                          {/* Module Cover */}
+                          <div className="aspect-[16/9] bg-gradient-to-br from-slate-700 to-slate-900 relative overflow-hidden">
+                            {module.cover_image_url ? (
+                              <>
+                                <img 
+                                  src={module.cover_image_url} 
+                                  alt={module.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                              </>
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <BookOpen className="h-16 w-16 text-slate-400" />
+                              </div>
+                            )}
+                            
+                            {/* Module Number Badge */}
+                            <div className="absolute top-4 left-4">
+                              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white">
+                                Módulo {module.order_number}
+                              </Badge>
+                            </div>
+                            
+                            {/* Play Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                <Play className="h-8 w-8 text-white ml-1" />
+                              </div>
                             </div>
                           </div>
                           
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-3">
-                                <Badge variant="outline" className="text-xs">
-                                  Aula {lesson.order_number}
-                                </Badge>
-                                <Badge variant="secondary" className="text-xs">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {lesson.duration} min
-                                </Badge>
-                                {Math.random() > 0.5 && (
-                                  <Badge className="bg-green-500 hover:bg-green-600 text-xs">
-                                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                                    Concluída
-                                  </Badge>
-                                )}
+                          {/* Module Info */}
+                          <CardContent className="p-6">
+                            <div className="mb-3">
+                              <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-emerald-600 transition-colors">
+                                {module.title}
+                              </h3>
+                              {module.description && (
+                                <p className="text-slate-600 line-clamp-2">
+                                  {module.description}
+                                </p>
+                              )}
+                            </div>
+                            
+                            {/* Module Stats */}
+                            <div className="flex items-center justify-between text-sm text-slate-500">
+                              <div className="flex items-center gap-4">
+                                <span className="flex items-center gap-1">
+                                  <PlayCircle className="h-4 w-4" />
+                                  {Math.floor(Math.random() * 8) + 3} aulas
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  {Math.floor(Math.random() * 120) + 60} min
+                                </span>
                               </div>
-                              <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Play className="h-4 w-4" />
-                              </Button>
+                              <Badge variant="outline" className="text-emerald-600 border-emerald-200">
+                                {Math.random() > 0.5 ? 'Iniciado' : 'Novo'}
+                              </Badge>
                             </div>
                             
-                            <h3 className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors line-clamp-1">
-                              {lesson.title}
-                            </h3>
-                            
-                            {lesson.description && (
-                              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                                {lesson.description}
-                              </p>
-                            )}
-                            
-                            {/* Progress Bar (simulado) */}
-                            <div className="w-full bg-muted rounded-full h-2 mb-2">
-                              <div 
-                                className="bg-primary rounded-full h-2 transition-all"
-                                style={{ width: `${Math.random() * 100}%` }}
-                              />
+                            {/* Progress Bar */}
+                            <div className="mt-4">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="text-xs text-slate-500">Progresso</span>
+                                <span className="text-xs font-medium text-emerald-600">
+                                  {Math.floor(Math.random() * 100)}%
+                                </span>
+                              </div>
+                              <div className="w-full bg-slate-200 rounded-full h-2">
+                                <div 
+                                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-500"
+                                  style={{ width: `${Math.floor(Math.random() * 100)}%` }}
+                                />
+                              </div>
                             </div>
-                          </div>
+                          </CardContent>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              
-              {filteredLessons.length === 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-12"
-                >
-                  <Card className="border-dashed">
-                    <CardContent className="p-12 text-center">
-                      <Trophy className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-muted-foreground mb-2">
-                        {searchTerm ? 'Nenhuma aula encontrada' : 'Nenhuma aula disponível ainda'}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {searchTerm ? 'Tente pesquisar por outro termo' : 'Novas aulas serão adicionadas em breve'}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Sidebar */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:col-span-1"
-          >
-            <div className="sticky top-24 space-y-6">
-              
-              {/* Módulos */}
-              {modules.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-accent" />
-                      Módulos ({modules.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {modules.map((module, index) => (
-                      <motion.div
-                        key={module.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 * index }}
-                        whileHover={{ scale: 1.02 }}
-                        className="p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                      >
-                        {module.cover_image_url && (
-                          <div className="aspect-video bg-muted rounded mb-2 overflow-hidden">
-                            <img 
-                              src={module.cover_image_url} 
-                              alt={module.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <h4 className="font-medium text-sm mb-1">{module.title}</h4>
-                        {module.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {module.description}
-                          </p>
-                        )}
-                      </motion.div>
-                    ))}
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <Card className="border-dashed border-2 border-slate-300">
+                  <CardContent className="p-12 text-center">
+                    <BookOpen className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-600 mb-2">
+                      Nenhum módulo disponível
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      Os módulos do curso serão adicionados em breve
+                    </p>
                   </CardContent>
                 </Card>
               )}
-            </div>
-          </motion.div>
+            </motion.div>
+
+            {/* Aulas Sidebar */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="lg:col-span-1"
+            >
+              <div className="sticky top-8">
+                <Card className="bg-white shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <PlayCircle className="h-5 w-5 text-emerald-600" />
+                      Todas as Aulas ({lessons.length})
+                    </CardTitle>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        placeholder="Buscar aulas..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 border-slate-200"
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="max-h-96 overflow-y-auto">
+                    <div className="space-y-2">
+                      {filteredLessons.map((lesson, index) => (
+                        <motion.div
+                          key={lesson.id}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.05 * index }}
+                          whileHover={{ x: 4 }}
+                          className="group cursor-pointer p-3 rounded-lg hover:bg-slate-50 transition-all duration-200"
+                          onClick={() => handleLessonClick(lesson)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex-shrink-0">
+                              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-lg flex items-center justify-center">
+                                <Play className="h-4 w-4 text-emerald-600" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-800 line-clamp-1 group-hover:text-emerald-600 transition-colors">
+                                {lesson.title}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline" className="text-xs border-slate-200">
+                                  {lesson.order_number}
+                                </Badge>
+                                <span className="text-xs text-slate-500">{lesson.duration} min</span>
+                                {Math.random() > 0.5 && (
+                                  <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                    
+                    {filteredLessons.length === 0 && (
+                      <div className="text-center py-8">
+                        <Search className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                        <p className="text-sm text-slate-500">
+                          Nenhuma aula encontrada
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
+
     </div>
   );
 }
