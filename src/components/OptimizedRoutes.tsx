@@ -59,23 +59,9 @@ const Mobile = createLazyWithRetry(() => import('@/pages/Mobile'), "Mobile");
 const KambaPay = createLazyWithRetry(() => import('@/pages/KambaPay'), "KambaPay");
 
 
-// Member Area routes
-const MemberArea = createLazyWithRetry(() => import('@/pages/MemberArea'), "MemberArea");
-const MemberAreaContent = createLazyWithRetry(() => import('@/pages/MemberAreaContent'), "MemberAreaContent");
-const MemberAreaSupportMaterials = createLazyWithRetry(() => import('@/pages/MemberAreaSupportMaterials'), "MemberAreaSupportMaterials");
-const MemberAreaAbout = createLazyWithRetry(() => import('@/pages/MemberAreaAbout'), "MemberAreaAbout");
-const MemberAreaMyCourses = createLazyWithRetry(() => import('@/pages/MemberAreaMyCourses'), "MemberAreaMyCourses");
-const MemberAreaSupport = createLazyWithRetry(() => import('@/pages/MemberAreaSupport'), "MemberAreaSupport");
-const MemberAreaHelp = createLazyWithRetry(() => import('@/pages/MemberAreaHelp'), "MemberAreaHelp");
-const MemberAreaLogin = createLazyWithRetry(() => import('@/pages/MemberAreaLogin'), "MemberAreaLogin");
-const MemberAreaLoginWrapper = createLazyWithRetry(() => import('@/pages/MemberAreaLoginWrapper'), "MemberAreaLoginWrapper");
-const ProtectedMemberAreaRoute = createLazyWithRetry(() => import('@/components/ProtectedMemberAreaRoute'), "ProtectedMemberAreaRoute");
-const ModuleDetail = createLazyWithRetry(() => import('@/pages/ModuleDetail'), "ModuleDetail");
-const LessonDetail = createLazyWithRetry(() => import('@/pages/LessonDetail'), "LessonDetail");
-
-// New simplified member area routes
-const NewMemberAreaLogin = createLazyWithRetry(() => import('@/pages/NewMemberAreaLogin'), "NewMemberAreaLogin");
-const NewMemberArea = createLazyWithRetry(() => import('@/pages/NewMemberArea'), "NewMemberArea");
+// Nova estrutura moderna de área de membros
+const MembersLogin = createLazyWithRetry(() => import('@/pages/MembersLogin'), "MembersLogin");
+const MembersArea = createLazyWithRetry(() => import('@/pages/MembersArea'), "MembersArea");
 
 
 // Páginas do painel vendedor - lazy load com preload e retry
@@ -186,23 +172,8 @@ export const OptimizedRoutes = {
   // Developer routes
   DevRoutes: withLazyLoading(DevRoutes, 'dashboard'),
   
-  // Test pages
   
-  // Member Area pages
-  MemberArea: withLazyLoading(MemberArea, 'member-area'),
-  MemberAreaContent: withLazyLoading(MemberAreaContent, 'member-area'),
-  MemberAreaSupportMaterials: withLazyLoading(MemberAreaSupportMaterials, 'member-area'),
-  MemberAreaAbout: withLazyLoading(MemberAreaAbout, 'member-area'),
-  MemberAreaMyCourses: withLazyLoading(MemberAreaMyCourses, 'member-area'),
-  MemberAreaSupport: withLazyLoading(MemberAreaSupport, 'member-area'),
-  MemberAreaHelp: withLazyLoading(MemberAreaHelp, 'member-area'),
-  MemberAreaLogin: withLazyLoading(MemberAreaLogin, 'member-area'),
-  MemberAreaLoginWrapper: withLazyLoading(MemberAreaLoginWrapper, 'member-area'),
-  ProtectedMemberAreaRoute: withLazyLoading(ProtectedMemberAreaRoute, 'member-area'),
-  ModuleDetail: withLazyLoading(ModuleDetail, 'member-area'),
-  LessonDetail: withLazyLoading(LessonDetail, 'member-area'),
-  
-  // New simplified member area pages
-  NewMemberAreaLogin: withLazyLoading(NewMemberAreaLogin, 'member-area'),
-  NewMemberArea: withLazyLoading(NewMemberArea, 'member-area'),
+  // Nova estrutura moderna de área de membros
+  MembersLogin: withLazyLoading(MembersLogin, 'member-area'),
+  MembersArea: withLazyLoading(MembersArea, 'member-area'),
 };

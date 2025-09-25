@@ -6,9 +6,8 @@ import './index.css';
 // Preload de rotas críticas
 import "./utils/preloadCriticalRoutes.ts";
 
-// Console de teste para área de membros
-import "./utils/memberAreaTestConsole.ts";
-import "./utils/newMemberAreaTestConsole.ts";
+// Nova estrutura de membros
+import '@/utils/membersLinks';
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

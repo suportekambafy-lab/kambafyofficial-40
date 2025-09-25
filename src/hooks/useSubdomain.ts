@@ -30,7 +30,7 @@ export function useSubdomain() {
         subdomain = 'pay'; 
       } else if (path.startsWith('/auth') || path.startsWith('/vendedor') || path.startsWith('/apps') || path.startsWith('/minhas-compras')) {
         subdomain = 'app';
-      } else if (path.startsWith('/login/') || path.startsWith('/area/')) {
+      } else if (path.startsWith('/login/') || path.startsWith('/area/') || path.startsWith('/members/')) {
         subdomain = 'membros';
         console.log('🎓 useSubdomain: MEMBROS - Funcionando na pré-visualização', {
           path,

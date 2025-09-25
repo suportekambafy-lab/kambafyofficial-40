@@ -127,31 +127,9 @@ const App = () => {
                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                         
                       {/* Member Area Routes - Modern Authentication System */}
-                          <Route path="/area/:id" element={
-                            <div>
-                              <div className="p-4 border border-blue-500 bg-blue-50">
-                                <h2 className="font-bold text-blue-800">Rota /area/:id ativada!</h2>
-                                <p className="text-sm">Pathname: {window.location.pathname}</p>
-                              </div>
-                              <OptimizedRoutes.MemberArea />
-                            </div>
-                          } />
-                          <Route path="/login/:id" element={
-                            <div>
-                              <div className="p-4 border border-yellow-500 bg-yellow-50">
-                                <h2 className="font-bold text-yellow-800">Rota /login/:id ativada!</h2>
-                                <p className="text-sm">Pathname: {window.location.pathname}</p>
-                              </div>
-                              <OptimizedRoutes.MemberAreaLoginWrapper />
-                            </div>
-                           } />
-                           
-                           {/* Nova estrutura de área de membros - limpa e simples */}
-                          <Route path="/member-area-login/:id" element={<OptimizedRoutes.NewMemberAreaLogin />} />
-                          <Route path="/member-area/:id" element={<OptimizedRoutes.NewMemberArea />} />
-                          
-                           <Route path="/area/:id/module/:moduleId" element={<OptimizedRoutes.ModuleDetail />} />
-                           <Route path="/area/:id/lesson/:lessonId" element={<OptimizedRoutes.LessonDetail />} />
+                          {/* Nova estrutura moderna de área de membros */}
+                          <Route path="/members/login/:id" element={<OptimizedRoutes.MembersLogin />} />
+                          <Route path="/members/area/:id" element={<OptimizedRoutes.MembersArea />} />
                        <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                         <Route path="/kambapay" element={<OptimizedRoutes.KambaPay />} />
                         
