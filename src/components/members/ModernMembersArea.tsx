@@ -217,19 +217,19 @@ export default function ModernMembersArea() {
           >
             <div className="flex items-center gap-3">
               {memberArea?.logo_url ? (
-                <Avatar className="h-12 w-12 ring-2 ring-red-500/50">
+                <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
                   <AvatarImage src={memberArea.logo_url} alt={memberArea.name} />
-                  <AvatarFallback className="bg-red-600">
+                  <AvatarFallback className="bg-emerald-600">
                     <GraduationCap className="h-6 w-6 text-white" />
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                <div className="h-12 w-12 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center">
+                <div className="h-12 w-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
                   <GraduationCap className="h-6 w-6 text-white" />
                 </div>
               )}
               <div className="text-white">
-                <p className="text-sm text-red-400">Área de Membros</p>
+                <p className="text-sm text-emerald-400">Área de Membros</p>
                 <p className="text-sm text-gray-300">Olá, {session?.studentName}</p>
               </div>
             </div>
@@ -246,7 +246,7 @@ export default function ModernMembersArea() {
             transition={{ delay: 0.1 }}
             className="text-center mb-12"
           >
-            <Badge className="bg-red-500/20 text-red-400 border-red-500/30 mb-4">
+            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4">
               <Trophy className="h-3 w-3 mr-1" />
               Curso Premium
             </Badge>
@@ -293,7 +293,7 @@ export default function ModernMembersArea() {
                           whileHover={{ scale: 1.05, y: -8 }}
                           className="group cursor-pointer flex-shrink-0 w-80"
                         >
-                          <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-red-500/20 transition-all duration-500 border border-gray-800 hover:border-red-500/50 transform-gpu">
+                          <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 hover:border-emerald-500/50 transform-gpu">
                             <div className="relative">
                               {/* Module Cover - Netflix Style */}
                               <div className="aspect-[16/9] bg-gradient-to-br from-gray-900 to-black relative overflow-hidden">
@@ -308,27 +308,27 @@ export default function ModernMembersArea() {
                                   </>
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center">
-                                    <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-red-500 transition-colors duration-300" />
+                                    <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-emerald-500 transition-colors duration-300" />
                                   </div>
                                 )}
                                 
                                 {/* Module Number Badge */}
                                 <div className="absolute top-4 left-4">
-                                  <Badge className="bg-red-600/90 backdrop-blur-sm hover:bg-red-700 text-white font-bold px-3 py-1">
+                                  <Badge className="bg-emerald-500/90 backdrop-blur-sm hover:bg-emerald-600 text-white font-bold px-3 py-1">
                                     Módulo {module.order_number}
                                   </Badge>
                                 </div>
                                 
                                 {/* Progress Badge */}
                                 <div className="absolute top-4 right-4">
-                                  <Badge variant="outline" className="text-red-400 border-red-500/50 bg-black/50 backdrop-blur-sm font-medium">
+                                  <Badge variant="outline" className="text-emerald-400 border-emerald-500/50 bg-black/50 backdrop-blur-sm font-medium">
                                     {Math.random() > 0.5 ? 'Em Progresso' : 'Novo'}
                                   </Badge>
                                 </div>
                                 
                                 {/* Play Overlay */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                  <div className="w-20 h-20 bg-red-600/80 backdrop-blur-sm rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                                  <div className="w-20 h-20 bg-emerald-500/80 backdrop-blur-sm rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
                                     <Play className="h-10 w-10 text-white ml-1" />
                                   </div>
                                 </div>
@@ -339,7 +339,7 @@ export default function ModernMembersArea() {
                               
                               {/* Module Info Overlay */}
                               <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-red-400 transition-colors duration-300">
+                                <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-emerald-400 transition-colors duration-300">
                                   {module.title}
                                 </h3>
                                 
@@ -367,13 +367,13 @@ export default function ModernMembersArea() {
                             <div className="bg-gray-900 p-4">
                               <div className="flex justify-between items-center mb-2">
                                 <span className="text-xs text-gray-400">Progresso do Módulo</span>
-                                <span className="text-xs font-medium text-red-400">
+                                <span className="text-xs font-medium text-emerald-400">
                                   {Math.floor(Math.random() * 100)}%
                                 </span>
                               </div>
                               <div className="w-full bg-gray-800 rounded-full h-2">
                                 <div 
-                                  className="bg-gradient-to-r from-red-600 to-red-500 h-2 rounded-full transition-all duration-700 shadow-sm shadow-red-500/30"
+                                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-700 shadow-sm shadow-emerald-500/30"
                                   style={{ width: `${Math.floor(Math.random() * 100)}%` }}
                                 />
                               </div>
@@ -389,7 +389,7 @@ export default function ModernMembersArea() {
                     {modules.map((_, index) => (
                       <div 
                         key={index}
-                        className="w-2 h-2 rounded-full bg-gray-700 hover:bg-red-500 transition-colors cursor-pointer"
+                        className="w-2 h-2 rounded-full bg-gray-700 hover:bg-emerald-500 transition-colors cursor-pointer"
                       />
                     ))}
                   </div>
