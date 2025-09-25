@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { LogIn, Mail, BookOpen } from 'lucide-react';
 import { useModernMembersAuth } from './ModernMembersAuth';
@@ -16,6 +15,7 @@ export default function ModernMembersLogin() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [memberArea, setMemberArea] = useState<any>(null);
+  const id = useId();
 
   useEffect(() => {
     const fetchMemberArea = async () => {
@@ -71,20 +71,21 @@ export default function ModernMembersLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-sm"
       >
-        <Card className="bg-gray-800 shadow-2xl border border-gray-700">
-          <CardHeader className="text-center pb-8">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 shadow-2xl">
+          <div className="flex flex-col items-center gap-2 mb-6">
             <motion.div
               initial={{ scale: 0.8, rotate: -10 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.2, type: "spring" }}
-              className="mx-auto mb-4 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg overflow-hidden"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 overflow-hidden"
+              aria-hidden="true"
             >
               {memberArea?.login_logo_url || memberArea?.logo_url ? (
                 <img 
@@ -93,66 +94,65 @@ export default function ModernMembersLogin() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                  <BookOpen className="h-8 w-8 text-white" />
-                </div>
+                <BookOpen className="h-6 w-6 text-zinc-300" />
               )}
             </motion.div>
-            <CardTitle className="text-2xl font-bold text-white">
-              {memberArea?.name || 'Área de Membros'}
-            </CardTitle>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="text-center">
+              <h1 className="text-lg font-semibold tracking-tight text-white">
+                {memberArea?.name || 'Área de Membros'}
+              </h1>
+              <p className="text-sm text-zinc-400 mt-1">
+                Entre com seu email de acesso
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-4">
               <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="space-y-3"
+                className="space-y-2"
               >
-                <Label htmlFor="email" className="flex items-center gap-2 text-sm font-medium text-gray-200">
-                  <Mail className="h-4 w-4 text-blue-400" />
-                  Seu email de acesso
-                </Label>
+                <Label htmlFor={`${id}-email`} className="text-zinc-200">Email</Label>
                 <Input
-                  id="email"
+                  id={`${id}-email`}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="exemplo@email.com"
-                  className="h-12 text-base bg-gray-700 border-gray-600 focus:border-blue-500 text-white placeholder:text-gray-400 transition-all"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:border-zinc-500"
                   required
                   disabled={isSubmitting}
                 />
               </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="pt-2"
+            </div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Button 
+                type="submit" 
+                className="w-full bg-white text-black hover:bg-zinc-100 font-medium" 
+                disabled={isSubmitting || !email}
               >
-                <Button 
-                  type="submit" 
-                  className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]" 
-                  disabled={isSubmitting || !email}
-                >
-                  {isSubmitting ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-5 h-5 border-2 border-current border-t-transparent rounded-full mr-2"
-                    />
-                  ) : (
-                    <LogIn className="h-5 w-5 mr-2" />
-                  )}
-                  {isSubmitting ? 'Entrando...' : 'Acessar Área de Membros'}
-                </Button>
-              </motion.div>
-            </form>
-          </CardContent>
-        </Card>
+                {isSubmitting ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
+                  />
+                ) : (
+                  <LogIn className="h-4 w-4 mr-2" />
+                )}
+                {isSubmitting ? 'Entrando...' : 'Acessar'}
+              </Button>
+            </motion.div>
+          </form>
+        </div>
       </motion.div>
     </div>
   );
