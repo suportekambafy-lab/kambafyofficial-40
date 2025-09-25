@@ -633,6 +633,7 @@ export type Database = {
           rating: number | null
           updated_at: string
           user_id: string
+          video_current_time: number | null
         }
         Insert: {
           completed?: boolean
@@ -645,6 +646,7 @@ export type Database = {
           rating?: number | null
           updated_at?: string
           user_id: string
+          video_current_time?: number | null
         }
         Update: {
           completed?: boolean
@@ -657,6 +659,7 @@ export type Database = {
           rating?: number | null
           updated_at?: string
           user_id?: string
+          video_current_time?: number | null
         }
         Relationships: [
           {

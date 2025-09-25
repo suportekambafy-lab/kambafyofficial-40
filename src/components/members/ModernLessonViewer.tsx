@@ -47,7 +47,7 @@ export function ModernLessonViewer({
 
   // Obter progresso da aula atual
   const currentProgress = lessonProgress[lesson.id];
-  const startTime = currentProgress?.current_time || 0;
+  const startTime = currentProgress?.video_current_time || 0;
 
   const currentIndex = lessons.findIndex(l => l.id === lesson.id);
   const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
@@ -62,32 +62,10 @@ export function ModernLessonViewer({
       console.log('📊 Progresso carregado para aula:', lesson.title, {
         progress: currentProgress.progress_percentage + '%',
         completed: currentProgress.completed,
-        startTime: currentProgress.current_time
+        startTime: currentProgress.video_current_time
       });
     }
   }, [lesson.id, currentProgress]);
-
-  useEffect(() => {
-    // Simular progresso para demo
-    let interval: NodeJS.Timeout;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentTime(prev => {
-          const newTime = prev + 1;
-          // lesson.duration está em segundos
-          const newProgress = (newTime / lesson.duration) * 100;
-          setProgress(newProgress);
-          
-          if (newProgress >= 90 && !isCompleted) {
-            setIsCompleted(true);
-          }
-          
-          return newTime;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, lesson.duration, isCompleted]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

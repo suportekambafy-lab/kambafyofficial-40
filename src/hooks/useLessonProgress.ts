@@ -10,7 +10,7 @@ interface LessonProgress {
   completed: boolean;
   rating?: number;
   last_watched_at: string;
-  current_time: number; // Posição onde parou no vídeo (em segundos)
+  video_current_time: number; // Posição onde parou no vídeo (em segundos)
 }
 
 interface LessonComment {
@@ -71,7 +71,7 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
           completed: progress.completed,
           rating: progress.rating,
           last_watched_at: progress.last_watched_at,
-          current_time: progress.current_time || 0
+          video_current_time: progress.video_current_time || 0
         };
       });
       setLessonProgress(progressMap);
@@ -84,7 +84,7 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
   };
 
   // Save lesson progress with proper conflict resolution
-  const updateLessonProgress = async (lessonId: string, progressData: Partial<LessonProgress & { current_time?: number }>) => {
+  const updateLessonProgress = async (lessonId: string, progressData: Partial<LessonProgress & { video_current_time?: number }>) => {
     if (!user) {
       console.log('Não é possível salvar progresso sem usuário autenticado');
       return;
@@ -100,7 +100,7 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
           progress_percentage: progressData.progress_percentage || 0,
           completed: progressData.completed || false,
           rating: progressData.rating,
-          current_time: progressData.current_time || 0,
+          video_current_time: progressData.video_current_time || 0,
           last_watched_at: new Date().toISOString()
         }, {
           onConflict: 'user_id,lesson_id',
@@ -121,7 +121,7 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
           progress_percentage: progressData.progress_percentage || prev[lessonId]?.progress_percentage || 0,
           completed: progressData.completed !== undefined ? progressData.completed : prev[lessonId]?.completed || false,
           rating: progressData.rating !== undefined ? progressData.rating : prev[lessonId]?.rating,
-          current_time: progressData.current_time || prev[lessonId]?.current_time || 0,
+          video_current_time: progressData.video_current_time || prev[lessonId]?.video_current_time || 0,
           last_watched_at: new Date().toISOString()
         }
       }));
@@ -129,7 +129,7 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
       console.log('✅ Progresso salvo:', lessonId, {
         progress: progressData.progress_percentage,
         completed: progressData.completed,
-        currentTime: progressData.current_time
+        currentTime: progressData.video_current_time
       });
     } catch (error) {
       console.error('Error updating lesson progress:', error);
@@ -163,7 +163,7 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
           lesson_id: lessonId,
           progress_percentage: progressPercentage,
           completed: isCompleted,
-          current_time: currentTime,
+          video_current_time: currentTime,
           last_watched_at: prev[lessonId]?.last_watched_at || new Date().toISOString()
         }
       }));
@@ -174,7 +174,7 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
     await updateLessonProgress(lessonId, {
       progress_percentage: progressPercentage,
       completed: isCompleted,
-      current_time: currentTime
+      video_current_time: currentTime
     });
   };
 
