@@ -22,13 +22,19 @@ export function LessonLinksManager({ links, onChange }: LessonLinksManagerProps)
         url: newLink.url.trim()
       };
       
-      onChange([...links, link]);
+      const updatedLinks = [...links, link];
+      console.log('🔗 Adding new link:', link);
+      console.log('🔗 Updated links array:', updatedLinks);
+      onChange(updatedLinks);
       setNewLink({ title: '', url: '' });
     }
   };
 
   const removeLink = (linkId: string) => {
-    onChange(links.filter(link => link.id !== linkId));
+    const updatedLinks = links.filter(link => link.id !== linkId);
+    console.log('🗑️ Removing link:', linkId);
+    console.log('🗑️ Updated links array:', updatedLinks);
+    onChange(updatedLinks);
   };
 
   const isValidUrl = (url: string) => {

@@ -600,12 +600,15 @@ export default function Members() {
         member_area_id: selectedArea.id,
         module_id: (formData.module_id && formData.module_id !== 'none') ? formData.module_id : (selectedModuleForLesson || null),
         order_number: editingLesson ? editingLesson.order_number : lessons.length + 1,
-        complementary_links: JSON.stringify(formData.complementary_links),
-        lesson_materials: JSON.stringify(formData.lesson_materials)
+        complementary_links: JSON.stringify(formData.complementary_links || []),
+        lesson_materials: JSON.stringify(formData.lesson_materials || [])
       };
 
-      console.log('Lesson data to insert:', lessonData);
-      console.log('Form data before saving:', formData);
+      console.log('🔍 Form data before saving:', {
+        complementary_links: formData.complementary_links,
+        lesson_materials: formData.lesson_materials
+      });
+      console.log('🔍 Lesson data to insert/update:', lessonData);
 
       if (editingLesson) {
         console.log('Updating lesson:', editingLesson.id);
@@ -668,7 +671,10 @@ export default function Members() {
   };
 
   const handleEdit = (lesson: Lesson) => {
-    console.log('Editing lesson:', lesson);
+    console.log('📝 Editing lesson:', lesson);
+    console.log('📝 Lesson complementary_links:', lesson.complementary_links);
+    console.log('📝 Lesson lesson_materials:', lesson.lesson_materials);
+    
     setEditingLesson(lesson);
     setFormData({
       title: lesson.title,
@@ -680,6 +686,12 @@ export default function Members() {
       complementary_links: lesson.complementary_links || [],
       lesson_materials: lesson.lesson_materials || []
     });
+    
+    console.log('📝 Form data set to:', {
+      complementary_links: lesson.complementary_links || [],
+      lesson_materials: lesson.lesson_materials || []
+    });
+    
     setSelectedModuleForLesson(''); // Reset this when editing
     setDialogOpen(true);
   };
@@ -1781,13 +1793,27 @@ export default function Members() {
                {/* Links Complementares */}
                <LessonLinksManager 
                  links={formData.complementary_links}
-                 onChange={(links) => setFormData(prev => ({ ...prev, complementary_links: links }))}
+                 onChange={(links) => {
+                   console.log('🔗 Links onChange called with:', links);
+                   setFormData(prev => {
+                     const updated = { ...prev, complementary_links: links };
+                     console.log('🔗 Updated form data:', updated);
+                     return updated;
+                   });
+                 }}
                />
                
                {/* Materiais da Aula */}
                <LessonMaterialsManager
                  materials={formData.lesson_materials}
-                 onChange={(materials) => setFormData(prev => ({ ...prev, lesson_materials: materials }))}
+                 onChange={(materials) => {
+                   console.log('📁 Materials onChange called with:', materials);
+                   setFormData(prev => {
+                     const updated = { ...prev, lesson_materials: materials };
+                     console.log('📁 Updated form data:', updated);
+                     return updated;
+                   });
+                 }}
                />
                
                <DialogFooter>

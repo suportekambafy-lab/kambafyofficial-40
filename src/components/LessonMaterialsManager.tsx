@@ -102,7 +102,10 @@ export function LessonMaterialsManager({ materials, onChange }: LessonMaterialsM
         size: file.size
       };
 
-      onChange([...materials, material]);
+      const updatedMaterials = [...materials, material];
+      console.log('📁 Adding new material:', material);
+      console.log('📁 Updated materials array:', updatedMaterials);
+      onChange(updatedMaterials);
       
       toast({
         title: "Sucesso",
@@ -125,7 +128,10 @@ export function LessonMaterialsManager({ materials, onChange }: LessonMaterialsM
   };
 
   const removeMaterial = (materialId: string) => {
-    onChange(materials.filter(material => material.id !== materialId));
+    const updatedMaterials = materials.filter(material => material.id !== materialId);
+    console.log('🗑️ Removing material:', materialId);
+    console.log('🗑️ Updated materials array:', updatedMaterials);
+    onChange(updatedMaterials);
   };
 
   return (
