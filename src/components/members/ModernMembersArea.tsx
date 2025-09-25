@@ -295,8 +295,12 @@ export default function ModernMembersArea() {
                         >
                           <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 hover:border-emerald-500/50 transform-gpu">
                             <div className="relative">
-                              {/* Module Cover - Netflix Style */}
-                              <div className="aspect-[16/9] bg-gradient-to-br from-gray-900 to-black relative overflow-hidden">
+                              {/* Module Cover - Netflix Style com orientação dinâmica */}
+                              <div className={`${
+                                (module as any).cover_orientation === 'vertical' 
+                                  ? 'aspect-[9/16]' 
+                                  : 'aspect-[16/9]'
+                              } bg-gradient-to-br from-gray-900 to-black relative overflow-hidden`}>
                                 {module.cover_image_url ? (
                                   <>
                                     <img 

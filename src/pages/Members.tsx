@@ -97,7 +97,8 @@ export default function Members() {
     title: '',
     description: '',
     status: 'draft' as 'draft' | 'published' | 'archived',
-    cover_image_url: ''
+    cover_image_url: '',
+    cover_orientation: 'horizontal' as 'horizontal' | 'vertical'
   });
 
   useEffect(() => {
@@ -208,6 +209,32 @@ export default function Members() {
       toast({
         title: "Erro",
         description: "Não foi possível atualizar a capa do módulo",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Função para atualizar orientação de módulo
+  const handleUpdateModuleOrientation = async (moduleId: string, orientation: 'horizontal' | 'vertical') => {
+    try {
+      const { error } = await supabase
+        .from('modules')
+        .update({ cover_orientation: orientation })
+        .eq('id', moduleId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Orientação da capa atualizada!"
+      });
+      
+      // Recarregar módulos
+      loadModules();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: `Não foi possível atualizar a orientação: ${error.message}`,
         variant: "destructive"
       });
     }
@@ -466,6 +493,7 @@ export default function Members() {
         description: moduleFormData.description,
         status: moduleFormData.status,
         cover_image_url: moduleFormData.cover_image_url || null,
+        cover_orientation: moduleFormData.cover_orientation,
         user_id: user.id,
         member_area_id: selectedArea?.id,
         order_number: editingModule ? editingModule.order_number : modules.length + 1
@@ -640,7 +668,8 @@ export default function Members() {
       title: module.title,
       description: module.description || '',
       status: module.status as 'draft' | 'published' | 'archived',
-      cover_image_url: module.cover_image_url || ''
+      cover_image_url: module.cover_image_url || '',
+      cover_orientation: (module as any).cover_orientation || 'horizontal'
     });
     setModuleDialogOpen(true);
   };
@@ -774,7 +803,8 @@ export default function Members() {
       title: '',
       description: '',
       status: 'draft',
-      cover_image_url: ''
+      cover_image_url: '',
+      cover_orientation: 'horizontal'
     });
     setEditingModule(null);
   };
@@ -1409,17 +1439,37 @@ export default function Members() {
                                 )}
                               </CardHeader>
                               <CardContent>
-                                <ImageUploader
-                                  label="Capa do Módulo"
-                                  value={module.cover_image_url || ''}
-                                  onChange={(url) => handleUpdateModuleCover(module.id, url || '')}
-                                  bucket="member-area-assets"
-                                  folder={`${user?.id}/modules`}
-                                  aspectRatio="16/9"
-                                />
-                                <p className="text-xs text-muted-foreground mt-2">
-                                  Esta capa aparece na vitrine estilo Netflix
-                                </p>
+                                <div className="space-y-4">
+                                  <div className="flex items-center justify-between">
+                                    <Label>Orientação da Capa</Label>
+                                    <Select 
+                                      value={(module as any).cover_orientation || 'horizontal'} 
+                                      onValueChange={(value: 'horizontal' | 'vertical') =>
+                                        handleUpdateModuleOrientation(module.id, value)
+                                      }
+                                    >
+                                      <SelectTrigger className="w-48">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="horizontal">Horizontal (16:9)</SelectItem>
+                                        <SelectItem value="vertical">Vertical (9:16)</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  <ImageUploader
+                                    label="Capa do Módulo"
+                                    value={module.cover_image_url || ''}
+                                    onChange={(url) => handleUpdateModuleCover(module.id, url || '')}
+                                    bucket="member-area-assets"
+                                    folder={`${user?.id}/modules`}
+                                    aspectRatio={(module as any).cover_orientation === 'vertical' ? '9/16' : '16/9'}
+                                  />
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    Esta capa aparece na vitrine dos módulos com a orientação escolhida
+                                  </p>
+                                </div>
                               </CardContent>
                             </Card>
                           ))}
@@ -1495,10 +1545,32 @@ export default function Members() {
                   onChange={(url) => setModuleFormData(prev => ({ ...prev, cover_image_url: url || '' }))}
                   bucket="member-area-assets"
                   folder={user?.id || 'anonymous'}
-                  aspectRatio="16/9"
+                  aspectRatio={moduleFormData.cover_orientation === 'vertical' ? '9/16' : '16/9'}
                 />
                 <p className="text-xs text-muted-foreground">
                   Esta imagem será exibida na vitrine dos módulos
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cover-orientation">Orientação da Capa</Label>
+                <Select 
+                  value={moduleFormData.cover_orientation || 'horizontal'} 
+                  onValueChange={(value: 'horizontal' | 'vertical') => setModuleFormData(prev => ({ 
+                    ...prev, 
+                    cover_orientation: value 
+                  }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Escolha a orientação" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="horizontal">Horizontal (16:9) - Estilo Netflix</SelectItem>
+                    <SelectItem value="vertical">Vertical (9:16) - Estilo Stories</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Horizontal é ideal para paisagens, vertical para retratos
                 </p>
               </div>
               

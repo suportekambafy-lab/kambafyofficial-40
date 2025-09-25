@@ -877,6 +877,7 @@ export type Database = {
       modules: {
         Row: {
           cover_image_url: string | null
+          cover_orientation: string | null
           created_at: string
           description: string | null
           id: string
@@ -889,6 +890,7 @@ export type Database = {
         }
         Insert: {
           cover_image_url?: string | null
+          cover_orientation?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -901,6 +903,7 @@ export type Database = {
         }
         Update: {
           cover_image_url?: string | null
+          cover_orientation?: string | null
           created_at?: string
           description?: string | null
           id?: string
