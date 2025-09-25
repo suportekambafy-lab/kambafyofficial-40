@@ -63,6 +63,17 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       return;
     }
     
+    // Para domínios customizados (não kambafy.com), também não fazer redirecionamentos
+    if (!hostname.includes('kambafy.com')) {
+      console.log('🔧 SubdomainGuard: DOMÍNIO CUSTOMIZADO - Sem redirecionamentos', {
+        currentSubdomain,
+        currentPath,
+        hostname,
+        message: 'TODAS as rotas funcionam diretamente em domínios customizados'
+      });
+      return;
+    }
+    
     // Define quais rotas são RESTRITAS de cada subdomínio (não permitidas)
     const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/login/', '/area/']; 
     const restrictedFromApp = ['/checkout', '/obrigado', '/admin', '/area/', '/login/']; 

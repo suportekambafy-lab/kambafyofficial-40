@@ -9,12 +9,28 @@ export function useMemberAreaLinks() {
   const { getSubdomainUrl } = useSubdomain();
 
   const getMemberAreaLoginUrl = (memberAreaId: string) => {
+    // Verificar se não é kambafy.com
+    const hostname = window.location.hostname;
+    if (!hostname.includes('kambafy.com')) {
+      const url = `/login/${memberAreaId}`;
+      memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'login', url);
+      return url;
+    }
+    
     const url = getSubdomainUrl('membros', `/login/${memberAreaId}`);
     memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'login', url);
     return url;
   };
 
   const getMemberAreaUrl = (memberAreaId: string, path: string = '') => {
+    // Verificar se não é kambafy.com
+    const hostname = window.location.hostname;
+    if (!hostname.includes('kambafy.com')) {
+      const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
+      memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'area', fullPath);
+      return fullPath;
+    }
+    
     const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
     const url = getSubdomainUrl('membros', fullPath);
     memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'area', url);
@@ -22,23 +38,45 @@ export function useMemberAreaLinks() {
   };
 
   const getMemberAreaLessonUrl = (memberAreaId: string, lessonId: string) => {
+    const hostname = window.location.hostname;
+    if (!hostname.includes('kambafy.com')) {
+      return `/area/${memberAreaId}/lesson/${lessonId}`;
+    }
     return getSubdomainUrl('membros', `/area/${memberAreaId}/lesson/${lessonId}`);
   };
 
   const getMemberAreaModuleUrl = (memberAreaId: string, moduleId: string) => {
+    const hostname = window.location.hostname;
+    if (!hostname.includes('kambafy.com')) {
+      return `/area/${memberAreaId}/module/${moduleId}`;
+    }
     return getSubdomainUrl('membros', `/area/${memberAreaId}/module/${moduleId}`);
   };
 
   const navigateToMemberArea = (memberAreaId: string, path: string = '') => {
     const url = getMemberAreaUrl(memberAreaId, path);
     memberAreaDebugLogger.logRedirection(window.location.href, url, 'Navegação via hook para área de membros');
-    window.location.href = url;
+    
+    const hostname = window.location.hostname;
+    if (!hostname.includes('kambafy.com')) {
+      // Para domínios customizados, usar navigate em vez de window.location.href
+      window.location.pathname = url;
+    } else {
+      window.location.href = url;
+    }
   };
 
   const navigateToMemberAreaLogin = (memberAreaId: string) => {
     const url = getMemberAreaLoginUrl(memberAreaId);
     memberAreaDebugLogger.logRedirection(window.location.href, url, 'Navegação via hook para login da área de membros');
-    window.location.href = url;
+    
+    const hostname = window.location.hostname;
+    if (!hostname.includes('kambafy.com')) {
+      // Para domínios customizados, usar navigate em vez de window.location.href
+      window.location.pathname = url;
+    } else {
+      window.location.href = url;
+    }
   };
 
   return {
@@ -85,6 +123,29 @@ export function createMemberAreaLinks() {
       getMemberAreaUrl: (memberAreaId: string, path: string = '') => {
         const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
         console.log('🔗 Dev - getMemberAreaUrl:', { memberAreaId, path, fullPath, hostname });
+        return fullPath;
+      },
+      getMemberAreaLessonUrl: (memberAreaId: string, lessonId: string) => `/area/${memberAreaId}/lesson/${lessonId}`,
+      getMemberAreaModuleUrl: (memberAreaId: string, moduleId: string) => `/area/${memberAreaId}/module/${moduleId}`,
+    };
+  }
+
+  // Se não for kambafy.com, manter as rotas locais
+  if (!hostname.includes('kambafy.com')) {
+    console.log('🛠️ createMemberAreaLinks - DOMÍNIO CUSTOMIZADO detectado', {
+      hostname,
+      baseDomain,
+      message: 'Usando rotas locais para área de membros em domínio customizado'
+    });
+    return {
+      getMemberAreaLoginUrl: (memberAreaId: string) => {
+        const url = `/login/${memberAreaId}`;
+        console.log('🔗 Custom domain - getMemberAreaLoginUrl:', { memberAreaId, url, hostname });
+        return url;
+      },
+      getMemberAreaUrl: (memberAreaId: string, path: string = '') => {
+        const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
+        console.log('🔗 Custom domain - getMemberAreaUrl:', { memberAreaId, path, fullPath, hostname });
         return fullPath;
       },
       getMemberAreaLessonUrl: (memberAreaId: string, lessonId: string) => `/area/${memberAreaId}/lesson/${lessonId}`,

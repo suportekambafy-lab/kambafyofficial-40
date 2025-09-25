@@ -82,6 +82,17 @@ export function useSubdomain() {
         return currentPath;
       }
       
+      // Se não for kambafy.com, manter na mesma aplicação
+      if (!hostname.includes('kambafy.com')) {
+        console.log('🔗 getSubdomainUrl CUSTOM DOMAIN: Retornando path local', {
+          currentPath,
+          targetSubdomain,
+          hostname,
+          message: 'Em domínio customizado, não há redirecionamento de domínio'
+        });
+        return currentPath;
+      }
+      
       // Para produção com domínios customizados (exceto mobile)
       const baseDomain = hostname.replace(/^(app\.|pay\.|admin\.|membros\.)/, '');
       

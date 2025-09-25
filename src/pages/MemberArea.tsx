@@ -39,16 +39,22 @@ function MemberAreaContentWrapper() {
   // Redirect to login if not authenticated (after loading is complete)
   useEffect(() => {
     if (!loading && (!student || !memberArea || !isAuthenticated) && areaId) {
-      // Para desenvolvimento/localhost, usar navigate do React Router
+      // Para desenvolvimento/localhost/lovable, usar navigate do React Router
       const hostname = window.location.hostname;
-      if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app')) {
+      if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
         console.log('Development: Navigating to login:', `/login/${areaId}`);
         navigate(`/login/${areaId}`, { replace: true });
       } else {
-        // Para produção, usar redirecionamento completo para o subdomínio correto
-        const loginUrl = `https://membros.kambafy.com/login/${areaId}`;
-        console.log('Production: Redirecting to login:', loginUrl);
-        window.location.href = loginUrl;
+        // Para produção, manter na mesma aplicação se não for kambafy.com
+        if (hostname.includes('kambafy.com')) {
+          const loginUrl = `https://membros.kambafy.com/login/${areaId}`;
+          console.log('Production kambafy.com: Redirecting to login:', loginUrl);
+          window.location.href = loginUrl;
+        } else {
+          // Para outros domínios, usar navigate local
+          console.log('Production other domain: Navigating to login:', `/login/${areaId}`);
+          navigate(`/login/${areaId}`, { replace: true });
+        }
       }
     }
   }, [loading, student, memberArea, isAuthenticated, areaId, navigate]);
