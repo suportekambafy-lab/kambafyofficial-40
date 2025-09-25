@@ -297,11 +297,11 @@ export default function ModernMembersArea() {
       <div className="bg-black min-h-screen">
         <div className={selectedLesson ? "" : "container mx-auto px-4 py-12"}>
           
-          {/* Layout quando aula selecionada - Foco total no vídeo */}
+          {/* Layout quando aula selecionada */}
           {selectedLesson ? (
-            <div className="w-full">
-              {/* Área do vídeo com foco total */}
-              <div className="w-full p-6">
+            <div className="flex min-h-screen">
+              {/* Área do vídeo */}
+              <div className="flex-1 p-6">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -311,7 +311,6 @@ export default function ModernMembersArea() {
                     <ModernLessonViewer
                       lesson={selectedLesson}
                       lessons={lessons}
-                      modules={modules}
                       onNavigateLesson={handleNavigateLesson}
                       onClose={() => setSelectedLesson(null)}
                     />
@@ -328,6 +327,102 @@ export default function ModernMembersArea() {
                       )}
                     </CardHeader>
                   </Card>
+                </motion.div>
+              </div>
+
+              {/* Sidebar com módulos e aulas */}
+              <div className="w-96 bg-gray-950 border-l border-gray-800 p-6 overflow-y-auto">
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-6"
+                >
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-emerald-400" />
+                      Conteúdo do Curso
+                    </h3>
+                  </div>
+
+                  {modules.map((module) => {
+                    const moduleLessons = lessons.filter(l => l.module_id === module.id);
+                    const isExpanded = moduleLessons.some(l => l.id === selectedLesson.id);
+                    
+                    return (
+                      <div key={module.id} className="space-y-3">
+                        <div 
+                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                            isExpanded ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-gray-800 hover:bg-gray-700'
+                          }`}
+                          onClick={() => handleModuleClick(module)}
+                        >
+                          {module.cover_image_url ? (
+                            <img 
+                              src={module.cover_image_url} 
+                              alt={module.title}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded flex items-center justify-center">
+                              <BookOpen className="h-6 w-6 text-emerald-400" />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h4 className="font-medium text-white text-sm">{module.title}</h4>
+                            <p className="text-xs text-gray-400">{moduleLessons.length} aulas</p>
+                          </div>
+                        </div>
+
+                        {/* Lista de aulas quando expandido */}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="pl-4 space-y-2"
+                            >
+                              {moduleLessons.map((lesson) => (
+                                <motion.div
+                                  key={lesson.id}
+                                  whileHover={{ scale: 1.02 }}
+                                  className={`p-3 rounded cursor-pointer transition-colors ${
+                                    lesson.id === selectedLesson.id 
+                                      ? 'bg-emerald-500/20 border-l-4 border-l-emerald-400' 
+                                      : 'bg-gray-800/50 hover:bg-gray-800'
+                                  }`}
+                                  onClick={() => handleLessonClick(lesson)}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex-shrink-0">
+                                      <Badge variant="outline" className="text-xs">
+                                        {lesson.order_number}
+                                      </Badge>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm text-white line-clamp-1">
+                                        {lesson.title}
+                                      </p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <Clock className="h-3 w-3 text-gray-400" />
+                                        <span className="text-xs text-gray-400">
+                                          {lesson.duration} min
+                                        </span>
+                                        {lesson.id === selectedLesson.id && (
+                                          <PlayCircle className="h-3 w-3 text-emerald-400" />
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
                 </motion.div>
               </div>
             </div>
