@@ -32,6 +32,7 @@ import { ModernLessonViewer } from './ModernLessonViewer';
 import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLessonProgress } from '@/hooks/useLessonProgress';
 
 // Função para detectar e atualizar duração do vídeo automaticamente
 const detectAndUpdateVideoDuration = async (lesson: Lesson) => {
@@ -90,6 +91,14 @@ export default function ModernMembersArea() {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const isMobile = useIsMobile();
+
+  // Hook de progresso das aulas
+  const { 
+    lessonProgress, 
+    updateVideoProgress,
+    getCourseProgress,
+    isLoadingProgress
+  } = useLessonProgress(memberAreaId || '', session?.studentEmail);
 
   console.log('🎬 ModernMembersArea render:', { 
     memberAreaId, 
@@ -212,8 +221,8 @@ export default function ModernMembersArea() {
                          lesson.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesFilter = filterStatus === 'all' || 
-      (filterStatus === 'completed' && Math.random() > 0.5) || // Simulado
-      (filterStatus === 'pending' && Math.random() <= 0.5);   // Simulado
+      (filterStatus === 'completed' && lessonProgress[lesson.id]?.completed) || 
+      (filterStatus === 'pending' && !lessonProgress[lesson.id]?.completed);
       
     return matchesModule && matchesSearch && matchesFilter;
   });
@@ -238,10 +247,17 @@ export default function ModernMembersArea() {
     );
   }
 
-  // Calcular duração total em minutos
+  // Calcular duração total em minutos e progresso real
   const totalDuration = Math.round(lessons.reduce((sum, lesson) => sum + lesson.duration, 0) / 60);
-  console.log('⏱️ Duração total calculada:', totalDuration, 'minutos de', lessons.length, 'aulas');
-  const completedLessons = Math.floor(lessons.length * 0.3); // Simulado
+  const completedLessons = lessons.filter(lesson => lessonProgress[lesson.id]?.completed).length;
+  const courseProgress = getCourseProgress(lessons.length);
+  
+  console.log('⏱️ Estatísticas do curso:', {
+    totalDuration: totalDuration + ' minutos',
+    totalLessons: lessons.length,
+    completedLessons,
+    courseProgress: courseProgress + '%'
+  });
 
   return (
     <div className="min-h-screen bg-gray-950 dark text-white">
@@ -249,10 +265,10 @@ export default function ModernMembersArea() {
       <MemberAreaSlideMenu
         lessons={lessons}
         modules={modules}
-        lessonProgress={{}} // Você pode implementar o hook de progresso aqui depois
-        getCourseProgress={(total) => Math.round((Math.floor(lessons.length * 0.3) / total) * 100) || 0}
+        lessonProgress={lessonProgress}
+        getCourseProgress={getCourseProgress}
         totalDuration={totalDuration}
-        completedLessons={Math.floor(lessons.length * 0.3)}
+        completedLessons={completedLessons}
         onLessonSelect={setSelectedLesson}
         onLogout={handleLogout}
       />
@@ -395,8 +411,10 @@ export default function ModernMembersArea() {
                     <ModernLessonViewer
                       lesson={selectedLesson}
                       lessons={lessons}
+                      lessonProgress={lessonProgress}
                       onNavigateLesson={handleNavigateLesson}
                       onClose={() => setSelectedLesson(null)}
+                      onUpdateProgress={updateVideoProgress}
                     />
                   </Card>
                   

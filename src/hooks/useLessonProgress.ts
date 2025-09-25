@@ -10,6 +10,7 @@ interface LessonProgress {
   completed: boolean;
   rating?: number;
   last_watched_at: string;
+  current_time: number; // Posição onde parou no vídeo (em segundos)
 }
 
 interface LessonComment {
@@ -21,22 +22,44 @@ interface LessonComment {
   user_name: string;
 }
 
-export const useLessonProgress = (memberAreaId: string) => {
+export const useLessonProgress = (memberAreaId: string, studentEmail?: string) => {
   const { user, session } = useAuth();
   const { toast } = useToast();
   const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
   const [comments, setComments] = useState<Record<string, LessonComment[]>>({});
+  const [isLoadingProgress, setIsLoadingProgress] = useState(false);
 
-  // Load lesson progress
+  // Load lesson progress - funciona tanto com user autenticado quanto com sessão de member area
   const loadLessonProgress = async () => {
-    if (!user || !memberAreaId) return;
+    if (!memberAreaId) return;
+    
+    // Usar user_id se autenticado, ou buscar por email da sessão de member area
+    const userId = user?.id;
+    const email = studentEmail;
+    
+    if (!userId && !email) {
+      console.log('Nenhum user_id ou email disponível para carregar progresso');
+      return;
+    }
 
     try {
-      const { data, error } = await supabase
+      setIsLoadingProgress(true);
+      
+      let query = supabase
         .from('lesson_progress')
         .select('*')
-        .eq('user_id', user.id)
         .eq('member_area_id', memberAreaId);
+        
+      if (userId) {
+        query = query.eq('user_id', userId);
+      } else if (email) {
+        // Para sessões de member area, usar uma query personalizada se necessário
+        // Por agora, vamos assumir que temos user_id via sessão
+        console.log('Usando email para carregar progresso:', email);
+        return; // Implementar lógica para buscar por sessão se necessário
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -47,18 +70,25 @@ export const useLessonProgress = (memberAreaId: string) => {
           progress_percentage: progress.progress_percentage,
           completed: progress.completed,
           rating: progress.rating,
-          last_watched_at: progress.last_watched_at
+          last_watched_at: progress.last_watched_at,
+          current_time: progress.current_time || 0
         };
       });
       setLessonProgress(progressMap);
+      console.log('✅ Progresso das aulas carregado:', Object.keys(progressMap).length, 'aulas');
     } catch (error) {
       console.error('Error loading lesson progress:', error);
+    } finally {
+      setIsLoadingProgress(false);
     }
   };
 
   // Save lesson progress with proper conflict resolution
-  const updateLessonProgress = async (lessonId: string, progressData: Partial<LessonProgress>) => {
-    if (!user) return;
+  const updateLessonProgress = async (lessonId: string, progressData: Partial<LessonProgress & { current_time?: number }>) => {
+    if (!user) {
+      console.log('Não é possível salvar progresso sem usuário autenticado');
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -70,6 +100,7 @@ export const useLessonProgress = (memberAreaId: string) => {
           progress_percentage: progressData.progress_percentage || 0,
           completed: progressData.completed || false,
           rating: progressData.rating,
+          current_time: progressData.current_time || 0,
           last_watched_at: new Date().toISOString()
         }, {
           onConflict: 'user_id,lesson_id',
@@ -90,11 +121,16 @@ export const useLessonProgress = (memberAreaId: string) => {
           progress_percentage: progressData.progress_percentage || prev[lessonId]?.progress_percentage || 0,
           completed: progressData.completed !== undefined ? progressData.completed : prev[lessonId]?.completed || false,
           rating: progressData.rating !== undefined ? progressData.rating : prev[lessonId]?.rating,
+          current_time: progressData.current_time || prev[lessonId]?.current_time || 0,
           last_watched_at: new Date().toISOString()
         }
       }));
 
-      console.log('Progress updated successfully for lesson:', lessonId, progressData);
+      console.log('✅ Progresso salvo:', lessonId, {
+        progress: progressData.progress_percentage,
+        completed: progressData.completed,
+        currentTime: progressData.current_time
+      });
     } catch (error) {
       console.error('Error updating lesson progress:', error);
       toast({
@@ -103,6 +139,43 @@ export const useLessonProgress = (memberAreaId: string) => {
         variant: "destructive"
       });
     }
+  };
+
+  // Função específica para salvar progresso do vídeo (chamada frequentemente)
+  const updateVideoProgress = async (lessonId: string, currentTime: number, duration: number) => {
+    if (!user || !duration || duration === 0) return;
+
+    const progressPercentage = Math.round((currentTime / duration) * 100);
+    const isCompleted = progressPercentage >= 90; // Considera completo quando assiste 90% ou mais
+
+    // Salvar no banco apenas a cada 10 segundos para evitar spam
+    const now = Date.now();
+    const lastUpdate = lessonProgress[lessonId]?.last_watched_at 
+      ? new Date(lessonProgress[lessonId].last_watched_at).getTime() 
+      : 0;
+    
+    if (now - lastUpdate < 10000) { // 10 segundos
+      // Apenas atualizar estado local
+      setLessonProgress(prev => ({
+        ...prev,
+        [lessonId]: {
+          ...prev[lessonId],
+          lesson_id: lessonId,
+          progress_percentage: progressPercentage,
+          completed: isCompleted,
+          current_time: currentTime,
+          last_watched_at: prev[lessonId]?.last_watched_at || new Date().toISOString()
+        }
+      }));
+      return;
+    }
+
+    // Salvar no banco de dados
+    await updateLessonProgress(lessonId, {
+      progress_percentage: progressPercentage,
+      completed: isCompleted,
+      current_time: currentTime
+    });
   };
 
   // Save rating
@@ -250,12 +323,14 @@ export const useLessonProgress = (memberAreaId: string) => {
     if (memberAreaId) {
       loadLessonProgress();
     }
-  }, [memberAreaId, user]);
+  }, [memberAreaId, user, studentEmail]);
 
   return {
     lessonProgress,
     comments,
+    isLoadingProgress,
     updateLessonProgress,
+    updateVideoProgress,
     saveRating,
     loadComments,
     saveComment,

@@ -25,15 +25,19 @@ import { Lesson } from '@/types/memberArea';
 interface ModernLessonViewerProps {
   lesson: Lesson;
   lessons: Lesson[];
+  lessonProgress?: Record<string, any>;
   onNavigateLesson: (lessonId: string) => void;
   onClose: () => void;
+  onUpdateProgress?: (lessonId: string, currentTime: number, duration: number) => void;
 }
 
 export function ModernLessonViewer({ 
   lesson, 
-  lessons, 
+  lessons,
+  lessonProgress = {},
   onNavigateLesson, 
-  onClose 
+  onClose,
+  onUpdateProgress
 }: ModernLessonViewerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -41,9 +45,27 @@ export function ModernLessonViewer({
   const [rating, setRating] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
 
+  // Obter progresso da aula atual
+  const currentProgress = lessonProgress[lesson.id];
+  const startTime = currentProgress?.current_time || 0;
+
   const currentIndex = lessons.findIndex(l => l.id === lesson.id);
   const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
   const prevLesson = currentIndex > 0 ? lessons[currentIndex - 1] : null;
+
+  // Inicializar estado com progresso salvo
+  useEffect(() => {
+    if (currentProgress) {
+      setProgress(currentProgress.progress_percentage || 0);
+      setIsCompleted(currentProgress.completed || false);
+      setRating(currentProgress.rating || 0);
+      console.log('📊 Progresso carregado para aula:', lesson.title, {
+        progress: currentProgress.progress_percentage + '%',
+        completed: currentProgress.completed,
+        startTime: currentProgress.current_time
+      });
+    }
+  }, [lesson.id, currentProgress]);
 
   useEffect(() => {
     // Simular progresso para demo
@@ -92,10 +114,19 @@ export function ModernLessonViewer({
                 lesson.bunny_embed_url || 
                 (lesson.video_url?.includes('mediadelivery.net/embed') ? lesson.video_url : undefined)
               }
+              startTime={startTime}
               onProgress={setProgress}
               onTimeUpdate={(currentTime, duration) => {
                 setCurrentTime(currentTime);
-                if (currentTime / duration >= 0.9 && !isCompleted) {
+                
+                // Salvar progresso automaticamente
+                if (onUpdateProgress && duration > 0) {
+                  onUpdateProgress(lesson.id, currentTime, duration);
+                }
+                
+                // Marcar como completo quando assistir 90% ou mais
+                const progressPercent = (currentTime / duration) * 100;
+                if (progressPercent >= 90 && !isCompleted) {
                   setIsCompleted(true);
                 }
               }}

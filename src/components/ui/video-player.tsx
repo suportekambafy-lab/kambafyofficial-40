@@ -49,6 +49,7 @@ const CustomSlider = ({
 interface VideoPlayerProps {
   src: string;
   embedUrl?: string; // For Bunny.net embeds
+  startTime?: number; // Tempo inicial para continuar de onde parou
   onProgress?: (progress: number) => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onPlay?: () => void;
@@ -62,6 +63,7 @@ interface VideoPlayerProps {
 const VideoPlayer = ({ 
   src, 
   embedUrl,
+  startTime = 0,
   onProgress,
   onTimeUpdate,
   onPlay,
@@ -182,6 +184,16 @@ const VideoPlayer = ({
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
+      
+      // Definir tempo inicial se fornecido (continuar de onde parou)
+      if (startTime > 0 && startTime < videoRef.current.duration) {
+        videoRef.current.currentTime = startTime;
+        const initialProgress = (startTime / videoRef.current.duration) * 100;
+        setProgress(initialProgress);
+        setCurrentTime(startTime);
+        console.log('🎬 Continuando vídeo do tempo:', Math.round(startTime), 'segundos');
+      }
+      
       if (onLoadedMetadata) {
         onLoadedMetadata();
       }
