@@ -6,7 +6,7 @@ import { CheckoutCustomizer } from '@/components/checkout/CheckoutCustomizer';
 import { OrderBumpConfigurator } from '@/components/OrderBumpConfigurator';
 import { UpsellConfigurator } from '@/components/UpsellConfigurator';
 import { QuizBuilder } from '@/components/QuizBuilder';
-import { SalesRecoveryConfigurator } from '@/components/SalesRecoveryConfigurator';
+
 import { IntegrationType } from '@/components/IntegrationTypeSelector';
 
 interface Product {
@@ -79,13 +79,6 @@ export function IntegrationConfigurator({
         />
       )}
 
-      {integrationType.id === 'sales-recovery' && (
-        <SalesRecoveryConfigurator 
-          product={product}
-          onBack={onBack}
-          onComplete={handleSuccess}
-        />
-      )}
 
       {integrationType.id === 'quiz-builder' && (
         <QuizBuilder 

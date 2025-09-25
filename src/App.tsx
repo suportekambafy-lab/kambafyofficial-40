@@ -95,7 +95,7 @@ const App = () => {
                          <Route path="/area/:id/lesson/:lessonId" element={<OptimizedRoutes.LessonDetail />} />
                        <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                         <Route path="/kambapay" element={<OptimizedRoutes.KambaPay />} />
-                        <Route path="/recuperacao-vendas" element={<OptimizedRoutes.SalesRecovery />} />
+                        
                        
                       {/* Admin Routes */}
                       <Route path="/admin/login" element={<OptimizedRoutes.AdminLogin />} />

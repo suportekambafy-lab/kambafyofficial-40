@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useGeoLocation } from '@/hooks/useGeoLocation';
 import { useAffiliateTracking } from '@/hooks/useAffiliateTracking';
 import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
-import { useAbandonedPurchaseDetection } from '@/hooks/useAbandonedPurchaseDetection';
+
 import { getPaymentMethodsByCountry } from '@/utils/paymentMethods';
 
 interface UseOptimizedCheckoutProps {
@@ -60,7 +60,6 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
 
   const { fetchBalanceByEmail } = useKambaPayBalance();
 
-  // Hook para detectar carrinhos abandonados - memoizado
   const totalAmountForDetection = useMemo(() => {
     if (!product) return 0;
     
@@ -87,14 +86,6 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     
     return total;
   }, [product, selectedOrderBumps, accessExtensionPrice, userCountry, convertPrice]);
-
-  const { markAsRecovered, hasDetected, abandonedPurchaseId } = useAbandonedPurchaseDetection({
-    product,
-    formData,
-    totalAmount: totalAmountForDetection,
-    currency: userCountry?.currency || 'KZ',
-    enabled: !!product && !!formData.email && !!formData.fullName
-  });
 
   // Função memoizada para obter métodos de pagamento
   const availablePaymentMethods = useMemo(() => {
@@ -497,11 +488,6 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     markAsValidAffiliate,
     markAsInvalidAffiliate,
     clearAffiliateCode,
-    
-    // Carrinho abandonado
-    markAsRecovered,
-    hasDetected,
-    abandonedPurchaseId,
     
     // Métodos de pagamento
     availablePaymentMethods,

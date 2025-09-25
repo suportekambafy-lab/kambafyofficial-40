@@ -13,7 +13,6 @@ import { FacebookPixelTracker } from "@/components/FacebookPixelTracker";
 import { useToast } from "@/hooks/use-toast";
 import { PhoneInput } from "@/components/PhoneInput";
 import { SEO } from "@/components/SEO";
-import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { StripePaymentForm } from "@/components/checkout/StripePaymentForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
@@ -199,9 +198,6 @@ const OptimizedCheckout = () => {
     markAsValidAffiliate,
     markAsInvalidAffiliate,
     clearAffiliateCode,
-    markAsRecovered,
-    hasDetected,
-    abandonedPurchaseId,
     availablePaymentMethods: productPaymentMethods,
     handleInputChange,
     handleCountryChange,
@@ -817,11 +813,6 @@ const OptimizedCheckout = () => {
             </Suspense>
           )}
 
-          {/* Indicador de carrinho abandonado */}
-          <AbandonedCartIndicator 
-            hasDetected={hasDetected}
-            abandonedPurchaseId={abandonedPurchaseId}
-          />
         </div>
       </div>
     </ThemeProvider>

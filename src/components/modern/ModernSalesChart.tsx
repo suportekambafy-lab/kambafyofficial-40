@@ -70,16 +70,8 @@ export function ModernSalesChart() {
 
       console.log('📊 Chart carregando vendas dos últimos 7 dias para produtos:', userProductIds);
 
-      // Buscar vendas recuperadas para aplicar desconto
-      const { data: recoveredPurchases } = await supabase
-        .from('abandoned_purchases')
-        .select('recovered_order_id')
-        .eq('status', 'recovered')
-        .not('recovered_order_id', 'is', null);
-
-      const recoveredOrderIds = new Set(
-        recoveredPurchases?.map(p => p.recovered_order_id).filter(Boolean) || []
-      );
+      // Vendas recuperadas removidas - sistema de recuperação desabilitado
+      const recoveredOrderIds = new Set();
 
       const { data: orders, error } = await supabase
         .from('orders')

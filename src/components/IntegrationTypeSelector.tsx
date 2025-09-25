@@ -50,13 +50,6 @@ const integrationTypes: IntegrationType[] = [
 
 const comingSoonTypes: IntegrationType[] = [
   {
-    id: 'sales-recovery',
-    name: 'Recuperação de Vendas',
-    description: 'Em breve - Detecte carrinhos abandonados e envie emails automáticos de recuperação',
-    icon: ({ className }: { className?: string }) => <Mail className={className} />,
-    color: 'text-gray-500'
-  },
-  {
     id: 'upsell',
     name: 'Upsell Pós-Compra',
     description: 'Em breve - Configure ofertas especiais que aparecem após a compra principal',

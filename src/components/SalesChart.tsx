@@ -81,16 +81,8 @@ export function SalesChart({ dateFilter }: SalesChartProps) {
         return;
       }
 
-      // Buscar vendas recuperadas para aplicar desconto
-      const { data: recoveredPurchases } = await supabase
-        .from('abandoned_purchases')
-        .select('recovered_order_id')
-        .eq('status', 'recovered')
-        .not('recovered_order_id', 'is', null);
-
-      const recoveredOrderIds = new Set(
-        recoveredPurchases?.map(p => p.recovered_order_id).filter(Boolean) || []
-      );
+      // Vendas recuperadas removidas - sistema de recuperação desabilitado
+      const recoveredOrderIds = new Set();
 
       // Buscar pedidos do período usando product_id
       const { data: orders, error } = await supabase

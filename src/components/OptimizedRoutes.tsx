@@ -57,7 +57,7 @@ const MeusAfiliados = createLazyWithRetry(() => import('@/pages/MeusAfiliados'),
 const UserIdentity = createLazyWithRetry(() => import('@/pages/UserIdentity'), "UserIdentity");
 const Mobile = createLazyWithRetry(() => import('@/pages/Mobile'), "Mobile");
 const KambaPay = createLazyWithRetry(() => import('@/pages/KambaPay'), "KambaPay");
-const SalesRecovery = createLazyWithRetry(() => import('@/pages/SalesRecovery'), "SalesRecovery");
+
 
 // Member Area routes
 const MemberArea = createLazyWithRetry(() => import('@/pages/MemberArea'), "MemberArea");
@@ -160,7 +160,7 @@ export const OptimizedRoutes = {
   UserIdentity: withLazyLoading(UserIdentity, 'settings'),
   Mobile: withLazyLoading(Mobile, 'dashboard'),
   KambaPay: withLazyLoading(KambaPay, 'settings'),
-  SalesRecovery: withLazyLoading(SalesRecovery, 'dashboard'),
+  
   
   SellerDashboard: withLazyLoading(SellerDashboard, 'dashboard'),
   AdminLogin: withLazyLoading(AdminLogin, 'settings'),

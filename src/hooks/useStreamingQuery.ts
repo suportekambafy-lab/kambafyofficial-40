@@ -69,16 +69,8 @@ export const useStreamingQuery = () => {
 
       if (ownSalesError) throw ownSalesError;
 
-      // Buscar vendas recuperadas para calcular stats corretos
-      const { data: recoveredPurchases } = await supabase
-        .from('abandoned_purchases')
-        .select('recovered_order_id')
-        .eq('status', 'recovered')
-        .not('recovered_order_id', 'is', null);
-
-      const recoveredOrderIds = new Set(
-        recoveredPurchases?.map(p => p.recovered_order_id).filter(Boolean) || []
-      );
+      // Vendas recuperadas removidas - sistema de recuperação desabilitado
+      const recoveredOrderIds = new Set();
 
       // 📊 STATS RÁPIDOS - vendas como afiliado
       let affiliateSalesData: any[] = [];

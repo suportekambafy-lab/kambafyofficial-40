@@ -20,8 +20,6 @@ import { SEO } from "@/components/SEO";
 import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
-import { useAbandonedPurchaseDetection } from "@/hooks/useAbandonedPurchaseDetection";
-import { AbandonedCartIndicator } from "@/components/AbandonedCartIndicator";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
@@ -199,14 +197,6 @@ const Checkout = () => {
     product ? getProductFinalPrice() + totalOrderBumpPrice : 0, 
     [product, getProductFinalPrice, totalOrderBumpPrice]
   );
-
-  const { markAsRecovered, hasDetected, abandonedPurchaseId } = useAbandonedPurchaseDetection({
-    product,
-    formData,
-    totalAmount: totalAmountForDetection,
-    currency: userCountry?.currency || 'KZ',
-    enabled: !!product && !!formData.email && !!formData.fullName
-  });
 
   // Remover efeito que aguarda geo - não precisamos mais
   // Os preços se atualizam automaticamente quando geo estiver pronto
@@ -1654,22 +1644,8 @@ const Checkout = () => {
         })
       });
 
-      // Não marcar vendas angolanas como recuperadas automaticamente
-      console.log('🔍 Verificando se deve marcar como recuperado:', {
-        hasDetected,
-        abandonedPurchaseId,
-        email: formData.email,
-        productId: product?.id,
-        paymentMethod: selectedPayment
-      });
-      
-      // Só marcar como recuperado se realmente houve detecção de abandono
-      if (hasDetected && abandonedPurchaseId) {
-        console.log('✅ Marcando como venda recuperada - carrinho foi detectado como abandonado');
-        await markAsRecovered(orderId);
-      } else {
-        console.log('ℹ️ Venda normal - não foi marcada como recuperada');
-      }
+      // Não marcar vendas como recuperadas - sistema de recuperação removido
+      console.log('✅ Venda concluída - sistema de recuperação desabilitado');
 
       // Verificar se há configuração de upsell
       if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
@@ -1994,14 +1970,6 @@ const Checkout = () => {
                 />
               </div>
 
-              {/* Indicador de detecção de carrinho abandonado - apenas para debug */}
-              {process.env.NODE_ENV === 'development' && (
-                <AbandonedCartIndicator
-                  hasDetected={hasDetected}
-                  abandonedPurchaseId={abandonedPurchaseId}
-                  enabled={!!formData.email && !!formData.fullName}
-                />
-              )}
 
               <OptimizedOrderBump 
                 productId={productId || ''}
