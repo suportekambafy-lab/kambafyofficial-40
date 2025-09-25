@@ -24,7 +24,13 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
   const { currentLevel, achievedLevels, allLevels } = useKambaLevels(totalRevenue);
 
   const formatCurrency = (value: number) => {
-    return `${(value / 1000000).toFixed(1)}M KZ`;
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M KZ`;
+    } else if (value >= 1000) {
+      return `${Math.round(value / 1000)}K KZ`;
+    } else {
+      return `${Math.round(value)} KZ`;
+    }
   };
 
   const isAchieved = (levelThreshold: number) => {

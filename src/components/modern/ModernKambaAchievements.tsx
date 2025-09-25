@@ -44,7 +44,7 @@ export function ModernKambaAchievements() {
       // Buscar vendas usando product_id
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('amount, seller_commission')
+        .select('amount, seller_commission, currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed');
 
@@ -55,7 +55,16 @@ export function ModernKambaAchievements() {
 
       const total = orders?.reduce((sum, order) => {
         // Usar seller_commission se disponível, senão usar amount
-        const amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        // Converter para KZ se necessário
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053, // 1 EUR = ~1053 KZ
+            'MZN': 14.3  // 1 MZN = ~14.3 KZ
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          amount = Math.round(amount * rate);
+        }
         return sum + amount;
       }, 0) || 0;
 
@@ -66,7 +75,13 @@ export function ModernKambaAchievements() {
   };
 
   const formatCurrency = (value: number) => {
-    return `${(value / 1000000).toFixed(1)}M KZ`;
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M KZ`;
+    } else if (value >= 1000) {
+      return `${Math.round(value / 1000)}K KZ`;
+    } else {
+      return `${Math.round(value)} KZ`;
+    }
   };
 
   return (
