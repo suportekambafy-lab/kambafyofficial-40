@@ -208,12 +208,12 @@ export default function ModernMembersArea() {
           </div>
         )}
         
-        <div className="relative container mx-auto px-4 py-8">
+        <div className="relative container mx-auto px-4 py-20">
           {/* Header */}
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="flex justify-between items-center mb-6"
+            className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10"
           >
             <div className="flex items-center gap-3">
               {memberArea?.logo_url ? (
