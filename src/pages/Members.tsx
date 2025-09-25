@@ -89,6 +89,7 @@ export default function Members() {
     title: '',
     description: '',
     video_url: '',
+    duration: 0, // Duração em segundos
     status: 'draft' as 'draft' | 'published' | 'archived',
     module_id: 'none'
   });
@@ -655,6 +656,7 @@ export default function Members() {
       title: lesson.title,
       description: lesson.description || '',
       video_url: lesson.video_url || '',
+      duration: lesson.duration || 0,
       status: lesson.status,
       module_id: lesson.module_id || ''
     });
@@ -790,6 +792,7 @@ export default function Members() {
       title: '',
       description: '',
       video_url: '',
+      duration: 0,
       status: 'draft',
       module_id: 'none' // Garantir que nunca seja string vazia
     });
@@ -898,6 +901,7 @@ export default function Members() {
       title: '',
       description: '',
       video_url: '',
+      duration: 0,
       status: 'draft',
       module_id: moduleId || 'none' // Garantir que nunca seja string vazia
     });
@@ -1711,6 +1715,26 @@ export default function Members() {
                 {formData.video_url && (
                   <p className="text-sm text-gray-500">Vídeo anexado ✓</p>
                 )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duração (em minutos)</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={formData.duration / 60} // Converter segundos para minutos
+                  onChange={(e) => {
+                    const minutes = parseFloat(e.target.value) || 0;
+                    const seconds = Math.round(minutes * 60);
+                    setFormData(prev => ({ ...prev, duration: seconds }));
+                  }}
+                  placeholder="Ex: 15 (minutos)"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Para vídeos Bunny.net, insira a duração manualmente. Para outros vídeos, será detectado automaticamente.
+                </p>
               </div>
               
               <div className="space-y-2">
