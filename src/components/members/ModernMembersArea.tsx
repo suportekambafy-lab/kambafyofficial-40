@@ -244,7 +244,7 @@ export default function ModernMembersArea() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-center mb-12"
+            className="text-center mb-12 mt-20 sm:mt-8"
           >
             <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4">
               <Trophy className="h-3 w-3 mr-1" />
