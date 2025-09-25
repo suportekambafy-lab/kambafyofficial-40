@@ -47,6 +47,8 @@ export function MemberAreaCustomizer({ open, onOpenChange, memberArea, onSuccess
   const [modules, setModules] = useState<Module[]>([]);
   const [loadingModules, setLoadingModules] = useState(false);
   
+  console.log('MemberAreaCustomizer render:', { open, memberArea: memberArea?.name });
+  
   const [formData, setFormData] = useState<CustomizationData>({
     name: '',
     description: '',
@@ -173,7 +175,12 @@ export function MemberAreaCustomizer({ open, onOpenChange, memberArea, onSuccess
     }
   };
 
-  if (!memberArea) return null;
+  if (!memberArea) {
+    console.log('MemberAreaCustomizer: memberArea is null, not rendering');
+    return null;
+  }
+
+  console.log('MemberAreaCustomizer: Rendering dialog with open =', open);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

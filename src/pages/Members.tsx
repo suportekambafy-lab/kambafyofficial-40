@@ -856,7 +856,10 @@ export default function Members() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setCustomizerOpen(true)}>
+                <DropdownMenuItem onClick={() => {
+                  console.log('Personalizar Área clicked');
+                  setCustomizerOpen(true);
+                }}>
                   <Edit className="h-3 w-3 mr-2" />
                   Personalizar Área
                 </DropdownMenuItem>
