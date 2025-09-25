@@ -213,7 +213,7 @@ export default function ModernMembersArea() {
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="flex justify-between items-center p-4 fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm"
+            className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10"
           >
             <div className="flex items-center gap-3">
               {memberArea?.logo_url ? (

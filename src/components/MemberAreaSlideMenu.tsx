@@ -66,7 +66,9 @@ export function MemberAreaSlideMenu({
   };
   return <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="fixed top-4 right-4 z-50 shadow-lg bg-gray-900/80 backdrop-blur-sm hover:bg-gray-800/90 text-white border border-gray-700/50 hover:border-emerald-500/50 p-3 rounded-lg transition-all">
+        <Button variant="ghost" size="sm" className="fixed top-4 right-4 z-50 shadow-lg bg-gray-900/80 backdrop-blur-sm hover:bg-gray-800/90 text-white border border-gray-700/50 hover:border-emerald-500/50 p-3 rounded-lg transition-all"
+          style={{ position: 'fixed' }}
+        >
           <div className="flex items-center gap-2">
             <div className="flex flex-col gap-1">
               <div className="w-4 h-0.5 bg-current rounded-full"></div>
