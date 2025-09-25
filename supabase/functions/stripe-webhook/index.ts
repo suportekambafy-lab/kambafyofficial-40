@@ -206,9 +206,16 @@ serve(async (req) => {
         const paidAmount = paymentIntent.amount / 100;
         const paidCurrency = paymentIntent.currency.toUpperCase();
         
-        // Taxa de conversão para KZ
+        console.log('🔍 STRIPE WEBHOOK - DADOS DE PAGAMENTO:', {
+          paidAmount,
+          paidCurrency,
+          stripeAmount: paymentIntent.amount,
+          hasCustomPrices
+        });
+        
+        // Taxa de conversão para KZ (alinhadas com useGeoLocation)
         const exchangeRates: Record<string, number> = {
-          'EUR': 1053, // 1 EUR = ~1053 KZ
+          'EUR': 1100, // 1 EUR = ~1100 KZ (atualizado)
           'MZN': 14.3, // 1 MZN = ~14.3 KZ
           'USD': 825   // 1 USD = ~825 KZ
         };
@@ -216,24 +223,38 @@ serve(async (req) => {
         let sellerCommissionInKZ: number;
         let amountInKZ: number;
         
-        // SEMPRE converter para KZ para vendedores angolanos
-        const rate = exchangeRates[paidCurrency] || 1;
-        amountInKZ = Math.round(paidAmount * rate);
+        // Conversão para KZ
+        if (paidCurrency === 'KZ') {
+          // Já está em KZ
+          amountInKZ = Math.round(paidAmount);
+          console.log('💰 JÁ EM KZ - sem conversão necessária:', amountInKZ);
+        } else {
+          // Converter de outra moeda para KZ
+          const rate = exchangeRates[paidCurrency] || 1;
+          amountInKZ = Math.round(paidAmount * rate);
+          console.log('💱 CONVERTENDO PARA KZ:', {
+            original: `${paidAmount} ${paidCurrency}`,
+            rate: rate,
+            converted: `${amountInKZ} KZ`
+          });
+        }
         
         if (hasCustomPrices) {
           // PREÇO PERSONALIZADO: Vendedor recebe o equivalente em KZ do que foi pago
           sellerCommissionInKZ = amountInKZ;
-          
           console.log(`💰 PREÇO PERSONALIZADO: Cliente pagou ${paidAmount} ${paidCurrency}, convertido para ${amountInKZ} KZ`);
         } else {
           // PREÇO CONVERTIDO: Vendedor recebe o valor original em KZ
           const originalPriceKZ = parseFloat(productData.price.replace(/[^\d,]/g, '').replace(',', '.'));
           sellerCommissionInKZ = originalPriceKZ;
-          
           console.log(`💰 PREÇO CONVERTIDO: Cliente pagou ${paidAmount} ${paidCurrency}, vendedor recebe ${sellerCommissionInKZ} KZ (preço original)`);
         }
         
-        console.log(`💱 Conversão: ${paidAmount} ${paidCurrency} → ${amountInKZ} KZ (taxa: ${rate})`);
+        console.log('🎯 VALORES FINAIS PARA SALVAR NO DATABASE:', {
+          amountInKZ,
+          sellerCommissionInKZ,
+          currency: 'KZ'
+        });
         
         const { data: orderData, error: updateError } = await supabase
           .from('orders')
