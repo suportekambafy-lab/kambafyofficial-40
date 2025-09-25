@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import VideoPlayer from '@/components/ui/video-player';
 import { 
   Play, 
   Pause,
@@ -121,42 +122,33 @@ export function ModernLessonViewer({
               transition={{ delay: 0.1 }}
             >
               <Card className="overflow-hidden">
-                <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 relative">
-                  {/* Video placeholder */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button 
-                        size="lg" 
-                        onClick={() => setIsPlaying(!isPlaying)}
-                        className="w-20 h-20 rounded-full bg-primary/90 hover:bg-primary shadow-2xl"
-                      >
-                        {isPlaying ? (
-                          <Pause className="h-8 w-8" />
-                        ) : (
-                          <Play className="h-8 w-8 ml-1" />
-                        )}
-                      </Button>
-                    </motion.div>
-                  </div>
-                  
-                  {/* Progress overlay */}
-                  {progress > 0 && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-4">
-                      <div className="flex items-center gap-3">
-                        <span className="text-white text-sm">
-                          {formatTime(currentTime)}
-                        </span>
-                        <Progress value={progress} className="flex-1" />
-                        <span className="text-white text-sm">
-                          {formatTime(totalSeconds)}
-                        </span>
+                {lesson.video_url || lesson.bunny_embed_url ? (
+                  <VideoPlayer
+                    src={lesson.video_url || ''}
+                    embedUrl={lesson.bunny_embed_url}
+                    onProgress={setProgress}
+                    onTimeUpdate={(currentTime, duration) => {
+                      setCurrentTime(currentTime);
+                      if (currentTime / duration >= 0.9 && !isCompleted) {
+                        setIsCompleted(true);
+                      }
+                    }}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                  />
+                ) : (
+                  <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 relative">
+                    {/* Video placeholder para aulas sem vídeo */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                          <Play className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <p className="text-muted-foreground">Nenhum vídeo disponível</p>
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </Card>
             </motion.div>
 

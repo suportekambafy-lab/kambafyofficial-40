@@ -4,6 +4,9 @@ export interface Lesson {
   title: string;
   description: string;
   video_url: string;
+  bunny_video_id?: string;
+  bunny_embed_url?: string;
+  video_data?: any;
   duration: number;
   order_number: number;
   status: 'draft' | 'published' | 'archived';

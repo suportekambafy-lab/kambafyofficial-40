@@ -677,6 +677,8 @@ export type Database = {
       }
       lessons: {
         Row: {
+          bunny_embed_url: string | null
+          bunny_video_id: string | null
           created_at: string
           description: string | null
           duration: number
@@ -688,9 +690,12 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          video_data: Json | null
           video_url: string | null
         }
         Insert: {
+          bunny_embed_url?: string | null
+          bunny_video_id?: string | null
           created_at?: string
           description?: string | null
           duration?: number
@@ -702,9 +707,12 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          video_data?: Json | null
           video_url?: string | null
         }
         Update: {
+          bunny_embed_url?: string | null
+          bunny_video_id?: string | null
           created_at?: string
           description?: string | null
           duration?: number
@@ -716,6 +724,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          video_data?: Json | null
           video_url?: string | null
         }
         Relationships: [
