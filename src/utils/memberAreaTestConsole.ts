@@ -19,7 +19,13 @@ window.testMemberAreaLogin = () => {
     instructions: 'Use o email: victormuabi20@gmail.com'
   });
   
-  console.log('🔍 Verificando se a URL vai ser redirecionada...');
+  console.log('🔍 Debug do ambiente atual:', {
+    hostname: window.location.hostname,
+    isLovablePreview: window.location.hostname.includes('lovable'),
+    isLocalhost: window.location.hostname.includes('localhost'),
+    currentUrl: window.location.href
+  });
+  
   console.log('🌐 Abrindo:', loginUrl);
   
   // Tenta abrir em nova aba
@@ -30,6 +36,15 @@ window.testMemberAreaLogin = () => {
     window.location.href = loginUrl;
   } else {
     console.log('✅ Nova aba aberta com sucesso');
+    
+    // Adiciona um listener para verificar se a nova aba foi redirecionada
+    setTimeout(() => {
+      try {
+        console.log('🔍 Verificando URL da nova aba:', newWindow.location.href);
+      } catch (error) {
+        console.log('⚠️ Não foi possível verificar a URL da nova aba (pode ser CORS)');
+      }
+    }, 2000);
   }
 };
 
