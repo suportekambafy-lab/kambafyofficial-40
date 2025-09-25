@@ -19,8 +19,16 @@ export default function MemberAreaContent({ memberArea }: MemberAreaContentProps
 
   // Redirect to login if not authenticated
   useEffect(() => {
+    console.log('🔍 MemberAreaContent: Verificando autenticação', {
+      authLoading,
+      isAuthenticated,
+      memberAreaId: memberArea.id
+    });
+    
     if (!authLoading && !isAuthenticated) {
-      window.location.href = memberAreaLinks.getMemberAreaLoginUrl(memberArea.id);
+      const loginUrl = memberAreaLinks.getMemberAreaLoginUrl(memberArea.id);
+      console.log('🚀 MemberAreaContent: Redirecionando para login', loginUrl);
+      window.location.href = loginUrl;
     }
   }, [authLoading, isAuthenticated, memberArea.id]);
 
@@ -94,6 +102,13 @@ export default function MemberAreaContent({ memberArea }: MemberAreaContentProps
       </div>
     );
   }
+
+  console.log('✅ MemberAreaContent: Renderizando dashboard', {
+    memberAreaId: memberArea.id,
+    lessonsCount: lessons.length,
+    modulesCount: modules.length,
+    lessons: lessons.map(l => ({ id: l.id, title: l.title }))
+  });
 
   return (
     <ModernMemberDashboard

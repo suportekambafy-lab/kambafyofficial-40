@@ -7,6 +7,7 @@ import { useSubdomain } from '@/hooks/useSubdomain';
 import Mobile from './Mobile';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { SEO, pageSEO } from "@/components/SEO";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const { loading } = useAuth();
@@ -27,6 +28,25 @@ const Index = () => {
       <>
         <SEO {...pageSEO.home} />
         <div className="relative overflow-hidden">
+          {/* Link de teste para área de membros */}
+          <div className="fixed top-4 right-4 z-50 space-y-2">
+            <Button 
+              onClick={() => window.open('https://membros.kambafy.com/login/290b0398-c5f4-4681-944b-edc40f6fe0a2', '_blank')}
+              variant="outline"
+              size="sm"
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              🧪 Teste Login victormuabi
+            </Button>
+            <Button 
+              onClick={() => window.open('https://membros.kambafy.com/area/290b0398-c5f4-4681-944b-edc40f6fe0a2', '_blank')}
+              variant="outline"
+              size="sm"
+              className="bg-green-600 text-white hover:bg-green-700 ml-2"
+            >
+              🧪 Teste Área victormuabi
+            </Button>
+          </div>
           <KambafyLanding />
         </div>
       </>
