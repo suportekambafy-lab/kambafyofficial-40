@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface VideoUploaderProps {
-  onVideoUploaded: (videoUrl: string) => void;
+  onVideoUploaded: (videoUrl: string, videoData?: any) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -35,12 +35,12 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         return;
       }
 
-      // Verificar tamanho do arquivo (50MB limite)
-      const maxSizeInBytes = 50 * 1024 * 1024; // 50MB
+      // Verificar tamanho do arquivo (20GB limite)
+      const maxSizeInBytes = 20 * 1024 * 1024 * 1024; // 20GB
       if (file.size > maxSizeInBytes) {
         toast({
           title: "Arquivo muito grande",
-          description: "O vídeo deve ter no máximo 50MB. Por favor, comprima o arquivo e tente novamente.",
+          description: "O vídeo deve ter no máximo 20GB. Por favor, reduza o tamanho do arquivo.",
           variant: "destructive"
         });
         return;
@@ -57,47 +57,45 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     setUploadProgress(0);
 
     try {
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const fileName = selectedFile.name;
+      
+      console.log('Creating video in Bunny.net:', fileName);
 
-      console.log('Uploading video to bucket:', fileName);
+      // Primeiro, criar o vídeo na Bunny.net
+      const { data: videoData, error: createError } = await supabase.functions.invoke('bunny-video-upload', {
+        body: {
+          fileName: fileName,
+          title: fileName.split('.')[0] // Remove extensão para o título
+        }
+      });
 
-      // Simular progresso
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + 10;
-        });
-      }, 200);
-
-      const { data, error } = await supabase.storage
-        .from('member-videos')
-        .upload(fileName, selectedFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      clearInterval(progressInterval);
-
-      if (error) {
-        console.error('Upload error:', error);
-        throw error;
+      if (createError) {
+        console.error('Error creating video:', createError);
+        throw new Error('Falha ao criar vídeo na Bunny.net');
       }
 
-      console.log('Upload successful:', data);
+      console.log('Video created, starting upload:', videoData);
+      setUploadProgress(10);
+
+      // Fazer upload do arquivo para a Bunny.net
+      const uploadResponse = await fetch(videoData.uploadUrl, {
+        method: 'PUT',
+        body: selectedFile,
+        headers: {
+          'AccessKey': '', // A edge function já gerencia isso
+          'Content-Type': 'application/octet-stream'
+        }
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Falha no upload do arquivo');
+      }
+
       setUploadProgress(100);
+      console.log('Upload successful to Bunny.net');
 
-      // Gerar URL pública correta para o bucket público
-      const publicUrl = `https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/member-videos/${data.path}`;
-      
-      console.log('Public URL:', publicUrl);
-      console.log('Calling onVideoUploaded with URL:', publicUrl);
-
-      // Chamar callback ANTES de fechar o modal
-      onVideoUploaded(publicUrl);
+      // Chamar callback com a URL do embed
+      onVideoUploaded(videoData.embedUrl, videoData);
       
       // Resetar estados
       setSelectedFile(null);
@@ -108,7 +106,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       toast({
         title: "Sucesso",
-        description: "Vídeo enviado com sucesso"
+        description: "Vídeo enviado com sucesso para Bunny.net"
       });
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
