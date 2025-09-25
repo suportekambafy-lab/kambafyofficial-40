@@ -1683,6 +1683,7 @@ export default function Members() {
           onOpenChange={setPreviewOpen}
           memberArea={selectedArea}
           lessons={lessons.filter(l => l.status === 'published')}
+          modules={modules}
         />
 
         <VideoUploader
