@@ -121,7 +121,10 @@ export function KambafyLanding() {
   const handleLoginOptionSelect = (option: 'business' | 'customer') => {
     setIsLoginDrawerOpen(false);
     const userType = option === 'business' ? 'seller' : 'customer';
-    window.location.href = `${window.location.protocol}//app.${window.location.hostname.replace(/^app\./, '')}${window.location.port ? ':' + window.location.port : ''}/auth?type=${userType}`;
+    
+    // ✅ CORRIGIDO: Usar navegação interna em vez de window.location.href
+    console.log('🔧 CORRIGIDO: Navegação interna para /auth:', { userType });
+    navigate(`/auth?type=${userType}`);
   };
   return <div className="font-bricolage">
       <Header onLoginOptionSelect={handleLoginOptionSelect} />
@@ -167,7 +170,9 @@ const Header = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   const handleAuthNavigation = (mode: 'login' | 'signup') => {
-    window.location.href = `${window.location.protocol}//app.${window.location.hostname.replace(/^app\./, '')}${window.location.port ? ':' + window.location.port : ''}/auth?mode=${mode}`;
+    // ✅ CORRIGIDO: Usar navegação interna em vez de window.location.href
+    console.log('🔧 CORRIGIDO: Navegação interna para /auth:', { mode });
+    navigate(`/auth?mode=${mode}`);
   };
   return <header>
       <nav data-state={menuState && 'active'} className="fixed z-20 w-full px-2 group">
@@ -261,7 +266,9 @@ const Header = ({
 const HeroSection = () => {
   const navigate = useNavigate();
   const handleGetStarted = () => {
-    window.location.href = `${window.location.protocol}//app.${window.location.hostname.replace(/^app\./, '')}${window.location.port ? ':' + window.location.port : ''}/auth?mode=signup`;
+    // ✅ CORRIGIDO: Usar navegação interna em vez de window.location.href
+    console.log('🔧 CORRIGIDO: Navegação interna para /auth?mode=signup');
+    navigate('/auth?mode=signup');
   };
   return <section>
       <div className="relative pt-24 md:pt-36">
@@ -498,7 +505,9 @@ const AboutSection = () => {
 const CTASection = () => {
   const navigate = useNavigate();
   const handleGetStarted = () => {
-    window.location.href = `${window.location.protocol}//app.${window.location.hostname.replace(/^app\./, '')}${window.location.port ? ':' + window.location.port : ''}/auth?mode=signup`;
+    // ✅ CORRIGIDO: Usar navegação interna em vez de window.location.href
+    console.log('🔧 CORRIGIDO: Navegação interna para /auth?mode=signup (CTA Section)');
+    navigate('/auth?mode=signup');
   };
   return <section className="py-24 bg-background">
       <div className="mx-auto max-w-4xl px-6 text-center">

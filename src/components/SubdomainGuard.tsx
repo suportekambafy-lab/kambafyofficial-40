@@ -30,37 +30,14 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       return;
     }
     
-    // SEGUNDA VERIFICAÇÃO: Para desenvolvimento/preview do Lovable, NUNCA fazer redirecionamentos
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
-      console.log('🔧 SubdomainGuard: PRÉ-VISUALIZAÇÃO/DEV - Sem redirecionamentos', {
+    // DESENVOLVIMENTO/PREVIEW: Para ambientes de desenvolvimento, NUNCA fazer redirecionamentos
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || 
+        hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
+      console.log('🔧 SubdomainGuard: PRÉ-VISUALIZAÇÃO/DEV - NENHUM redirecionamento', {
         currentSubdomain,
         currentPath,
         hostname,
-        isLovablePreview: hostname.includes('lovable.app'),
-        isLovableProject: hostname.includes('lovableproject.com'),
-        message: 'TODAS as rotas funcionam diretamente na pré-visualização'
-      });
-      
-      // Na pré-visualização do Lovable, todas as rotas devem funcionar sem redirecionamentos
-      if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
-        console.log('🎓 SubdomainGuard: ✅ Área de membros AUTORIZADA na pré-visualização', {
-          currentPath,
-          currentSubdomain,
-          message: 'Login e área de membros funcionam diretamente'
-        });
-      }
-      
-      if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || currentPath.startsWith('/apps')) {
-        console.log('🔐 SubdomainGuard: ✅ Rotas de autenticação AUTORIZADAS na pré-visualização', {
-          currentPath,
-          message: 'Autenticação funciona diretamente na pré-visualização'
-        });
-      }
-      
-      console.log('✅ SubdomainGuard: ACESSO TOTALMENTE LIBERADO na pré-visualização', {
-        currentPath,
-        hostname,
-        message: 'NENHUM redirecionamento será feito - todas as funcionalidades disponíveis'
+        message: '✅ TODAS as rotas funcionam diretamente - sem reloads!'
       });
       return;
     }
