@@ -822,40 +822,52 @@ export type Database = {
       }
       member_areas: {
         Row: {
+          accent_color: string | null
+          background_style: string | null
           created_at: string
           description: string | null
           hero_description: string | null
           hero_image_url: string | null
           hero_title: string | null
           id: string
+          login_logo_url: string | null
           logo_url: string | null
           name: string
+          primary_color: string | null
           updated_at: string
           url: string
           user_id: string
         }
         Insert: {
+          accent_color?: string | null
+          background_style?: string | null
           created_at?: string
           description?: string | null
           hero_description?: string | null
           hero_image_url?: string | null
           hero_title?: string | null
           id?: string
+          login_logo_url?: string | null
           logo_url?: string | null
           name: string
+          primary_color?: string | null
           updated_at?: string
           url: string
           user_id: string
         }
         Update: {
+          accent_color?: string | null
+          background_style?: string | null
           created_at?: string
           description?: string | null
           hero_description?: string | null
           hero_image_url?: string | null
           hero_title?: string | null
           id?: string
+          login_logo_url?: string | null
           logo_url?: string | null
           name?: string
+          primary_color?: string | null
           updated_at?: string
           url?: string
           user_id?: string
