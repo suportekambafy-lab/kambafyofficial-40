@@ -83,7 +83,7 @@ export function MemberAreaSlideMenu({
             <BarChart3 className="w-5 h-5" />
             Menu do Curso
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className="text-slate-300">
             Acompanhe seu progresso e pesquise aulas
           </SheetDescription>
         </SheetHeader>
