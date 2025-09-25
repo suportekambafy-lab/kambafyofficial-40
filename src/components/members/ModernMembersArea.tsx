@@ -33,6 +33,50 @@ import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+// Função para detectar e atualizar duração do vídeo automaticamente
+const detectAndUpdateVideoDuration = async (lesson: Lesson) => {
+  return new Promise<void>((resolve) => {
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    
+    video.onloadedmetadata = async () => {
+      const durationInSeconds = Math.round(video.duration);
+      console.log(`🎬 Duração detectada para "${lesson.title}": ${durationInSeconds}s`);
+      
+      if (durationInSeconds > 0) {
+        try {
+          const { error } = await supabase
+            .from('lessons')
+            .update({ duration: durationInSeconds })
+            .eq('id', lesson.id);
+            
+          if (error) {
+            console.error('❌ Erro ao atualizar duração:', error);
+          } else {
+            console.log(`✅ Duração atualizada no banco: ${lesson.title}`);
+          }
+        } catch (err) {
+          console.error('❌ Erro na atualização:', err);
+        }
+      }
+      resolve();
+    };
+    
+    video.onerror = () => {
+      console.log(`❌ Erro ao carregar vídeo: ${lesson.title}`);
+      resolve();
+    };
+    
+    // Para vídeos Bunny.net embed não conseguimos detectar automaticamente
+    if (lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed')) {
+      video.src = lesson.video_url;
+    } else {
+      console.log(`⚠️ Vídeo embed detectado (${lesson.title}) - duração deve ser inserida manualmente`);
+      resolve();
+    }
+  });
+};
+
 export default function ModernMembersArea() {
   const { id: memberAreaId } = useParams();
   const { session, memberArea, isAuthenticated, logout, isLoading: authLoading } = useModernMembersAuth();
@@ -87,6 +131,14 @@ export default function ModernMembersArea() {
 
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
+          
+          // Auto-detectar duração de vídeos que têm duration = 0
+          lessonsData.forEach(async (lesson) => {
+            if (lesson.duration === 0 && (lesson.video_url || lesson.bunny_embed_url)) {
+              console.log('🔍 Detectando duração para:', lesson.title);
+              await detectAndUpdateVideoDuration(lesson as Lesson);
+            }
+          });
           
           setLessons(lessonsData as Lesson[]);
         } else {
