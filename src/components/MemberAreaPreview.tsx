@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLessonProgress } from "@/hooks/useLessonProgress";
 import { useAuth } from "@/contexts/AuthContext";
 import VideoPlayer from "@/components/ui/video-player";
+import { MemberAreaSlideMenu } from "@/components/MemberAreaSlideMenu";
 import type { Lesson, Module, MemberArea } from "@/types/memberArea";
 
 interface MemberAreaPreviewProps {
@@ -218,6 +219,15 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl max-h-[95vh] p-0 overflow-hidden">
+        {/* Menu Slide Lateral */}
+        <MemberAreaSlideMenu
+          lessons={lessons}
+          modules={modules}
+          lessonProgress={lessonProgress}
+          getCourseProgress={getCourseProgress}
+          onLessonSelect={setSelectedLesson}
+        />
+        
         <div className="h-[90vh] bg-gray-50 flex flex-col">
           {/* Header */}
           <header className="bg-white border-b shadow-sm flex-shrink-0">
@@ -226,7 +236,10 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-bold text-sm sm:text-lg">K</span>
                 </div>
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{memberArea.name}</h1>
+                <div>
+                  <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{memberArea.name}</h1>
+                  <p className="text-xs text-gray-500">👉 Use o menu lateral direito para progresso e pesquisa</p>
+                </div>
               </div>
               
               <div className="flex items-center space-x-2 sm:space-x-4">
@@ -257,23 +270,13 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
               showSidebar ? 'block' : 'hidden'
             } lg:block lg:w-80`}>
               <div className="p-4 sm:p-6 h-full overflow-y-auto">
-                <div className="mb-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">Progresso do Curso</h2>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                      style={{ 
-                        width: `${getCourseProgress(publishedLessons.length)}%`
-                      }}
-                    ></div>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">
-                    {Object.values(lessonProgress).filter(p => p.completed).length} de {publishedLessons.length} aulas concluídas
-                  </p>
-                </div>
-
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-gray-700">Conteúdo do Curso</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium text-gray-700">Conteúdo do Curso</h3>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                      {publishedLessons.length} aulas
+                    </Badge>
+                  </div>
                   
                   {/* Módulos com suas aulas */}
                   {publishedModules.map((module) => {
