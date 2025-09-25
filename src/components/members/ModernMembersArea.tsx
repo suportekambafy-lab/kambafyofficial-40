@@ -172,16 +172,17 @@ export default function ModernMembersArea() {
   const completedLessons = Math.floor(lessons.length * 0.3); // Simulado
 
   return (
-    <div className="min-h-screen bg-slate-900 dark">
+    <div className="min-h-screen bg-gray-950 dark text-white">
       
       {/* Hero Section - Estilo Hotmart/Kiwify */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 overflow-hidden"
+        className="relative bg-gradient-to-br from-gray-900 via-gray-950 to-black overflow-hidden"
       >
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-grid-slate-700/[0.05] bg-[size:40px_40px]" />
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-950/90 via-transparent to-transparent" />
         
         {/* Hero Image Background */}
         {memberArea?.hero_image_url && (
@@ -191,7 +192,7 @@ export default function ModernMembersArea() {
               alt={memberArea.name}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/80 to-transparent" />
           </div>
         )}
         
@@ -216,8 +217,8 @@ export default function ModernMembersArea() {
                 </div>
               )}
               <div className="text-white">
-                <p className="text-sm text-emerald-300">Área de Membros</p>
-                <p className="text-sm text-slate-300">Olá, {session?.studentName}</p>
+                <p className="text-sm text-emerald-400">Área de Membros</p>
+                <p className="text-sm text-gray-300">Olá, {session?.studentName}</p>
               </div>
             </div>
             
@@ -225,7 +226,7 @@ export default function ModernMembersArea() {
               variant="outline" 
               size="sm" 
               onClick={handleLogout}
-              className="border-slate-600 text-slate-300 hover:bg-slate-800"
+              className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Sair
@@ -239,47 +240,47 @@ export default function ModernMembersArea() {
             transition={{ delay: 0.1 }}
             className="text-center mb-12"
           >
-            <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400/30 mb-4">
+            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4">
               <Trophy className="h-3 w-3 mr-1" />
               Curso Premium
             </Badge>
             
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
               {memberArea?.hero_title || memberArea?.name}
             </h1>
             
-            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
               {memberArea?.hero_description || memberArea?.description}
             </p>
 
             {/* Progress Overview */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 max-w-lg mx-auto">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-slate-300 font-medium">Seu Progresso</span>
-                <span className="text-2xl font-bold text-emerald-400">
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto border border-gray-700/50">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-gray-200 font-semibold text-lg">Seu Progresso</span>
+                <span className="text-3xl font-bold text-emerald-400">
                   {Math.round((completedLessons / lessons.length) * 100) || 0}%
                 </span>
               </div>
               
-              <div className="w-full bg-slate-700 rounded-full h-3 mb-4">
+              <div className="w-full bg-gray-700 rounded-full h-4 mb-6 overflow-hidden">
                 <div 
-                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-3 rounded-full transition-all duration-500"
+                  className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-green-400 h-4 rounded-full transition-all duration-700 shadow-lg shadow-emerald-500/20"
                   style={{ width: `${Math.round((completedLessons / lessons.length) * 100) || 0}%` }}
                 />
               </div>
               
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-white">{lessons.length}</p>
-                  <p className="text-xs text-slate-400">Aulas</p>
+              <div className="grid grid-cols-3 gap-6 text-center">
+                <div className="bg-gray-700/30 rounded-xl p-4">
+                  <p className="text-3xl font-bold text-white mb-1">{lessons.length}</p>
+                  <p className="text-sm text-gray-400">Total de Aulas</p>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-emerald-400">{completedLessons}</p>
-                  <p className="text-xs text-slate-400">Concluídas</p>
+                <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
+                  <p className="text-3xl font-bold text-emerald-400 mb-1">{completedLessons}</p>
+                  <p className="text-sm text-emerald-300">Concluídas</p>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-slate-300">{Math.round(totalDuration / 60)}h</p>
-                  <p className="text-xs text-slate-400">Duração</p>
+                <div className="bg-gray-700/30 rounded-xl p-4">
+                  <p className="text-3xl font-bold text-gray-200 mb-1">{Math.round(totalDuration / 60)}h</p>
+                  <p className="text-sm text-gray-400">Duração Total</p>
                 </div>
               </div>
             </div>
@@ -288,8 +289,8 @@ export default function ModernMembersArea() {
       </motion.section>
 
       {/* Main Content Area */}
-      <div className="bg-slate-100 min-h-screen">
-        <div className="container mx-auto px-4 py-8">
+      <div className="bg-gray-900 min-h-screen">
+        <div className="container mx-auto px-4 py-12">
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
@@ -300,9 +301,9 @@ export default function ModernMembersArea() {
               transition={{ delay: 0.2 }}
               className="lg:col-span-2"
             >
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">Módulos do Curso</h2>
-                <p className="text-slate-600">Escolha um módulo para começar a aprender</p>
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold text-white mb-3">Módulos do Curso</h2>
+                <p className="text-gray-400 text-lg">Escolha um módulo para começar a aprender</p>
               </div>
 
               {modules.length > 0 ? (
@@ -316,10 +317,10 @@ export default function ModernMembersArea() {
                       whileHover={{ y: -4 }}
                       className="group cursor-pointer"
                     >
-                      <Card className="overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 border-0">
+                      <Card className="overflow-hidden bg-gray-800 shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 border border-gray-700 hover:border-emerald-500/30">
                         <div className="relative">
                           {/* Module Cover */}
-                          <div className="aspect-[16/9] bg-gradient-to-br from-slate-700 to-slate-900 relative overflow-hidden">
+                          <div className="aspect-[16/9] bg-gradient-to-br from-gray-800 to-gray-950 relative overflow-hidden">
                             {module.cover_image_url ? (
                               <>
                                 <img 
@@ -331,13 +332,13 @@ export default function ModernMembersArea() {
                               </>
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <BookOpen className="h-16 w-16 text-slate-400" />
+                                <BookOpen className="h-16 w-16 text-gray-500" />
                               </div>
                             )}
                             
                             {/* Module Number Badge */}
                             <div className="absolute top-4 left-4">
-                              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white">
+                              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold">
                                 Módulo {module.order_number}
                               </Badge>
                             </div>
@@ -352,19 +353,19 @@ export default function ModernMembersArea() {
                           
                           {/* Module Info */}
                           <CardContent className="p-6">
-                            <div className="mb-3">
-                              <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-emerald-600 transition-colors">
+                            <div className="mb-4">
+                              <h3 className="text-xl font-bold text-white mb-2 group-hover:text-emerald-400 transition-colors">
                                 {module.title}
                               </h3>
                               {module.description && (
-                                <p className="text-slate-600 line-clamp-2">
+                                <p className="text-gray-400 line-clamp-2">
                                   {module.description}
                                 </p>
                               )}
                             </div>
                             
                             {/* Module Stats */}
-                            <div className="flex items-center justify-between text-sm text-slate-500">
+                            <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
                               <div className="flex items-center gap-4">
                                 <span className="flex items-center gap-1">
                                   <PlayCircle className="h-4 w-4" />
@@ -375,22 +376,22 @@ export default function ModernMembersArea() {
                                   {Math.floor(Math.random() * 120) + 60} min
                                 </span>
                               </div>
-                              <Badge variant="outline" className="text-emerald-600 border-emerald-200">
+                              <Badge variant="outline" className="text-emerald-400 border-emerald-500/50 bg-emerald-500/10">
                                 {Math.random() > 0.5 ? 'Iniciado' : 'Novo'}
                               </Badge>
                             </div>
                             
                             {/* Progress Bar */}
-                            <div className="mt-4">
+                            <div>
                               <div className="flex justify-between items-center mb-2">
-                                <span className="text-xs text-slate-500">Progresso</span>
-                                <span className="text-xs font-medium text-emerald-600">
+                                <span className="text-xs text-gray-400">Progresso</span>
+                                <span className="text-xs font-medium text-emerald-400">
                                   {Math.floor(Math.random() * 100)}%
                                 </span>
                               </div>
-                              <div className="w-full bg-slate-200 rounded-full h-2">
+                              <div className="w-full bg-gray-700 rounded-full h-2">
                                 <div 
-                                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-500"
+                                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-500 shadow-sm shadow-emerald-500/20"
                                   style={{ width: `${Math.floor(Math.random() * 100)}%` }}
                                 />
                               </div>
@@ -402,13 +403,13 @@ export default function ModernMembersArea() {
                   ))}
                 </div>
               ) : (
-                <Card className="border-dashed border-2 border-slate-300">
+                <Card className="border-dashed border-2 border-gray-700 bg-gray-800/50">
                   <CardContent className="p-12 text-center">
-                    <BookOpen className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-slate-600 mb-2">
+                    <BookOpen className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-300 mb-2">
                       Nenhum módulo disponível
                     </h3>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-gray-500">
                       Os módulos do curso serão adicionados em breve
                     </p>
                   </CardContent>
@@ -424,19 +425,19 @@ export default function ModernMembersArea() {
               className="lg:col-span-1"
             >
               <div className="sticky top-8">
-                <Card className="bg-white shadow-lg">
+                <Card className="bg-gray-800 shadow-xl border border-gray-700">
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <PlayCircle className="h-5 w-5 text-emerald-600" />
+                    <CardTitle className="text-lg flex items-center gap-2 text-white">
+                      <PlayCircle className="h-5 w-5 text-emerald-500" />
                       Todas as Aulas ({lessons.length})
                     </CardTitle>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
                         placeholder="Buscar aulas..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 border-slate-200"
+                        className="pl-10 border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:border-emerald-500"
                       />
                     </div>
                   </CardHeader>
@@ -449,24 +450,24 @@ export default function ModernMembersArea() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.05 * index }}
                           whileHover={{ x: 4 }}
-                          className="group cursor-pointer p-3 rounded-lg hover:bg-slate-50 transition-all duration-200"
+                          className="group cursor-pointer p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-200"
                           onClick={() => handleLessonClick(lesson)}
                         >
                           <div className="flex items-center gap-3">
                             <div className="flex-shrink-0">
-                              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-lg flex items-center justify-center">
-                                <Play className="h-4 w-4 text-emerald-600" />
+                              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-lg flex items-center justify-center group-hover:from-emerald-500/30 group-hover:to-emerald-600/30 transition-all">
+                                <Play className="h-4 w-4 text-emerald-500 group-hover:text-emerald-400" />
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-800 line-clamp-1 group-hover:text-emerald-600 transition-colors">
+                              <p className="text-sm font-medium text-gray-200 line-clamp-1 group-hover:text-emerald-400 transition-colors">
                                 {lesson.title}
                               </p>
                               <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="text-xs border-slate-200">
+                                <Badge variant="outline" className="text-xs border-gray-600 text-gray-400 bg-gray-700/50">
                                   {lesson.order_number}
                                 </Badge>
-                                <span className="text-xs text-slate-500">{lesson.duration} min</span>
+                                <span className="text-xs text-gray-500">{lesson.duration} min</span>
                                 {Math.random() > 0.5 && (
                                   <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                                 )}
@@ -479,8 +480,8 @@ export default function ModernMembersArea() {
                     
                     {filteredLessons.length === 0 && (
                       <div className="text-center py-8">
-                        <Search className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                        <p className="text-sm text-slate-500">
+                        <Search className="h-8 w-8 text-gray-500 mx-auto mb-2" />
+                        <p className="text-sm text-gray-400">
                           Nenhuma aula encontrada
                         </p>
                       </div>
