@@ -35,12 +35,22 @@ export function KambafyLanding() {
   // Função de teste para navegação
   const testMemberAreaNavigation = () => {
     console.log('🧪 TESTE: Tentando navegar para /area/teste');
+    console.log('🧪 TESTE: URL atual antes da navegação:', window.location.href);
     navigate('/area/teste');
+    setTimeout(() => {
+      console.log('🧪 TESTE: URL após navegação:', window.location.href);
+      console.log('🧪 TESTE: Pathname após navegação:', window.location.pathname);
+    }, 100);
   };
 
   const testLoginNavigation = () => {
     console.log('🧪 TESTE: Tentando navegar para /login/teste');
+    console.log('🧪 TESTE: URL atual antes da navegação:', window.location.href);
     navigate('/login/teste');
+    setTimeout(() => {
+      console.log('🧪 TESTE: URL após navegação:', window.location.href);
+      console.log('🧪 TESTE: Pathname após navegação:', window.location.pathname);
+    }, 100);
   };
 
   // Expor funções globalmente para teste no console
