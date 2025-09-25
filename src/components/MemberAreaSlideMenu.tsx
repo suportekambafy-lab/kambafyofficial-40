@@ -15,6 +15,8 @@ interface MemberAreaSlideMenuProps {
   completedLessons: number;
   onLessonSelect?: (lesson: Lesson) => void;
   onLogout?: () => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 export function MemberAreaSlideMenu({
   lessons,
@@ -24,10 +26,11 @@ export function MemberAreaSlideMenu({
   totalDuration,
   completedLessons,
   onLessonSelect,
-  onLogout
+  onLogout,
+  isOpen = false,
+  onOpenChange
 }: MemberAreaSlideMenuProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [open, setOpen] = useState(false);
   const publishedLessons = lessons.filter(lesson => lesson.status === 'published');
   const totalLessonsCount = publishedLessons.length;
 
@@ -53,7 +56,9 @@ export function MemberAreaSlideMenu({
     if (onLessonSelect) {
       onLessonSelect(lesson);
     }
-    setOpen(false);
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
   };
   const getLessonStatusIcon = (lesson: Lesson) => {
     const progress = lessonProgress[lesson.id];
@@ -64,19 +69,7 @@ export function MemberAreaSlideMenu({
     }
     return <Play className="w-4 h-4 text-gray-400" />;
   };
-  return <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="fixed top-4 right-4 z-50 shadow-lg bg-gray-900/80 backdrop-blur-sm hover:bg-gray-800/90 text-white border border-gray-700/50 hover:border-emerald-500/50 p-3 rounded-lg transition-all">
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col gap-1">
-              <div className="w-4 h-0.5 bg-current rounded-full"></div>
-              <div className="w-4 h-0.5 bg-current rounded-full"></div>
-              <div className="w-4 h-0.5 bg-current rounded-full"></div>
-            </div>
-            <img src="/kambafy-symbol.svg" alt="Kambafy" className="w-5 h-5 text-emerald-500" />
-          </div>
-        </Button>
-      </SheetTrigger>
+  return <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[400px] sm:w-[540px] bg-gray-950 text-white border-gray-800">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-slate-50">
@@ -194,7 +187,9 @@ export function MemberAreaSlideMenu({
           {onLogout && <div className="mt-6 pt-4 border-t border-gray-700">
               <Button onClick={() => {
             onLogout();
-            setOpen(false);
+            if (onOpenChange) {
+              onOpenChange(false);
+            }
           }} variant="outline" className="w-full flex items-center gap-2 text-red-400 border-red-400/50 bg-red-500/10 hover:bg-red-500/20 hover:border-red-400">
                 <LogOut className="w-4 h-4" />
                 Sair da Área
