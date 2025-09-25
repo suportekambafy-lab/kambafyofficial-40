@@ -271,10 +271,10 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
           currency: stripeCurrency,
           productId,
           customerData,
-          originalAmount: amount,
-          originalCurrency: 'KZ',
-          convertedAmount: convertedAmount,
-          targetCurrency: currency,
+          originalAmount: amount, // Valor original em KZ
+          originalCurrency: 'KZ', // Moeda original do sistema
+          convertedAmount: convertedAmount, // Valor convertido para a moeda de destino
+          targetCurrency: currency, // Moeda de destino (EUR, MZN, etc)
           paymentMethod: paymentMethod,
           testMode: false
         }

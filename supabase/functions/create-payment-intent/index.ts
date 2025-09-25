@@ -171,28 +171,41 @@ serve(async (req) => {
     // Salvar ordem no banco com status "pending" para todos os métodos Stripe
     const orderStatus = 'pending';
     
-    // CORREÇÃO CRÍTICA: SEMPRE converter valores para KZ antes de salvar no banco
-    // Taxas de conversão para KZ
+    // CORREÇÃO CRÍTICA: Converter valores corretamente para KZ antes de salvar no banco
+    // Taxas de conversão para KZ (alinhadas com useGeoLocation)
     const exchangeRates: Record<string, number> = {
-      'EUR': 1053, // 1 EUR = ~1053 KZ
-      'MZN': 14.3, // 1 MZN = ~14.3 KZ
+      'EUR': 1100, // 1 EUR = ~1100 KZ (atualizado)
+      'MZN': 14.3, // 1 MZN = ~14.3 KZ  
       'USD': 825   // 1 USD = ~825 KZ
     };
     
     let finalAmount: string;
     let finalCurrency: string = 'KZ'; // SEMPRE KZ no banco
     
-    // Se temos originalAmount em KZ, usar esse valor
-    if (originalCurrency === 'KZ' && originalAmount) {
-      finalAmount = originalAmount.toString();
-      console.log(`💰 Valor já em KZ: ${finalAmount} KZ`);
+    console.log('🔍 PAYMENT INTENT - DADOS DE ENTRADA:', {
+      originalAmount,
+      originalCurrency,
+      convertedAmount,
+      targetCurrency,
+      stripeAmount: amount,
+      stripeCurrency: currency
+    });
+    
+    // LÓGICA CORRIGIDA:
+    // - Se targetCurrency é EUR/MZN, significa que o cliente está pagando nessa moeda
+    // - Devemos converter o valor pago (convertedAmount) para KZ para salvar no banco
+    if (targetCurrency && targetCurrency !== 'KZ') {
+      // Cliente está pagando em moeda estrangeira (EUR, MZN)
+      // Converter o valor pago para KZ
+      const rate = exchangeRates[targetCurrency] || 1;
+      const convertedValueToKZ = Math.round(convertedAmount * rate);
+      finalAmount = convertedValueToKZ.toString();
+      console.log(`💱 PAGAMENTO EM MOEDA ESTRANGEIRA: ${convertedAmount} ${targetCurrency} → ${finalAmount} KZ (taxa: ${rate})`);
     } 
-    // Se temos originalAmount em outra moeda, converter para KZ
-    else if (originalAmount && originalCurrency && originalCurrency !== 'KZ') {
-      const rate = exchangeRates[originalCurrency] || 1;
-      const convertedValue = Math.round(originalAmount * rate);
-      finalAmount = convertedValue.toString();
-      console.log(`💱 Convertendo: ${originalAmount} ${originalCurrency} → ${finalAmount} KZ (taxa: ${rate})`);
+    // Cliente está pagando em KZ
+    else if (originalCurrency === 'KZ' && originalAmount) {
+      finalAmount = originalAmount.toString();
+      console.log(`💰 PAGAMENTO EM KZ: ${finalAmount} KZ`);
     }
     // Fallback: converter do amount do Stripe para KZ
     else {
@@ -201,7 +214,7 @@ serve(async (req) => {
       const rate = exchangeRates[stripeCurrency] || 1;
       const convertedValue = Math.round(stripeAmount * rate);
       finalAmount = convertedValue.toString();
-      console.log(`💱 Fallback - Convertendo: ${stripeAmount} ${stripeCurrency} → ${finalAmount} KZ (taxa: ${rate})`);
+      console.log(`💱 FALLBACK - Convertendo: ${stripeAmount} ${stripeCurrency} → ${finalAmount} KZ (taxa: ${rate})`);
     }
     
     const orderData = {
