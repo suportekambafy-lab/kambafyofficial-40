@@ -83,7 +83,7 @@ export function ModernLessonViewer({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden border-0 bg-background/95">
                 {lesson.video_url || lesson.bunny_embed_url ? (
                   <VideoPlayer
                     src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''}
@@ -125,10 +125,10 @@ export function ModernLessonViewer({
         >
           <div className="flex justify-between items-center">
             <Button 
-              variant="outline" 
+              variant="ghost" 
               disabled={!prevLesson}
               onClick={() => prevLesson && onNavigateLesson(prevLesson.id)}
-              className="bg-gray-800 hover:bg-gray-700 border-gray-600 text-white"
+              className="bg-muted/20 hover:bg-muted/30 text-foreground border-0"
             >
               <SkipBack className="h-4 w-4 mr-2" />
               Anterior
@@ -155,10 +155,10 @@ export function ModernLessonViewer({
             </div>
             
             <Button 
-              variant="outline"
+              variant="ghost"
               disabled={!nextLesson}
               onClick={() => nextLesson && onNavigateLesson(nextLesson.id)}
-              className="bg-gray-800 hover:bg-gray-700 border-gray-600 text-white"
+              className="bg-muted/20 hover:bg-muted/30 text-foreground border-0"
             >
               <SkipForward className="h-4 w-4 mr-2" />
               Próxima
