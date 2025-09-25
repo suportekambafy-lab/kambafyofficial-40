@@ -44,6 +44,7 @@ export function ModernLessonViewer({
   onNavigateLesson, 
   onClose 
 }: ModernLessonViewerProps) {
+  // Force re-render with updated styles
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -358,7 +359,7 @@ export function ModernLessonViewer({
         transition={{ delay: 0.1 }}
         className="mb-8"
       >
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden bg-gray-900">
           {lesson.video_url || lesson.bunny_embed_url ? (
             <VideoPlayer
               src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''}
@@ -533,7 +534,7 @@ export function ModernLessonViewer({
                 </div>
               </div>
 
-              <Separator className="bg-gray-700" />
+              <div className="h-px bg-gray-700 my-4"></div>
 
               {/* Lista de comentários */}
               <div className="space-y-4">
