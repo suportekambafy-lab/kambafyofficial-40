@@ -16,7 +16,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     id: 'bronze',
     name: 'Kamba Bronze',
     emoji: '🟤',
-    threshold: 5000,
+    threshold: 1000000,
     color: '#8B5E3C',
     badge: '/lovable-uploads/9a3eb8d5-f7fb-4d71-9fa3-24b656365590.png',
     rewards: ['🎖 Selo no perfil', '📦 Placa física']
@@ -25,7 +25,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     id: 'zinga',
     name: 'Kamba Zinga',
     emoji: '🟠',
-    threshold: 100000,
+    threshold: 5000000,
     color: '#F58634',
     badge: '/lovable-uploads/ea32f463-fe2f-42a1-b0e2-3652f83cf956.png',
     rewards: ['🎖 Selo no perfil', '📦 Placa física']
@@ -34,7 +34,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     id: 'dikanza',
     name: 'Kamba Dikanza',
     emoji: '🟡',
-    threshold: 500000,
+    threshold: 15000000,
     color: '#FFCB05',
     badge: '/lovable-uploads/da32c56d-6a01-423e-a683-7d131bf39e52.png',
     rewards: ['🎖 Selo + Placa', '🎓 Acesso a mentorias', '🌐 Destaque no site']
@@ -43,7 +43,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     id: 'wakanda',
     name: 'Kamba Wakanda',
     emoji: '⚫',
-    threshold: 1000000,
+    threshold: 50000000,
     color: '#000000',
     badge: '/lovable-uploads/4cbb6857-ffc5-435f-8067-c6d7686af2a9.png',
     rewards: ['🎖 Selo + Placa', '🎁 Kit do Criador', '📩 Convite para eventos']
@@ -52,7 +52,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     id: 'diamante',
     name: 'Kamba Diamante',
     emoji: '💎',
-    threshold: 5000000,
+    threshold: 100000000,
     color: '#00CFFF',
     badge: '/lovable-uploads/0a88b024-7c04-4e5f-9caa-240ca5244cae.png',
     rewards: [

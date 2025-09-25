@@ -200,8 +200,8 @@ export function MobileDashboard() {
   };
 
   // Calcular próxima meta não alcançada para mobile
-  const kambaLevels = [5000, 100000, 500000, 1000000, 5000000];
-  let goal = 5000; // Primeira meta por padrão
+  const kambaLevels = [1000000, 5000000, 15000000, 50000000, 100000000];
+  let goal = 1000000; // Primeira meta por padrão
   
   // Encontrar a próxima meta não alcançada
   for (let i = 0; i < kambaLevels.length; i++) {
