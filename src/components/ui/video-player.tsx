@@ -81,17 +81,43 @@ const VideoPlayer = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  const togglePlay = () => {
-    if (videoRef.current) {
+  const togglePlay = async () => {
+    if (!videoRef.current) return;
+    
+    try {
       if (isPlaying) {
         videoRef.current.pause();
+        setIsPlaying(false);
         onPause?.();
       } else {
-        videoRef.current.play();
-        onPlay?.();
+        // Verificar se a URL é válida antes de tentar reproduzir
+        if (isValidVideoUrl(src) || (embedUrl && embedUrl.includes('mediadelivery.net'))) {
+          await videoRef.current.play();
+          setIsPlaying(true);
+          onPlay?.();
+        } else {
+          console.warn('URL de vídeo inválida:', src);
+          onError?.();
+        }
       }
-      setIsPlaying(!isPlaying);
+    } catch (error) {
+      console.error('Erro ao reproduzir vídeo:', error);
+      setIsPlaying(false);
+      onError?.();
     }
+  };
+
+  // Função para verificar se a URL é válida
+  const isValidVideoUrl = (url: string): boolean => {
+    if (!url || url.includes('example.com')) {
+      return false;
+    }
+    
+    const validExtensions = ['.mp4', '.webm', '.ogg', '.m4v', '.mov'];
+    const validDomains = ['mediadelivery.net', 'bunnycdn.com', 'vimeo.com', 'youtube.com'];
+    
+    return validExtensions.some(ext => url.toLowerCase().includes(ext)) ||
+           validDomains.some(domain => url.includes(domain));
   };
 
   const handleVolumeChange = (value: number) => {
@@ -184,6 +210,26 @@ const VideoPlayer = ({
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         />
+      </motion.div>
+    );
+  }
+
+  // Se não há URL de vídeo válida, mostrar placeholder
+  if (!src || !isValidVideoUrl(src)) {
+    return (
+      <motion.div 
+        className="relative w-full max-w-4xl mx-auto rounded-xl overflow-hidden bg-gray-900 shadow-[0_0_20px_rgba(0,0,0,0.2)]"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="w-full aspect-video flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
+          <div className="text-center text-white p-8">
+            <Play className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+            <h3 className="text-xl font-semibold mb-2">Vídeo não disponível</h3>
+            <p className="text-gray-400">O vídeo desta aula ainda não foi carregado.</p>
+          </div>
+        </div>
       </motion.div>
     );
   }

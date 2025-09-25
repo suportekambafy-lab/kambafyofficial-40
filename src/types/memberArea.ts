@@ -3,7 +3,7 @@ export interface Lesson {
   id: string;
   title: string;
   description: string;
-  video_url: string;
+  video_url?: string;
   bunny_video_id?: string;
   bunny_embed_url?: string;
   video_data?: any;

@@ -124,8 +124,11 @@ export function ModernLessonViewer({
               <Card className="overflow-hidden">
                 {lesson.video_url || lesson.bunny_embed_url ? (
                   <VideoPlayer
-                    src={lesson.video_url || ''}
-                    embedUrl={lesson.bunny_embed_url}
+                    src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''}
+                    embedUrl={
+                      lesson.bunny_embed_url || 
+                      (lesson.video_url?.includes('mediadelivery.net/embed') ? lesson.video_url : undefined)
+                    }
                     onProgress={setProgress}
                     onTimeUpdate={(currentTime, duration) => {
                       setCurrentTime(currentTime);
