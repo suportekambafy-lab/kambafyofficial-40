@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useMembersAuth } from './MembersAuth';
+import { useInternalMembersNavigation } from '@/utils/internalMembersLinks';
 
 interface Lesson {
   id: string;
@@ -41,7 +42,7 @@ interface Module {
 
 export default function MembersArea() {
   const { id: memberAreaId } = useParams();
-  const navigate = useNavigate();
+  const { goToLogin } = useInternalMembersNavigation();
   const { session, memberArea, logout, isLoading: authLoading } = useMembersAuth();
   
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -50,10 +51,10 @@ export default function MembersArea() {
 
   // Redirect se não autenticado
   useEffect(() => {
-    if (!authLoading && !session) {
-      navigate(`/members/login/${memberAreaId}`);
+    if (!authLoading && !session && memberAreaId) {
+      goToLogin(memberAreaId);
     }
-  }, [authLoading, session, memberAreaId, navigate]);
+  }, [authLoading, session, memberAreaId, goToLogin]);
 
   // Carregar conteúdo da área
   useEffect(() => {
@@ -99,7 +100,9 @@ export default function MembersArea() {
   const handleLogout = () => {
     logout();
     toast.success('Logout realizado com sucesso');
-    navigate(`/members/login/${memberAreaId}`);
+    if (memberAreaId) {
+      goToLogin(memberAreaId);
+    }
   };
 
   if (authLoading || isLoading) {

@@ -6,8 +6,8 @@ import './index.css';
 // Preload de rotas críticas
 import "./utils/preloadCriticalRoutes.ts";
 
-// Nova estrutura de membros
-import '@/utils/membersLinks';
+// Sistema interno de membros (sem redirecionamentos)
+import '@/utils/internalMembersLinks';
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

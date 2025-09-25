@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,11 @@ import { Label } from '@/components/ui/label';
 import { LogIn, Mail, User, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMembersAuth } from './MembersAuth';
+import { useInternalMembersNavigation } from '@/utils/internalMembersLinks';
 
 export default function MembersLogin() {
   const { id: memberAreaId } = useParams();
-  const navigate = useNavigate();
+  const { goToArea } = useInternalMembersNavigation();
   const { login } = useMembersAuth();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -29,7 +30,7 @@ export default function MembersLogin() {
       toast.success('Login realizado com sucesso!', {
         description: 'Redirecionando para a área de membros...'
       });
-      navigate(`/members/area/${memberAreaId}`);
+      goToArea(memberAreaId);
     } else {
       toast.error('Erro no login', {
         description: 'Verifique seus dados ou entre em contato com o suporte.'
