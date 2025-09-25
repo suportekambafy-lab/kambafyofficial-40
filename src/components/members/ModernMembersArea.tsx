@@ -87,11 +87,15 @@ export default function ModernMembersArea() {
 
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
-          console.log('📊 Dados das lessons:', lessonsData.map(l => ({ 
-            title: l.title, 
-            duration: l.duration, 
-            order_number: l.order_number 
-          })));
+          console.log('📊 Dados das lessons:');
+          lessonsData.forEach((lesson, index) => {
+            console.log(`   Aula ${index + 1}:`, {
+              title: lesson.title,
+              duration: lesson.duration,
+              order_number: lesson.order_number,
+              id: lesson.id
+            });
+          });
           setLessons(lessonsData as Lesson[]);
         } else {
           console.error('❌ ModernMembersArea: Erro ao carregar lessons:', lessonsError);
