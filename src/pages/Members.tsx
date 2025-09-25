@@ -578,7 +578,7 @@ export default function Members() {
         title: formData.title.trim(),
         description: formData.description?.trim() || null,
         video_url: formData.video_url?.trim() || null,
-        duration: formData.duration * 60, // Convert minutes to seconds
+        duration: formData.duration, // Already in seconds from form
         status: formData.status,
         user_id: user.id,
         member_area_id: selectedArea.id,
