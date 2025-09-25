@@ -122,6 +122,7 @@ export default function ModernMembersArea() {
   };
 
   const handleModuleClick = (module: Module) => {
+    console.log('📚 Módulo selecionado:', module.title);
     setSelectedModule(module);
   };
 
