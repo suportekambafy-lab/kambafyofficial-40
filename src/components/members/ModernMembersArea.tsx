@@ -304,7 +304,6 @@ export default function ModernMembersArea() {
                   className="text-white hover:text-emerald-400"
                 >
                   {sidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                  {sidebarVisible ? 'Ocultar Lista' : 'Mostrar Lista'}
                 </Button>
                 <Badge variant="secondary" className="text-xs bg-gray-800">
                   <Clock className="h-3 w-3 mr-1" />
