@@ -288,8 +288,7 @@ export default function ModernMembersArea() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="sm" onClick={() => setSelectedLesson(null)} className="text-white hover:text-emerald-400">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar ao curso
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <Badge variant="outline" className="text-emerald-400 border-emerald-500/30">
                   Aula {selectedLesson.order_number}
@@ -297,6 +296,10 @@ export default function ModernMembersArea() {
               </div>
               
               <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs bg-gray-800">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {selectedLesson.duration} min
+                </Badge>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -305,10 +308,6 @@ export default function ModernMembersArea() {
                 >
                   {sidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
                 </Button>
-                <Badge variant="secondary" className="text-xs bg-gray-800">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {selectedLesson.duration} min
-                </Badge>
               </div>
             </div>
           </div>
