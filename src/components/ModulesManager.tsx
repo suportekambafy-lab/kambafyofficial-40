@@ -301,7 +301,7 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
                   Adicionar Módulo
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingModule ? 'Editar Módulo' : 'Novo Módulo'}
