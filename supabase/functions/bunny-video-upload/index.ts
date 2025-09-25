@@ -21,6 +21,13 @@ serve(async (req) => {
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
     const bunnyLibraryId = Deno.env.get('BUNNY_LIBRARY_ID');
 
+    console.log('Environment check:', {
+      hasApiKey: !!bunnyApiKey,
+      hasLibraryId: !!bunnyLibraryId,
+      apiKeyLength: bunnyApiKey?.length,
+      libraryId: bunnyLibraryId
+    });
+
     if (!bunnyApiKey || !bunnyLibraryId) {
       console.error('Missing Bunny.net credentials');
       return new Response(
@@ -37,26 +44,49 @@ serve(async (req) => {
 
       console.log('Creating video in Bunny.net:', { fileName, title });
 
-      // Create video in Bunny Stream
-      const createVideoResponse = await fetch(
-        `https://video.bunnycdn.com/library/${bunnyLibraryId}/videos`,
-        {
-          method: 'POST',
-          headers: {
-            'AccessKey': bunnyApiKey,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            title: title || fileName,
-          }),
+      const requestPayload = {
+        title: title || fileName,
+      };
+
+      const requestUrl = `https://video.bunnycdn.com/library/${bunnyLibraryId}/videos`;
+      
+      console.log('Request details:', {
+        url: requestUrl,
+        payload: requestPayload,
+        headers: {
+          'AccessKey': `***${bunnyApiKey?.slice(-4)}`,
+          'Content-Type': 'application/json'
         }
-      );
+      });
+
+      // Create video in Bunny Stream
+      const createVideoResponse = await fetch(requestUrl, {
+        method: 'POST',
+        headers: {
+          'AccessKey': bunnyApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestPayload),
+      });
+
+      console.log('Response status:', createVideoResponse.status);
+      console.log('Response headers:', Object.fromEntries(createVideoResponse.headers.entries()));
 
       if (!createVideoResponse.ok) {
         const errorText = await createVideoResponse.text();
-        console.error('Failed to create video in Bunny:', errorText);
+        console.error('Bunny API Error Response:', {
+          status: createVideoResponse.status,
+          statusText: createVideoResponse.statusText,
+          errorText: errorText,
+          url: requestUrl
+        });
+        
         return new Response(
-          JSON.stringify({ error: 'Failed to create video in Bunny.net' }),
+          JSON.stringify({ 
+            error: 'Failed to create video in Bunny.net',
+            details: errorText,
+            status: createVideoResponse.status
+          }),
           { 
             status: createVideoResponse.status,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }

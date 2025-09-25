@@ -82,7 +82,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         method: 'PUT',
         body: selectedFile,
         headers: {
-          'AccessKey': '', // A edge function já gerencia isso
           'Content-Type': 'application/octet-stream'
         }
       });
