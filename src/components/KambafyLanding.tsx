@@ -55,9 +55,9 @@ export function KambafyLanding() {
 
   // Testar rotas reais de área de membros
   const testRealMemberArea = () => {
-    console.log('🧪 TESTE REAL: Tentando navegar para /area/123');
+    console.log('🧪 TESTE REAL: Tentando navegar para /area/real-member-test');
     console.log('🧪 TESTE REAL: URL atual:', window.location.href);
-    navigate('/area/123');
+    navigate('/area/real-member-test');
     setTimeout(() => {
       console.log('🧪 TESTE REAL: URL após navegação:', window.location.href);
       console.log('🧪 TESTE REAL: Pathname após navegação:', window.location.pathname);
@@ -65,13 +65,20 @@ export function KambafyLanding() {
   };
 
   const testRealLogin = () => {
-    console.log('🧪 TESTE REAL: Tentando navegar para /login/456');
+    console.log('🧪 TESTE REAL: Tentando navegar para /login/real-login-test');
     console.log('🧪 TESTE REAL: URL atual:', window.location.href);
-    navigate('/login/456');
+    navigate('/login/real-login-test');
     setTimeout(() => {
       console.log('🧪 TESTE REAL: URL após navegação:', window.location.href);
       console.log('🧪 TESTE REAL: Pathname após navegação:', window.location.pathname);
     }, 100);
+  };
+
+  // Testar redirecionamento do SubdomainGuard
+  const testSubdomainRedirect = () => {
+    console.log('🔄 TESTE REDIRECIONAMENTO: Testando /area/should-redirect-to-membros');
+    console.log('🔄 Este teste DEVE redirecionar para membros.kambafy.com');
+    navigate('/area/should-redirect-to-membros');
   };
 
   // Expor funções globalmente para teste no console
@@ -80,12 +87,14 @@ export function KambafyLanding() {
     (window as any).testLogin = testLoginNavigation;
     (window as any).testRealAreaMembros = testRealMemberArea;
     (window as any).testRealLogin = testRealLogin;
+    (window as any).testSubdomainRedirect = testSubdomainRedirect;
     
     console.log('🧪 TESTE: Funções disponíveis no console:');
-    console.log('🧪 testAreaMembros() - Testa /area/teste');
-    console.log('🧪 testLogin() - Testa /login/teste');
-    console.log('🧪 testRealAreaMembros() - Testa /area/123 (rota real)');
-    console.log('🧪 testRealLogin() - Testa /login/456 (rota real)');
+    console.log('🧪 testAreaMembros() - Testa /area/teste (pula guard)');
+    console.log('🧪 testLogin() - Testa /login/teste (pula guard)');
+    console.log('🧪 testRealAreaMembros() - Testa /area/real-member-test');
+    console.log('🧪 testRealLogin() - Testa /login/real-login-test');
+    console.log('🧪 testSubdomainRedirect() - DEVE redirecionar para membros.kambafy.com');
   }, []);
   useEffect(() => {
     // Carregar apenas o script do Chatbase

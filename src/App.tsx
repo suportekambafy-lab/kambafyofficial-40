@@ -178,8 +178,25 @@ const App = () => {
                          <div className="p-8 border border-green-600 bg-green-100">
                            <h1 className="text-2xl font-bold text-green-900">🧪 TESTE REAL: Rota /area/123 (com ID real)</h1>
                            <p className="text-green-700">Esta é uma rota real de área de membros com ID válido</p>
-                           <p className="text-sm text-green-700">Pathname: {window.location.pathname}</p>
-                           <p className="text-sm text-green-700">Host: {window.location.hostname}</p>
+                           <div className="mt-4 space-y-2">
+                             <p className="text-sm text-green-700">Pathname: <span className="font-mono bg-green-200 px-2 py-1 rounded">{window.location.pathname}</span></p>
+                             <p className="text-sm text-green-700">Host: <span className="font-mono bg-green-200 px-2 py-1 rounded">{window.location.hostname}</span></p>
+                             <p className="text-sm text-green-700">URL Completa: <span className="font-mono bg-green-200 px-2 py-1 rounded">{window.location.href}</span></p>
+                             <hr className="my-4" />
+                             <button 
+                               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                               onClick={() => {
+                                 console.log('🔍 URL DEBUG:', {
+                                   href: window.location.href,
+                                   pathname: window.location.pathname,
+                                   hostname: window.location.hostname,
+                                   timestamp: new Date().toISOString()
+                                 });
+                               }}
+                             >
+                               Debug URL no Console
+                             </button>
+                           </div>
                          </div>
                        } />
                        <Route path="/login/456" element={
