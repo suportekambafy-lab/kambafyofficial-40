@@ -87,6 +87,11 @@ export default function ModernMembersArea() {
 
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
+          console.log('📊 Dados das lessons:', lessonsData.map(l => ({ 
+            title: l.title, 
+            duration: l.duration, 
+            order_number: l.order_number 
+          })));
           setLessons(lessonsData as Lesson[]);
         } else {
           console.error('❌ ModernMembersArea: Erro ao carregar lessons:', lessonsError);
@@ -187,6 +192,7 @@ export default function ModernMembersArea() {
 
   // Calcular duração total em minutos
   const totalDuration = lessons.reduce((sum, lesson) => sum + lesson.duration, 0);
+  console.log('⏱️ Duração total calculada:', totalDuration, 'de', lessons.length, 'aulas');
   const completedLessons = Math.floor(lessons.length * 0.3); // Simulado
 
   return (
@@ -292,14 +298,14 @@ export default function ModernMembersArea() {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <Badge variant="outline" className="text-emerald-400 border-emerald-500/30">
-                  Aula {selectedLesson.order_number}
+                  Aula {lessons.indexOf(selectedLesson) + 1}
                 </Badge>
               </div>
               
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="text-xs bg-gray-800">
                   <Clock className="h-3 w-3 mr-1" />
-                  {selectedLesson.duration} min
+                  {selectedLesson.duration > 0 ? `${selectedLesson.duration} min` : 'Duração não definida'}
                 </Badge>
                 <Button
                   variant="ghost"

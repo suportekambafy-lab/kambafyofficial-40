@@ -121,7 +121,9 @@ export function MemberAreaSlideMenu({
                 <p className="text-xs text-emerald-300">Concluídas</p>
               </div>
               <div className="text-center p-3 bg-gray-800 rounded-lg">
-                <p className="text-lg font-bold text-white">{Math.floor(totalDuration / 60)}h {totalDuration % 60}min</p>
+                <p className="text-lg font-bold text-white">
+                  {totalDuration > 0 ? `${Math.floor(totalDuration / 60)}h ${totalDuration % 60}min` : 'N/A'}
+                </p>
                 <p className="text-xs text-gray-400">Duração</p>
               </div>
             </div>
