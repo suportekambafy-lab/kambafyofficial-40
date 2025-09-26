@@ -97,7 +97,7 @@ serve(async (req) => {
 
     // Gerar token de acesso AppyPay usando o endpoint Microsoft
     const tokenResponse = await fetch('https://login.microsoftonline.com/auth.appypay.co.ao/oauth2/token', {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
