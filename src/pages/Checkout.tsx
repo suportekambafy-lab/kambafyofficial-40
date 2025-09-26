@@ -1167,7 +1167,8 @@ const Checkout = () => {
           }
         });
 
-        if (credentialsTest.error || (credentialsTest.data && !credentialsTest.data.success)) {
+        // Check for any error or failed response
+        if (credentialsTest.error || !credentialsTest.data || !credentialsTest.data.success) {
           console.error('❌ AppyPay credentials test failed:', credentialsTest);
           
           toast({
