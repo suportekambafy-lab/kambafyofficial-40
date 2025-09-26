@@ -80,37 +80,6 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Handle test credential check - only validate token, don't create charge
-    if (requestBody.testCredentials) {
-      logStep("Performing credentials test only - token obtained successfully");
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true,
-          message: 'Credentials test successful',
-          test: true
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      );
-    }
-
-    // Buscar produto (only for real charges, not tests)
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .single();
-
-    if (productError || !product) {
-      logStep("Product not found", productError);
-      throw new Error('Produto não encontrado');
-    }
-
-    logStep("Product found", { name: product.name });
-
     // Gerar token de acesso AppyPay
     const tokenResponse = await fetch(`${appyPayAuthBaseUrl}/oauth2/token`, {
       method: 'POST',
@@ -182,6 +151,20 @@ serve(async (req) => {
         }
       );
     }
+
+    // Buscar produto (only for real charges, not tests)
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .single();
+
+    if (productError || !product) {
+      logStep("Product not found", productError);
+      throw new Error('Produto não encontrado');
+    }
+
+    logStep("Product found", { name: product.name });
 
     // Gerar ID único para a transação
     const merchantTransactionId = Math.random().toString(36).substr(2, 15).toUpperCase();
