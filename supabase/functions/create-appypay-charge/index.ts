@@ -90,7 +90,24 @@ serve(async (req) => {
     });
 
     if (!tokenResponse.ok) {
-      throw new Error(`Erro ao obter token AppyPay: ${tokenResponse.status}`);
+      const errorText = await tokenResponse.text();
+      logStep("Token authentication failed", { status: tokenResponse.status, error: errorText });
+      
+      if (tokenResponse.status === 401) {
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Falha na autenticação AppyPay. Credenciais inválidas.',
+            code: 'AUTHENTICATION_FAILED'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 401,
+          }
+        );
+      }
+      
+      throw new Error(`Erro ao obter token AppyPay: ${tokenResponse.status} - ${errorText}`);
     }
 
     const tokenData = await tokenResponse.json();
