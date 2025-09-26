@@ -60,17 +60,17 @@ serve(async (req) => {
     const appyPayClientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
     const appyPayApiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
     const appyPayAuthBaseUrl = Deno.env.get('APPYPAY_AUTH_BASE_URL');
-    const appyPayApplicationId = Deno.env.get('APPYPAY_APPLICATION_ID');
+    const appyPayResource = Deno.env.get('APPYPAY_RESOURCE');
 
     logStep("Checking AppyPay credentials", {
       hasClientId: !!appyPayClientId,
       hasClientSecret: !!appyPayClientSecret,
       hasApiBaseUrl: !!appyPayApiBaseUrl,
       hasAuthBaseUrl: !!appyPayAuthBaseUrl,
-      hasApplicationId: !!appyPayApplicationId
+      hasResource: !!appyPayResource
     });
 
-    if (!appyPayClientId || !appyPayClientSecret || !appyPayApiBaseUrl || !appyPayAuthBaseUrl || !appyPayApplicationId) {
+    if (!appyPayClientId || !appyPayClientSecret || !appyPayApiBaseUrl || !appyPayAuthBaseUrl || !appyPayResource) {
       logStep("CRITICAL ERROR: Missing AppyPay credentials");
       return new Response(
         JSON.stringify({ 
@@ -103,7 +103,7 @@ serve(async (req) => {
         'grant_type': 'client_credentials',
         'client_id': appyPayClientId,
         'client_secret': appyPayClientSecret,
-        'resource': appyPayApplicationId
+        'resource': appyPayResource
       })
     });
 
