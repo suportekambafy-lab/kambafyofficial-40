@@ -154,6 +154,11 @@ const PaymentMethods = memo(({
               <span className="text-sm font-medium text-center">
                 {method.name}
               </span>
+              {method.id === 'express' && (
+                <span className="text-xs text-green-600 font-medium">
+                  Via AppyPay
+                </span>
+              )}
             </div>
           </div>
         ))}
@@ -768,6 +773,87 @@ const OptimizedCheckout = () => {
                             />
                             <p className="text-sm text-red-600">Telefone é obrigatório</p>
                           </div>
+                          
+                          <Button 
+                            onClick={async () => {
+                              if (processing) return;
+                              
+                              if (!formData.fullName || !formData.email || !formData.phone) {
+                                toast({
+                                  title: "Dados obrigatórios",
+                                  description: "Por favor, preencha todos os campos obrigatórios.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              
+                              setProcessing(true);
+                              
+                              try {
+                                const finalPrice = parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice;
+                                
+                                const appyPayResponse = await supabase.functions.invoke('create-appypay-charge', {
+                                  body: {
+                                    amount: finalPrice,
+                                    productId: product?.id,
+                                    customerData: {
+                                      name: formData.fullName,
+                                      email: formData.email,
+                                      phone: formData.phone
+                                    },
+                                    originalAmount: finalPrice,
+                                    originalCurrency: 'AOA',
+                                    paymentMethod: 'express',
+                                    phoneNumber: formData.phone
+                                  }
+                                });
+
+                                if (appyPayResponse.error) {
+                                  console.error('AppyPay error:', appyPayResponse.error);
+                                  toast({
+                                    title: "Erro no pagamento",
+                                    description: "Ocorreu um erro ao processar o pagamento. Tente novamente.",
+                                    variant: "destructive",
+                                  });
+                                  return;
+                                }
+
+                                const result = appyPayResponse.data;
+                                
+                                if (result.success) {
+                                  toast({
+                                    title: "Pagamento processado!",
+                                    description: result.payment_status === 'completed' ? 
+                                      "Seu pagamento foi confirmado com sucesso!" : 
+                                      "Seu pagamento está sendo processado.",
+                                    variant: "default",
+                                  });
+
+                                  // Redirecionar para página de sucesso
+                                  navigate(`/checkout-success/${product?.id}?orderId=${result.order_id}&method=appypay`);
+                                } else {
+                                  toast({
+                                    title: "Erro no pagamento",
+                                    description: result.error || "Não foi possível processar o pagamento.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              } catch (error) {
+                                console.error('AppyPay processing error:', error);
+                                toast({
+                                  title: "Erro inesperado",
+                                  description: "Ocorreu um erro inesperado. Tente novamente.",
+                                  variant: "destructive",
+                                });
+                              } finally {
+                                setProcessing(false);
+                              }
+                            }}
+                            disabled={processing}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            {processing ? "Processando..." : "Comprar Agora"}
+                          </Button>
                         </div>
                       )}
                       
