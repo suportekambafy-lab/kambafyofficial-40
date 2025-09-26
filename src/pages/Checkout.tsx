@@ -1170,12 +1170,15 @@ const Checkout = () => {
         // Check for any error or failed response
         if (credentialsTest.error || !credentialsTest.data || !credentialsTest.data.success) {
           console.error('❌ AppyPay credentials test failed:', credentialsTest);
+          console.log('🚨 Showing error toast to user...');
           
           toast({
             title: "Sistema indisponível",
             description: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
             variant: "destructive",
           });
+          
+          console.log('✅ Error toast triggered');
           return;
         }
 
@@ -1185,11 +1188,15 @@ const Checkout = () => {
         
       } catch (credError) {
         console.error('❌ Credentials test error:', credError);
+        console.log('🚨 Showing error toast from catch block...');
+        
         toast({
           title: "Sistema indisponível", 
           description: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
           variant: "destructive",
         });
+        
+        console.log('✅ Error toast from catch block triggered');
         return;
       }
     }
