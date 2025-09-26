@@ -96,8 +96,14 @@ serve(async (req) => {
     );
 
     // Gerar token de acesso AppyPay usando o endpoint Microsoft
+    logStep("Requesting OAuth token", {
+      authUrl: 'https://login.microsoftonline.com/auth.appypay.co.ao/oauth2/token',
+      grantType: appyPayGrantType,
+      clientId: appyPayClientId
+    });
+
     const tokenResponse = await fetch('https://login.microsoftonline.com/auth.appypay.co.ao/oauth2/token', {
-      method: 'GET',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -146,9 +152,28 @@ serve(async (req) => {
     }
 
     const tokenData = await tokenResponse.json();
+    
+    if (!tokenData.access_token) {
+      logStep("TOKEN MISSING IN RESPONSE", tokenData);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Token de acesso não recebido do AppyPay',
+          code: 'TOKEN_MISSING'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
+    }
+    
     const accessToken = tokenData.access_token;
 
-    logStep("AppyPay token obtained");
+    logStep("AppyPay token obtained successfully", { 
+      tokenType: tokenData.token_type,
+      expiresIn: tokenData.expires_in 
+    });
 
     // Handle test credential check - only validate token, don't create charge
     if (requestBody.testCredentials) {
@@ -207,7 +232,11 @@ serve(async (req) => {
       paymentMethod: appyPayMethod
     };
 
-    logStep("Creating AppyPay charge", appyPayPayload);
+    logStep("Creating AppyPay charge", {
+      payload: appyPayPayload,
+      url: 'https://gwy-api.appypay.co.ao/v2.0/charges',
+      method: 'POST'
+    });
 
     // Criar charge no AppyPay v2.0
     const chargeResponse = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {
@@ -219,6 +248,12 @@ serve(async (req) => {
         'Accept-Language': 'pt-BR'
       },
       body: JSON.stringify(appyPayPayload)
+    });
+
+    logStep("AppyPay charge response received", {
+      status: chargeResponse.status,
+      statusText: chargeResponse.statusText,
+      ok: chargeResponse.ok
     });
 
     if (!chargeResponse.ok) {
@@ -246,11 +281,13 @@ serve(async (req) => {
 
     const chargeResult = await chargeResponse.json();
     
-    logStep("AppyPay charge created", { 
+    logStep("AppyPay charge response parsed", { 
       id: chargeResult.id, 
       status: chargeResult.responseStatus?.status,
       successful: chargeResult.responseStatus?.successful,
-      reference: chargeResult.responseStatus?.reference
+      source: chargeResult.responseStatus?.source,
+      reference: chargeResult.responseStatus?.reference,
+      fullResponse: chargeResult
     });
 
     // Determinar status do pedido baseado na resposta v2.0
