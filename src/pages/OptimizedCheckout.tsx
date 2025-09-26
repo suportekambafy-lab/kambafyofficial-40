@@ -792,6 +792,16 @@ const OptimizedCheckout = () => {
                               try {
                                 const finalPrice = parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice;
                                 
+                                console.log('🚀 Starting AppyPay payment:', {
+                                  finalPrice,
+                                  productId: product?.id,
+                                  customerData: {
+                                    name: formData.fullName,
+                                    email: formData.email,
+                                    phone: formData.phone
+                                  }
+                                });
+                                
                                 const appyPayResponse = await supabase.functions.invoke('create-appypay-charge', {
                                   body: {
                                     amount: finalPrice,
@@ -808,19 +818,38 @@ const OptimizedCheckout = () => {
                                   }
                                 });
 
+                                console.log('📡 AppyPay response:', appyPayResponse);
+
                                 if (appyPayResponse.error) {
-                                  console.error('AppyPay error:', appyPayResponse.error);
+                                  console.error('❌ AppyPay function error:', appyPayResponse.error);
+                                  
+                                  // Stop processing immediately on function error
+                                  setProcessing(false);
+                                  
                                   toast({
-                                    title: "Erro no pagamento",
-                                    description: "Ocorreu um erro ao processar o pagamento. Tente novamente.",
+                                    title: "Erro de configuração",
+                                    description: "Sistema de pagamento temporariamente indisponível. Contacte o suporte.",
                                     variant: "destructive",
                                   });
                                   return;
                                 }
 
                                 const result = appyPayResponse.data;
+                                console.log('📊 AppyPay result:', result);
+                                
+                                if (!result) {
+                                  console.error('❌ No data in AppyPay response');
+                                  setProcessing(false);
+                                  toast({
+                                    title: "Erro no pagamento",
+                                    description: "Resposta inválida do sistema de pagamento.",
+                                    variant: "destructive",
+                                  });
+                                  return;
+                                }
                                 
                                 if (result.success) {
+                                  console.log('✅ AppyPay payment successful:', result);
                                   toast({
                                     title: "Pagamento processado!",
                                     description: result.payment_status === 'completed' ? 
@@ -832,21 +861,29 @@ const OptimizedCheckout = () => {
                                   // Redirecionar para página de sucesso
                                   navigate(`/checkout-success/${product?.id}?orderId=${result.order_id}&method=appypay`);
                                 } else {
+                                  console.error('❌ AppyPay payment failed:', result);
+                                  setProcessing(false);
+                                  
+                                  // Handle specific error codes
+                                  let errorMessage = result.error || "Não foi possível processar o pagamento.";
+                                  if (result.code === 'INVALID_CREDENTIALS' || result.code === 'MISSING_CREDENTIALS') {
+                                    errorMessage = "Sistema de pagamento temporariamente indisponível. Contacte o suporte.";
+                                  }
+                                  
                                   toast({
                                     title: "Erro no pagamento",
-                                    description: result.error || "Não foi possível processar o pagamento.",
+                                    description: errorMessage,
                                     variant: "destructive",
                                   });
                                 }
                               } catch (error) {
-                                console.error('AppyPay processing error:', error);
+                                console.error('💥 AppyPay processing error:', error);
+                                setProcessing(false);
                                 toast({
                                   title: "Erro inesperado",
                                   description: "Ocorreu um erro inesperado. Tente novamente.",
                                   variant: "destructive",
                                 });
-                              } finally {
-                                setProcessing(false);
                               }
                             }}
                             disabled={processing}
