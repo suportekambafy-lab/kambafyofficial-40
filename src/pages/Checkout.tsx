@@ -723,10 +723,15 @@ const Checkout = () => {
       }
 
       const newSalesCount = (product.sales || 0) + 1;
+      
+      // Handle both UUID and slug formats for productId
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const isUUID = uuidRegex.test(productId || '');
+      
       await supabase
         .from('products')
         .update({ sales: newSalesCount })
-        .eq('id', productId);
+        .eq(isUUID ? 'id' : 'slug', productId);
 
       try {
         console.log('🔔 Triggering webhooks for Stripe payment success...');
@@ -1552,12 +1557,16 @@ const Checkout = () => {
           console.log('Updating product sales count...');
           const newSalesCount = (product.sales || 0) + 1;
           
+          // Handle both UUID and slug formats for productId
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+          const isUUID = uuidRegex.test(productId || '');
+          
           const { data: updatedProduct, error: updateError } = await supabase
             .from('products')
             .update({ 
               sales: newSalesCount 
             })
-            .eq('id', productId)
+            .eq(isUUID ? 'id' : 'slug', productId)
             .select();
 
           if (updateError) {

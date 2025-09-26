@@ -274,9 +274,7 @@ serve(async (req) => {
       currency: originalCurrency,
       payment_method: paymentMethod,
       status: orderStatus,
-      user_id: product.user_id,
-      appypay_transaction_id: chargeResult.id,
-      appypay_merchant_transaction_id: merchantTransactionId,
+      user_id: null, // Anonymous checkout - user_id should be null for anonymous orders
       seller_commission: parseFloat(originalAmount?.toString() || amount.toString())
     };
 

@@ -23,11 +23,15 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
       try {
         console.log('🎯 FacebookPixelTracker - Fetching settings for productId:', productId);
         
+        // Handle both UUID and slug formats for productId
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const isUUID = uuidRegex.test(productId || '');
+        
         // Primeiro buscar o produto para ver quem é o dono
         const { data: product, error: productError } = await supabase
           .from('products')
           .select('user_id')
-          .eq('id', productId)
+          .eq(isUUID ? 'id' : 'slug', productId)
           .single();
 
         if (productError) {
