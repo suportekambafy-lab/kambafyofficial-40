@@ -90,7 +90,8 @@ serve(async (req) => {
         currency: 'KZ',
         payment_method: 'kambapay',
         status: 'completed',
-        user_id: product.user_id
+        user_id: null, // Anonymous checkout - user_id should be null
+        seller_commission: productPrice
       }])
       .select()
       .single();
