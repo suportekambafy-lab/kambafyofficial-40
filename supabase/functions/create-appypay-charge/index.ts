@@ -40,7 +40,8 @@ serve(async (req) => {
       originalAmount,
       originalCurrency = 'AOA',
       paymentMethod = 'express',
-      phoneNumber
+      phoneNumber,
+      orderData: checkoutOrderData // Order data passed from checkout
     } = requestBody;
 
     if (!amount || !productId || !customerData) {
@@ -215,7 +216,9 @@ serve(async (req) => {
                      now.getMinutes().toString().padStart(2, '0');
     const randomSuffix = Math.random().toString(36).substr(2, 6).toUpperCase();
     const merchantTransactionId = `TR${timestamp}${randomSuffix}`;
-    const orderId = generateOrderId();
+    
+    // Use order ID from checkout if provided, otherwise generate new one
+    const orderId = checkoutOrderData?.order_id || generateOrderId();
 
     // Determinar método de pagamento baseado no tipo
     let appyPayMethod = 'REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f'; // Default: Referência
@@ -303,8 +306,8 @@ serve(async (req) => {
       orderStatus = 'failed';
     }
 
-    // Salvar ordem no banco
-    const orderData = {
+    // Salvar ordem no banco usando dados do checkout ou criar novos dados
+    const orderDataToSave = checkoutOrderData || {
       product_id: productId,
       order_id: orderId,
       customer_name: customerData.name,
@@ -318,11 +321,11 @@ serve(async (req) => {
       seller_commission: parseFloat(originalAmount?.toString() || amount.toString())
     };
 
-    logStep("Saving order", orderData);
+    logStep("Saving order", orderDataToSave);
 
     const { error: orderError } = await supabase
       .from('orders')
-      .insert(orderData);
+      .insert(orderDataToSave);
 
     if (orderError) {
       logStep("Error saving order", orderError);
@@ -339,8 +342,8 @@ serve(async (req) => {
             customerEmail: customerData.email,
             customerName: customerData.name,
             productName: product.name,
-            amount: orderData.amount,
-            currency: orderData.currency,
+            amount: orderDataToSave.amount,
+            currency: orderDataToSave.currency,
             orderId: orderId
           }
         });

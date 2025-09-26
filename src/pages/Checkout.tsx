@@ -1534,10 +1534,55 @@ const Checkout = () => {
       console.log('🔍 Order data keys:', Object.keys(orderData));
       console.log('🔍 Order data values:', Object.values(orderData));
 
-      // Create order through secure edge function instead of direct DB insert
-      const { data: insertedOrder, error: orderError } = await supabase.functions.invoke('create-multibanco-order', {
-        body: orderData
-      });
+      // Route payments to appropriate system based on payment method
+      let insertedOrder, orderError;
+      
+      if (selectedPayment === 'express' || selectedPayment === 'reference') {
+        // Use AppyPay for both express and reference payments in Angola
+        console.log('🚀 Using AppyPay for payment method:', selectedPayment);
+        
+        const appyPayResponse = await supabase.functions.invoke('create-appypay-charge', {
+          body: {
+            amount: totalAmountInKZ,
+            productId: product.id,
+            customerData: {
+              name: formData.fullName,
+              email: formData.email,
+              phone: formData.phone
+            },
+            originalAmount: totalAmountInKZ,
+            originalCurrency: 'KZ',
+            paymentMethod: selectedPayment,
+            phoneNumber: formData.phone,
+            orderData: orderData // Pass order data for saving
+          }
+        });
+        
+        if (appyPayResponse.error) {
+          console.error('❌ AppyPay error:', appyPayResponse.error);
+          toast({
+            title: "Erro no pagamento",
+            message: `Erro AppyPay: ${appyPayResponse.error.message || 'Erro desconhecido'}`,
+            variant: "error"
+          });
+          setProcessing(false);
+          return;
+        }
+        
+        insertedOrder = appyPayResponse.data;
+        console.log('✅ AppyPay response:', insertedOrder);
+        
+      } else {
+        // Use create-multibanco-order for other payment methods (transfer, etc.)
+        console.log('🏦 Using Multibanco system for payment method:', selectedPayment);
+        
+        const multibancoResponse = await supabase.functions.invoke('create-multibanco-order', {
+          body: orderData
+        });
+        
+        insertedOrder = multibancoResponse.data;
+        orderError = multibancoResponse.error;
+      }
 
       if (orderError || !insertedOrder) {
         console.error('Error saving order:', orderError);
