@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 import { CountrySelector } from "@/components/checkout/CountrySelector";
 import { FacebookPixelTracker } from "@/components/FacebookPixelTracker";
-import { useToast } from "@/hooks/use-toast";
+import { useCustomToast } from "@/hooks/useCustomToast";
 import { PhoneInput } from "@/components/PhoneInput";
 import { useGeoLocation } from "@/hooks/useGeoLocation";
 import { getPaymentMethodsByCountry } from "@/utils/paymentMethods";
@@ -43,7 +43,7 @@ const Checkout = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { toast } = useCustomToast();
   const { setTheme } = useTheme();
   const { 
     userCountry, 
@@ -345,8 +345,8 @@ const Checkout = () => {
         window.history.replaceState({}, document.title, window.location.pathname);
         toast({
           title: "Pagamento cancelado",
-          description: "O pagamento foi cancelado. Você pode tentar novamente.",
-          variant: "default"
+          message: "O pagamento foi cancelado. Você pode tentar novamente.",
+          variant: "error"
         });
       }
     }
@@ -869,8 +869,8 @@ const Checkout = () => {
       console.error('Erro ao processar sucesso do pagamento:', error);
       toast({
         title: "Erro",
-        description: "Erro ao finalizar compra. Entre em contato conosco.",
-        variant: "destructive"
+        message: "Erro ao finalizar compra. Entre em contato conosco.",
+        variant: "error"
       });
     }
   };
@@ -878,8 +878,8 @@ const Checkout = () => {
   const handleCardPaymentError = (error: string) => {
     toast({
       title: "Erro no pagamento",
-      description: error,
-      variant: "destructive"
+      message: error,
+      variant: "error"
     });
   };
 
@@ -906,8 +906,8 @@ const Checkout = () => {
         });
         toast({
           title: "Campos obrigatórios",
-          description: "Por favor, preencha todos os campos antes de continuar",
-          variant: "destructive"
+          message: "Por favor, preencha todos os campos antes de continuar",
+          variant: "error"
         });
         setProcessing(false);
         return;
@@ -932,8 +932,8 @@ const Checkout = () => {
         console.error('❌ Error uploading payment proof:', uploadError);
         toast({
           title: "Erro no upload",
-          description: "Erro ao carregar comprovativo. Tente novamente.",
-          variant: "destructive"
+          message: "Erro ao carregar comprovativo. Tente novamente.",
+          variant: "error"
         });
         setProcessing(false);
         return;
@@ -1035,8 +1035,8 @@ const Checkout = () => {
         console.error('❌ Error saving bank transfer order:', orderError);
         toast({
           title: "Erro",
-          description: `Erro ao processar compra: ${orderError.message}`,
-          variant: "destructive"
+          message: `Erro ao processar compra: ${orderError.message}`,
+          variant: "error"
         });
         setProcessing(false);
         return;
@@ -1081,8 +1081,8 @@ const Checkout = () => {
       console.error('❌ Bank transfer purchase error:', error);
       toast({
         title: "Erro no pagamento",
-        description: "Erro inesperado ao processar transferência bancária",
-        variant: "destructive"
+        message: "Erro inesperado ao processar transferência bancária",
+        variant: "error"
       });
       setProcessing(false);
     }
@@ -1093,8 +1093,8 @@ const Checkout = () => {
     setProcessing(false);
     toast({
       title: "Tempo Esgotado",
-      description: "O tempo para concluir o pagamento esgotou. Por favor, retaça o pagamento com rapidez.",
-      variant: "destructive",
+      message: "O tempo para concluir o pagamento esgotou. Por favor, retaça o pagamento com rapidez.",
+      variant: "error",
     });
   };
 
@@ -1104,7 +1104,8 @@ const Checkout = () => {
     
     toast({
       title: "Pronto para novo pagamento",
-      description: "Você pode agora iniciar um novo pagamento express.",
+      message: "Você pode agora iniciar um novo pagamento express.",
+      variant: "success",
     });
   };
 
@@ -1131,8 +1132,8 @@ const Checkout = () => {
       console.log('❌ Product not found');
       toast({
         title: "Erro",
-        description: "Produto não encontrado",
-        variant: "destructive"
+        message: "Produto não encontrado",
+        variant: "error"
       });
       return;
     }
@@ -1174,8 +1175,8 @@ const Checkout = () => {
           
           toast({
             title: "Sistema indisponível",
-            description: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
-            variant: "destructive",
+            message: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
+            variant: "error",
           });
           
           console.log('✅ Error toast triggered');
@@ -1192,8 +1193,8 @@ const Checkout = () => {
         
         toast({
           title: "Sistema indisponível", 
-          description: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
-          variant: "destructive",
+          message: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
+          variant: "error",
         });
         
         console.log('✅ Error toast from catch block triggered');
@@ -1228,8 +1229,8 @@ const Checkout = () => {
           console.error('❌ Erro ao enviar código 2FA:', codeError);
           toast({
             title: "Erro de segurança",
-            description: "Não foi possível enviar código de verificação",
-            variant: "destructive"
+            message: "Não foi possível enviar código de verificação",
+            variant: "error"
           });
           setProcessing(false);
           return;
@@ -1241,8 +1242,8 @@ const Checkout = () => {
         if (!userCode || userCode.length !== 6) {
           toast({
             title: "Verificação cancelada",
-            description: "Código de verificação não informado ou inválido",
-            variant: "destructive"
+            message: "Código de verificação não informado ou inválido",
+            variant: "error"
           });
           setProcessing(false);
           return;
@@ -1260,8 +1261,8 @@ const Checkout = () => {
         if (verifyError || !verificationData?.valid) {
           toast({
             title: "Código inválido",
-            description: "O código de verificação está incorreto ou expirado",
-            variant: "destructive"
+            message: "O código de verificação está incorreto ou expirado",
+            variant: "error"
           });
           setProcessing(false);
           return;
@@ -1294,8 +1295,8 @@ const Checkout = () => {
           console.error('❌ KambaPay payment error:', error);
           toast({
             title: "Erro no pagamento",
-            description: error.message || "Erro ao processar pagamento com KambaPay",
-            variant: "destructive"
+            message: error.message || "Erro ao processar pagamento com KambaPay",
+            variant: "error"
           });
           setProcessing(false);
           return;
@@ -1382,14 +1383,14 @@ const Checkout = () => {
             
             toast({
               title: "Saldo insuficiente",
-              description: `Você tem ${availableBalance.toLocaleString()} KZ disponível, mas precisa de ${requiredAmount.toLocaleString()} KZ. Adicione saldo à sua conta KambaPay.`,
-              variant: "destructive"
+              message: `Você tem ${availableBalance.toLocaleString()} KZ disponível, mas precisa de ${requiredAmount.toLocaleString()} KZ. Adicione saldo à sua conta KambaPay.`,
+              variant: "error"
             });
           } else {
             toast({
               title: "Erro no pagamento",
-              description: data?.message || "Pagamento com KambaPay falhou",
-              variant: "destructive"
+              message: data?.message || "Pagamento com KambaPay falhou",
+              variant: "error"
             });
           }
           setProcessing(false);
@@ -1399,8 +1400,8 @@ const Checkout = () => {
         console.error('❌ Unexpected KambaPay error:', error);
         toast({
           title: "Erro no pagamento",
-          description: "Erro inesperado ao processar pagamento com KambaPay",
-          variant: "destructive"
+          message: "Erro inesperado ao processar pagamento com KambaPay",
+          variant: "error"
         });
         setProcessing(false);
         return;
@@ -1539,8 +1540,8 @@ const Checkout = () => {
         console.error('Error saving order:', orderError);
         toast({
           title: "Erro",
-          description: `Erro ao processar compra: ${orderError.message}`,
-          variant: "destructive"
+          message: `Erro ao processar compra: ${orderError.message}`,
+          variant: "error"
         });
         setProcessing(false);
         return;
@@ -1729,8 +1730,8 @@ const Checkout = () => {
       console.error('Error processing payment:', error);
       toast({
         title: "Erro",
-        description: "Erro ao processar pagamento. Tente novamente.",
-        variant: "destructive"
+        message: "Erro ao processar pagamento. Tente novamente.",
+        variant: "error"
       });
       setProcessing(false);
     }
