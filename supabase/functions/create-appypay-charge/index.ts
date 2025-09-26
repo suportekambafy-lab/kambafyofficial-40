@@ -149,7 +149,7 @@ serve(async (req) => {
 
     logStep("AppyPay token obtained");
 
-    // Handle test credential check
+    // Handle test credential check - only validate token, don't create charge
     if (requestBody.testCredentials) {
       logStep("Performing credentials test only - token obtained successfully");
       
@@ -205,8 +205,25 @@ serve(async (req) => {
 
     if (!chargeResponse.ok) {
       const errorText = await chargeResponse.text();
-      logStep("AppyPay charge failed", { status: chargeResponse.status, error: errorText });
-      throw new Error(`Erro ao criar cobrança AppyPay: ${chargeResponse.status} - ${errorText}`);
+      logStep("CHARGE CREATION FAILED", { 
+        status: chargeResponse.status, 
+        error: errorText,
+        payload: appyPayPayload
+      });
+      
+      // Return structured error response instead of throwing
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: `Falha ao processar pagamento AppyPay (${chargeResponse.status})`,
+          code: 'CHARGE_CREATION_FAILED',
+          details: errorText
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
     }
 
     const chargeResult = await chargeResponse.json();
