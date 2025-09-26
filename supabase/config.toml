@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.update-order-status]
 verify_jwt = false
+
+[functions.create-multibanco-order]
+verify_jwt = false
