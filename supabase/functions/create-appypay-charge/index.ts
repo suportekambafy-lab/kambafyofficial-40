@@ -103,7 +103,7 @@ serve(async (req) => {
     });
 
     const tokenResponse = await fetch('https://login.microsoftonline.com/auth.appypay.co.ao/oauth2/token', {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
