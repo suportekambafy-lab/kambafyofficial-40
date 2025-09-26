@@ -1,6 +1,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+// Utility function to generate order ID
+const generateOrderId = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  
+  // Generate 6 random characters
+  const randomChars = Math.random().toString(36).substring(2, 8).toUpperCase();
+  
+  return `ORD-${year}${month}${day}-${randomChars}`;
+};
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -80,17 +93,17 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Gerar token de acesso AppyPay
-    const tokenResponse = await fetch(`${appyPayAuthBaseUrl}/oauth2/token`, {
+    // Gerar token de acesso AppyPay usando o endpoint Microsoft
+    const tokenResponse = await fetch('https://login.microsoftonline.com/auth.appypay.co.ao/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: appyPayClientId,
-        client_secret: appyPayClientSecret,
-        resource: appyPayApplicationId
+        'grant_type': 'client_credentials',
+        'client_id': appyPayClientId,
+        'client_secret': appyPayClientSecret,
+        'resource': appyPayApplicationId
       })
     });
 
@@ -166,33 +179,36 @@ serve(async (req) => {
 
     logStep("Product found", { name: product.name });
 
-    // Gerar ID único para a transação
-    const merchantTransactionId = Math.random().toString(36).substr(2, 15).toUpperCase();
-    const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
+    // Gerar ID único para a transação (formato mais robusto)
+    const now = new Date();
+    const timestamp = now.getFullYear().toString().slice(-2) + 
+                     (now.getMonth() + 1).toString().padStart(2, '0') + 
+                     now.getDate().toString().padStart(2, '0') + 
+                     now.getHours().toString().padStart(2, '0') + 
+                     now.getMinutes().toString().padStart(2, '0');
+    const randomSuffix = Math.random().toString(36).substr(2, 6).toUpperCase();
+    const merchantTransactionId = `TR${timestamp}${randomSuffix}`;
+    const orderId = generateOrderId();
 
-    // Preparar dados para AppyPay
+    // Determinar método de pagamento baseado no tipo
+    let appyPayMethod = 'REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f'; // Default: Referência
+    if (paymentMethod === 'express') {
+      appyPayMethod = 'GPO_53c70da3-1c88-4391-8b60-ab4757fbb044'; // Multicaixa Express
+    }
+
+    // Preparar dados para AppyPay v2.0
     const appyPayPayload = {
       amount: parseFloat(amount),
       currency: "AOA",
       description: `Compra: ${product.name}`,
       merchantTransactionId: merchantTransactionId,
-      paymentMethod: "GPO_53c70da3-1c88-4391-8b60-ab4757fbb044", // ID do método Multicaixa Express
-      paymentInfo: {
-        phoneNumber: phoneNumber || customerData.phone || "923000000" // Telefone para simulação
-      },
-      notify: {
-        name: customerData.name,
-        telephone: phoneNumber || customerData.phone || "923000000",
-        email: customerData.email,
-        smsNotification: true,
-        emailNotification: true
-      }
+      paymentMethod: appyPayMethod
     };
 
     logStep("Creating AppyPay charge", appyPayPayload);
 
-    // Criar charge no AppyPay
-    const chargeResponse = await fetch(`${appyPayApiBaseUrl}/v1/charges`, {
+    // Criar charge no AppyPay v2.0
+    const chargeResponse = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -231,13 +247,18 @@ serve(async (req) => {
     logStep("AppyPay charge created", { 
       id: chargeResult.id, 
       status: chargeResult.responseStatus?.status,
-      successful: chargeResult.responseStatus?.successful
+      successful: chargeResult.responseStatus?.successful,
+      reference: chargeResult.responseStatus?.reference
     });
 
-    // Determinar status do pedido baseado na resposta
+    // Determinar status do pedido baseado na resposta v2.0
     let orderStatus = 'pending';
-    if (chargeResult.responseStatus?.successful && chargeResult.responseStatus?.status === 'Success') {
-      orderStatus = 'completed';
+    if (chargeResult.responseStatus?.successful) {
+      if (chargeResult.responseStatus?.status === 'Success') {
+        orderStatus = 'completed';
+      } else if (chargeResult.responseStatus?.status === 'Pending') {
+        orderStatus = 'pending'; // Para pagamentos por referência
+      }
     } else if (chargeResult.responseStatus?.status === 'Failed') {
       orderStatus = 'failed';
     }
@@ -303,7 +324,11 @@ serve(async (req) => {
       merchant_transaction_id: merchantTransactionId,
       payment_status: orderStatus,
       appypay_response: chargeResult.responseStatus,
-      reference: chargeResult.responseStatus?.reference || null
+      reference: chargeResult.responseStatus?.reference || null,
+      // Dados específicos para pagamento por referência
+      reference_number: chargeResult.responseStatus?.reference?.referenceNumber,
+      due_date: chargeResult.responseStatus?.reference?.dueDate,
+      entity: chargeResult.responseStatus?.reference?.entity
     };
 
     logStep("Returning success response", response);
