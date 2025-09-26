@@ -255,12 +255,13 @@ serve(async (req) => {
 
     // Determinar status do pedido baseado na resposta v2.0
     let orderStatus = 'pending';
-    if (chargeResult.responseStatus?.successful) {
-      if (chargeResult.responseStatus?.status === 'Success') {
-        orderStatus = 'completed';
-      } else if (chargeResult.responseStatus?.status === 'Pending') {
-        orderStatus = 'pending'; // Para pagamentos por referência
-      }
+    
+    // Para AppyPay, referências são sempre 'pending' inicialmente
+    // Mesmo que successful=true, se status='Pending', é uma referência que precisa ser paga depois
+    if (chargeResult.responseStatus?.status === 'Success') {
+      orderStatus = 'completed';
+    } else if (chargeResult.responseStatus?.status === 'Pending') {
+      orderStatus = 'pending'; // Referências são pagas posteriormente
     } else if (chargeResult.responseStatus?.status === 'Failed') {
       orderStatus = 'failed';
     }
@@ -293,7 +294,7 @@ serve(async (req) => {
 
     logStep("Order saved successfully");
 
-    // Se o pagamento foi bem-sucedido, enviar email de confirmação
+    // Só enviar email de confirmação se o pagamento foi realmente completado (não para referências pendentes)
     if (orderStatus === 'completed') {
       try {
         const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
@@ -315,6 +316,8 @@ serve(async (req) => {
       } catch (emailError) {
         logStep("Email error", emailError);
       }
+    } else {
+      logStep("Payment pending - confirmation email will be sent after payment confirmation");
     }
 
     const response = {
