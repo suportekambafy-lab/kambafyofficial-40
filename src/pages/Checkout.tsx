@@ -1028,19 +1028,18 @@ const Checkout = () => {
         })
       };
 
-      console.log('🏦 Inserting bank transfer order:', orderData);
+      console.log('🏦 Creating bank transfer order:', orderData);
 
-      const { data: insertedOrder, error: orderError } = await supabase
-        .from('orders')
-        .insert(orderData)
-        .select()
-        .single();
+      // Create order through secure edge function instead of direct DB insert
+      const { data: insertedOrder, error: orderError } = await supabase.functions.invoke('create-multibanco-order', {
+        body: orderData
+      });
 
-      if (orderError) {
+      if (orderError || !insertedOrder) {
         console.error('❌ Error saving bank transfer order:', orderError);
         toast({
           title: "Erro",
-          message: `Erro ao processar compra: ${orderError.message}`,
+          message: `Erro ao processar compra: ${orderError?.message || 'Erro desconhecido'}`,
           variant: "error"
         });
         setProcessing(false);
@@ -1535,17 +1534,16 @@ const Checkout = () => {
       console.log('🔍 Order data keys:', Object.keys(orderData));
       console.log('🔍 Order data values:', Object.values(orderData));
 
-      const { data: insertedOrder, error: orderError } = await supabase
-        .from('orders')
-        .insert(orderData)
-        .select()
-        .single();
+      // Create order through secure edge function instead of direct DB insert
+      const { data: insertedOrder, error: orderError } = await supabase.functions.invoke('create-multibanco-order', {
+        body: orderData
+      });
 
-      if (orderError) {
+      if (orderError || !insertedOrder) {
         console.error('Error saving order:', orderError);
         toast({
           title: "Erro",
-          message: `Erro ao processar compra: ${orderError.message}`,
+          message: `Erro ao processar compra: ${orderError?.message || 'Erro desconhecido'}`,
           variant: "error"
         });
         setProcessing(false);
