@@ -1143,11 +1143,54 @@ const Checkout = () => {
       return;
     }
 
-    // Para pagamento express, não criar pedido aqui - apenas mostrar countdown
+    // Para pagamento express, validar credenciais primeiro
     if (selectedPayment === 'express') {
-      console.log('🔄 Pagamento Express - iniciar countdown');
-      setProcessing(true); // Manter como true para mostrar o countdown visual
-      return;
+      console.log('🔄 Pagamento Express - validar credenciais primeiro');
+      
+      try {
+        console.log('🔍 Testing AppyPay credentials before showing countdown...');
+        
+        const credentialsTest = await supabase.functions.invoke('create-appypay-charge', {
+          body: {
+            amount: 1, // Test with minimal amount
+            productId: 'test',
+            customerData: {
+              name: 'Test',
+              email: 'test@test.com',
+              phone: '923000000'
+            },
+            originalAmount: 1,
+            originalCurrency: 'AOA',
+            paymentMethod: 'express',
+            phoneNumber: '923000000',
+            testCredentials: true // Add test flag
+          }
+        });
+
+        if (credentialsTest.error || (credentialsTest.data && !credentialsTest.data.success)) {
+          console.error('❌ AppyPay credentials test failed:', credentialsTest);
+          
+          toast({
+            title: "Sistema indisponível",
+            description: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        console.log('✅ AppyPay credentials validated, showing countdown...');
+        setProcessing(true); // Only set processing to true if credentials are valid
+        return;
+        
+      } catch (credError) {
+        console.error('❌ Credentials test error:', credError);
+        toast({
+          title: "Sistema indisponível", 
+          description: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Para KambaPay, usar edge function específica com 2FA
