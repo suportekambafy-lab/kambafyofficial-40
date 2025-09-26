@@ -80,7 +80,24 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Buscar produto
+    // Handle test credential check - only validate token, don't create charge
+    if (requestBody.testCredentials) {
+      logStep("Performing credentials test only - token obtained successfully");
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Credentials test successful',
+          test: true
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    // Buscar produto (only for real charges, not tests)
     const { data: product, error: productError } = await supabase
       .from('products')
       .select('*')
