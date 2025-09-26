@@ -49,7 +49,7 @@ serve(async (req) => {
     const appyPayAuthBaseUrl = Deno.env.get('APPYPAY_AUTH_BASE_URL');
     const appyPayApplicationId = Deno.env.get('APPYPAY_APPLICATION_ID');
 
-    if (!appyPayClientId || !appyPayClientSecret || !appyPayApiBaseUrl || !appyPayAuthBaseUrl) {
+    if (!appyPayClientId || !appyPayClientSecret || !appyPayApiBaseUrl || !appyPayAuthBaseUrl || !appyPayApplicationId) {
       throw new Error('Credenciais AppyPay não configuradas');
     }
 
@@ -76,7 +76,7 @@ serve(async (req) => {
     logStep("Product found", { name: product.name });
 
     // Gerar token de acesso AppyPay
-    const tokenResponse = await fetch(`${appyPayAuthBaseUrl}/connect/token`, {
+    const tokenResponse = await fetch(`${appyPayAuthBaseUrl}/oauth2/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -85,7 +85,7 @@ serve(async (req) => {
         grant_type: 'client_credentials',
         client_id: appyPayClientId,
         client_secret: appyPayClientSecret,
-        scope: 'openid'
+        resource: appyPayApplicationId
       })
     });
 
