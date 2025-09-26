@@ -149,6 +149,23 @@ serve(async (req) => {
 
     logStep("AppyPay token obtained");
 
+    // Handle test credential check
+    if (requestBody.testCredentials) {
+      logStep("Performing credentials test only - token obtained successfully");
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Credentials test successful',
+          test: true
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
     // Gerar ID único para a transação
     const merchantTransactionId = Math.random().toString(36).substr(2, 15).toUpperCase();
     const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();

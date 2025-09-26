@@ -787,6 +787,50 @@ const OptimizedCheckout = () => {
                                 return;
                               }
                               
+                              // First, test AppyPay credentials before showing countdown
+                              try {
+                                console.log('🔍 Testing AppyPay credentials before payment...');
+                                
+                                const credentialsTest = await supabase.functions.invoke('create-appypay-charge', {
+                                  body: {
+                                    amount: 1, // Test with minimal amount
+                                    productId: 'test',
+                                    customerData: {
+                                      name: 'Test',
+                                      email: 'test@test.com',
+                                      phone: '923000000'
+                                    },
+                                    originalAmount: 1,
+                                    originalCurrency: 'AOA',
+                                    paymentMethod: 'express',
+                                    phoneNumber: '923000000',
+                                    testCredentials: true // Add test flag
+                                  }
+                                });
+
+                                if (credentialsTest.error || (credentialsTest.data && !credentialsTest.data.success)) {
+                                  console.error('❌ AppyPay credentials test failed:', credentialsTest);
+                                  
+                                  toast({
+                                    title: "Sistema indisponível",
+                                    description: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
+                                    variant: "destructive",
+                                  });
+                                  return;
+                                }
+
+                                console.log('✅ AppyPay credentials validated, proceeding with payment...');
+                                
+                              } catch (credError) {
+                                console.error('❌ Credentials test error:', credError);
+                                toast({
+                                  title: "Sistema indisponível", 
+                                  description: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              
                               setProcessing(true);
                               
                               try {
