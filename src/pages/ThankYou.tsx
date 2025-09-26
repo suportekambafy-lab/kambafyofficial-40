@@ -121,6 +121,10 @@ const ThankYou = () => {
 
       try {
         console.log('📦 ThankYou: Carregando dados do produto...');
+        
+        // Check if productId is a UUID or a slug
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderDetails.productId);
+        
         const { data: productData, error: productError } = await supabase
           .from('products')
           .select(`
@@ -128,7 +132,7 @@ const ThankYou = () => {
             member_areas(id, name, url),
             profiles!products_user_id_fkey(full_name, email)
           `)
-          .eq('id', orderDetails.productId)
+          .eq(isUUID ? 'id' : 'slug', orderDetails.productId)
           .single();
         
         if (productError) {
@@ -164,8 +168,7 @@ const ThankYou = () => {
         const { data: relatedOrdersData, error: relatedError } = await supabase
           .from('orders')
           .select('*')
-          .or(`parent_order_id.eq.${orderDetails.orderId},order_id.eq.${orderDetails.orderId}`)
-          .neq('order_id', orderDetails.orderId);
+          .eq('order_id', orderDetails.orderId);
 
         if (relatedError) {
           console.error('❌ Erro ao buscar pedidos relacionados:', relatedError);
