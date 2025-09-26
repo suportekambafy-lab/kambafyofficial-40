@@ -49,8 +49,27 @@ serve(async (req) => {
     const appyPayAuthBaseUrl = Deno.env.get('APPYPAY_AUTH_BASE_URL');
     const appyPayApplicationId = Deno.env.get('APPYPAY_APPLICATION_ID');
 
+    logStep("Checking AppyPay credentials", {
+      hasClientId: !!appyPayClientId,
+      hasClientSecret: !!appyPayClientSecret,
+      hasApiBaseUrl: !!appyPayApiBaseUrl,
+      hasAuthBaseUrl: !!appyPayAuthBaseUrl,
+      hasApplicationId: !!appyPayApplicationId
+    });
+
     if (!appyPayClientId || !appyPayClientSecret || !appyPayApiBaseUrl || !appyPayAuthBaseUrl || !appyPayApplicationId) {
-      throw new Error('Credenciais AppyPay não configuradas');
+      logStep("CRITICAL ERROR: Missing AppyPay credentials");
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Credenciais AppyPay não configuradas. Contacte o suporte.',
+          code: 'MISSING_CREDENTIALS'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
     }
 
     logStep("AppyPay credentials verified");
@@ -91,14 +110,19 @@ serve(async (req) => {
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      logStep("Token authentication failed", { status: tokenResponse.status, error: errorText });
+      logStep("AUTHENTICATION FAILED", { 
+        status: tokenResponse.status, 
+        error: errorText,
+        authUrl: appyPayAuthBaseUrl 
+      });
       
       if (tokenResponse.status === 401) {
         return new Response(
           JSON.stringify({ 
             success: false,
-            error: 'Falha na autenticação AppyPay. Credenciais inválidas.',
-            code: 'AUTHENTICATION_FAILED'
+            error: 'Credenciais AppyPay inválidas. Verifique as configurações.',
+            code: 'INVALID_CREDENTIALS',
+            details: 'Falha na autenticação com AppyPay'
           }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -107,7 +131,17 @@ serve(async (req) => {
         );
       }
       
-      throw new Error(`Erro ao obter token AppyPay: ${tokenResponse.status} - ${errorText}`);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: `Erro de autenticação AppyPay: ${tokenResponse.status}`,
+          code: 'AUTH_ERROR'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: tokenResponse.status,
+        }
+      );
     }
 
     const tokenData = await tokenResponse.json();
