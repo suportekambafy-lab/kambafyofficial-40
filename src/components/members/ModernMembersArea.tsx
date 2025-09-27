@@ -131,7 +131,7 @@ export default function ModernMembersArea() {
   //   }
   // }, [authLoading, isAuthenticated, user, memberAreaId, memberArea, checkMemberAccess]);
 
-  // Verificar query params para acesso direto verificado - não fazer nenhum redirecionamento
+  // Verificar query params para acesso direto verificado ou redirecionar para login se necessário
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const isVerified = urlParams.get('verified') === 'true';
@@ -142,10 +142,15 @@ export default function ModernMembersArea() {
       return; // Não fazer nada, apenas carregar o conteúdo
     }
     
-    // REMOVER TODOS OS REDIRECIONAMENTOS AUTOMÁTICOS
-    // Deixar que o usuário clique no botão para fazer login se necessário
-    console.log('ℹ️ ModernMembersArea: Área carregada, aguardando ação do usuário se necessário');
-  }, [authLoading, memberAreaId]);
+    // Se não tem verificação e não está autenticado, redirecionar para login
+    if (!authLoading && !isAuthenticated && !isVerified) {
+      console.log('🔄 ModernMembersArea: Redirecionando para login - não autenticado');
+      window.location.href = `/members/login/${memberAreaId}`;
+      return;
+    }
+    
+    console.log('ℹ️ ModernMembersArea: Usuário autenticado ou acesso verificado, carregando área');
+  }, [authLoading, isAuthenticated, memberAreaId]);
 
   // Carregar conteúdo da área independente de autenticação se tiver parâmetros de verificação
   useEffect(() => {
@@ -321,6 +326,22 @@ export default function ModernMembersArea() {
     completedLessons,
     courseProgress: courseProgress + '%'
   });
+
+  // Só mostrar conteúdo se estiver autenticado OU tiver verificação via query params
+  const urlParams = new URLSearchParams(window.location.search);
+  const isVerified = urlParams.get('verified') === 'true';
+  const emailParam = urlParams.get('email');
+  
+  // Se não está carregando e não tem nem autenticação nem verificação, não mostrar nada (será redirecionado)
+  if (!authLoading && !isAuthenticated && !(isVerified && emailParam)) {
+    return null; // Será redirecionado para login
+  }
+  
+  // Não mostrar tela de loading - fazer verificação silenciosamente
+  if (authLoading) {
+    return null; // Não mostrar nada enquanto carrega
+  }
+
   return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
       <MemberAreaSlideMenu lessons={lessons} modules={modules} lessonProgress={lessonProgress} getCourseProgress={getCourseProgress} getModuleProgress={getModuleProgress} getModuleStats={getModuleStats} totalDuration={totalDuration} completedLessons={completedLessons} onLessonSelect={setSelectedLesson} onLogout={handleLogout} />
