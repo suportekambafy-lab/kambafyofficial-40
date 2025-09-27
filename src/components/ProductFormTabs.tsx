@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { X, Upload, Plus, Save, Loader2, FileUp } from "lucide-react";
+import { X, Upload, Plus, Save, Loader2, FileUp, DollarSign } from "lucide-react";
 import { useCustomToast } from "@/hooks/useCustomToast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,7 +59,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     supportWhatsapp: "",
     accessDurationType: "lifetime",
     accessDurationValue: null as number | null,
-    accessDurationDescription: ""
+    accessDurationDescription: "",
+    allowCustomPrice: false,
+    minimumPrice: "",
+    suggestedPrice: ""
   });
 
   const [newTag, setNewTag] = useState("");
@@ -122,7 +125,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         supportWhatsapp: editingProduct.support_whatsapp || "",
         accessDurationType: editingProduct.access_duration_type || "lifetime",
         accessDurationValue: editingProduct.access_duration_value || null,
-        accessDurationDescription: editingProduct.access_duration_description || ""
+        accessDurationDescription: editingProduct.access_duration_description || "",
+        allowCustomPrice: editingProduct.allow_custom_price || false,
+        minimumPrice: editingProduct.minimum_price?.toString() || "",
+        suggestedPrice: editingProduct.suggested_price?.toString() || ""
       });
     } else {
       setFormData({
@@ -144,7 +150,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         supportWhatsapp: "",
         accessDurationType: "lifetime",
         accessDurationValue: null,
-        accessDurationDescription: ""
+        accessDurationDescription: "",
+        allowCustomPrice: false,
+        minimumPrice: "",
+        suggestedPrice: ""
       });
     }
   }, [editingProduct, selectedType]);
@@ -451,7 +460,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
             supportWhatsapp: "",
             accessDurationType: "lifetime",
             accessDurationValue: null,
-            accessDurationDescription: ""
+            accessDurationDescription: "",
+            allowCustomPrice: false,
+            minimumPrice: "",
+            suggestedPrice: ""
           });
         }
       }
@@ -591,8 +603,74 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
           value={formData.price}
           onChange={(e) => handleInputChange("price", e.target.value)}
           placeholder="Ex: 5000"
+          disabled={formData.allowCustomPrice}
         />
+        {formData.allowCustomPrice && (
+          <p className="text-sm text-muted-foreground">
+            Preço desabilitado: o cliente definirá o valor
+          </p>
+        )}
       </div>
+
+      {/* Configuração de Preço Aberto */}
+      <Card className="border-2 border-green-500 bg-green-50/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base text-green-800">
+            <DollarSign className="w-4 h-4" />
+            Preço Aberto ("Pague o que quiser")
+          </CardTitle>
+          <p className="text-xs text-green-600 font-bold">
+            ✅ SEÇÃO VISÍVEL - Estado: {String(formData.allowCustomPrice)}
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Permitir preço personalizado</Label>
+              <p className="text-sm text-muted-foreground">
+                O cliente pode definir quanto deseja pagar
+              </p>
+            </div>
+            <Switch
+              checked={formData.allowCustomPrice}
+              onCheckedChange={(checked) => {
+                console.log('🔄 Switch preço personalizado mudou para:', checked);
+                handleInputChange("allowCustomPrice", checked);
+              }}
+            />
+          </div>
+
+          {formData.allowCustomPrice && (
+            <div className="space-y-4 pt-2 border-t">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="minimumPrice">Preço mínimo (KZ)</Label>
+                  <Input
+                    id="minimumPrice"
+                    type="number"
+                    value={formData.minimumPrice}
+                    onChange={(e) => handleInputChange("minimumPrice", e.target.value)}
+                    placeholder="Ex: 1000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="suggestedPrice">Preço sugerido (KZ)</Label>
+                  <Input
+                    id="suggestedPrice"
+                    type="number"
+                    value={formData.suggestedPrice}
+                    onChange={(e) => handleInputChange("suggestedPrice", e.target.value)}
+                    placeholder="Ex: 5000"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O cliente pode pagar qualquer valor acima do mínimo. O preço sugerido será mostrado como referência.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Configuração de preços por país */}
       <CountryPriceConfig
