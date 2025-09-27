@@ -86,20 +86,20 @@ export function LessonContentTabs({
                     Materiais de Apoio
                   </h3>
                   <div className="grid gap-3">
-                    {lessonMaterials.map(material => <div key={material.id} className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border hover:bg-secondary/70 transition-colors">
+                    {lessonMaterials.map(material => <div key={material.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 bg-secondary/50 rounded-lg border hover:bg-secondary/70 transition-colors">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {getFileIcon(material.type)}
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground truncate">
+                            <p className="font-medium text-foreground truncate text-sm sm:text-base" title={material.name}>
                               {material.name}
                             </p>
-                            {material.size && <p className="text-sm text-muted-foreground">
+                            {material.size && <p className="text-xs sm:text-sm text-muted-foreground">
                                 {formatFileSize(material.size)}
                               </p>}
                           </div>
                         </div>
-                        <Button asChild variant="outline" size="sm" className="flex-shrink-0">
-                          <a href={material.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                        <Button asChild variant="outline" size="sm" className="flex-shrink-0 w-full sm:w-auto">
+                          <a href={material.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                             <Download className="h-4 w-4" />
                             Download
                           </a>
