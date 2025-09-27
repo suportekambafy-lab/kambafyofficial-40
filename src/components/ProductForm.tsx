@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { X, Upload, Plus, Save, Loader2, FileUp, DollarSign } from "lucide-react";
+import { X, Upload, Plus, Save, Loader2, FileUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -51,10 +50,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
     memberAreaId: "",
     paymentMethods: [] as PaymentMethod[],
     fantasyName: "",
-    customPrices: {} as Record<string, string>,
-    allowCustomPrice: false,
-    minimumPrice: "",
-    suggestedPrice: ""
+    customPrices: {} as Record<string, string>
   });
 
   const [newTag, setNewTag] = useState("");
@@ -107,10 +103,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         memberAreaId: editingProduct.member_area_id || "",
         paymentMethods: editingProduct.payment_methods || [],
         fantasyName: editingProduct.fantasy_name || "",
-        customPrices: editingProduct.custom_prices || {},
-        allowCustomPrice: editingProduct.allow_custom_price || false,
-        minimumPrice: editingProduct.minimum_price?.toString() || "",
-        suggestedPrice: editingProduct.suggested_price?.toString() || ""
+        customPrices: editingProduct.custom_prices || {}
       });
     } else {
       setFormData({
@@ -125,10 +118,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         memberAreaId: "",
         paymentMethods: [],
         fantasyName: "",
-        customPrices: {},
-        allowCustomPrice: false,
-        minimumPrice: "",
-        suggestedPrice: ""
+        customPrices: {}
       });
     }
   }, [editingProduct, selectedType]);
@@ -137,13 +127,10 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
   console.log('🔥 ProductForm renderizado - formData:', {
     price: formData.price,
     customPrices: formData.customPrices,
-    allowCustomPrice: formData.allowCustomPrice,
-    minimumPrice: formData.minimumPrice,
-    suggestedPrice: formData.suggestedPrice,
     open: open
   });
 
-  const handleInputChange = (field: string, value: string | Record<string, string> | boolean) => {
+  const handleInputChange = (field: string, value: string | Record<string, string>) => {
     console.log('🔄 ProductForm handleInputChange:', { field, value });
     setFormData(prev => ({
       ...prev,
@@ -211,46 +198,13 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
       return;
     }
 
-    if (!formData.name || (!formData.price && !formData.allowCustomPrice)) {
+    if (!formData.name || !formData.price) {
       toast({
         title: "Erro",
-        description: "Nome e preço são obrigatórios (ou ative preço aberto)",
+        description: "Nome e preço são obrigatórios",
         variant: "destructive"
       });
       return;
-    }
-
-    // Validações específicas para preço aberto
-    if (formData.allowCustomPrice) {
-      if (!formData.minimumPrice) {
-        toast({
-          title: "Erro",
-          description: "Preço mínimo é obrigatório quando preço aberto está ativado",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const minPrice = parseFloat(formData.minimumPrice);
-      const suggestedPrice = parseFloat(formData.suggestedPrice);
-
-      if (minPrice <= 0) {
-        toast({
-          title: "Erro",
-          description: "Preço mínimo deve ser maior que zero",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (formData.suggestedPrice && suggestedPrice < minPrice) {
-        toast({
-          title: "Erro",
-          description: "Preço sugerido deve ser maior ou igual ao preço mínimo",
-          variant: "destructive"
-        });
-        return;
-      }
     }
 
     if (formData.type === "Curso" && !formData.memberAreaId) {
@@ -279,7 +233,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
       const productData = {
         name: formData.name,
         type: formData.type,
-        price: formData.allowCustomPrice ? "0" : formData.price, // Preço 0 quando aberto
+        price: formData.price,
         description: formData.description,
         share_link: formData.type === "Curso" ? null : formData.shareLink,
         cover: formData.cover,
@@ -289,9 +243,6 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         payment_methods: formData.paymentMethods as any,
         fantasy_name: formData.fantasyName || null,
         custom_prices: formData.customPrices,
-        allow_custom_price: formData.allowCustomPrice,
-        minimum_price: formData.allowCustomPrice ? parseFloat(formData.minimumPrice) : null,
-        suggested_price: formData.allowCustomPrice && formData.suggestedPrice ? parseFloat(formData.suggestedPrice) : null,
         user_id: user.id,
         status: "Ativo"
       };
@@ -345,10 +296,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
             memberAreaId: "",
             paymentMethods: [],
             fantasyName: "",
-            customPrices: {},
-            allowCustomPrice: false,
-            minimumPrice: "",
-            suggestedPrice: ""
+            customPrices: {}
           });
         }
       }
@@ -482,76 +430,8 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
                 value={formData.price}
                 onChange={(e) => handleInputChange("price", e.target.value)}
                 placeholder="Ex: 5000"
-                disabled={formData.allowCustomPrice}
               />
-              {formData.allowCustomPrice && (
-                <p className="text-sm text-muted-foreground">
-                  Preço desabilitado: o cliente definirá o valor
-                </p>
-              )}
             </div>
-
-            {/* Configuração de Preço Aberto - MOVIDO PARA CIMA */}
-            <Card className="border-2 border-green-500 bg-green-50">
-              <CardHeader className="bg-green-100">
-                <CardTitle className="flex items-center gap-2 text-base text-green-800">
-                  <DollarSign className="w-4 h-4" />
-                  Preço Aberto ("Pague o que quiser")
-                </CardTitle>
-                <p className="text-xs text-green-600 font-bold">
-                  ✅ ESTA SEÇÃO ESTÁ RENDERIZADA - allowCustomPrice: {String(formData.allowCustomPrice)}
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Permitir preço personalizado</Label>
-                    <p className="text-sm text-muted-foreground">
-                      O cliente pode definir quanto deseja pagar
-                    </p>
-                  </div>
-                  <Switch
-                    checked={formData.allowCustomPrice}
-                    onCheckedChange={(checked) => {
-                      console.log('🔄 Switch preço personalizado mudou para:', checked);
-                      handleInputChange("allowCustomPrice", checked);
-                    }}
-                  />
-                </div>
-
-                {formData.allowCustomPrice && (
-                  <div className="space-y-4 border-t pt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="minimumPrice">Preço Mínimo (KZ)</Label>
-                      <Input
-                        id="minimumPrice"
-                        type="number"
-                        value={formData.minimumPrice}
-                        onChange={(e) => handleInputChange("minimumPrice", e.target.value)}
-                        placeholder="Ex: 1000"
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        Valor mínimo que o cliente deve pagar
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="suggestedPrice">Preço Sugerido (KZ)</Label>
-                      <Input
-                        id="suggestedPrice"
-                        type="number"
-                        value={formData.suggestedPrice}
-                        onChange={(e) => handleInputChange("suggestedPrice", e.target.value)}
-                        placeholder="Ex: 3000"
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        Valor que aparecerá como sugestão para o cliente
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
             {/* Configuração de preços por país */}
             <CountryPriceConfig

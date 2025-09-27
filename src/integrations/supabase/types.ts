@@ -1319,7 +1319,6 @@ export type Database = {
           access_duration_value: number | null
           admin_approved: boolean | null
           allow_affiliates: boolean | null
-          allow_custom_price: boolean | null
           ban_reason: string | null
           category: string | null
           commission: string | null
@@ -1331,7 +1330,6 @@ export type Database = {
           id: string
           image_alt: string | null
           member_area_id: string | null
-          minimum_price: number | null
           name: string
           payment_methods: Json | null
           price: string
@@ -1344,7 +1342,6 @@ export type Database = {
           share_link: string | null
           slug: string | null
           status: string | null
-          suggested_price: number | null
           support_email: string | null
           support_whatsapp: string | null
           tags: string[] | null
@@ -1358,7 +1355,6 @@ export type Database = {
           access_duration_value?: number | null
           admin_approved?: boolean | null
           allow_affiliates?: boolean | null
-          allow_custom_price?: boolean | null
           ban_reason?: string | null
           category?: string | null
           commission?: string | null
@@ -1370,7 +1366,6 @@ export type Database = {
           id?: string
           image_alt?: string | null
           member_area_id?: string | null
-          minimum_price?: number | null
           name: string
           payment_methods?: Json | null
           price: string
@@ -1383,7 +1378,6 @@ export type Database = {
           share_link?: string | null
           slug?: string | null
           status?: string | null
-          suggested_price?: number | null
           support_email?: string | null
           support_whatsapp?: string | null
           tags?: string[] | null
@@ -1397,7 +1391,6 @@ export type Database = {
           access_duration_value?: number | null
           admin_approved?: boolean | null
           allow_affiliates?: boolean | null
-          allow_custom_price?: boolean | null
           ban_reason?: string | null
           category?: string | null
           commission?: string | null
@@ -1409,7 +1402,6 @@ export type Database = {
           id?: string
           image_alt?: string | null
           member_area_id?: string | null
-          minimum_price?: number | null
           name?: string
           payment_methods?: Json | null
           price?: string
@@ -1422,7 +1414,6 @@ export type Database = {
           share_link?: string | null
           slug?: string | null
           status?: string | null
-          suggested_price?: number | null
           support_email?: string | null
           support_whatsapp?: string | null
           tags?: string[] | null
