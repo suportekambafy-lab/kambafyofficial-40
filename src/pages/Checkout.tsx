@@ -1517,63 +1517,71 @@ const Checkout = () => {
           }
           try {
             console.log('🔔 Triggering webhooks for local payment method...');
-            const webhookPayload = {
-              event: 'payment.success',
-              data: {
+            
+            // Só disparar webhooks se o pagamento for completado, não para pending
+            const shouldTriggerWebhooks = selectedPayment !== 'reference' || (insertedOrder?.payment_status === 'completed');
+            
+            if (shouldTriggerWebhooks) {
+              const webhookPayload = {
+                event: 'payment.success',
+                data: {
+                  order_id: orderId,
+                  amount: totalAmount.toString(),
+                  base_product_price: product.price,
+                  currency: userCountry.currency,
+                  customer_email: formData.email,
+                  customer_name: formData.fullName,
+                  product_id: product.id,
+                  product_name: product.name,
+                  payment_method: selectedPayment,
+                  timestamp: new Date().toISOString(),
+                  order_bump: orderBump ? {
+                    bump_product_name: orderBump.bump_product_name,
+                    bump_product_price: orderBump.bump_product_price,
+                    discount: orderBump.discount,
+                    discounted_price: totalOrderBumpPrice
+                  } : null
+                },
+                user_id: product.user_id,
                 order_id: orderId,
-                amount: totalAmount.toString(),
-                base_product_price: product.price,
-                currency: userCountry.currency,
-                customer_email: formData.email,
-                customer_name: formData.fullName,
-                product_id: product.id,
-                product_name: product.name,
-                payment_method: selectedPayment,
-                timestamp: new Date().toISOString(),
-                order_bump: orderBump ? {
-                  bump_product_name: orderBump.bump_product_name,
-                  bump_product_price: orderBump.bump_product_price,
-                  discount: orderBump.discount,
-                  discounted_price: totalOrderBumpPrice
-                } : null
-              },
-              user_id: product.user_id,
-              order_id: orderId,
-              product_id: product.id
-            };
-            const {
-              error: webhookError
-            } = await supabase.functions.invoke('trigger-webhooks', {
-              body: webhookPayload
-            });
-            if (webhookError) {
-              console.error('Error triggering payment webhooks:', webhookError);
-            }
-            const productPurchasePayload = {
-              event: 'product.purchased',
-              data: {
+                product_id: product.id
+              };
+              const {
+                error: webhookError
+              } = await supabase.functions.invoke('trigger-webhooks', {
+                body: webhookPayload
+              });
+              if (webhookError) {
+                console.error('Error triggering payment webhooks:', webhookError);
+              }
+              const productPurchasePayload = {
+                event: 'product.purchased',
+                data: {
+                  order_id: orderId,
+                  product_id: product.id,
+                  product_name: product.name,
+                  customer_email: formData.email,
+                  customer_name: formData.fullName,
+                  price: totalAmount.toString(),
+                  currency: userCountry.currency,
+                  timestamp: new Date().toISOString()
+                },
+                user_id: product.user_id,
                 order_id: orderId,
-                product_id: product.id,
-                product_name: product.name,
-                customer_email: formData.email,
-                customer_name: formData.fullName,
-                price: totalAmount.toString(),
-                currency: userCountry.currency,
-                timestamp: new Date().toISOString()
-              },
-              user_id: product.user_id,
-              order_id: orderId,
-              product_id: product.id
-            };
-            const {
-              error: productWebhookError
-            } = await supabase.functions.invoke('trigger-webhooks', {
-              body: productPurchasePayload
-            });
-            if (productWebhookError) {
-              console.error('Error triggering product purchase webhooks:', productWebhookError);
+                product_id: product.id
+              };
+              const {
+                error: productWebhookError
+              } = await supabase.functions.invoke('trigger-webhooks', {
+                body: productPurchasePayload
+              });
+              if (productWebhookError) {
+                console.error('Error triggering product purchase webhooks:', productWebhookError);
+              } else {
+                console.log('✅ Webhooks triggered successfully for local payment');
+              }
             } else {
-              console.log('✅ Webhooks triggered successfully for local payment');
+              console.log('⏸️ Webhooks skipped - payment is pending (reference payment)');
             }
           } catch (webhookError) {
             console.error('❌ Error triggering webhooks for local payment:', webhookError);
