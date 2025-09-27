@@ -89,7 +89,7 @@ export function LessonContentTabs({
                     Materiais de Apoio
                   </h3>
                   <div className="space-y-3">
-                    {lessonMaterials.map(material => <div key={material.id} className="flex flex-col gap-3 p-3 sm:p-4 bg-secondary/50 rounded-lg border hover:bg-secondary/70 transition-colors">
+                    {lessonMaterials.map(material => <div key={material.id} className="flex flex-col gap-3 p-3 sm:p-4 bg-secondary/50 border hover:bg-secondary/70 transition-colors rounded-md">
                         <div className="flex items-center gap-3 min-w-0">
                           {getFileIcon(material.type)}
                           <div className="flex-1 min-w-0">
