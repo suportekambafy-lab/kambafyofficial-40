@@ -1954,112 +1954,6 @@ const Checkout = () => {
 
   return (
     <ThemeProvider forceLightMode={true}>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes apple-curve {
-            0% { 
-              border-radius: 0 0 50px 50px;
-              width: 30px;
-              height: 15px;
-              background: transparent;
-              border: 3px solid #86efac;
-              border-top: none;
-            }
-          }
-          
-          @keyframes apple-circle {
-            0% { 
-              border-radius: 0 0 50px 50px;
-              width: 66px;
-              height: 33px;
-              background: transparent;
-              border: 3px solid #86efac;
-              border-top: none;
-            }
-            25% {
-              border-radius: 50%;
-              width: 52px;
-              height: 52px;
-              background: transparent;
-              border: 3px solid #86efac;
-            }
-            50% {
-              border-radius: 50%;
-              width: 52px;
-              height: 52px;
-              background: transparent;
-              border: 3px solid #86efac;
-            }
-            75% {
-              border-radius: 50%;
-              width: 52px;
-              height: 52px;
-              background: #86efac;
-              border: 3px solid #86efac;
-            }
-            90% {
-              border-radius: 50%;
-              width: 52px;
-              height: 52px;
-              background: #22c55e;
-              border: 3px solid #22c55e;
-              transform: scale(1.1);
-            }
-            100% {
-              border-radius: 0 0 50px 50px;
-              width: 66px;
-              height: 33px;
-              background: transparent;
-              border: 3px solid #86efac;
-              border-top: none;
-            }
-          }
-          
-          @keyframes checkmark-cycle {
-            0% { opacity: 0; }
-            75% { opacity: 0; }
-            85% { opacity: 1; }
-            95% { opacity: 1; }
-            100% { opacity: 0; }
-          }
-          
-          .apple-animation {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 70px;
-          }
-          
-          .apple-shape {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: #22c55e;
-            border: 3px solid #22c55e;
-            animation: apple-circle 2.5s ease-in-out infinite;
-            animation-delay: 0s;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          
-          .apple-shape::after {
-            content: '✓';
-            color: white;
-            font-size: 26px;
-            font-weight: bold;
-            opacity: 0;
-            animation: checkmark-cycle 2.5s ease-in-out infinite;
-          }
-          
-          @keyframes checkmark-appear {
-            to {
-              opacity: 1;
-            }
-          }
-        `
-      }} />
       
       <FacebookPixelTracker productId={productId || ''} />
       {product && (
@@ -2417,8 +2311,8 @@ const Checkout = () => {
                       <div className="border-t pt-4 mt-4">
                         <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
                           <div className="flex items-center justify-center mb-4">
-                            <div className="apple-animation">
-                              <div className="apple-shape"></div>
+                            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                              <Check className="h-6 w-6 text-white" />
                             </div>
                           </div>
                           
