@@ -37,7 +37,7 @@ export function LessonContentTabs({
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
-  return <div className="mt-4 sm:mt-8 border-t border-gray-800 pt-4 sm:pt-6 rounded-3xl">
+  return <div className="mt-4 sm:mt-8 pt-4 sm:pt-6 rounded-3xl">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="h-auto rounded-none border-b border-border bg-transparent p-0 w-full justify-start overflow-x-auto">
           <TabsTrigger value="description" className="relative rounded-none py-2 px-3 sm:px-4 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary">
