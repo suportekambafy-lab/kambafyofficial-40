@@ -89,7 +89,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('[SMS-NOTIFICATION] Sending SMS via Infobip:', JSON.stringify(smsPayload, null, 2));
 
     // Enviar SMS via Infobip
-    const infobipResponse = await fetch(`${INFOBIP_BASE_URL}/sms/2/text/advanced`, {
+    const baseUrl = INFOBIP_BASE_URL?.startsWith('http') ? INFOBIP_BASE_URL : `https://${INFOBIP_BASE_URL}`;
+    const infobipResponse = await fetch(`${baseUrl}/sms/2/text/advanced`, {
       method: 'POST',
       headers: {
         'Authorization': `App ${INFOBIP_API_KEY}`,
