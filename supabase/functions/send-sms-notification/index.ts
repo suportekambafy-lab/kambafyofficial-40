@@ -44,8 +44,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('[SMS-NOTIFICATION] Request data:', JSON.stringify(requestData, null, 2));
 
     // Validar dados obrigatórios
-    if (!requestData.to || !requestData.message) {
-      throw new Error('Phone number and message are required');
+    if (!requestData.to) {
+      throw new Error('Phone number is required');
     }
 
     // Formatar número de telefone para Vonage
