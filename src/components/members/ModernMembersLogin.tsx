@@ -45,30 +45,32 @@ export default function ModernMembersLogin() {
     const success = await login(email, password);
     
     if (success) {
-      navigate(`/members/area/${memberAreaId}`, { replace: true });
+      // Redirecionar diretamente sem páginas intermediárias
+      window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(email)}`;
     }
     
     setIsSubmitting(false);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center space-y-4"
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 border-4 border-white border-t-transparent rounded-full mx-auto"
-          />
-          <p className="text-gray-300">Verificando acesso...</p>
-        </motion.div>
-      </div>
-    );
-  }
+  // Remover completamente a tela de loading/verificando acesso
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+  //       <motion.div
+  //         initial={{ scale: 0.8, opacity: 0 }}
+  //         animate={{ scale: 1, opacity: 1 }}
+  //         className="text-center space-y-4"
+  //       >
+  //         <motion.div
+  //           animate={{ rotate: 360 }}
+  //           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+  //           className="w-12 h-12 border-4 border-white border-t-transparent rounded-full mx-auto"
+  //         />
+  //         <p className="text-gray-300">Verificando acesso...</p>
+  //       </motion.div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">

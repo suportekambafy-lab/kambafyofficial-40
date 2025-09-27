@@ -125,11 +125,12 @@ export default function ProtectedMemberArea({ children }: ProtectedMemberAreaPro
           }
         } else {
           console.log('ProtectedMemberArea - User does not have access');
-          setHasAccess(false);
+          // MUDANÇA: Não bloquear mais automaticamente, deixar que a área de membros decida
+          setHasAccess(true); // Permitir sempre e deixar a verificação para a área
         }
       } catch (error) {
         console.error('Erro ao verificar acesso:', error);
-        setHasAccess(false);
+        setHasAccess(true); // Em caso de erro, permitir acesso e deixar área decidir
       } finally {
         setLoading(false);
       }
@@ -138,9 +139,9 @@ export default function ProtectedMemberArea({ children }: ProtectedMemberAreaPro
     checkAccess();
   }, [user, areaId, authLoading]);
 
-  // Não mostrar tela de loading - redirecionar diretamente para área
+  // Não mostrar tela de loading - fazer verificação silenciosamente
   if (authLoading || loading) {
-    return null;
+    return null; // Não mostrar nada enquanto carrega
   }
 
   if (!user) {

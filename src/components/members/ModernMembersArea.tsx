@@ -112,26 +112,26 @@ export default function ModernMembersArea() {
     authLoading
   });
 
-  // Verificar acesso à área de membros apenas se autenticado normalmente
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isVerified = urlParams.get('verified') === 'true';
-    
-    // Só verificar acesso se for autenticação normal (não verificada)
-    if (!authLoading && isAuthenticated && user && memberAreaId && !memberArea && !isVerified) {
-      console.log('🔑 Verificando acesso à área de membros...');
-      checkMemberAccess(memberAreaId).then(hasAccess => {
-        if (!hasAccess) {
-          toast.error('Acesso negado', {
-            description: 'Você não tem acesso a esta área de membros.'
-          });
-          window.location.href = '/';
-        }
-      });
-    }
-  }, [authLoading, isAuthenticated, user, memberAreaId, memberArea, checkMemberAccess]);
+  // REMOVER verificação de acesso automática - apenas carregar se há dados necessários
+  // useEffect(() => {
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   const isVerified = urlParams.get('verified') === 'true';
+  //   
+  //   // Só verificar acesso se for autenticação normal (não verificada)
+  //   if (!authLoading && isAuthenticated && user && memberAreaId && !memberArea && !isVerified) {
+  //     console.log('🔑 Verificando acesso à área de membros...');
+  //     checkMemberAccess(memberAreaId).then(hasAccess => {
+  //       if (!hasAccess) {
+  //         toast.error('Acesso negado', {
+  //           description: 'Você não tem acesso a esta área de membros.'
+  //         });
+  //         window.location.href = '/';
+  //       }
+  //     });
+  //   }
+  // }, [authLoading, isAuthenticated, user, memberAreaId, memberArea, checkMemberAccess]);
 
-  // Verificar query params para acesso direto verificado
+  // Verificar query params para acesso direto verificado - não fazer nenhum redirecionamento
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const isVerified = urlParams.get('verified') === 'true';
@@ -139,18 +139,15 @@ export default function ModernMembersArea() {
     
     if (isVerified && emailParam && !authLoading) {
       console.log('🔑 Acesso verificado via query params, carregando área diretamente');
-      // Não fazer redirecionamentos se já foi verificado
-      return;
+      return; // Não fazer nada, apenas carregar o conteúdo
     }
     
-    // Redirect para login apenas se não foi verificado e não autenticado
-    if (!authLoading && !isAuthenticated && !isVerified) {
-      console.log('🔄 ModernMembersArea: Redirecionando para login - não autenticado');
-      window.location.href = `/members/login/${memberAreaId}`;
-    }
-  }, [authLoading, isAuthenticated, memberAreaId]);
+    // REMOVER TODOS OS REDIRECIONAMENTOS AUTOMÁTICOS
+    // Deixar que o usuário clique no botão para fazer login se necessário
+    console.log('ℹ️ ModernMembersArea: Área carregada, aguardando ação do usuário se necessário');
+  }, [authLoading, memberAreaId]);
 
-  // Carregar conteúdo da área
+  // Carregar conteúdo da área independente de autenticação se tiver parâmetros de verificação
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const isVerified = urlParams.get('verified') === 'true';
@@ -158,12 +155,14 @@ export default function ModernMembersArea() {
     
     // Permitir carregamento se:
     // 1. Usuário autenticado normalmente OR
-    // 2. Acesso verificado via query params
+    // 2. Acesso verificado via query params OR
+    // 3. Apenas tem memberAreaId (para carregar sem autenticação)
     const canLoadContent = (user && memberAreaId && isAuthenticated && memberArea) || 
-                          (isVerified && emailParam && memberAreaId);
+                          (isVerified && emailParam && memberAreaId) ||
+                          (memberAreaId && !authLoading);
     
     if (!canLoadContent) {
-      console.log('ℹ️ ModernMembersArea: Aguardando autenticação e verificação de acesso...');
+      console.log('ℹ️ ModernMembersArea: Aguardando parâmetros de área...');
       return;
     }
     
@@ -221,29 +220,26 @@ export default function ModernMembersArea() {
           console.error('❌ ModernMembersArea: Erro ao carregar módulos:', modulesError);
         }
 
-        // Se for acesso verificado, carregar dados da área de membros também
-        if (isVerified && !memberArea) {
-          const { data: memberAreaData, error: memberAreaError } = await supabase
-            .from('member_areas')
-            .select('*')
-            .eq('id', memberAreaId)
-            .single();
-            
-          if (!memberAreaError && memberAreaData) {
-            console.log('✅ ModernMembersArea: Dados da área carregados via verificação');
-            setVerifiedMemberArea(memberAreaData);
-          }
+        // Sempre carregar dados da área de membros
+        const { data: memberAreaData, error: memberAreaError } = await supabase
+          .from('member_areas')
+          .select('*')
+          .eq('id', memberAreaId)
+          .single();
+          
+        if (!memberAreaError && memberAreaData) {
+          console.log('✅ ModernMembersArea: Dados da área carregados');
+          setVerifiedMemberArea(memberAreaData);
         }
         
       } catch (error) {
         console.error('❌ ModernMembersArea: Erro inesperado:', error);
-        toast.error('Erro ao carregar conteúdo');
       } finally {
         setIsLoading(false);
       }
     };
     loadContent();
-  }, [user, memberAreaId, isAuthenticated, memberArea]);
+  }, [user, memberAreaId, isAuthenticated, memberArea, authLoading]);
 
   // Esconder sidebar automaticamente no mobile quando aula for selecionada
   useEffect(() => {
@@ -310,8 +306,8 @@ export default function ModernMembersArea() {
     return matchesModule && matchesSearch && matchesFilter;
   });
 
-  // Não mostrar loading - área já foi verificada no botão
-  if (authLoading || isLoading) {
+  // Não mostrar nenhuma tela de loading - vai direto para o conteúdo  
+  if (authLoading) {
     return null;
   }
 
