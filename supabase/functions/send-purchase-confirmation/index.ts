@@ -97,85 +97,104 @@ const handler = async (req: Request): Promise<Response> => {
         <html>
         <head>
           <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Pagamento Pendente - ${productName} - Kambafy</title>
+          <style>
+            @media only screen and (max-width: 600px) {
+              .container { width: 100% !important; padding: 15px !important; }
+              .logo { width: 120px !important; height: auto !important; }
+              .header-title { font-size: 20px !important; }
+              .section { padding: 20px !important; }
+              .payment-table td { display: block !important; width: 100% !important; padding: 5px 0 !important; }
+              .payment-table td:first-child { font-weight: bold; margin-bottom: 5px; }
+            }
+          </style>
         </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <div style="background-color: #f59e0b; color: white; width: 60px; height: 60px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
-              <span style="font-size: 24px; font-weight: bold;">K</span>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155;">
+          <div class="container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+            
+            <!-- Header -->
+            <div style="text-align: center; padding: 40px 30px 30px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
+              <img src="https://app.kambafy.com/kambafy-logo-new.svg" alt="Kambafy" class="logo" style="width: 140px; height: auto; margin-bottom: 20px;">
+              <h1 class="header-title" style="margin: 0; font-size: 24px; font-weight: 600; color: #1e293b;">Pagamento Pendente</h1>
+              <p style="margin: 8px 0 0; font-size: 16px; color: #64748b;">Complete o seu pagamento para acessar o produto</p>
             </div>
-            <div style="background-color: #f59e0b; color: white; padding: 20px; border-radius: 8px;">
-              <h1 style="margin: 0; font-size: 24px;">⏳ Pagamento Pendente</h1>
-              <p style="margin: 10px 0 0 0; font-size: 16px; color: white;">Complete o seu pagamento para acessar o produto.</p>
+
+            <!-- Payment Details -->
+            <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+              <h2 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Dados para Pagamento</h2>
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                <table class="payment-table" style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 12px 0; font-weight: 500; color: #475569; width: 30%;">Entidade:</td>
+                    <td style="padding: 12px 0; font-size: 20px; font-weight: 700; color: #1e293b; font-family: 'Courier New', monospace;">${referenceData?.entity || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 0; font-weight: 500; color: #475569;">Referência:</td>
+                    <td style="padding: 12px 0; font-size: 20px; font-weight: 700; color: #1e293b; font-family: 'Courier New', monospace;">${referenceData?.referenceNumber || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 0; font-weight: 500; color: #475569;">Valor:</td>
+                    <td style="padding: 12px 0; font-size: 20px; font-weight: 700; color: #059669;">${amount} ${currency}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 0; font-weight: 500; color: #475569;">Data Limite:</td>
+                    <td style="padding: 12px 0; color: #1e293b; font-weight: 500;">${referenceData?.dueDate ? new Date(referenceData.dueDate).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                  </tr>
+                </table>
+              </div>
             </div>
-          </div>
 
-          <div style="background-color: #fff3cd; padding: 25px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #f59e0b;">
-            <h2 style="color: #856404; margin: 0 0 20px 0;">📋 Dados para Pagamento</h2>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #856404;">Entidade:</td>
-                <td style="padding: 8px 0; font-size: 18px; color: #856404; font-weight: bold;">${referenceData?.entity || 'N/A'}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #856404;">Referência:</td>
-                <td style="padding: 8px 0; font-size: 18px; color: #856404; font-weight: bold;">${referenceData?.referenceNumber || 'N/A'}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #856404;">Valor:</td>
-                <td style="padding: 8px 0; font-size: 18px; color: #856404; font-weight: bold;">${amount} ${currency}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #856404;">Data Limite:</td>
-                <td style="padding: 8px 0; color: #856404;">${referenceData?.dueDate ? new Date(referenceData.dueDate).toLocaleDateString('pt-BR') : 'N/A'}</td>
-              </tr>
-            </table>
-          </div>
+            <!-- Order Details -->
+            <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Detalhes do Pedido</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: 500; color: #475569; width: 30%;">Pedido:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${orderId}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: 500; color: #475569;">Produto:</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-weight: 500;">${productName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: 500; color: #475569;">Cliente:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${customerName}</td>
+                </tr>
+              </table>
+            </div>
 
-          <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
-            <h3 style="color: #16a34a; margin: 0 0 15px 0;">Detalhes do Pedido</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold;">Número do Pedido:</td>
-                <td style="padding: 8px 0;">${orderId}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold;">Produto:</td>
-                <td style="padding: 8px 0;">${productName}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold;">Cliente:</td>
-                <td style="padding: 8px 0;">${customerName}</td>
-              </tr>
-            </table>
-          </div>
+            <!-- How to Pay -->
+            <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Como Pagar</h3>
+              <div style="color: #475569; line-height: 1.6;">
+                <p style="margin: 0 0 12px;">1. Use os dados acima no seu Multicaixa Express ou app bancário</p>
+                <p style="margin: 0 0 12px;">2. O pagamento será processado automaticamente</p>
+                <p style="margin: 0 0 12px;">3. Você receberá um email de confirmação quando o pagamento for aprovado</p>
+                <p style="margin: 0;">4. O acesso ao produto será liberado imediatamente após a confirmação</p>
+              </div>
+            </div>
 
-          <div style="background-color: #e0f2fe; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #0277bd; margin: 0 0 15px 0;">📱 Como Pagar</h3>
-            <p style="margin: 0 0 10px 0; color: #0277bd;">
-              1. Use os dados acima no seu Multicaixa Express ou app bancário<br>
-              2. O pagamento será processado automaticamente<br>
-              3. Você receberá um email de confirmação quando o pagamento for aprovado<br>
-              4. O acesso ao produto será liberado imediatamente após a confirmação
-            </p>
-          </div>
+            <!-- Support -->
+            <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">Precisa de Ajuda?</h3>
+              <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
+                Se tiver alguma dúvida sobre o pagamento, entre em contato conosco:
+              </p>
+              <div style="color: #475569; font-size: 14px;">
+                <p style="margin: 0;"><strong>Email:</strong> suporte@kambafy.com</p>
+                <p style="margin: 5px 0 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
+              </div>
+            </div>
 
-          <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #856404; margin: 0 0 10px 0;">📞 Precisa de Ajuda?</h3>
-            <p style="margin: 0; color: #856404;">
-              Se tiver alguma dúvida sobre o pagamento, entre em contato conosco:
-            </p>
-            <p style="margin: 10px 0 0 0; color: #856404;">
-              <strong>Email:</strong> suporte@kambafy.com<br>
-              <strong>WhatsApp:</strong> (+244) 900 000 000
-            </p>
-          </div>
+            <!-- Footer -->
+            <div style="text-align: center; padding: 30px; background-color: #f8fafc;">
+              <img src="https://app.kambafy.com/kambafy-logo-new.svg" alt="Kambafy" style="width: 100px; height: auto; margin-bottom: 15px; opacity: 0.7;">
+              <p style="margin: 0; color: #64748b; font-size: 14px;">
+                Obrigado por escolher a Kambafy
+              </p>
+            </div>
 
-          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-            <p style="margin: 0; color: #666;">
-              <strong>Kambafy</strong><br>
-              Obrigado por escolher nossos produtos!
-            </p>
           </div>
         </body>
         </html>
