@@ -1970,57 +1970,74 @@ const Checkout = () => {
           @keyframes apple-circle {
             0% { 
               border-radius: 0 0 50px 50px;
-              width: 60px;
-              height: 30px;
+              width: 80px;
+              height: 40px;
               background: transparent;
               border: 3px solid #86efac;
               border-top: none;
             }
             25% {
               border-radius: 50%;
-              width: 48px;
-              height: 48px;
+              width: 64px;
+              height: 64px;
               background: transparent;
               border: 3px solid #86efac;
             }
             50% {
               border-radius: 50%;
-              width: 48px;
-              height: 48px;
+              width: 64px;
+              height: 64px;
               background: transparent;
               border: 3px solid #86efac;
             }
             75% {
               border-radius: 50%;
-              width: 48px;
-              height: 48px;
+              width: 64px;
+              height: 64px;
               background: #86efac;
               border: 3px solid #86efac;
             }
-            100% {
+            90% {
               border-radius: 50%;
-              width: 48px;
-              height: 48px;
+              width: 64px;
+              height: 64px;
               background: #22c55e;
               border: 3px solid #22c55e;
               transform: scale(1.1);
             }
+            100% {
+              border-radius: 0 0 50px 50px;
+              width: 80px;
+              height: 40px;
+              background: transparent;
+              border: 3px solid #86efac;
+              border-top: none;
+            }
+          }
+          
+          @keyframes checkmark-cycle {
+            0% { opacity: 0; }
+            75% { opacity: 0; }
+            85% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { opacity: 0; }
           }
           
           .apple-animation {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 64px;
+            height: 80px;
           }
           
           .apple-shape {
-            width: 48px;
-            height: 48px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
             background: #22c55e;
             border: 3px solid #22c55e;
-            animation: apple-circle 0.8s ease-in-out infinite;
+            animation: apple-circle 2.5s ease-in-out infinite;
+            animation-delay: 0s;
             position: relative;
             display: flex;
             align-items: center;
@@ -2030,10 +2047,10 @@ const Checkout = () => {
           .apple-shape::after {
             content: '✓';
             color: white;
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             opacity: 0;
-            animation: checkmark-appear 0.2s ease-in-out 0.6s infinite;
+            animation: checkmark-cycle 2.5s ease-in-out infinite;
           }
           
           @keyframes checkmark-appear {
