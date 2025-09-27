@@ -386,7 +386,7 @@ export default function ModernMembersArea() {
             }} transition={{
               delay: 0.1
             }}>
-                  <Card className="overflow-hidden mb-6 bg-zinc-950 rounded-none">
+                  <Card className="overflow-hidden mb-6 bg-zinc-950 rounded-none border-0">
                     <ModernLessonViewer lesson={selectedLesson} lessons={lessons} lessonProgress={lessonProgress} onNavigateLesson={handleNavigateLesson} onClose={() => setSelectedLesson(null)} onUpdateProgress={updateVideoProgress} />
                   </Card>
                   
