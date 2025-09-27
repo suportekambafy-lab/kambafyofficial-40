@@ -114,8 +114,8 @@ const handler = async (req: Request): Promise<Response> => {
             
             <!-- Header -->
             <div style="text-align: center; padding: 40px 30px 30px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
-              <div style="background-color: #f59e0b; color: white; width: 60px; height: 60px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 28px; font-weight: bold;">K</div>
-              <h1 class="header-title" style="margin: 0; font-size: 24px; font-weight: 600; color: #1e293b;">Pagamento Pendente</h1>
+              <h1 class="header-title" style="margin: 0; font-size: 28px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">KAMBAFY</h1>
+              <p style="margin: 15px 0 0; font-size: 18px; font-weight: 500; color: #f59e0b;">Pagamento Pendente</p>
               <p style="margin: 8px 0 0; font-size: 16px; color: #64748b;">Complete o seu pagamento para acessar o produto</p>
             </div>
 
@@ -187,8 +187,8 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
 
             <!-- Footer -->
-            <div style="text-align: center; padding: 30px; background-color: #f8fafc;">
-              <div style="background-color: #64748b; color: white; width: 40px; height: 40px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 20px; font-weight: bold; opacity: 0.7;">K</div>
+            <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
               <p style="margin: 0; color: #64748b; font-size: 14px;">
                 Obrigado por escolher a Kambafy
               </p>
@@ -378,11 +378,9 @@ const handler = async (req: Request): Promise<Response> => {
             </head>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="background-color: #16a34a; color: white; width: 60px; height: 60px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
-                  <span style="font-size: 24px; font-weight: bold;">K</span>
-                </div>
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">KAMBAFY</h1>
                 <div style="background-color: #16a34a; color: white; padding: 20px; border-radius: 8px;">
-                  <h1 style="margin: 0; font-size: 24px;">✅ Compra Confirmada!</h1>
+                  <h2 style="margin: 0; font-size: 24px; font-weight: 600;">Compra Confirmada!</h2>
                   <p style="margin: 10px 0 0 0; font-size: 16px; color: white;">Obrigado pela sua compra, ${customerName}!</p>
                 </div>
               </div>
@@ -429,8 +427,8 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
 
               <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-                <p style="margin: 0; color: #666;">
-                  <strong>Kambafy</strong><br>
+                <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
+                <p style="margin: 0; color: #64748b; font-size: 14px;">
                   Obrigado por confiar em nós!
                 </p>
               </div>
@@ -447,11 +445,9 @@ const handler = async (req: Request): Promise<Response> => {
           </head>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
-              <div style="background-color: #16a34a; color: white; width: 60px; height: 60px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
-                <span style="font-size: 24px; font-weight: bold;">K</span>
-              </div>
+              <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">KAMBAFY</h1>
               <div style="background-color: #16a34a; color: white; padding: 20px; border-radius: 8px;">
-                <h1 style="margin: 0; font-size: 24px;">✅ Compra Confirmada!</h1>
+                <h2 style="margin: 0; font-size: 24px; font-weight: 600;">Compra Confirmada!</h2>
                 <p style="margin: 10px 0 0 0; font-size: 16px; color: white;">Obrigado pela sua compra, ${customerName}!</p>
               </div>
             </div>
@@ -494,8 +490,8 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
 
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-              <p style="margin: 0; color: #666;">
-                <strong>Kambafy</strong><br>
+              <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
+              <p style="margin: 0; color: #64748b; font-size: 14px;">
                 Obrigado por confiar em nós!
               </p>
             </div>
