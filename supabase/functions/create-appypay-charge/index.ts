@@ -207,14 +207,12 @@ serve(async (req) => {
 
     logStep("Product found", { name: product.name });
 
-    // Gerar ID único para a transação (formato mais robusto)
+    // Gerar ID único para a transação (máximo 15 caracteres alfanuméricos)
     const now = new Date();
-    const timestamp = now.getFullYear().toString().slice(-2) + 
-                     (now.getMonth() + 1).toString().padStart(2, '0') + 
-                     now.getDate().toString().padStart(2, '0') + 
+    const timestamp = now.getDate().toString().padStart(2, '0') + 
                      now.getHours().toString().padStart(2, '0') + 
                      now.getMinutes().toString().padStart(2, '0');
-    const randomSuffix = Math.random().toString(36).substr(2, 6).toUpperCase();
+    const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
     const merchantTransactionId = `TR${timestamp}${randomSuffix}`;
     
     // Use order ID from checkout if provided, otherwise generate new one
