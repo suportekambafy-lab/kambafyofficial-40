@@ -21,7 +21,7 @@ import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
-import { ReferenceModal } from "@/components/ReferenceModal";
+
 
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 
@@ -105,7 +105,6 @@ const Checkout = () => {
 
   // Verificar se é um upsell de outro pedido
   const [upsellFromOrder, setUpsellFromOrder] = useState<string | null>(null);
-  const [showReferenceModal, setShowReferenceModal] = useState(false);
   const [referenceData, setReferenceData] = useState<{
     referenceNumber: string;
     entity: string;
@@ -1788,7 +1787,6 @@ const Checkout = () => {
           productName: product.name,
           orderId: orderId
         });
-        setShowReferenceModal(true);
         setProcessing(false);
       } else {
         console.log('🏠 Redirecionando para página de agradecimento');
@@ -2305,6 +2303,78 @@ const Checkout = () => {
                         </span>
                       </div>
                     </div>
+
+                    {/* Reference Payment Details */}
+                    {referenceData && (
+                      <div className="border-t pt-4 mt-4">
+                        <div className="bg-green-50 rounded-lg p-4 space-y-4">
+                          <div className="flex items-center justify-center mb-4">
+                            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                              <Check className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                          
+                          <div className="text-center mb-4">
+                            <p className="text-green-800 font-semibold mb-2">
+                              Referência gerada com sucesso!
+                            </p>
+                            <p className="text-sm text-green-700">
+                              Use os dados abaixo para efetuar o pagamento em qualquer banco ou ATM
+                            </p>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="bg-white rounded-lg p-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-600">Entidade:</span>
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-mono font-bold text-lg">{referenceData.entity}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => navigator.clipboard.writeText(referenceData.entity)}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <Receipt className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg p-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-600">Referência:</span>
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-mono font-bold text-lg">{referenceData.referenceNumber}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => navigator.clipboard.writeText(referenceData.referenceNumber)}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <Receipt className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="bg-blue-50 rounded-lg p-3 mt-4">
+                            <p className="text-sm font-medium text-blue-800 mb-2">Passos:</p>
+                            <p className="text-sm text-blue-700">
+                              <strong>Pagamentos &gt;&gt; Pagamentos de serviços &gt;&gt; Pagamentos por referência</strong>
+                            </p>
+                          </div>
+
+                          <Button 
+                            onClick={() => navigate(`/obrigado?order_id=${referenceData.orderId}&status=pending`)}
+                            className="w-full mt-4"
+                          >
+                            Finalizar e continuar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                     
                     {selectedPayment === 'express' && !processing && (
                       <div className="mt-4 space-y-4">
@@ -2398,7 +2468,7 @@ const Checkout = () => {
                       </div>
                     )}
 
-                    {selectedPayment === 'reference' && (
+                    {selectedPayment === 'reference' && !referenceData && (
                       <div className="mt-4 space-y-4">
                         <div className="text-left p-4 bg-orange-50 rounded-lg border border-orange-100">
                           <p className="text-sm font-medium text-gray-700 leading-relaxed mb-2">
@@ -2439,7 +2509,7 @@ const Checkout = () => {
                 </div>
               )}
 
-              {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
+              {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && (
                 <Button
                   onClick={handlePurchase}
                   disabled={
@@ -2470,7 +2540,7 @@ const Checkout = () => {
                       PROCESSANDO...
                     </div>
                   ) : (
-                    'COMPRAR AGORA'
+                    selectedPayment === 'reference' ? 'GERAR REFERÊNCIA' : 'COMPRAR AGORA'
                   )}
                 </Button>
               )}
@@ -2510,14 +2580,6 @@ const Checkout = () => {
         </div>
       </div>
       
-      {/* Reference Modal */}
-      {showReferenceModal && referenceData && (
-        <ReferenceModal
-          isOpen={showReferenceModal}
-          onClose={() => setShowReferenceModal(false)}
-          referenceData={referenceData}
-        />
-      )}
     </ThemeProvider>
   );
 };
