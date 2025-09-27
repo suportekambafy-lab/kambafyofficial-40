@@ -95,7 +95,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
                            Math.floor(Math.random() * 100).toString().padStart(2, '0');
         
         // Criar conta via edge function
-        const { error: registrationError } = await supabase.functions.invoke('process-customer-registration', {
+        const { data: registrationData, error: registrationError } = await supabase.functions.invoke('add-member-area-student', {
           body: {
             customerEmail: formData.email,
             customerName: formData.name,
@@ -107,7 +107,8 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
           console.error('Error creating user account:', registrationError);
           // Continue mesmo se houver erro na criação da conta
         } else {
-          isNewAccount = true;
+          isNewAccount = registrationData?.isNewAccount || false;
+          console.log('User registration result:', registrationData);
         }
       }
 
@@ -230,7 +231,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
                            Math.floor(Math.random() * 100).toString().padStart(2, '0');
         
         // Criar conta via edge function
-        const { error: registrationError } = await supabase.functions.invoke('process-customer-registration', {
+        const { data: registrationData, error: registrationError } = await supabase.functions.invoke('add-member-area-student', {
           body: {
             customerEmail: student.student_email,
             customerName: student.student_name,
@@ -242,7 +243,8 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
           console.error('Error creating user account:', registrationError);
           // Continue mesmo se houver erro na criação da conta
         } else {
-          isNewAccount = true;
+          isNewAccount = registrationData?.isNewAccount || false;
+          console.log('User registration result:', registrationData);
         }
       }
 
