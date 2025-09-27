@@ -17,7 +17,7 @@ import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { LessonComments } from './LessonComments';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useLessonProgress } from '@/hooks/useLessonProgress';
+import { useMemberLessonProgress } from '@/hooks/useMemberLessonProgress';
 
 // Função para detectar e atualizar duração do vídeo automaticamente
 const detectAndUpdateVideoDuration = async (lesson: Lesson) => {
@@ -88,7 +88,15 @@ export default function ModernMembersArea() {
     getModuleProgress,
     getModuleStats,
     isLoadingProgress
-  } = useLessonProgress(memberAreaId || '', session?.studentEmail);
+  } = useMemberLessonProgress(memberAreaId || '', session?.studentEmail);
+
+  console.log('🎬 ModernMembersArea - Progress Hook State:', {
+    memberAreaId,
+    studentEmail: session?.studentEmail,
+    lessonProgressCount: Object.keys(lessonProgress).length,
+    isLoadingProgress,
+    lessonProgress: Object.keys(lessonProgress).length > 0 ? lessonProgress : 'EMPTY'
+  });
   console.log('🎬 ModernMembersArea render:', {
     memberAreaId,
     isAuthenticated,

@@ -29,16 +29,29 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
   const [comments, setComments] = useState<Record<string, LessonComment[]>>({});
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
 
+  console.log('🔧 useLessonProgress initialized:', {
+    memberAreaId,
+    studentEmail,
+    userId: user?.id,
+    hasSession: !!session,
+    hasUser: !!user
+  });
+
   // Load lesson progress - funciona tanto com user autenticado quanto com sessão de member area
   const loadLessonProgress = async () => {
-    if (!memberAreaId) return;
+    console.log('🔄 loadLessonProgress called with:', { memberAreaId, userId: user?.id, studentEmail });
+    
+    if (!memberAreaId) {
+      console.log('❌ No memberAreaId provided');
+      return;
+    }
     
     // Usar user_id se autenticado, ou buscar por email da sessão de member area
     const userId = user?.id;
     const email = studentEmail;
     
     if (!userId && !email) {
-      console.log('Nenhum user_id ou email disponível para carregar progresso');
+      console.log('❌ Nenhum user_id ou email disponível para carregar progresso');
       return;
     }
 
@@ -75,7 +88,11 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
         };
       });
       setLessonProgress(progressMap);
-      console.log('✅ Progresso das aulas carregado:', Object.keys(progressMap).length, 'aulas');
+      console.log('✅ Progresso das aulas carregado:', {
+        count: Object.keys(progressMap).length,
+        data: progressMap,
+        raw: data
+      });
     } catch (error) {
       console.error('Error loading lesson progress:', error);
     } finally {
@@ -316,7 +333,14 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
   // Calculate course progress
   const getCourseProgress = (totalLessons: number) => {
     const completedLessons = Object.values(lessonProgress).filter(p => p.completed).length;
-    return totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+    const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+    console.log('📊 getCourseProgress:', {
+      totalLessons,
+      completedLessons,
+      progress,
+      lessonProgressKeys: Object.keys(lessonProgress)
+    });
+    return progress;
   };
 
   // Calculate module progress based on completed lessons in that module
@@ -337,16 +361,27 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
       return progress && progress.progress_percentage > 0 && !progress.completed;
     }).length;
     
-    return {
+    const stats = {
       total: moduleLessons.length,
       completed: completedLessons,
       inProgress: inProgressLessons,
       remaining: moduleLessons.length - completedLessons - inProgressLessons,
       progress: moduleLessons.length > 0 ? Math.round((completedLessons / moduleLessons.length) * 100) : 0
     };
+    
+    console.log('📈 getModuleStats for', moduleId, ':', stats);
+    return stats;
   };
 
   useEffect(() => {
+    console.log('🔄 useLessonProgress useEffect triggered:', {
+      memberAreaId,
+      userId: user?.id,
+      studentEmail,
+      hasUser: !!user,
+      hasSession: !!session
+    });
+    
     if (memberAreaId) {
       loadLessonProgress();
     }
