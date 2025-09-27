@@ -34,7 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
       hasApiKey: !!INFOBIP_API_KEY,
       hasBaseUrl: !!INFOBIP_BASE_URL,
       apiKeyLength: INFOBIP_API_KEY?.length || 0,
-      baseUrlLength: INFOBIP_BASE_URL?.length || 0
+      baseUrl: INFOBIP_BASE_URL
     });
     
     if (!INFOBIP_API_KEY || !INFOBIP_BASE_URL) {
