@@ -109,7 +109,11 @@ export default function ModernMembersArea() {
     isAuthenticated,
     userExists: !!user,
     memberAreaExists: !!memberArea,
-    authLoading
+    verifiedMemberAreaExists: !!verifiedMemberArea,
+    currentMemberAreaExists: !!currentMemberArea,
+    authLoading,
+    lessonsCount: lessons.length,
+    modulesCount: modules.length
   });
 
   // REMOVER verificação de acesso automática - apenas carregar se há dados necessários
@@ -316,19 +320,19 @@ export default function ModernMembersArea() {
     courseProgress: courseProgress + '%'
   });
 
+  console.log('🎨 ModernMembersArea - Renderizando conteúdo:', {
+    hasCurrentMemberArea: !!currentMemberArea,
+    hasLessons: lessons.length > 0,
+    hasModules: modules.length > 0,
+    selectedLesson: !!selectedLesson
+  });
+
   return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
       <MemberAreaSlideMenu lessons={lessons} modules={modules} lessonProgress={lessonProgress} getCourseProgress={getCourseProgress} getModuleProgress={getModuleProgress} getModuleStats={getModuleStats} totalDuration={totalDuration} completedLessons={completedLessons} onLessonSelect={setSelectedLesson} onLogout={handleLogout} />
       
       {/* Hero Section - Ocultar quando aula selecionada */}
-      {!selectedLesson && <motion.section initial={{
-      opacity: 0
-    }} animate={{
-      opacity: 1
-    }} exit={{
-      opacity: 0,
-      y: -20
-    }} className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden">
+      {!selectedLesson && <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:40px_40px]" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
@@ -341,13 +345,7 @@ export default function ModernMembersArea() {
           
           <div className="relative container mx-auto px-4 py-20">
             {/* Header */}
-            <motion.div initial={{
-          y: -20,
-          opacity: 0
-        }} animate={{
-          y: 0,
-          opacity: 1
-        }} className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10">
+            <motion.div className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10">
               <div className="flex items-center gap-3">
                 {currentMemberArea?.logo_url ? <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
                     <AvatarImage src={currentMemberArea.logo_url} alt={currentMemberArea.name} />
@@ -365,15 +363,7 @@ export default function ModernMembersArea() {
             </motion.div>
 
             {/* Course Hero */}
-            <motion.div initial={{
-          y: 20,
-          opacity: 0
-        }} animate={{
-          y: 0,
-          opacity: 1
-        }} transition={{
-          delay: 0.1
-        }} className="text-center mb-12 mt-20 sm:mt-8">
+            <motion.div className="text-center mb-12 mt-20 sm:mt-8">
               <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4">
                 <Trophy className="h-3 w-3 mr-1" />
                 Curso Premium
@@ -391,13 +381,7 @@ export default function ModernMembersArea() {
         </motion.section>}
 
       {/* Header fixo quando aula selecionada */}
-      {selectedLesson && <motion.header initial={{
-      y: -20,
-      opacity: 0
-    }} animate={{
-      y: 0,
-      opacity: 1
-    }} className="bg-black/95 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
+      {selectedLesson && <motion.header className="bg-black/95 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4 bg-zinc-950">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -433,15 +417,7 @@ export default function ModernMembersArea() {
               
               {/* Área do vídeo */}
               <div className="flex-1 p-6 px-0 py-0">
-                <motion.div initial={{
-              opacity: 0,
-              scale: 0.95
-            }} animate={{
-              opacity: 1,
-              scale: 1
-            }} transition={{
-              delay: 0.1
-            }}>
+                <motion.div>
                   <Card className="overflow-hidden mb-6 bg-zinc-950 rounded-none border-0">
                     <ModernLessonViewer lesson={selectedLesson} lessons={lessons} lessonProgress={lessonProgress} onNavigateLesson={handleNavigateLesson} onClose={() => setSelectedLesson(null)} onUpdateProgress={updateVideoProgress} />
                   </Card>
