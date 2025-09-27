@@ -21,6 +21,7 @@ import {
   Target
 } from 'lucide-react';
 import { Lesson } from '@/types/memberArea';
+import { LessonContentTabs } from './LessonContentTabs';
 
 interface ModernLessonViewerProps {
   lesson: Lesson;
@@ -78,7 +79,7 @@ export function ModernLessonViewer({
 
   return (
     <div className="space-y-6">
-      {/* Video Player - sozinho */}
+      {/* Video Player */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -125,6 +126,15 @@ export function ModernLessonViewer({
             </div>
           )}
         </Card>
+      </motion.div>
+
+      {/* Lesson Content Tabs */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <LessonContentTabs lesson={lesson} />
       </motion.div>
     </div>
   );

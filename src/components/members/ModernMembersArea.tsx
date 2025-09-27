@@ -148,18 +148,18 @@ export default function ModernMembersArea() {
          if (!lessonsError && lessonsData) {
            console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
            
-           // Processar dados das lessons para converter JSON para os tipos corretos
-           const processedLessons = lessonsData.map((lesson: any) => ({
-             ...lesson,
-             complementary_links: lesson.complementary_links ? 
-               (typeof lesson.complementary_links === 'string' ? 
-                 JSON.parse(lesson.complementary_links) : 
-                 lesson.complementary_links) : [],
-             lesson_materials: lesson.lesson_materials ? 
-               (typeof lesson.lesson_materials === 'string' ? 
-                 JSON.parse(lesson.lesson_materials) : 
-                 lesson.lesson_materials) : []
-           }));
+            // Processar dados das lessons para converter JSON para os tipos corretos
+            const processedLessons = lessonsData.map((lesson: any) => ({
+              ...lesson,
+              complementary_links: lesson.complementary_links ? 
+                (typeof lesson.complementary_links === 'string' ? 
+                  JSON.parse(lesson.complementary_links) : 
+                  lesson.complementary_links) : [],
+              lesson_materials: lesson.lesson_materials ? 
+                (typeof lesson.lesson_materials === 'string' ? 
+                  JSON.parse(lesson.lesson_materials) : 
+                  lesson.lesson_materials) : []
+            }));
            
            // Auto-detectar duração de vídeos que têm duration = 0
            processedLessons.forEach(async (lesson) => {

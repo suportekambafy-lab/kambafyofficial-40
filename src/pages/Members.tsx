@@ -590,6 +590,10 @@ export default function Members() {
     }
 
     try {
+      // Validar que os arrays não são nulos antes de stringify
+      const validatedLinks = Array.isArray(formData.complementary_links) ? formData.complementary_links : [];
+      const validatedMaterials = Array.isArray(formData.lesson_materials) ? formData.lesson_materials : [];
+      
       const lessonData = {
         title: formData.title.trim(),
         description: formData.description?.trim() || null,
@@ -600,27 +604,39 @@ export default function Members() {
         member_area_id: selectedArea.id,
         module_id: (formData.module_id && formData.module_id !== 'none') ? formData.module_id : (selectedModuleForLesson || null),
         order_number: editingLesson ? editingLesson.order_number : lessons.length + 1,
-        complementary_links: JSON.stringify(formData.complementary_links || []),
-        lesson_materials: JSON.stringify(formData.lesson_materials || [])
+        complementary_links: JSON.stringify(validatedLinks),
+        lesson_materials: JSON.stringify(validatedMaterials)
       };
 
       console.log('🔍 Form data before saving:', {
         complementary_links: formData.complementary_links,
-        lesson_materials: formData.lesson_materials
+        lesson_materials: formData.lesson_materials,
+        complementary_links_length: formData.complementary_links?.length,
+        lesson_materials_length: formData.lesson_materials?.length,
+        validatedLinks: validatedLinks,
+        validatedMaterials: validatedMaterials,
+        validatedLinks_length: validatedLinks.length,
+        validatedMaterials_length: validatedMaterials.length
       });
       console.log('🔍 Lesson data to insert/update:', lessonData);
 
       if (editingLesson) {
         console.log('Updating lesson:', editingLesson.id);
-        const { error } = await supabase
+        console.log('🔄 Update data:', lessonData);
+        
+        const { data: updatedData, error } = await supabase
           .from('lessons')
           .update(lessonData)
-          .eq('id', editingLesson.id);
+          .eq('id', editingLesson.id)
+          .select()
+          .single();
         
         if (error) {
           console.error('Update error:', error);
           throw error;
         }
+        
+        console.log('✅ Updated lesson data:', updatedData);
         
         toast({
           title: "Sucesso",
@@ -675,6 +691,17 @@ export default function Members() {
     console.log('📝 Lesson complementary_links:', lesson.complementary_links);
     console.log('📝 Lesson lesson_materials:', lesson.lesson_materials);
     
+    // Processar os dados para garantir que sejam arrays válidos
+    const processedLinks = lesson.complementary_links ? 
+      (typeof lesson.complementary_links === 'string' ? 
+        JSON.parse(lesson.complementary_links) : 
+        lesson.complementary_links) : [];
+        
+    const processedMaterials = lesson.lesson_materials ? 
+      (typeof lesson.lesson_materials === 'string' ? 
+        JSON.parse(lesson.lesson_materials) : 
+        lesson.lesson_materials) : [];
+    
     setEditingLesson(lesson);
     setFormData({
       title: lesson.title,
@@ -683,13 +710,15 @@ export default function Members() {
       duration: lesson.duration || 0,
       status: lesson.status,
       module_id: lesson.module_id || '',
-      complementary_links: lesson.complementary_links || [],
-      lesson_materials: lesson.lesson_materials || []
+      complementary_links: processedLinks,
+      lesson_materials: processedMaterials
     });
     
     console.log('📝 Form data set to:', {
-      complementary_links: lesson.complementary_links || [],
-      lesson_materials: lesson.lesson_materials || []
+      complementary_links: processedLinks,
+      lesson_materials: processedMaterials,
+      complementary_links_length: processedLinks.length,
+      lesson_materials_length: processedMaterials.length
     });
     
     setSelectedModuleForLesson(''); // Reset this when editing
@@ -1791,30 +1820,38 @@ export default function Members() {
                </div>
                
                {/* Links Complementares */}
-               <LessonLinksManager 
-                 links={formData.complementary_links}
-                 onChange={(links) => {
-                   console.log('🔗 Links onChange called with:', links);
-                   setFormData(prev => {
-                     const updated = { ...prev, complementary_links: links };
-                     console.log('🔗 Updated form data:', updated);
-                     return updated;
-                   });
-                 }}
-               />
-               
-               {/* Materiais da Aula */}
-               <LessonMaterialsManager
-                 materials={formData.lesson_materials}
-                 onChange={(materials) => {
-                   console.log('📁 Materials onChange called with:', materials);
-                   setFormData(prev => {
-                     const updated = { ...prev, lesson_materials: materials };
-                     console.log('📁 Updated form data:', updated);
-                     return updated;
-                   });
-                 }}
-               />
+                <LessonLinksManager 
+                  links={formData.complementary_links || []}
+                  onChange={(links) => {
+                    console.log('🔗 Links onChange called with:', links);
+                    console.log('🔗 Links type:', typeof links, 'Array?', Array.isArray(links));
+                    setFormData(prev => {
+                      const updated = { ...prev, complementary_links: links };
+                      console.log('🔗 Updated form data:', {
+                        ...updated,
+                        complementary_links_length: updated.complementary_links?.length
+                      });
+                      return updated;
+                    });
+                  }}
+                />
+                
+                {/* Materiais da Aula */}
+                <LessonMaterialsManager
+                  materials={formData.lesson_materials || []}
+                  onChange={(materials) => {
+                    console.log('📁 Materials onChange called with:', materials);
+                    console.log('📁 Materials type:', typeof materials, 'Array?', Array.isArray(materials));
+                    setFormData(prev => {
+                      const updated = { ...prev, lesson_materials: materials };
+                      console.log('📁 Updated form data:', {
+                        ...updated,
+                        lesson_materials_length: updated.lesson_materials?.length
+                      });
+                      return updated;
+                    });
+                  }}
+                />
                
                <DialogFooter>
                 <Button 
