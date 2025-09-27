@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-const VONAGE_API_KEY = Deno.env.get('VONAGE_API_KEY');
-const VONAGE_API_SECRET = Deno.env.get('VONAGE_API_SECRET');
+const INFOBIP_API_KEY = Deno.env.get('INFOBIP_API_KEY');
+const INFOBIP_BASE_URL = Deno.env.get('INFOBIP_BASE_URL');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,16 +30,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log('[SMS-NOTIFICATION] Vonage credentials check:', {
-      hasApiKey: !!VONAGE_API_KEY,
-      hasApiSecret: !!VONAGE_API_SECRET,
-      apiKeyLength: VONAGE_API_KEY?.length || 0,
-      apiSecretLength: VONAGE_API_SECRET?.length || 0
+    console.log('[SMS-NOTIFICATION] Infobip credentials check:', {
+      hasApiKey: !!INFOBIP_API_KEY,
+      hasBaseUrl: !!INFOBIP_BASE_URL,
+      apiKeyLength: INFOBIP_API_KEY?.length || 0,
+      baseUrlLength: INFOBIP_BASE_URL?.length || 0
     });
     
-    if (!VONAGE_API_KEY || !VONAGE_API_SECRET) {
-      console.error('[SMS-NOTIFICATION] Vonage API credentials not configured');
-      throw new Error('Vonage API credentials not configured');
+    if (!INFOBIP_API_KEY || !INFOBIP_BASE_URL) {
+      console.error('[SMS-NOTIFICATION] Infobip API credentials not configured');
+      throw new Error('Infobip API credentials not configured');
     }
 
     const requestData: SMSNotificationRequest = await req.json();
@@ -50,7 +50,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Phone number is required');
     }
 
-    // Formatar número de telefone para Vonage
+    // Formatar número de telefone para Infobip
     let phoneNumber = requestData.to.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
     
     // Se não começar com código do país, assumir Angola (+244)
@@ -71,50 +71,55 @@ const handler = async (req: Request): Promise<Response> => {
       finalMessage = `Lembrete de pagamento\n\nOla ${requestData.customerName || 'Cliente'},\n\nSeu pagamento esta pendente.\n\nEntidade: ${requestData.entity || 'N/A'}\nReferencia: ${requestData.referenceNumber || 'N/A'}\nValor: ${requestData.amount || 'N/A'} KZ\n\nComplete seu pagamento para ter acesso ao produto "${requestData.productName}".`;
     }
 
-    // Preparar payload para Vonage SMS API
+    // Preparar payload para Infobip SMS API
     const smsPayload = {
-      from: requestData.from || 'Kambafy',
-      to: phoneNumber,
-      text: finalMessage
+      messages: [
+        {
+          destinations: [
+            {
+              to: phoneNumber
+            }
+          ],
+          from: requestData.from || 'Kambafy',
+          text: finalMessage
+        }
+      ]
     };
 
-    console.log('[SMS-NOTIFICATION] Sending SMS via Vonage:', JSON.stringify(smsPayload, null, 2));
+    console.log('[SMS-NOTIFICATION] Sending SMS via Infobip:', JSON.stringify(smsPayload, null, 2));
 
-    // Enviar SMS via Vonage
-    const vonageResponse = await fetch('https://rest.nexmo.com/sms/json', {
+    // Enviar SMS via Infobip
+    const infobipResponse = await fetch(`${INFOBIP_BASE_URL}/sms/2/text/advanced`, {
       method: 'POST',
       headers: {
+        'Authorization': `App ${INFOBIP_API_KEY}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        ...smsPayload,
-        api_key: VONAGE_API_KEY,
-        api_secret: VONAGE_API_SECRET
-      })
+      body: JSON.stringify(smsPayload)
     });
 
-    const responseData = await vonageResponse.json();
-    console.log('[SMS-NOTIFICATION] Vonage response:', JSON.stringify(responseData, null, 2));
+    const responseData = await infobipResponse.json();
+    console.log('[SMS-NOTIFICATION] Infobip response:', JSON.stringify(responseData, null, 2));
 
-    if (!vonageResponse.ok) {
-      console.error('[SMS-NOTIFICATION] Vonage API error:', responseData);
-      throw new Error(`Vonage API error: ${responseData['error-text'] || 'Unknown error'}`);
+    if (!infobipResponse.ok) {
+      console.error('[SMS-NOTIFICATION] Infobip API error:', responseData);
+      throw new Error(`Infobip API error: ${responseData.requestError?.serviceException?.text || 'Unknown error'}`);
     }
 
     // Verificar se a mensagem foi enviada com sucesso
     const message = responseData.messages?.[0];
-    if (message?.status !== '0') {
+    if (message?.status?.groupId !== 1) {
       console.error('[SMS-NOTIFICATION] Message failed:', message);
-      throw new Error(`Message failed: ${message['error-text'] || 'Unknown error'}`);
+      throw new Error(`Message failed: ${message?.status?.description || 'Unknown error'}`);
     }
 
-    console.log('[SMS-NOTIFICATION] SMS sent successfully via Vonage:', message?.['message-id']);
+    console.log('[SMS-NOTIFICATION] SMS sent successfully via Infobip:', message?.messageId);
 
     return new Response(JSON.stringify({
       success: true,
-      messageId: message?.['message-id'],
+      messageId: message?.messageId,
       status: message?.status,
-      vonageResponse: responseData
+      infobipResponse: responseData
     }), {
       status: 200,
       headers: {
