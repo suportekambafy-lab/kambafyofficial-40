@@ -342,7 +342,7 @@ export default function ModernMembersArea() {
       y: 0,
       opacity: 1
     }} className="bg-black/95 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-4 py-4 bg-zinc-950">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="sm" onClick={() => setSelectedLesson(null)} className="text-white hover:text-emerald-400">
