@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CreditCard, Lock } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { CreditCard, Lock, X } from 'lucide-react';
+import { PaymentProgress } from '@/components/ui/payment-progress';
+import { useOptimizedPayment } from '@/hooks/useOptimizedPayment';
 
 interface StripePaymentFormProps {
   product: any;
@@ -35,92 +35,53 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
   userCountry,
   t = (key: string) => key
 }) => {
-  const { toast } = useToast();
-  const [processingPayment, setProcessingPayment] = useState(false);
+  const { isProcessing, processStripePayment, cancelPayment } = useOptimizedPayment();
+  const [paymentStage, setPaymentStage] = useState<'validating' | 'processing' | 'redirecting' | 'complete'>('validating');
+  const [paymentProgress, setPaymentProgress] = useState(0);
 
   const handleStripePayment = async () => {
-    if (!customerInfo.fullName || !customerInfo.email) {
-      toast({
-        title: "Informações obrigatórias",
-        description: "Preencha nome e email para continuar",
-        variant: "destructive"
-      });
-      return;
+    // Generate unique order ID
+    const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Calculate final amount with custom prices
+    let finalAmount = amount;
+    if (product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
+      const customPrice = parseFloat(product.custom_prices[userCountry.code]);
+      if (!isNaN(customPrice)) {
+        finalAmount = customPrice;
+      }
     }
 
+    const hasCustomPrices = !!(product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]);
+
+    // Set submitting state immediately for UI feedback
     setIsSubmitting(true);
-    setProcessingPayment(true);
 
-    try {
-      // Gerar ID único para o pedido
-      const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      // Calcular valor correto para o Stripe considerando preços personalizados
-      let finalAmount = amount;
-      
-      // Verificar se há preços personalizados configurados para o país atual
-      if (product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
-        const customPrice = parseFloat(product.custom_prices[userCountry.code]);
-        if (!isNaN(customPrice)) {
-          console.log(`💰 Usando preço personalizado para ${userCountry.code}: ${customPrice} ${userCountry.currency}`);
-          finalAmount = customPrice;
-        }
+    // Process payment with optimized flow
+    await processStripePayment({
+      amount: finalAmount,
+      currency,
+      productName: product.name,
+      customerEmail: customerInfo.email,
+      customerName: customerInfo.fullName,
+      productId: product.id,
+      orderId,
+      hasCustomPrices
+    }, {
+      onProgress: (stage, progress) => {
+        setPaymentStage(stage);
+        setPaymentProgress(progress);
+      },
+      onSuccess: (data) => {
+        console.log('Payment successful:', data);
+        // Keep submitting state for a moment to show completion
+        setTimeout(() => setIsSubmitting(false), 1000);
+      },
+      onError: (error) => {
+        console.error('Payment error:', error);
+        setIsSubmitting(false);
       }
-
-      console.log('Iniciating Stripe payment:', {
-        originalAmount: amount,
-        finalAmount,
-        currency,
-        productName: product.name,
-        customerEmail: customerInfo.email,
-        orderId,
-        hasCustomPrices: !!(product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]),
-        userCountry: userCountry?.code
-      });
-
-      const hasCustomPrices = !!(product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]);
-
-      const { data, error } = await supabase.functions.invoke('create-stripe-payment', {
-        body: {
-          amount: finalAmount,
-          currency,
-          productName: product.name,
-          customerEmail: customerInfo.email,
-          customerName: customerInfo.fullName,
-          productId: product.id,
-          orderId,
-          hasCustomPrices // Informar se está usando preço personalizado
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (data?.url) {
-        console.log('Redirecting to Stripe checkout:', data.url);
-        // Abrir checkout do Stripe em nova aba
-        window.open(data.url, '_blank');
-        
-        toast({
-          title: "Redirecionando para pagamento",
-          description: "Você será redirecionado para o checkout seguro do Stripe",
-        });
-      } else {
-        throw new Error('URL de checkout não recebida');
-      }
-
-    } catch (error) {
-      console.error('Erro no pagamento Stripe:', error);
-      toast({
-        title: "Erro no pagamento",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-      setProcessingPayment(false);
-    }
+    });
   };
 
   return (
@@ -148,13 +109,33 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
           </div>
         </div>
 
+        {isProcessing && (
+          <div className="mb-6 p-4 bg-muted/50 rounded-lg border">
+            <PaymentProgress 
+              stage={paymentStage} 
+              progress={paymentProgress}
+            />
+            <div className="flex justify-end mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={cancelPayment}
+                className="text-xs"
+              >
+                <X className="w-3 h-3 mr-1" />
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
+
         <Button
           onClick={handleStripePayment}
-          disabled={isSubmitting || processingPayment || !customerInfo.fullName || !customerInfo.email}
+          disabled={isSubmitting || isProcessing || !customerInfo.fullName || !customerInfo.email}
           className="w-full h-12 text-lg font-semibold"
           size="lg"
         >
-          {processingPayment ? (
+          {isProcessing ? (
             <span className="flex items-center gap-2">
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               {t('payment.processing') || 'Processando...'}
