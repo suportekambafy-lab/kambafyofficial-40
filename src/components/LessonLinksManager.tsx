@@ -5,6 +5,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, Plus, ExternalLink } from 'lucide-react';
 import { ComplementaryLink } from '@/types/memberArea';
+import { z } from 'zod';
+
+// Schema de validação para links
+const linkSchema = z.object({
+  title: z.string().trim().min(1, "Título é obrigatório").max(100, "Título deve ter menos de 100 caracteres"),
+  url: z.string().trim().url("URL deve ser válida").max(500, "URL deve ter menos de 500 caracteres")
+});
 
 interface LessonLinksManagerProps {
   links: ComplementaryLink[];
@@ -13,47 +20,69 @@ interface LessonLinksManagerProps {
 
 export function LessonLinksManager({ links, onChange }: LessonLinksManagerProps) {
   const [newLink, setNewLink] = useState({ title: '', url: '' });
+  const [errors, setErrors] = useState<{ title?: string; url?: string }>({});
 
-  const addLink = () => {
-    if (newLink.title.trim() && newLink.url.trim()) {
-      const link: ComplementaryLink = {
-        id: Date.now().toString(),
-        title: newLink.title.trim(),
-        url: newLink.url.trim()
-      };
-      
-      const updatedLinks = [...links, link];
-      console.log('🔗 Adding new link:', link);
-      console.log('🔗 Updated links array:', updatedLinks);
-      onChange(updatedLinks);
-      setNewLink({ title: '', url: '' });
+  const validateLink = (link: { title: string; url: string }) => {
+    try {
+      linkSchema.parse(link);
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: { title?: string; url?: string } = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0] as keyof typeof fieldErrors] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+      return false;
     }
   };
 
+  const addLink = () => {
+    const trimmedLink = {
+      title: newLink.title.trim(),
+      url: newLink.url.trim()
+    };
+
+    if (!validateLink(trimmedLink)) {
+      return;
+    }
+
+    const link: ComplementaryLink = {
+      id: Date.now().toString(),
+      title: trimmedLink.title,
+      url: trimmedLink.url
+    };
+    
+    const updatedLinks = [...(Array.isArray(links) ? links : []), link];
+    console.log('🔗 Adding new link:', link);
+    console.log('🔗 Updated links array:', updatedLinks);
+    onChange(updatedLinks);
+    setNewLink({ title: '', url: '' });
+    setErrors({});
+  };
+
   const removeLink = (linkId: string) => {
-    const updatedLinks = links.filter(link => link.id !== linkId);
+    const currentLinks = Array.isArray(links) ? links : [];
+    const updatedLinks = currentLinks.filter(link => link.id !== linkId);
     console.log('🗑️ Removing link:', linkId);
     console.log('🗑️ Updated links array:', updatedLinks);
     onChange(updatedLinks);
   };
 
-  const isValidUrl = (url: string) => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  };
+  const safeLinks = Array.isArray(links) ? links : [];
 
   return (
     <div className="space-y-4">
       <Label className="text-sm font-medium">Links Complementares</Label>
       
       {/* Links existentes */}
-      {links.length > 0 && (
+      {safeLinks.length > 0 && (
         <div className="space-y-2">
-          {links.map((link) => (
+          {safeLinks.map((link) => (
             <Card key={link.id} className="p-3">
               <CardContent className="p-0">
                 <div className="flex items-center justify-between gap-2">
@@ -89,23 +118,41 @@ export function LessonLinksManager({ links, onChange }: LessonLinksManagerProps)
       <Card className="p-3 border-dashed">
         <CardContent className="p-0 space-y-3">
           <div className="space-y-2">
-            <Input
-              placeholder="Título do link (ex: Material complementar)"
-              value={newLink.title}
-              onChange={(e) => setNewLink(prev => ({ ...prev, title: e.target.value }))}
-            />
-            <Input
-              placeholder="URL (ex: https://exemplo.com)"
-              value={newLink.url}
-              onChange={(e) => setNewLink(prev => ({ ...prev, url: e.target.value }))}
-            />
+            <div>
+              <Input
+                placeholder="Título do link (ex: Material complementar)"
+                value={newLink.title}
+                onChange={(e) => {
+                  setNewLink(prev => ({ ...prev, title: e.target.value }));
+                  if (errors.title) setErrors(prev => ({ ...prev, title: undefined }));
+                }}
+                className={errors.title ? "border-destructive" : ""}
+              />
+              {errors.title && (
+                <p className="text-xs text-destructive mt-1">{errors.title}</p>
+              )}
+            </div>
+            <div>
+              <Input
+                placeholder="URL (ex: https://exemplo.com)"
+                value={newLink.url}
+                onChange={(e) => {
+                  setNewLink(prev => ({ ...prev, url: e.target.value }));
+                  if (errors.url) setErrors(prev => ({ ...prev, url: undefined }));
+                }}
+                className={errors.url ? "border-destructive" : ""}
+              />
+              {errors.url && (
+                <p className="text-xs text-destructive mt-1">{errors.url}</p>
+              )}
+            </div>
           </div>
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={addLink}
-            disabled={!newLink.title.trim() || !newLink.url.trim() || !isValidUrl(newLink.url)}
+            disabled={!newLink.title.trim() || !newLink.url.trim()}
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />

@@ -590,9 +590,18 @@ export default function Members() {
     }
 
     try {
-      // Validar que os arrays não são nulos antes de stringify
-      const validatedLinks = Array.isArray(formData.complementary_links) ? formData.complementary_links : [];
-      const validatedMaterials = Array.isArray(formData.lesson_materials) ? formData.lesson_materials : [];
+      // Validar e garantir que os arrays são seguros antes de stringify
+      const safeLinks = Array.isArray(formData.complementary_links) ? formData.complementary_links : [];
+      const safeMaterials = Array.isArray(formData.lesson_materials) ? formData.lesson_materials : [];
+      
+      // Validação adicional dos links para segurança
+      const validatedLinks = safeLinks.filter(link => 
+        link && 
+        typeof link.title === 'string' && 
+        typeof link.url === 'string' &&
+        link.title.trim().length > 0 &&
+        link.url.trim().length > 0
+      );
       
       const lessonData = {
         title: formData.title.trim(),
@@ -605,7 +614,7 @@ export default function Members() {
         module_id: (formData.module_id && formData.module_id !== 'none') ? formData.module_id : (selectedModuleForLesson || null),
         order_number: editingLesson ? editingLesson.order_number : lessons.length + 1,
         complementary_links: JSON.stringify(validatedLinks),
-        lesson_materials: JSON.stringify(validatedMaterials)
+        lesson_materials: JSON.stringify(safeMaterials)
       };
 
       console.log('🔍 Form data before saving:', {
@@ -614,9 +623,9 @@ export default function Members() {
         complementary_links_length: formData.complementary_links?.length,
         lesson_materials_length: formData.lesson_materials?.length,
         validatedLinks: validatedLinks,
-        validatedMaterials: validatedMaterials,
+        validatedMaterials: safeMaterials,
         validatedLinks_length: validatedLinks.length,
-        validatedMaterials_length: validatedMaterials.length
+        validatedMaterials_length: safeMaterials.length
       });
       console.log('🔍 Lesson data to insert/update:', lessonData);
 
@@ -1827,22 +1836,26 @@ export default function Members() {
                 </Select>
                </div>
                
-               {/* Links Complementares */}
-                <LessonLinksManager 
-                  links={formData.complementary_links || []}
-                  onChange={(links) => {
-                    console.log('🔗 Links onChange called with:', links);
-                    console.log('🔗 Links type:', typeof links, 'Array?', Array.isArray(links));
-                    setFormData(prev => {
-                      const updated = { ...prev, complementary_links: links };
-                      console.log('🔗 Updated form data:', {
-                        ...updated,
-                        complementary_links_length: updated.complementary_links?.length
-                      });
-                      return updated;
-                    });
-                  }}
-                />
+                {/* Links Complementares */}
+                 <LessonLinksManager 
+                   links={formData.complementary_links || []}
+                   onChange={(links) => {
+                     console.log('🔗 Links onChange called with:', links);
+                     console.log('🔗 Links type:', typeof links, 'Array?', Array.isArray(links));
+                     
+                     // Garantir que sempre seja um array válido
+                     const safeLinks = Array.isArray(links) ? links : [];
+                     
+                     setFormData(prev => {
+                       const updated = { ...prev, complementary_links: safeLinks };
+                       console.log('🔗 Updated form data:', {
+                         ...updated,
+                         complementary_links_length: updated.complementary_links?.length
+                       });
+                       return updated;
+                     });
+                   }}
+                 />
                 
                 {/* Materiais da Aula */}
                 <LessonMaterialsManager
