@@ -21,6 +21,7 @@ import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
+import { ReferenceModal } from "@/components/ReferenceModal";
 
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 
@@ -104,6 +105,7 @@ const Checkout = () => {
 
   // Verificar se é um upsell de outro pedido
   const [upsellFromOrder, setUpsellFromOrder] = useState<string | null>(null);
+  const [showReferenceModal, setShowReferenceModal] = useState(false);
   const [referenceData, setReferenceData] = useState<{
     referenceNumber: string;
     entity: string;
@@ -1786,6 +1788,7 @@ const Checkout = () => {
           productName: product.name,
           orderId: orderId
         });
+        setShowReferenceModal(true);
         setProcessing(false);
       } else {
         console.log('🏠 Redirecionando para página de agradecimento');
@@ -2197,266 +2200,282 @@ const Checkout = () => {
                       email: formData.email,
                       phone: formData.phone
                     }}
-                    orderBumpsData={selectedOrderBumps}
-                    onSuccess={(orderDetails: any) => {
-                      console.log('💰 Stripe Payment Success:', orderDetails);
-                      // Processar comissão do afiliado
-                      if (hasAffiliate && affiliateCode) {
-                        markAsValidAffiliate();
-                      }
-                      
-                      // Disparar evento para Facebook Pixel
-                      window.dispatchEvent(new CustomEvent('purchase-completed', {
-                        detail: { 
-                          productId, 
-                          orderId: orderDetails.order_id,
-                          amount: totalPrice,
-                          currency: userCountry.currency
-                        }
-                      }));
-                      
-                      // Redirect user to thank you page
-                      const params = new URLSearchParams({
-                        order_id: orderDetails.order_id,
-                        payment_intent_id: orderDetails.payment_intent_id || '',
-                        status: 'completed'
-                      });
-                      navigate(`/obrigado?${params.toString()}`);
-                    }}
-                    affiliateCode={affiliateCode}
-                    hasAffiliate={hasAffiliate}
-                    orderBumpPrice={totalOrderBumpPrice}
-                    upsellFromOrder={upsellFromOrder}
+                    paymentMethod={selectedPayment}
+                    onSuccess={handleCardPaymentSuccess}
+                    onError={handleCardPaymentError}
+                    processing={processing}
+                    setProcessing={setProcessing}
+                    displayPrice={getDisplayPrice(totalPrice, true)}
+                    convertedAmount={convertedTotalPrice}
                   />
                 </div>
               )}
 
+
+
+
               {selectedPayment === 'kambapay' && (
                 <div className="mt-6">
-                  {kambaPayEmailError && (
-                    <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                      <div className="flex items-center">
-                        <AlertTriangle className="h-5 w-5 text-orange-600 mr-2" />
-                        <p className="text-sm font-medium text-orange-700">
-                          {kambaPayEmailError}
-                        </p>
+                  <Card className="border-blue-200 bg-blue-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+                          <Wallet className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-blue-900">Pagamento com KambaPay</h3>
+                          <p className="text-sm text-blue-700">Use seu saldo KambaPay para pagar</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-
-                  <Suspense fallback={<div className="p-4 text-center">Carregando KambaPay...</div>}>
-                    <KambaPayCheckoutOption 
-                      productPrice={totalPrice}
-                      currency={userCountry.currency}
-                      onPaymentSuccess={(email, transactionId) => {
-                        console.log('💰 KambaPay Payment Success:', { email, transactionId });
-                        // Processar comissão do afiliado
-                        if (hasAffiliate && affiliateCode) {
-                          markAsValidAffiliate();
-                        }
+                      
+                      <div className="space-y-3">
+                        <div className="bg-white p-3 rounded-lg border border-blue-200">
+                          <div className="text-sm text-gray-600 mb-1">Valor total</div>
+                          <div className="text-lg font-bold text-blue-600">
+                            {getDisplayPrice(totalPrice, true)}
+                          </div>
+                        </div>
                         
-                        // Disparar evento para Facebook Pixel
-                        window.dispatchEvent(new CustomEvent('purchase-completed', {
-                          detail: { 
-                            productId, 
-                            orderId: transactionId,
-                            amount: totalPrice,
-                            currency: userCountry.currency
-                          }
-                        }));
-                        
-                        // Redirect user to thank you page
-                        const params = new URLSearchParams({
-                          order_id: transactionId,
-                          payment_intent_id: '',
-                          status: 'completed'
-                        });
-                        navigate(`/obrigado?${params.toString()}`);
-                      }}
-                    />
-                  </Suspense>
-                </div>
-              )}
-
-              {selectedPayment === 'express' && (
-                <div className="mt-6 space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="expressPhone" className="text-gray-700 font-medium">
-                      Número de Telefone (Express)
-                    </Label>
-                    <Input
-                      id="expressPhone"
-                      placeholder="Digite seu número de telefone"
-                      value={expressPhone}
-                      onChange={(e) => setExpressPhone(e.target.value)}
-                      className="h-12 border-gray-300 focus:border-green-500"
-                    />
-                    <p className="text-sm text-gray-600">
-                      Você receberá uma notificação no seu telefone para confirmar o pagamento.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {selectedPayment === 'reference' && (
-                <div className="mt-4 space-y-4">
-                  <div className="text-left p-4 bg-orange-50 rounded-lg border border-orange-100">
-                    <p className="text-sm font-medium text-gray-700 leading-relaxed mb-2">
-                      <span className="font-semibold">💡 Como funciona:</span>
-                    </p>
-                    <div className="text-sm text-gray-600 leading-relaxed space-y-1">
-                      <p>1. Clique em "Gerar Referência"</p>
-                      <p>2. Você receberá uma referência de pagamento</p>
-                      <p>3. Use a referência para pagar em qualquer banco ou ATM</p>
-                    </div>
-                  </div>
+                        {kambaPayEmailError ? (
+                          <div className="text-xs text-red-600 bg-red-100 p-3 rounded border border-red-200">
+                            <strong>⚠️ Atenção:</strong> {kambaPayEmailError}
+                            <div className="mt-2">
+                              <button 
+                                className="text-blue-600 underline text-xs hover:text-blue-800"
+                                onClick={() => window.open('/kambapay', '_blank')}
+                              >
+                                Criar conta KambaPay
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
+                            <div className="flex items-center justify-between mb-2">
+                              <span><strong>💡 Dica:</strong> O pagamento será processado com o email informado acima.</span>
+                              <button 
+                                className="text-blue-600 underline text-xs hover:text-blue-800"
+                                onClick={() => window.open('/kambapay', '_blank')}
+                              >
+                                Ver saldo
+                              </button>
+                            </div>
+                            <p>Certifique-se de que possui saldo suficiente em sua conta KambaPay.</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </div>
 
-            {/* Order Summary Panel */}
             <div className="space-y-6">
               <Card className="shadow-sm">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Resumo do pedido</h3>
-                  
-                  <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumo do pedido</h3>
+                  <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">{getDisplayPrice(getProductFinalPrice())}</span>
+                      <span className="text-gray-700">{product?.name || 'Produto'}</span>
+                      <span className="font-medium text-gray-900">
+                        {getDisplayPrice(originalPrice)}
+                      </span>
                     </div>
                     
-                    {totalOrderBumpPrice > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Extras</span>
-                        <span className="font-medium">{getOrderBumpDisplayPrice(totalOrderBumpPrice)}</span>
+                    {Array.from(selectedOrderBumps.values()).map(({ data: bump, price }) => (
+                      <div key={bump.id} className="flex justify-between items-center text-green-600">
+                        <div className="flex-1">
+                          <span className="text-sm">{bump.bump_product_name}</span>
+                          {bump.discount > 0 && (
+                            <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded ml-2">
+                              -{bump.discount}%
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-medium">
+                          +{getOrderBumpDisplayPrice(price)}
+                        </span>
                       </div>
-                    )}
+                    ))}
                     
-                    <div className="border-t pt-4">
+                    <div className="border-t pt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-lg font-bold text-gray-900">Total</span>
-                        <span className="text-2xl font-bold text-green-600">{getDisplayPrice(totalPrice)}</span>
+                        <span className="text-gray-700 font-medium">Total</span>
+                        <span className="text-2xl font-bold text-green-600">
+                          {getDisplayPrice(totalPrice, true)}
+                        </span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Reference Details Section */}
-                  {referenceData && (
-                    <div className="mt-6 pt-6 border-t">
-                      <div className="text-center mb-4">
-                        <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
-                          <CheckCircle className="w-4 h-4" />
-                          Referência Gerada
+                    
+                    {selectedPayment === 'express' && !processing && (
+                      <div className="mt-4 space-y-4">
+                        {/* Instrução para pagamento express */}
+                        <div className="text-left p-4 bg-blue-50 rounded-lg border border-blue-100">
+                          <p className="text-sm font-medium text-gray-700 leading-relaxed">
+                            <span className="font-semibold">ATENÇÃO:</span> Após clicar no botão <span className="font-semibold">Comprar Agora</span>
+                          </p>
+                          <p className="text-sm text-gray-600 leading-relaxed mt-1">
+                            → abra o aplicativo Multicaixa Express, e encontre o botão → <span className="text-red-500 font-semibold">Operação por Autorizar</span> clica no botão, selecione o pagamento pendente e <span className="font-semibold">finalize o pagamento.</span>
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-600">
+                            Por favor, insira o número de telefone ativo do Multicaixa Express.
+                          </label>
+                          <PhoneInput
+                            value={expressPhone}
+                            onChange={(value) => setExpressPhone(value)}
+                            placeholder="Digite seu telefone"
+                            selectedCountry="AO"
+                            allowedCountries={["AO"]}
+                            className="w-full"
+                          />
                         </div>
                       </div>
-                      
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4">
-                        <h4 className="font-medium text-blue-900 text-center">Dados para pagamento</h4>
-                        
-                        <div className="space-y-3">
-                          <div className="bg-white rounded p-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Entidade:</span>
-                              <span className="font-mono font-bold text-lg">{referenceData.entity}</span>
+                    )}
+
+                    {selectedPayment === 'express' && processing && (
+                      <div className="mt-4 space-y-4">
+                        <div className="text-center">
+                          <p className="text-gray-900 font-medium text-lg mb-4">
+                            Confirme o pagamento no seu telemóvel
+                          </p>
+                          
+                          {/* Círculo de countdown */}
+                          <div className="relative inline-flex items-center justify-center mb-6">
+                            <svg 
+                              width="200" 
+                              height="200" 
+                              className="transform -rotate-90"
+                            >
+                              {/* Círculo de fundo */}
+                              <circle
+                                cx="100"
+                                cy="100"
+                                r="90"
+                                stroke="#e5e7eb"
+                                strokeWidth="12"
+                                fill="transparent"
+                              />
+                              {/* Círculo de progresso */}
+                              <circle
+                                cx="100"
+                                cy="100"
+                                r="90"
+                                stroke="#2563eb"
+                                strokeWidth="12"
+                                fill="transparent"
+                                strokeLinecap="round"
+                                strokeDasharray={565.48}
+                                strokeDashoffset={565.48 * (expressCountdownTime / 60)}
+                                style={{
+                                  transition: 'stroke-dashoffset 1s linear'
+                                }}
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                              <span className="text-sm text-gray-500 mb-2">Tempo Restante</span>
+                              <span className="text-4xl font-bold text-gray-900" id="countdown-timer">{expressCountdownTime}</span>
+                              <span className="text-sm text-gray-500 mt-1">segundos</span>
                             </div>
                           </div>
                           
-                          <div className="bg-white rounded p-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Referência:</span>
-                              <span className="font-mono font-bold text-lg">{referenceData.referenceNumber}</span>
-                            </div>
+                          <div className="space-y-2 text-sm text-gray-600 max-w-xs mx-auto">
+                            <p className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold mt-0.5">→</span>
+                              Abra o <strong>Multicaixa Express</strong>
+                            </p>
+                            <p className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold mt-0.5">→</span>
+                              Procure por <span className="text-red-600 font-bold">"Operação por Autorizar"</span>
+                            </p>
+                            <p className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold mt-0.5">→</span>
+                              <strong>Confirme a transação</strong>
+                            </p>
                           </div>
                         </div>
-                        
-                        <div className="text-center text-sm text-blue-800">
-                          <p><strong>Passos:</strong> Pagamentos → Pagamentos de serviços → Pagamentos por referência</p>
+                      </div>
+                    )}
+
+                    {selectedPayment === 'reference' && (
+                      <div className="mt-4 space-y-4">
+                        <div className="text-left p-4 bg-orange-50 rounded-lg border border-orange-100">
+                          <p className="text-sm font-medium text-gray-700 leading-relaxed mb-2">
+                            <span className="font-semibold">💡 Como funciona:</span>
+                          </p>
+                          <div className="text-sm text-gray-600 leading-relaxed space-y-1">
+                            <p>1. Clique em "Gerar Referência"</p>
+                            <p>2. Você receberá uma referência de pagamento</p>
+                            <p>3. Use a referência para pagar em qualquer banco ou ATM</p>
+                          </div>
                         </div>
                       </div>
-                      
-                      <Button 
-                        onClick={() => {
-                          const params = new URLSearchParams({
-                            order_id: referenceData.orderId,
-                            status: 'pending'
-                          });
-                          navigate(`/obrigado?${params.toString()}`);
-                        }}
-                        className="w-full mt-4"
-                        size="lg"
-                      >
-                        Finalizar e continuar
-                      </Button>
-                      
-                      <p className="text-xs text-gray-500 text-center mt-3">
-                        Após o pagamento, você receberá o acesso ao produto por email em até 5 minutos.
-                      </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </CardContent>
               </Card>
+
+              {selectedPayment === 'transfer' && (
+                <div className="mt-6">
+                  <BankTransferForm
+                    totalAmount={totalPrice.toString()}
+                    currency={userCountry.currency}
+                    onPaymentComplete={async (file, bank) => {
+                      setBankTransferData({ file, bank });
+                      console.log('🏦 Bank transfer proof uploaded:', { fileName: file.name, bank });
+                      
+                      try {
+                        console.log('🏦 Starting bank transfer purchase process...');
+                        // Processar compra por transferência imediatamente
+                        await handleBankTransferPurchase(file, bank);
+                        console.log('🏦 Bank transfer purchase completed successfully');
+                      } catch (error) {
+                        console.error('🏦 Error in bank transfer purchase:', error);
+                      }
+                    }}
+                    disabled={processing}
+                  />
+                </div>
+              )}
+
+              {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && (
+                <Button
+                  onClick={handlePurchase}
+                  disabled={
+                    !formData.fullName || 
+                    !formData.email || 
+                    !(selectedPayment === 'express' ? expressPhone : formData.phone) || 
+                    !selectedPayment || 
+                    processing || 
+                    (selectedPayment === 'kambapay' && !!kambaPayEmailError)
+                  }
+                  className={`w-full h-12 font-semibold relative transition-all ${
+                    (!formData.fullName || 
+                     !formData.email || 
+                     !(selectedPayment === 'express' ? expressPhone : formData.phone) || 
+                     !selectedPayment || 
+                     processing || 
+                     (selectedPayment === 'kambapay' && !!kambaPayEmailError)
+                    )
+                      ? 'bg-green-600/50 cursor-not-allowed text-white/70'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                >
+                  {processing ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-6 h-6 rounded bg-green-700 flex items-center justify-center mr-2">
+                        <span className="text-xs font-bold text-white animate-bounce">K</span>
+                      </div>
+                      PROCESSANDO...
+                    </div>
+                  ) : (
+                    'COMPRAR AGORA'
+                  )}
+                </Button>
+              )}
             </div>
           </div>
-
-          {selectedPayment === 'transfer' && (
-            <div className="mt-6">
-              <BankTransferForm
-                totalAmount={totalPrice.toString()}
-                currency={userCountry.currency}
-                onPaymentComplete={async (file, bank) => {
-                  setBankTransferData({ file, bank });
-                  console.log('🏦 Bank transfer proof uploaded:', { fileName: file.name, bank });
-                  
-                  try {
-                    console.log('🏦 Starting bank transfer purchase process...');
-                    // Processar compra por transferência imediatamente
-                    await handleBankTransferPurchase(file, bank);
-                    console.log('🏦 Bank transfer purchase completed successfully');
-                  } catch (error) {
-                    console.error('🏦 Error in bank transfer purchase:', error);
-                  }
-                }}
-                disabled={processing}
-              />
-            </div>
-          )}
-
-          {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && (
-            <Button
-              onClick={handlePurchase}
-              disabled={
-                !formData.fullName || 
-                !formData.email || 
-                !(selectedPayment === 'express' ? expressPhone : formData.phone) || 
-                !selectedPayment || 
-                processing || 
-                (selectedPayment === 'kambapay' && !!kambaPayEmailError)
-              }
-              className={`w-full h-12 font-semibold relative transition-all ${
-                (!formData.fullName || 
-                 !formData.email || 
-                 !(selectedPayment === 'express' ? expressPhone : formData.phone) || 
-                 !selectedPayment || 
-                 processing || 
-                 (selectedPayment === 'kambapay' && !!kambaPayEmailError)
-                )
-                  ? 'bg-green-600/50 cursor-not-allowed text-white/70'
-                  : 'bg-green-600 hover:bg-green-700 text-white'
-              }`}
-            >
-              {processing ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-6 h-6 rounded bg-green-700 flex items-center justify-center mr-2">
-                    <span className="text-xs font-bold text-white animate-bounce">K</span>
-                  </div>
-                  PROCESSANDO...
-                </div>
-              ) : (
-                'COMPRAR AGORA'
-              )}
-            </Button>
-          )}
 
           {checkoutSettings?.reviews?.enabled && (
             <div className="mt-8 mb-8">
@@ -2490,6 +2509,15 @@ const Checkout = () => {
           </div>
         </div>
       </div>
+      
+      {/* Reference Modal */}
+      {showReferenceModal && referenceData && (
+        <ReferenceModal
+          isOpen={showReferenceModal}
+          onClose={() => setShowReferenceModal(false)}
+          referenceData={referenceData}
+        />
+      )}
     </ThemeProvider>
   );
 };
