@@ -30,7 +30,6 @@ export function KambaPayCheckoutOption({
   const [balanceChecked, setBalanceChecked] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [showRegistration, setShowRegistration] = useState(false);
-  
   const { fetchBalanceByEmail, useBalanceByEmail, registerKambaPayEmail, loading } = useKambaPayBalance();
 
   const checkBalance = async () => {

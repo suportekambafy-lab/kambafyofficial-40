@@ -16,7 +16,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
+import { useCustomToast } from "@/hooks/useCustomToast";
 import { getPaymentMethodsByCountry } from '@/utils/paymentMethods';
 
 interface CustomerBalanceModalProps {
@@ -25,6 +25,7 @@ interface CustomerBalanceModalProps {
 
 export function CustomerBalanceModal({ children }: CustomerBalanceModalProps) {
   const { user } = useAuth();
+  const { toast } = useCustomToast();
   const userEmail = user?.email || '';
   const { balance, transactions, loading, addBalanceByEmail, registerKambaPayEmail, fetchBalanceByEmail, fetchTransactionsByEmail } = useKambaPayBalance();
   const [amount, setAmount] = useState('');
@@ -57,7 +58,11 @@ export function CustomerBalanceModal({ children }: CustomerBalanceModalProps) {
 
   const handleRegister = async () => {
     if (!userEmail) {
-      toast.error('Email do usuário não encontrado');
+      toast({
+        title: 'Erro',
+        message: 'Email do usuário não encontrado',
+        variant: 'error'
+      });
       return;
     }
 
@@ -66,14 +71,26 @@ export function CustomerBalanceModal({ children }: CustomerBalanceModalProps) {
       const success = await registerKambaPayEmail(userEmail);
       
       if (success) {
-        toast.success('Registrado no KambaPay com sucesso!');
+        toast({
+          title: 'Sucesso',
+          message: 'Registrado no KambaPay com sucesso!',
+          variant: 'success'
+        });
         setIsRegistered(true);
         await checkRegistration();
       } else {
-        toast.error('Erro ao registrar no KambaPay');
+        toast({
+          title: 'Erro',
+          message: 'Erro ao registrar no KambaPay',
+          variant: 'error'
+        });
       }
     } catch (error) {
-      toast.error('Erro inesperado ao registrar');
+      toast({
+        title: 'Erro',
+        message: 'Erro inesperado ao registrar',
+        variant: 'error'
+      });
     } finally {
       setIsRegistering(false);
     }
@@ -81,23 +98,39 @@ export function CustomerBalanceModal({ children }: CustomerBalanceModalProps) {
 
   const handleAddBalance = async () => {
     if (!userEmail) {
-      toast.error('Email do usuário não encontrado');
+      toast({
+        title: 'Erro',
+        message: 'Email do usuário não encontrado',
+        variant: 'error'
+      });
       return;
     }
 
     if (!isRegistered) {
-      toast.error('Você precisa se registrar no KambaPay primeiro');
+      toast({
+        title: 'Erro',
+        message: 'Você precisa se registrar no KambaPay primeiro',
+        variant: 'error'
+      });
       return;
     }
 
     const amountValue = parseFloat(amount);
     if (!amountValue || amountValue <= 0) {
-      toast.error('Por favor, insira um valor válido');
+      toast({
+        title: 'Erro',
+        message: 'Por favor, insira um valor válido',
+        variant: 'error'
+      });
       return;
     }
 
     if (!paymentMethod) {
-      toast.error('Por favor, selecione um método de pagamento');
+      toast({
+        title: 'Erro',
+        message: 'Por favor, selecione um método de pagamento',
+        variant: 'error'
+      });
       return;
     }
 
@@ -112,15 +145,27 @@ export function CustomerBalanceModal({ children }: CustomerBalanceModalProps) {
       );
       
       if (success) {
-        toast.success(`${amountValue} KZ adicionados ao seu saldo!`);
+        toast({
+          title: 'Sucesso',
+          message: `${amountValue} KZ adicionados ao seu saldo!`,
+          variant: 'success'
+        });
         setAmount('');
         setPaymentMethod('');
         await checkRegistration();
       } else {
-        toast.error('Erro ao adicionar saldo. Tente novamente.');
+        toast({
+          title: 'Erro',
+          message: 'Erro ao adicionar saldo. Tente novamente.',
+          variant: 'error'
+        });
       }
     } catch (error) {
-      toast.error('Erro inesperado ao adicionar saldo');
+      toast({
+        title: 'Erro',
+        message: 'Erro inesperado ao adicionar saldo',
+        variant: 'error'
+      });
     } finally {
       setIsAdding(false);
     }

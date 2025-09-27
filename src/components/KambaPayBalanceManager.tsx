@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
+import { useCustomToast } from '@/hooks/useCustomToast';
 import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
 import { Wallet, Plus, Eye, EyeOff } from 'lucide-react';
 import { getPaymentMethodsByCountry } from '@/utils/paymentMethods';
@@ -19,6 +19,7 @@ export function KambaPayBalanceManager({ email, onBalanceUpdate }: KambaPayBalan
   const [paymentMethod, setPaymentMethod] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showBalance, setShowBalance] = useState(false);
+  const { toast } = useCustomToast();
   
   const { balance, loading, addBalanceByEmail, fetchBalanceByEmail } = useKambaPayBalance(email);
 
@@ -29,13 +30,21 @@ export function KambaPayBalanceManager({ email, onBalanceUpdate }: KambaPayBalan
     e.preventDefault();
     
     if (!amount || !paymentMethod) {
-      toast.error('Por favor, preencha todos os campos');
+      toast({
+        title: 'Erro',
+        message: 'Por favor, preencha todos os campos',
+        variant: 'error'
+      });
       return;
     }
 
     const amountNumber = parseFloat(amount);
     if (isNaN(amountNumber) || amountNumber <= 0) {
-      toast.error('Por favor, insira um valor válido');
+      toast({
+        title: 'Erro',
+        message: 'Por favor, insira um valor válido',
+        variant: 'error'
+      });
       return;
     }
 
@@ -50,15 +59,27 @@ export function KambaPayBalanceManager({ email, onBalanceUpdate }: KambaPayBalan
       );
       
       if (success) {
-        toast.success(`Saldo de ${amountNumber} KZ adicionado com sucesso!`);
+        toast({
+          title: 'Sucesso',
+          message: `Saldo de ${amountNumber} KZ adicionado com sucesso!`,
+          variant: 'success'
+        });
         setAmount('');
         setPaymentMethod('');
         onBalanceUpdate?.();
       } else {
-        toast.error('Erro ao adicionar saldo');
+        toast({
+          title: 'Erro',
+          message: 'Erro ao adicionar saldo',
+          variant: 'error'
+        });
       }
     } catch (error) {
-      toast.error('Erro inesperado ao adicionar saldo');
+      toast({
+        title: 'Erro',
+        message: 'Erro inesperado ao adicionar saldo',
+        variant: 'error'
+      });
     } finally {
       setIsLoading(false);
     }

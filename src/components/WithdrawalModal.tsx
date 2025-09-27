@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { PiggyBank, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useCustomToast } from "@/hooks/useCustomToast";
 
 interface WithdrawalModalProps {
   open: boolean;
@@ -23,6 +23,7 @@ export function WithdrawalModal({
   onWithdrawalSuccess 
 }: WithdrawalModalProps) {
   const { user } = useAuth();
+  const { toast } = useCustomToast();
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -120,7 +121,11 @@ export function WithdrawalModal({
 
       console.log('✅ Solicitação de saque criada com sucesso:', insertData);
 
-      toast.success("Solicitação de saque criada com sucesso!");
+      toast({
+        title: 'Sucesso',
+        message: "Solicitação de saque criada com sucesso!",
+        variant: 'success'
+      });
       setWithdrawalAmount("");
       onOpenChange(false);
       
