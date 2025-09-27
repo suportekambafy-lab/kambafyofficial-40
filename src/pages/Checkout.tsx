@@ -2092,7 +2092,7 @@ const Checkout = () => {
 
                           <div className="rounded-lg p-3 mt-4 bg-zinc-50">
                             <p className="text-sm text-sky-800">
-                              <strong>Passos: Pagamentos &gt;&gt; Pagamentos de serviços &gt;&gt; Pagamentos por referência</strong>
+                              Passos: <strong>Pagamentos &gt;&gt; Pagamentos de serviços &gt;&gt; Pagamentos por referência</strong>
                             </p>
                           </div>
 
