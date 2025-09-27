@@ -254,26 +254,9 @@ export default function ModernMembersArea() {
     return matchesModule && matchesSearch && matchesFilter;
   });
 
-  // Loading state
+  // Não mostrar loading - área já foi verificada no botão
   if (authLoading || isLoading) {
-    return <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center">
-        <motion.div initial={{
-        scale: 0.8,
-        opacity: 0
-      }} animate={{
-        scale: 1,
-        opacity: 1
-      }} className="text-center space-y-4">
-          <motion.div animate={{
-          rotate: 360
-        }} transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "linear"
-        }} className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-          <p className="text-muted-foreground">Carregando sua área de membros...</p>
-        </motion.div>
-      </div>;
+    return null;
   }
 
   // Calcular duração total em minutos e progresso real

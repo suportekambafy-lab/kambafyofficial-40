@@ -361,7 +361,9 @@ const ThankYou = () => {
     }
   };
 
-  const handleAccessProduct = () => {
+  const [isAccessingProduct, setIsAccessingProduct] = useState(false);
+
+  const handleAccessProduct = async () => {
     // Usar o status atual em vez do status inicial
     if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
       const methodName = orderDetails.paymentMethod === 'multibanco' ? 'Multibanco' : 
@@ -371,7 +373,50 @@ const ThankYou = () => {
     }
 
     if (product?.type === 'Curso' && product?.member_areas?.id) {
-      navigate(`/area/${product.member_areas.id}`);
+      setIsAccessingProduct(true);
+      
+      try {
+        // Verificar se o usuário tem acesso diretamente
+        const { data: memberAreaData, error: memberAreaError } = await supabase
+          .from('member_areas')
+          .select('id, name, user_id')
+          .eq('id', product.member_areas.id)
+          .single();
+
+        if (memberAreaError || !memberAreaData) {
+          throw new Error('Área de membros não encontrada');
+        }
+
+        // Verificar se tem compra válida
+        const { data: orders, error: ordersError } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            products!inner (
+              member_area_id,
+              member_areas!inner (
+                id,
+                name
+              )
+            )
+          `)
+          .eq('customer_email', orderDetails.customerEmail)
+          .eq('status', 'completed')
+          .eq('products.member_areas.id', product.member_areas.id);
+
+        if (ordersError || !orders || orders.length === 0) {
+          throw new Error('Você não tem acesso a esta área de membros');
+        }
+
+        // Se chegou até aqui, tem acesso - redirecionar diretamente
+        navigate(`/members/area/${product.member_areas.id}`);
+        
+      } catch (error) {
+        console.error('Erro ao verificar acesso:', error);
+        alert(error.message || 'Erro ao acessar o produto. Tente novamente.');
+      } finally {
+        setIsAccessingProduct(false);
+      }
     } else if (product?.share_link) {
       window.open(product.share_link, '_blank');
     } else {
@@ -748,9 +793,14 @@ const ThankYou = () => {
                     ? 'bg-gray-400 cursor-not-allowed' 
                     : 'bg-checkout-green hover:bg-checkout-green/90'
                 }`}
-                disabled={orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod)}
+                disabled={orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod) || isAccessingProduct}
               >
-                {product?.type === 'Curso' && product?.member_areas ? (
+                {isAccessingProduct ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                    Verificando acesso...
+                  </>
+                ) : product?.type === 'Curso' && product?.member_areas ? (
                   <>
                     <ExternalLink className="w-4 h-4 mr-2" />
                     {orderStatus === 'pending' ? 'Pendente' : 'Acessar Curso'}

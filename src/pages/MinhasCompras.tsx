@@ -17,6 +17,7 @@ import { CustomerBalanceModal } from "@/components/CustomerBalanceModal";
 import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
 import professionalManImage from "@/assets/professional-man.jpg";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { toast } from 'sonner';
 
 interface Order {
   id: string;
@@ -134,34 +135,62 @@ export default function MinhasCompras() {
     return `https://images.unsplash.com/${cover}`;
   };
 
-  const handleAccessProduct = (product: any) => {
+  const [accessingProduct, setAccessingProduct] = useState<string | null>(null);
+
+  const handleAccessProduct = async (product: any) => {
     console.log('🚀 MinhasCompras - Tentando acessar produto:', {
       product,
       productType: product.type,
       memberAreaId: product.member_areas?.id
     });
     
-    // Para cursos, usar a nova rota protegida moderna
+    // Para cursos, fazer verificação direta de acesso
     if (product.type === 'Curso' && product.member_areas?.id) {
-      const memberAreaUrl = memberAreaLinks.getMemberAreaUrl(product.member_areas.id);
-      console.log('🔗 MinhasCompras - Navegando para área de membros:', {
-        memberAreaId: product.member_areas.id,
-        generatedUrl: memberAreaUrl
-      });
+      setAccessingProduct(product.id);
       
-      // Em desenvolvimento/pré-visualização, usar navegação por React Router
-      const hostname = window.location.hostname;
-      if (hostname.includes('localhost') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
-        console.log('🛠️ Pré-visualização/Dev detectado - usando React Router', {
-          hostname,
-          memberAreaUrl,
-          isLovablePreview: hostname.includes('lovable.app')
+      try {
+        // Verificar se o usuário tem acesso diretamente
+        const { data: memberAreaData, error: memberAreaError } = await supabase
+          .from('member_areas')
+          .select('id, name, user_id')
+          .eq('id', product.member_areas.id)
+          .single();
+
+        if (memberAreaError || !memberAreaData) {
+          throw new Error('Área de membros não encontrada');
+        }
+
+        // Verificar se tem compra válida
+        const { data: orders, error: ordersError } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            products!inner (
+              member_area_id,
+              member_areas!inner (
+                id,
+                name
+              )
+            )
+          `)
+          .eq('customer_email', user?.email)
+          .eq('status', 'completed')
+          .eq('products.member_areas.id', product.member_areas.id);
+
+        if (ordersError || !orders || orders.length === 0) {
+          throw new Error('Você não tem acesso a esta área de membros');
+        }
+
+        // Se chegou até aqui, tem acesso - redirecionar diretamente
+        navigate(`/members/area/${product.member_areas.id}`);
+        
+      } catch (error) {
+        console.error('Erro ao verificar acesso:', error);
+        toast.error('Erro ao acessar produto', {
+          description: error.message || 'Tente novamente mais tarde'
         });
-        navigate(`/area/${product.member_areas.id}`);
-      } else {
-        // Em produção, navegar para o subdomínio membros
-        console.log('🌐 Produção detectada - navegando para subdomínio membros');
-        window.location.href = memberAreaUrl;
+      } finally {
+        setAccessingProduct(null);
       }
     } else if (product.share_link) {
       console.log('🔗 MinhasCompras - Abrindo share_link:', product.share_link);
@@ -309,18 +338,38 @@ export default function MinhasCompras() {
                                   onClick={() => handleAccessProduct(order.products)}
                                   size="sm"
                                   className="bg-checkout-green hover:bg-checkout-green/90"
+                                  disabled={accessingProduct === order.products.id}
                                 >
-                                  <ExternalLink className="w-4 h-4 mr-2" />
-                                  Acessar Curso
+                                  {accessingProduct === order.products.id ? (
+                                    <>
+                                      <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin mr-2" />
+                                      Verificando...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ExternalLink className="w-4 h-4 mr-2" />
+                                      Acessar Curso
+                                    </>
+                                  )}
                                 </Button>
                               ) : order.products.share_link ? (
                                 <Button
                                   onClick={() => handleAccessProduct(order.products)}
                                   size="sm"
                                   className="bg-checkout-green hover:bg-checkout-green/90"
+                                  disabled={accessingProduct === order.products.id}
                                 >
-                                  <ExternalLink className="w-4 h-4 mr-2" />
-                                  Acessar Produto
+                                  {accessingProduct === order.products.id ? (
+                                    <>
+                                      <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin mr-2" />
+                                      Verificando...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ExternalLink className="w-4 h-4 mr-2" />
+                                      Acessar Produto
+                                    </>
+                                  )}
                                 </Button>
                               ) : (
                                 <Button

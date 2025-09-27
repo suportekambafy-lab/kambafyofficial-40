@@ -138,12 +138,9 @@ export default function ProtectedMemberArea({ children }: ProtectedMemberAreaPro
     checkAccess();
   }, [user, areaId, authLoading]);
 
+  // Não mostrar tela de loading - redirecionar diretamente para área
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <LoadingSpinner text="Verificando acesso..." />
-      </div>
-    );
+    return null;
   }
 
   if (!user) {
