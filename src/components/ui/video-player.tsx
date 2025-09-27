@@ -210,7 +210,7 @@ const VideoPlayer = ({
   if (embedUrl && embedUrl.includes('mediadelivery.net/embed')) {
     return (
       <motion.div 
-        className="relative w-full max-w-4xl mx-auto rounded-xl overflow-hidden bg-[#11111198] shadow-[0_0_20px_rgba(0,0,0,0.2)] backdrop-blur-sm"
+        className="relative w-full max-w-4xl mx-auto overflow-hidden bg-[#11111198] shadow-[0_0_20px_rgba(0,0,0,0.2)] backdrop-blur-sm"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -230,7 +230,7 @@ const VideoPlayer = ({
   if (!src || !isValidVideoUrl(src)) {
     return (
       <motion.div 
-        className="relative w-full max-w-4xl mx-auto rounded-xl overflow-hidden bg-gray-900 shadow-[0_0_20px_rgba(0,0,0,0.2)]"
+        className="relative w-full max-w-4xl mx-auto overflow-hidden bg-gray-900 shadow-[0_0_20px_rgba(0,0,0,0.2)]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -248,7 +248,7 @@ const VideoPlayer = ({
 
   return (
     <motion.div
-      className="relative w-full max-w-4xl mx-auto rounded-xl overflow-hidden bg-[#11111198] shadow-[0_0_20px_rgba(0,0,0,0.2)] backdrop-blur-sm"
+      className="relative w-full max-w-4xl mx-auto overflow-hidden bg-[#11111198] shadow-[0_0_20px_rgba(0,0,0,0.2)] backdrop-blur-sm"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -279,7 +279,7 @@ const VideoPlayer = ({
       <AnimatePresence>
         {showControls && (
           <motion.div
-            className="absolute bottom-0 mx-auto max-w-xl left-0 right-0 p-4 m-2 bg-[#11111198] backdrop-blur-md rounded-2xl"
+            className="absolute bottom-0 mx-auto max-w-xl left-0 right-0 p-4 m-2 bg-[#11111198] backdrop-blur-md"
             initial={{ y: 20, opacity: 0, filter: "blur(10px)" }}
             animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
             exit={{ y: 20, opacity: 0, filter: "blur(10px)" }}
