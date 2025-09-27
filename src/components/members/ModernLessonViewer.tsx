@@ -70,7 +70,7 @@ export function ModernLessonViewer({
     }} transition={{
       delay: 0.1
     }}>
-        <div className="overflow-hidden bg-black border border-gray-800 rounded-none px-0 mx-0 my-0 py-[8px]">
+        <div className="overflow-hidden bg-black border border-gray-800 rounded-none my-0 px-px mx-[4px] py-0">
           {lesson.video_url || lesson.bunny_embed_url ? <VideoPlayer src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''} embedUrl={lesson.bunny_embed_url || (lesson.video_url?.includes('mediadelivery.net/embed') ? lesson.video_url : undefined)} startTime={startTime} onProgress={setProgress} onTimeUpdate={(currentTime, duration) => {
           setCurrentTime(currentTime);
 
