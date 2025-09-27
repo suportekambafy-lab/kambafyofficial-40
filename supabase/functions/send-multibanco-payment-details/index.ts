@@ -47,83 +47,87 @@ const handler = async (req: Request): Promise<Response> => {
       to: [customerEmail],
       subject: `Dados para Pagamento - ${productName}`,
       html: `
-        <!DOCTYPE html>
         <html>
         <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>Dados para Pagamento Multibanco</title>
+          <style>
+            @media only screen and (max-width: 600px) {
+              .container { width: 100% !important; padding: 15px !important; }
+              .header-title { font-size: 20px !important; }
+              .section { padding: 20px !important; }
+              .payment-table td { display: block !important; width: 100% !important; padding: 5px 0 !important; }
+              .payment-table td:first-child { font-weight: bold; margin-bottom: 5px; }
+            }
+          </style>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
-          <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155;">
+          <div class="container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
             
             <!-- Header -->
-            <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px 20px; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Dados para Pagamento</h1>
-              <p style="margin: 10px 0 0 0; opacity: 0.9;">Complete seu pagamento com os dados abaixo</p>
+            <div style="text-align: center; padding: 40px 30px 30px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
+              <h1 class="header-title" style="margin: 0; font-size: 28px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">KAMBAFY</h1>
+              <p style="margin: 15px 0 0; font-size: 18px; font-weight: 500; color: #f59e0b;">Dados para Pagamento</p>
+              <p style="margin: 8px 0 0; font-size: 16px; color: #64748b;">Complete seu pagamento com os dados abaixo</p>
             </div>
-            
-            <!-- Content -->
-            <div style="padding: 30px 20px;">
-              
-              <!-- Greeting -->
-              <p style="font-size: 16px; color: #333; margin: 0 0 20px 0;">
+
+            <!-- Greeting -->
+            <div style="padding: 30px 30px 0;">
+              <p style="font-size: 16px; color: #1e293b; margin: 0 0 20px;">
                 Olá <strong>${customerName}</strong>,
               </p>
-              
-              <p style="font-size: 14px; color: #666; line-height: 1.6; margin: 0 0 25px 0;">
+              <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0 0 25px;">
                 Recebemos seu pedido para <strong>${productName}</strong>. Para completar a compra, efetue o pagamento usando os dados Multibanco abaixo:
               </p>
-              
-              <!-- Payment Details Card -->
-              <div style="background-color: #f8fffe; border: 2px solid #10b981; border-radius: 8px; padding: 25px; margin: 20px 0;">
-                <h3 style="margin: 0 0 20px 0; color: #10b981; font-size: 18px; text-align: center;">
-                  💳 Dados de Pagamento Multibanco
-                </h3>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                  <span style="font-weight: bold; color: #333; font-size: 14px;">Entidade:</span>
-                  <span style="font-size: 18px; font-weight: bold; color: #10b981; font-family: monospace;">${entity}</span>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                  <span style="font-weight: bold; color: #333; font-size: 14px;">Referência:</span>
-                  <span style="font-size: 18px; font-weight: bold; color: #10b981; font-family: monospace;">${reference}</span>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
-                  <span style="font-weight: bold; color: #333; font-size: 14px;">Valor:</span>
-                  <span style="font-size: 18px; font-weight: bold; color: #10b981;">${amount} ${currency}</span>
-                </div>
-              </div>
-              
-              <!-- Instructions -->
-              <div style="background-color: #fef3cd; border: 1px solid #fbbf24; border-radius: 6px; padding: 15px; margin: 20px 0;">
-                <h4 style="margin: 0 0 10px 0; color: #92400e; font-size: 14px;">ℹ️ Como pagar:</h4>
-                <ul style="margin: 0; padding-left: 20px; color: #92400e; font-size: 13px; line-height: 1.5;">
-                  <li>Acesse o multibanco ou homebanking</li>
-                  <li>Selecione "Pagamentos" ou "Serviços"</li>
-                  <li>Insira a entidade e referência acima</li>
-                  <li>Confirme o valor e efetue o pagamento</li>
-                </ul>
-              </div>
-              
-              <p style="font-size: 13px; color: #666; line-height: 1.6; margin: 25px 0 0 0;">
-                ⏰ <strong>Importante:</strong> Após efetuar o pagamento, você receberá automaticamente um email de confirmação com os detalhes de acesso ao produto. O processamento pode levar até alguns minutos.
-              </p>
-              
             </div>
-            
+
+            <!-- Payment Details -->
+            <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+              <h2 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Dados de Pagamento Multibanco</h2>
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                <table class="payment-table" style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 12px 0; font-weight: 500; color: #475569; width: 30%;">Entidade:</td>
+                    <td style="padding: 12px 0; font-size: 20px; font-weight: 700; color: #1e293b; font-family: 'Courier New', monospace;">${entity}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 0; font-weight: 500; color: #475569;">Referência:</td>
+                    <td style="padding: 12px 0; font-size: 20px; font-weight: 700; color: #1e293b; font-family: 'Courier New', monospace;">${reference}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 0; font-weight: 500; color: #475569;">Valor:</td>
+                    <td style="padding: 12px 0; font-size: 20px; font-weight: 700; color: #059669;">${amount} ${currency}</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Como Pagar</h3>
+              <div style="color: #475569; line-height: 1.6;">
+                <p style="margin: 0 0 12px;">1. Acesse o multibanco ou homebanking</p>
+                <p style="margin: 0 0 12px;">2. Selecione "Pagamentos" ou "Serviços"</p>
+                <p style="margin: 0 0 12px;">3. Insira a entidade e referência acima</p>
+                <p style="margin: 0;">4. Confirme o valor e efetue o pagamento</p>
+              </div>
+              
+              <div style="background-color: #fef3cd; border: 1px solid #fbbf24; border-radius: 6px; padding: 15px; margin: 20px 0 0;">
+                <p style="margin: 0; font-size: 13px; color: #92400e; line-height: 1.6;">
+                  <strong>Importante:</strong> Após efetuar o pagamento, você receberá automaticamente um email de confirmação com os detalhes de acesso ao produto. O processamento pode levar até alguns minutos.
+                </p>
+              </div>
+            </div>
+
             <!-- Footer -->
-            <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <p style="margin: 0; font-size: 12px; color: #6b7280;">
-                Este email foi enviado automaticamente. Se precisar de ajuda, entre em contato conosco.
-              </p>
-              <p style="margin: 10px 0 0 0; font-size: 12px; color: #6b7280;">
-                © 2024 Kambafy. Todos os direitos reservados.
+            <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
+              <p style="margin: 0; color: #64748b; font-size: 14px;">
+                Este email foi enviado automaticamente
               </p>
             </div>
-            
+
           </div>
         </body>
         </html>

@@ -65,87 +65,92 @@ const handler = async (req: Request): Promise<Response> => {
     const emailHtml = `
       <html>
       <head>
-        <meta charset="utf-8">
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>${isNewAccount ? 'Bem-vindo à Kambafy - Crie sua Senha' : 'Redefinir Senha - Kambafy'}</title>
       </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <div style="background-color: #16a34a; color: white; width: 60px; height: 60px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
-            <span style="font-size: 24px; font-weight: bold;">K</span>
-          </div>
-          <div style="background-color: #16a34a; color: white; padding: 20px; border-radius: 8px;">
-            <h1 style="margin: 0; font-size: 24px;">
-              ${isNewAccount ? '🎉 Bem-vindo à Kambafy!' : '🔑 Redefinir Senha'}
-            </h1>
-            <p style="margin: 10px 0 0 0; font-size: 16px; color: white;">
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          
+          <!-- Header -->
+          <div style="text-align: center; padding: 40px 30px 30px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
+            <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">KAMBAFY</h1>
+            <p style="margin: 15px 0 0; font-size: 18px; font-weight: 500; color: ${isNewAccount ? '#16a34a' : '#f59e0b'};">${isNewAccount ? 'Bem-vindo à Kambafy!' : 'Redefinir Senha'}</p>
+            <p style="margin: 8px 0 0; font-size: 16px; color: #64748b;">
               ${isNewAccount ? `Olá ${displayName}! Sua conta foi criada.` : `Olá ${displayName}!`}
             </p>
           </div>
-        </div>
 
-        ${isNewAccount ? `
-        <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #16a34a; margin: 0 0 15px 0;">🛒 Sua Compra foi Processada!</h3>
-          <p style="margin: 0; color: #16a34a;">
-            Criamos automaticamente uma conta para você ter acesso aos seus produtos.
-            ${orderId ? `<br>Número do pedido: <strong>${orderId}</strong>` : ''}
-          </p>
-        </div>
-        ` : ''}
-
-        <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
-          <h2 style="color: #16a34a; margin: 0 0 20px 0;">
-            ${isNewAccount ? 'Crie Sua Senha' : 'Redefinir Senha'}
-          </h2>
-          <p style="margin: 0 0 20px 0;">
-            ${isNewAccount 
-              ? 'Para acessar sua conta e seus produtos, você precisa criar uma senha segura.'
-              : 'Clique no botão abaixo para redefinir sua senha.'
-            }
-          </p>
-          
-          <div style="text-align: center; margin: 25px 0;">
-            <a href="${actualResetLink}" 
-               style="display: inline-block; background-color: #16a34a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
-              ${isNewAccount ? 'Criar Minha Senha' : 'Redefinir Senha'}
-            </a>
+          ${isNewAccount ? `
+          <div style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px;">
+              <h3 style="color: #16a34a; margin: 0 0 15px; font-size: 18px; font-weight: 600;">Sua Compra foi Processada!</h3>
+              <p style="margin: 0; color: #16a34a; line-height: 1.6;">
+                Criamos automaticamente uma conta para você ter acesso aos seus produtos.
+                ${orderId ? `<br>Número do pedido: <strong>${orderId}</strong>` : ''}
+              </p>
+            </div>
           </div>
-          
-          <p style="margin: 15px 0 0 0; font-size: 14px; color: #666;">
-            Este link é válido por 1 hora. Se não funcionar, copie e cole no seu navegador:
-          </p>
-          <p style="word-break: break-all; background-color: #f0f0f0; padding: 10px; border-radius: 4px; font-size: 12px; margin: 10px 0;">
-            ${actualResetLink}
-          </p>
-        </div>
+          ` : ''}
 
-        ${isNewAccount ? `
-        <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #856404; margin: 0 0 15px 0;">📧 Próximos Passos</h3>
-          <div style="color: #856404; margin: 0;">
-            <p style="margin: 0 0 10px 0;">1. <strong>Crie sua senha</strong> usando o botão acima</p>
-            <p style="margin: 0 0 10px 0;">2. <strong>Verifique seu email</strong> - enviaremos as confirmações dos produtos</p>
-            <p style="margin: 0 0 10px 0;">3. <strong>Acesse seus produtos</strong> através dos links que receberá</p>
+          <!-- Main Content -->
+          <div style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="color: #1e293b; margin: 0 0 20px; font-size: 20px; font-weight: 600;">
+              ${isNewAccount ? 'Crie Sua Senha' : 'Redefinir Senha'}
+            </h2>
+            <p style="margin: 0 0 25px; color: #475569; line-height: 1.6;">
+              ${isNewAccount 
+                ? 'Para acessar sua conta e seus produtos, você precisa criar uma senha segura.'
+                : 'Clique no botão abaixo para redefinir sua senha.'
+              }
+            </p>
+            
+            <div style="text-align: center; margin: 25px 0;">
+              <a href="${actualResetLink}" 
+                 style="display: inline-block; background-color: #16a34a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                ${isNewAccount ? 'Criar Minha Senha' : 'Redefinir Senha'}
+              </a>
+            </div>
+            
+            <p style="margin: 15px 0 0; font-size: 14px; color: #64748b;">
+              Este link é válido por 1 hora. Se não funcionar, copie e cole no seu navegador:
+            </p>
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin: 10px 0; word-break: break-all; font-size: 12px; color: #475569;">
+              ${actualResetLink}
+            </div>
           </div>
-        </div>
-        ` : ''}
 
-        <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #856404; margin: 0 0 10px 0;">📞 Precisa de Ajuda?</h3>
-          <p style="margin: 0; color: #856404;">
-            Se tiver alguma dúvida, entre em contato conosco:
-          </p>
-          <p style="margin: 10px 0 0 0; color: #856404;">
-            <strong>Email:</strong> suporte@kambafy.com<br>
-            <strong>WhatsApp:</strong> (+244) 900 000 000
-          </p>
-        </div>
+          ${isNewAccount ? `
+          <div style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+            <h3 style="color: #1e293b; margin: 0 0 20px; font-size: 18px; font-weight: 600;">Próximos Passos</h3>
+            <div style="color: #475569; line-height: 1.6;">
+              <p style="margin: 0 0 12px;">1. <strong>Crie sua senha</strong> usando o botão acima</p>
+              <p style="margin: 0 0 12px;">2. <strong>Verifique seu email</strong> - enviaremos as confirmações dos produtos</p>
+              <p style="margin: 0;">3. <strong>Acesse seus produtos</strong> através dos links que receberá</p>
+            </div>
+          </div>
+          ` : ''}
 
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-          <p style="margin: 0; color: #666;">
-            <strong>Kambafy</strong><br>
-            ${isNewAccount ? 'Bem-vindo à nossa comunidade!' : 'Aqui para ajudar!'}
-          </p>
+          <!-- Support -->
+          <div style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+            <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">Precisa de Ajuda?</h3>
+            <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
+              Se tiver alguma dúvida, entre em contato conosco:
+            </p>
+            <div style="color: #475569; font-size: 14px;">
+              <p style="margin: 0;"><strong>Email:</strong> suporte@kambafy.com</p>
+              <p style="margin: 5px 0 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+            <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">
+              ${isNewAccount ? 'Bem-vindo à nossa comunidade!' : 'Aqui para ajudar!'}
+            </p>
+          </div>
+
         </div>
       </body>
       </html>

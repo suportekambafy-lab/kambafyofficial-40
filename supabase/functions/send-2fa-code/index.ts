@@ -91,44 +91,78 @@ const handler = async (req: Request): Promise<Response> => {
     // Preparar conteúdo do email baseado no tipo de evento
     let subject = '';
     let htmlContent = '';
+    let codeDisplay = `<div style="text-align: center; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; margin: 20px 0;"><span style="font-size: 32px; font-weight: 700; color: #1e293b; font-family: 'Courier New', monospace; letter-spacing: 3px;">${code}</span></div>`;
 
     switch (finalEventType) {
       case 'signup':
         subject = 'Código de verificação - Confirmação de cadastro';
         htmlContent = `
-          <h1>Bem-vindo à Kambafy!</h1>
-          <p>Para finalizar seu cadastro, use o código de verificação abaixo:</p>
-          <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
-          <p>Este código é válido por 10 minutos.</p>
-          <p>Se você não fez este cadastro, ignore este email.</p>
-          <br>
-          <p>Equipe Kambafy</p>
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #16a34a;">Bem-vindo à Kambafy!</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Para finalizar seu cadastro, use o código de verificação abaixo:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #64748b; font-size: 14px;">Se você não fez este cadastro, ignore este email.</p>
+              </div>
+            </div>
+          </body>
+          </html>
         `;
         break;
         
       case 'kambapay_login':
         subject = 'Código de verificação - Login KambaPay';
         htmlContent = `
-          <h1>Código de verificação para login</h1>
-          <p>Seu código de verificação para login no KambaPay é:</p>
-          <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
-          <p>Este código é válido por 10 minutos.</p>
-          <p>Se você não solicitou este login, ignore este email.</p>
-          <br>
-          <p>Equipe Kambafy</p>
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #16a34a;">Código de verificação para login</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Seu código de verificação para login no KambaPay é:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #64748b; font-size: 14px;">Se você não solicitou este login, ignore este email.</p>
+              </div>
+            </div>
+          </body>
+          </html>
         `;
         break;
       
       case 'kambapay_register':
         subject = 'Código de verificação - Criação de conta KambaPay';
         htmlContent = `
-          <h1>Bem-vindo ao KambaPay!</h1>
-          <p>Seu código de verificação para criar sua conta KambaPay é:</p>
-          <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
-          <p>Este código é válido por 10 minutos.</p>
-          <p>Após a verificação, você poderá carregar saldo e usar seu email para pagamentos rápidos e seguros.</p>
-          <br>
-          <p>Equipe Kambafy</p>
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #16a34a;">Bem-vindo ao KambaPay!</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Seu código de verificação para criar sua conta KambaPay é:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #64748b; font-size: 14px;">Após a verificação, você poderá carregar saldo e usar seu email para pagamentos rápidos e seguros.</p>
+              </div>
+            </div>
+          </body>
+          </html>
         `;
         break;
       
@@ -136,38 +170,71 @@ const handler = async (req: Request): Promise<Response> => {
         const amount = purchase_data?.amount || 0;
         subject = 'Código de verificação - Compra com KambaPay';
         htmlContent = `
-          <h1>Confirmação de compra</h1>
-          <p>Para sua segurança, confirme sua compra de <strong>${amount.toLocaleString()} KZ</strong> com o código:</p>
-          <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
-          <p>Este código é válido por 10 minutos.</p>
-          <p>Se você não fez esta compra, não compartilhe este código.</p>
-          <br>
-          <p>Equipe Kambafy</p>
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #16a34a;">Confirmação de compra</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Para sua segurança, confirme sua compra de <strong>${amount.toLocaleString()} KZ</strong> com o código:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #64748b; font-size: 14px;">Se você não fez esta compra, não compartilhe este código.</p>
+              </div>
+            </div>
+          </body>
+          </html>
         `;
         break;
       
       case 'admin_login':
         subject = 'Código de verificação - Login Admin';
         htmlContent = `
-          <h1>Código de verificação para Admin</h1>
-          <p>Seu código de verificação para login administrativo é:</p>
-          <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
-          <p>Este código é válido por 10 minutos.</p>
-          <p>Se você não solicitou este login, ignore este email e entre em contato conosco.</p>
-          <br>
-          <p>Equipe Kambafy</p>
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #dc2626;">Código de verificação para Admin</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Seu código de verificação para login administrativo é:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #64748b; font-size: 14px;">Se você não solicitou este login, ignore este email e entre em contato conosco.</p>
+              </div>
+            </div>
+          </body>
+          </html>
         `;
         break;
       
       default:
         subject = 'Código de verificação - KambaPay';
         htmlContent = `
-          <h1>Código de verificação</h1>
-          <p>Seu código de verificação é:</p>
-          <h2 style="color: #006b02; font-size: 32px; text-align: center; background: #f0f9f0; padding: 20px; border-radius: 8px;">${code}</h2>
-          <p>Este código é válido por 10 minutos.</p>
-          <br>
-          <p>Equipe Kambafy</p>
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #16a34a;">Código de verificação</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Seu código de verificação é:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+              </div>
+            </div>
+          </body>
+          </html>
         `;
     }
 

@@ -52,31 +52,50 @@ const handler = async (req: Request): Promise<Response> => {
       reply_to: email,
       subject: `Nova mensagem de contato: ${subject}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <div style="background-color: #16a34a; color: white; width: 60px; height: 60px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
-              <span style="font-size: 24px; font-weight: bold;">K</span>
+        <html>
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Nova mensagem de contato</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+            
+            <!-- Header -->
+            <div style="text-align: center; padding: 40px 30px 30px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">KAMBAFY</h1>
+              <p style="margin: 15px 0 0; font-size: 18px; font-weight: 500; color: #16a34a;">Nova mensagem de contato recebida</p>
             </div>
-            <h2 style="color: #16a34a;">Nova mensagem de contato recebida</h2>
-          </div>
-          
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <p><strong>Nome:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            ${phone ? `<p><strong>Telefone:</strong> ${phone}</p>` : ''}
-            <p><strong>Assunto:</strong> ${subject}</p>
-          </div>
-          
-          <div style="background-color: #fff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
-            <p><strong>Mensagem:</strong></p>
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 10px;">
-              ${message.replace(/\n/g, '<br>')}
+            
+            <!-- Contact Details -->
+            <div style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                <p style="margin: 0 0 12px; color: #1e293b;"><strong>Nome:</strong> ${name}</p>
+                <p style="margin: 0 0 12px; color: #1e293b;"><strong>Email:</strong> ${email}</p>
+                ${phone ? `<p style="margin: 0 0 12px; color: #1e293b;"><strong>Telefone:</strong> ${phone}</p>` : ''}
+                <p style="margin: 0; color: #1e293b;"><strong>Assunto:</strong> ${subject}</p>
+              </div>
             </div>
+            
+            <!-- Message -->
+            <div style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 15px; font-size: 18px; font-weight: 600; color: #1e293b;">Mensagem:</h3>
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                <p style="margin: 0; color: #475569; line-height: 1.6; white-space: pre-wrap;">${message}</p>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
+              <p style="margin: 0; color: #64748b; font-size: 14px;">
+                Para responder, basta clicar em "Responder" - o email será enviado diretamente para ${email}
+              </p>
+            </div>
+
           </div>
-          
-          <hr style="margin: 20px 0;">
-          <p style="color: #666; font-size: 14px;"><em>Para responder, basta clicar em "Responder" - o email será enviado diretamente para ${email}</em></p>
-        </div>
+        </body>
+        </html>
       `,
     });
 
@@ -88,29 +107,44 @@ const handler = async (req: Request): Promise<Response> => {
       to: [email],
       subject: "Confirmação - Mensagem recebida",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <div style="background-color: #16a34a; color: white; width: 60px; height: 60px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
-              <span style="font-size: 24px; font-weight: bold;">K</span>
+        <html>
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Confirmação - Mensagem recebida</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+            
+            <!-- Header -->
+            <div style="text-align: center; padding: 40px 30px 30px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">KAMBAFY</h1>
+              <p style="margin: 15px 0 0; font-size: 18px; font-weight: 500; color: #16a34a;">Obrigado por entrar em contato, ${name}!</p>
             </div>
-            <h2 style="color: #16a34a;">Obrigado por entrar em contato, ${name}!</h2>
+            
+            <!-- Content -->
+            <div style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                <p style="margin: 0 0 15px; color: #1e293b;">Recebemos sua mensagem sobre: <strong>${subject}</strong></p>
+                <p style="margin: 0 0 15px; color: #475569;">Nossa equipe analisará sua solicitação e responderá o mais breve possível.</p>
+                <p style="margin: 0; color: #475569;">Normalmente respondemos em até 24 horas durante dias úteis.</p>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
+              <p style="margin: 0 0 12px; color: #64748b; font-size: 14px;">
+                Atenciosamente, Equipe Kambafy
+              </p>
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">
+                Se você não enviou esta mensagem, pode ignorar este email.
+              </p>
+            </div>
+
           </div>
-          
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <p>Recebemos sua mensagem sobre: <strong>${subject}</strong></p>
-            <p>Nossa equipe analisará sua solicitação e responderá o mais breve possível.</p>
-            <p>Normalmente respondemos em até 24 horas durante dias úteis.</p>
-          </div>
-          
-          <div style="text-align: center; margin: 20px 0;">
-            <p>Atenciosamente,<br><strong>Equipe Kambafy</strong></p>
-          </div>
-          
-          <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
-          <p style="font-size: 12px; color: #666; text-align: center;">
-            Se você não enviou esta mensagem, pode ignorar este email.
-          </p>
-        </div>
+        </body>
+        </html>
       `,
     });
 
