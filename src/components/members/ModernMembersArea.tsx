@@ -391,9 +391,7 @@ export default function ModernMembersArea() {
                   </Card>
                   
                   {/* Info da aula */}
-                  <Card className="bg-gray-900 border-gray-800">
-                    
-                  </Card>
+                  
                   
                   {/* Seção de comentários */}
                   <LessonComments lessonId={selectedLesson.id} studentEmail={session?.studentEmail} studentName={session?.studentName} />
