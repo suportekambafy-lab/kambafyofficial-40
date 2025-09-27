@@ -2483,15 +2483,10 @@ const Checkout = () => {
 
                     {selectedPayment === 'reference' && !referenceData && (
                       <div className="mt-4 space-y-4">
-                        <div className="text-left p-4 bg-orange-50 rounded-lg border border-orange-100">
-                          <p className="text-sm font-medium text-gray-700 leading-relaxed mb-2">
-                            <span className="font-semibold">💡 Como funciona:</span>
+                        <div className="text-left p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                          <p className="text-sm font-medium text-gray-900 leading-relaxed">
+                            Clique em gerar referência, copie os dados e pague pelo app do seu banco ou em qualquer ATM.
                           </p>
-                          <div className="text-sm text-gray-600 leading-relaxed space-y-1">
-                            <p>1. Clique em "Gerar Referência"</p>
-                            <p>2. Você receberá uma referência de pagamento</p>
-                            <p>3. Use a referência para pagar em qualquer banco ou ATM</p>
-                          </div>
                         </div>
                       </div>
                     )}
