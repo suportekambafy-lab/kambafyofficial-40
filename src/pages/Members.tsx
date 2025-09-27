@@ -920,7 +920,10 @@ export default function Members() {
 
   const handlePreview = () => {
     if (selectedArea) {
-      setPreviewOpen(true);
+      // Navegar para a área de membros real ao invés de abrir preview
+      const memberAreaLinks = createMemberAreaLinks();
+      const memberAreaUrl = memberAreaLinks.getMemberAreaUrl(selectedArea.id);
+      window.open(memberAreaUrl, '_blank');
     }
   };
 
