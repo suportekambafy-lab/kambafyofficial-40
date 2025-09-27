@@ -488,7 +488,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
               )}
             </div>
 
-            {/* Configuração de Preço Aberto */}
+            {/* Configuração de Preço Aberto - MOVIDO PARA CIMA */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
