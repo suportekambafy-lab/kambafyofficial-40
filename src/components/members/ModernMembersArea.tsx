@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Play, BookOpen, LogOut, Clock, Users, Star, Search, Filter, GraduationCap, Trophy, Target, CheckCircle2, PlayCircle, MoreVertical, ArrowLeft, Menu, X, Lock, AlertCircle, ExternalLink, Download, FileText } from 'lucide-react';
+import { Play, BookOpen, LogOut, Clock, Users, Star, Search, Filter, GraduationCap, Trophy, Target, CheckCircle2, PlayCircle, MoreVertical, ArrowLeft, Menu, X, Lock, AlertCircle, ExternalLink, Download, FileText, Timer } from 'lucide-react';
 import { CountdownTimer } from '@/components/ui/countdown-timer';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
@@ -565,8 +565,8 @@ export default function ModernMembersArea() {
                                           <Clock className="h-3 w-3 mr-1" />
                                           {Math.round(lesson.duration / 60)} min
                                         </Badge>
-                                        {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && <Badge variant="outline" className="text-blue-400 border-blue-400">
-                                            <Clock className="h-3 w-3 mr-1" />
+                                        {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && <Badge variant="outline" className="text-amber-400 border-amber-400 bg-amber-400/10">
+                                            <Timer className="h-3 w-3 mr-1" />
                                             Agendada
                                           </Badge>}
                                       </div>
@@ -578,8 +578,11 @@ export default function ModernMembersArea() {
                                         </p>}
 
                                       {/* Countdown para aulas agendadas */}
-                                      {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && <div className="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                                          <div className="text-sm font-medium text-blue-400 mb-2">Aula será liberada em:</div>
+                                      {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && <div className="mt-4 p-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg border border-amber-500/20">
+                                          <div className="text-sm font-medium text-amber-400 mb-2 flex items-center gap-2">
+                                            <Timer className="h-4 w-4" />
+                                            Aula será liberada em:
+                                          </div>
                                           <CountdownTimer targetDate={lesson.scheduled_at} className="justify-start" onComplete={() => {
                                 toast.success("Aula liberada!", {
                                   description: `A aula "${lesson.title}" está agora disponível!`

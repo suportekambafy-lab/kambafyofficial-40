@@ -9,6 +9,7 @@ import VideoPlayer from '@/components/ui/video-player';
 import { Play, Pause, SkipForward, SkipBack, Clock, CheckCircle2, Star, MessageCircle, BookOpen, ArrowLeft, Users, Target } from 'lucide-react';
 import { Lesson } from '@/types/memberArea';
 import { LessonContentTabs } from './LessonContentTabs';
+import { LessonReleaseTimer } from '@/components/ui/lesson-release-timer';
 interface ModernLessonViewerProps {
   lesson: Lesson;
   lessons: Lesson[];
@@ -59,6 +60,10 @@ export function ModernLessonViewer({
 
   // lesson.duration está em segundos
   const totalSeconds = lesson.duration;
+
+  // Verificar se a aula está agendada para liberação futura
+  const isScheduled = lesson.is_scheduled && lesson.scheduled_at;
+  const isNotYetReleased = isScheduled && new Date(lesson.scheduled_at) > new Date();
   return <div className="space-y-8 bg-zinc-950">
       {/* Video Player */}
       <motion.div initial={{
@@ -71,7 +76,12 @@ export function ModernLessonViewer({
       delay: 0.1
     }}>
         <div className="overflow-hidden bg-black border border-gray-800 rounded-none my-0 py-0 px-0 mx-0">
-          {lesson.video_url || lesson.bunny_embed_url ? <VideoPlayer src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''} embedUrl={lesson.bunny_embed_url || (lesson.video_url?.includes('mediadelivery.net/embed') ? lesson.video_url : undefined)} startTime={startTime} onProgress={setProgress} onTimeUpdate={(currentTime, duration) => {
+          {isNotYetReleased ? (
+            <LessonReleaseTimer 
+              releaseDate={new Date(lesson.scheduled_at!)} 
+              lessonTitle={lesson.title}
+            />
+          ) : lesson.video_url || lesson.bunny_embed_url ? <VideoPlayer src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''} embedUrl={lesson.bunny_embed_url || (lesson.video_url?.includes('mediadelivery.net/embed') ? lesson.video_url : undefined)} startTime={startTime} onProgress={setProgress} onTimeUpdate={(currentTime, duration) => {
           setCurrentTime(currentTime);
 
           // Salvar progresso automaticamente
