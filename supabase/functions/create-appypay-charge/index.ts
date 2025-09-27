@@ -215,9 +215,6 @@ serve(async (req) => {
     const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
     const merchantTransactionId = `TR${timestamp}${randomSuffix}`;
     
-    // Use order ID from checkout if provided, otherwise generate new one
-    const orderId = checkoutOrderData?.order_id || generateOrderId();
-
     // Determinar método de pagamento baseado no tipo
     let appyPayMethod = 'REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f'; // Default: Referência
     if (paymentMethod === 'express') {
@@ -289,6 +286,17 @@ serve(async (req) => {
       source: chargeResult.responseStatus?.source,
       reference: chargeResult.responseStatus?.reference,
       fullResponse: chargeResult
+    });
+
+    // Use reference number as order ID if available, otherwise use checkout order ID or generate new one
+    const orderId = chargeResult.responseStatus?.reference?.referenceNumber || 
+                   checkoutOrderData?.order_id || 
+                   generateOrderId();
+
+    logStep("Using order ID", { 
+      orderId, 
+      source: chargeResult.responseStatus?.reference?.referenceNumber ? 'reference_number' : 
+              checkoutOrderData?.order_id ? 'checkout_data' : 'generated'
     });
 
     // Determinar status do pedido baseado na resposta v2.0
