@@ -74,7 +74,6 @@ export default function ModernMembersArea() {
   } = useModernMembersAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
@@ -171,7 +170,6 @@ export default function ModernMembersArea() {
     console.log('📥 ModernMembersArea: Carregando conteúdo...');
     const loadContent = async () => {
       try {
-        // NÃO usar setIsLoading - nunca mostrar loading
 
         // Carregar lessons
         const { data: lessonsData, error: lessonsError } = await supabase
@@ -237,7 +235,6 @@ export default function ModernMembersArea() {
       } catch (error) {
         console.error('❌ ModernMembersArea: Erro inesperado:', error);
       }
-      // NÃO fazer setIsLoading(false) - nunca usar loading
     };
     loadContent();
   }, [memberAreaId]); // Apenas memberAreaId como dependência
@@ -250,10 +247,11 @@ export default function ModernMembersArea() {
       setSidebarVisible(true);
     }
   }, [selectedLesson, isMobile]);
-  const handleLogout = () => {
-    logout();
-    // Redirecionar para login da área de membros
-    window.location.href = `/members/login/${memberAreaId}`;
+  const handleLogout = async () => {
+    console.log('🚪 Fazendo logout...');
+    await logout();
+    // Redirecionar imediatamente para login sem delay
+    window.location.replace(`/members/login/${memberAreaId}`);
   };
   const handleLessonClick = (lesson: Lesson) => {
     if (!isLessonAccessible(lesson)) {
