@@ -181,8 +181,8 @@ export default function MinhasCompras() {
           throw new Error('Você não tem acesso a esta área de membros');
         }
 
-        // Se chegou até aqui, tem acesso - redirecionar diretamente
-        navigate(`/members/area/${product.member_areas.id}`);
+        // Se chegou até aqui, tem acesso - redirecionar diretamente para área com query params
+        window.location.href = `/members/area/${product.member_areas.id}?verified=true&email=${encodeURIComponent(user?.email || '')}`;
         
       } catch (error) {
         console.error('Erro ao verificar acesso:', error);

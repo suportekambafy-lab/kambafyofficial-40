@@ -80,7 +80,12 @@ export default function ModernMembersArea() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  // Estado para dados da área quando acesso é verificado
+  const [verifiedMemberArea, setVerifiedMemberArea] = useState<any>(null);
   const isMobile = useIsMobile();
+  
+  // Obter dados da área de membros (autenticada ou verificada)
+  const currentMemberArea = memberArea || verifiedMemberArea;
 
   // Hook de progresso das aulas
   const {
@@ -107,9 +112,13 @@ export default function ModernMembersArea() {
     authLoading
   });
 
-  // Verificar acesso à área de membros
+  // Verificar acesso à área de membros apenas se autenticado normalmente
   useEffect(() => {
-    if (!authLoading && isAuthenticated && user && memberAreaId && !memberArea) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isVerified = urlParams.get('verified') === 'true';
+    
+    // Só verificar acesso se for autenticação normal (não verificada)
+    if (!authLoading && isAuthenticated && user && memberAreaId && !memberArea && !isVerified) {
       console.log('🔑 Verificando acesso à área de membros...');
       checkMemberAccess(memberAreaId).then(hasAccess => {
         if (!hasAccess) {
@@ -122,9 +131,20 @@ export default function ModernMembersArea() {
     }
   }, [authLoading, isAuthenticated, user, memberAreaId, memberArea, checkMemberAccess]);
 
-  // Redirect para login se não autenticado
+  // Verificar query params para acesso direto verificado
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isVerified = urlParams.get('verified') === 'true';
+    const emailParam = urlParams.get('email');
+    
+    if (isVerified && emailParam && !authLoading) {
+      console.log('🔑 Acesso verificado via query params, carregando área diretamente');
+      // Não fazer redirecionamentos se já foi verificado
+      return;
+    }
+    
+    // Redirect para login apenas se não foi verificado e não autenticado
+    if (!authLoading && !isAuthenticated && !isVerified) {
       console.log('🔄 ModernMembersArea: Redirecionando para login - não autenticado');
       window.location.href = `/members/login/${memberAreaId}`;
     }
@@ -132,28 +152,46 @@ export default function ModernMembersArea() {
 
   // Carregar conteúdo da área
   useEffect(() => {
-    if (!user || !memberAreaId || !isAuthenticated || !memberArea) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isVerified = urlParams.get('verified') === 'true';
+    const emailParam = urlParams.get('email');
+    
+    // Permitir carregamento se:
+    // 1. Usuário autenticado normalmente OR
+    // 2. Acesso verificado via query params
+    const canLoadContent = (user && memberAreaId && isAuthenticated && memberArea) || 
+                          (isVerified && emailParam && memberAreaId);
+    
+    if (!canLoadContent) {
       console.log('ℹ️ ModernMembersArea: Aguardando autenticação e verificação de acesso...');
       return;
     }
+    
     console.log('📥 ModernMembersArea: Carregando conteúdo...');
     const loadContent = async () => {
       try {
         setIsLoading(true);
 
         // Carregar lessons
-        const {
-          data: lessonsData,
-          error: lessonsError
-        } = await supabase.from('lessons').select('*').eq('member_area_id', memberAreaId).eq('status', 'published').order('order_number');
+        const { data: lessonsData, error: lessonsError } = await supabase
+          .from('lessons')
+          .select('*')
+          .eq('member_area_id', memberAreaId)
+          .eq('status', 'published')
+          .order('order_number');
+          
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
 
           // Processar dados das lessons para converter JSON para os tipos corretos
           const processedLessons = lessonsData.map((lesson: any) => ({
             ...lesson,
-            complementary_links: lesson.complementary_links ? typeof lesson.complementary_links === 'string' ? JSON.parse(lesson.complementary_links) : lesson.complementary_links : [],
-            lesson_materials: lesson.lesson_materials ? typeof lesson.lesson_materials === 'string' ? JSON.parse(lesson.lesson_materials) : lesson.lesson_materials : []
+            complementary_links: lesson.complementary_links ? 
+              typeof lesson.complementary_links === 'string' ? 
+                JSON.parse(lesson.complementary_links) : lesson.complementary_links : [],
+            lesson_materials: lesson.lesson_materials ? 
+              typeof lesson.lesson_materials === 'string' ? 
+                JSON.parse(lesson.lesson_materials) : lesson.lesson_materials : []
           }));
 
           // Auto-detectar duração de vídeos que têm duration = 0
@@ -169,16 +207,34 @@ export default function ModernMembersArea() {
         }
 
         // Carregar módulos
-        const {
-          data: modulesData,
-          error: modulesError
-        } = await supabase.from('modules').select('*').eq('member_area_id', memberAreaId).eq('status', 'published').order('order_number');
+        const { data: modulesData, error: modulesError } = await supabase
+          .from('modules')
+          .select('*')
+          .eq('member_area_id', memberAreaId)
+          .eq('status', 'published')
+          .order('order_number');
+          
         if (!modulesError && modulesData) {
           console.log('✅ ModernMembersArea: Módulos carregados:', modulesData.length);
           setModules(modulesData as Module[]);
         } else {
           console.error('❌ ModernMembersArea: Erro ao carregar módulos:', modulesError);
         }
+
+        // Se for acesso verificado, carregar dados da área de membros também
+        if (isVerified && !memberArea) {
+          const { data: memberAreaData, error: memberAreaError } = await supabase
+            .from('member_areas')
+            .select('*')
+            .eq('id', memberAreaId)
+            .single();
+            
+          if (!memberAreaError && memberAreaData) {
+            console.log('✅ ModernMembersArea: Dados da área carregados via verificação');
+            setVerifiedMemberArea(memberAreaData);
+          }
+        }
+        
       } catch (error) {
         console.error('❌ ModernMembersArea: Erro inesperado:', error);
         toast.error('Erro ao carregar conteúdo');
@@ -287,8 +343,8 @@ export default function ModernMembersArea() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
           
           {/* Hero Image Background */}
-          {memberArea?.hero_image_url && <div className="absolute inset-0 opacity-40">
-              <img src={memberArea.hero_image_url} alt={memberArea.name} className="w-full h-full object-cover" />
+          {currentMemberArea?.hero_image_url && <div className="absolute inset-0 opacity-40">
+              <img src={currentMemberArea.hero_image_url} alt={currentMemberArea.name} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
             </div>}
           
@@ -302,8 +358,8 @@ export default function ModernMembersArea() {
           opacity: 1
         }} className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10">
               <div className="flex items-center gap-3">
-                {memberArea?.logo_url ? <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
-                    <AvatarImage src={memberArea.logo_url} alt={memberArea.name} />
+                {currentMemberArea?.logo_url ? <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
+                    <AvatarImage src={currentMemberArea.logo_url} alt={currentMemberArea.name} />
                     <AvatarFallback className="bg-emerald-600">
                       <GraduationCap className="h-6 w-6 text-white" />
                     </AvatarFallback>
@@ -333,11 +389,11 @@ export default function ModernMembersArea() {
               </Badge>
               
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                {memberArea?.hero_title || memberArea?.name}
+                {currentMemberArea?.hero_title || currentMemberArea?.name}
               </h1>
               
               <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-                {memberArea?.hero_description || memberArea?.description}
+                {currentMemberArea?.hero_description || currentMemberArea?.description}
               </p>
             </motion.div>
           </div>
