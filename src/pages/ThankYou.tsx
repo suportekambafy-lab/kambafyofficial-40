@@ -43,7 +43,7 @@ const ThankYou = () => {
     sellerId: searchParams.get('seller_id') || '',
     paymentMethod: searchParams.get('payment_method') || '',
     paymentIntentId: searchParams.get('payment_intent_id') || '',
-    status: searchParams.get('status') || 'completed',
+    status: searchParams.get('status') || 'pending',
     baseProductPrice: searchParams.get('base_product_price') || searchParams.get('amount') || '0',
     // Order Bump data
     orderBumpName: searchParams.get('order_bump_name') || '',
@@ -376,13 +376,13 @@ const ThankYou = () => {
   const getSuccessMessage = () => {
     if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
       return {
-        title: "Pedido Criado com Sucesso!",
-        subtitle: "Complete o pagamento para ter acesso ao produto"
+        title: "Obrigado pelo seu pedido!",
+        subtitle: "Por favor, complete o seu pagamento para desbloquear o acesso."
       };
     }
     return {
-      title: "Obrigado pela sua compra!",
-      subtitle: "Sua compra foi processada com sucesso"
+      title: "Obrigado pelo seu pedido!",
+      subtitle: "Por favor, complete o seu pagamento para desbloquear o acesso."
     };
   };
 
@@ -691,7 +691,7 @@ const ThankYou = () => {
               {orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod) ? (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-yellow-800 text-sm mb-2">
-                    <strong>Pendente:</strong> O acesso ao produto será liberado após a confirmação do pagamento.
+                    <strong>Pendente:</strong> O acesso estará disponível assim que a referência de pagamento for confirmada.
                   </p>
                   <p className="text-yellow-700 text-sm">
                     Você receberá um e-mail de confirmação assim que o pagamento for processado.
