@@ -9,48 +9,50 @@ export function useMemberAreaLinks() {
   const { getSubdomainUrl } = useSubdomain();
 
   const getMemberAreaLoginUrl = (memberAreaId: string) => {
-    // Verificar se não é kambafy.com
+    // Para localhost, usar rotas locais
     const hostname = window.location.hostname;
-    if (!hostname.includes('kambafy.com')) {
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
       const url = `/login/${memberAreaId}`;
       memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'login', url);
       return url;
     }
     
-    const url = getSubdomainUrl('membros', `/login/${memberAreaId}`);
+    // Para todos os outros ambientes, usar URLs da Kambafy
+    const url = 'https://membros.kambafy.com/login/' + memberAreaId;
     memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'login', url);
     return url;
   };
 
   const getMemberAreaUrl = (memberAreaId: string, path: string = '') => {
-    // Verificar se não é kambafy.com
+    // Para localhost, usar rotas locais
     const hostname = window.location.hostname;
-    if (!hostname.includes('kambafy.com')) {
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
       const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
       memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'area', fullPath);
       return fullPath;
     }
     
+    // Para todos os outros ambientes, usar URLs da Kambafy
     const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
-    const url = getSubdomainUrl('membros', fullPath);
+    const url = 'https://membros.kambafy.com' + fullPath;
     memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'area', url);
     return url;
   };
 
   const getMemberAreaLessonUrl = (memberAreaId: string, lessonId: string) => {
     const hostname = window.location.hostname;
-    if (!hostname.includes('kambafy.com')) {
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
       return `/area/${memberAreaId}/lesson/${lessonId}`;
     }
-    return getSubdomainUrl('membros', `/area/${memberAreaId}/lesson/${lessonId}`);
+    return `https://membros.kambafy.com/area/${memberAreaId}/lesson/${lessonId}`;
   };
 
   const getMemberAreaModuleUrl = (memberAreaId: string, moduleId: string) => {
     const hostname = window.location.hostname;
-    if (!hostname.includes('kambafy.com')) {
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
       return `/area/${memberAreaId}/module/${moduleId}`;
     }
-    return getSubdomainUrl('membros', `/area/${memberAreaId}/module/${moduleId}`);
+    return `https://membros.kambafy.com/area/${memberAreaId}/module/${moduleId}`;
   };
 
   const navigateToMemberArea = (memberAreaId: string, path: string = '') => {
@@ -58,10 +60,11 @@ export function useMemberAreaLinks() {
     memberAreaDebugLogger.logRedirection(window.location.href, url, 'Navegação via hook para área de membros');
     
     const hostname = window.location.hostname;
-    if (!hostname.includes('kambafy.com')) {
-      // Para domínios customizados, usar navigate em vez de window.location.href
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+      // Para localhost, usar navegação local
       window.location.pathname = url;
     } else {
+      // Para todos os outros ambientes, usar URL completa da Kambafy
       window.location.href = url;
     }
   };
@@ -71,10 +74,11 @@ export function useMemberAreaLinks() {
     memberAreaDebugLogger.logRedirection(window.location.href, url, 'Navegação via hook para login da área de membros');
     
     const hostname = window.location.hostname;
-    if (!hostname.includes('kambafy.com')) {
-      // Para domínios customizados, usar navigate em vez de window.location.href
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+      // Para localhost, usar navegação local
       window.location.pathname = url;
     } else {
+      // Para todos os outros ambientes, usar URL completa da Kambafy
       window.location.href = url;
     }
   };
@@ -93,27 +97,21 @@ export function useMemberAreaLinks() {
  * Versão não-hook para uso em contextos onde hooks não podem ser usados
  */
 export function createMemberAreaLinks() {
-  // Detectar hostname atual
+  // Para produção/kambafy, sempre usar URLs da Kambafy
   const hostname = window.location.hostname;
-  const baseDomain = hostname.replace(/^(app\.|pay\.|admin\.|membros\.)/, '');
+  
+  // Detectar se devemos usar URLs de produção da Kambafy
+  const shouldUseKambafyUrls = !hostname.includes('localhost') && !hostname.includes('127.0.0.1');
   
   console.log('🏗️ createMemberAreaLinks - Detectando ambiente:', {
     hostname,
-    baseDomain,
-    isLocalhost: hostname.includes('localhost'),
-    isLovable: hostname.includes('lovable.app')
+    shouldUseKambafyUrls,
+    message: shouldUseKambafyUrls ? 'Usando URLs da Kambafy' : 'Usando URLs locais'
   });
   
-  // Para desenvolvimento/preview, usar as rotas diretas
-  if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
-    console.log('🛠️ createMemberAreaLinks - DESENVOLVIMENTO detectado', {
-      hostname,
-      baseDomain,
-      isLocalhost: hostname.includes('localhost'),
-      isLovable: hostname.includes('lovable.app'),
-      isLovableProject: hostname.includes('lovableproject.com'),
-      message: 'Usando rotas locais para área de membros'
-    });
+  // Para desenvolvimento local, usar as rotas diretas
+  if (!shouldUseKambafyUrls) {
+    console.log('🛠️ createMemberAreaLinks - DESENVOLVIMENTO detectado');
     return {
       getMemberAreaLoginUrl: (memberAreaId: string) => {
         const url = `/login/${memberAreaId}`;
@@ -130,34 +128,11 @@ export function createMemberAreaLinks() {
     };
   }
 
-  // Se não for kambafy.com, manter as rotas locais
-  if (!hostname.includes('kambafy.com')) {
-    console.log('🛠️ createMemberAreaLinks - DOMÍNIO CUSTOMIZADO detectado', {
-      hostname,
-      baseDomain,
-      message: 'Usando rotas locais para área de membros em domínio customizado'
-    });
-    return {
-      getMemberAreaLoginUrl: (memberAreaId: string) => {
-        const url = `/login/${memberAreaId}`;
-        console.log('🔗 Custom domain - getMemberAreaLoginUrl:', { memberAreaId, url, hostname });
-        return url;
-      },
-      getMemberAreaUrl: (memberAreaId: string, path: string = '') => {
-        const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
-        console.log('🔗 Custom domain - getMemberAreaUrl:', { memberAreaId, path, fullPath, hostname });
-        return fullPath;
-      },
-      getMemberAreaLessonUrl: (memberAreaId: string, lessonId: string) => `/area/${memberAreaId}/lesson/${lessonId}`,
-      getMemberAreaModuleUrl: (memberAreaId: string, moduleId: string) => `/area/${memberAreaId}/module/${moduleId}`,
-    };
-  }
-
-  // Para produção, usar subdomínio membros
-  const membersHostname = `membros.${baseDomain}`;
-  const protocol = window.location.protocol;
+  // Para todos os outros ambientes (produção, preview, etc), usar URLs da Kambafy
+  const membersHostname = 'membros.kambafy.com';
+  const protocol = 'https:';
   
-  console.log('🌐 createMemberAreaLinks - Usando ambiente de produção:', {
+  console.log('🌐 createMemberAreaLinks - Usando URLs da Kambafy:', {
     membersHostname,
     protocol
   });
@@ -165,13 +140,13 @@ export function createMemberAreaLinks() {
   return {
     getMemberAreaLoginUrl: (memberAreaId: string) => {
       const url = `${protocol}//${membersHostname}/login/${memberAreaId}`;
-      console.log('🔗 Prod - getMemberAreaLoginUrl:', { memberAreaId, url });
+      console.log('🔗 Kambafy - getMemberAreaLoginUrl:', { memberAreaId, url });
       return url;
     },
     getMemberAreaUrl: (memberAreaId: string, path: string = '') => {
       const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
       const url = `${protocol}//${membersHostname}${fullPath}`;
-      console.log('🔗 Prod - getMemberAreaUrl:', { memberAreaId, path, fullPath, url });
+      console.log('🔗 Kambafy - getMemberAreaUrl:', { memberAreaId, path, fullPath, url });
       return url;
     },
     getMemberAreaLessonUrl: (memberAreaId: string, lessonId: string) => 
