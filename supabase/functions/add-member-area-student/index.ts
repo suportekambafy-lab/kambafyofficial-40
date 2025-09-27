@@ -66,6 +66,22 @@ const handler = async (req: Request): Promise<Response> => {
         throw createUserError;
       }
 
+      // Forçar confirmação do email usando admin API
+      if (newUser.user) {
+        const { error: confirmError } = await supabase.auth.admin.updateUserById(
+          newUser.user.id,
+          { 
+            email_confirm: true
+          }
+        );
+        
+        if (confirmError) {
+          console.error('❌ Error confirming email:', confirmError);
+        } else {
+          console.log('✅ Email confirmed successfully');
+        }
+      }
+
       console.log('✅ User created successfully:', newUser.user?.email);
       isNewAccount = true;
       passwordToReturn = finalPassword;
