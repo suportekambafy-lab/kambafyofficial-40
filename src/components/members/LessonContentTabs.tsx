@@ -50,165 +50,168 @@ export function LessonContentTabs({ lesson }: LessonContentTabsProps) {
   };
 
   return (
-    <div className="mt-6">
+    <div className="mt-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="description" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-3 mb-8 bg-transparent border-0 h-auto p-0 gap-4">
+          <TabsTrigger 
+            value="description" 
+            className="flex items-center gap-2 bg-transparent border-0 shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md px-4 py-2"
+          >
             <BookOpen className="h-4 w-4" />
             Descrição
           </TabsTrigger>
-          <TabsTrigger value="materials" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="materials" 
+            className="flex items-center gap-2 bg-transparent border-0 shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md px-4 py-2"
+          >
             <FileText className="h-4 w-4" />
             Material ({lessonMaterials.length})
           </TabsTrigger>
-          <TabsTrigger value="links" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="links" 
+            className="flex items-center gap-2 bg-transparent border-0 shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md px-4 py-2"
+          >
             <ExternalLink className="h-4 w-4" />
             Links ({complementaryLinks.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="description" className="mt-0">
-          <Card className="border-0 shadow-none">
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div>
-                  {lesson.description && (
-                    <div className="prose prose-gray max-w-none">
-                      <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                        {lesson.description}
-                      </p>
-                    </div>
-                  )}
-                  {!lesson.description && (
-                    <p className="text-muted-foreground italic">
-                      Nenhuma descrição disponível para esta aula.
+        <TabsContent value="description" className="mt-0 border-0">
+          <div className="p-0">
+            <div className="space-y-4">
+              <div>
+                {lesson.description && (
+                  <div className="prose prose-gray max-w-none">
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {lesson.description}
                     </p>
-                  )}
-                </div>
-                
-                {lesson.duration > 0 && (
-                  <div className="flex items-center gap-2 pt-4 border-t">
-                    <Badge variant="secondary" className="text-sm">
-                      Duração: {Math.floor(lesson.duration / 60)}:{(lesson.duration % 60).toString().padStart(2, '0')}
-                    </Badge>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="materials" className="mt-0">
-          <Card className="border-0 shadow-none">
-            <CardContent className="p-6">
-              {lessonMaterials.length > 0 ? (
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Materiais de Apoio
-                  </h3>
-                  <div className="grid gap-3">
-                    {lessonMaterials.map((material) => (
-                      <div
-                        key={material.id}
-                        className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border hover:bg-secondary/70 transition-colors"
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          {getFileIcon(material.type)}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground truncate">
-                              {material.name}
-                            </p>
-                            {material.size && (
-                              <p className="text-sm text-muted-foreground">
-                                {formatFileSize(material.size)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="sm"
-                          className="flex-shrink-0"
-                        >
-                          <a
-                            href={material.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2"
-                          >
-                            <Download className="h-4 w-4" />
-                            Download
-                          </a>
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    Nenhum material disponível para esta aula.
+                {!lesson.description && (
+                  <p className="text-muted-foreground italic">
+                    Nenhuma descrição disponível para esta aula.
                   </p>
+                )}
+              </div>
+              
+              {lesson.duration > 0 && (
+                <div className="flex items-center gap-2 pt-4">
+                  <Badge variant="secondary" className="text-sm">
+                    Duração: {Math.floor(lesson.duration / 60)}:{(lesson.duration % 60).toString().padStart(2, '0')}
+                  </Badge>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
-        <TabsContent value="links" className="mt-0">
-          <Card className="border-0 shadow-none">
-            <CardContent className="p-6">
-              {complementaryLinks.length > 0 ? (
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Links Complementares
-                  </h3>
-                  <div className="grid gap-3">
-                    {complementaryLinks.map((link) => (
-                      <div
-                        key={link.id}
-                        className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border hover:bg-secondary/70 transition-colors"
-                      >
+        <TabsContent value="materials" className="mt-0 border-0">
+          <div className="p-0">
+            {lessonMaterials.length > 0 ? (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-foreground mb-4">
+                  Materiais de Apoio
+                </h3>
+                <div className="grid gap-3">
+                  {lessonMaterials.map((material) => (
+                    <div
+                      key={material.id}
+                      className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg hover:bg-secondary/70 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {getFileIcon(material.type)}
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-foreground truncate">
-                            {link.title}
+                            {material.name}
                           </p>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {link.url}
-                          </p>
+                          {material.size && (
+                            <p className="text-sm text-muted-foreground">
+                              {formatFileSize(material.size)}
+                            </p>
+                          )}
                         </div>
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="sm"
-                          className="flex-shrink-0"
-                        >
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            Visitar
-                          </a>
-                        </Button>
                       </div>
-                    ))}
-                  </div>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="flex-shrink-0 border-0"
+                      >
+                        <a
+                          href={material.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <ExternalLink className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    Nenhum link complementar disponível para esta aula.
-                  </p>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Nenhum material disponível para esta aula.
+                </p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="links" className="mt-0 border-0">
+          <div className="p-0">
+            {complementaryLinks.length > 0 ? (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-foreground mb-4">
+                  Links Complementares
+                </h3>
+                <div className="grid gap-3">
+                  {complementaryLinks.map((link) => (
+                    <div
+                      key={link.id}
+                      className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg hover:bg-secondary/70 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">
+                          {link.title}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {link.url}
+                        </p>
+                      </div>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="flex-shrink-0 border-0"
+                      >
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Visitar
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <ExternalLink className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Nenhum link complementar disponível para esta aula.
+                </p>
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
