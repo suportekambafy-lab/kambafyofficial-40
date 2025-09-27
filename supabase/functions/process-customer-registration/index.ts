@@ -59,12 +59,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     const existingUser = existingUsers?.users?.find(user => user.email === customerEmail);
     let needsPasswordReset = false;
+    let temporaryPassword = null;
 
     if (!existingUser) {
       console.log('👤 Creating new user account...');
       
       // Criar conta automática com senha temporária
-      const temporaryPassword = Math.random().toString(36).slice(-12) + 'Temp123!';
+      temporaryPassword = Math.random().toString(36).slice(-12) + 'Temp123!';
       
       const { data: newUser, error: createUserError } = await supabase.auth.admin.createUser({
         email: customerEmail,
@@ -104,29 +105,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('✅ User already exists:', existingUser.email);
     }
 
-    // Enviar email de reset de senha se necessário
-    if (needsPasswordReset) {
-      console.log('📧 Sending password reset email...');
-      
-      const { error: passwordResetError } = await supabase.functions.invoke('send-password-reset', {
-        body: {
-          email: customerEmail,
-          customerName: customerName,
-          isNewAccount: true,
-          orderId: orderId
-        }
-      });
-
-      if (passwordResetError) {
-        console.error('❌ Error sending password reset:', passwordResetError);
-        // Não falhar por causa do email de senha
-      } else {
-        console.log('✅ Password reset email sent');
-      }
-
-      // Aguardar um pouco antes de enviar os emails de produto
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
+    // Não enviar mais email de reset de senha - dados serão incluídos no email de confirmação
+    console.log('✅ User account ready, password will be included in purchase confirmation');
 
     // Agora enviar confirmações de compra
     console.log('📧 Sending purchase confirmations...');
@@ -134,7 +114,9 @@ const handler = async (req: Request): Promise<Response> => {
     // Email para produto principal
     const mainProductPayload = {
       ...requestData,
-      orderBump: undefined // Remover order bump do email principal
+      orderBump: undefined, // Remover order bump do email principal
+      isNewAccount: needsPasswordReset,
+      temporaryPassword: temporaryPassword
     };
 
     const { error: mainEmailError } = await supabase.functions.invoke('send-purchase-confirmation', {
@@ -164,7 +146,9 @@ const handler = async (req: Request): Promise<Response> => {
         shareLink: requestData.orderBump.bump_share_link,
         memberAreaId: requestData.orderBump.bump_member_area_id,
         sellerId: requestData.sellerId,
-        baseProductPrice: requestData.orderBump.bump_product_price
+        baseProductPrice: requestData.orderBump.bump_product_price,
+        isNewAccount: false, // Order bump não precisa mostrar dados de login
+        temporaryPassword: null
       };
 
       const { error: bumpEmailError } = await supabase.functions.invoke('send-purchase-confirmation', {

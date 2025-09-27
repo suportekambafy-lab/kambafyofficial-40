@@ -35,6 +35,8 @@ interface PurchaseConfirmationRequest {
     entity?: string;
     dueDate?: string;
   };
+  isNewAccount?: boolean;
+  temporaryPassword?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -58,7 +60,9 @@ const handler = async (req: Request): Promise<Response> => {
       baseProductPrice,
       paymentMethod,
       paymentStatus,
-      referenceData
+      referenceData,
+      isNewAccount,
+      temporaryPassword
     }: PurchaseConfirmationRequest = await req.json();
 
     console.log('=== PURCHASE CONFIRMATION START ===');
@@ -456,6 +460,39 @@ const handler = async (req: Request): Promise<Response> => {
               <h2 style="color: #16a34a; margin: 0 0 15px 0;">Você comprou: ${productName}</h2>
               <p style="font-size: 18px; color: #666; margin: 0;">de ${sellerProfile?.full_name || 'Kambafy'}</p>
             </div>
+
+            ${isNewAccount && temporaryPassword ? `
+            <!-- Login Information for New Account -->
+            <div style="background-color: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px; padding: 25px; margin: 25px 0;">
+              <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">🔑 Seus Dados de Acesso</h3>
+              <p style="margin: 0 0 20px 0; color: #1e40af; font-weight: 500;">
+                Criamos automaticamente uma conta para você acessar seus produtos:
+              </p>
+              <div style="background-color: white; border-radius: 6px; padding: 20px; margin: 15px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 10px 0; font-weight: bold; color: #1e40af; width: 30%;">Email:</td>
+                    <td style="padding: 10px 0; color: #1e293b; font-family: 'Courier New', monospace; font-weight: 600;">${customerEmail}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0; font-weight: bold; color: #1e40af;">Senha:</td>
+                    <td style="padding: 10px 0; color: #1e293b; font-family: 'Courier New', monospace; font-weight: 600; background-color: #f8fafc; padding: 8px; border-radius: 4px;">${temporaryPassword}</td>
+                  </tr>
+                </table>
+              </div>
+              <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0;">
+                <p style="margin: 0; color: #92400e; font-size: 14px;">
+                  <strong>⚠️ Importante:</strong> Recomendamos que você altere essa senha assim que fizer o primeiro login para uma senha de sua preferência.
+                </p>
+              </div>
+              <div style="text-align: center; margin: 20px 0;">
+                <a href="https://app.kambafy.com/auth" 
+                   style="display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+                  Fazer Login Agora
+                </a>
+              </div>
+            </div>
+            ` : ''}
 
             ${accessInfo}
             ${orderBumpSection}
