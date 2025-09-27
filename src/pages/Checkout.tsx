@@ -1602,7 +1602,16 @@ const Checkout = () => {
             discount: orderBump.discount,
             discounted_price: totalOrderBumpPrice
           } : null,
-          baseProductPrice: product.price
+          baseProductPrice: product.price,
+          paymentMethod: selectedPayment,
+          paymentStatus: insertedOrder?.payment_status || 'completed',
+          ...(selectedPayment === 'reference' && insertedOrder && {
+            referenceData: {
+              referenceNumber: insertedOrder.reference_number,
+              entity: insertedOrder.entity,
+              dueDate: insertedOrder.due_date
+            }
+          })
         };
         const {
           data: emailResponse,

@@ -28,6 +28,13 @@ interface PurchaseConfirmationRequest {
     discounted_price: number;
   };
   baseProductPrice?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  referenceData?: {
+    referenceNumber?: string;
+    entity?: string;
+    dueDate?: string;
+  };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -48,7 +55,10 @@ const handler = async (req: Request): Promise<Response> => {
       memberAreaId,
       sellerId,
       orderBump,
-      baseProductPrice
+      baseProductPrice,
+      paymentMethod,
+      paymentStatus,
+      referenceData
     }: PurchaseConfirmationRequest = await req.json();
 
     console.log('=== PURCHASE CONFIRMATION START ===');
@@ -64,12 +74,140 @@ const handler = async (req: Request): Promise<Response> => {
       memberAreaId,
       sellerId,
       orderBump,
-      baseProductPrice
+      baseProductPrice,
+      paymentMethod,
+      paymentStatus,
+      referenceData
     });
 
     // Validate required fields
     if (!customerEmail || !customerName || !productName || !orderId) {
       throw new Error('Missing required fields: customerEmail, customerName, productName, or orderId');
+    }
+
+    // Check if this is a pending reference payment
+    const isPendingReference = paymentMethod === 'reference' && paymentStatus === 'pending';
+    
+    if (isPendingReference) {
+      console.log('=== PENDING REFERENCE PAYMENT DETECTED ===');
+      console.log('Sending pending payment email instead of confirmation');
+      
+      // Send pending payment email with reference details
+      const pendingEmailHtml = `
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Pagamento Pendente - ${productName} - Kambafy</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <div style="background-color: #f59e0b; color: white; width: 60px; height: 60px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+              <span style="font-size: 24px; font-weight: bold;">K</span>
+            </div>
+            <div style="background-color: #f59e0b; color: white; padding: 20px; border-radius: 8px;">
+              <h1 style="margin: 0; font-size: 24px;">⏳ Pagamento Pendente</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px; color: white;">Complete o seu pagamento para acessar o produto.</p>
+            </div>
+          </div>
+
+          <div style="background-color: #fff3cd; padding: 25px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #f59e0b;">
+            <h2 style="color: #856404; margin: 0 0 20px 0;">📋 Dados para Pagamento</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #856404;">Entidade:</td>
+                <td style="padding: 8px 0; font-size: 18px; color: #856404; font-weight: bold;">${referenceData?.entity || 'N/A'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #856404;">Referência:</td>
+                <td style="padding: 8px 0; font-size: 18px; color: #856404; font-weight: bold;">${referenceData?.referenceNumber || 'N/A'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #856404;">Valor:</td>
+                <td style="padding: 8px 0; font-size: 18px; color: #856404; font-weight: bold;">${amount} ${currency}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #856404;">Data Limite:</td>
+                <td style="padding: 8px 0; color: #856404;">${referenceData?.dueDate ? new Date(referenceData.dueDate).toLocaleDateString('pt-BR') : 'N/A'}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
+            <h3 style="color: #16a34a; margin: 0 0 15px 0;">Detalhes do Pedido</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Número do Pedido:</td>
+                <td style="padding: 8px 0;">${orderId}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Produto:</td>
+                <td style="padding: 8px 0;">${productName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Cliente:</td>
+                <td style="padding: 8px 0;">${customerName}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background-color: #e0f2fe; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #0277bd; margin: 0 0 15px 0;">📱 Como Pagar</h3>
+            <p style="margin: 0 0 10px 0; color: #0277bd;">
+              1. Use os dados acima no seu Multicaixa Express ou app bancário<br>
+              2. O pagamento será processado automaticamente<br>
+              3. Você receberá um email de confirmação quando o pagamento for aprovado<br>
+              4. O acesso ao produto será liberado imediatamente após a confirmação
+            </p>
+          </div>
+
+          <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #856404; margin: 0 0 10px 0;">📞 Precisa de Ajuda?</h3>
+            <p style="margin: 0; color: #856404;">
+              Se tiver alguma dúvida sobre o pagamento, entre em contato conosco:
+            </p>
+            <p style="margin: 10px 0 0 0; color: #856404;">
+              <strong>Email:</strong> suporte@kambafy.com<br>
+              <strong>WhatsApp:</strong> (+244) 900 000 000
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="margin: 0; color: #666;">
+              <strong>Kambafy</strong><br>
+              Obrigado por escolher nossos produtos!
+            </p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Send pending payment email
+      const { data: pendingEmailResponse, error: pendingEmailError } = await resend.emails.send({
+        from: "Kambafy <noreply@kambafy.com>",
+        to: [customerEmail.trim()],
+        subject: `Pagamento Pendente - ${productName} - Pedido #${orderId}`,
+        html: pendingEmailHtml,
+      });
+
+      if (pendingEmailError) {
+        console.error('Erro ao enviar email de pagamento pendente:', pendingEmailError);
+        throw new Error('Falha ao enviar email de pagamento pendente');
+      }
+
+      console.log("Pending payment email sent successfully:", pendingEmailResponse);
+      
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Pending payment email sent successfully',
+        emailSent: true,
+        paymentStatus: 'pending'
+      }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
     }
 
     // Create Supabase client
