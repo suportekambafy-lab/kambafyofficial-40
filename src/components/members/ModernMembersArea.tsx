@@ -376,7 +376,7 @@ export default function ModernMembersArea() {
               {isMobile && sidebarVisible && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarVisible(false)} />}
               
               {/* Área do vídeo */}
-              <div className="flex-1 p-6">
+              <div className="flex-1 p-6 px-0 py-0">
                 <motion.div initial={{
               opacity: 0,
               scale: 0.95
