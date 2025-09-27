@@ -380,13 +380,17 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         access_duration_type: formData.accessDurationType,
         access_duration_value: formData.accessDurationValue,
         access_duration_description: formData.accessDurationDescription,
+        allow_custom_price: formData.allowCustomPrice,
+        minimum_price: formData.minimumPrice ? parseFloat(formData.minimumPrice) : null,
+        suggested_price: formData.suggestedPrice ? parseFloat(formData.suggestedPrice) : null,
         user_id: user.id,
         status: isDraft ? "Rascunho" : "Ativo"
       };
 
-      console.log('Saving product data:', productData);
-      console.log('🔍 CUSTOM PRICES ANTES DE SALVAR:', formData.customPrices);
-      console.log('🔍 PRODUCT DATA CUSTOM PRICES:', productData.custom_prices);
+      console.log('💾 Saving product data:', productData);
+      console.log('🔍 PREÇO PERSONALIZADO - allowCustomPrice:', formData.allowCustomPrice);
+      console.log('🔍 PREÇO PERSONALIZADO - minimumPrice:', formData.minimumPrice);
+      console.log('🔍 PREÇO PERSONALIZADO - suggestedPrice:', formData.suggestedPrice);
 
       let error;
       if (editingProduct) {
