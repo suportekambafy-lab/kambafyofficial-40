@@ -37,7 +37,7 @@ export function LessonContentTabs({
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
-  return <div className="mt-8 border-t border-gray-800 pt-6">
+  return <div className="mt-8 border-t border-gray-800 pt-6 bg-zinc-950">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="description" className="flex items-center gap-2">
