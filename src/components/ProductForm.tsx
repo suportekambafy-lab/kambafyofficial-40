@@ -137,6 +137,9 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
   console.log('🔥 ProductForm renderizado - formData:', {
     price: formData.price,
     customPrices: formData.customPrices,
+    allowCustomPrice: formData.allowCustomPrice,
+    minimumPrice: formData.minimumPrice,
+    suggestedPrice: formData.suggestedPrice,
     open: open
   });
 
@@ -489,12 +492,15 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
             </div>
 
             {/* Configuração de Preço Aberto - MOVIDO PARA CIMA */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
+            <Card className="border-2 border-green-500 bg-green-50">
+              <CardHeader className="bg-green-100">
+                <CardTitle className="flex items-center gap-2 text-base text-green-800">
                   <DollarSign className="w-4 h-4" />
                   Preço Aberto ("Pague o que quiser")
                 </CardTitle>
+                <p className="text-xs text-green-600 font-bold">
+                  ✅ ESTA SEÇÃO ESTÁ RENDERIZADA - allowCustomPrice: {String(formData.allowCustomPrice)}
+                </p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -506,7 +512,10 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
                   </div>
                   <Switch
                     checked={formData.allowCustomPrice}
-                    onCheckedChange={(checked) => handleInputChange("allowCustomPrice", checked)}
+                    onCheckedChange={(checked) => {
+                      console.log('🔄 Switch preço personalizado mudou para:', checked);
+                      handleInputChange("allowCustomPrice", checked);
+                    }}
                   />
                 </div>
 
