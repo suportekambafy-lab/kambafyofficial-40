@@ -2400,8 +2400,8 @@ const Checkout = () => {
                       <div className="border-t pt-4 mt-4">
                         <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
                           <div className="flex items-center justify-center mb-4">
-                            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-                              <Check className="h-6 w-6 text-white" />
+                            <div className="apple-animation">
+                              <div className="apple-shape"></div>
                             </div>
                           </div>
                           
@@ -2418,27 +2418,20 @@ const Checkout = () => {
                             <div className="bg-blue-50 rounded-lg p-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-600">Entidade:</span>
-                                <div className="flex flex-col items-center space-y-1">
-                                  {copiedEntity && (
-                                    <div className="apple-animation">
-                                      <div className="apple-shape"></div>
-                                    </div>
-                                  )}
-                                  <div className="flex items-center space-x-2">
-                                    <span className="font-mono font-bold text-lg text-gray-900">{referenceData.entity}</span>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(referenceData.entity);
-                                        setCopiedEntity(true);
-                                        setTimeout(() => setCopiedEntity(false), 2000);
-                                      }}
-                                      className="h-6 w-6 p-0"
-                                    >
-                                      {copiedEntity ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                                    </Button>
-                                  </div>
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-mono font-bold text-lg text-gray-900">{referenceData.entity}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(referenceData.entity);
+                                      setCopiedEntity(true);
+                                      setTimeout(() => setCopiedEntity(false), 2000);
+                                    }}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    {copiedEntity ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                                  </Button>
                                 </div>
                               </div>
                             </div>
@@ -2446,27 +2439,20 @@ const Checkout = () => {
                             <div className="bg-blue-50 rounded-lg p-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-600">Referência:</span>
-                                <div className="flex flex-col items-center space-y-1">
-                                  {copiedReference && (
-                                    <div className="apple-animation">
-                                      <div className="apple-shape"></div>
-                                    </div>
-                                  )}
-                                  <div className="flex items-center space-x-2">
-                                    <span className="font-mono font-bold text-lg text-gray-900">{referenceData.referenceNumber}</span>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(referenceData.referenceNumber);
-                                        setCopiedReference(true);
-                                        setTimeout(() => setCopiedReference(false), 2000);
-                                      }}
-                                      className="h-6 w-6 p-0"
-                                    >
-                                      {copiedReference ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                                    </Button>
-                                  </div>
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-mono font-bold text-lg text-gray-900">{referenceData.referenceNumber}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(referenceData.referenceNumber);
+                                      setCopiedReference(true);
+                                      setTimeout(() => setCopiedReference(false), 2000);
+                                    }}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    {copiedReference ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                                  </Button>
                                 </div>
                               </div>
                             </div>
