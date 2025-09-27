@@ -49,7 +49,11 @@ const ThankYou = () => {
     orderBumpName: searchParams.get('order_bump_name') || '',
     orderBumpPrice: searchParams.get('order_bump_price') || '',
     orderBumpDiscount: searchParams.get('order_bump_discount') || '',
-    orderBumpDiscountedPrice: searchParams.get('order_bump_discounted_price') || ''
+    orderBumpDiscountedPrice: searchParams.get('order_bump_discounted_price') || '',
+    // Reference payment data
+    referenceNumber: searchParams.get('reference_number') || '',
+    entity: searchParams.get('entity') || '',
+    dueDate: searchParams.get('due_date') || ''
   });
 
   // Estado para pedidos relacionados (upsells)
@@ -678,6 +682,54 @@ const ThankYou = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Payment Reference Details - Only show for reference payments */}
+        {orderDetails.paymentMethod === 'reference' && orderDetails.referenceNumber && (
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-checkout-text mb-4 flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Dados da Referência de Pagamento
+              </h3>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-blue-800 text-sm mb-3">
+                  <strong>Use os dados abaixo para efetuar o pagamento:</strong>
+                </p>
+                
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Entidade</label>
+                    <p className="text-lg font-bold text-blue-800">{orderDetails.entity}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Referência</label>
+                    <p className="text-lg font-bold text-blue-800">{orderDetails.referenceNumber}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Valor</label>
+                    <p className="text-lg font-bold text-blue-800">{orderDetails.amount} {orderDetails.currency}</p>
+                  </div>
+                </div>
+
+                {orderDetails.dueDate && (
+                  <div className="mt-4 pt-3 border-t border-blue-200">
+                    <label className="text-sm font-medium text-muted-foreground">Data Limite</label>
+                    <p className="text-sm text-blue-700">
+                      {new Date(orderDetails.dueDate).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Access Section - Only show for Courses and E-books, not for Payment Links */}
         {product?.type !== 'Link de Pagamento' && (
