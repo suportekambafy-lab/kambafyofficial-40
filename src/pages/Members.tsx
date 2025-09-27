@@ -618,15 +618,17 @@ export default function Members() {
       };
 
       console.log('🔍 Form data before saving:', {
-        complementary_links: formData.complementary_links,
-        lesson_materials: formData.lesson_materials,
-        complementary_links_length: formData.complementary_links?.length,
-        lesson_materials_length: formData.lesson_materials?.length,
-        validatedLinks: validatedLinks,
-        validatedMaterials: safeMaterials,
-        validatedLinks_length: validatedLinks.length,
-        validatedMaterials_length: safeMaterials.length
+        form_complementary_links: formData.complementary_links,
+        form_lesson_materials: formData.lesson_materials,
+        form_complementary_links_length: formData.complementary_links?.length,
+        form_lesson_materials_length: formData.lesson_materials?.length,
+        validated_links: validatedLinks,
+        validated_materials: safeMaterials,
+        validated_links_length: validatedLinks.length,
+        validated_materials_length: safeMaterials.length
       });
+      console.log('🔍 Lesson data to insert/update:', lessonData);
+      console.log('🔍 complementary_links JSON:', lessonData.complementary_links);
       console.log('🔍 Lesson data to insert/update:', lessonData);
 
       if (editingLesson) {
@@ -1836,26 +1838,27 @@ export default function Members() {
                 </Select>
                </div>
                
-                {/* Links Complementares */}
-                 <LessonLinksManager 
-                   links={formData.complementary_links || []}
-                   onChange={(links) => {
-                     console.log('🔗 Links onChange called with:', links);
-                     console.log('🔗 Links type:', typeof links, 'Array?', Array.isArray(links));
-                     
-                     // Garantir que sempre seja um array válido
-                     const safeLinks = Array.isArray(links) ? links : [];
-                     
-                     setFormData(prev => {
-                       const updated = { ...prev, complementary_links: safeLinks };
-                       console.log('🔗 Updated form data:', {
-                         ...updated,
-                         complementary_links_length: updated.complementary_links?.length
+                 {/* Links Complementares */}
+                 <div className="space-y-2">
+                   <Label className="text-sm font-medium">Links Complementares da Aula</Label>
+                   <LessonLinksManager 
+                     links={formData.complementary_links || []}
+                     onChange={(links) => {
+                       console.log('🔗 Links onChange called with:', links);
+                       console.log('🔗 Links type:', typeof links, 'Array?', Array.isArray(links));
+                       
+                       // Garantir que sempre seja um array válido
+                       const safeLinks = Array.isArray(links) ? links : [];
+                       
+                       setFormData(prev => {
+                         const updated = { ...prev, complementary_links: safeLinks };
+                         console.log('🔗 Updated form data complementary_links:', updated.complementary_links);
+                         console.log('🔗 Updated form data keys:', Object.keys(updated));
+                         return updated;
                        });
-                       return updated;
-                     });
-                   }}
-                 />
+                     }}
+                   />
+                 </div>
                 
                 {/* Materiais da Aula */}
                 <LessonMaterialsManager

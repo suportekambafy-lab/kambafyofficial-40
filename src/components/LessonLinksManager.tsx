@@ -22,6 +22,9 @@ export function LessonLinksManager({ links, onChange }: LessonLinksManagerProps)
   const [newLink, setNewLink] = useState({ title: '', url: '' });
   const [errors, setErrors] = useState<{ title?: string; url?: string }>({});
 
+  console.log('🔗 LessonLinksManager render - current links:', links);
+  console.log('🔗 LessonLinksManager render - links length:', links?.length);
+
   const validateLink = (link: { title: string; url: string }) => {
     try {
       linkSchema.parse(link);
@@ -42,12 +45,17 @@ export function LessonLinksManager({ links, onChange }: LessonLinksManagerProps)
   };
 
   const addLink = () => {
+    console.log('🔗 Adding link attempt - newLink:', newLink);
+    
     const trimmedLink = {
       title: newLink.title.trim(),
       url: newLink.url.trim()
     };
 
+    console.log('🔗 Trimmed link:', trimmedLink);
+
     if (!validateLink(trimmedLink)) {
+      console.log('🔗 Link validation failed');
       return;
     }
 
@@ -57,9 +65,13 @@ export function LessonLinksManager({ links, onChange }: LessonLinksManagerProps)
       url: trimmedLink.url
     };
     
-    const updatedLinks = [...(Array.isArray(links) ? links : []), link];
+    const currentLinks = Array.isArray(links) ? links : [];
+    const updatedLinks = [...currentLinks, link];
+    
     console.log('🔗 Adding new link:', link);
+    console.log('🔗 Current links:', currentLinks);
     console.log('🔗 Updated links array:', updatedLinks);
+    
     onChange(updatedLinks);
     setNewLink({ title: '', url: '' });
     setErrors({});
