@@ -80,7 +80,7 @@ export function LessonContentTabs({
 
         <TabsContent value="materials" className="mt-0">
           <Card className="border-0 shadow-none">
-            <CardContent className="p-6">
+            <CardContent className="p-6 bg-zinc-950">
               {lessonMaterials.length > 0 ? <div className="space-y-3">
                   <h3 className="text-lg font-semibold text-foreground mb-4">
                     Materiais de Apoio
