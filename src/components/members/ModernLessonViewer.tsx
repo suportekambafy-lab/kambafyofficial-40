@@ -85,7 +85,7 @@ export function ModernLessonViewer({
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <Card className="overflow-hidden border-0 bg-background/95">
+        <div className="overflow-hidden bg-black">
           {lesson.video_url || lesson.bunny_embed_url ? (
             <VideoPlayer
               src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''}
@@ -113,19 +113,19 @@ export function ModernLessonViewer({
               onPause={() => setIsPlaying(false)}
             />
           ) : (
-            <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 relative">
+            <div className="aspect-video bg-black relative">
               {/* Video placeholder para aulas sem vídeo */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                    <Play className="h-8 w-8 text-muted-foreground" />
+                  <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mb-4">
+                    <Play className="h-8 w-8 text-gray-400" />
                   </div>
-                  <p className="text-muted-foreground">Nenhum vídeo disponível</p>
+                  <p className="text-gray-400">Nenhum vídeo disponível</p>
                 </div>
               </div>
             </div>
           )}
-        </Card>
+        </div>
       </motion.div>
 
       {/* Lesson Content Tabs */}

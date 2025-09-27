@@ -68,13 +68,10 @@ export function LessonContentTabs({ lesson }: LessonContentTabsProps) {
         </TabsList>
 
         <TabsContent value="description" className="mt-0">
-          <Card>
+          <Card className="border-0 shadow-none">
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
-                    {lesson.title}
-                  </h2>
                   {lesson.description && (
                     <div className="prose prose-gray max-w-none">
                       <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
@@ -102,7 +99,7 @@ export function LessonContentTabs({ lesson }: LessonContentTabsProps) {
         </TabsContent>
 
         <TabsContent value="materials" className="mt-0">
-          <Card>
+          <Card className="border-0 shadow-none">
             <CardContent className="p-6">
               {lessonMaterials.length > 0 ? (
                 <div className="space-y-3">
@@ -161,7 +158,7 @@ export function LessonContentTabs({ lesson }: LessonContentTabsProps) {
         </TabsContent>
 
         <TabsContent value="links" className="mt-0">
-          <Card>
+          <Card className="border-0 shadow-none">
             <CardContent className="p-6">
               {complementaryLinks.length > 0 ? (
                 <div className="space-y-3">
