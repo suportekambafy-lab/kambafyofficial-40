@@ -1787,7 +1787,7 @@ export default function Members() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um módulo" />
                     </SelectTrigger>
-                     <SelectContent>
+                     <SelectContent className="z-[60] bg-background border shadow-lg">
                        <SelectItem value="none">Sem módulo</SelectItem>
                        {modules
                          .filter(m => m.status === 'published')
@@ -1869,7 +1869,7 @@ export default function Members() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[60] bg-background border shadow-lg">
                     <SelectItem value="draft">Rascunho</SelectItem>
                     <SelectItem value="published">Publicado</SelectItem>
                     <SelectItem value="archived">Arquivado</SelectItem>
@@ -1905,24 +1905,24 @@ export default function Members() {
                    {formData.is_scheduled && (
                      <div className="space-y-2">
                        <Label>Data de Liberação</Label>
-                       <Popover>
-                         <PopoverTrigger asChild>
-                           <Button
-                             variant={"outline"}
-                             className={cn(
-                               "w-full justify-start text-left font-normal",
-                               !formData.scheduled_at && "text-muted-foreground"
-                             )}
-                           >
-                             <CalendarIcon className="mr-2 h-4 w-4" />
-                             {formData.scheduled_at ? (
-                               format(formData.scheduled_at, "dd/MM/yyyy HH:mm")
-                             ) : (
-                               <span>Selecionar data e hora</span>
-                             )}
-                           </Button>
-                         </PopoverTrigger>
-                         <PopoverContent className="w-auto p-0" align="start">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !formData.scheduled_at && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {formData.scheduled_at ? (
+                                format(formData.scheduled_at, "dd/MM/yyyy HH:mm")
+                              ) : (
+                                <span>Selecionar data e hora</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 z-[60] bg-background border shadow-lg" align="start">
                            <CalendarComponent
                              mode="single"
                              selected={formData.scheduled_at || undefined}
