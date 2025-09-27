@@ -28,6 +28,13 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('[SMS-NOTIFICATION] Vonage credentials check:', {
+      hasApiKey: !!VONAGE_API_KEY,
+      hasApiSecret: !!VONAGE_API_SECRET,
+      apiKeyLength: VONAGE_API_KEY?.length || 0,
+      apiSecretLength: VONAGE_API_SECRET?.length || 0
+    });
+    
     if (!VONAGE_API_KEY || !VONAGE_API_SECRET) {
       console.error('[SMS-NOTIFICATION] Vonage API credentials not configured');
       throw new Error('Vonage API credentials not configured');
