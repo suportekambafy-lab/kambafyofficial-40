@@ -18,6 +18,8 @@ const sendSMSNotification = async (
     productName: string;
     memberAreaUrl?: string;
     referenceNumber?: string;
+    entity?: string;
+    amount?: string;
   }
 ) => {
   try {
@@ -36,6 +38,8 @@ const sendSMSNotification = async (
         productName: data.productName,
         memberAreaUrl: data.memberAreaUrl,
         referenceNumber: data.referenceNumber,
+        entity: data.entity,
+        amount: data.amount,
         message: '' // Will be generated based on type
       }
     });
@@ -278,7 +282,9 @@ const handler = async (req: Request): Promise<Response> => {
             await sendSMSNotification(customerPhone, 'payment_reminder', {
               customerName,
               productName,
-              referenceNumber: referenceData?.referenceNumber
+              referenceNumber: referenceData?.referenceNumber,
+              entity: referenceData?.entity,
+              amount: amount
             });
           }
 

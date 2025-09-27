@@ -17,6 +17,8 @@ interface SMSNotificationRequest {
   productName?: string;
   memberAreaUrl?: string;
   referenceNumber?: string;
+  entity?: string;
+  amount?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -66,7 +68,7 @@ const handler = async (req: Request): Promise<Response> => {
     } else if (requestData.type === 'course_access') {
       finalMessage = `🎓 Acesso liberado!\n\nOlá ${requestData.customerName || 'Cliente'},\n\nSeu acesso ao curso "${requestData.productName}" foi liberado!\n\n${requestData.memberAreaUrl ? `Acesse agora: ${requestData.memberAreaUrl}` : ''}\n\nBons estudos!`;
     } else if (requestData.type === 'payment_reminder') {
-      finalMessage = `💰 Lembrete de pagamento\n\nOlá ${requestData.customerName || 'Cliente'},\n\nSeu pagamento está pendente.\n\n${requestData.referenceNumber ? `Referência: ${requestData.referenceNumber}` : ''}\n\nComplete seu pagamento para ter acesso ao produto "${requestData.productName}".`;
+      finalMessage = `Lembrete de pagamento\n\nOla ${requestData.customerName || 'Cliente'},\n\nSeu pagamento esta pendente.\n\nEntidade: ${requestData.entity || 'N/A'}\nReferencia: ${requestData.referenceNumber || 'N/A'}\nValor: ${requestData.amount || 'N/A'} KZ\n\nComplete seu pagamento para ter acesso ao produto "${requestData.productName}".`;
     }
 
     // Preparar payload para Vonage SMS API
