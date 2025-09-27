@@ -325,19 +325,7 @@ export default function ModernMembersArea() {
     selectedLesson: !!selectedLesson
   });
 
-  // Se não tem dados ainda, forçar mostrar pelo menos um loading visual
-  if (!currentMemberArea && lessons.length === 0 && modules.length === 0) {
-    console.log('🔄 ModernMembersArea: Mostrando loading pois não há dados ainda');
-    return (
-      <div className="min-h-screen bg-gray-950 dark text-white flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full mx-auto animate-spin"></div>
-          <p className="text-gray-300">Carregando área de membros...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // SEMPRE renderizar o conteúdo - remover completamente verificações de loading
   return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
       <MemberAreaSlideMenu lessons={lessons} modules={modules} lessonProgress={lessonProgress} getCourseProgress={getCourseProgress} getModuleProgress={getModuleProgress} getModuleStats={getModuleStats} totalDuration={totalDuration} completedLessons={completedLessons} onLessonSelect={setSelectedLesson} onLogout={handleLogout} />
@@ -387,16 +375,6 @@ export default function ModernMembersArea() {
               <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
                 {currentMemberArea?.hero_description || currentMemberArea?.description || 'Bem-vindo à sua área de membros exclusiva'}
               </p>
-
-              {/* Debug info - temporário */}
-              <div className="mt-8 p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg max-w-md mx-auto">
-                <p className="text-sm text-emerald-400">
-                  {lessons.length} aulas • {modules.length} módulos carregados
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Status: {currentMemberArea ? 'Área carregada' : 'Carregando...'}
-                </p>
-              </div>
             </motion.div>
           </div>
         </motion.section>}
