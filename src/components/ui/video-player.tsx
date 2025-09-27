@@ -210,14 +210,14 @@ const VideoPlayer = ({
   if (embedUrl && embedUrl.includes('mediadelivery.net/embed')) {
     return (
       <motion.div 
-        className="relative w-full max-w-4xl mx-auto overflow-hidden bg-[#11111198] shadow-[0_0_20px_rgba(0,0,0,0.2)] backdrop-blur-sm"
+        className="relative w-full overflow-hidden bg-black"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <iframe
           src={embedUrl}
-          className="w-full aspect-video"
+          className="w-full aspect-video border-0"
           frameBorder="0"
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
