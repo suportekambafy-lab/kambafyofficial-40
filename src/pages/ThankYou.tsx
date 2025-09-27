@@ -113,6 +113,29 @@ const ThankYou = () => {
       // Definir status inicial
       setOrderStatus(orderDetails.status);
 
+      // Se não temos customer_name nos parâmetros, buscar do banco usando order_id
+      if (orderDetails.customerName === 'Cliente' && orderDetails.orderId) {
+        try {
+          console.log('🔍 Buscando nome do cliente do banco de dados...');
+          const { data: orderData, error: orderError } = await supabase
+            .from('orders')
+            .select('customer_name, customer_email')
+            .eq('order_id', orderDetails.orderId)
+            .single();
+
+          if (orderData && !orderError) {
+            console.log('✅ Nome do cliente encontrado:', orderData.customer_name);
+            setOrderDetails(prev => ({ 
+              ...prev, 
+              customerName: orderData.customer_name || 'Cliente',
+              customerEmail: orderData.customer_email || prev.customerEmail
+            }));
+          }
+        } catch (error) {
+          console.error('❌ Erro ao buscar nome do cliente:', error);
+        }
+      }
+
       if (!orderDetails.productId) {
         console.log('⚠️ ThankYou: Sem product_id, finalizando...');
         setLoading(false);
