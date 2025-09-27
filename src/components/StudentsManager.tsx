@@ -208,6 +208,74 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
     }
   };
 
+  const handleResendAccess = async (student: Student) => {
+    try {
+      // Buscar dados da área de membros
+      const { data: memberAreaData, error: memberAreaError } = await supabase
+        .from('member_areas')
+        .select('name, url')
+        .eq('id', memberAreaId)
+        .single();
+
+      if (memberAreaError) {
+        console.error('Error fetching member area:', memberAreaError);
+        toast({
+          title: "Erro",
+          description: "Erro ao buscar dados da área de membros",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Buscar dados do vendedor
+      const { data: sellerData, error: sellerError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (sellerError) {
+        console.error('Error fetching seller data:', sellerError);
+      }
+
+      // Enviar email de acesso
+      const memberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
+      
+      const { error: emailError } = await supabase.functions.invoke('send-member-access-email', {
+        body: {
+          studentName: student.student_name,
+          studentEmail: student.student_email,
+          memberAreaName: memberAreaData.name,
+          memberAreaUrl: memberAreaUrl,
+          sellerName: sellerData?.full_name,
+          isNewAccount: false, // Sempre false para reenvio
+          temporaryPassword: undefined
+        }
+      });
+
+      if (emailError) {
+        console.error('Error sending access email:', emailError);
+        toast({
+          title: "Erro",
+          description: "Erro ao reenviar email de acesso",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "Email de acesso reenviado com sucesso!"
+        });
+      }
+    } catch (error) {
+      console.error('Exception resending access:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao reenviar acesso",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleRemoveStudent = async (studentId: string) => {
     if (!confirm('Tem certeza que deseja remover este estudante?')) return;
 
@@ -389,10 +457,10 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuItem 
-                            onClick={() => window.open(`mailto:${student.student_email}`, '_blank')}
+                            onClick={() => handleResendAccess(student)}
                           >
                             <Mail className="mr-2 h-4 w-4" />
-                            Enviar Email
+                            Reenviar Acesso
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             className="text-red-600"
