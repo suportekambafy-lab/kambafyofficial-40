@@ -21,56 +21,56 @@ import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
-
-
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 
 // Importar componentes otimizados
-import { 
-  OptimizedCustomBanner,
-  OptimizedCountdownTimer,
-  OptimizedFakeReviews,
-  OptimizedSocialProof,
-  OptimizedOrderBump,
-  OptimizedStripeCardPayment
-} from '@/components/checkout/OptimizedCheckoutComponents';
+import { OptimizedCustomBanner, OptimizedCountdownTimer, OptimizedFakeReviews, OptimizedSocialProof, OptimizedOrderBump, OptimizedStripeCardPayment } from '@/components/checkout/OptimizedCheckoutComponents';
 
 // Lazy load componentes mais simples
-const KambaPayCheckoutOption = lazy(() => import('@/components/KambaPayCheckoutOption').then(module => ({ default: module.KambaPayCheckoutOption })));
-
-
+const KambaPayCheckoutOption = lazy(() => import('@/components/KambaPayCheckoutOption').then(module => ({
+  default: module.KambaPayCheckoutOption
+})));
 const Checkout = () => {
   console.log('🛒 Checkout component initialized');
-  const { productId } = useParams();
+  const {
+    productId
+  } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { toast } = useCustomToast();
-  const { setTheme } = useTheme();
-  const { 
-    userCountry, 
-    loading: geoLoading, 
-    formatPrice, 
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useCustomToast();
+  const {
+    setTheme
+  } = useTheme();
+  const {
+    userCountry,
+    loading: geoLoading,
+    formatPrice,
     convertPrice,
-    changeCountry, 
+    changeCountry,
     supportedCountries,
     isReady: geoReady
   } = useGeoLocation();
-  
-  console.log('🌍 Geo state:', { geoLoading, geoReady, userCountry: userCountry?.code });
-  const { 
-    affiliateCode, 
-    hasAffiliate, 
-    markAsValidAffiliate, 
+  console.log('🌍 Geo state:', {
+    geoLoading,
+    geoReady,
+    userCountry: userCountry?.code
+  });
+  const {
+    affiliateCode,
+    hasAffiliate,
+    markAsValidAffiliate,
     markAsInvalidAffiliate,
-    clearAffiliateCode 
+    clearAffiliateCode
   } = useAffiliateTracking();
-
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(false); // Não iniciar com loading
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [processing, setProcessing] = useState(false);
-  
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -81,27 +81,44 @@ const Checkout = () => {
   const [selectedPayment, setSelectedPayment] = useState("");
   const [checkoutSettings, setCheckoutSettings] = useState<any>(null);
   const [orderBump, setOrderBump] = useState<any>(null);
-  const [selectedOrderBumps, setSelectedOrderBumps] = useState<Map<string, { data: any; price: number }>>(new Map());
+  const [selectedOrderBumps, setSelectedOrderBumps] = useState<Map<string, {
+    data: any;
+    price: number;
+  }>>(new Map());
 
   // Calculate total order bump price from all selected bumps
   const totalOrderBumpPrice = useMemo(() => {
     const allPrices = Array.from(selectedOrderBumps.values());
-    const total = allPrices.reduce((sum, { price }) => sum + price, 0);
+    const total = allPrices.reduce((sum, {
+      price
+    }) => sum + price, 0);
     console.log(`🔥 TOTAL ORDER BUMP PRICE CALCULATION:`, {
       selectedBumpsCount: selectedOrderBumps.size,
-      allPrices: allPrices.map(({ data, price }) => ({ id: data.id, name: data.bump_product_name, price })),
+      allPrices: allPrices.map(({
+        data,
+        price
+      }) => ({
+        id: data.id,
+        name: data.bump_product_name,
+        price
+      })),
       total
     });
     return total;
   }, [selectedOrderBumps]);
   const [resetOrderBumps, setResetOrderBumps] = useState(false);
   const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
-  const [bankTransferData, setBankTransferData] = useState<{file: File, bank: string} | null>(null);
+  const [bankTransferData, setBankTransferData] = useState<{
+    file: File;
+    bank: string;
+  } | null>(null);
   const [expressCountdownTime, setExpressCountdownTime] = useState(60);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Hook para KambaPay
-  const { fetchBalanceByEmail } = useKambaPayBalance();
+  const {
+    fetchBalanceByEmail
+  } = useKambaPayBalance();
 
   // Verificar se é um upsell de outro pedido
   const [upsellFromOrder, setUpsellFromOrder] = useState<string | null>(null);
@@ -116,7 +133,6 @@ const Checkout = () => {
   } | null>(null);
   const [copiedEntity, setCopiedEntity] = useState(false);
   const [copiedReference, setCopiedReference] = useState(false);
-  
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const upsellFrom = urlParams.get('upsell_from');
@@ -131,26 +147,23 @@ const Checkout = () => {
     if (selectedPayment === 'express' && processing) {
       // Iniciar countdown
       setExpressCountdownTime(60);
-      
       const interval = setInterval(() => {
-        setExpressCountdownTime((prevTime) => {
+        setExpressCountdownTime(prevTime => {
           if (prevTime <= 1) {
             // Tempo esgotado
             clearInterval(interval);
             handleExpressPaymentTimeout();
             return 0;
           }
-          
+
           // Atualizar elemento do DOM se existir
           const timerElement = document.getElementById('countdown-timer');
           if (timerElement) {
             timerElement.textContent = (prevTime - 1).toString();
           }
-          
           return prevTime - 1;
         });
       }, 1000);
-      
       countdownIntervalRef.current = interval;
     } else {
       // Limpar countdown quando não é express ou não está processando
@@ -159,14 +172,14 @@ const Checkout = () => {
         countdownIntervalRef.current = null;
       }
       setExpressCountdownTime(60);
-      
+
       // Resetar elemento do DOM
       const timerElement = document.getElementById('countdown-timer');
       if (timerElement) {
         timerElement.textContent = '60';
       }
     }
-    
+
     // Cleanup ao desmontar componente
     return () => {
       if (countdownIntervalRef.current) {
@@ -204,11 +217,7 @@ const Checkout = () => {
     }
     return getConvertedPrice(productPriceKZ);
   }, [product, originalPriceKZ, userCountry, getConvertedPrice]);
-  
-  const totalAmountForDetection = useMemo(() => 
-    product ? getProductFinalPrice() + totalOrderBumpPrice : 0, 
-    [product, getProductFinalPrice, totalOrderBumpPrice]
-  );
+  const totalAmountForDetection = useMemo(() => product ? getProductFinalPrice() + totalOrderBumpPrice : 0, [product, getProductFinalPrice, totalOrderBumpPrice]);
 
   // Remover efeito que aguarda geo - não precisamos mais
   // Os preços se atualizam automaticamente quando geo estiver pronto
@@ -242,7 +251,6 @@ const Checkout = () => {
     };
     return phoneCodes[countryCode] || '+244';
   };
-
   const getDisplayPrice = useCallback((priceInKZ: number, isAlreadyConverted = false): string => {
     // Se já é um valor convertido (total calculado), apenas formatar
     if (isAlreadyConverted && userCountry?.currency === 'EUR') {
@@ -250,29 +258,26 @@ const Checkout = () => {
       console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO: ${displayPrice}`);
       return displayPrice;
     }
-    
+
     // Verificar se userCountry está disponível
     if (!userCountry) {
       console.log(`🚨 getDisplayPrice - GEO NOT READY: ${priceInKZ} KZ`);
       return `${priceInKZ.toLocaleString()} KZ`;
     }
-    
+
     // SEMPRE usar preços personalizados se disponíveis para o país do usuário
     if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code] && priceInKZ === originalPriceKZ) {
       const customPrice = parseFloat(product.custom_prices[userCountry.code]);
-      const displayPrice = userCountry.currency === 'EUR' ? `€${customPrice.toFixed(2)}` :
-                         userCountry.currency === 'MZN' ? `${customPrice.toFixed(2)} MZN` :
-                         `${customPrice.toLocaleString()} KZ`;
+      const displayPrice = userCountry.currency === 'EUR' ? `€${customPrice.toFixed(2)}` : userCountry.currency === 'MZN' ? `${customPrice.toFixed(2)} MZN` : `${customPrice.toLocaleString()} KZ`;
       console.log(`🚨 getDisplayPrice - USANDO PREÇO PERSONALIZADO: ${priceInKZ} KZ -> ${displayPrice}`);
       return displayPrice;
     }
-    
+
     // Verificar se formatPrice está disponível antes de usar
     if (!formatPrice || !userCountry) {
       console.log(`🚨 getDisplayPrice - FORMAT NOT READY: ${priceInKZ} KZ`);
       return `${priceInKZ.toLocaleString()} KZ`;
     }
-    
     try {
       const displayPrice = formatPrice(priceInKZ, userCountry, product?.custom_prices);
       console.log(`🚨 getDisplayPrice - USANDO FORMATAÇÃO PADRÃO: ${priceInKZ} KZ -> ${displayPrice}`);
@@ -288,7 +293,7 @@ const Checkout = () => {
     if (!userCountry) {
       return `${price.toLocaleString()} KZ`;
     }
-    
+
     // O price já vem calculado corretamente (seja KZ original ou valor personalizado)
     // Apenas formatar com o símbolo correto da moeda
     if (userCountry.currency === 'EUR') {
@@ -311,25 +316,23 @@ const Checkout = () => {
       console.log('🌍 País mudou, resetando order bumps selecionados para evitar conflitos de preço');
       setOrderBump(null);
       setResetOrderBumps(true);
-      
+
       // Reset do flag após um pequeno delay para garantir que os components recebam a prop
       setTimeout(() => setResetOrderBumps(false), 100);
     }
   }, [userCountry?.code]);
-
   useEffect(() => {
     console.log('Checkout page loaded with productId:', productId);
-    
+
     // Verificar se o usuário foi redirecionado de volta do Klarna
     const urlParams = new URLSearchParams(window.location.search);
     const paymentReturn = urlParams.get('payment_return');
     const redirectStatus = urlParams.get('redirect_status');
     const orderId = urlParams.get('order_id');
     const paymentIntentId = urlParams.get('payment_intent_id');
-    
     if (paymentReturn === 'klarna') {
       console.log('🔄 User returned from Klarna payment');
-      
+
       // Verificar o status do pagamento e redirecionar adequadamente
       if (redirectStatus === 'succeeded' && orderId) {
         // Pagamento bem-sucedido, redirecionar para página de obrigado
@@ -341,14 +344,13 @@ const Checkout = () => {
         // Disparar evento para Facebook Pixel
         const currentParams = new URLSearchParams(window.location.search);
         window.dispatchEvent(new CustomEvent('purchase-completed', {
-          detail: { 
-            productId, 
+          detail: {
+            productId,
             orderId,
             amount: parseFloat(currentParams.get('amount') || '0'),
             currency: currentParams.get('currency') || 'EUR'
           }
         }));
-
         navigate(`/obrigado?${params.toString()}`);
         return;
       } else if (redirectStatus === 'failed') {
@@ -362,7 +364,6 @@ const Checkout = () => {
         });
       }
     }
-    
     const loadProduct = async () => {
       if (!productId) {
         console.error('No productId provided');
@@ -370,37 +371,33 @@ const Checkout = () => {
         setLoading(false);
         return;
       }
-
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       const isUUID = uuidRegex.test(productId);
-      
       console.log(`Loading product ${isUUID ? 'by UUID' : 'by slug'}:`, productId);
-
       try {
-        const { data: productData, error: productError } = await supabase
-          .from('products')
-          .select(`
+        const {
+          data: productData,
+          error: productError
+        } = await supabase.from('products').select(`
             *,
             member_areas (
               id,
               name,
               url
             )
-          `)
-          .eq(isUUID ? 'id' : 'slug', productId)
-          .maybeSingle();
-
+          `).eq(isUUID ? 'id' : 'slug', productId).maybeSingle();
         console.log('🔍 DEBUGGING PRODUCT QUERY RESULT (CHECKOUT.TSX):', {
           productData,
-          hasCustomPrices: !!(productData?.custom_prices),
+          hasCustomPrices: !!productData?.custom_prices,
           customPricesValue: productData?.custom_prices,
           customPricesType: typeof productData?.custom_prices,
           customPricesKeys: productData?.custom_prices ? Object.keys(productData.custom_prices) : 'N/A',
           productError
         });
-
-        console.log('Product query result:', { productData, productError });
-
+        console.log('Product query result:', {
+          productData,
+          productError
+        });
         if (productError) {
           console.error('Error loading product:', productError);
           setError(`Erro ao carregar produto: ${productError.message}`);
@@ -432,7 +429,7 @@ const Checkout = () => {
           console.log('Product loaded successfully:', productData);
           setProduct(productData);
           setError("");
-          
+
           // Aplicar SEO imediatamente quando o produto carrega
           setProductSEO(productData);
         }
@@ -445,49 +442,40 @@ const Checkout = () => {
         setProduct(null);
       }
     };
-
     const loadCheckoutSettings = async () => {
       if (!productId) {
         console.log('No productId provided for checkout settings');
         return;
       }
-      
       try {
         console.log('🔍 DEBUG: Loading checkout settings for product:', productId);
-        
+
         // Primeiro vamos verificar se a tabela existe
-        const { data: tableExists } = await supabase
-          .from('checkout_customizations')
-          .select('id')
-          .limit(1);
-        
+        const {
+          data: tableExists
+        } = await supabase.from('checkout_customizations').select('id').limit(1);
         console.log('📋 Table checkout_customizations exists, sample data:', tableExists);
-        
+
         // Primeiro buscar o produto para obter o ID correto
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         const isUUID = uuidRegex.test(productId);
-        
         let actualProductId = productId;
         if (!isUUID) {
-          const { data: productData } = await supabase
-            .from('products')
-            .select('id')
-            .eq('slug', productId)
-            .maybeSingle();
-          
+          const {
+            data: productData
+          } = await supabase.from('products').select('id').eq('slug', productId).maybeSingle();
           if (productData) {
             actualProductId = productData.id;
           }
         }
-        
-        const { data, error } = await supabase
-          .from('checkout_customizations')
-          .select('*')
-          .eq('product_id', actualProductId)
-          .maybeSingle();
-
-        console.log('🎯 Checkout settings query result for product', productId, ':', { data, error });
-
+        const {
+          data,
+          error
+        } = await supabase.from('checkout_customizations').select('*').eq('product_id', actualProductId).maybeSingle();
+        console.log('🎯 Checkout settings query result for product', productId, ':', {
+          data,
+          error
+        });
         if (error) {
           console.error('❌ Error loading checkout settings:', error);
         } else if (data?.settings) {
@@ -507,7 +495,6 @@ const Checkout = () => {
         console.error('💥 Unexpected error loading checkout settings:', error);
       }
     };
-
     console.log('🚀 Loading product and settings immediately...');
     loadProduct();
     loadCheckoutSettings();
@@ -516,29 +503,23 @@ const Checkout = () => {
   // Função para verificar se email está registrado no KambaPay
   const checkKambaPayEmail = async (email: string) => {
     if (!email) return;
-    
     setKambaPayEmailError(null);
     try {
       const balance = await fetchBalanceByEmail(email);
       if (!balance) {
-        setKambaPayEmailError(
-          `O email ${email} não está registrado no KambaPay. Por favor, use outro método de pagamento ou crie uma conta KambaPay.`
-        );
+        setKambaPayEmailError(`O email ${email} não está registrado no KambaPay. Por favor, use outro método de pagamento ou crie uma conta KambaPay.`);
       }
     } catch (error) {
       console.error('Error checking KambaPay registration:', error);
-      setKambaPayEmailError(
-        'Erro ao verificar conta KambaPay. Tente outro método de pagamento.'
-      );
+      setKambaPayEmailError('Erro ao verificar conta KambaPay. Tente outro método de pagamento.');
     }
   };
-
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-    
+
     // Se o email mudou e KambaPay está selecionado, verificar novamente
     if (field === 'email' && selectedPayment === 'kambapay' && value) {
       // Usar timeout para evitar muitas chamadas enquanto digita
@@ -550,7 +531,6 @@ const Checkout = () => {
       setKambaPayEmailError(null);
     }
   };
-
   const handleCountryChange = (countryCode: string) => {
     changeCountry(countryCode);
     const phoneCode = getPhoneCodeByCountry(countryCode);
@@ -559,13 +539,12 @@ const Checkout = () => {
       phoneCountry: countryCode,
       phone: phoneCode + " "
     }));
-    
+
     // Limpar método de pagamento selecionado e dados relacionados quando mudar país
     setSelectedPayment("");
     setKambaPayEmailError(null);
     setBankTransferData(null);
   };
-
   const getProductImage = (cover: string) => {
     if (!cover) return professionalManImage;
     if (cover.startsWith('data:')) {
@@ -582,11 +561,10 @@ const Checkout = () => {
   // Memoizar métodos de pagamento para evitar recálculos
   const availablePaymentMethods = useMemo(() => {
     if (!userCountry) return [];
-    
+
     // Primeiro, verificar se o produto tem métodos de pagamento configurados
     if (product?.payment_methods && Array.isArray(product.payment_methods)) {
       const enabledMethods = product.payment_methods.filter((method: any) => method.enabled);
-      
       const countryMethods = enabledMethods.filter((method: any) => {
         if (userCountry.code === 'AO') {
           return ['express', 'transfer', 'reference', 'kambapay'].includes(method.id);
@@ -597,13 +575,12 @@ const Checkout = () => {
         }
         return false;
       });
-
       return countryMethods;
     }
 
     // Fallback: usar métodos baseados no país selecionado
     const countryMethods = getPaymentMethodsByCountry(userCountry.code);
-    
+
     // Adicionar KambaPay a todos os países
     const kambaPayMethod = {
       id: "kambapay",
@@ -611,50 +588,42 @@ const Checkout = () => {
       image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzI1NjNFQiIvPgo8cGF0aCBkPSJNMTIgMTJIMjhWMjhIMTJWMTJaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTYgMTZIMjBWMjRIMTZWMTZaIiBmaWxsPSIjMjU2M0VCIi8+CjxwYXRoIGQ9Ik0yMCAxNkgyNFYyNEgyMFYxNloiIGZpbGw9IiMyNTYzRUIiLz4KPC9zdmc+",
       enabled: true
     };
-    
     return [...countryMethods, kambaPayMethod];
   }, [userCountry, product]);
-
   const getPaymentMethods = () => availablePaymentMethods;
-
   const getSelectedPaymentName = () => {
     const selected = availablePaymentMethods.find(method => method.id === selectedPayment);
     return selected ? selected.name : "";
   };
-
   const getPaymentGridClasses = () => {
     const methodCount = availablePaymentMethods.length;
-    
     if (methodCount === 1) return "grid-cols-1";
     if (methodCount === 2) return "grid-cols-2";
     if (methodCount === 3) return "grid-cols-3";
     return "grid-cols-4";
   };
-
   const handleOrderBumpToggle = (isSelected: boolean, bumpData: any) => {
-    console.log(`🚨 CHECKOUT.TSX - handleOrderBumpToggle CALLED:`, { 
-      isSelected, 
+    console.log(`🚨 CHECKOUT.TSX - handleOrderBumpToggle CALLED:`, {
+      isSelected,
       bumpData: bumpData ? {
         id: bumpData.id,
         bump_product_price: bumpData.bump_product_price,
         bump_product_custom_prices: bumpData.bump_product_custom_prices,
         discount: bumpData.discount
       } : null,
-      userCountry: userCountry?.code 
+      userCountry: userCountry?.code
     });
-
     if (isSelected && bumpData) {
       // Calcular preço considerando preços personalizados para o país do usuário
       const originalPriceKZ = parseFloat(bumpData.bump_product_price.replace(/[^\d,]/g, '').replace(',', '.'));
       let finalPrice = originalPriceKZ;
-      
       console.log(`🚨 CHECKOUT.TSX - CALCULATING ORDER BUMP PRICE:`, {
         originalPriceKZ,
-        hasCustomPrices: !!(bumpData.bump_product_custom_prices),
+        hasCustomPrices: !!bumpData.bump_product_custom_prices,
         userCountryCode: userCountry?.code,
         customPriceForCountry: bumpData.bump_product_custom_prices?.[userCountry?.code || '']
       });
-      
+
       // SEMPRE usar preços personalizados se existirem
       if (bumpData.bump_product_custom_prices && userCountry?.code && bumpData.bump_product_custom_prices[userCountry.code]) {
         finalPrice = parseFloat(bumpData.bump_product_custom_prices[userCountry.code]);
@@ -669,18 +638,18 @@ const Checkout = () => {
           finalPrice = originalPriceKZ;
         }
       }
-      
+
       // Aplicar desconto ao preço final
-      const discountedPrice = bumpData.discount > 0 
-        ? finalPrice * (1 - bumpData.discount / 100)
-        : finalPrice;
-      
+      const discountedPrice = bumpData.discount > 0 ? finalPrice * (1 - bumpData.discount / 100) : finalPrice;
       console.log(`🚨 CHECKOUT.TSX - Final order bump price: ${discountedPrice} KZ`);
-      
+
       // Adicionar ao Map de order bumps selecionados
       setSelectedOrderBumps(prev => {
         const updated = new Map(prev);
-        updated.set(bumpData.id, { data: bumpData, price: discountedPrice });
+        updated.set(bumpData.id, {
+          data: bumpData,
+          price: discountedPrice
+        });
         console.log(`🚨 CHECKOUT.TSX - Added to selectedOrderBumps:`, {
           bumpId: bumpData.id,
           bumpName: bumpData.bump_product_name,
@@ -689,12 +658,12 @@ const Checkout = () => {
         });
         return updated;
       });
-      
+
       // Manter compatibilidade com código legado
       setOrderBump(bumpData);
     } else {
       console.log(`🚨 CHECKOUT.TSX - Order bump deselected, setting price to 0`);
-      
+
       // Remover do Map de order bumps selecionados
       if (bumpData?.id) {
         setSelectedOrderBumps(prev => {
@@ -708,48 +677,36 @@ const Checkout = () => {
           return updated;
         });
       }
-      
+
       // Se não há mais bumps selecionados, limpar o estado legado também
       if (selectedOrderBumps.size <= 1) {
         setOrderBump(null);
       }
     }
   };
-
   const handleCardPaymentSuccess = async (paymentResult: any) => {
     try {
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
-
-      const { error: orderError } = await supabase
-        .from('orders')
-        .update({
-          status: 'completed',
-          order_id: orderId
-        })
-        .eq('customer_email', formData.email)
-        .eq('product_id', productId)
-        .eq('status', 'pending');
-
+      const {
+        error: orderError
+      } = await supabase.from('orders').update({
+        status: 'completed',
+        order_id: orderId
+      }).eq('customer_email', formData.email).eq('product_id', productId).eq('status', 'pending');
       if (orderError) {
         console.error('Erro ao atualizar ordem:', orderError);
       }
-
       const newSalesCount = (product.sales || 0) + 1;
-      
+
       // Handle both UUID and slug formats for productId
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       const isUUID = uuidRegex.test(productId || '');
-      
-      await supabase
-        .from('products')
-        .update({ sales: newSalesCount })
-        .eq(isUUID ? 'id' : 'slug', productId);
-
+      await supabase.from('products').update({
+        sales: newSalesCount
+      }).eq(isUUID ? 'id' : 'slug', productId);
       try {
         console.log('🔔 Triggering webhooks for Stripe payment success...');
-        
         const totalAmountInKZ = finalProductPrice + totalOrderBumpPrice;
-        
         const webhookPayload = {
           event: 'payment.success',
           data: {
@@ -774,15 +731,14 @@ const Checkout = () => {
           order_id: orderId,
           product_id: product.id
         };
-
-        const { error: webhookError } = await supabase.functions.invoke('trigger-webhooks', {
+        const {
+          error: webhookError
+        } = await supabase.functions.invoke('trigger-webhooks', {
           body: webhookPayload
         });
-
         if (webhookError) {
           console.error('Error triggering payment webhooks:', webhookError);
         }
-
         const productPurchasePayload = {
           event: 'product.purchased',
           data: {
@@ -799,31 +755,28 @@ const Checkout = () => {
           order_id: orderId,
           product_id: product.id
         };
-
-        const { error: productWebhookError } = await supabase.functions.invoke('trigger-webhooks', {
+        const {
+          error: productWebhookError
+        } = await supabase.functions.invoke('trigger-webhooks', {
           body: productPurchasePayload
         });
-
         if (productWebhookError) {
           console.error('Error triggering product purchase webhooks:', productWebhookError);
         } else {
           console.log('✅ Webhooks triggered successfully for Stripe payment');
         }
-
       } catch (webhookError) {
         console.error('❌ Error triggering webhooks for Stripe payment:', webhookError);
       }
-
       const totalAmountInKZ = finalProductPrice + totalOrderBumpPrice;
-      
+
       // Verificar se há upsell configurado
       const shouldRedirectToUpsell = checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link;
-      
       if (shouldRedirectToUpsell) {
         // Redirecionar para página de upsell
         const upsellUrl = new URL(checkoutSettings.upsell.link);
         upsellUrl.searchParams.set('from_order', orderId);
-        
+
         // Criar URL de retorno para página de obrigado
         const returnParams = new URLSearchParams({
           order_id: orderId,
@@ -842,15 +795,12 @@ const Checkout = () => {
             order_bump_discounted_price: totalOrderBumpPrice.toString()
           })
         });
-        
         const returnUrl = `${window.location.origin}/obrigado?${returnParams.toString()}`;
         upsellUrl.searchParams.set('return_url', returnUrl);
-        
         console.log('🎯 Redirecionando para upsell:', upsellUrl.toString());
         window.location.href = upsellUrl.toString();
         return;
       }
-
       const params = new URLSearchParams({
         order_id: orderId,
         customer_name: formData.fullName.trim(),
@@ -873,14 +823,13 @@ const Checkout = () => {
 
       // Disparar evento para Facebook Pixel
       window.dispatchEvent(new CustomEvent('purchase-completed', {
-        detail: { 
-          productId, 
+        detail: {
+          productId,
           orderId,
           amount: totalAmountInKZ,
           currency: 'KZ'
         }
       }));
-
       navigate(`/obrigado?${params.toString()}`);
     } catch (error) {
       console.error('Erro ao processar sucesso do pagamento:', error);
@@ -891,7 +840,6 @@ const Checkout = () => {
       });
     }
   };
-
   const handleCardPaymentError = (error: string) => {
     toast({
       title: "Erro no pagamento",
@@ -899,27 +847,26 @@ const Checkout = () => {
       variant: "error"
     });
   };
-
   const handleBankTransferPurchase = async (proofFile: File, selectedBank: string) => {
-    console.log('🏦 Processing bank transfer purchase with proof:', { fileName: proofFile.name, bank: selectedBank });
-    console.log('🏦 Form data check:', { 
-      fullName: formData.fullName, 
-      email: formData.email, 
+    console.log('🏦 Processing bank transfer purchase with proof:', {
+      fileName: proofFile.name,
+      bank: selectedBank
+    });
+    console.log('🏦 Form data check:', {
+      fullName: formData.fullName,
+      email: formData.email,
       phone: formData.phone,
       product: !!product,
-      productId 
+      productId
     });
-    
     setProcessing(true);
-
     try {
       const requiredPhone = selectedPayment === 'express' ? expressPhone : formData.phone;
-      
       if (!formData.fullName || !formData.email || !requiredPhone) {
-        console.error('🏦 Missing required fields:', { 
-          fullName: !!formData.fullName, 
-          email: !!formData.email, 
-          phone: !!requiredPhone 
+        console.error('🏦 Missing required fields:', {
+          fullName: !!formData.fullName,
+          email: !!formData.email,
+          phone: !!requiredPhone
         });
         toast({
           title: "Campos obrigatórios",
@@ -929,7 +876,6 @@ const Checkout = () => {
         setProcessing(false);
         return;
       }
-
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
       const totalAmount = finalProductPrice + totalOrderBumpPrice;
 
@@ -937,14 +883,13 @@ const Checkout = () => {
       console.log('📤 Uploading payment proof to storage...');
       const fileExtension = proofFile.name.split('.').pop();
       const fileName = `${orderId}-${Date.now()}.${fileExtension}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('payment-proofs')
-        .upload(fileName, proofFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
+      const {
+        data: uploadData,
+        error: uploadError
+      } = await supabase.storage.from('payment-proofs').upload(fileName, proofFile, {
+        cacheControl: '3600',
+        upsert: false
+      });
       if (uploadError) {
         console.error('❌ Error uploading payment proof:', uploadError);
         toast({
@@ -955,24 +900,17 @@ const Checkout = () => {
         setProcessing(false);
         return;
       }
-
       console.log('✅ Payment proof uploaded successfully:', uploadData);
 
       // Calcular comissões se houver afiliado
       let affiliate_commission = null;
       let seller_commission = null;
-      
       if (hasAffiliate && affiliateCode) {
         console.log('🔍 Calculando comissões para afiliado:', affiliateCode);
-        
-        const { data: affiliate, error: affiliateError } = await supabase
-          .from('affiliates')
-          .select('commission_rate')
-          .eq('affiliate_code', affiliateCode)
-          .eq('product_id', product.id)
-          .eq('status', 'ativo')
-          .maybeSingle();
-          
+        const {
+          data: affiliate,
+          error: affiliateError
+        } = await supabase.from('affiliates').select('commission_rate').eq('affiliate_code', affiliateCode).eq('product_id', product.id).eq('status', 'ativo').maybeSingle();
         if (affiliate && !affiliateError) {
           console.log('✅ Afiliado válido encontrado:', affiliate);
           markAsValidAffiliate();
@@ -992,35 +930,28 @@ const Checkout = () => {
       }
 
       // Converter valores para KZ para vendedores angolanos
-      const totalAmountInKZ = userCountry.currency !== 'KZ' 
-        ? Math.round(totalAmount * userCountry.exchangeRate)  
-        : totalAmount;
-
-      const affiliate_commission_kz = affiliate_commission 
-        ? (userCountry.currency !== 'KZ' ? Math.round(affiliate_commission * userCountry.exchangeRate) : affiliate_commission)
-        : null;
-        
-      const seller_commission_kz = seller_commission 
-        ? (userCountry.currency !== 'KZ' ? Math.round(seller_commission * userCountry.exchangeRate) : seller_commission)
-        : null;
-
+      const totalAmountInKZ = userCountry.currency !== 'KZ' ? Math.round(totalAmount * userCountry.exchangeRate) : totalAmount;
+      const affiliate_commission_kz = affiliate_commission ? userCountry.currency !== 'KZ' ? Math.round(affiliate_commission * userCountry.exchangeRate) : affiliate_commission : null;
+      const seller_commission_kz = seller_commission ? userCountry.currency !== 'KZ' ? Math.round(seller_commission * userCountry.exchangeRate) : seller_commission : null;
       console.log('🏦 Conversão de moeda para transferência:', {
         originalAmount: totalAmount,
         originalCurrency: userCountry.currency,
         convertedAmount: totalAmountInKZ,
         exchangeRate: userCountry.exchangeRate
       });
-
       const orderData = {
         product_id: product.id,
         order_id: orderId,
         customer_name: formData.fullName,
         customer_email: formData.email,
         customer_phone: formData.phone,
-        amount: totalAmountInKZ.toString(), // Sempre em KZ
-        currency: 'KZ', // Sempre salvar como KZ
+        amount: totalAmountInKZ.toString(),
+        // Sempre em KZ
+        currency: 'KZ',
+        // Sempre salvar como KZ
         payment_method: 'transfer',
-        status: 'pending', // Status padrão para transferência - fica pendente até aprovação
+        status: 'pending',
+        // Status padrão para transferência - fica pendente até aprovação
         user_id: null,
         affiliate_code: hasAffiliate ? affiliateCode : null,
         affiliate_commission: affiliate_commission_kz,
@@ -1039,14 +970,15 @@ const Checkout = () => {
           upload_timestamp: new Date().toISOString()
         })
       };
-
       console.log('🏦 Creating bank transfer order:', orderData);
 
       // Create order through secure edge function instead of direct DB insert
-      const { data: insertedOrder, error: orderError } = await supabase.functions.invoke('create-multibanco-order', {
+      const {
+        data: insertedOrder,
+        error: orderError
+      } = await supabase.functions.invoke('create-multibanco-order', {
         body: orderData
       });
-
       if (orderError || !insertedOrder) {
         console.error('❌ Error saving bank transfer order:', orderError);
         toast({
@@ -1057,7 +989,6 @@ const Checkout = () => {
         setProcessing(false);
         return;
       }
-
       console.log('✅ Bank transfer order saved successfully:', insertedOrder);
 
       // Navegar para página de agradecimento COM STATUS PENDING
@@ -1072,7 +1003,8 @@ const Checkout = () => {
         seller_id: product.user_id,
         base_product_price: product.price,
         payment_method: 'transfer',
-        status: 'pending', // IMPORTANTE: Manter como pending
+        status: 'pending',
+        // IMPORTANTE: Manter como pending
         ...(orderBump && {
           order_bump_name: orderBump.bump_product_name,
           order_bump_price: orderBump.bump_product_price,
@@ -1083,16 +1015,14 @@ const Checkout = () => {
 
       // Disparar evento para Facebook Pixel
       window.dispatchEvent(new CustomEvent('purchase-completed', {
-        detail: { 
-          productId, 
+        detail: {
+          productId,
           orderId,
           amount: totalAmount,
           currency: userCountry.currency
         }
       }));
-
       navigate(`/obrigado?${params.toString()}`);
-
     } catch (error) {
       console.error('❌ Bank transfer purchase error:', error);
       toast({
@@ -1103,28 +1033,24 @@ const Checkout = () => {
       setProcessing(false);
     }
   };
-
   const handleExpressPaymentTimeout = () => {
     console.log('⏰ Express payment timeout - stopping processing');
     setProcessing(false);
     toast({
       title: "Tempo Esgotado",
       message: "O tempo para concluir o pagamento esgotou. Por favor, retaça o pagamento com rapidez.",
-      variant: "error",
+      variant: "error"
     });
   };
-
   const handleExpressPaymentRestart = () => {
     console.log('🔄 Restarting express payment');
     setProcessing(false);
-    
     toast({
       title: "Pronto para novo pagamento",
       message: "Você pode agora iniciar um novo pagamento express.",
-      variant: "success",
+      variant: "success"
     });
   };
-
   const handlePurchase = async () => {
     console.log('🚀 HandlePurchase called with:', {
       selectedPayment,
@@ -1136,14 +1062,11 @@ const Checkout = () => {
       userCountry: userCountry.code,
       availablePaymentMethods: availablePaymentMethods.map(m => m.id)
     });
-
     const requiredPhone = selectedPayment === 'express' ? expressPhone : formData.phone;
-
     if (!formData.fullName || !formData.email || !requiredPhone || !selectedPayment) {
       console.log('❌ Validation failed - missing required fields');
       return;
     }
-
     if (!product || !productId) {
       console.log('❌ Product not found');
       toast({
@@ -1163,13 +1086,12 @@ const Checkout = () => {
     // Para pagamento express, validar credenciais primeiro
     if (selectedPayment === 'express') {
       console.log('🔄 Pagamento Express - validar credenciais primeiro');
-      
       try {
         console.log('🔍 Testing AppyPay credentials before showing countdown...');
-        
         const credentialsTest = await supabase.functions.invoke('create-appypay-charge', {
           body: {
-            amount: 1, // Test with minimal amount
+            amount: 1,
+            // Test with minimal amount
             productId: 'test',
             customerData: {
               name: 'Test',
@@ -1188,31 +1110,25 @@ const Checkout = () => {
         if (credentialsTest.error || !credentialsTest.data || !credentialsTest.data.success) {
           console.error('❌ AppyPay credentials test failed:', credentialsTest);
           console.log('🚨 Showing error toast to user...');
-          
           toast({
             title: "Sistema indisponível",
             message: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
-            variant: "error",
+            variant: "error"
           });
-          
           console.log('✅ Error toast triggered');
           return;
         }
-
         console.log('✅ AppyPay credentials validated, showing countdown...');
         setProcessing(true); // Only set processing to true if credentials are valid
         return;
-        
       } catch (credError) {
         console.error('❌ Credentials test error:', credError);
         console.log('🚨 Showing error toast from catch block...');
-        
         toast({
-          title: "Sistema indisponível", 
+          title: "Sistema indisponível",
           message: "O pagamento Multicaixa Express está temporariamente indisponível. Contacte o suporte.",
-          variant: "error",
+          variant: "error"
         });
-        
         console.log('✅ Error toast from catch block triggered');
         return;
       }
@@ -1222,15 +1138,15 @@ const Checkout = () => {
     if (selectedPayment === 'kambapay') {
       console.log('🔵 KambaPay payment method selected');
       setProcessing(true);
-
       try {
         const totalAmount = finalProductPrice + totalOrderBumpPrice;
-        
+
         // Primeiro, enviar código 2FA para segurança da compra
         console.log('🔒 Enviando código 2FA para compra KambaPay...');
-        
-        const { error: codeError } = await supabase.functions.invoke('send-2fa-code', {
-          body: { 
+        const {
+          error: codeError
+        } = await supabase.functions.invoke('send-2fa-code', {
+          body: {
             email: formData.email,
             event_type: 'kambapay_purchase',
             user_email: formData.email,
@@ -1240,7 +1156,6 @@ const Checkout = () => {
             }
           }
         });
-
         if (codeError) {
           console.error('❌ Erro ao enviar código 2FA:', codeError);
           toast({
@@ -1254,7 +1169,6 @@ const Checkout = () => {
 
         // Solicitar código 2FA do usuário
         const userCode = prompt('Para sua segurança, digite o código de 6 dígitos enviado para seu email:');
-        
         if (!userCode || userCode.length !== 6) {
           toast({
             title: "Verificação cancelada",
@@ -1266,14 +1180,16 @@ const Checkout = () => {
         }
 
         // Verificar código 2FA
-        const { data: verificationData, error: verifyError } = await supabase.functions.invoke('verify-2fa-code', {
+        const {
+          data: verificationData,
+          error: verifyError
+        } = await supabase.functions.invoke('verify-2fa-code', {
           body: {
             email: formData.email,
             code: userCode,
             event_type: 'kambapay_purchase'
           }
         });
-
         if (verifyError || !verificationData?.valid) {
           toast({
             title: "Código inválido",
@@ -1283,9 +1199,7 @@ const Checkout = () => {
           setProcessing(false);
           return;
         }
-
         console.log('✅ Código 2FA verificado. Processando pagamento KambaPay...');
-        
         const paymentData = {
           email: formData.email,
           productId: product.id,
@@ -1300,13 +1214,13 @@ const Checkout = () => {
             discounted_price: totalOrderBumpPrice
           } : null
         };
-
         console.log('🔵 Processing KambaPay payment with data:', paymentData);
-
-        const { data, error } = await supabase.functions.invoke('process-kambapay-payment', {
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('process-kambapay-payment', {
           body: paymentData
         });
-
         if (error) {
           console.error('❌ KambaPay payment error:', error);
           toast({
@@ -1317,18 +1231,16 @@ const Checkout = () => {
           setProcessing(false);
           return;
         }
-
         if (data?.success) {
           console.log('✅ KambaPay payment successful:', data);
-          
+
           // Verificar se há upsell configurado para KambaPay
           const shouldRedirectToUpsell = checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link;
-          
           if (shouldRedirectToUpsell) {
             // Redirecionar para página de upsell
             const upsellUrl = new URL(checkoutSettings.upsell.link);
             upsellUrl.searchParams.set('from_order', data.orderId);
-            
+
             // Criar URL de retorno para página de obrigado
             const returnParams = new URLSearchParams({
               order_id: data.orderId,
@@ -1347,10 +1259,8 @@ const Checkout = () => {
                 order_bump_discounted_price: totalOrderBumpPrice.toString()
               })
             });
-            
             const returnUrl = `${window.location.origin}/obrigado?${returnParams.toString()}`;
             upsellUrl.searchParams.set('return_url', returnUrl);
-            
             console.log('🎯 Redirecionando para upsell KambaPay:', upsellUrl.toString());
             window.location.href = upsellUrl.toString();
             return;
@@ -1379,24 +1289,22 @@ const Checkout = () => {
 
           // Disparar evento para Facebook Pixel
           window.dispatchEvent(new CustomEvent('purchase-completed', {
-            detail: { 
-              productId, 
+            detail: {
+              productId,
               orderId: data.orderId,
               amount: totalAmount,
               currency: userCountry.currency
             }
           }));
-
           navigate(`/obrigado?${params.toString()}`);
           return;
         } else {
           console.error('❌ KambaPay payment failed:', data);
-          
+
           // Verificar se é erro de saldo insuficiente
           if (data?.code === 'INSUFFICIENT_BALANCE') {
             const availableBalance = data?.availableBalance || 0;
             const requiredAmount = data?.requiredAmount || totalAmount;
-            
             toast({
               title: "Saldo insuficiente",
               message: `Você tem ${availableBalance.toLocaleString()} KZ disponível, mas precisa de ${requiredAmount.toLocaleString()} KZ. Adicione saldo à sua conta KambaPay.`,
@@ -1423,9 +1331,8 @@ const Checkout = () => {
         return;
       }
     }
-
     console.log('✅ Processing local payment method:', selectedPayment);
-    
+
     // Para pagamento express, iniciar countdown
     if (selectedPayment === 'express') {
       // Iniciar countdown de 60 segundos
@@ -1436,42 +1343,34 @@ const Checkout = () => {
         if (timerElement) {
           timerElement.textContent = timeLeft.toString();
         }
-        
         if (timeLeft <= 0) {
           clearInterval(timer);
           handleExpressPaymentTimeout();
         }
       }, 1000);
     }
-    
     setProcessing(true);
-
     try {
       console.log('Starting purchase process for product:', product);
-      
       await new Promise(resolve => setTimeout(resolve, 2000));
-
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
       const totalAmount = finalProductPrice + totalOrderBumpPrice;
 
       // Calcular comissões se houver afiliado
       let affiliate_commission = null;
       let seller_commission = null;
-      
       if (hasAffiliate && affiliateCode) {
         console.log('🔍 Calculando comissões para afiliado:', affiliateCode);
-        
+
         // Buscar informações do afiliado
-        const { data: affiliate, error: affiliateError } = await supabase
-          .from('affiliates')
-          .select('commission_rate')
-          .eq('affiliate_code', affiliateCode)
-          .eq('product_id', product.id)
-          .eq('status', 'ativo')
-          .maybeSingle();
-          
-        console.log('🔍 Dados do afiliado:', { affiliate, affiliateError });
-          
+        const {
+          data: affiliate,
+          error: affiliateError
+        } = await supabase.from('affiliates').select('commission_rate').eq('affiliate_code', affiliateCode).eq('product_id', product.id).eq('status', 'ativo').maybeSingle();
+        console.log('🔍 Dados do afiliado:', {
+          affiliate,
+          affiliateError
+        });
         if (affiliate && !affiliateError) {
           console.log('✅ Afiliado válido encontrado:', affiliate);
           markAsValidAffiliate();
@@ -1479,7 +1378,6 @@ const Checkout = () => {
           const commission_decimal = parseFloat(commission_rate.replace('%', '')) / 100;
           affiliate_commission = Math.round(totalAmount * commission_decimal * 100) / 100; // Arredondar para 2 casas
           seller_commission = Math.round((totalAmount - affiliate_commission) * 100) / 100;
-          
           console.log('💰 Comissões calculadas:', {
             totalAmount,
             commission_rate,
@@ -1500,36 +1398,30 @@ const Checkout = () => {
       }
 
       // Converter valores para KZ para vendedores angolanos
-      const totalAmountInKZ = userCountry.currency !== 'KZ' 
-        ? Math.round(totalAmount * userCountry.exchangeRate)  
-        : totalAmount;
-
-      const affiliate_commission_kz = affiliate_commission 
-        ? (userCountry.currency !== 'KZ' ? Math.round(affiliate_commission * userCountry.exchangeRate) : affiliate_commission)
-        : null;
-        
-      const seller_commission_kz = seller_commission 
-        ? (userCountry.currency !== 'KZ' ? Math.round(seller_commission * userCountry.exchangeRate) : seller_commission)
-        : null;
-
+      const totalAmountInKZ = userCountry.currency !== 'KZ' ? Math.round(totalAmount * userCountry.exchangeRate) : totalAmount;
+      const affiliate_commission_kz = affiliate_commission ? userCountry.currency !== 'KZ' ? Math.round(affiliate_commission * userCountry.exchangeRate) : affiliate_commission : null;
+      const seller_commission_kz = seller_commission ? userCountry.currency !== 'KZ' ? Math.round(seller_commission * userCountry.exchangeRate) : seller_commission : null;
       console.log('💱 Conversão de moeda:', {
         originalAmount: totalAmount,
         originalCurrency: userCountry.currency,
         convertedAmount: totalAmountInKZ,
         exchangeRate: userCountry.exchangeRate
       });
-
       const orderData = {
         product_id: product.id,
         order_id: orderId,
         customer_name: formData.fullName,
         customer_email: formData.email,
         customer_phone: formData.phone,
-        amount: totalAmountInKZ.toString(), // Sempre em KZ
-        currency: 'KZ', // Sempre salvar como KZ
+        amount: totalAmountInKZ.toString(),
+        // Sempre em KZ
+        currency: 'KZ',
+        // Sempre salvar como KZ
         payment_method: selectedPayment,
-        status: 'pending', // Angola payment methods should start as pending
-        user_id: null, // Always null for checkout page orders (guest orders)
+        status: 'pending',
+        // Angola payment methods should start as pending
+        user_id: null,
+        // Always null for checkout page orders (guest orders)
         affiliate_code: hasAffiliate ? affiliateCode : null,
         affiliate_commission: affiliate_commission_kz,
         seller_commission: seller_commission_kz,
@@ -1541,18 +1433,15 @@ const Checkout = () => {
           discounted_price: totalOrderBumpPrice
         }) : null
       };
-
       console.log('Inserting order with corrected data:', orderData);
       console.log('🔍 Order data keys:', Object.keys(orderData));
       console.log('🔍 Order data values:', Object.values(orderData));
 
       // Route payments to appropriate system based on payment method
       let insertedOrder, orderError;
-      
       if (selectedPayment === 'express' || selectedPayment === 'reference') {
         // Use AppyPay for both express and reference payments in Angola
         console.log('🚀 Using AppyPay for payment method:', selectedPayment);
-        
         const appyPayResponse = await supabase.functions.invoke('create-appypay-charge', {
           body: {
             amount: totalAmountInKZ,
@@ -1569,7 +1458,6 @@ const Checkout = () => {
             orderData: orderData // Pass order data for saving
           }
         });
-        
         if (appyPayResponse.error) {
           console.error('❌ AppyPay error:', appyPayResponse.error);
           toast({
@@ -1580,22 +1468,17 @@ const Checkout = () => {
           setProcessing(false);
           return;
         }
-        
         insertedOrder = appyPayResponse.data;
         console.log('✅ AppyPay response:', insertedOrder);
-        
       } else {
         // Use create-multibanco-order for other payment methods (transfer, etc.)
         console.log('🏦 Using Multibanco system for payment method:', selectedPayment);
-        
         const multibancoResponse = await supabase.functions.invoke('create-multibanco-order', {
           body: orderData
         });
-        
         insertedOrder = multibancoResponse.data;
         orderError = multibancoResponse.error;
       }
-
       if (orderError || !insertedOrder) {
         console.error('Error saving order:', orderError);
         toast({
@@ -1607,36 +1490,33 @@ const Checkout = () => {
         return;
       } else {
         console.log('Order saved successfully:', insertedOrder);
-        
         try {
           console.log('Updating product sales count...');
           const newSalesCount = (product.sales || 0) + 1;
-          
+
           // Handle both UUID and slug formats for productId
           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
           const isUUID = uuidRegex.test(productId || '');
-          
-          const { data: updatedProduct, error: updateError } = await supabase
-            .from('products')
-            .update({ 
-              sales: newSalesCount 
-            })
-            .eq(isUUID ? 'id' : 'slug', productId)
-            .select();
-
+          const {
+            data: updatedProduct,
+            error: updateError
+          } = await supabase.from('products').update({
+            sales: newSalesCount
+          }).eq(isUUID ? 'id' : 'slug', productId).select();
           if (updateError) {
             console.error('Error updating product sales:', updateError);
             console.error('Update error details:', JSON.stringify(updateError, null, 2));
           } else {
             console.log('Product sales count updated successfully:', updatedProduct);
             if (updatedProduct && updatedProduct.length > 0) {
-              setProduct(prev => ({ ...prev, sales: newSalesCount }));
+              setProduct(prev => ({
+                ...prev,
+                sales: newSalesCount
+              }));
             }
           }
-
           try {
             console.log('🔔 Triggering webhooks for local payment method...');
-            
             const webhookPayload = {
               event: 'payment.success',
               data: {
@@ -1661,15 +1541,14 @@ const Checkout = () => {
               order_id: orderId,
               product_id: product.id
             };
-
-            const { error: webhookError } = await supabase.functions.invoke('trigger-webhooks', {
+            const {
+              error: webhookError
+            } = await supabase.functions.invoke('trigger-webhooks', {
               body: webhookPayload
             });
-
             if (webhookError) {
               console.error('Error triggering payment webhooks:', webhookError);
             }
-
             const productPurchasePayload = {
               event: 'product.purchased',
               data: {
@@ -1686,26 +1565,23 @@ const Checkout = () => {
               order_id: orderId,
               product_id: product.id
             };
-
-            const { error: productWebhookError } = await supabase.functions.invoke('trigger-webhooks', {
+            const {
+              error: productWebhookError
+            } = await supabase.functions.invoke('trigger-webhooks', {
               body: productPurchasePayload
             });
-
             if (productWebhookError) {
               console.error('Error triggering product purchase webhooks:', productWebhookError);
             } else {
               console.log('✅ Webhooks triggered successfully for local payment');
             }
-
           } catch (webhookError) {
             console.error('❌ Error triggering webhooks for local payment:', webhookError);
           }
-
         } catch (updateError) {
           console.error('Unexpected error updating sales:', updateError);
         }
       }
-
       try {
         console.log('Sending confirmation email...');
         const emailData = {
@@ -1728,11 +1604,12 @@ const Checkout = () => {
           } : null,
           baseProductPrice: product.price
         };
-
-        const { data: emailResponse, error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
+        const {
+          data: emailResponse,
+          error: emailError
+        } = await supabase.functions.invoke('send-purchase-confirmation', {
           body: emailData
         });
-
         if (emailError) {
           console.error('Error sending confirmation email:', emailError);
         } else {
@@ -1741,7 +1618,6 @@ const Checkout = () => {
       } catch (emailError) {
         console.error('Unexpected error sending confirmation email:', emailError);
       }
-
       const params = new URLSearchParams({
         order_id: orderId,
         customer_name: formData.fullName.trim(),
@@ -1794,8 +1670,8 @@ const Checkout = () => {
         console.log('🏠 Redirecionando para página de agradecimento');
         // Disparar evento para Facebook Pixel
         window.dispatchEvent(new CustomEvent('purchase-completed', {
-          detail: { 
-            productId, 
+          detail: {
+            productId,
             orderId,
             amount: totalAmount,
             currency: userCountry.currency
@@ -1813,23 +1689,15 @@ const Checkout = () => {
       setProcessing(false);
     }
   };
-
   if (loading) {
-    return (
-      <ThemeProvider forceLightMode={true}>
+    return <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <LoadingSpinner 
-            text="Carregando informações do produto..."
-            size="lg"
-          />
+          <LoadingSpinner text="Carregando informações do produto..." size="lg" />
         </div>
-      </ThemeProvider>
-    );
+      </ThemeProvider>;
   }
-
   if (error) {
-    return (
-      <ThemeProvider forceLightMode={true}>
+    return <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4 text-red-600">Erro</h1>
@@ -1837,21 +1705,15 @@ const Checkout = () => {
             <p className="text-sm text-muted-foreground">
               Product ID: {productId || 'Não fornecido'}
             </p>
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="mt-4"
-            >
+            <Button onClick={() => window.location.reload()} className="mt-4">
               Tentar novamente
             </Button>
           </div>
         </div>
-      </ThemeProvider>
-    );
+      </ThemeProvider>;
   }
-
   if (!product && productNotFound) {
-    return (
-      <ThemeProvider forceLightMode={true}>
+    return <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Produto não encontrado</h1>
@@ -1861,13 +1723,10 @@ const Checkout = () => {
             </p>
           </div>
         </div>
-      </ThemeProvider>
-    );
+      </ThemeProvider>;
   }
-
   if (product?.status === 'Inativo') {
-    return (
-      <ThemeProvider forceLightMode={true}>
+    return <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6 sm:p-8">
             <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
@@ -1886,13 +1745,10 @@ const Checkout = () => {
             </p>
           </div>
         </div>
-      </ThemeProvider>
-    );
+      </ThemeProvider>;
   }
-
   if (product?.status === 'Banido') {
-    return (
-      <ThemeProvider forceLightMode={true}>
+    return <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6 sm:p-8">
             <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
@@ -1911,21 +1767,17 @@ const Checkout = () => {
             </p>
           </div>
         </div>
-      </ThemeProvider>
-    );
+      </ThemeProvider>;
   }
-
   if (!product) {
     // Render a minimal, non-animated placeholder while we confirm product availability
-    return (
-      <ThemeProvider forceLightMode={true}>
+    return <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50" />
-      </ThemeProvider>
-    );
+      </ThemeProvider>;
   }
 
   // CALCULAR PRECOS CORRETOS USANDO PREÇOS PERSONALIZADOS
-  
+
   // 🔥 CALCULAR PREÇO FINAL DO PRODUTO PRINCIPAL (considerando preços personalizados)
   let finalProductPrice = originalPriceKZ;
   if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
@@ -1935,10 +1787,9 @@ const Checkout = () => {
     finalProductPrice = getConvertedPrice(originalPriceKZ);
     console.log(`🚨 PRODUTO PRINCIPAL - USANDO CONVERSÃO: ${finalProductPrice} ${userCountry?.currency}`);
   }
-  
+
   // 🔥 CALCULAR TOTAL CORRETO (ambos na mesma moeda final)
   const totalPrice = finalProductPrice + totalOrderBumpPrice;
-  
   console.log(`🚨 PREÇOS FINAIS PARA CHECKOUT:`);
   console.log(`Product: ${product?.name}`);
   console.log(`Original price KZ: ${originalPriceKZ} KZ`);
@@ -1951,58 +1802,35 @@ const Checkout = () => {
   const originalPrice = originalPriceKZ;
   const convertedPrice = finalProductPrice;
   const convertedTotalPrice = totalPrice;
-
-  return (
-    <ThemeProvider forceLightMode={true}>
+  return <ThemeProvider forceLightMode={true}>
       
       <FacebookPixelTracker productId={productId || ''} />
-      {product && (
-        <SEO 
-          title={(product.seo_title && product.seo_title.trim()) ? product.seo_title : `${product.name} | Kambafy`}
-          description={product.seo_description || (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`)}
-          ogImage={product.cover || 'https://kambafy.com/kambafy-social-preview.png'}
-          keywords={(product.seo_keywords && product.seo_keywords.length > 0)
-            ? product.seo_keywords.join(', ')
-            : `${product.name}, comprar ${product.name}, checkout, pagamento seguro, ${product.tags?.join(', ') || ''}`}
-          structuredData={{
-            "@context": "https://schema.org",
-            "@type": "Product",
-            "name": product.name,
-            "description": product.seo_description || (product.description || `Produto digital: ${product.name}`),
-            "image": product.cover || 'https://kambafy.com/kambafy-social-preview.png',
-            "brand": {
-              "@type": "Brand",
-              "name": product.fantasy_name || "Kambafy"
-            },
-            "offers": {
-              "@type": "Offer",
-              "url": `https://kambafy.com/checkout/${product.id}`,
-              "priceCurrency": "AOA", 
-              "price": product.price,
-              "availability": "https://schema.org/InStock",
-              "seller": {
-                "@type": "Organization",
-                "name": product.fantasy_name || "Kambafy"
-              }
-            }
-          }}
-        />
-      )}
+      {product && <SEO title={product.seo_title && product.seo_title.trim() ? product.seo_title : `${product.name} | Kambafy`} description={product.seo_description || product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`} ogImage={product.cover || 'https://kambafy.com/kambafy-social-preview.png'} keywords={product.seo_keywords && product.seo_keywords.length > 0 ? product.seo_keywords.join(', ') : `${product.name}, comprar ${product.name}, checkout, pagamento seguro, ${product.tags?.join(', ') || ''}`} structuredData={{
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": product.name,
+      "description": product.seo_description || product.description || `Produto digital: ${product.name}`,
+      "image": product.cover || 'https://kambafy.com/kambafy-social-preview.png',
+      "brand": {
+        "@type": "Brand",
+        "name": product.fantasy_name || "Kambafy"
+      },
+      "offers": {
+        "@type": "Offer",
+        "url": `https://kambafy.com/checkout/${product.id}`,
+        "priceCurrency": "AOA",
+        "price": product.price,
+        "availability": "https://schema.org/InStock",
+        "seller": {
+          "@type": "Organization",
+          "name": product.fantasy_name || "Kambafy"
+        }
+      }
+    }} />}
       <div className="min-h-screen bg-gray-50">
-        {checkoutSettings?.countdown?.enabled && (
-          <OptimizedCountdownTimer
-            minutes={checkoutSettings.countdown.minutes}
-            title={checkoutSettings.countdown.title}
-            backgroundColor={checkoutSettings.countdown.backgroundColor}
-            textColor={checkoutSettings.countdown.textColor}
-          />
-        )}
+        {checkoutSettings?.countdown?.enabled && <OptimizedCountdownTimer minutes={checkoutSettings.countdown.minutes} title={checkoutSettings.countdown.title} backgroundColor={checkoutSettings.countdown.backgroundColor} textColor={checkoutSettings.countdown.textColor} />}
 
-        {checkoutSettings?.banner?.enabled && checkoutSettings.banner.bannerImage && (
-          <OptimizedCustomBanner
-            bannerImage={checkoutSettings.banner.bannerImage}
-          />
-        )}
+        {checkoutSettings?.banner?.enabled && checkoutSettings.banner.bannerImage && <OptimizedCustomBanner bannerImage={checkoutSettings.banner.bannerImage} />}
 
         <div className="bg-checkout-secure text-white py-3">
           <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
@@ -2013,41 +1841,29 @@ const Checkout = () => {
               </div>
               <span className="font-bold text-lg">COMPRA 100% SEGURA</span>
             </div>
-            <CountrySelector
-              selectedCountry={userCountry}
-              onCountryChange={handleCountryChange}
-              supportedCountries={supportedCountries}
-            />
+            <CountrySelector selectedCountry={userCountry} onCountryChange={handleCountryChange} supportedCountries={supportedCountries} />
           </div>
         </div>
 
         <div className="max-w-4xl mx-auto px-4 py-8">
           {/* Debug: Always show social proof for now */}
-          <OptimizedSocialProof
-            settings={{
-              totalSales: checkoutSettings?.socialProof?.totalSales || 1247,
-              position: checkoutSettings?.socialProof?.position || 'bottom-right',
-              enabled: checkoutSettings?.socialProof?.enabled !== false // Mostrar por padrão
-            }}
-          />
+          <OptimizedSocialProof settings={{
+          totalSales: checkoutSettings?.socialProof?.totalSales || 1247,
+          position: checkoutSettings?.socialProof?.position || 'bottom-right',
+          enabled: checkoutSettings?.socialProof?.enabled !== false // Mostrar por padrão
+        }} />
           
           {/* Debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="fixed top-0 left-0 bg-red-100 p-2 text-xs z-50">
-              CheckoutSettings: {checkoutSettings ? 'Loaded' : 'Not Loaded'}<br/>
+          {process.env.NODE_ENV === 'development' && <div className="fixed top-0 left-0 bg-red-100 p-2 text-xs z-50">
+              CheckoutSettings: {checkoutSettings ? 'Loaded' : 'Not Loaded'}<br />
               SocialProof: {checkoutSettings?.socialProof?.enabled ? 'Enabled' : 'Default/Disabled'}
-            </div>
-          )}
+            </div>}
 
           <Card className="mb-8 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center gap-6">
                 <div className="w-24 h-24 rounded-lg overflow-hidden shadow-sm">
-                  <img 
-                    src={getProductImage(product.cover)} 
-                    alt={product.image_alt || product.name} 
-                    className="w-full h-full object-cover" 
-                  />
+                  <img src={getProductImage(product.cover)} alt={product.image_alt || product.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-xl font-bold text-gray-900">{product.name.toUpperCase()}</h2>
@@ -2069,55 +1885,27 @@ const Checkout = () => {
                 <Label htmlFor="fullName" className="text-gray-700 font-medium">
                   Nome completo
                 </Label>
-                <Input
-                  id="fullName"
-                  placeholder="Digite seu nome completo"
-                  value={formData.fullName}
-                  onChange={(e) => handleInputChange("fullName", e.target.value)}
-                  className="h-12 border-gray-300 focus:border-green-500"
-                />
+                <Input id="fullName" placeholder="Digite seu nome completo" value={formData.fullName} onChange={e => handleInputChange("fullName", e.target.value)} className="h-12 border-gray-300 focus:border-green-500" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 font-medium">
                   E-mail
                 </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Digite seu e-mail para receber a compra"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="h-12 border-gray-300 focus:border-green-500"
-                />
+                <Input id="email" type="email" placeholder="Digite seu e-mail para receber a compra" value={formData.email} onChange={e => handleInputChange("email", e.target.value)} className="h-12 border-gray-300 focus:border-green-500" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-gray-700 font-medium">
                   Telefone ou Whatsapp
                 </Label>
-                <PhoneInput
-                  value={formData.phone}
-                  onChange={(value) => handleInputChange("phone", value)}
-                  selectedCountry={formData.phoneCountry}
-                  onCountryChange={handleCountryChange}
-                  placeholder="Digite seu telefone"
-                  className="h-12"
-                />
+                <PhoneInput value={formData.phone} onChange={value => handleInputChange("phone", value)} selectedCountry={formData.phoneCountry} onCountryChange={handleCountryChange} placeholder="Digite seu telefone" className="h-12" />
               </div>
 
 
-              <OptimizedOrderBump 
-                productId={productId || ''}
-                position="before_payment_method"
-                onToggle={handleOrderBumpToggle}
-                userCountry={userCountry}
-                formatPrice={formatPrice}
-                resetSelection={resetOrderBumps}
-              />
+              <OptimizedOrderBump productId={productId || ''} position="before_payment_method" onToggle={handleOrderBumpToggle} userCountry={userCountry} formatPrice={formatPrice} resetSelection={resetOrderBumps} />
 
-              {availablePaymentMethods.length > 0 ? (
-                <div className="space-y-4">
+              {availablePaymentMethods.length > 0 ? <div className="space-y-4">
                   <div className="space-y-2">
                     <span className="text-green-600 font-medium">
                       Pagar com: {selectedPayment && <span className="text-gray-700">{getSelectedPaymentName()}</span>}
@@ -2126,48 +1914,28 @@ const Checkout = () => {
                   </div>
                   
                   <div className={`grid ${getPaymentGridClasses()} gap-3`}>
-                     {availablePaymentMethods.map((method) => (
-                       <div
-                         key={method.id}
-                         className={`cursor-pointer transition-all border rounded-xl p-3 flex flex-col items-center relative ${
-                           selectedPayment === method.id
-                             ? 'border-green-500 border-2 bg-green-50'
-                             : 'border-gray-300 hover:border-green-400'
-                         }`}
-                          onClick={async () => {
-                            console.log('🔍 Método de pagamento selecionado:', method.id);
-                            setSelectedPayment(method.id);
-                            setKambaPayEmailError(null);
-                            
-                            // Se KambaPay foi selecionado, verificar se o email está registrado
-                            if (method.id === 'kambapay' && formData.email) {
-                              await checkKambaPayEmail(formData.email);
-                            }
-                          }}
-                       >
-                        {selectedPayment === method.id && (
-                          <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                     {availablePaymentMethods.map(method => <div key={method.id} className={`cursor-pointer transition-all border rounded-xl p-3 flex flex-col items-center relative ${selectedPayment === method.id ? 'border-green-500 border-2 bg-green-50' : 'border-gray-300 hover:border-green-400'}`} onClick={async () => {
+                  console.log('🔍 Método de pagamento selecionado:', method.id);
+                  setSelectedPayment(method.id);
+                  setKambaPayEmailError(null);
+
+                  // Se KambaPay foi selecionado, verificar se o email está registrado
+                  if (method.id === 'kambapay' && formData.email) {
+                    await checkKambaPayEmail(formData.email);
+                  }
+                }}>
+                        {selectedPayment === method.id && <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                             <Check className="w-3 h-3 text-white" />
-                          </div>
-                        )}
+                          </div>}
                         <div className="w-12 h-12 rounded-xl overflow-hidden mb-2 flex items-center justify-center">
-                          <img
-                            src={method.image}
-                            alt={method.name}
-                            className={`w-10 h-10 object-contain transition-all ${
-                              selectedPayment === method.id ? '' : 'opacity-60 saturate-50'
-                            }`}
-                          />
+                          <img src={method.image} alt={method.name} className={`w-10 h-10 object-contain transition-all ${selectedPayment === method.id ? '' : 'opacity-60 saturate-50'}`} />
                         </div>
                         <p className="text-xs text-gray-700 text-center leading-tight">
                           {method.name}
                         </p>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
+                </div> : <div className="space-y-4">
                   <div className="text-center py-8 bg-gray-100 rounded-lg">
                     <p className="text-gray-600 font-medium">
                       Métodos de pagamento não disponíveis para {userCountry.name}
@@ -2176,46 +1944,22 @@ const Checkout = () => {
                       Em breve teremos opções de pagamento para sua região.
                     </p>
                   </div>
-                </div>
-              )}
+                </div>}
 
-              <OptimizedOrderBump 
-                productId={productId || ''}
-                position="after_payment_method"
-                onToggle={handleOrderBumpToggle}
-                userCountry={userCountry}
-                formatPrice={formatPrice}
-                resetSelection={resetOrderBumps}
-              />
+              <OptimizedOrderBump productId={productId || ''} position="after_payment_method" onToggle={handleOrderBumpToggle} userCountry={userCountry} formatPrice={formatPrice} resetSelection={resetOrderBumps} />
 
-              {(['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment)) && (
-                <div className="mt-6">
-                  <OptimizedStripeCardPayment
-                    amount={totalPrice}
-                    originalAmountKZ={originalPriceKZ}
-                    currency={userCountry.currency}
-                    productId={productId || ''}
-                    customerData={{
-                      name: formData.fullName,
-                      email: formData.email,
-                      phone: formData.phone
-                    }}
-                    paymentMethod={selectedPayment}
-                    onSuccess={handleCardPaymentSuccess}
-                    onError={handleCardPaymentError}
-                    processing={processing}
-                    setProcessing={setProcessing}
-                    displayPrice={getDisplayPrice(totalPrice, true)}
-                    convertedAmount={convertedTotalPrice}
-                  />
-                </div>
-              )}
+              {['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && <div className="mt-6">
+                  <OptimizedStripeCardPayment amount={totalPrice} originalAmountKZ={originalPriceKZ} currency={userCountry.currency} productId={productId || ''} customerData={{
+                name: formData.fullName,
+                email: formData.email,
+                phone: formData.phone
+              }} paymentMethod={selectedPayment} onSuccess={handleCardPaymentSuccess} onError={handleCardPaymentError} processing={processing} setProcessing={setProcessing} displayPrice={getDisplayPrice(totalPrice, true)} convertedAmount={convertedTotalPrice} />
+                </div>}
 
 
 
 
-              {selectedPayment === 'kambapay' && (
-                <div className="mt-6">
+              {selectedPayment === 'kambapay' && <div className="mt-6">
                   <Card className="border-blue-200 bg-blue-50">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-4">
@@ -2236,37 +1980,26 @@ const Checkout = () => {
                           </div>
                         </div>
                         
-                        {kambaPayEmailError ? (
-                          <div className="text-xs text-red-600 bg-red-100 p-3 rounded border border-red-200">
+                        {kambaPayEmailError ? <div className="text-xs text-red-600 bg-red-100 p-3 rounded border border-red-200">
                             <strong>⚠️ Atenção:</strong> {kambaPayEmailError}
                             <div className="mt-2">
-                              <button 
-                                className="text-blue-600 underline text-xs hover:text-blue-800"
-                                onClick={() => window.open('/kambapay', '_blank')}
-                              >
+                              <button className="text-blue-600 underline text-xs hover:text-blue-800" onClick={() => window.open('/kambapay', '_blank')}>
                                 Criar conta KambaPay
                               </button>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
+                          </div> : <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
                             <div className="flex items-center justify-between mb-2">
                               <span><strong>💡 Dica:</strong> O pagamento será processado com o email informado acima.</span>
-                              <button 
-                                className="text-blue-600 underline text-xs hover:text-blue-800"
-                                onClick={() => window.open('/kambapay', '_blank')}
-                              >
+                              <button className="text-blue-600 underline text-xs hover:text-blue-800" onClick={() => window.open('/kambapay', '_blank')}>
                                 Ver saldo
                               </button>
                             </div>
                             <p>Certifique-se de que possui saldo suficiente em sua conta KambaPay.</p>
-                          </div>
-                        )}
+                          </div>}
                       </div>
                     </CardContent>
                   </Card>
-                </div>
-              )}
+                </div>}
             </div>
 
             <div className="space-y-6">
@@ -2281,21 +2014,20 @@ const Checkout = () => {
                       </span>
                     </div>
                     
-                    {Array.from(selectedOrderBumps.values()).map(({ data: bump, price }) => (
-                      <div key={bump.id} className="flex justify-between items-center text-green-600">
+                    {Array.from(selectedOrderBumps.values()).map(({
+                    data: bump,
+                    price
+                  }) => <div key={bump.id} className="flex justify-between items-center text-green-600">
                         <div className="flex-1">
                           <span className="text-sm">{bump.bump_product_name}</span>
-                          {bump.discount > 0 && (
-                            <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded ml-2">
+                          {bump.discount > 0 && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded ml-2">
                               -{bump.discount}%
-                            </span>
-                          )}
+                            </span>}
                         </div>
                         <span className="font-medium">
                           +{getOrderBumpDisplayPrice(price)}
                         </span>
-                      </div>
-                    ))}
+                      </div>)}
                     
                     <div className="border-t pt-3">
                       <div className="flex justify-between items-center">
@@ -2307,8 +2039,7 @@ const Checkout = () => {
                     </div>
 
                     {/* Reference Payment Details */}
-                    {referenceData && (
-                      <div className="border-t pt-4 mt-4">
+                    {referenceData && <div className="border-t pt-4 mt-4">
                         <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
                           <div className="flex items-center justify-center mb-4">
                             <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
@@ -2331,16 +2062,11 @@ const Checkout = () => {
                                 <span className="text-sm font-medium text-gray-600">Entidade:</span>
                                 <div className="flex items-center space-x-2">
                                   <span className="font-mono font-bold text-lg text-gray-900">{referenceData.entity}</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(referenceData.entity);
-                                      setCopiedEntity(true);
-                                      setTimeout(() => setCopiedEntity(false), 2000);
-                                    }}
-                                    className="h-6 w-6 p-0"
-                                  >
+                                  <Button variant="ghost" size="sm" onClick={() => {
+                                navigator.clipboard.writeText(referenceData.entity);
+                                setCopiedEntity(true);
+                                setTimeout(() => setCopiedEntity(false), 2000);
+                              }} className="h-6 w-6 p-0">
                                     {copiedEntity ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
                                   </Button>
                                 </div>
@@ -2352,16 +2078,11 @@ const Checkout = () => {
                                 <span className="text-sm font-medium text-gray-600">Referência:</span>
                                 <div className="flex items-center space-x-2">
                                   <span className="font-mono font-bold text-lg text-gray-900">{referenceData.referenceNumber}</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(referenceData.referenceNumber);
-                                      setCopiedReference(true);
-                                      setTimeout(() => setCopiedReference(false), 2000);
-                                    }}
-                                    className="h-6 w-6 p-0"
-                                  >
+                                  <Button variant="ghost" size="sm" onClick={() => {
+                                navigator.clipboard.writeText(referenceData.referenceNumber);
+                                setCopiedReference(true);
+                                setTimeout(() => setCopiedReference(false), 2000);
+                              }} className="h-6 w-6 p-0">
                                     {copiedReference ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
                                   </Button>
                                 </div>
@@ -2369,38 +2090,33 @@ const Checkout = () => {
                             </div>
                           </div>
 
-                          <div className="bg-blue-50 rounded-lg p-3 mt-4">
-                            <p className="text-sm font-medium text-blue-800 mb-2">Passos:</p>
-                            <p className="text-sm text-blue-700">
+                          <div className="rounded-lg p-3 mt-4 bg-zinc-50">
+                            <p className="text-sm font-medium mb-2 text-zinc-950">Passos:</p>
+                            <p className="text-sm text-sky-800">
                               <strong>Pagamentos &gt;&gt; Pagamentos de serviços &gt;&gt; Pagamentos por referência</strong>
                             </p>
                           </div>
 
-                          <Button 
-                            onClick={() => {
-                              const params = new URLSearchParams({
-                                order_id: referenceData.orderId,
-                                status: 'pending',
-                                payment_method: 'reference',
-                                reference_number: referenceData.referenceNumber,
-                                entity: referenceData.entity,
-                                due_date: referenceData.dueDate,
-                                amount: referenceData.amount.toString(),
-                                currency: referenceData.currency,
-                                product_name: referenceData.productName
-                              });
-                              navigate(`/obrigado?${params.toString()}`);
-                            }}
-                            className="w-full mt-4"
-                          >
+                          <Button onClick={() => {
+                        const params = new URLSearchParams({
+                          order_id: referenceData.orderId,
+                          status: 'pending',
+                          payment_method: 'reference',
+                          reference_number: referenceData.referenceNumber,
+                          entity: referenceData.entity,
+                          due_date: referenceData.dueDate,
+                          amount: referenceData.amount.toString(),
+                          currency: referenceData.currency,
+                          product_name: referenceData.productName
+                        });
+                        navigate(`/obrigado?${params.toString()}`);
+                      }} className="w-full mt-4">
                             Finalizar e continuar
                           </Button>
                         </div>
-                      </div>
-                    )}
+                      </div>}
                     
-                    {selectedPayment === 'express' && !processing && (
-                      <div className="mt-4 space-y-4">
+                    {selectedPayment === 'express' && !processing && <div className="mt-4 space-y-4">
                         {/* Instrução para pagamento express */}
                         <div className="text-left p-4 bg-blue-50 rounded-lg border border-blue-100">
                           <p className="text-sm font-medium text-gray-700 leading-relaxed">
@@ -2415,20 +2131,11 @@ const Checkout = () => {
                           <label className="block text-sm font-medium text-gray-600">
                             Por favor, insira o número de telefone ativo do Multicaixa Express.
                           </label>
-                          <PhoneInput
-                            value={expressPhone}
-                            onChange={(value) => setExpressPhone(value)}
-                            placeholder="Digite seu telefone"
-                            selectedCountry="AO"
-                            allowedCountries={["AO"]}
-                            className="w-full"
-                          />
+                          <PhoneInput value={expressPhone} onChange={value => setExpressPhone(value)} placeholder="Digite seu telefone" selectedCountry="AO" allowedCountries={["AO"]} className="w-full" />
                         </div>
-                      </div>
-                    )}
+                      </div>}
 
-                    {selectedPayment === 'express' && processing && (
-                      <div className="mt-4 space-y-4">
+                    {selectedPayment === 'express' && processing && <div className="mt-4 space-y-4">
                         <div className="text-center">
                           <p className="text-gray-900 font-medium text-lg mb-4">
                             Confirme o pagamento no seu telemóvel
@@ -2436,35 +2143,13 @@ const Checkout = () => {
                           
                           {/* Círculo de countdown */}
                           <div className="relative inline-flex items-center justify-center mb-6">
-                            <svg 
-                              width="200" 
-                              height="200" 
-                              className="transform -rotate-90"
-                            >
+                            <svg width="200" height="200" className="transform -rotate-90">
                               {/* Círculo de fundo */}
-                              <circle
-                                cx="100"
-                                cy="100"
-                                r="90"
-                                stroke="#e5e7eb"
-                                strokeWidth="12"
-                                fill="transparent"
-                              />
+                              <circle cx="100" cy="100" r="90" stroke="#e5e7eb" strokeWidth="12" fill="transparent" />
                               {/* Círculo de progresso */}
-                              <circle
-                                cx="100"
-                                cy="100"
-                                r="90"
-                                stroke="#2563eb"
-                                strokeWidth="12"
-                                fill="transparent"
-                                strokeLinecap="round"
-                                strokeDasharray={565.48}
-                                strokeDashoffset={565.48 * (expressCountdownTime / 60)}
-                                style={{
-                                  transition: 'stroke-dashoffset 1s linear'
-                                }}
-                              />
+                              <circle cx="100" cy="100" r="90" stroke="#2563eb" strokeWidth="12" fill="transparent" strokeLinecap="round" strokeDasharray={565.48} strokeDashoffset={565.48 * (expressCountdownTime / 60)} style={{
+                            transition: 'stroke-dashoffset 1s linear'
+                          }} />
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                               <span className="text-sm text-gray-500 mb-2">Tempo Restante</span>
@@ -2488,99 +2173,58 @@ const Checkout = () => {
                             </p>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      </div>}
 
-                    {selectedPayment === 'reference' && !referenceData && (
-                      <div className="mt-4 space-y-4">
+                    {selectedPayment === 'reference' && !referenceData && <div className="mt-4 space-y-4">
                         <div className="text-left p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
                           <p className="text-sm font-medium text-gray-900 leading-relaxed">
                             Clique em gerar referência, copie os dados e pague pelo app do seu banco ou em qualquer ATM.
                           </p>
                         </div>
-                      </div>
-                    )}
+                      </div>}
                   </div>
                 </CardContent>
               </Card>
 
-              {selectedPayment === 'transfer' && (
-                <div className="mt-6">
-                  <BankTransferForm
-                    totalAmount={totalPrice.toString()}
-                    currency={userCountry.currency}
-                    onPaymentComplete={async (file, bank) => {
-                      setBankTransferData({ file, bank });
-                      console.log('🏦 Bank transfer proof uploaded:', { fileName: file.name, bank });
-                      
-                      try {
-                        console.log('🏦 Starting bank transfer purchase process...');
-                        // Processar compra por transferência imediatamente
-                        await handleBankTransferPurchase(file, bank);
-                        console.log('🏦 Bank transfer purchase completed successfully');
-                      } catch (error) {
-                        console.error('🏦 Error in bank transfer purchase:', error);
-                      }
-                    }}
-                    disabled={processing}
-                  />
-                </div>
-              )}
+              {selectedPayment === 'transfer' && <div className="mt-6">
+                  <BankTransferForm totalAmount={totalPrice.toString()} currency={userCountry.currency} onPaymentComplete={async (file, bank) => {
+                setBankTransferData({
+                  file,
+                  bank
+                });
+                console.log('🏦 Bank transfer proof uploaded:', {
+                  fileName: file.name,
+                  bank
+                });
+                try {
+                  console.log('🏦 Starting bank transfer purchase process...');
+                  // Processar compra por transferência imediatamente
+                  await handleBankTransferPurchase(file, bank);
+                  console.log('🏦 Bank transfer purchase completed successfully');
+                } catch (error) {
+                  console.error('🏦 Error in bank transfer purchase:', error);
+                }
+              }} disabled={processing} />
+                </div>}
 
-              {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && (
-                <Button
-                  onClick={handlePurchase}
-                  disabled={
-                    !formData.fullName || 
-                    !formData.email || 
-                    !(selectedPayment === 'express' ? expressPhone : formData.phone) || 
-                    !selectedPayment || 
-                    processing || 
-                    (selectedPayment === 'kambapay' && !!kambaPayEmailError)
-                  }
-                  className={`w-full h-12 font-semibold relative transition-all ${
-                    (!formData.fullName || 
-                     !formData.email || 
-                     !(selectedPayment === 'express' ? expressPhone : formData.phone) || 
-                     !selectedPayment || 
-                     processing || 
-                     (selectedPayment === 'kambapay' && !!kambaPayEmailError)
-                    )
-                      ? 'bg-green-600/50 cursor-not-allowed text-white/70'
-                      : 'bg-green-600 hover:bg-green-700 text-white'
-                  }`}
-                >
-                  {processing ? (
-                    <div className="flex items-center justify-center">
+              {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && <Button onClick={handlePurchase} disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing || selectedPayment === 'kambapay' && !!kambaPayEmailError} className={`w-full h-12 font-semibold relative transition-all ${!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing || selectedPayment === 'kambapay' && !!kambaPayEmailError ? 'bg-green-600/50 cursor-not-allowed text-white/70' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
+                  {processing ? <div className="flex items-center justify-center">
                       <div className="w-6 h-6 rounded bg-green-700 flex items-center justify-center mr-2">
                         <span className="text-xs font-bold text-white animate-bounce">K</span>
                       </div>
                       PROCESSANDO...
-                    </div>
-                  ) : (
-                    selectedPayment === 'reference' ? 'GERAR REFERÊNCIA' : 'COMPRAR AGORA'
-                  )}
-                </Button>
-              )}
+                    </div> : selectedPayment === 'reference' ? 'GERAR REFERÊNCIA' : 'COMPRAR AGORA'}
+                </Button>}
             </div>
           </div>
 
-          {checkoutSettings?.reviews?.enabled && (
-            <div className="mt-8 mb-8">
-              <OptimizedFakeReviews
-                reviews={checkoutSettings.reviews.reviews}
-                title={checkoutSettings.reviews.title}
-              />
-            </div>
-          )}
+          {checkoutSettings?.reviews?.enabled && <div className="mt-8 mb-8">
+              <OptimizedFakeReviews reviews={checkoutSettings.reviews.reviews} title={checkoutSettings.reviews.title} />
+            </div>}
 
           <div className="mt-12 text-center space-y-4">
             <div className="flex flex-col items-center space-y-3">
-              <img 
-                src="/kambafy-secure-icon.png" 
-                alt="Kambafy"
-                className="w-16 h-16 rounded-lg"
-              />
+              <img src="/kambafy-secure-icon.png" alt="Kambafy" className="w-16 h-16 rounded-lg" />
               <div>
                 <h4 className="font-semibold text-green-600">Kambafy</h4>
                 <p className="text-sm text-gray-600">Todos os direitos reservados.</p>
@@ -2598,8 +2242,6 @@ const Checkout = () => {
         </div>
       </div>
       
-    </ThemeProvider>
-  );
+    </ThemeProvider>;
 };
-
 export default Checkout;
