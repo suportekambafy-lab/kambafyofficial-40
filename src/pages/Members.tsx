@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Video, FileText, Users, MoreHorizontal, Edit, Trash2, Eye, Clock, BookOpen, Upload, Minimize2, Search, ChevronDown, ArrowLeft, ExternalLink, EyeOff, GripVertical, Mail, Save, Image, Type, Settings } from "lucide-react";
+import { Plus, Video, FileText, Users, MoreHorizontal, Edit, Trash2, Eye, Clock, BookOpen, Upload, Minimize2, Search, ChevronDown, ArrowLeft, ExternalLink, EyeOff, GripVertical, Mail, Save, Image, Type, Settings, CalendarIcon, AlertTriangle, Timer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,11 @@ import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 import { LessonLinksManager } from '@/components/LessonLinksManager';
 import { LessonMaterialsManager } from '@/components/LessonMaterialsManager';
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Product {
   id: string;
@@ -95,7 +100,9 @@ export default function Members() {
     status: 'draft' as 'draft' | 'published' | 'archived',
     module_id: 'none',
     complementary_links: [] as ComplementaryLink[],
-    lesson_materials: [] as LessonMaterial[]
+    lesson_materials: [] as LessonMaterial[],
+    is_scheduled: false,
+    scheduled_at: null as Date | null
   });
   
   const [moduleFormData, setModuleFormData] = useState({
@@ -103,7 +110,8 @@ export default function Members() {
     description: '',
     status: 'draft' as 'draft' | 'published' | 'archived',
     cover_image_url: '',
-    cover_orientation: 'horizontal' as 'horizontal' | 'vertical'
+    cover_orientation: 'horizontal' as 'horizontal' | 'vertical',
+    coming_soon: false
   });
 
   useEffect(() => {
@@ -511,6 +519,7 @@ export default function Members() {
         status: moduleFormData.status,
         cover_image_url: moduleFormData.cover_image_url || null,
         cover_orientation: moduleFormData.cover_orientation,
+        coming_soon: moduleFormData.coming_soon,
         user_id: user.id,
         member_area_id: selectedArea?.id,
         order_number: editingModule ? editingModule.order_number : modules.length + 1
@@ -614,7 +623,9 @@ export default function Members() {
         module_id: (formData.module_id && formData.module_id !== 'none') ? formData.module_id : (selectedModuleForLesson || null),
         order_number: editingLesson ? editingLesson.order_number : lessons.length + 1,
         complementary_links: JSON.stringify(validatedLinks),
-        lesson_materials: JSON.stringify(safeMaterials)
+        lesson_materials: JSON.stringify(safeMaterials),
+        is_scheduled: formData.is_scheduled,
+        scheduled_at: formData.is_scheduled && formData.scheduled_at ? formData.scheduled_at.toISOString() : null
       };
 
       console.log('🔍 Form data before saving:', {
@@ -722,7 +733,9 @@ export default function Members() {
       status: lesson.status,
       module_id: lesson.module_id || '',
       complementary_links: processedLinks,
-      lesson_materials: processedMaterials
+      lesson_materials: processedMaterials,
+      is_scheduled: lesson.is_scheduled || false,
+      scheduled_at: lesson.scheduled_at ? new Date(lesson.scheduled_at) : null
     });
     
     console.log('📝 Form data set to:', {
@@ -743,7 +756,8 @@ export default function Members() {
       description: module.description || '',
       status: module.status as 'draft' | 'published' | 'archived',
       cover_image_url: module.cover_image_url || '',
-      cover_orientation: (module as any).cover_orientation || 'horizontal'
+      cover_orientation: (module as any).cover_orientation || 'horizontal',
+      coming_soon: module.coming_soon || false
     });
     setModuleDialogOpen(true);
   };
@@ -868,7 +882,9 @@ export default function Members() {
       status: 'draft',
       module_id: 'none', // Garantir que nunca seja string vazia
       complementary_links: [],
-      lesson_materials: []
+      lesson_materials: [],
+      is_scheduled: false,
+      scheduled_at: null
     });
     setEditingLesson(null);
     setSelectedModuleForLesson('');
@@ -881,7 +897,8 @@ export default function Members() {
       description: '',
       status: 'draft',
       cover_image_url: '',
-      cover_orientation: 'horizontal'
+      cover_orientation: 'horizontal',
+      coming_soon: false
     });
     setEditingModule(null);
   };
@@ -979,7 +996,9 @@ export default function Members() {
       status: 'draft',
       module_id: moduleId || 'none', // Garantir que nunca seja string vazia
       complementary_links: [],
-      lesson_materials: []
+      lesson_materials: [],
+      is_scheduled: false,
+      scheduled_at: null
     });
     setEditingLesson(null);
     setSelectedModuleForLesson(moduleId);
@@ -1676,6 +1695,26 @@ export default function Members() {
                 </Select>
               </div>
               
+              {/* Módulo Em Breve */}
+              <div className="flex items-center space-x-3 p-4 border rounded-lg bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+                <Checkbox
+                  id="coming-soon"
+                  checked={moduleFormData.coming_soon}
+                  onCheckedChange={(checked) => 
+                    setModuleFormData(prev => ({ ...prev, coming_soon: checked === true }))
+                  }
+                />
+                <div className="flex-1">
+                  <Label htmlFor="coming-soon" className="font-medium text-amber-900 dark:text-amber-100">
+                    Módulo Em Breve
+                  </Label>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                    Quando ativado, o módulo será exibido como "Em Breve" para os alunos
+                  </p>
+                </div>
+                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setModuleDialogOpen(false)}>
                   Cancelar
@@ -1838,6 +1877,101 @@ export default function Members() {
                 </Select>
                </div>
                
+                 {/* Agendamento da Aula */}
+                 <div className="space-y-4 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                   <div className="flex items-center space-x-3">
+                     <Checkbox
+                       id="is-scheduled"
+                       checked={formData.is_scheduled}
+                       onCheckedChange={(checked) => 
+                         setFormData(prev => ({ 
+                           ...prev, 
+                           is_scheduled: checked === true,
+                           scheduled_at: checked === true ? prev.scheduled_at : null
+                         }))
+                       }
+                     />
+                     <div className="flex-1">
+                       <Label htmlFor="is-scheduled" className="font-medium text-blue-900 dark:text-blue-100">
+                         Agendar Liberação da Aula
+                       </Label>
+                       <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                         Defina uma data para liberar automaticamente esta aula
+                       </p>
+                     </div>
+                     <Timer className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                   </div>
+                   
+                   {formData.is_scheduled && (
+                     <div className="space-y-2">
+                       <Label>Data de Liberação</Label>
+                       <Popover>
+                         <PopoverTrigger asChild>
+                           <Button
+                             variant={"outline"}
+                             className={cn(
+                               "w-full justify-start text-left font-normal",
+                               !formData.scheduled_at && "text-muted-foreground"
+                             )}
+                           >
+                             <CalendarIcon className="mr-2 h-4 w-4" />
+                             {formData.scheduled_at ? (
+                               format(formData.scheduled_at, "dd/MM/yyyy HH:mm")
+                             ) : (
+                               <span>Selecionar data e hora</span>
+                             )}
+                           </Button>
+                         </PopoverTrigger>
+                         <PopoverContent className="w-auto p-0" align="start">
+                           <CalendarComponent
+                             mode="single"
+                             selected={formData.scheduled_at || undefined}
+                             onSelect={(date) => {
+                               if (date) {
+                                 // Manter a hora atual ou definir para meio-dia se não houver
+                                 const currentTime = formData.scheduled_at || new Date();
+                                 date.setHours(currentTime.getHours(), currentTime.getMinutes());
+                               }
+                               setFormData(prev => ({ ...prev, scheduled_at: date || null }));
+                             }}
+                             disabled={(date) => date < new Date()}
+                             initialFocus
+                             className={cn("p-3 pointer-events-auto")}
+                           />
+                           {formData.scheduled_at && (
+                             <div className="p-3 border-t">
+                               <Label className="text-sm font-medium">Horário</Label>
+                               <div className="flex gap-2 mt-2">
+                                 <Input
+                                   type="time"
+                                   value={formData.scheduled_at ? 
+                                     `${formData.scheduled_at.getHours().toString().padStart(2, '0')}:${formData.scheduled_at.getMinutes().toString().padStart(2, '0')}` : 
+                                     '12:00'
+                                   }
+                                   onChange={(e) => {
+                                     const [hours, minutes] = e.target.value.split(':');
+                                     if (formData.scheduled_at) {
+                                       const newDate = new Date(formData.scheduled_at);
+                                       newDate.setHours(parseInt(hours), parseInt(minutes));
+                                       setFormData(prev => ({ ...prev, scheduled_at: newDate }));
+                                     }
+                                   }}
+                                   className="w-full"
+                                 />
+                               </div>
+                             </div>
+                           )}
+                         </PopoverContent>
+                       </Popover>
+                       {formData.scheduled_at && (
+                         <p className="text-xs text-blue-600 dark:text-blue-400">
+                           A aula será liberada em: {format(formData.scheduled_at, "dd/MM/yyyy 'às' HH:mm")}
+                         </p>
+                       )}
+                     </div>
+                   )}
+                 </div>
+                
                  {/* Links Complementares */}
                  <div className="space-y-2">
                    <Label className="text-sm font-medium">Links Complementares da Aula</Label>
