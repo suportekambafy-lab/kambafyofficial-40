@@ -82,7 +82,9 @@ const handler = async (req: Request): Promise<Response> => {
         // Usar admin API para confirmar o email
         const { error: confirmError } = await supabase.auth.admin.updateUserById(
           user.id,
-          { email_confirm: true }
+          { 
+            email_confirm: true
+          }
         );
 
         if (confirmError) {
@@ -90,6 +92,9 @@ const handler = async (req: Request): Promise<Response> => {
         } else {
           console.log('✅ Email confirmed via admin API');
         }
+
+        // Pequena pausa para garantir que a confirmação foi processada
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         // Tentar login novamente após confirmação
         const { data: retryAuthData, error: retryAuthError } = await supabaseAnon.auth.signInWithPassword({
@@ -113,7 +118,34 @@ const handler = async (req: Request): Promise<Response> => {
             },
           });
         } else {
-          console.error('❌ Retry login failed:', retryAuthError);
+          console.error('❌ Retry login failed after confirmation:', retryAuthError);
+          
+          // Tentar uma última vez com um pequeno delay adicional
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const { data: finalRetryData, error: finalRetryError } = await supabaseAnon.auth.signInWithPassword({
+            email,
+            password,
+          });
+          
+          if (finalRetryData.user && finalRetryData.session) {
+            console.log('✅ Final retry login successful');
+            
+            return new Response(JSON.stringify({
+              success: true,
+              user: finalRetryData.user,
+              session: finalRetryData.session,
+              emailConfirmed: true
+            }), {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+                ...corsHeaders,
+              },
+            });
+          } else {
+            console.error('❌ Final retry also failed:', finalRetryError);
+          }
         }
       }
     }

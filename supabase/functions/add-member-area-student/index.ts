@@ -66,12 +66,27 @@ const handler = async (req: Request): Promise<Response> => {
         throw createUserError;
       }
 
-      // Em vez de forçar confirmação, vamos usar login customizado
-      if (newUser.user) {
-        console.log('✅ User created - will use custom login flow');
+      if (!newUser.user) {
+        throw new Error('Failed to create user');
       }
 
-      console.log('✅ User created successfully:', newUser.user?.email);
+      console.log('✅ User created successfully:', newUser.user.email);
+      
+      // Garantir confirmação de email com verificação adicional
+      console.log('🔍 Double-checking email confirmation...');
+      const { error: confirmError } = await supabase.auth.admin.updateUserById(
+        newUser.user.id,
+        { 
+          email_confirm: true
+        }
+      );
+      
+      if (confirmError) {
+        console.error('⚠️ Warning: Could not confirm email via update:', confirmError);
+      } else {
+        console.log('✅ Email confirmation double-checked');
+      }
+      
       isNewAccount = true;
       passwordToReturn = finalPassword;
 
@@ -79,7 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
-          user_id: newUser.user?.id,
+          user_id: newUser.user.id,
           full_name: customerName,
           email: customerEmail
         });
@@ -93,24 +108,43 @@ const handler = async (req: Request): Promise<Response> => {
       
     } else if (temporaryPassword) {
       // Usuário existe e foi fornecida nova senha temporária
-      console.log('🔑 Updating existing user password...');
+      console.log('🔑 Updating existing user password and confirming email...');
       
-      const { error: updatePasswordError } = await supabase.auth.admin.updateUserById(
+      // Sempre garantir que o email está confirmado para usuários existentes
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
         existingUser.id,
-        { password: temporaryPassword }
+        { 
+          password: temporaryPassword,
+          email_confirm: true
+        }
       );
 
-      if (updatePasswordError) {
-        console.error('❌ Error updating user password:', updatePasswordError);
-        throw updatePasswordError;
+      if (updateError) {
+        console.error('❌ Error updating user:', updateError);
+        throw updateError;
       }
 
-      console.log('✅ User password updated successfully');
+      console.log('✅ User password updated and email confirmed');
       isNewAccount = true; // Tratamos como nova conta para envio de credenciais
       passwordToReturn = temporaryPassword;
       
     } else {
-      console.log('✅ User already exists:', existingUser.email);
+      console.log('✅ User already exists, ensuring email is confirmed...');
+      
+      // Mesmo para usuários existentes sem nova senha, garantir confirmação
+      const { error: confirmError } = await supabase.auth.admin.updateUserById(
+        existingUser.id,
+        { 
+          email_confirm: true
+        }
+      );
+      
+      if (confirmError) {
+        console.error('⚠️ Warning: Could not confirm existing user email:', confirmError);
+      } else {
+        console.log('✅ Existing user email confirmed');
+      }
+      
       isNewAccount = false;
       passwordToReturn = undefined;
     }

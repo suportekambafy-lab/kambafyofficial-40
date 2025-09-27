@@ -297,75 +297,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    console.log('🚀 Iniciando login...');
-    
+  const signIn = async (email: string, password: string): Promise<{ error?: AuthError }> => {
     try {
-      // Primeiro tentar login normal
+      console.log('🔐 Attempting sign in for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email,
         password,
       });
 
-      // Se login normal funcionou
-      if (!error && data.user && data.session) {
-        console.log('✅ Login normal bem-sucedido');
+      if (error) {
+        console.error('❌ Sign in error:', error);
         
-        // Verificar se o usuário está banido
-        await checkUserBanStatus(data.user);
-        
-        return { error: null, data };
-      }
-
-      // Se o erro é de email não confirmado, tentar login customizado
-      if (error?.message?.includes('Email not confirmed')) {
-        console.log('📧 Email não confirmado, tentando login customizado...');
-        
-        try {
-          const { data: customData, error: customError } = await supabase.functions.invoke('custom-auth-login', {
-            body: {
-              email: email.trim().toLowerCase(),
-              password,
-            },
-          });
-
-          if (customError) {
-            console.error('❌ Erro no login customizado:', customError);
-            return { 
-              error: {
-                message: "Email não confirmado. Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.",
-                code: "email_not_confirmed"
-              } as any
-            };
-          }
-
-          if (customData.success && customData.session) {
-            console.log('✅ Login customizado bem-sucedido');
-            
-            // Atualizar estado manualmente já que não passará pelo listener normal
-            setSession(customData.session);
-            setUser(customData.user);
-            
-            // Verificar se o usuário está banido
-            await checkUserBanStatus(customData.user);
-            
-            toast({
-              title: "Login realizado com sucesso!",
-              description: "Bem-vindo de volta.",
+        // Se o erro for "Email not confirmed", tentar login customizado
+        if (error.message?.includes('Email not confirmed')) {
+          console.log('📧 Email not confirmed, trying custom login...');
+          
+          try {
+            const { data: customData, error: customError } = await supabase.functions.invoke('custom-auth-login', {
+              body: { email, password }
             });
-
-            return { error: null, data: customData };
+            
+            if (customError) {
+              console.error('❌ Custom login error:', customError);
+              return { error };
+            }
+            
+            if (customData?.success && customData?.user && customData?.session) {
+              console.log('✅ Custom login successful, setting session...');
+              
+              // Definir manualmente a sessão
+              const { error: setSessionError } = await supabase.auth.setSession({
+                access_token: customData.session.access_token,
+                refresh_token: customData.session.refresh_token,
+              });
+              
+              if (setSessionError) {
+                console.error('❌ Error setting custom session:', setSessionError);
+                return { error: setSessionError };
+              }
+              
+              console.log('✅ Custom session set successfully');
+              
+              // Verificar banimento
+              await checkUserBanStatus(customData.user);
+              
+              return {};
+            } else {
+              console.log('❌ Custom login returned no valid session');
+            }
+          } catch (customError) {
+            console.error('❌ Custom login exception:', customError);
           }
-        } catch (customError) {
-          console.error('❌ Erro inesperado no login customizado:', customError);
         }
+        
+        return { error };
       }
 
-      // Retornar erro original se não conseguiu resolver
-      return { error, data };
+      console.log('✅ Sign in successful');
       
+      // Verificar se o usuário está banido
+      if (data.user) {
+        await checkUserBanStatus(data.user);
+      }
+      
+      return {};
     } catch (error) {
-      console.error('❌ Erro inesperado no login:', error);
+      console.error('❌ Unexpected sign in error:', error);
       return { error: error as AuthError };
     }
   };
