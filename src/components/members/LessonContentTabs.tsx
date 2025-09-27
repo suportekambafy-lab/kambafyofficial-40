@@ -39,7 +39,7 @@ export function LessonContentTabs({
   };
   return <div className="mt-8 border-t border-gray-800 pt-6 bg-zinc-950">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6 bg-zinc-950">
           <TabsTrigger value="description" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             Descrição
