@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useCustomToast } from '@/hooks/useCustomToast';
 import { User, Session } from '@supabase/supabase-js';
 
 interface MemberArea {
@@ -43,6 +43,7 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
   const [session, setSession] = useState<Session | null>(null);
   const [memberArea, setMemberArea] = useState<MemberArea | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useCustomToast();
 
   const isAuthenticated = Boolean(session?.user);
 
@@ -134,24 +135,30 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
 
       if (error) {
         console.error('❌ ModernAuth: Erro no login:', error);
-        toast.error('Erro no login', {
-          description: error.message === 'Invalid login credentials' 
+        toast({
+          title: 'Erro no login',
+          message: error.message === 'Invalid login credentials' 
             ? 'Email ou senha incorretos' 
-            : 'Erro ao fazer login. Tente novamente.'
+            : 'Erro ao fazer login. Tente novamente.',
+          variant: 'error'
         });
         return false;
       }
 
       console.log('✅ ModernAuth: Login realizado com sucesso');
-      toast.success('Login realizado com sucesso!', {
-        description: 'Bem-vindo à área de membros.'
+      toast({
+        title: 'Login realizado com sucesso!',
+        message: 'Bem-vindo à área de membros.',
+        variant: 'success'
       });
 
       return true;
     } catch (error) {
       console.error('❌ ModernAuth: Erro inesperado no login:', error);
-      toast.error('Erro inesperado', {
-        description: 'Algo deu errado. Tente novamente.'
+      toast({
+        title: 'Erro inesperado',
+        message: 'Algo deu errado. Tente novamente.',
+        variant: 'error'
       });
       return false;
     } finally {
@@ -165,7 +172,11 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
     await supabase.auth.signOut();
     setMemberArea(null);
     
-    toast.success('Logout realizado com sucesso');
+    toast({
+      title: 'Logout realizado com sucesso',
+      message: 'Até a próxima!',
+      variant: 'success'
+    });
   };
 
   const contextValue: ModernMembersAuthContextType = {
