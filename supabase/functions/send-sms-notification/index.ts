@@ -117,12 +117,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Verificar se a mensagem foi enviada com sucesso
     const message = responseData.messages?.[0];
+    console.log('[SMS-NOTIFICATION] First message response:', JSON.stringify(message, null, 2));
+    
     if (message?.status?.groupId !== 1) {
-      console.error('[SMS-NOTIFICATION] Message failed:', message);
+      console.error('[SMS-NOTIFICATION] Message failed - Status Group ID:', message?.status?.groupId);
+      console.error('[SMS-NOTIFICATION] Message status:', JSON.stringify(message?.status, null, 2));
+      console.error('[SMS-NOTIFICATION] Full message object:', JSON.stringify(message, null, 2));
       throw new Error(`Message failed: ${message?.status?.description || 'Unknown error'}`);
     }
 
-    console.log('[SMS-NOTIFICATION] SMS sent successfully via Infobip:', message?.messageId);
+    console.log('[SMS-NOTIFICATION] SMS sent successfully via Infobip - Message ID:', message?.messageId);
+    console.log('[SMS-NOTIFICATION] Message status:', JSON.stringify(message?.status, null, 2));
 
     return new Response(JSON.stringify({
       success: true,
