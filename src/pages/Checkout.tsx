@@ -1954,6 +1954,95 @@ const Checkout = () => {
 
   return (
     <ThemeProvider forceLightMode={true}>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes apple-curve {
+            0% { 
+              border-radius: 0 0 50px 50px;
+              width: 30px;
+              height: 15px;
+              background: transparent;
+              border: 3px solid #86efac;
+              border-top: none;
+            }
+          }
+          
+          @keyframes apple-circle {
+            0% { 
+              border-radius: 0 0 50px 50px;
+              width: 30px;
+              height: 15px;
+              background: transparent;
+              border: 3px solid #86efac;
+              border-top: none;
+            }
+            25% {
+              border-radius: 50%;
+              width: 24px;
+              height: 24px;
+              background: transparent;
+              border: 3px solid #86efac;
+            }
+            50% {
+              border-radius: 50%;
+              width: 24px;
+              height: 24px;
+              background: transparent;
+              border: 3px solid #86efac;
+            }
+            75% {
+              border-radius: 50%;
+              width: 24px;
+              height: 24px;
+              background: #86efac;
+              border: 3px solid #86efac;
+            }
+            100% {
+              border-radius: 50%;
+              width: 24px;
+              height: 24px;
+              background: #22c55e;
+              border: 3px solid #22c55e;
+              transform: scale(1.1);
+            }
+          }
+          
+          .apple-animation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 32px;
+          }
+          
+          .apple-shape {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #22c55e;
+            border: 3px solid #22c55e;
+            animation: apple-circle 1.5s ease-in-out;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          .apple-shape::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            opacity: 0;
+            animation: checkmark-appear 0.3s ease-in-out 1.2s forwards;
+          }
+          
+          @keyframes checkmark-appear {
+            to {
+              opacity: 1;
+            }
+          }
+        `
+      }} />
       
       <FacebookPixelTracker productId={productId || ''} />
       {product && (
@@ -2329,20 +2418,27 @@ const Checkout = () => {
                             <div className="bg-blue-50 rounded-lg p-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-600">Entidade:</span>
-                                <div className="flex items-center space-x-2">
-                                  <span className="font-mono font-bold text-lg text-gray-900">{referenceData.entity}</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(referenceData.entity);
-                                      setCopiedEntity(true);
-                                      setTimeout(() => setCopiedEntity(false), 2000);
-                                    }}
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    {copiedEntity ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                                  </Button>
+                                <div className="flex flex-col items-center space-y-1">
+                                  {copiedEntity && (
+                                    <div className="apple-animation">
+                                      <div className="apple-shape"></div>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center space-x-2">
+                                    <span className="font-mono font-bold text-lg text-gray-900">{referenceData.entity}</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(referenceData.entity);
+                                        setCopiedEntity(true);
+                                        setTimeout(() => setCopiedEntity(false), 2000);
+                                      }}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      {copiedEntity ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -2350,20 +2446,27 @@ const Checkout = () => {
                             <div className="bg-blue-50 rounded-lg p-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-600">Referência:</span>
-                                <div className="flex items-center space-x-2">
-                                  <span className="font-mono font-bold text-lg text-gray-900">{referenceData.referenceNumber}</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(referenceData.referenceNumber);
-                                      setCopiedReference(true);
-                                      setTimeout(() => setCopiedReference(false), 2000);
-                                    }}
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    {copiedReference ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                                  </Button>
+                                <div className="flex flex-col items-center space-y-1">
+                                  {copiedReference && (
+                                    <div className="apple-animation">
+                                      <div className="apple-shape"></div>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center space-x-2">
+                                    <span className="font-mono font-bold text-lg text-gray-900">{referenceData.referenceNumber}</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(referenceData.referenceNumber);
+                                        setCopiedReference(true);
+                                        setTimeout(() => setCopiedReference(false), 2000);
+                                      }}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      {copiedReference ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
