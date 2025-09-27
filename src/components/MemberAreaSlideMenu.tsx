@@ -206,7 +206,7 @@ export function MemberAreaSlideMenu({
           </ScrollArea>
 
           {/* Botão de Logout */}
-          {onLogout && <div className="mt-6 pt-4 border-t border-gray-700">
+          {onLogout && <div className="mt-6 pt-4">
               <Button onClick={() => {
             onLogout();
             setOpen(false);
