@@ -362,7 +362,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
 
   return (
     <>
-      <div className="h-16 bg-card border-b border-border z-20 flex items-center justify-between px-4 md:px-6 shadow-sm transition-colors duration-300">
+      <div className="h-16 bg-card border-b border-border/30 dark:border-border/20 z-20 flex items-center justify-between px-4 md:px-6 shadow-sm transition-colors duration-300">
         {/* Left side */}
         <div className="flex items-center gap-2">
           {/* Mobile menu button */}
@@ -450,7 +450,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
           <SellerNotificationCenter />
 
           {/* Divider */}
-          <div className="h-6 w-px bg-border mx-2" />
+          <div className="h-6 w-px bg-border/30 dark:bg-border/20 mx-2" />
 
           {/* User menu - Desktop Dropdown, Mobile Drawer */}
           {isMobile ? (
