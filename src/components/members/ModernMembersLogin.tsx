@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { LogIn, Mail, BookOpen } from 'lucide-react';
 import { useModernMembersAuth } from './ModernMembersAuth';
 import { supabase } from '@/integrations/supabase/client';
+import kambafyLogo from '@/assets/kambafy-logo-gray.svg';
 
 export default function ModernMembersLogin() {
   const { id: memberAreaId } = useParams();
@@ -78,11 +79,25 @@ export default function ModernMembersLogin() {
   // }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+      {/* Logo do Kambafy */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-8"
+      >
+        <img 
+          src={kambafyLogo} 
+          alt="Kambafy" 
+          className="h-12 w-auto opacity-60"
+        />
+      </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
         className="w-full max-w-sm"
       >
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 shadow-2xl">
