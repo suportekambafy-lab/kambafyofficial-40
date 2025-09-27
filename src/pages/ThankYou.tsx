@@ -688,7 +688,7 @@ const ThankYou = () => {
                 Acesso ao Produto
               </h3>
               
-              {orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod) ? (
+              {orderStatus === 'pending' && ['multibanco', 'transfer', 'reference'].includes(orderDetails.paymentMethod) ? (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-yellow-800 text-sm mb-2">
                     <strong>Pendente:</strong> O acesso estará disponível assim que a referência de pagamento for confirmada.
