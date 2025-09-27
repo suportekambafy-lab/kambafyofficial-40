@@ -1549,20 +1549,20 @@ export default function Members() {
                                 <div className="space-y-4">
                                   <div className="flex items-center justify-between">
                                     <Label>Orientação da Capa</Label>
-                                    <Select 
-                                      value={(module as any).cover_orientation || 'horizontal'} 
-                                      onValueChange={(value: 'horizontal' | 'vertical') =>
-                                        handleUpdateModuleOrientation(module.id, value)
-                                      }
-                                    >
-                                      <SelectTrigger className="w-48">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="horizontal">Horizontal (16:9)</SelectItem>
-                                        <SelectItem value="vertical">Vertical (9:16)</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                     <Select 
+                                       value={(module as any).cover_orientation || 'horizontal'} 
+                                       onValueChange={(value: 'horizontal' | 'vertical') =>
+                                         handleUpdateModuleOrientation(module.id, value)
+                                       }
+                                     >
+                                       <SelectTrigger className="w-48">
+                                         <SelectValue />
+                                       </SelectTrigger>
+                                       <SelectContent className="z-[100]" style={{ zIndex: 100 }}>
+                                         <SelectItem value="horizontal">Horizontal (16:9)</SelectItem>
+                                         <SelectItem value="vertical">Vertical (9:16)</SelectItem>
+                                       </SelectContent>
+                                     </Select>
                                   </div>
                                   
                                   <ImageUploader
@@ -1671,7 +1671,7 @@ export default function Members() {
                   <SelectTrigger>
                     <SelectValue placeholder="Escolha a orientação" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[100]" style={{ zIndex: 100 }}>
                     <SelectItem value="horizontal">Horizontal (16:9) - Estilo Netflix</SelectItem>
                     <SelectItem value="vertical">Vertical (9:16) - Estilo Stories</SelectItem>
                   </SelectContent>
@@ -1687,7 +1687,7 @@ export default function Members() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[100]" style={{ zIndex: 100 }}>
                     <SelectItem value="draft">Rascunho</SelectItem>
                     <SelectItem value="published">Publicado</SelectItem>
                     <SelectItem value="archived">Arquivado</SelectItem>
@@ -1787,7 +1787,7 @@ export default function Members() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um módulo" />
                     </SelectTrigger>
-                     <SelectContent className="z-[60] bg-background border shadow-lg">
+                     <SelectContent className="z-[100]" style={{ zIndex: 100 }}>
                        <SelectItem value="none">Sem módulo</SelectItem>
                        {modules
                          .filter(m => m.status === 'published')
@@ -1869,7 +1869,7 @@ export default function Members() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="z-[60] bg-background border shadow-lg">
+                  <SelectContent className="z-[100]" style={{ zIndex: 100 }}>
                     <SelectItem value="draft">Rascunho</SelectItem>
                     <SelectItem value="published">Publicado</SelectItem>
                     <SelectItem value="archived">Arquivado</SelectItem>
@@ -1922,7 +1922,7 @@ export default function Members() {
                               )}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 z-[60] bg-background border shadow-lg" align="start">
+                          <PopoverContent className="w-auto p-0 z-[100]" style={{ zIndex: 100 }} align="start">
                            <CalendarComponent
                              mode="single"
                              selected={formData.scheduled_at || undefined}
