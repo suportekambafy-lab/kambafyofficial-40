@@ -74,6 +74,7 @@ export default function ModernMembersArea() {
   } = useModernMembersAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
@@ -170,6 +171,7 @@ export default function ModernMembersArea() {
     console.log('📥 ModernMembersArea: Carregando conteúdo...');
     const loadContent = async () => {
       try {
+        // NÃO usar setIsLoading - nunca mostrar loading
 
         // Carregar lessons
         const { data: lessonsData, error: lessonsError } = await supabase
@@ -235,6 +237,7 @@ export default function ModernMembersArea() {
       } catch (error) {
         console.error('❌ ModernMembersArea: Erro inesperado:', error);
       }
+      // NÃO fazer setIsLoading(false) - nunca usar loading
     };
     loadContent();
   }, [memberAreaId]); // Apenas memberAreaId como dependência
@@ -247,11 +250,10 @@ export default function ModernMembersArea() {
       setSidebarVisible(true);
     }
   }, [selectedLesson, isMobile]);
-  const handleLogout = async () => {
-    console.log('🚪 Fazendo logout...');
-    await logout();
-    // Redirecionar imediatamente para login sem delay
-    window.location.replace(`/members/login/${memberAreaId}`);
+  const handleLogout = () => {
+    logout();
+    // Redirecionar para login da área de membros
+    window.location.href = `/members/login/${memberAreaId}`;
   };
   const handleLessonClick = (lesson: Lesson) => {
     if (!isLessonAccessible(lesson)) {
@@ -325,13 +327,12 @@ export default function ModernMembersArea() {
     selectedLesson: !!selectedLesson
   });
 
-  // SEMPRE renderizar o conteúdo - remover completamente verificações de loading
   return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
       <MemberAreaSlideMenu lessons={lessons} modules={modules} lessonProgress={lessonProgress} getCourseProgress={getCourseProgress} getModuleProgress={getModuleProgress} getModuleStats={getModuleStats} totalDuration={totalDuration} completedLessons={completedLessons} onLessonSelect={setSelectedLesson} onLogout={handleLogout} />
       
-      {/* Hero Section - SEMPRE MOSTRAR quando não há aula selecionada */}
-      {!selectedLesson && <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden min-h-screen flex flex-col">
+      {/* Hero Section - Ocultar quando aula selecionada */}
+      {!selectedLesson && <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:40px_40px]" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
@@ -362,18 +363,18 @@ export default function ModernMembersArea() {
             </motion.div>
 
             {/* Course Hero */}
-            <motion.div className="text-center mb-12 mt-20 sm:mt-8 relative z-10">
+            <motion.div className="text-center mb-12 mt-20 sm:mt-8">
               <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4">
                 <Trophy className="h-3 w-3 mr-1" />
                 Curso Premium
               </Badge>
               
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                {currentMemberArea?.hero_title || currentMemberArea?.name || 'Área de Membros'}
+              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                {currentMemberArea?.hero_title || currentMemberArea?.name}
               </h1>
               
               <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-                {currentMemberArea?.hero_description || currentMemberArea?.description || 'Bem-vindo à sua área de membros exclusiva'}
+                {currentMemberArea?.hero_description || currentMemberArea?.description}
               </p>
             </motion.div>
           </div>

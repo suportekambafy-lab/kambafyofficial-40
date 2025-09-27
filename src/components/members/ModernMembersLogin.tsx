@@ -42,17 +42,19 @@ export default function ModernMembersLogin() {
 
     setIsSubmitting(true);
     
-    // Delay visual no botão (2.3 segundos) para dar feedback ao usuário
-    await new Promise(resolve => setTimeout(resolve, 2300));
+    // Aguardar um pouco mais para dar tempo da verificação
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     const success = await login(email, password);
     
     if (success) {
-      // Redirecionar imediatamente sem delay adicional
-      window.location.replace(`/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(email)}`);
-    } else {
-      setIsSubmitting(false);
+      // Aguardar mais um pouco antes de redirecionar
+      await new Promise(resolve => setTimeout(resolve, 800));
+      // Redirecionar diretamente sem páginas intermediárias
+      window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(email)}`;
     }
+    
+    setIsSubmitting(false);
   };
 
   // Remover completamente a tela de loading/verificando acesso
