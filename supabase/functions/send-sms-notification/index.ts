@@ -1,5 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
+// Twilio credentials
+const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID');
+const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN');
+
+// Infobip credentials (fallback)
 const INFOBIP_API_KEY = Deno.env.get('INFOBIP_API_KEY');
 const INFOBIP_BASE_URL = Deno.env.get('INFOBIP_BASE_URL');
 
@@ -30,17 +35,20 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log('[SMS-NOTIFICATION] Infobip credentials check:', {
-      hasApiKey: !!INFOBIP_API_KEY,
-      hasBaseUrl: !!INFOBIP_BASE_URL,
-      apiKeyLength: INFOBIP_API_KEY?.length || 0,
-      baseUrl: INFOBIP_BASE_URL,
-      formattedUrl: INFOBIP_BASE_URL ? (INFOBIP_BASE_URL.startsWith('http') ? INFOBIP_BASE_URL : `https://${INFOBIP_BASE_URL}`) : 'N/A'
+    // Check available SMS providers
+    const hasTwilio = !!(TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN);
+    const hasInfobip = !!(INFOBIP_API_KEY && INFOBIP_BASE_URL);
+    
+    console.log('[SMS-NOTIFICATION] SMS Provider availability:', {
+      twilio: hasTwilio,
+      infobip: hasInfobip,
+      twilioAccountSidLength: TWILIO_ACCOUNT_SID?.length || 0,
+      infobipApiKeyLength: INFOBIP_API_KEY?.length || 0
     });
     
-    if (!INFOBIP_API_KEY || !INFOBIP_BASE_URL) {
-      console.error('[SMS-NOTIFICATION] Infobip API credentials not configured');
-      throw new Error('Infobip API credentials not configured');
+    if (!hasTwilio && !hasInfobip) {
+      console.error('[SMS-NOTIFICATION] No SMS provider configured');
+      throw new Error('No SMS provider configured. Please configure either Twilio or Infobip credentials.');
     }
 
     const requestData: SMSNotificationRequest = await req.json();
@@ -72,69 +80,18 @@ const handler = async (req: Request): Promise<Response> => {
       finalMessage = `Lembrete de pagamento\n\nOla ${requestData.customerName || 'Cliente'},\n\nSeu pagamento esta pendente.\n\nEntidade: ${requestData.entity || 'N/A'}\nReferencia: ${requestData.referenceNumber || 'N/A'}\nValor: ${requestData.amount || 'N/A'} KZ\n\nComplete seu pagamento para ter acesso ao produto "${requestData.productName}".`;
     }
 
-    // Preparar payload para Infobip SMS API
-    const smsPayload = {
-      messages: [
-        {
-          destinations: [
-            {
-              to: phoneNumber
-            }
-          ],
-          from: requestData.from || 'Kambafy',
-          text: finalMessage
-        }
-      ]
-    };
-
-    // Preparar URL base para Infobip
-    const baseUrl = INFOBIP_BASE_URL?.startsWith('http') ? INFOBIP_BASE_URL : `https://${INFOBIP_BASE_URL}`;
-
-    console.log('[SMS-NOTIFICATION] Sending SMS via Infobip:', JSON.stringify(smsPayload, null, 2));
-    console.log('[SMS-NOTIFICATION] Full URL:', `${baseUrl}/sms/2/text/advanced`);
-    console.log('[SMS-NOTIFICATION] Headers:', {
-      'Authorization': `App ${INFOBIP_API_KEY}`,
-      'Content-Type': 'application/json'
-    });
-
-    // Enviar SMS via Infobip
-    const infobipResponse = await fetch(`${baseUrl}/sms/2/text/advanced`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `App ${INFOBIP_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(smsPayload)
-    });
-
-    const responseData = await infobipResponse.json();
-    console.log('[SMS-NOTIFICATION] Infobip response:', JSON.stringify(responseData, null, 2));
-
-    if (!infobipResponse.ok) {
-      console.error('[SMS-NOTIFICATION] Infobip API error:', responseData);
-      throw new Error(`Infobip API error: ${responseData.requestError?.serviceException?.text || 'Unknown error'}`);
-    }
-
-    // Verificar se a mensagem foi enviada com sucesso
-    const message = responseData.messages?.[0];
-    console.log('[SMS-NOTIFICATION] First message response:', JSON.stringify(message, null, 2));
+    // Send SMS using available provider (Twilio preferred)
+    let smsResponse;
     
-    if (message?.status?.groupId !== 1) {
-      console.error('[SMS-NOTIFICATION] Message failed - Status Group ID:', message?.status?.groupId);
-      console.error('[SMS-NOTIFICATION] Message status:', JSON.stringify(message?.status, null, 2));
-      console.error('[SMS-NOTIFICATION] Full message object:', JSON.stringify(message, null, 2));
-      throw new Error(`Message failed: ${message?.status?.description || 'Unknown error'}`);
+    if (hasTwilio) {
+      console.log('[SMS-NOTIFICATION] Using Twilio provider');
+      smsResponse = await sendViaTwilio(phoneNumber, finalMessage, requestData.from);
+    } else {
+      console.log('[SMS-NOTIFICATION] Using Infobip provider');
+      smsResponse = await sendViaInfobip(phoneNumber, finalMessage, requestData.from);
     }
 
-    console.log('[SMS-NOTIFICATION] SMS sent successfully via Infobip - Message ID:', message?.messageId);
-    console.log('[SMS-NOTIFICATION] Message status:', JSON.stringify(message?.status, null, 2));
-
-    return new Response(JSON.stringify({
-      success: true,
-      messageId: message?.messageId,
-      status: message?.status,
-      infobipResponse: responseData
-    }), {
+    return new Response(JSON.stringify(smsResponse), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -156,5 +113,125 @@ const handler = async (req: Request): Promise<Response> => {
     });
   }
 };
+
+// Twilio SMS sender
+async function sendViaTwilio(phoneNumber: string, message: string, from?: string): Promise<any> {
+  try {
+    console.log('[SMS-NOTIFICATION] Sending SMS via Twilio to:', phoneNumber);
+    
+    // Create basic auth header for Twilio
+    const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
+    
+    // Prepare form data for Twilio API
+    const formData = new URLSearchParams();
+    formData.append('To', phoneNumber);
+    formData.append('From', from || '+1234567890'); // You'll need to use your Twilio phone number
+    formData.append('Body', message);
+
+    console.log('[SMS-NOTIFICATION] Twilio request:', {
+      to: phoneNumber,
+      from: from || '+1234567890',
+      bodyLength: message.length
+    });
+    
+    const twilioResponse = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: formData
+    });
+
+    const responseData = await twilioResponse.json();
+    console.log('[SMS-NOTIFICATION] Twilio response:', JSON.stringify(responseData, null, 2));
+
+    if (!twilioResponse.ok) {
+      console.error('[SMS-NOTIFICATION] Twilio API error:', responseData);
+      throw new Error(`Twilio API error: ${responseData.message || 'Unknown error'}`);
+    }
+
+    console.log('[SMS-NOTIFICATION] SMS sent successfully via Twilio - Message SID:', responseData.sid);
+
+    return {
+      success: true,
+      provider: 'twilio',
+      messageId: responseData.sid,
+      status: responseData.status,
+      twilioResponse: responseData
+    };
+  } catch (error: any) {
+    console.error('[SMS-NOTIFICATION] Twilio error:', error);
+    throw error;
+  }
+}
+
+// Infobip SMS sender (fallback)
+async function sendViaInfobip(phoneNumber: string, messageText: string, from?: string): Promise<any> {
+  try {
+    console.log('[SMS-NOTIFICATION] Sending SMS via Infobip to:', phoneNumber);
+    
+    // Preparar payload para Infobip SMS API
+    const smsPayload: any = {
+      messages: [
+        {
+          destinations: [
+            {
+              to: phoneNumber
+            }
+          ],
+          from: from || 'Kambafy',
+          text: messageText
+        }
+      ]
+    };
+
+    // Preparar URL base para Infobip
+    const baseUrl = INFOBIP_BASE_URL?.startsWith('http') ? INFOBIP_BASE_URL : `https://${INFOBIP_BASE_URL}`;
+
+    console.log('[SMS-NOTIFICATION] Sending SMS via Infobip:', JSON.stringify(smsPayload, null, 2));
+    console.log('[SMS-NOTIFICATION] Full URL:', `${baseUrl}/sms/2/text/advanced`);
+
+    // Enviar SMS via Infobip
+    const infobipResponse: any = await fetch(`${baseUrl}/sms/2/text/advanced`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `App ${INFOBIP_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(smsPayload)
+    });
+
+    const responseData: any = await infobipResponse.json();
+    console.log('[SMS-NOTIFICATION] Infobip response:', JSON.stringify(responseData, null, 2));
+
+    if (!infobipResponse.ok) {
+      console.error('[SMS-NOTIFICATION] Infobip API error:', responseData);
+      throw new Error(`Infobip API error: ${responseData.requestError?.serviceException?.text || 'Unknown error'}`);
+    }
+
+    // Verificar se a mensagem foi enviada com sucesso
+    const messageResponse: any = responseData.messages?.[0];
+    console.log('[SMS-NOTIFICATION] First message response:', JSON.stringify(messageResponse, null, 2));
+    
+    if (messageResponse?.status?.groupId !== 1) {
+      console.error('[SMS-NOTIFICATION] Message failed - Status Group ID:', messageResponse?.status?.groupId);
+      throw new Error(`Message failed: ${messageResponse?.status?.description || 'Unknown error'}`);
+    }
+
+    console.log('[SMS-NOTIFICATION] SMS sent successfully via Infobip - Message ID:', messageResponse?.messageId);
+
+    return {
+      success: true,
+      provider: 'infobip',
+      messageId: messageResponse?.messageId,
+      status: messageResponse?.status,
+      infobipResponse: responseData
+    };
+  } catch (error: any) {
+    console.error('[SMS-NOTIFICATION] Infobip error:', error);
+    throw error;
+  }
+}
 
 serve(handler);
