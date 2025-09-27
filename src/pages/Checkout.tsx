@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, memo, lazy, Suspense, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Shield, Check, AlertTriangle, CheckCircle, Wallet, Receipt } from "lucide-react";
+import { Shield, Check, AlertTriangle, CheckCircle, Wallet, Receipt, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -2335,7 +2335,7 @@ const Checkout = () => {
                                     onClick={() => navigator.clipboard.writeText(referenceData.entity)}
                                     className="h-6 w-6 p-0"
                                   >
-                                    <Receipt className="h-3 w-3" />
+                                    <Copy className="h-3 w-3" />
                                   </Button>
                                 </div>
                               </div>
@@ -2352,7 +2352,7 @@ const Checkout = () => {
                                     onClick={() => navigator.clipboard.writeText(referenceData.referenceNumber)}
                                     className="h-6 w-6 p-0"
                                   >
-                                    <Receipt className="h-3 w-3" />
+                                    <Copy className="h-3 w-3" />
                                   </Button>
                                 </div>
                               </div>
@@ -2367,7 +2367,20 @@ const Checkout = () => {
                           </div>
 
                           <Button 
-                            onClick={() => navigate(`/obrigado?order_id=${referenceData.orderId}&status=pending`)}
+                            onClick={() => {
+                              const params = new URLSearchParams({
+                                order_id: referenceData.orderId,
+                                status: 'pending',
+                                payment_method: 'reference',
+                                reference_number: referenceData.referenceNumber,
+                                entity: referenceData.entity,
+                                due_date: referenceData.dueDate,
+                                amount: referenceData.amount.toString(),
+                                currency: referenceData.currency,
+                                product_name: referenceData.productName
+                              });
+                              navigate(`/obrigado?${params.toString()}`);
+                            }}
                             className="w-full mt-4"
                           >
                             Finalizar e continuar
