@@ -1074,9 +1074,10 @@ export default function Members() {
         </div>
 
         <Tabs defaultValue="conteudo" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsList className="grid w-full grid-cols-4 h-auto">
             <TabsTrigger value="conteudo" className="text-xs md:text-sm py-2">Conteúdo</TabsTrigger>
             <TabsTrigger value="cursos" className="text-xs md:text-sm py-2">Cursos</TabsTrigger>
+            <TabsTrigger value="alunos" className="text-xs md:text-sm py-2">Alunos</TabsTrigger>
             <TabsTrigger value="configuracoes" className="text-xs md:text-sm py-2">Configurações</TabsTrigger>
           </TabsList>
           
@@ -1347,6 +1348,13 @@ export default function Members() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="alunos" className="space-y-6">
+            <StudentsManager 
+              memberAreaId={selectedArea.id} 
+              memberAreaName={selectedArea.name}
+            />
           </TabsContent>
 
           <TabsContent value="configuracoes">
