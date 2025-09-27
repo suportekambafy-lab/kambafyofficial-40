@@ -78,14 +78,14 @@ export function ModernLessonViewer({
   const totalSeconds = lesson.duration;
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6">
       {/* Video Player */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="bg-black">
+        <div className="overflow-hidden bg-black">
           {lesson.video_url || lesson.bunny_embed_url ? (
             <VideoPlayer
               src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''}
