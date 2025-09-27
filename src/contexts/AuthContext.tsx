@@ -298,50 +298,99 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    console.log('🚀 Iniciando login...');
+    
+    try {
+      // Primeiro tentar login normal
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-    // Verificar se o email não foi confirmado
-    if (!error && data.user && !data.user.email_confirmed_at) {
-      // Fazer logout imediatamente
-      await supabase.auth.signOut();
-      
-      // Retornar erro personalizado
-      const emailNotConfirmedError = {
-        message: "Email não confirmado. Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.",
-        code: "email_not_confirmed"
-      };
-      
-      return { error: emailNotConfirmedError as any };
-    }
-
-    // Verificar se o usuário está banido
-    if (!error && data.user) {
-      try {
-        console.log('🔍 Verificando status de banimento no login para:', data.user.id);
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('banned, ban_reason, full_name, email')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
+      // Se login normal funcionou
+      if (!error && data.user && data.session) {
+        console.log('✅ Login normal bem-sucedido');
         
-        if (profileError) {
-          console.error('❌ Erro ao buscar profile no login:', profileError);
-        } else if (profile?.banned) {
-          console.log('🚫 Usuário banido no login:', profile.ban_reason);
-          setIsBanned(true);
-          setBanReason(profile.ban_reason || 'Motivo não especificado');
-          setUserProfile(profile);
-          // Não fazer logout, permitir que vejam a tela de contestação
-        }
-      } catch (error) {
-        console.error('❌ Erro ao verificar status de banimento no login:', error);
+        // Verificar se o usuário está banido
+        await checkUserBanStatus(data.user);
+        
+        return { error: null, data };
       }
-    }
 
-    return { error, data };
+      // Se o erro é de email não confirmado, tentar login customizado
+      if (error?.message?.includes('Email not confirmed')) {
+        console.log('📧 Email não confirmado, tentando login customizado...');
+        
+        try {
+          const { data: customData, error: customError } = await supabase.functions.invoke('custom-auth-login', {
+            body: {
+              email: email.trim().toLowerCase(),
+              password,
+            },
+          });
+
+          if (customError) {
+            console.error('❌ Erro no login customizado:', customError);
+            return { 
+              error: {
+                message: "Email não confirmado. Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.",
+                code: "email_not_confirmed"
+              } as any
+            };
+          }
+
+          if (customData.success && customData.session) {
+            console.log('✅ Login customizado bem-sucedido');
+            
+            // Atualizar estado manualmente já que não passará pelo listener normal
+            setSession(customData.session);
+            setUser(customData.user);
+            
+            // Verificar se o usuário está banido
+            await checkUserBanStatus(customData.user);
+            
+            toast({
+              title: "Login realizado com sucesso!",
+              description: "Bem-vindo de volta.",
+            });
+
+            return { error: null, data: customData };
+          }
+        } catch (customError) {
+          console.error('❌ Erro inesperado no login customizado:', customError);
+        }
+      }
+
+      // Retornar erro original se não conseguiu resolver
+      return { error, data };
+      
+    } catch (error) {
+      console.error('❌ Erro inesperado no login:', error);
+      return { error: error as AuthError };
+    }
+  };
+
+  const checkUserBanStatus = async (user: User) => {
+    try {
+      console.log('🔍 Verificando status de banimento no login para:', user.id);
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('banned, ban_reason, full_name, email')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (profileError) {
+        console.error('❌ Erro ao buscar profile no login:', profileError);
+      } else if (profile?.banned) {
+        console.log('🚫 Usuário banido no login:', profile.ban_reason);
+        setIsBanned(true);
+        setBanReason(profile.ban_reason || 'Motivo não especificado');
+        setUserProfile(profile);
+        // Não fazer logout, permitir que vejam a tela de contestação
+      }
+    } catch (error) {
+      console.error('❌ Erro ao verificar status de banimento no login:', error);
+    }
   };
 
   const signOut = async () => {

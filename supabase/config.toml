@@ -21,6 +21,12 @@ verify_jwt = false
 [functions.member-area-logout]
 verify_jwt = false
 
+[functions.member-area-custom-login]
+verify_jwt = false
+
+[functions.custom-auth-login]
+verify_jwt = false
+
 [functions.update-order-status]
 verify_jwt = false
 
