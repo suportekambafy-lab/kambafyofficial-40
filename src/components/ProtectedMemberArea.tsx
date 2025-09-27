@@ -138,6 +138,77 @@ export default function ProtectedMemberArea({ children }: ProtectedMemberAreaPro
     checkAccess();
   }, [user, areaId, authLoading]);
 
-  // Se chegou até aqui, renderizar diretamente a área
+  // Não mostrar tela de loading - redirecionar diretamente para área
+  if (authLoading || loading) {
+    return null;
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <Card className="max-w-md mx-auto bg-gray-800 border-gray-700">
+          <CardContent className="p-8 text-center">
+            <Lock className="w-16 h-16 mx-auto mb-4 text-red-400" />
+            <h2 className="text-2xl font-bold mb-4 text-white">Acesso Restrito</h2>
+            <p className="text-gray-300 mb-6">
+              Você precisa estar logado para acessar esta área de membros.
+            </p>
+            <div className="space-y-3">
+              <Button 
+                onClick={() => navigate('/auth')}
+                className="w-full bg-checkout-green hover:bg-checkout-green/90"
+              >
+                Fazer Login
+              </Button>
+              <Button 
+                onClick={() => navigate('/')}
+                variant="outline"
+                className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar ao Início
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (hasAccess === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <Card className="max-w-md mx-auto bg-gray-800 border-gray-700">
+          <CardContent className="p-8 text-center">
+            <Lock className="w-16 h-16 mx-auto mb-4 text-red-400" />
+            <h2 className="text-2xl font-bold mb-4 text-white">Acesso Negado</h2>
+            <p className="text-gray-300 mb-2">
+              Você não tem acesso a <strong>{memberAreaName || "esta área de membros"}</strong>.
+            </p>
+            <p className="text-gray-400 text-sm mb-6">
+              Para acessar este conteúdo, você precisa comprar o curso relacionado.
+            </p>
+            <div className="space-y-3">
+              <Button 
+                onClick={() => navigate('/minhas-compras')}
+                className="w-full bg-checkout-green hover:bg-checkout-green/90"
+              >
+                Ver Minhas Compras
+              </Button>
+              <Button 
+                onClick={() => navigate('/')}
+                variant="outline"
+                className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar ao Início
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }
