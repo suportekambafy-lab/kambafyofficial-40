@@ -59,14 +59,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Phone number is required');
     }
 
-    // Formatar número de telefone para Infobip
-    let phoneNumber = requestData.to.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
-    
-    // Se não começar com código do país, assumir Angola (+244)
-    if (!phoneNumber.startsWith('244') && phoneNumber.length === 9) {
-      phoneNumber = '244' + phoneNumber;
-    }
-
+    // Formatar número de telefone para formato internacional
+    let phoneNumber = formatPhoneNumber(requestData.to);
     console.log('[SMS-NOTIFICATION] Formatted phone:', phoneNumber);
 
     // Preparar mensagem baseada no tipo
@@ -122,15 +116,18 @@ async function sendViaTwilio(phoneNumber: string, message: string, from?: string
     // Create basic auth header for Twilio
     const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
     
+    // Garantir que o número tenha formato internacional (+XXXXXXXXXXXX)
+    const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+' + phoneNumber;
+    
     // Prepare form data for Twilio API
     const formData = new URLSearchParams();
-    formData.append('To', phoneNumber);
-    formData.append('From', from || '+1234567890'); // You'll need to use your Twilio phone number
+    formData.append('To', formattedPhone);
+    formData.append('From', from || '+12345678901'); // Substitua pelo seu número Twilio verificado
     formData.append('Body', message);
 
     console.log('[SMS-NOTIFICATION] Twilio request:', {
-      to: phoneNumber,
-      from: from || '+1234567890',
+      to: formattedPhone,
+      from: from || '+12345678901',
       bodyLength: message.length
     });
     
@@ -232,6 +229,62 @@ async function sendViaInfobip(phoneNumber: string, messageText: string, from?: s
     console.error('[SMS-NOTIFICATION] Infobip error:', error);
     throw error;
   }
+}
+
+// Função para formatar número de telefone no formato internacional
+function formatPhoneNumber(phoneInput: string): string {
+  // Remove todos os caracteres não numéricos exceto o +
+  let cleanNumber = phoneInput.replace(/[^\d+]/g, '');
+  
+  // Se já começa com +, use como está
+  if (cleanNumber.startsWith('+')) {
+    return cleanNumber;
+  }
+  
+  // Remove + se existir no meio
+  cleanNumber = cleanNumber.replace(/\+/g, '');
+  
+  // Detectar e formatar baseado no comprimento e padrões
+  if (cleanNumber.length === 9) {
+    // Número local de 9 dígitos - assumir Angola (+244)
+    return '+244' + cleanNumber;
+  } else if (cleanNumber.length === 10) {
+    // Pode ser Brasil (+55), Portugal (+351), etc.
+    // Vamos assumir Brasil por padrão
+    return '+55' + cleanNumber;
+  } else if (cleanNumber.length === 11) {
+    // Brasil com DDD (11 dígitos)
+    return '+55' + cleanNumber;
+  } else if (cleanNumber.length === 12) {
+    // Já tem código do país de 3 dígitos (ex: 244xxxxxxxx)
+    if (cleanNumber.startsWith('244')) {
+      return '+' + cleanNumber;
+    } else if (cleanNumber.startsWith('351')) {
+      // Portugal
+      return '+' + cleanNumber;
+    } else if (cleanNumber.startsWith('258')) {
+      // Moçambique
+      return '+' + cleanNumber;
+    }
+    // Padrão: assumir que já tem código de país
+    return '+' + cleanNumber;
+  } else if (cleanNumber.length === 13) {
+    // Já tem código do país de 2 dígitos (ex: 55xxxxxxxxxxx)
+    return '+' + cleanNumber;
+  }
+  
+  // Se não conseguir detectar, tentar alguns padrões comuns
+  if (cleanNumber.startsWith('244') || cleanNumber.startsWith('351') || cleanNumber.startsWith('258')) {
+    return '+' + cleanNumber;
+  }
+  
+  // Fallback: assumir Angola se número local
+  if (cleanNumber.length >= 8 && cleanNumber.length <= 9) {
+    return '+244' + cleanNumber;
+  }
+  
+  // Se tudo falhar, retornar com + se não tiver
+  return cleanNumber.startsWith('+') ? cleanNumber : '+' + cleanNumber;
 }
 
 serve(handler);
