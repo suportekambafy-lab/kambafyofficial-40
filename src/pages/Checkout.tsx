@@ -1605,7 +1605,7 @@ const Checkout = () => {
           } : null,
           baseProductPrice: product.price,
           paymentMethod: selectedPayment,
-          paymentStatus: insertedOrder?.payment_status || 'completed',
+          paymentStatus: selectedPayment === 'reference' ? 'pending' : (insertedOrder?.payment_status || 'completed'),
           ...(selectedPayment === 'reference' && insertedOrder && {
             referenceData: {
               referenceNumber: insertedOrder.reference_number,
