@@ -60,8 +60,8 @@ export function ModernLessonViewer({
   // lesson.duration está em segundos
   const totalSeconds = lesson.duration;
   return (
-    <div className="space-y-6 bg-zinc-950">
-      {/* Video Player */}
+    <div className="space-y-4 bg-zinc-950">
+      {/* Video Player - Larger size */}
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }} 
         animate={{ opacity: 1, scale: 1 }} 
@@ -69,7 +69,7 @@ export function ModernLessonViewer({
       >
         <div className="relative overflow-hidden bg-black rounded-lg border border-gray-800">
           {lesson.video_url || lesson.bunny_embed_url ? (
-            <>
+            <div className="aspect-video min-h-[60vh]">
               <VideoPlayer 
                 src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''} 
                 embedUrl={lesson.bunny_embed_url || (lesson.video_url?.includes('mediadelivery.net/embed') ? lesson.video_url : undefined)} 
@@ -92,32 +92,9 @@ export function ModernLessonViewer({
                 onPlay={() => setIsPlaying(true)} 
                 onPause={() => setIsPlaying(false)} 
               />
-              
-              {/* Navigation Arrows */}
-              {prevLesson && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onNavigateLesson(prevLesson.id)}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 border-0 rounded-lg backdrop-blur-sm transition-all duration-200 z-10"
-                >
-                  <ChevronLeft className="h-6 w-6 text-white" />
-                </Button>
-              )}
-              
-              {nextLesson && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onNavigateLesson(nextLesson.id)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 border-0 rounded-lg backdrop-blur-sm transition-all duration-200 z-10"
-                >
-                  <ChevronRight className="h-6 w-6 text-white" />
-                </Button>
-              )}
-            </>
+            </div>
           ) : (
-            <div className="aspect-video bg-black relative">
+            <div className="aspect-video min-h-[60vh] bg-black relative">
               {/* Video placeholder para aulas sem vídeo */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
@@ -137,7 +114,7 @@ export function ModernLessonViewer({
         initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ delay: 0.2 }}
-        className="border-t border-gray-800 pt-6"
+        className="border-t border-gray-800 pt-4"
       >
         <LessonContentTabs lesson={lesson} />
       </motion.div>
