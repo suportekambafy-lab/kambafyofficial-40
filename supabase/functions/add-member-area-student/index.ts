@@ -66,32 +66,9 @@ const handler = async (req: Request): Promise<Response> => {
         throw createUserError;
       }
 
-      // Forçar confirmação do email usando SQL direto
+      // Em vez de forçar confirmação, vamos usar login customizado
       if (newUser.user) {
-        // Primeiro tentar via admin API
-        const { error: confirmError } = await supabase.auth.admin.updateUserById(
-          newUser.user.id,
-          { 
-            email_confirm: true
-          }
-        );
-        
-        if (confirmError) {
-          console.error('❌ Error confirming email via admin API:', confirmError);
-        } else {
-          console.log('✅ Email confirmed via admin API');
-        }
-
-        // Forçar via SQL como backup
-        const { error: sqlError } = await supabase.rpc('admin_confirm_user_email', {
-          user_id: newUser.user.id
-        });
-
-        if (sqlError) {
-          console.error('❌ Error confirming email via SQL:', sqlError);
-        } else {
-          console.log('✅ Email confirmed via SQL backup');
-        }
+        console.log('✅ User created - will use custom login flow');
       }
 
       console.log('✅ User created successfully:', newUser.user?.email);
@@ -120,10 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       const { error: updatePasswordError } = await supabase.auth.admin.updateUserById(
         existingUser.id,
-        { 
-          password: temporaryPassword,
-          email_confirm: true
-        }
+        { password: temporaryPassword }
       );
 
       if (updatePasswordError) {
@@ -131,7 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
         throw updatePasswordError;
       }
 
-      console.log('✅ User password updated and email confirmed successfully');
+      console.log('✅ User password updated successfully');
       isNewAccount = true; // Tratamos como nova conta para envio de credenciais
       passwordToReturn = temporaryPassword;
       

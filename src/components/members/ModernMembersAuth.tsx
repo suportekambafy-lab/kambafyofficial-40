@@ -125,34 +125,95 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      console.log('🚀 ModernAuth: Iniciando login com Supabase Auth...', { email });
+      console.log('🚀 ModernAuth: Iniciando login customizado...', { email });
       setIsLoading(true);
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Obter memberAreaId da URL atual
+      const urlPath = window.location.pathname;
+      const memberAreaId = urlPath.split('/').pop();
+
+      if (!memberAreaId) {
+        throw new Error('ID da área de membros não encontrado');
+      }
+
+      // Tentar login customizado primeiro
+      const { data, error } = await supabase.functions.invoke('member-area-custom-login', {
+        body: {
+          memberAreaId,
+          email,
+          password,
+        },
       });
 
       if (error) {
-        console.error('❌ ModernAuth: Erro no login:', error);
+        console.error('❌ ModernAuth: Erro no login customizado:', error);
         toast({
           title: 'Erro no login',
-          message: error.message === 'Invalid login credentials' 
-            ? 'Email ou senha incorretos' 
-            : 'Erro ao fazer login. Tente novamente.',
+          message: 'Email ou senha incorretos',
           variant: 'error'
         });
         return false;
       }
 
-      console.log('✅ ModernAuth: Login realizado com sucesso');
-      toast({
-        title: 'Login realizado com sucesso!',
-        message: 'Bem-vindo à área de membros.',
-        variant: 'success'
-      });
+      if (data.success) {
+        console.log('✅ ModernAuth: Login customizado realizado com sucesso');
+        
+        // Para login customizado, simular user/session com os dados retornados
+        const customUser = {
+          id: crypto.randomUUID(),
+          email: email,
+          app_metadata: { provider: 'email', providers: ['email'] },
+          user_metadata: { full_name: data.studentName },
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+          confirmation_sent_at: null,
+          recovery_sent_at: null,
+          email_change_sent_at: null,
+          new_email: null,
+          invited_at: null,
+          action_link: null,
+          email_confirmed_at: new Date().toISOString(),
+          phone_confirmed_at: null,
+          confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          role: 'authenticated',
+          updated_at: new Date().toISOString(),
+          identities: [],
+          factors: [],
+          phone: null,
+          new_phone: null,
+          phone_change_sent_at: null,
+          email_change_token_new: null,
+          email_change_token_current: null,
+          phone_change_token: null,
+          recovery_token: null,
+          email_change_confirm_status: 0,
+          banned_until: null,
+          deleted_at: null
+        } as unknown as User;
+        
+        const customSession = {
+          user: customUser,
+          access_token: data.sessionToken,
+          refresh_token: data.sessionToken,
+          expires_in: 86400,
+          expires_at: Math.floor(new Date(data.expiresAt).getTime() / 1000),
+          token_type: 'bearer'
+        } as Session;
+        
+        setUser(customUser);
+        setSession(customSession);
+        
+        toast({
+          title: 'Login realizado com sucesso!',
+          message: 'Bem-vindo à área de membros.',
+          variant: 'success'
+        });
 
-      return true;
+        return true;
+      }
+
+      return false;
     } catch (error) {
       console.error('❌ ModernAuth: Erro inesperado no login:', error);
       toast({

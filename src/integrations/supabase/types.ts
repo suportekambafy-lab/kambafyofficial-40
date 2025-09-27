@@ -2122,6 +2122,10 @@ export type Database = {
           | { admin_id?: string; product_id: string }
         Returns: undefined
       }
+      admin_confirm_user_email: {
+        Args: { user_id: string }
+        Returns: undefined
+      }
       admin_process_withdrawal_request: {
         Args: {
           admin_id?: string
