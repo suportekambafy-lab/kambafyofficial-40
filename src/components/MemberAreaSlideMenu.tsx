@@ -11,6 +11,8 @@ interface MemberAreaSlideMenuProps {
   modules: Module[];
   lessonProgress: Record<string, any>;
   getCourseProgress: (totalLessons: number) => number;
+  getModuleProgress: (moduleId: string, lessons: any[]) => number;
+  getModuleStats: (moduleId: string, lessons: any[]) => any;
   totalDuration: number;
   completedLessons: number;
   onLessonSelect?: (lesson: Lesson) => void;
@@ -21,6 +23,8 @@ export function MemberAreaSlideMenu({
   modules,
   lessonProgress,
   getCourseProgress,
+  getModuleProgress,
+  getModuleStats,
   totalDuration,
   completedLessons,
   onLessonSelect,
@@ -152,18 +156,47 @@ export function MemberAreaSlideMenu({
                   {Object.values(filteredLessonsByModule).map(({
                 module,
                 lessons: moduleLessons
-              }) => <div key={module.id} className="space-y-2">
-                      <h4 className="font-medium text-emerald-400 text-sm px-2 py-1 bg-gray-800 rounded">
-                        📁 {module.title}
-                      </h4>
-                      {moduleLessons.map(lesson => <div key={lesson.id} onClick={() => handleLessonClick(lesson)} className="flex items-center gap-3 p-3 border border-gray-700 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors">
+              }) => {
+                const moduleStats = getModuleStats(module.id, lessons);
+                return <div key={module.id} className="space-y-3">
+                      <div className="px-3 py-2 bg-gray-800 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-emerald-400 text-sm">
+                            📁 {module.title}
+                          </h4>
+                          <Badge variant="secondary" className="text-xs bg-emerald-500/20 text-emerald-400">
+                            {moduleStats.progress}%
+                          </Badge>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-1.5">
+                          <div 
+                            className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-1.5 rounded-full transition-all duration-300" 
+                            style={{ width: `${moduleStats.progress}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {moduleStats.completed}/{moduleStats.total} aulas concluídas
+                        </p>
+                      </div>
+                      {moduleLessons.map(lesson => <div key={lesson.id} onClick={() => handleLessonClick(lesson)} className="flex items-center gap-3 p-3 border border-gray-700 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors ml-2">
                           {getLessonStatusIcon(lesson)}
                           <div className="flex-1 min-w-0">
                             <h5 className="font-medium text-white truncate">{lesson.title}</h5>
                             {lesson.description && <p className="text-xs text-gray-400 line-clamp-2">{lesson.description}</p>}
+                            {lessonProgress[lesson.id]?.progress_percentage > 0 && !lessonProgress[lesson.id]?.completed && (
+                              <div className="mt-1">
+                                <div className="w-full bg-gray-700 rounded-full h-1">
+                                  <div 
+                                    className="bg-yellow-500 h-1 rounded-full transition-all duration-300" 
+                                    style={{ width: `${lessonProgress[lesson.id]?.progress_percentage || 0}%` }}
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>)}
-                    </div>)}
+                    </div>;
+              })}
 
                   {/* Aulas sem módulo */}
                   {filteredLessonsWithoutModule.length > 0 && <div className="space-y-2">

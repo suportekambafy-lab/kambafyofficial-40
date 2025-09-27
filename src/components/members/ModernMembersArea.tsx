@@ -85,6 +85,8 @@ export default function ModernMembersArea() {
     lessonProgress,
     updateVideoProgress,
     getCourseProgress,
+    getModuleProgress,
+    getModuleStats,
     isLoadingProgress
   } = useLessonProgress(memberAreaId || '', session?.studentEmail);
   console.log('🎬 ModernMembersArea render:', {
@@ -262,7 +264,7 @@ export default function ModernMembersArea() {
   });
   return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
-      <MemberAreaSlideMenu lessons={lessons} modules={modules} lessonProgress={lessonProgress} getCourseProgress={getCourseProgress} totalDuration={totalDuration} completedLessons={completedLessons} onLessonSelect={setSelectedLesson} onLogout={handleLogout} />
+      <MemberAreaSlideMenu lessons={lessons} modules={modules} lessonProgress={lessonProgress} getCourseProgress={getCourseProgress} getModuleProgress={getModuleProgress} getModuleStats={getModuleStats} totalDuration={totalDuration} completedLessons={completedLessons} onLessonSelect={setSelectedLesson} onLogout={handleLogout} />
       
       {/* Hero Section - Ocultar quando aula selecionada */}
       {!selectedLesson && <motion.section initial={{
@@ -555,7 +557,18 @@ export default function ModernMembersArea() {
                               }} />
                                         </div>}
 
-                                      {/* Progress bar para aulas acessíveis */}
+                                      {/* Barra de progresso para aulas iniciadas */}
+                                      {currentProgress && currentProgress.progress_percentage > 0 && !currentProgress.completed && <div className="mt-3">
+                                          <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                                            <span>Progresso</span>
+                                            <span>{currentProgress.progress_percentage}%</span>
+                                          </div>
+                                          <div className="w-full bg-gray-700 rounded-full h-1.5">
+                                            <div className="bg-gradient-to-r from-yellow-500 to-yellow-400 h-1.5 rounded-full transition-all duration-300" style={{
+                                            width: `${currentProgress.progress_percentage}%`
+                                          }} />
+                                          </div>
+                                        </div>}
                                       {isLessonAccessible(lesson) && currentProgress && <div className="mt-3">
                                           <div className="flex justify-between text-xs text-gray-400 mb-1">
                                             <span>Progresso</span>

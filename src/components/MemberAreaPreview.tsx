@@ -43,7 +43,9 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
     saveRating, 
     loadComments, 
     saveComment,
-    getCourseProgress 
+    getCourseProgress,
+    getModuleProgress,
+    getModuleStats
   } = useLessonProgress(memberArea.id);
 
   // Organizar aulas por módulos
@@ -68,14 +70,6 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
       setSelectedLesson(publishedLessons[0]);
     }
   }, [open, publishedLessons, selectedLesson]);
-
-  // Carregar comentários quando selecionar aula
-  useEffect(() => {
-    if (selectedLesson) {
-      loadComments(selectedLesson.id);
-      setUserRating(lessonProgress[selectedLesson.id]?.rating || 0);
-    }
-  }, [selectedLesson, loadComments, lessonProgress]);
 
   // Limpar estado quando fechar o modal
   useEffect(() => {
@@ -225,6 +219,8 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
           modules={modules}
           lessonProgress={lessonProgress}
           getCourseProgress={getCourseProgress}
+          getModuleProgress={getModuleProgress}
+          getModuleStats={getModuleStats}
           totalDuration={Math.round(publishedLessons.reduce((sum, lesson) => sum + (lesson.duration || 0), 0) / 60)}
           completedLessons={Object.values(lessonProgress).filter(p => p.completed).length}
           onLessonSelect={setSelectedLesson}

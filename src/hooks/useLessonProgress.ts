@@ -319,6 +319,33 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
     return totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
   };
 
+  // Calculate module progress based on completed lessons in that module
+  const getModuleProgress = (moduleId: string, lessons: any[]) => {
+    const moduleLessons = lessons.filter(lesson => lesson.module_id === moduleId);
+    if (moduleLessons.length === 0) return 0;
+    
+    const completed = moduleLessons.filter(lesson => lessonProgress[lesson.id]?.completed).length;
+    return Math.round((completed / moduleLessons.length) * 100);
+  };
+
+  // Get detailed module statistics
+  const getModuleStats = (moduleId: string, lessons: any[]) => {
+    const moduleLessons = lessons.filter(lesson => lesson.module_id === moduleId);
+    const completedLessons = moduleLessons.filter(lesson => lessonProgress[lesson.id]?.completed).length;
+    const inProgressLessons = moduleLessons.filter(lesson => {
+      const progress = lessonProgress[lesson.id];
+      return progress && progress.progress_percentage > 0 && !progress.completed;
+    }).length;
+    
+    return {
+      total: moduleLessons.length,
+      completed: completedLessons,
+      inProgress: inProgressLessons,
+      remaining: moduleLessons.length - completedLessons - inProgressLessons,
+      progress: moduleLessons.length > 0 ? Math.round((completedLessons / moduleLessons.length) * 100) : 0
+    };
+  };
+
   useEffect(() => {
     if (memberAreaId) {
       loadLessonProgress();
@@ -334,6 +361,8 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
     saveRating,
     loadComments,
     saveComment,
-    getCourseProgress
+    getCourseProgress,
+    getModuleProgress,
+    getModuleStats
   };
 };
