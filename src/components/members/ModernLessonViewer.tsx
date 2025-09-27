@@ -69,7 +69,7 @@ export function ModernLessonViewer({
       >
         <div className="relative overflow-hidden bg-black rounded-lg border border-gray-800">
           {lesson.video_url || lesson.bunny_embed_url ? (
-            <div className="aspect-video w-full h-[50vh] md:h-[60vh] lg:h-[70vh]">
+            <div className="aspect-video w-full h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
               <VideoPlayer 
                 src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''} 
                 embedUrl={lesson.bunny_embed_url || (lesson.video_url?.includes('mediadelivery.net/embed') ? lesson.video_url : undefined)} 
@@ -94,14 +94,14 @@ export function ModernLessonViewer({
               />
             </div>
           ) : (
-            <div className="aspect-video w-full h-[50vh] md:h-[60vh] lg:h-[70vh] bg-black relative">
+            <div className="aspect-video w-full h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh] bg-black relative">
               {/* Video placeholder para aulas sem vídeo */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-800 flex items-center justify-center mb-4">
-                    <Play className="h-6 w-6 md:h-8 md:w-8 text-gray-400" />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gray-800 flex items-center justify-center mb-2 sm:mb-4">
+                    <Play className="h-4 w-4 sm:h-6 sm:w-6 md:h-8 md:w-8 text-gray-400" />
                   </div>
-                  <p className="text-sm md:text-base text-gray-400">Nenhum vídeo disponível</p>
+                  <p className="text-xs sm:text-sm md:text-base text-gray-400">Nenhum vídeo disponível</p>
                 </div>
               </div>
             </div>
