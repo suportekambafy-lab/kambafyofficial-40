@@ -34,7 +34,8 @@ const handler = async (req: Request): Promise<Response> => {
       hasApiKey: !!INFOBIP_API_KEY,
       hasBaseUrl: !!INFOBIP_BASE_URL,
       apiKeyLength: INFOBIP_API_KEY?.length || 0,
-      baseUrl: INFOBIP_BASE_URL
+      baseUrl: INFOBIP_BASE_URL,
+      formattedUrl: INFOBIP_BASE_URL ? (INFOBIP_BASE_URL.startsWith('http') ? INFOBIP_BASE_URL : `https://${INFOBIP_BASE_URL}`) : 'N/A'
     });
     
     if (!INFOBIP_API_KEY || !INFOBIP_BASE_URL) {
@@ -86,10 +87,17 @@ const handler = async (req: Request): Promise<Response> => {
       ]
     };
 
+    // Preparar URL base para Infobip
+    const baseUrl = INFOBIP_BASE_URL?.startsWith('http') ? INFOBIP_BASE_URL : `https://${INFOBIP_BASE_URL}`;
+
     console.log('[SMS-NOTIFICATION] Sending SMS via Infobip:', JSON.stringify(smsPayload, null, 2));
+    console.log('[SMS-NOTIFICATION] Full URL:', `${baseUrl}/sms/2/text/advanced`);
+    console.log('[SMS-NOTIFICATION] Headers:', {
+      'Authorization': `App ${INFOBIP_API_KEY}`,
+      'Content-Type': 'application/json'
+    });
 
     // Enviar SMS via Infobip
-    const baseUrl = INFOBIP_BASE_URL?.startsWith('http') ? INFOBIP_BASE_URL : `https://${INFOBIP_BASE_URL}`;
     const infobipResponse = await fetch(`${baseUrl}/sms/2/text/advanced`, {
       method: 'POST',
       headers: {
