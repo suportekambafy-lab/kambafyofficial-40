@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useModernMembersAuth } from './ModernMembersAuth';
 import { ModernLessonViewer } from './ModernLessonViewer';
 import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
+import { LessonComments } from './LessonComments';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLessonProgress } from '@/hooks/useLessonProgress';
@@ -398,6 +399,13 @@ export default function ModernMembersArea() {
                         </CardDescription>}
                     </CardHeader>
                   </Card>
+                  
+                  {/* Seção de comentários */}
+                  <LessonComments 
+                    lessonId={selectedLesson.id} 
+                    studentEmail={session?.studentEmail}
+                    studentName={session?.studentName}
+                  />
                 </motion.div>
               </div>
 
