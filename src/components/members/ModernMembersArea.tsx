@@ -293,6 +293,13 @@ export default function ModernMembersArea() {
   // Funções para verificar acessibilidade
   const isLessonAccessible = (lesson: Lesson) => {
     if (lesson.status !== 'published') return false;
+    // Para aulas agendadas, consideramos "acessível" para permitir abertura mas não reprodução
+    return true;
+  };
+
+  // Função para verificar se o conteúdo da aula pode ser reproduzido
+  const isLessonContentAccessible = (lesson: Lesson) => {
+    if (lesson.status !== 'published') return false;
     if (lesson.is_scheduled && lesson.scheduled_at) {
       return new Date(lesson.scheduled_at) <= new Date();
     }
@@ -550,15 +557,15 @@ export default function ModernMembersArea() {
                       y: 0
                     }} transition={{
                       delay: 0.1 * index
-                    }} className={`group transition-all duration-200 ${isLessonAccessible(lesson) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`} onClick={() => handleLessonClick(lesson)}>
-                                <Card className={`bg-gray-900 transition-all duration-300 border border-gray-800 ${isLessonAccessible(lesson) ? 'hover:bg-gray-800 hover:border-emerald-500/50' : 'opacity-75'}`}>
+                    }} className={`group transition-all duration-200 cursor-pointer`} onClick={() => handleLessonClick(lesson)}>
+                                <Card className={`bg-gray-900 transition-all duration-300 border border-gray-800 hover:bg-gray-800 ${isLessonContentAccessible(lesson) ? 'hover:border-emerald-500/50' : 'hover:border-amber-500/50'}`}>
                                   <div className="p-6 flex items-center gap-4">
-                                    <div className={`flex-shrink-0 w-16 h-16 rounded-lg flex items-center justify-center ${isLessonAccessible(lesson) ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20' : 'bg-gray-800'}`}>
-                                      {isLessonAccessible(lesson) ? currentProgress?.completed ? <CheckCircle2 className="h-8 w-8 text-emerald-400" /> : <Play className="h-8 w-8 text-emerald-400" /> : <Lock className="h-8 w-8 text-gray-500" />}
+                                    <div className={`flex-shrink-0 w-16 h-16 rounded-lg flex items-center justify-center ${isLessonContentAccessible(lesson) ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20' : 'bg-gradient-to-br from-amber-500/20 to-amber-600/20'}`}>
+                                      {!isLessonContentAccessible(lesson) && lesson.is_scheduled ? <Timer className="h-8 w-8 text-amber-400" /> : currentProgress?.completed ? <CheckCircle2 className="h-8 w-8 text-emerald-400" /> : <Play className="h-8 w-8 text-emerald-400" />}
                                     </div>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-2">
-                                        <Badge className={`${isLessonAccessible(lesson) ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-gray-700 text-gray-400'}`}>
+                                        <Badge className={`${isLessonContentAccessible(lesson) ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
                                           Aula {lesson.order_number}
                                         </Badge>
                                         <Badge variant="outline" className="text-gray-400 border-gray-600">
@@ -570,7 +577,7 @@ export default function ModernMembersArea() {
                                             Agendada
                                           </Badge>}
                                       </div>
-                                      <h4 className={`text-lg font-semibold transition-colors ${isLessonAccessible(lesson) ? 'text-white group-hover:text-emerald-400' : 'text-gray-500'}`}>
+                                      <h4 className={`text-lg font-semibold transition-colors ${isLessonContentAccessible(lesson) ? 'text-white group-hover:text-emerald-400' : 'text-white group-hover:text-amber-400'}`}>
                                         {lesson.title}
                                       </h4>
                                       {lesson.description && <p className="text-gray-400 text-sm mt-1 line-clamp-2">
@@ -602,7 +609,7 @@ export default function ModernMembersArea() {
                                           }} />
                                           </div>
                                         </div>}
-                                      {isLessonAccessible(lesson) && currentProgress && <div className="mt-3">
+                                      {isLessonContentAccessible(lesson) && currentProgress && <div className="mt-3">
                                           <div className="flex justify-between text-xs text-gray-400 mb-1">
                                             <span>Progresso</span>
                                             <span>{currentProgress.progress_percentage}%</span>
@@ -610,8 +617,8 @@ export default function ModernMembersArea() {
                                           <Progress value={currentProgress.progress_percentage} className="h-2" />
                                         </div>}
                                     </div>
-                                    <div className={`flex-shrink-0 transition-opacity ${isLessonAccessible(lesson) && !lesson.is_scheduled ? 'opacity-0 group-hover:opacity-100' : 'opacity-50'}`}>
-                                      <Play className="h-6 w-6 text-emerald-400" />
+                                    <div className={`flex-shrink-0 transition-opacity opacity-0 group-hover:opacity-100`}>
+                                      {!isLessonContentAccessible(lesson) && lesson.is_scheduled ? <Timer className="h-6 w-6 text-amber-400" /> : <Play className="h-6 w-6 text-emerald-400" />}
                                     </div>
                                   </div>
                                 </Card>
