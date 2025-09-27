@@ -64,9 +64,9 @@ const handler = async (req: Request): Promise<Response> => {
     let finalMessage = requestData.message;
     
     if (requestData.type === 'purchase_confirmation') {
-      finalMessage = `🎉 Compra confirmada!\n\nOlá ${requestData.customerName || 'Cliente'},\n\nSua compra do produto "${requestData.productName}" foi confirmada com sucesso!\n\n${requestData.memberAreaUrl ? `Acesse seu curso: ${requestData.memberAreaUrl}` : ''}\n\nObrigado por escolher a Kambafy!`;
+      finalMessage = `Compra confirmada!\n\nOla ${requestData.customerName || 'Cliente'},\n\nSua compra do produto "${requestData.productName}" foi confirmada com sucesso!\n\n${requestData.memberAreaUrl ? `Acesse seu curso: ${requestData.memberAreaUrl}` : ''}\n\nObrigado por escolher a Kambafy!`;
     } else if (requestData.type === 'course_access') {
-      finalMessage = `🎓 Acesso liberado!\n\nOlá ${requestData.customerName || 'Cliente'},\n\nSeu acesso ao curso "${requestData.productName}" foi liberado!\n\n${requestData.memberAreaUrl ? `Acesse agora: ${requestData.memberAreaUrl}` : ''}\n\nBons estudos!`;
+      finalMessage = `Acesso liberado!\n\nOla ${requestData.customerName || 'Cliente'},\n\nSeu acesso ao curso "${requestData.productName}" foi liberado!\n\n${requestData.memberAreaUrl ? `Acesse agora: ${requestData.memberAreaUrl}` : ''}\n\nBons estudos!`;
     } else if (requestData.type === 'payment_reminder') {
       finalMessage = `Lembrete de pagamento\n\nOla ${requestData.customerName || 'Cliente'},\n\nSeu pagamento esta pendente.\n\nEntidade: ${requestData.entity || 'N/A'}\nReferencia: ${requestData.referenceNumber || 'N/A'}\nValor: ${requestData.amount || 'N/A'} KZ\n\nComplete seu pagamento para ter acesso ao produto "${requestData.productName}".`;
     }
