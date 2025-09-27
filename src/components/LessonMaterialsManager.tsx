@@ -78,8 +78,19 @@ export function LessonMaterialsManager({ materials, onChange }: LessonMaterialsM
     setIsUploading(true);
 
     try {
+      // Limpar nome do arquivo removendo caracteres especiais
+      const cleanFileName = file.name
+        .normalize('NFD') // Normalizar acentos
+        .replace(/[\u0300-\u036f]/g, '') // Remover acentos
+        .replace(/[^a-zA-Z0-9.-]/g, '_') // Substituir caracteres especiais por underscore
+        .replace(/_{2,}/g, '_') // Substituir múltiplos underscores por um
+        .toLowerCase();
+
       // Gerar nome único para o arquivo
-      const fileName = `${Date.now()}-${file.name}`;
+      const fileName = `${Date.now()}-${cleanFileName}`;
+      
+      console.log('📁 Original filename:', file.name);
+      console.log('📁 Clean filename:', fileName);
       
       // Upload para o Supabase Storage
       const { data, error } = await supabase.storage
