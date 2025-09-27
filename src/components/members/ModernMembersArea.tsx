@@ -325,12 +325,25 @@ export default function ModernMembersArea() {
     selectedLesson: !!selectedLesson
   });
 
+  // Se não tem dados ainda, forçar mostrar pelo menos um loading visual
+  if (!currentMemberArea && lessons.length === 0 && modules.length === 0) {
+    console.log('🔄 ModernMembersArea: Mostrando loading pois não há dados ainda');
+    return (
+      <div className="min-h-screen bg-gray-950 dark text-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full mx-auto animate-spin"></div>
+          <p className="text-gray-300">Carregando área de membros...</p>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
       <MemberAreaSlideMenu lessons={lessons} modules={modules} lessonProgress={lessonProgress} getCourseProgress={getCourseProgress} getModuleProgress={getModuleProgress} getModuleStats={getModuleStats} totalDuration={totalDuration} completedLessons={completedLessons} onLessonSelect={setSelectedLesson} onLogout={handleLogout} />
       
-      {/* Hero Section - Ocultar quando aula selecionada */}
-      {!selectedLesson && <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden">
+      {/* Hero Section - SEMPRE MOSTRAR quando não há aula selecionada */}
+      {!selectedLesson && <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden min-h-screen flex flex-col">
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:40px_40px]" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
@@ -361,19 +374,29 @@ export default function ModernMembersArea() {
             </motion.div>
 
             {/* Course Hero */}
-            <motion.div className="text-center mb-12 mt-20 sm:mt-8">
+            <motion.div className="text-center mb-12 mt-20 sm:mt-8 relative z-10">
               <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4">
                 <Trophy className="h-3 w-3 mr-1" />
                 Curso Premium
               </Badge>
               
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                {currentMemberArea?.hero_title || currentMemberArea?.name}
+              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+                {currentMemberArea?.hero_title || currentMemberArea?.name || 'Área de Membros'}
               </h1>
               
               <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-                {currentMemberArea?.hero_description || currentMemberArea?.description}
+                {currentMemberArea?.hero_description || currentMemberArea?.description || 'Bem-vindo à sua área de membros exclusiva'}
               </p>
+
+              {/* Debug info - temporário */}
+              <div className="mt-8 p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg max-w-md mx-auto">
+                <p className="text-sm text-emerald-400">
+                  {lessons.length} aulas • {modules.length} módulos carregados
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Status: {currentMemberArea ? 'Área carregada' : 'Carregando...'}
+                </p>
+              </div>
             </motion.div>
           </div>
         </motion.section>}
