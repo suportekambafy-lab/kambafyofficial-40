@@ -60,40 +60,64 @@ export function ModernLessonViewer({
   // lesson.duration está em segundos
   const totalSeconds = lesson.duration;
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
-      {/* Fullscreen Video Container */}
-      <div className="relative flex-1">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }} 
-          animate={{ opacity: 1, scale: 1 }} 
-          transition={{ delay: 0.1 }}
-          className="h-full w-full"
-        >
+    <div className="space-y-6 bg-zinc-950">
+      {/* Video Player */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={{ opacity: 1, scale: 1 }} 
+        transition={{ delay: 0.1 }}
+      >
+        <div className="relative overflow-hidden bg-black rounded-lg border border-gray-800">
           {lesson.video_url || lesson.bunny_embed_url ? (
-            <VideoPlayer 
-              src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''} 
-              embedUrl={lesson.bunny_embed_url || (lesson.video_url?.includes('mediadelivery.net/embed') ? lesson.video_url : undefined)} 
-              startTime={startTime} 
-              onProgress={setProgress} 
-              onTimeUpdate={(currentTime, duration) => {
-                setCurrentTime(currentTime);
-                
-                // Salvar progresso automaticamente
-                if (onUpdateProgress && duration > 0) {
-                  onUpdateProgress(lesson.id, currentTime, duration);
-                }
-                
-                // Marcar como completo quando assistir 90% ou mais
-                const progressPercent = (currentTime / duration) * 100;
-                if (progressPercent >= 90 && !isCompleted) {
-                  setIsCompleted(true);
-                }
-              }} 
-              onPlay={() => setIsPlaying(true)} 
-              onPause={() => setIsPlaying(false)} 
-            />
+            <>
+              <VideoPlayer 
+                src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''} 
+                embedUrl={lesson.bunny_embed_url || (lesson.video_url?.includes('mediadelivery.net/embed') ? lesson.video_url : undefined)} 
+                startTime={startTime} 
+                onProgress={setProgress} 
+                onTimeUpdate={(currentTime, duration) => {
+                  setCurrentTime(currentTime);
+                  
+                  // Salvar progresso automaticamente
+                  if (onUpdateProgress && duration > 0) {
+                    onUpdateProgress(lesson.id, currentTime, duration);
+                  }
+                  
+                  // Marcar como completo quando assistir 90% ou mais
+                  const progressPercent = (currentTime / duration) * 100;
+                  if (progressPercent >= 90 && !isCompleted) {
+                    setIsCompleted(true);
+                  }
+                }} 
+                onPlay={() => setIsPlaying(true)} 
+                onPause={() => setIsPlaying(false)} 
+              />
+              
+              {/* Navigation Arrows */}
+              {prevLesson && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onNavigateLesson(prevLesson.id)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 border-0 rounded-lg backdrop-blur-sm transition-all duration-200 z-10"
+                >
+                  <ChevronLeft className="h-6 w-6 text-white" />
+                </Button>
+              )}
+              
+              {nextLesson && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onNavigateLesson(nextLesson.id)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 border-0 rounded-lg backdrop-blur-sm transition-all duration-200 z-10"
+                >
+                  <ChevronRight className="h-6 w-6 text-white" />
+                </Button>
+              )}
+            </>
           ) : (
-            <div className="h-full w-full bg-black relative">
+            <div className="aspect-video bg-black relative">
               {/* Video placeholder para aulas sem vídeo */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
@@ -105,48 +129,15 @@ export function ModernLessonViewer({
               </div>
             </div>
           )}
-          
-          {/* Navigation Arrows */}
-          {prevLesson && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onNavigateLesson(prevLesson.id)}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 border-0 rounded-lg backdrop-blur-sm transition-all duration-200"
-            >
-              <ChevronLeft className="h-6 w-6 text-white" />
-            </Button>
-          )}
-          
-          {nextLesson && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onNavigateLesson(nextLesson.id)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 border-0 rounded-lg backdrop-blur-sm transition-all duration-200"
-            >
-              <ChevronRight className="h-6 w-6 text-white" />
-            </Button>
-          )}
-          
-          {/* Back Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="absolute top-4 left-4 w-12 h-12 bg-black/50 hover:bg-black/70 border-0 rounded-lg backdrop-blur-sm transition-all duration-200"
-          >
-            <ArrowLeft className="h-6 w-6 text-white" />
-          </Button>
-        </motion.div>
-      </div>
-      
-      {/* Bottom Content Tabs */}
+        </div>
+      </motion.div>
+
+      {/* Lesson Content Tabs */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ delay: 0.2 }}
-        className="bg-zinc-950 border-t border-gray-800"
+        className="border-t border-gray-800 pt-6"
       >
         <LessonContentTabs lesson={lesson} />
       </motion.div>
