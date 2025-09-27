@@ -71,38 +71,47 @@ export function LessonComments({
     loadComments();
   }, [lessonId]);
   const handleSubmitComment = async () => {
-    if (!newComment.trim() || !studentEmail) {
+    if (!newComment.trim()) {
       toast.error('Digite um comentário válido');
       return;
     }
+    
     setIsSubmitting(true);
     try {
-      // Para sistemas de área de membros, precisamos usar um user_id temporário baseado no email
-      // ou criar uma entrada na tabela de usuários se necessário
-      const tempUserId = crypto.randomUUID();
-      const {
-        data,
-        error
-      } = await supabase.from('lesson_comments').insert({
-        lesson_id: lessonId,
-        comment: newComment.trim(),
-        user_id: tempUserId
-      }).select().single();
+      // Usar autenticação regular do Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('Você precisa estar logado para comentar');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('lesson_comments')
+        .insert({
+          lesson_id: lessonId,
+          comment: newComment.trim(),
+          user_id: user.id
+        })
+        .select()
+        .single();
+        
       if (error) {
         console.error('Erro ao adicionar comentário:', error);
         toast.error('Erro ao adicionar comentário');
         return;
       }
 
-      // Adicionar comentário localmente com dados do estudante
+      // Adicionar comentário localmente com dados do usuário
       const newCommentData = {
         ...data,
         user: {
-          full_name: studentName,
-          email: studentEmail
+          full_name: studentName || user.email?.split('@')[0] || 'Usuário',
+          email: user.email
         }
       };
-      setComments(prev => [...prev, newCommentData]);
+      
+      setComments(prev => [newCommentData, ...prev]);
       setNewComment('');
       toast.success('Comentário adicionado com sucesso!');
     } catch (error) {

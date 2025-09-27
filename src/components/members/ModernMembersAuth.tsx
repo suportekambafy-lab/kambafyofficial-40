@@ -1,16 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface MemberSession {
-  id: string;
-  memberAreaId: string;
-  studentEmail: string;
-  studentName: string;
-  sessionToken: string;
-  expiresAt: string;
-  memberArea?: MemberArea;
-}
+import { User, Session } from '@supabase/supabase-js';
 
 interface MemberArea {
   id: string;
@@ -23,12 +14,14 @@ interface MemberArea {
 }
 
 interface ModernMembersAuthContextType {
-  session: MemberSession | null;
+  user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (memberAreaId: string, email: string, name: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   memberArea: MemberArea | null;
+  checkMemberAccess: (memberAreaId: string) => Promise<boolean>;
 }
 
 const ModernMembersAuthContext = createContext<ModernMembersAuthContextType | null>(null);
@@ -46,59 +39,36 @@ interface ModernMembersAuthProviderProps {
 }
 
 export function ModernMembersAuthProvider({ children }: ModernMembersAuthProviderProps) {
-  const [session, setSession] = useState<MemberSession | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [memberArea, setMemberArea] = useState<MemberArea | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const isAuthenticated = Boolean(session?.sessionToken && new Date(session?.expiresAt || '') > new Date());
+  const isAuthenticated = Boolean(session?.user);
 
-  // Verificar sessão existente ao carregar
+  // Configurar listener de autenticação do Supabase
   useEffect(() => {
-    const checkExistingSession = async () => {
-      console.log('🔍 ModernAuth: Verificando sessão existente...');
-      
-      try {
-        const savedSession = localStorage.getItem('modernMembersSession');
-        if (savedSession) {
-          const sessionData = JSON.parse(savedSession);
-          console.log('📋 ModernAuth: Sessão encontrada:', { 
-            sessionData,
-            expiresAt: sessionData.expiresAt,
-            currentTime: new Date().toISOString(),
-            isValid: new Date(sessionData.expiresAt) > new Date()
-          });
-          
-          // Verificar se a sessão não expirou
-          const sessionExpiry = new Date(sessionData.expiresAt);
-          const currentTime = new Date();
-          
-          if (sessionExpiry > currentTime) {
-            console.log('✅ ModernAuth: Sessão válida, carregando área...');
-            await loadMemberArea(sessionData.memberAreaId);
-            setSession(sessionData);
-          } else {
-            console.log('❌ ModernAuth: Sessão expirada, removendo...', {
-              expiry: sessionExpiry.toISOString(),
-              current: currentTime.toISOString(),
-              diff: sessionExpiry.getTime() - currentTime.getTime()
-            });
-            localStorage.removeItem('modernMembersSession');
-          }
-        } else {
-          console.log('ℹ️ ModernAuth: Nenhuma sessão encontrada');
-        }
-      } catch (error) {
-        console.error('❌ ModernAuth: Erro ao verificar sessão:', error);
-        localStorage.removeItem('modernMembersSession');
-      } finally {
-        setIsLoading(false);
+    console.log('🔍 ModernAuth: Configurando listener de auth...');
+    
+    // Configurar listener de mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('🔄 ModernAuth: Auth state changed:', event, !!session);
+        setSession(session);
+        setUser(session?.user ?? null);
       }
-    };
+    );
 
-    // Adicionar delay para evitar conflitos com login simultâneo
-    const timer = setTimeout(checkExistingSession, 100);
-    return () => clearTimeout(timer);
-  }, []); // Remover dependencies para evitar re-execução
+    // Verificar sessão existente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('📋 ModernAuth: Sessão inicial:', !!session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const loadMemberArea = async (memberAreaId: string) => {
     try {
@@ -122,73 +92,57 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
     }
   };
 
-  const login = async (memberAreaId: string, email: string, name: string): Promise<boolean> => {
-    try {
-      console.log('🚀 ModernAuth: Iniciando login...', { memberAreaId, email, name });
-      setIsLoading(true);
+  // Verificar se o usuário tem acesso à área de membros
+  const checkMemberAccess = async (memberAreaId: string): Promise<boolean> => {
+    if (!user?.email) return false;
 
-      // Verificar acesso primeiro
+    try {
       const { data: student } = await supabase
         .from('member_area_students')
         .select('*')
         .eq('member_area_id', memberAreaId)
-        .eq('student_email', email)
+        .eq('student_email', user.email)
         .maybeSingle();
 
-      if (!student) {
-        console.error('❌ ModernAuth: Acesso negado - estudante não encontrado');
-        toast.error('Acesso negado', {
-          description: 'Seu email não tem acesso a esta área de membros.'
-        });
-        return false;
+      const hasAccess = !!student;
+      console.log('🔑 ModernAuth: Verificação de acesso:', { 
+        memberAreaId, 
+        email: user.email, 
+        hasAccess 
+      });
+
+      if (hasAccess) {
+        await loadMemberArea(memberAreaId);
       }
 
-      console.log('✅ ModernAuth: Estudante encontrado, criando sessão...');
+      return hasAccess;
+    } catch (error) {
+      console.error('❌ ModernAuth: Erro ao verificar acesso:', error);
+      return false;
+    }
+  };
 
-      // Criar sessão via edge function
-      const { data: sessionData, error } = await supabase.functions.invoke('member-area-login', {
-        body: {
-          memberAreaId,
-          studentEmail: email,
-          studentName: name
-        }
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      console.log('🚀 ModernAuth: Iniciando login com Supabase Auth...', { email });
+      setIsLoading(true);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
       if (error) {
-        console.error('❌ ModernAuth: Erro na edge function:', error);
+        console.error('❌ ModernAuth: Erro no login:', error);
         toast.error('Erro no login', {
-          description: 'Erro interno do servidor. Tente novamente.'
+          description: error.message === 'Invalid login credentials' 
+            ? 'Email ou senha incorretos' 
+            : 'Erro ao fazer login. Tente novamente.'
         });
         return false;
       }
 
-      console.log('✅ ModernAuth: Sessão criada com sucesso:', sessionData);
-
-      // Carregar área de membros
-      await loadMemberArea(memberAreaId);
-
-      // Criar sessão com tempo de expiração mais longo para debug
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 1); // 1 dia válido
-
-      const newSession: MemberSession = {
-        id: sessionData.data.sessionToken,
-        memberAreaId,
-        studentEmail: email,
-        studentName: name,
-        sessionToken: sessionData.data.sessionToken,
-        expiresAt: expiresAt.toISOString() // Usar nossa própria data de expiração
-      };
-
-      console.log('💾 ModernAuth: Salvando sessão:', {
-        session: newSession,
-        expiresAt: newSession.expiresAt,
-        currentTime: new Date().toISOString()
-      });
-
-      setSession(newSession);
-      localStorage.setItem('modernMembersSession', JSON.stringify(newSession));
-
+      console.log('✅ ModernAuth: Login realizado com sucesso');
       toast.success('Login realizado com sucesso!', {
         description: 'Bem-vindo à área de membros.'
       });
@@ -205,30 +159,24 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     console.log('🚪 ModernAuth: Fazendo logout...');
     
-    // Tentar fazer logout no servidor
-    if (session?.sessionToken) {
-      supabase.functions.invoke('member-area-logout', {
-        body: { sessionToken: session.sessionToken }
-      }).catch(console.error);
-    }
-
-    setSession(null);
+    await supabase.auth.signOut();
     setMemberArea(null);
-    localStorage.removeItem('modernMembersSession');
     
     toast.success('Logout realizado com sucesso');
   };
 
   const contextValue: ModernMembersAuthContextType = {
+    user,
     session,
     memberArea,
     isAuthenticated,
     isLoading,
     login,
     logout,
+    checkMemberAccess,
   };
 
   return (

@@ -64,10 +64,12 @@ export default function ModernMembersArea() {
     id: memberAreaId
   } = useParams();
   const {
+    user,
     session,
     memberArea,
     isAuthenticated,
     logout,
+    checkMemberAccess,
     isLoading: authLoading
   } = useModernMembersAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -88,11 +90,11 @@ export default function ModernMembersArea() {
     getModuleProgress,
     getModuleStats,
     isLoadingProgress
-  } = useMemberLessonProgress(memberAreaId || '', session?.studentEmail);
+  } = useMemberLessonProgress(memberAreaId || '', user?.email);
 
   console.log('🎬 ModernMembersArea - Progress Hook State:', {
     memberAreaId,
-    studentEmail: session?.studentEmail,
+    userEmail: user?.email,
     lessonProgressCount: Object.keys(lessonProgress).length,
     isLoadingProgress,
     lessonProgress: Object.keys(lessonProgress).length > 0 ? lessonProgress : 'EMPTY'
@@ -100,24 +102,38 @@ export default function ModernMembersArea() {
   console.log('🎬 ModernMembersArea render:', {
     memberAreaId,
     isAuthenticated,
-    sessionExists: !!session,
+    userExists: !!user,
     memberAreaExists: !!memberArea,
     authLoading
   });
 
-  // Redirect para login se não autenticado - usar useEffect para evitar render condicional
+  // Verificar acesso à área de membros
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || !session)) {
+    if (!authLoading && isAuthenticated && user && memberAreaId && !memberArea) {
+      console.log('🔑 Verificando acesso à área de membros...');
+      checkMemberAccess(memberAreaId).then(hasAccess => {
+        if (!hasAccess) {
+          toast.error('Acesso negado', {
+            description: 'Você não tem acesso a esta área de membros.'
+          });
+          window.location.href = '/';
+        }
+      });
+    }
+  }, [authLoading, isAuthenticated, user, memberAreaId, memberArea, checkMemberAccess]);
+
+  // Redirect para login se não autenticado
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
       console.log('🔄 ModernMembersArea: Redirecionando para login - não autenticado');
-      // Usar window.location para evitar problemas de hooks
       window.location.href = `/members/login/${memberAreaId}`;
     }
-  }, [authLoading, isAuthenticated, session, memberAreaId]);
+  }, [authLoading, isAuthenticated, memberAreaId]);
 
   // Carregar conteúdo da área
   useEffect(() => {
-    if (!session || !memberAreaId || !isAuthenticated) {
-      console.log('ℹ️ ModernMembersArea: Aguardando autenticação...');
+    if (!user || !memberAreaId || !isAuthenticated || !memberArea) {
+      console.log('ℹ️ ModernMembersArea: Aguardando autenticação e verificação de acesso...');
       return;
     }
     console.log('📥 ModernMembersArea: Carregando conteúdo...');
@@ -171,7 +187,7 @@ export default function ModernMembersArea() {
       }
     };
     loadContent();
-  }, [session, memberAreaId, isAuthenticated]);
+  }, [user, memberAreaId, isAuthenticated, memberArea]);
 
   // Esconder sidebar automaticamente no mobile quando aula for selecionada
   useEffect(() => {
@@ -313,7 +329,7 @@ export default function ModernMembersArea() {
                   </div>}
                 <div className="text-white">
                   <p className="text-sm text-emerald-400">Área de Membros</p>
-                  <p className="text-sm text-gray-300">Olá, {session?.studentName}</p>
+                  <p className="text-sm text-gray-300">Olá, {user?.email?.split('@')[0]}</p>
                 </div>
               </div>
             </motion.div>
@@ -404,7 +420,7 @@ export default function ModernMembersArea() {
                   
                   
                   {/* Seção de comentários */}
-                  <LessonComments lessonId={selectedLesson.id} studentEmail={session?.studentEmail} studentName={session?.studentName} />
+                  <LessonComments lessonId={selectedLesson.id} studentEmail={user?.email} studentName={user?.email?.split('@')[0]} />
                 </motion.div>
               </div>
 

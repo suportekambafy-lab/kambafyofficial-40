@@ -20,28 +20,27 @@ interface LessonComment {
   user_name: string;
 }
 
-// Hook específico para áreas de membros com sessões temporárias
-export const useMemberLessonProgress = (memberAreaId: string, studentEmail?: string) => {
+// Hook específico para áreas de membros com autenticação regular
+export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string) => {
   const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
   const [comments, setComments] = useState<Record<string, LessonComment[]>>({});
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
 
   console.log('🔧 useMemberLessonProgress initialized:', {
     memberAreaId,
-    studentEmail
+    userEmail
   });
 
-  // Para áreas de membros, vamos usar uma abordagem simplificada
-  // Por enquanto, vamos simular dados de progresso baseado no localStorage
-  const getStorageKey = (lessonId: string) => `lesson_progress_${memberAreaId}_${studentEmail}_${lessonId}`;
-  const getCourseStorageKey = () => `course_progress_${memberAreaId}_${studentEmail}`;
+  // Para áreas de membros, vamos usar localStorage por usuário
+  const getStorageKey = (lessonId: string) => `lesson_progress_${memberAreaId}_${userEmail}_${lessonId}`;
+  const getCourseStorageKey = () => `course_progress_${memberAreaId}_${userEmail}`;
 
   // Load lesson progress from localStorage for member areas
   const loadLessonProgress = async () => {
-    console.log('🔄 loadLessonProgress called for member area:', { memberAreaId, studentEmail });
+    console.log('🔄 loadLessonProgress called for member area:', { memberAreaId, userEmail });
     
-    if (!memberAreaId || !studentEmail) {
-      console.log('❌ No memberAreaId or studentEmail provided');
+    if (!memberAreaId || !userEmail) {
+      console.log('❌ No memberAreaId or userEmail provided');
       return;
     }
 
@@ -160,7 +159,7 @@ export const useMemberLessonProgress = (memberAreaId: string, studentEmail?: str
   const loadComments = async (lessonId: string) => {
     console.log('💬 loadComments called for:', lessonId);
     // For member areas, we'll use a simplified comment system
-    const savedComments = localStorage.getItem(`comments_${memberAreaId}_${lessonId}`);
+    const savedComments = localStorage.getItem(`comments_${memberAreaId}_${userEmail}_${lessonId}`);
     if (savedComments) {
       const commentsData = JSON.parse(savedComments);
       setComments(prev => ({ ...prev, [lessonId]: commentsData }));
@@ -177,12 +176,12 @@ export const useMemberLessonProgress = (memberAreaId: string, studentEmail?: str
       user_id: 'member',
       comment: commentText.trim(),
       created_at: new Date().toISOString(),
-      user_name: studentEmail?.split('@')[0] || 'Estudante'
+      user_name: userEmail?.split('@')[0] || 'Estudante'
     };
 
     const updatedComments = [newComment, ...(comments[lessonId] || [])];
     setComments(prev => ({ ...prev, [lessonId]: updatedComments }));
-    localStorage.setItem(`comments_${memberAreaId}_${lessonId}`, JSON.stringify(updatedComments));
+    localStorage.setItem(`comments_${memberAreaId}_${userEmail}_${lessonId}`, JSON.stringify(updatedComments));
 
     toast.success('Comentário adicionado');
   };
@@ -243,13 +242,13 @@ export const useMemberLessonProgress = (memberAreaId: string, studentEmail?: str
   useEffect(() => {
     console.log('🔄 useMemberLessonProgress useEffect triggered:', {
       memberAreaId,
-      studentEmail
+      userEmail
     });
     
-    if (memberAreaId && studentEmail) {
+    if (memberAreaId && userEmail) {
       loadLessonProgress();
     }
-  }, [memberAreaId, studentEmail]);
+  }, [memberAreaId, userEmail]);
 
   return {
     lessonProgress,

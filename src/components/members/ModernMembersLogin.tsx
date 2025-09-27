@@ -13,6 +13,7 @@ export default function ModernMembersLogin() {
   const navigate = useNavigate();
   const { login, isLoading } = useModernMembersAuth();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [memberArea, setMemberArea] = useState<any>(null);
   const id = useId();
@@ -37,12 +38,11 @@ export default function ModernMembersLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!memberAreaId || !email || isSubmitting) return;
+    if (!memberAreaId || !email || !password || isSubmitting) return;
 
     setIsSubmitting(true);
     
-    // Usar o email como nome temporariamente - o nome real virá da compra
-    const success = await login(memberAreaId, email, email.split('@')[0]);
+    const success = await login(email, password);
     
     if (success) {
       navigate(`/members/area/${memberAreaId}`, { replace: true });
@@ -102,7 +102,7 @@ export default function ModernMembersLogin() {
                 {memberArea?.name || 'Área de Membros'}
               </h1>
               <p className="text-sm text-zinc-400 mt-1">
-                Entre com seu email de acesso
+                Entre com suas credenciais de acesso
               </p>
             </div>
           </div>
@@ -127,6 +127,25 @@ export default function ModernMembersLogin() {
                   disabled={isSubmitting}
                 />
               </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="space-y-2"
+              >
+                <Label htmlFor={`${id}-password`} className="text-zinc-200">Senha</Label>
+                <Input
+                  id={`${id}-password`}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Sua senha"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:border-zinc-500"
+                  required
+                  disabled={isSubmitting}
+                />
+              </motion.div>
             </div>
             
             <motion.div
@@ -137,7 +156,7 @@ export default function ModernMembersLogin() {
               <Button 
                 type="submit" 
                 className="w-full bg-white text-black hover:bg-zinc-100 font-medium" 
-                disabled={isSubmitting || !email}
+                disabled={isSubmitting || !email || !password}
               >
                 {isSubmitting ? (
                   <motion.div
