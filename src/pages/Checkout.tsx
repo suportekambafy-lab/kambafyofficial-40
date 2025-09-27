@@ -2107,7 +2107,7 @@ const Checkout = () => {
 
                           <Button onClick={() => {
                         const params = new URLSearchParams({
-                          order_id: referenceData.orderId,
+                          order_id: referenceData.referenceNumber,
                           status: 'pending',
                           payment_method: 'reference',
                           reference_number: referenceData.referenceNumber,
