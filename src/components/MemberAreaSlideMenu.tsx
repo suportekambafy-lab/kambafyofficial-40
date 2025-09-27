@@ -132,21 +132,7 @@ export function MemberAreaSlideMenu({
           </div>
 
           {/* Pesquisa de Aulas */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Search className="w-5 h-5 text-emerald-400" />
-              <h3 className="font-semibold text-white">Pesquisar Aulas</h3>
-            </div>
-            
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input placeholder="Digite o nome da aula..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400" />
-            </div>
-
-            {searchTerm && <div className="text-sm text-gray-300">
-                {filteredLessons.length} resultado{filteredLessons.length !== 1 ? 's' : ''} encontrado{filteredLessons.length !== 1 ? 's' : ''}
-              </div>}
-          </div>
+          
 
           {/* Resultados da Pesquisa */}
           <ScrollArea className="flex-1 max-h-[400px]">
@@ -169,10 +155,9 @@ export function MemberAreaSlideMenu({
                           </Badge>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-1.5">
-                          <div 
-                            className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-1.5 rounded-full transition-all duration-300" 
-                            style={{ width: `${moduleStats.progress}%` }}
-                          />
+                          <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-1.5 rounded-full transition-all duration-300" style={{
+                        width: `${moduleStats.progress}%`
+                      }} />
                         </div>
                         <p className="text-xs text-gray-400 mt-1">
                           {moduleStats.completed}/{moduleStats.total} aulas concluídas
@@ -183,16 +168,13 @@ export function MemberAreaSlideMenu({
                           <div className="flex-1 min-w-0">
                             <h5 className="font-medium text-white truncate">{lesson.title}</h5>
                             {lesson.description && <p className="text-xs text-gray-400 line-clamp-2">{lesson.description}</p>}
-                            {lessonProgress[lesson.id]?.progress_percentage > 0 && !lessonProgress[lesson.id]?.completed && (
-                              <div className="mt-1">
+                            {lessonProgress[lesson.id]?.progress_percentage > 0 && !lessonProgress[lesson.id]?.completed && <div className="mt-1">
                                 <div className="w-full bg-gray-700 rounded-full h-1">
-                                  <div 
-                                    className="bg-yellow-500 h-1 rounded-full transition-all duration-300" 
-                                    style={{ width: `${lessonProgress[lesson.id]?.progress_percentage || 0}%` }}
-                                  />
+                                  <div className="bg-yellow-500 h-1 rounded-full transition-all duration-300" style={{
+                            width: `${lessonProgress[lesson.id]?.progress_percentage || 0}%`
+                          }} />
                                 </div>
-                              </div>
-                            )}
+                              </div>}
                           </div>
                         </div>)}
                     </div>;
@@ -217,8 +199,8 @@ export function MemberAreaSlideMenu({
                       <p>Nenhuma aula encontrada</p>
                     </div>}
                 </div> : <div className="text-center py-8 text-gray-400">
-                  <Search className="w-8 h-8 mx-auto mb-2 text-gray-600" />
-                  <p className="text-sm">Digite algo para pesquisar aulas</p>
+                  
+                  
                 </div>}
             </div>
           </ScrollArea>
