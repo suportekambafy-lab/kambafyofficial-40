@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 interface Comment {
   id: string;
   comment: string;
@@ -22,14 +21,16 @@ interface Comment {
     email?: string;
   };
 }
-
 interface LessonCommentsProps {
   lessonId: string;
   studentEmail?: string;
   studentName?: string;
 }
-
-export function LessonComments({ lessonId, studentEmail, studentName }: LessonCommentsProps) {
+export function LessonComments({
+  lessonId,
+  studentEmail,
+  studentName
+}: LessonCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -38,30 +39,27 @@ export function LessonComments({ lessonId, studentEmail, studentName }: LessonCo
   // Carregar comentários
   useEffect(() => {
     if (!lessonId) return;
-
     const loadComments = async () => {
       try {
         setIsLoading(true);
-
-        const { data, error } = await supabase
-          .from('lesson_comments')
-          .select(`
+        const {
+          data,
+          error
+        } = await supabase.from('lesson_comments').select(`
             id,
             comment,
             created_at,
             updated_at,
             user_id,
             lesson_id
-          `)
-          .eq('lesson_id', lessonId)
-          .order('created_at', { ascending: true });
-
+          `).eq('lesson_id', lessonId).order('created_at', {
+          ascending: true
+        });
         if (error) {
           console.error('Erro ao carregar comentários:', error);
           toast.error('Erro ao carregar comentários');
           return;
         }
-
         setComments(data || []);
       } catch (error) {
         console.error('Erro inesperado ao carregar comentários:', error);
@@ -70,33 +68,26 @@ export function LessonComments({ lessonId, studentEmail, studentName }: LessonCo
         setIsLoading(false);
       }
     };
-
     loadComments();
   }, [lessonId]);
-
   const handleSubmitComment = async () => {
     if (!newComment.trim() || !studentEmail) {
       toast.error('Digite um comentário válido');
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       // Para sistemas de área de membros, precisamos usar um user_id temporário baseado no email
       // ou criar uma entrada na tabela de usuários se necessário
       const tempUserId = crypto.randomUUID();
-
-      const { data, error } = await supabase
-        .from('lesson_comments')
-        .insert({
-          lesson_id: lessonId,
-          comment: newComment.trim(),
-          user_id: tempUserId
-        })
-        .select()
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('lesson_comments').insert({
+        lesson_id: lessonId,
+        comment: newComment.trim(),
+        user_id: tempUserId
+      }).select().single();
       if (error) {
         console.error('Erro ao adicionar comentário:', error);
         toast.error('Erro ao adicionar comentário');
@@ -111,11 +102,9 @@ export function LessonComments({ lessonId, studentEmail, studentName }: LessonCo
           email: studentEmail
         }
       };
-
       setComments(prev => [...prev, newCommentData]);
       setNewComment('');
       toast.success('Comentário adicionado com sucesso!');
-
     } catch (error) {
       console.error('Erro inesperado ao adicionar comentário:', error);
       toast.error('Erro ao adicionar comentário');
@@ -123,11 +112,11 @@ export function LessonComments({ lessonId, studentEmail, studentName }: LessonCo
       setIsSubmitting(false);
     }
   };
-
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
+    return format(new Date(dateString), "d 'de' MMMM 'às' HH:mm", {
+      locale: ptBR
+    });
   };
-
   const getInitials = (name?: string, email?: string) => {
     if (name) {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -137,69 +126,51 @@ export function LessonComments({ lessonId, studentEmail, studentName }: LessonCo
     }
     return 'AN';
   };
-
-  return (
-    <Card className="bg-gray-900 border-gray-800 mt-6">
-      <CardHeader>
+  return <Card className="border-gray-800 mt-6 bg-zinc-950">
+      <CardHeader className="bg-zinc-950">
         <CardTitle className="flex items-center gap-2 text-white">
           <MessageCircle className="h-5 w-5" />
           Comentários ({comments.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 bg-zinc-950">
         {/* Formulário para novo comentário */}
         <div className="space-y-3">
-          <Textarea
-            placeholder="Deixe seu comentário sobre esta aula..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 resize-none"
-            rows={3}
-          />
+          <Textarea placeholder="Deixe seu comentário sobre esta aula..." value={newComment} onChange={e => setNewComment(e.target.value)} rows={3} className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-950" />
           <div className="flex justify-end">
-            <Button 
-              onClick={handleSubmitComment}
-              disabled={!newComment.trim() || isSubmitting}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            >
-              {isSubmitting ? (
-                <>
+            <Button onClick={handleSubmitComment} disabled={!newComment.trim() || isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              {isSubmitting ? <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   Enviando...
-                </>
-              ) : (
-                <>
+                </> : <>
                   <Send className="h-4 w-4 mr-2" />
                   Comentar
-                </>
-              )}
+                </>}
             </Button>
           </div>
         </div>
 
         {/* Lista de comentários */}
         <div className="space-y-4">
-          {isLoading ? (
-            <div className="text-center py-8">
+          {isLoading ? <div className="text-center py-8">
               <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <p className="text-gray-400">Carregando comentários...</p>
-            </div>
-          ) : comments.length === 0 ? (
-            <div className="text-center py-8">
+            </div> : comments.length === 0 ? <div className="text-center py-8">
               <MessageCircle className="h-12 w-12 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-400">Seja o primeiro a comentar nesta aula!</p>
-            </div>
-          ) : (
-            <AnimatePresence>
-              {comments.map((comment, index) => (
-                <motion.div
-                  key={comment.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex gap-3 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50"
-                >
+            </div> : <AnimatePresence>
+              {comments.map((comment, index) => <motion.div key={comment.id} initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} exit={{
+            opacity: 0,
+            y: -20
+          }} transition={{
+            delay: index * 0.1
+          }} className="flex gap-3 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
                   <Avatar className="h-10 w-10 ring-2 ring-gray-700">
                     <AvatarImage src="" alt={comment.user?.full_name || studentName} />
                     <AvatarFallback className="bg-emerald-600 text-white text-sm">
@@ -224,12 +195,9 @@ export function LessonComments({ lessonId, studentEmail, studentName }: LessonCo
                       {comment.comment}
                     </p>
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          )}
+                </motion.div>)}
+            </AnimatePresence>}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
