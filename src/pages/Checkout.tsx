@@ -115,6 +115,10 @@ const Checkout = () => {
   const [expressCountdownTime, setExpressCountdownTime] = useState(60);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Estados para preço aberto
+  const [customPrice, setCustomPrice] = useState<string>("");
+  const [showCustomPriceInput, setShowCustomPriceInput] = useState(false);
+
   // Hook para KambaPay
   const {
     fetchBalanceByEmail
@@ -211,12 +215,24 @@ const Checkout = () => {
   // Calcular o valor total usando preços finais (considerando personalizados)
   const getProductFinalPrice = useCallback(() => {
     if (!product) return 0;
+    
+    // Se preço aberto estiver habilitado e usuário inseriu um valor personalizado
+    if (product.allow_custom_price && customPrice) {
+      const userPrice = parseFloat(customPrice);
+      const minPrice = product.minimum_price || 0;
+      
+      // Garantir que o preço não seja menor que o mínimo
+      if (userPrice >= minPrice) {
+        return userPrice;
+      }
+    }
+    
     const productPriceKZ = originalPriceKZ;
     if (product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
       return parseFloat(product.custom_prices[userCountry.code]);
     }
     return getConvertedPrice(productPriceKZ);
-  }, [product, originalPriceKZ, userCountry, getConvertedPrice]);
+  }, [product, originalPriceKZ, userCountry, getConvertedPrice, customPrice]);
   const totalAmountForDetection = useMemo(() => product ? getProductFinalPrice() + totalOrderBumpPrice : 0, [product, getProductFinalPrice, totalOrderBumpPrice]);
 
   // Remover efeito que aguarda geo - não precisamos mais
@@ -432,6 +448,14 @@ const Checkout = () => {
 
           // Aplicar SEO imediatamente quando o produto carrega
           setProductSEO(productData);
+
+          // Inicializar preço aberto se habilitado
+          if (productData.allow_custom_price) {
+            setShowCustomPriceInput(true);
+            if (productData.suggested_price) {
+              setCustomPrice(productData.suggested_price.toString());
+            }
+          }
         }
       } catch (error) {
         console.error('Unexpected error loading product:', error);
@@ -1890,7 +1914,49 @@ const Checkout = () => {
                     <CheckCircle className="w-4 h-4 text-green-500" />
                   </div>
                   <div className="text-2xl font-bold text-green-600 mt-2">
-                    {getDisplayPrice(originalPrice)}
+                    {product.allow_custom_price ? (
+                      <div className="space-y-3">
+                        <div className="text-sm text-gray-600">
+                          Pague o que quiser (mínimo: {getDisplayPrice(product.minimum_price || 0)})
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={customPrice}
+                            onChange={(e) => setCustomPrice(e.target.value)}
+                            placeholder={`Mínimo: ${product.minimum_price || 0}`}
+                            className="w-32"
+                            min={product.minimum_price || 0}
+                          />
+                          <span className="text-sm text-gray-600">
+                            {userCountry?.currency === 'EUR' ? 'EUR' : 
+                             userCountry?.currency === 'MZN' ? 'MZN' : 'KZ'}
+                          </span>
+                        </div>
+                        {product.suggested_price && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCustomPrice(product.suggested_price.toString())}
+                            className="text-xs"
+                          >
+                            Sugestão: {getDisplayPrice(product.suggested_price)}
+                          </Button>
+                        )}
+                        {customPrice && parseFloat(customPrice) >= (product.minimum_price || 0) && (
+                          <div className="text-green-600 font-bold">
+                            Valor final: {getDisplayPrice(parseFloat(customPrice))}
+                          </div>
+                        )}
+                        {customPrice && parseFloat(customPrice) < (product.minimum_price || 0) && (
+                          <div className="text-red-600 text-sm">
+                            Valor deve ser pelo menos {getDisplayPrice(product.minimum_price || 0)}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      getDisplayPrice(originalPrice)
+                    )}
                   </div>
                 </div>
               </div>
