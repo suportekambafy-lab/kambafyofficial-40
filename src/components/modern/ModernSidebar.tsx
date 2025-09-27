@@ -187,10 +187,10 @@ export function ModernSidebar({
               animate={{ x: 0 }}
               exit={{ x: -320 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="fixed left-0 top-0 h-screen w-80 bg-sidebar border-r border-sidebar-border flex flex-col z-50 shadow-xl"
+              className="fixed left-0 top-0 h-screen w-80 bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-xl"
             >
               {/* Header */}
-              <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
+              <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
               <img 
                 src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
                 alt="Kambafy" 
@@ -208,7 +208,7 @@ export function ModernSidebar({
               </div>
 
               {/* Progress bar above navigation */}
-              <div className="px-4 py-2 border-b border-sidebar-border">
+              <div className="px-4 py-2 border-b border-sidebar-border/30 dark:border-sidebar/30">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
                     <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
@@ -257,10 +257,10 @@ export function ModernSidebar({
         width: collapsed ? 80 : 320
       }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col z-50 shadow-sm"
+      className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-sm"
     >
       {/* Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
         <AnimatePresence mode="wait">
           {!collapsed ? (
             <motion.div
@@ -306,7 +306,7 @@ export function ModernSidebar({
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.2 }}
-          className="px-4 py-2 border-b border-sidebar-border"
+          className="px-4 py-2 border-b border-sidebar-border/30 dark:border-sidebar/30"
         >
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
@@ -357,7 +357,7 @@ export function ModernSidebar({
       </nav>
 
       {/* Bottom Section */}
-      <div className="border-t border-sidebar-border p-3 space-y-1">
+      <div className="border-t border-sidebar-border/30 dark:border-sidebar/30 p-3 space-y-1">
         {bottomItems.map((item) => (
           <NavLink
             key={item.href}
