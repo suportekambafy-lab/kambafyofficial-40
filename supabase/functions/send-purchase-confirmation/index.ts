@@ -121,6 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Request data:', {
       customerName,
       customerEmail,
+      customerPhone, // Adicionar telefone no log
       productName,
       orderId,
       amount,

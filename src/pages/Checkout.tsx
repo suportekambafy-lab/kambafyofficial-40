@@ -1587,6 +1587,7 @@ const Checkout = () => {
         const emailData = {
           customerName: formData.fullName.trim(),
           customerEmail: formData.email.trim().toLowerCase(),
+          customerPhone: formData.phone.trim(), // Adicionar telefone para SMS
           productName: product.name,
           orderId: orderId,
           amount: totalAmount.toString(),
