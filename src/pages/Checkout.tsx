@@ -114,6 +114,8 @@ const Checkout = () => {
     productName: string;
     orderId: string;
   } | null>(null);
+  const [copiedEntity, setCopiedEntity] = useState(false);
+  const [copiedReference, setCopiedReference] = useState(false);
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -2307,7 +2309,7 @@ const Checkout = () => {
                     {/* Reference Payment Details */}
                     {referenceData && (
                       <div className="border-t pt-4 mt-4">
-                        <div className="bg-green-50 rounded-lg p-4 space-y-4">
+                        <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
                           <div className="flex items-center justify-center mb-4">
                             <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
                               <Check className="h-6 w-6 text-white" />
@@ -2315,44 +2317,52 @@ const Checkout = () => {
                           </div>
                           
                           <div className="text-center mb-4">
-                            <p className="text-green-800 font-semibold mb-2">
+                            <p className="text-gray-900 font-semibold mb-2">
                               Referência gerada com sucesso!
                             </p>
-                            <p className="text-sm text-green-700">
+                            <p className="text-sm text-gray-700">
                               Use os dados abaixo para efetuar o pagamento em qualquer banco ou ATM
                             </p>
                           </div>
 
                           <div className="space-y-3">
-                            <div className="bg-white rounded-lg p-3">
+                            <div className="bg-blue-50 rounded-lg p-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-600">Entidade:</span>
                                 <div className="flex items-center space-x-2">
-                                  <span className="font-mono font-bold text-lg">{referenceData.entity}</span>
+                                  <span className="font-mono font-bold text-lg text-gray-900">{referenceData.entity}</span>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => navigator.clipboard.writeText(referenceData.entity)}
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(referenceData.entity);
+                                      setCopiedEntity(true);
+                                      setTimeout(() => setCopiedEntity(false), 2000);
+                                    }}
                                     className="h-6 w-6 p-0"
                                   >
-                                    <Copy className="h-3 w-3" />
+                                    {copiedEntity ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
                                   </Button>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="bg-white rounded-lg p-3">
+                            <div className="bg-blue-50 rounded-lg p-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-600">Referência:</span>
                                 <div className="flex items-center space-x-2">
-                                  <span className="font-mono font-bold text-lg">{referenceData.referenceNumber}</span>
+                                  <span className="font-mono font-bold text-lg text-gray-900">{referenceData.referenceNumber}</span>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => navigator.clipboard.writeText(referenceData.referenceNumber)}
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(referenceData.referenceNumber);
+                                      setCopiedReference(true);
+                                      setTimeout(() => setCopiedReference(false), 2000);
+                                    }}
                                     className="h-6 w-6 p-0"
                                   >
-                                    <Copy className="h-3 w-3" />
+                                    {copiedReference ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
                                   </Button>
                                 </div>
                               </div>
