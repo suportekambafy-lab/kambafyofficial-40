@@ -42,9 +42,14 @@ export default function ModernMembersLogin() {
 
     setIsSubmitting(true);
     
+    // Aguardar um pouco mais para dar tempo da verificação
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
     const success = await login(email, password);
     
     if (success) {
+      // Aguardar mais um pouco antes de redirecionar
+      await new Promise(resolve => setTimeout(resolve, 800));
       // Redirecionar diretamente sem páginas intermediárias
       window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(email)}`;
     }

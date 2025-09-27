@@ -152,29 +152,22 @@ export default function ModernMembersArea() {
     console.log('ℹ️ ModernMembersArea: Usuário autenticado ou acesso verificado, carregando área');
   }, [authLoading, isAuthenticated, memberAreaId]);
 
-  // Carregar conteúdo da área independente de autenticação se tiver parâmetros de verificação
+  // Carregar conteúdo da área independente de loading - sempre mostrar o que tem
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const isVerified = urlParams.get('verified') === 'true';
     const emailParam = urlParams.get('email');
     
-    // Permitir carregamento se:
-    // 1. Usuário autenticado normalmente OR
-    // 2. Acesso verificado via query params OR
-    // 3. Apenas tem memberAreaId (para carregar sem autenticação)
-    const canLoadContent = (user && memberAreaId && isAuthenticated && memberArea) || 
-                          (isVerified && emailParam && memberAreaId) ||
-                          (memberAreaId && !authLoading);
-    
-    if (!canLoadContent) {
-      console.log('ℹ️ ModernMembersArea: Aguardando parâmetros de área...');
+    // Permitir carregamento sempre que tiver memberAreaId
+    if (!memberAreaId) {
+      console.log('ℹ️ ModernMembersArea: Sem memberAreaId...');
       return;
     }
     
     console.log('📥 ModernMembersArea: Carregando conteúdo...');
     const loadContent = async () => {
       try {
-        setIsLoading(true);
+        // NÃO usar setIsLoading - nunca mostrar loading
 
         // Carregar lessons
         const { data: lessonsData, error: lessonsError } = await supabase
@@ -239,12 +232,11 @@ export default function ModernMembersArea() {
         
       } catch (error) {
         console.error('❌ ModernMembersArea: Erro inesperado:', error);
-      } finally {
-        setIsLoading(false);
       }
+      // NÃO fazer setIsLoading(false) - nunca usar loading
     };
     loadContent();
-  }, [user, memberAreaId, isAuthenticated, memberArea, authLoading]);
+  }, [memberAreaId]); // Apenas memberAreaId como dependência
 
   // Esconder sidebar automaticamente no mobile quando aula for selecionada
   useEffect(() => {
@@ -256,6 +248,8 @@ export default function ModernMembersArea() {
   }, [selectedLesson, isMobile]);
   const handleLogout = () => {
     logout();
+    // Redirecionar para login da área de membros
+    window.location.href = `/members/login/${memberAreaId}`;
   };
   const handleLessonClick = (lesson: Lesson) => {
     if (!isLessonAccessible(lesson)) {
@@ -311,12 +305,7 @@ export default function ModernMembersArea() {
     return matchesModule && matchesSearch && matchesFilter;
   });
 
-  // Não mostrar nenhuma tela de loading - vai direto para o conteúdo  
-  if (authLoading) {
-    return null;
-  }
-
-  // Calcular duração total em minutos e progresso real
+  // Calcular duração total em minutos e progresso real SEMPRE
   const totalDuration = Math.round(lessons.reduce((sum, lesson) => sum + lesson.duration, 0) / 60);
   const completedLessons = lessons.filter(lesson => lessonProgress[lesson.id]?.completed).length;
   const courseProgress = getCourseProgress(lessons.length);
@@ -326,21 +315,6 @@ export default function ModernMembersArea() {
     completedLessons,
     courseProgress: courseProgress + '%'
   });
-
-  // Só mostrar conteúdo se estiver autenticado OU tiver verificação via query params
-  const urlParams = new URLSearchParams(window.location.search);
-  const isVerified = urlParams.get('verified') === 'true';
-  const emailParam = urlParams.get('email');
-  
-  // Se não está carregando e não tem nem autenticação nem verificação, não mostrar nada (será redirecionado)
-  if (!authLoading && !isAuthenticated && !(isVerified && emailParam)) {
-    return null; // Será redirecionado para login
-  }
-  
-  // Não mostrar tela de loading - fazer verificação silenciosamente
-  if (authLoading) {
-    return null; // Não mostrar nada enquanto carrega
-  }
 
   return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
