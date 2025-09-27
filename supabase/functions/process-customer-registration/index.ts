@@ -10,6 +10,7 @@ const corsHeaders = {
 interface CustomerRegistrationRequest {
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   productName: string;
   orderId: string;
   amount: string;

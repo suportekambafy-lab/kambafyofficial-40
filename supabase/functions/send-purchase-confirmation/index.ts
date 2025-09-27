@@ -1,7 +1,57 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
+
+// Helper function to send SMS notification
+const sendSMSNotification = async (
+  phone: string, 
+  type: 'purchase_confirmation' | 'payment_reminder' | 'course_access',
+  data: {
+    customerName: string;
+    productName: string;
+    memberAreaUrl?: string;
+    referenceNumber?: string;
+  }
+) => {
+  try {
+    if (!phone || phone.trim() === '') {
+      console.log('[SMS] No phone number provided, skipping SMS');
+      return null;
+    }
+
+    console.log(`[SMS] Sending ${type} SMS to:`, phone);
+    
+    const { data: smsResult, error } = await supabase.functions.invoke('send-sms-notification', {
+      body: {
+        to: phone,
+        type: type,
+        customerName: data.customerName,
+        productName: data.productName,
+        memberAreaUrl: data.memberAreaUrl,
+        referenceNumber: data.referenceNumber,
+        message: '' // Will be generated based on type
+      }
+    });
+
+    if (error) {
+      console.error('[SMS] Error sending SMS:', error);
+      return null;
+    }
+
+    console.log('[SMS] SMS sent successfully:', smsResult);
+    return smsResult;
+  } catch (error) {
+    console.error('[SMS] Exception sending SMS:', error);
+    return null;
+  }
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +62,7 @@ const corsHeaders = {
 interface PurchaseConfirmationRequest {
   customerName: string;
   customerEmail: string;
+  customerPhone?: string; // Telefone do cliente para SMS
   productName: string;
   orderId: string;
   amount: string;
@@ -48,6 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { 
       customerName, 
       customerEmail, 
+      customerPhone,
       productName, 
       orderId, 
       amount, 
@@ -217,10 +269,20 @@ const handler = async (req: Request): Promise<Response> => {
           if (pendingEmailError) {
             console.error('Background task error - sending pending payment email:', pendingEmailError);
           } else {
-            console.log("Pending payment email sent successfully:", pendingEmailResponse);
+            console.log('Pending payment email sent successfully:', pendingEmailResponse);
           }
-        } catch (error) {
-          console.error('Background task error:', error);
+
+          // Send SMS for pending payment if phone number is provided
+          if (customerPhone) {
+            await sendSMSNotification(customerPhone, 'payment_reminder', {
+              customerName,
+              productName,
+              referenceNumber: referenceData?.referenceNumber
+            });
+          }
+
+        } catch (backgroundError) {
+          console.error('Background task error:', backgroundError);
         }
       })();
       
@@ -549,6 +611,16 @@ const handler = async (req: Request): Promise<Response> => {
           console.error('Background task error - sending confirmation email:', emailError);
         } else {
           console.log("Purchase confirmation email sent successfully:", emailResponse);
+        }
+
+        // Send SMS for purchase confirmation if phone number is provided
+        if (customerPhone) {
+          const memberAreaUrl = memberAreaId ? `https://kambafy.com/members/${memberAreaId}` : shareLink;
+          await sendSMSNotification(customerPhone, 'purchase_confirmation', {
+            customerName,
+            productName,
+            memberAreaUrl
+          });
         }
 
       } catch (error) {

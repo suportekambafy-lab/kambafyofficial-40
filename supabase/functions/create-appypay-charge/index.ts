@@ -351,6 +351,7 @@ serve(async (req) => {
           body: {
             customerEmail: customerData.email,
             customerName: customerData.name,
+            customerPhone: phoneNumber || customerData.phone,
             productName: product.name,
             amount: orderDataToSave.amount,
             currency: orderDataToSave.currency,

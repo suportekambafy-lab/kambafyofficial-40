@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.create-multibanco-order]
 verify_jwt = false
+
+[functions.send-sms-notification]
+verify_jwt = false
