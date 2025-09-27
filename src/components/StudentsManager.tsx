@@ -77,6 +77,39 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
     if (!user || !memberAreaId) return;
 
     try {
+      // 1. Primeiro, verificar se o usuário já existe consultando a tabela profiles
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', formData.email)
+        .single();
+      
+      let isNewAccount = false;
+      let temporaryPassword = '';
+      
+      // 2. Se o usuário não existe, criar uma conta
+      if (!existingProfile) {
+        // Gerar senha temporária
+        temporaryPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+        
+        // Criar conta via edge function
+        const { error: registrationError } = await supabase.functions.invoke('process-customer-registration', {
+          body: {
+            customerEmail: formData.email,
+            customerName: formData.name,
+            temporaryPassword: temporaryPassword
+          }
+        });
+
+        if (registrationError) {
+          console.error('Error creating user account:', registrationError);
+          // Continue mesmo se houver erro na criação da conta
+        } else {
+          isNewAccount = true;
+        }
+      }
+
+      // 3. Adicionar estudante à área de membros
       const { error } = await supabase
         .from('member_area_students')
         .insert({
@@ -92,26 +125,78 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
           description: "Erro ao adicionar estudante",
           variant: "destructive"
         });
-      } else {
-        toast({
-          title: "Sucesso",
-          description: "Estudante adicionado com sucesso"
+        return;
+      }
+
+      // 4. Buscar dados da área de membros para o email
+      const { data: memberAreaData, error: memberAreaError } = await supabase
+        .from('member_areas')
+        .select('name, url')
+        .eq('id', memberAreaId)
+        .single();
+
+      if (memberAreaError) {
+        console.error('Error fetching member area:', memberAreaError);
+      }
+
+      // 5. Buscar dados do vendedor
+      const { data: sellerData, error: sellerError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .single();
+
+      if (sellerError) {
+        console.error('Error fetching seller data:', sellerError);
+      }
+
+      // 6. Enviar email de acesso
+      if (memberAreaData) {
+        const memberAreaUrl = `https://app.kambafy.com/member/${memberAreaData.url}`;
+        
+        const { error: emailError } = await supabase.functions.invoke('send-member-access-email', {
+          body: {
+            studentName: formData.name,
+            studentEmail: formData.email,
+            memberAreaName: memberAreaData.name,
+            memberAreaUrl: memberAreaUrl,
+            sellerName: sellerData?.full_name,
+            isNewAccount: isNewAccount,
+            temporaryPassword: isNewAccount ? temporaryPassword : undefined
+          }
         });
-        
-        setFormData({ name: '', email: '' });
-        setDialogOpen(false);
-        
-        // Recarregar lista de estudantes
-        const { data } = await supabase
-          .from('member_area_students')
-          .select('*')
-          .eq('member_area_id', memberAreaId)
-          .order('created_at', { ascending: false });
-          
-        if (data) {
-          setStudents(data);
+
+        if (emailError) {
+          console.error('Error sending access email:', emailError);
+          toast({
+            title: "Atenção",
+            description: "Estudante adicionado, mas houve erro ao enviar email de acesso",
+            variant: "default"
+          });
         }
       }
+
+      toast({
+        title: "Sucesso",
+        description: isNewAccount 
+          ? "Estudante adicionado e conta criada! Email de acesso enviado."
+          : "Estudante adicionado com sucesso! Email de acesso enviado."
+      });
+      
+      setFormData({ name: '', email: '' });
+      setDialogOpen(false);
+      
+      // Recarregar lista de estudantes
+      const { data } = await supabase
+        .from('member_area_students')
+        .select('*')
+        .eq('member_area_id', memberAreaId)
+        .order('created_at', { ascending: false });
+        
+      if (data) {
+        setStudents(data);
+      }
+
     } catch (error) {
       console.error('Exception adding student:', error);
       toast({
