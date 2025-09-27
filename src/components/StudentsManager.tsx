@@ -89,8 +89,10 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
       
       // 2. Se o usuário não existe, criar uma conta
       if (!existingProfile) {
-        // Gerar senha temporária
-        temporaryPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+        // Gerar senha temporária mais robusta (8 caracteres + 4 maiúsculos)
+        temporaryPassword = Math.random().toString(36).slice(-8) + 
+                           Math.random().toString(36).slice(-4).toUpperCase() +
+                           Math.floor(Math.random() * 100).toString().padStart(2, '0');
         
         // Criar conta via edge function
         const { error: registrationError } = await supabase.functions.invoke('process-customer-registration', {
@@ -210,7 +212,41 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
   const handleResendAccess = async (student: Student) => {
     try {
-      // Buscar dados da área de membros
+      // 1. Verificar se o usuário já existe
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', student.student_email)
+        .single();
+      
+      let isNewAccount = false;
+      let temporaryPassword = '';
+      
+      // 2. Se o usuário não existe, criar uma conta
+      if (!existingProfile) {
+        // Gerar senha temporária mais robusta (8 caracteres + 4 maiúsculos + 2 números)
+        temporaryPassword = Math.random().toString(36).slice(-8) + 
+                           Math.random().toString(36).slice(-4).toUpperCase() +
+                           Math.floor(Math.random() * 100).toString().padStart(2, '0');
+        
+        // Criar conta via edge function
+        const { error: registrationError } = await supabase.functions.invoke('process-customer-registration', {
+          body: {
+            customerEmail: student.student_email,
+            customerName: student.student_name,
+            temporaryPassword: temporaryPassword
+          }
+        });
+
+        if (registrationError) {
+          console.error('Error creating user account:', registrationError);
+          // Continue mesmo se houver erro na criação da conta
+        } else {
+          isNewAccount = true;
+        }
+      }
+
+      // 3. Buscar dados da área de membros
       const { data: memberAreaData, error: memberAreaError } = await supabase
         .from('member_areas')
         .select('name, url')
@@ -227,7 +263,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
         return;
       }
 
-      // Buscar dados do vendedor
+      // 4. Buscar dados do vendedor
       const { data: sellerData, error: sellerError } = await supabase
         .from('profiles')
         .select('full_name')
@@ -238,7 +274,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
         console.error('Error fetching seller data:', sellerError);
       }
 
-      // Enviar email de acesso
+      // 5. Enviar email de acesso
       const memberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
       
       const { error: emailError } = await supabase.functions.invoke('send-member-access-email', {
@@ -248,8 +284,8 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
           memberAreaName: memberAreaData.name,
           memberAreaUrl: memberAreaUrl,
           sellerName: sellerData?.full_name,
-          isNewAccount: false, // Sempre false para reenvio
-          temporaryPassword: undefined
+          isNewAccount: isNewAccount,
+          temporaryPassword: isNewAccount ? temporaryPassword : undefined
         }
       });
 
@@ -263,7 +299,9 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
       } else {
         toast({
           title: "Sucesso",
-          description: "Email de acesso reenviado com sucesso!"
+          description: isNewAccount 
+            ? "Conta criada e email de acesso enviado com senha temporária!"
+            : "Email de acesso reenviado com sucesso!"
         });
       }
     } catch (error) {
