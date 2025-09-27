@@ -126,7 +126,7 @@ export function LessonComments({
     }
     return 'AN';
   };
-  return <Card className="border-gray-800 mt-6 bg-zinc-950">
+  return <Card className="mt-6 bg-zinc-950">
       <CardHeader className="bg-zinc-950">
         <CardTitle className="flex items-center gap-2 text-white">
           <MessageCircle className="h-5 w-5" />
