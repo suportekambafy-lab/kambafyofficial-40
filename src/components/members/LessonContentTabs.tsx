@@ -87,7 +87,7 @@ export function LessonContentTabs({ lesson }: LessonContentTabsProps) {
                 </div>
                 
                 {lesson.duration > 0 && (
-                  <div className="flex items-center gap-2 pt-4 border-t border-black">
+                  <div className="flex items-center gap-2 pt-4">
                     <Badge variant="secondary" className="text-sm">
                       Duração: {Math.floor(lesson.duration / 60)}:{(lesson.duration % 60).toString().padStart(2, '0')}
                     </Badge>
