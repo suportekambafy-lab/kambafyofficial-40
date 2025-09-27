@@ -313,7 +313,11 @@ serve(async (req) => {
     }
 
     // Salvar ordem no banco usando dados do checkout ou criar novos dados
-    const orderDataToSave = checkoutOrderData || {
+    const orderDataToSave = checkoutOrderData ? {
+      ...checkoutOrderData,
+      order_id: orderId, // Always use reference number as order_id
+      status: orderStatus
+    } : {
       product_id: productId,
       order_id: orderId,
       customer_name: customerData.name,
