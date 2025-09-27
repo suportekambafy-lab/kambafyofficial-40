@@ -152,7 +152,8 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
       // 6. Enviar email de acesso
       if (memberAreaData) {
-        const memberAreaUrl = `https://app.kambafy.com/member/${memberAreaData.url}`;
+        // Usar a estrutura correta de URLs para áreas de membros
+        const memberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
         
         const { error: emailError } = await supabase.functions.invoke('send-member-access-email', {
           body: {
