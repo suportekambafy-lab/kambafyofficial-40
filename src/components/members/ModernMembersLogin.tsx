@@ -90,7 +90,7 @@ export default function ModernMembersLogin() {
         <img 
           src={kambafyLogo} 
           alt="Kambafy" 
-          className="h-12 w-auto opacity-60"
+          className="h-20 w-auto opacity-60"
         />
       </motion.div>
 
