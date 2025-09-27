@@ -21,6 +21,7 @@ import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
+import { ReferenceModal } from "@/components/ReferenceModal";
 
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 
@@ -104,6 +105,16 @@ const Checkout = () => {
 
   // Verificar se é um upsell de outro pedido
   const [upsellFromOrder, setUpsellFromOrder] = useState<string | null>(null);
+  const [showReferenceModal, setShowReferenceModal] = useState(false);
+  const [referenceData, setReferenceData] = useState<{
+    referenceNumber: string;
+    entity: string;
+    dueDate: string;
+    amount: number;
+    currency: string;
+    productName: string;
+    orderId: string;
+  } | null>(null);
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -1765,6 +1776,20 @@ const Checkout = () => {
         // Para pagamento express, NÃO processar o pedido aqui
         // O pedido só será criado quando o webhook confirmar o pagamento
         setProcessing(false);
+      } else if (selectedPayment === 'reference' && insertedOrder?.payment_status === 'pending' && insertedOrder?.reference_number) {
+        console.log('📋 Mostrando dados da referência AppyPay');
+        // Para pagamento por referência com status pending, mostrar modal com dados da referência
+        setReferenceData({
+          referenceNumber: insertedOrder.reference_number,
+          entity: insertedOrder.entity,
+          dueDate: insertedOrder.due_date,
+          amount: totalAmountInKZ,
+          currency: 'KZ',
+          productName: product.name,
+          orderId: orderId
+        });
+        setShowReferenceModal(true);
+        setProcessing(false);
       } else {
         console.log('🏠 Redirecionando para página de agradecimento');
         // Disparar evento para Facebook Pixel
@@ -2484,6 +2509,15 @@ const Checkout = () => {
           </div>
         </div>
       </div>
+      
+      {/* Reference Modal */}
+      {showReferenceModal && referenceData && (
+        <ReferenceModal
+          isOpen={showReferenceModal}
+          onClose={() => setShowReferenceModal(false)}
+          referenceData={referenceData}
+        />
+      )}
     </ThemeProvider>
   );
 };
