@@ -90,13 +90,9 @@ const ThankYou = () => {
         console.log('✅ Status do pedido atualizado:', order.status);
         setOrderStatus(order.status);
 
-        // Se o status mudou para 'completed', parar verificações e atualizar
+        // Se o status mudou para 'completed', apenas atualizar o estado
         if (order.status === 'completed') {
-          console.log('🎉 Pagamento aprovado! Atualizando dados...');
-          // Recarregar a página para garantir que tudo atualize
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
+          console.log('🎉 Pagamento aprovado! Status atualizado.');
         }
       }
     } catch (error) {
@@ -293,9 +289,9 @@ const ThankYou = () => {
         console.log('✅ Status do pedido atualizado via real-time:', newOrder.status);
         setOrderStatus(newOrder.status);
 
-        // Se foi aprovado via real-time, atualizar imediatamente
+        // Se foi aprovado via real-time, apenas mostrar confirmação
         if (newOrder.status === 'completed') {
-          console.log('🎉 Pagamento aprovado via real-time! Atualizando...');
+          console.log('🎉 Pagamento aprovado via real-time!');
 
           // Mostrar toast de confirmação
           const event = new CustomEvent('showTransferApproval', {
@@ -305,11 +301,6 @@ const ThankYou = () => {
             }
           });
           window.dispatchEvent(event);
-
-          // Recarregar após 3 segundos para atualizar todos os dados
-          setTimeout(() => {
-            window.location.reload();
-          }, 3000);
         }
       }
     }).subscribe(status => {
@@ -318,7 +309,8 @@ const ThankYou = () => {
     
     return () => {
       console.log('🔌 Desconectando real-time updates');
-      supabase.removeChannel(channel);
+      // Usar unsubscribe ao invés de removeChannel para evitar erro
+      channel.unsubscribe();
     };
   }, [orderStatus]); // Só depende do orderStatus, não do orderDetails completo
   const fetchMultibancoData = async () => {
