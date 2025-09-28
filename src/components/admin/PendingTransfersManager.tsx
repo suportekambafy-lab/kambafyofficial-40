@@ -65,28 +65,9 @@ export function PendingTransfersManager() {
       
       console.log('💰 Buscando transferências pendentes...');
 
+      // Usar query manual com RPC ou query direta para contornar problemas de RLS
       const { data: orders, error } = await supabase
-        .from('orders')
-        .select(`
-          id,
-          order_id,
-          customer_name,
-          customer_email,
-          amount,
-          currency,
-          created_at,
-          payment_proof_data,
-          user_id,
-          status,
-          payment_method,
-          products (
-            name
-          )
-        `)
-        .in('status', ['pending'])
-        .in('payment_method', ['transfer', 'bank_transfer', 'transferencia'])
-        .not('payment_proof_data', 'is', null)
-        .order('created_at', { ascending: false });
+        .rpc('get_pending_transfers_for_admin');
 
       console.log('💰 Query resultado:', { data: orders, error });
 
