@@ -31,7 +31,6 @@ import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-
 interface Product {
   id: string;
   name: string;
@@ -42,7 +41,6 @@ interface Product {
   member_area_id: string;
   created_at: string;
 }
-
 interface CustomizationData {
   // Área Principal
   name: string;
@@ -51,14 +49,19 @@ interface CustomizationData {
   hero_title: string;
   hero_description: string;
   logo_url: string;
-  
+
   // Logo de Login (separado do logo principal)
   login_logo_url: string;
 }
-
 export default function Members() {
-  const { user, session, loading } = useAuth();
-  const { toast } = useToast();
+  const {
+    user,
+    session,
+    loading
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
@@ -78,7 +81,7 @@ export default function Members() {
   const [draggedLesson, setDraggedLesson] = useState<Lesson | null>(null);
   const [draggedModule, setDraggedModule] = useState<Module | null>(null);
   const [selectedModuleForLesson, setSelectedModuleForLesson] = useState<string>('');
-  
+
   // Estado para personalização da área de membros
   const [isUpdatingArea, setIsUpdatingArea] = useState(false);
   const [customizationTab, setCustomizationTab] = useState('basics');
@@ -91,12 +94,12 @@ export default function Members() {
     logo_url: '',
     login_logo_url: ''
   });
-  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     video_url: '',
-    duration: 0, // Duração em segundos
+    duration: 0,
+    // Duração em segundos
     status: 'draft' as 'draft' | 'published' | 'archived',
     module_id: 'none',
     complementary_links: [] as ComplementaryLink[],
@@ -104,7 +107,6 @@ export default function Members() {
     is_scheduled: false,
     scheduled_at: null as Date | null
   });
-  
   const [moduleFormData, setModuleFormData] = useState({
     title: '',
     description: '',
@@ -113,14 +115,17 @@ export default function Members() {
     cover_orientation: 'horizontal' as 'horizontal' | 'vertical',
     coming_soon: false
   });
-
   useEffect(() => {
     if (!loading && user) {
       // Cache check para member areas
       const cached = sessionStorage.getItem(`member-areas-${user.id}`);
       if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 3 * 60 * 1000) { // 3 minutos
+        const {
+          data,
+          timestamp
+        } = JSON.parse(cached);
+        if (Date.now() - timestamp < 3 * 60 * 1000) {
+          // 3 minutos
           setMemberAreas(data);
           return;
         }
@@ -132,7 +137,6 @@ export default function Members() {
       setProducts([]);
     }
   }, [user, loading]);
-
   useEffect(() => {
     if (selectedArea && user) {
       console.log('Selected area changed, loading lessons, modules and products for:', selectedArea.id);
@@ -160,7 +164,6 @@ export default function Members() {
   // Função para atualizar a área de membros
   const handleUpdateArea = async () => {
     if (!selectedArea || !user) return;
-
     setIsUpdatingArea(true);
     try {
       const updateData: any = {
@@ -175,19 +178,14 @@ export default function Members() {
 
       // Adicionar campos de personalização se existirem
       if (areaCustomizationData.login_logo_url) updateData.login_logo_url = areaCustomizationData.login_logo_url;
-
-      const { error } = await supabase
-        .from('member_areas')
-        .update(updateData)
-        .eq('id', selectedArea.id);
-
+      const {
+        error
+      } = await supabase.from('member_areas').update(updateData).eq('id', selectedArea.id);
       if (error) throw error;
-
       toast({
         title: "Sucesso",
         description: "Personalização atualizada com sucesso!"
       });
-
       await loadData(); // Recarregar dados para atualizar a UI
     } catch (error: any) {
       console.error('Error updating member area:', error);
@@ -204,18 +202,16 @@ export default function Members() {
   // Função para atualizar capa de módulo
   const handleUpdateModuleCover = async (moduleId: string, coverUrl: string) => {
     try {
-      const { error } = await supabase
-        .from('modules')
-        .update({ cover_image_url: coverUrl })
-        .eq('id', moduleId);
-
+      const {
+        error
+      } = await supabase.from('modules').update({
+        cover_image_url: coverUrl
+      }).eq('id', moduleId);
       if (error) throw error;
-
       toast({
         title: "Sucesso",
         description: "Capa do módulo atualizada!"
       });
-
       loadModules(); // Recarregar módulos
     } catch (error) {
       console.error('Error updating module cover:', error);
@@ -230,18 +226,17 @@ export default function Members() {
   // Função para atualizar orientação de módulo
   const handleUpdateModuleOrientation = async (moduleId: string, orientation: 'horizontal' | 'vertical') => {
     try {
-      const { error } = await supabase
-        .from('modules')
-        .update({ cover_orientation: orientation })
-        .eq('id', moduleId);
-
+      const {
+        error
+      } = await supabase.from('modules').update({
+        cover_orientation: orientation
+      }).eq('id', moduleId);
       if (error) throw error;
-
       toast({
         title: "Sucesso",
         description: "Orientação da capa atualizada!"
       });
-      
+
       // Recarregar módulos
       loadModules();
     } catch (error: any) {
@@ -252,53 +247,48 @@ export default function Members() {
       });
     }
   };
-
   const loadData = async () => {
     if (!user) {
       console.error('loadData called but no user found');
       return;
     }
-
     console.log('=== LOADING DATA ===');
     console.log('User ID:', user.id);
-    
     try {
       console.log('Fetching member areas...');
-      const { data: areasData, error: areasError } = await supabase
-        .from('member_areas')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      console.log('Areas query result:', { data: areasData, error: areasError });
-
+      const {
+        data: areasData,
+        error: areasError
+      } = await supabase.from('member_areas').select('*').eq('user_id', user.id).order('created_at', {
+        ascending: false
+      });
+      console.log('Areas query result:', {
+        data: areasData,
+        error: areasError
+      });
       if (areasError) {
         console.error('Error fetching member areas:', areasError);
         throw areasError;
       }
 
       // Carregar contagem de estudantes para cada área
-      const areasWithCounts = await Promise.all(
-        (areasData || []).map(async (area) => {
-          const { count } = await supabase
-            .from('member_area_students')
-            .select('*', { count: 'exact' })
-            .eq('member_area_id', area.id);
-
-          const { count: lessonsCount } = await supabase
-            .from('lessons')
-            .select('*', { count: 'exact' })
-            .eq('member_area_id', area.id)
-            .eq('status', 'published');
-
-          return {
-            ...area,
-            students_count: count || 0,
-            lessons_count: lessonsCount || 0
-          };
-        })
-      );
-
+      const areasWithCounts = await Promise.all((areasData || []).map(async area => {
+        const {
+          count
+        } = await supabase.from('member_area_students').select('*', {
+          count: 'exact'
+        }).eq('member_area_id', area.id);
+        const {
+          count: lessonsCount
+        } = await supabase.from('lessons').select('*', {
+          count: 'exact'
+        }).eq('member_area_id', area.id).eq('status', 'published');
+        return {
+          ...area,
+          students_count: count || 0,
+          lessons_count: lessonsCount || 0
+        };
+      }));
       setMemberAreas(areasWithCounts);
 
       // Cache por 3 minutos
@@ -306,7 +296,6 @@ export default function Members() {
         data: areasWithCounts,
         timestamp: Date.now()
       }));
-
     } catch (error) {
       console.error('Error in loadData:', error);
       toast({
@@ -316,50 +305,44 @@ export default function Members() {
       });
     }
   };
-
   const loadModules = async () => {
     if (!user || !selectedArea) {
       console.error('loadModules called but no user or selectedArea found');
       return;
     }
-
     console.log('=== LOADING MODULES ===');
     console.log('User ID:', user.id);
     console.log('Selected Area ID:', selectedArea.id);
-    
     try {
-      const { data: modulesData, error: modulesError } = await supabase
-        .from('modules')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('member_area_id', selectedArea.id)
-        .order('order_number', { ascending: true });
-
-      console.log('Modules query result:', { data: modulesData, error: modulesError });
-
+      const {
+        data: modulesData,
+        error: modulesError
+      } = await supabase.from('modules').select('*').eq('user_id', user.id).eq('member_area_id', selectedArea.id).order('order_number', {
+        ascending: true
+      });
+      console.log('Modules query result:', {
+        data: modulesData,
+        error: modulesError
+      });
       if (modulesError) {
         console.error('Error fetching modules:', modulesError);
         throw modulesError;
       }
 
       // Carregar contagem de aulas para cada módulo
-      const modulesWithCounts = await Promise.all(
-        (modulesData || []).map(async (module) => {
-          const { count } = await supabase
-            .from('lessons')
-            .select('*', { count: 'exact' })
-            .eq('module_id', module.id);
-
-          return {
-            ...module,
-            lessons_count: count || 0
-          };
-        })
-      );
-      
+      const modulesWithCounts = await Promise.all((modulesData || []).map(async module => {
+        const {
+          count
+        } = await supabase.from('lessons').select('*', {
+          count: 'exact'
+        }).eq('module_id', module.id);
+        return {
+          ...module,
+          lessons_count: count || 0
+        };
+      }));
       console.log('Setting modules:', modulesWithCounts);
       setModules(modulesWithCounts as Module[]);
-      
     } catch (error) {
       console.error('Error in loadModules:', error);
       toast({
@@ -369,49 +352,37 @@ export default function Members() {
       });
     }
   };
-
   const loadLessons = async () => {
     if (!user || !selectedArea) {
       console.error('loadLessons called but no user or selectedArea found');
       return;
     }
-
     console.log('=== LOADING LESSONS ===');
     console.log('User ID:', user.id);
     console.log('Selected Area ID:', selectedArea.id);
-    
     setLoadingLessons(true);
-    
     try {
-      const { data: lessonsData, error: lessonsError } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('member_area_id', selectedArea.id)
-        .order('order_number', { ascending: true });
-
-      console.log('Lessons query result:', { data: lessonsData, error: lessonsError });
-
+      const {
+        data: lessonsData,
+        error: lessonsError
+      } = await supabase.from('lessons').select('*').eq('user_id', user.id).eq('member_area_id', selectedArea.id).order('order_number', {
+        ascending: true
+      });
+      console.log('Lessons query result:', {
+        data: lessonsData,
+        error: lessonsError
+      });
       if (lessonsError) {
         console.error('Error fetching lessons:', lessonsError);
         throw lessonsError;
       }
-      
       console.log('Setting lessons:', lessonsData);
       const processedLessons = (lessonsData || []).map((lesson: any) => ({
         ...lesson,
-        complementary_links: lesson.complementary_links ? 
-          (typeof lesson.complementary_links === 'string' ? 
-            JSON.parse(lesson.complementary_links) : 
-            lesson.complementary_links) : [],
-        lesson_materials: lesson.lesson_materials ? 
-          (typeof lesson.lesson_materials === 'string' ? 
-            JSON.parse(lesson.lesson_materials) : 
-            lesson.lesson_materials) : []
+        complementary_links: lesson.complementary_links ? typeof lesson.complementary_links === 'string' ? JSON.parse(lesson.complementary_links) : lesson.complementary_links : [],
+        lesson_materials: lesson.lesson_materials ? typeof lesson.lesson_materials === 'string' ? JSON.parse(lesson.lesson_materials) : lesson.lesson_materials : []
       })) as Lesson[];
-      
       setLessons(processedLessons);
-      
     } catch (error) {
       console.error('Error in loadLessons:', error);
       toast({
@@ -423,38 +394,32 @@ export default function Members() {
       setLoadingLessons(false);
     }
   };
-
   const loadProducts = async () => {
     if (!user || !selectedArea) {
       console.error('loadProducts called but no user or selectedArea found');
       return;
     }
-
     console.log('=== LOADING PRODUCTS ===');
     console.log('User ID:', user.id);
     console.log('Selected Area ID:', selectedArea.id);
-    
     setLoadingProducts(true);
-    
     try {
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('member_area_id', selectedArea.id)
-        .eq('type', 'Curso')
-        .order('created_at', { ascending: false });
-
-      console.log('Products query result:', { data: productsData, error: productsError });
-
+      const {
+        data: productsData,
+        error: productsError
+      } = await supabase.from('products').select('*').eq('user_id', user.id).eq('member_area_id', selectedArea.id).eq('type', 'Curso').order('created_at', {
+        ascending: false
+      });
+      console.log('Products query result:', {
+        data: productsData,
+        error: productsError
+      });
       if (productsError) {
         console.error('Error fetching products:', productsError);
         throw productsError;
       }
-      
       console.log('Setting products:', productsData);
       setProducts((productsData || []) as Product[]);
-      
     } catch (error) {
       console.error('Error in loadProducts:', error);
       toast({
@@ -466,36 +431,31 @@ export default function Members() {
       setLoadingProducts(false);
     }
   };
-
   const loadAllProducts = async () => {
     if (!user) {
       console.error('loadAllProducts called but no user found');
       return;
     }
-
     console.log('=== LOADING ALL PRODUCTS ===');
     console.log('User ID:', user.id);
-    
     setLoadingProducts(true);
-    
     try {
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('type', 'Curso')
-        .order('created_at', { ascending: false });
-
-      console.log('All products query result:', { data: productsData, error: productsError });
-
+      const {
+        data: productsData,
+        error: productsError
+      } = await supabase.from('products').select('*').eq('user_id', user.id).eq('type', 'Curso').order('created_at', {
+        ascending: false
+      });
+      console.log('All products query result:', {
+        data: productsData,
+        error: productsError
+      });
       if (productsError) {
         console.error('Error fetching all products:', productsError);
         throw productsError;
       }
-      
       console.log('Setting all products:', productsData);
       setProducts((productsData || []) as Product[]);
-      
     } catch (error) {
       console.error('Error in loadAllProducts:', error);
       toast({
@@ -507,11 +467,9 @@ export default function Members() {
       setLoadingProducts(false);
     }
   };
-
   const handleSubmitModule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-
     try {
       const moduleData = {
         title: moduleFormData.title,
@@ -524,32 +482,25 @@ export default function Members() {
         member_area_id: selectedArea?.id,
         order_number: editingModule ? editingModule.order_number : modules.length + 1
       };
-
       if (editingModule) {
-        const { error } = await supabase
-          .from('modules')
-          .update(moduleData)
-          .eq('id', editingModule.id);
-        
+        const {
+          error
+        } = await supabase.from('modules').update(moduleData).eq('id', editingModule.id);
         if (error) throw error;
-        
         toast({
           title: "Sucesso",
           description: "Módulo atualizado com sucesso"
         });
       } else {
-        const { error } = await supabase
-          .from('modules')
-          .insert([moduleData]);
-        
+        const {
+          error
+        } = await supabase.from('modules').insert([moduleData]);
         if (error) throw error;
-        
         toast({
-          title: "Sucesso",  
+          title: "Sucesso",
           description: "Módulo criado com sucesso"
         });
       }
-
       resetModuleForm();
       setModuleDialogOpen(false);
       await loadModules();
@@ -562,12 +513,10 @@ export default function Members() {
       });
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('=== CREATING LESSON ===');
     console.log('Form data:', formData);
-    
     if (!user) {
       console.error('No user found');
       toast({
@@ -577,7 +526,6 @@ export default function Members() {
       });
       return;
     }
-
     if (!selectedArea) {
       console.error('No selected area');
       toast({
@@ -587,7 +535,6 @@ export default function Members() {
       });
       return;
     }
-
     if (!formData.title.trim()) {
       console.error('No title provided');
       toast({
@@ -597,37 +544,29 @@ export default function Members() {
       });
       return;
     }
-
     try {
       // Validar e garantir que os arrays são seguros antes de stringify
       const safeLinks = Array.isArray(formData.complementary_links) ? formData.complementary_links : [];
       const safeMaterials = Array.isArray(formData.lesson_materials) ? formData.lesson_materials : [];
-      
+
       // Validação adicional dos links para segurança
-      const validatedLinks = safeLinks.filter(link => 
-        link && 
-        typeof link.title === 'string' && 
-        typeof link.url === 'string' &&
-        link.title.trim().length > 0 &&
-        link.url.trim().length > 0
-      );
-      
+      const validatedLinks = safeLinks.filter(link => link && typeof link.title === 'string' && typeof link.url === 'string' && link.title.trim().length > 0 && link.url.trim().length > 0);
       const lessonData = {
         title: formData.title.trim(),
         description: formData.description?.trim() || null,
         video_url: formData.video_url?.trim() || null,
-        duration: formData.duration, // Already in seconds from form
+        duration: formData.duration,
+        // Already in seconds from form
         status: formData.status,
         user_id: user.id,
         member_area_id: selectedArea.id,
-        module_id: (formData.module_id && formData.module_id !== 'none') ? formData.module_id : (selectedModuleForLesson || null),
+        module_id: formData.module_id && formData.module_id !== 'none' ? formData.module_id : selectedModuleForLesson || null,
         order_number: editingLesson ? editingLesson.order_number : lessons.length + 1,
         complementary_links: JSON.stringify(validatedLinks),
         lesson_materials: JSON.stringify(safeMaterials),
         is_scheduled: formData.is_scheduled,
         scheduled_at: formData.is_scheduled && formData.scheduled_at ? formData.scheduled_at.toISOString() : null
       };
-
       console.log('🔍 Form data before saving:', {
         form_complementary_links: formData.complementary_links,
         form_lesson_materials: formData.lesson_materials,
@@ -641,46 +580,37 @@ export default function Members() {
       console.log('🔍 Lesson data to insert/update:', lessonData);
       console.log('🔍 complementary_links JSON:', lessonData.complementary_links);
       console.log('🔍 Lesson data to insert/update:', lessonData);
-
       if (editingLesson) {
         console.log('Updating lesson:', editingLesson.id);
         console.log('🔄 Update data:', lessonData);
-        
-        const { data: updatedData, error } = await supabase
-          .from('lessons')
-          .update(lessonData)
-          .eq('id', editingLesson.id)
-          .select()
-          .single();
-        
+        const {
+          data: updatedData,
+          error
+        } = await supabase.from('lessons').update(lessonData).eq('id', editingLesson.id).select().single();
         if (error) {
           console.error('Update error:', error);
           throw error;
         }
-        
         console.log('✅ Updated lesson data:', updatedData);
-        
         toast({
           title: "Sucesso",
           description: "Aula atualizada com sucesso"
         });
       } else {
         console.log('Creating new lesson');
-        const { data, error } = await supabase
-          .from('lessons')
-          .insert([lessonData])
-          .select()
-          .single();
-        
-        console.log('Insert lesson result:', { data, error });
-        
+        const {
+          data,
+          error
+        } = await supabase.from('lessons').insert([lessonData]).select().single();
+        console.log('Insert lesson result:', {
+          data,
+          error
+        });
         if (error) {
           console.error('Insert error:', error);
           throw error;
         }
-        
         console.log('Successfully saved lesson with video_url:', data?.video_url);
-        
         toast({
           title: "Sucesso",
           description: "Aula criada com sucesso"
@@ -691,12 +621,11 @@ export default function Members() {
       resetForm();
       setDialogOpen(false);
       setSelectedModuleForLesson('');
-      
+
       // Reload data
       await loadLessons();
       await loadModules();
       await loadData();
-      
       console.log('Lesson created/updated successfully');
     } catch (error) {
       console.error('Erro ao salvar aula:', error);
@@ -707,23 +636,14 @@ export default function Members() {
       });
     }
   };
-
   const handleEdit = (lesson: Lesson) => {
     console.log('📝 Editing lesson:', lesson);
     console.log('📝 Lesson complementary_links:', lesson.complementary_links);
     console.log('📝 Lesson lesson_materials:', lesson.lesson_materials);
-    
+
     // Processar os dados para garantir que sejam arrays válidos
-    const processedLinks = lesson.complementary_links ? 
-      (typeof lesson.complementary_links === 'string' ? 
-        JSON.parse(lesson.complementary_links) : 
-        lesson.complementary_links) : [];
-        
-    const processedMaterials = lesson.lesson_materials ? 
-      (typeof lesson.lesson_materials === 'string' ? 
-        JSON.parse(lesson.lesson_materials) : 
-        lesson.lesson_materials) : [];
-    
+    const processedLinks = lesson.complementary_links ? typeof lesson.complementary_links === 'string' ? JSON.parse(lesson.complementary_links) : lesson.complementary_links : [];
+    const processedMaterials = lesson.lesson_materials ? typeof lesson.lesson_materials === 'string' ? JSON.parse(lesson.lesson_materials) : lesson.lesson_materials : [];
     setEditingLesson(lesson);
     setFormData({
       title: lesson.title,
@@ -737,18 +657,15 @@ export default function Members() {
       is_scheduled: lesson.is_scheduled || false,
       scheduled_at: lesson.scheduled_at ? new Date(lesson.scheduled_at) : null
     });
-    
     console.log('📝 Form data set to:', {
       complementary_links: processedLinks,
       lesson_materials: processedMaterials,
       complementary_links_length: processedLinks.length,
       lesson_materials_length: processedMaterials.length
     });
-    
     setSelectedModuleForLesson(''); // Reset this when editing
     setDialogOpen(true);
   };
-
   const handleEditModule = (module: Module) => {
     setEditingModule(module);
     setModuleFormData({
@@ -761,20 +678,15 @@ export default function Members() {
     });
     setModuleDialogOpen(true);
   };
-
   const handleDelete = async (lessonId: string) => {
     if (!confirm('Tem certeza que deseja remover esta aula?')) return;
-    
     try {
-      const { error } = await supabase
-        .from('lessons')
-        .delete()
-        .eq('id', lessonId);
-
+      const {
+        error
+      } = await supabase.from('lessons').delete().eq('id', lessonId);
       if (error) throw error;
-
       toast({
-        title: "Sucesso",  
+        title: "Sucesso",
         description: "Aula removida com sucesso"
       });
       await loadLessons();
@@ -789,18 +701,13 @@ export default function Members() {
       });
     }
   };
-
   const handleDeleteModule = async (moduleId: string) => {
     if (!confirm('Tem certeza que deseja remover este módulo? Todas as aulas do módulo também serão removidas.')) return;
-    
     try {
-      const { error } = await supabase
-        .from('modules')
-        .delete()
-        .eq('id', moduleId);
-
+      const {
+        error
+      } = await supabase.from('modules').delete().eq('id', moduleId);
       if (error) throw error;
-
       toast({
         title: "Sucesso",
         description: "Módulo removido com sucesso"
@@ -816,23 +723,19 @@ export default function Members() {
       });
     }
   };
-
   const handleToggleVisibility = async (lesson: Lesson) => {
     const newStatus = lesson.status === 'published' ? 'draft' : 'published';
-    
     try {
-      const { error } = await supabase
-        .from('lessons')
-        .update({ status: newStatus })
-        .eq('id', lesson.id);
-
+      const {
+        error
+      } = await supabase.from('lessons').update({
+        status: newStatus
+      }).eq('id', lesson.id);
       if (error) throw error;
-
       toast({
         title: "Sucesso",
         description: `Aula ${newStatus === 'published' ? 'publicada' : 'ocultada'} com sucesso`
       });
-      
       await loadLessons();
       await loadData(); // Recarregar para atualizar contadores
     } catch (error) {
@@ -844,23 +747,19 @@ export default function Members() {
       });
     }
   };
-
   const handleToggleModuleVisibility = async (module: Module) => {
     const newStatus = module.status === 'published' ? 'draft' : 'published';
-    
     try {
-      const { error } = await supabase
-        .from('modules')
-        .update({ status: newStatus })
-        .eq('id', module.id);
-
+      const {
+        error
+      } = await supabase.from('modules').update({
+        status: newStatus
+      }).eq('id', module.id);
       if (error) throw error;
-
       toast({
         title: "Sucesso",
         description: `Módulo ${newStatus === 'published' ? 'publicado' : 'ocultado'} com sucesso`
       });
-      
       await loadModules();
     } catch (error) {
       console.error('Error toggling visibility:', error);
@@ -871,7 +770,6 @@ export default function Members() {
       });
     }
   };
-
   const resetForm = () => {
     console.log('Resetting form');
     setFormData({
@@ -880,7 +778,8 @@ export default function Members() {
       video_url: '',
       duration: 0,
       status: 'draft',
-      module_id: 'none', // Garantir que nunca seja string vazia
+      module_id: 'none',
+      // Garantir que nunca seja string vazia
       complementary_links: [],
       lesson_materials: [],
       is_scheduled: false,
@@ -890,7 +789,6 @@ export default function Members() {
     setSelectedModuleForLesson('');
     console.log('Form reset complete');
   };
-
   const resetModuleForm = () => {
     setModuleFormData({
       title: '',
@@ -902,11 +800,13 @@ export default function Members() {
     });
     setEditingModule(null);
   };
-
   const handleVideoUploaded = (videoUrl: string) => {
     console.log('Video uploaded callback received:', videoUrl);
     setFormData(prev => {
-      const newFormData = { ...prev, video_url: videoUrl };
+      const newFormData = {
+        ...prev,
+        video_url: videoUrl
+      };
       console.log('Updated formData with video:', newFormData);
       return newFormData;
     });
@@ -917,7 +817,6 @@ export default function Members() {
       description: "Vídeo enviado com sucesso! Agora preencha os dados da aula."
     });
   };
-
   const handlePreview = () => {
     if (selectedArea) {
       // Navegar para a área de membros real ao invés de abrir preview
@@ -926,7 +825,6 @@ export default function Members() {
       window.open(memberAreaUrl, '_blank');
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
@@ -939,7 +837,6 @@ export default function Members() {
         return 'bg-gray-100 text-gray-800';
     }
   };
-
   const getStatusText = (status: string) => {
     switch (status) {
       case 'published':
@@ -952,7 +849,6 @@ export default function Members() {
         return status;
     }
   };
-
   const getProductStatusColor = (status: string) => {
     switch (status) {
       case 'Ativo':
@@ -965,21 +861,17 @@ export default function Members() {
         return 'bg-gray-100 text-gray-800';
     }
   };
-
   const getModuleTitle = (moduleId: string) => {
     const module = modules.find(m => m.id === moduleId);
     return module ? module.title : 'Sem módulo';
   };
-
   const getLessonsByModule = (moduleId: string) => {
     return lessons.filter(lesson => lesson.module_id === moduleId).sort((a, b) => a.order_number - b.order_number);
   };
-
   const openLessonDialogForModule = (moduleId: string) => {
     console.log('openLessonDialogForModule called with moduleId:', moduleId);
     console.log('Current state - dialogOpen:', dialogOpen, 'selectedArea:', selectedArea?.id);
     console.log('Current modules:', modules.length);
-    
     if (!selectedArea) {
       console.error('No selected area found!');
       toast({
@@ -989,7 +881,7 @@ export default function Members() {
       });
       return;
     }
-    
+
     // Resetar primeiro para evitar valores vazios problemáticos
     setFormData({
       title: '',
@@ -997,7 +889,8 @@ export default function Members() {
       video_url: '',
       duration: 0,
       status: 'draft',
-      module_id: moduleId || 'none', // Garantir que nunca seja string vazia
+      module_id: moduleId || 'none',
+      // Garantir que nunca seja string vazia
       complementary_links: [],
       lesson_materials: [],
       is_scheduled: false,
@@ -1008,24 +901,17 @@ export default function Members() {
     setDialogOpen(true);
     console.log('Dialog should be open now');
   };
-
   const handleDeleteArea = async (areaId: string) => {
     if (!user) return;
-    
     try {
-      const { error } = await supabase
-        .from('member_areas')
-        .delete()
-        .eq('id', areaId)
-        .eq('user_id', user.id);
-        
+      const {
+        error
+      } = await supabase.from('member_areas').delete().eq('id', areaId).eq('user_id', user.id);
       if (error) throw error;
-      
       toast({
         title: "Sucesso",
         description: "Área excluída com sucesso"
       });
-      
       setSelectedArea(null);
       await loadData();
     } catch (error) {
@@ -1037,18 +923,13 @@ export default function Members() {
       });
     }
   };
-
   if (loading) {
-    return (
-      <div className="p-3 md:p-6 flex items-center justify-center">
+    return <div className="p-3 md:p-6 flex items-center justify-center">
         <LoadingSpinner text="Carregando..." />
-      </div>
-    );
+      </div>;
   }
-
   if (!user) {
-    return (
-      <div className="p-3 md:p-6 flex items-center justify-center">
+    return <div className="p-3 md:p-6 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Acesso Negado</h2>
           <p className="text-muted-foreground mb-3 md:mb-4 text-sm md:text-base">Você precisa estar logado para acessar esta página.</p>
@@ -1056,13 +937,10 @@ export default function Members() {
             Fazer Login
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (selectedArea) {
-    return (
-      <div className="p-3 md:p-6 space-y-4 md:space-y-6">
+    return <div className="p-3 md:p-6 space-y-4 md:space-y-6">
         <div className="flex flex-col gap-3 md:gap-0 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 md:gap-4">
             <Button variant="ghost" onClick={() => setSelectedArea(null)} className="p-1 md:p-2">
@@ -1070,12 +948,7 @@ export default function Members() {
             </Button>
             <div>
               <h1 className="text-lg md:text-2xl font-bold">{selectedArea.name}</h1>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-2 text-xs md:text-sm"
-                onClick={handlePreview}
-              >
+              <Button variant="outline" size="sm" className="mt-2 text-xs md:text-sm" onClick={handlePreview}>
                 <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                 Pré-visualizar
               </Button>
@@ -1130,12 +1003,8 @@ export default function Members() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {modules.length > 0 ? (
-                  <div className="space-y-4">
-                    {modules
-                      .sort((a, b) => a.order_number - b.order_number)
-                      .map((module) => (
-                       <div key={module.id} className="border rounded-lg p-3 md:p-4 space-y-3">
+                {modules.length > 0 ? <div className="space-y-4">
+                    {modules.sort((a, b) => a.order_number - b.order_number).map(module => <div key={module.id} className="border rounded-lg p-3 md:p-4 space-y-3">
                         {/* Cabeçalho do Módulo */}
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                           <div className="flex items-center gap-2 md:gap-3">
@@ -1144,15 +1013,11 @@ export default function Members() {
                             <div className="flex-1">
                               <div className="font-medium flex items-center gap-2 text-sm md:text-base">
                                 {module.title}
-                                {module.status !== 'published' && (
-                                  <EyeOff className="w-3 h-3 md:w-4 md:h-4 text-gray-400" />
-                                )}
+                                {module.status !== 'published' && <EyeOff className="w-3 h-3 md:w-4 md:h-4 text-gray-400" />}
                               </div>
-                              {module.description && (
-                                <div className="text-xs md:text-sm text-gray-500 mt-1">
+                              {module.description && <div className="text-xs md:text-sm text-gray-500 mt-1">
                                   {module.description}
-                                </div>
-                              )}
+                                </div>}
                               <div className="text-xs md:text-sm text-gray-400 mt-1">
                                 {module.lessons_count || 0} aulas
                               </div>
@@ -1162,20 +1027,15 @@ export default function Members() {
                             <Badge className={getStatusColor(module.status) + " text-xs"}>
                               {getStatusText(module.status)}
                             </Badge>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={(e) => {
-                                console.log('Button clicked! Event:', e);
-                                console.log('Module ID:', module.id);
-                                console.log('Module title:', module.title);
-                                console.log('About to call openLessonDialogForModule');
-                                e.preventDefault();
-                                e.stopPropagation();
-                                openLessonDialogForModule(module.id);
-                              }}
-                              className="text-xs md:text-sm"
-                            >
+                            <Button variant="outline" size="sm" onClick={e => {
+                        console.log('Button clicked! Event:', e);
+                        console.log('Module ID:', module.id);
+                        console.log('Module title:', module.title);
+                        console.log('About to call openLessonDialogForModule');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openLessonDialogForModule(module.id);
+                      }} className="text-xs md:text-sm">
                               <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                               <span className="hidden md:inline">Adicionar Aula</span>
                               <span className="md:hidden">Aula</span>
@@ -1192,22 +1052,15 @@ export default function Members() {
                                   Editar
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleToggleModuleVisibility(module)}>
-                                  {module.status === 'published' ? (
-                                    <>
+                                  {module.status === 'published' ? <>
                                       <EyeOff className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                                       Ocultar
-                                    </>
-                                  ) : (
-                                    <>
+                                    </> : <>
                                       <Eye className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                                       Publicar
-                                    </>
-                                  )}
+                                    </>}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleDeleteModule(module.id)}
-                                  className="text-destructive"
-                                >
+                                <DropdownMenuItem onClick={() => handleDeleteModule(module.id)} className="text-destructive">
                                   <Trash2 className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                                   Remover
                                 </DropdownMenuItem>
@@ -1218,27 +1071,19 @@ export default function Members() {
 
                         {/* Aulas do Módulo */}
                         <div className="pl-4 md:pl-8 space-y-2">
-                          {getLessonsByModule(module.id).map((lesson) => (
-                            <div 
-                              key={lesson.id} 
-                              className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-                            >
+                          {getLessonsByModule(module.id).map(lesson => <div key={lesson.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
                               <div className="flex items-center gap-2 md:gap-3 flex-1">
                                 <GripVertical className="w-3 h-3 md:w-4 md:h-4 text-gray-400 cursor-move hidden md:block" />
                                 <div className="w-2 h-2 md:w-3 md:h-3 bg-gray-200 rounded flex-shrink-0"></div>
                                 <div className="flex-1 min-w-0">
                                   <div className="font-medium flex items-center gap-2 text-xs md:text-sm">
                                     <span className="truncate">{lesson.title}</span>
-                                    {lesson.status !== 'published' && (
-                                      <EyeOff className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                                    )}
+                                    {lesson.status !== 'published' && <EyeOff className="w-3 h-3 text-gray-400 flex-shrink-0" />}
                                   </div>
-                                  {lesson.description && (
-                                    <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                  {lesson.description && <div className="text-xs text-gray-500 mt-1 line-clamp-2">
                                       {lesson.description.substring(0, 60)}
                                       {lesson.description.length > 60 && '...'}
-                                    </div>
-                                  )}
+                                    </div>}
                                 </div>
                               </div>
                               <div className="flex items-center gap-1 md:gap-2 justify-end">
@@ -1257,57 +1102,41 @@ export default function Members() {
                                       Editar
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleToggleVisibility(lesson)}>
-                                      {lesson.status === 'published' ? (
-                                        <>
+                                      {lesson.status === 'published' ? <>
                                           <EyeOff className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                                           Ocultar
-                                        </>
-                                      ) : (
-                                        <>
+                                        </> : <>
                                           <Eye className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                                           Publicar
-                                        </>
-                                      )}
+                                        </>}
                                     </DropdownMenuItem>
-                                    {lesson.video_url && (
-                                      <DropdownMenuItem onClick={() => window.open(lesson.video_url, '_blank')}>
+                                    {lesson.video_url && <DropdownMenuItem onClick={() => window.open(lesson.video_url, '_blank')}>
                                         <Video className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                                         Ver Vídeo
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem 
-                                      onClick={() => handleDelete(lesson.id)}
-                                      className="text-destructive"
-                                    >
+                                      </DropdownMenuItem>}
+                                    <DropdownMenuItem onClick={() => handleDelete(lesson.id)} className="text-destructive">
                                       <Trash2 className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                                       Remover
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </div>
-                            </div>
-                          ))}
+                            </div>)}
                           
-                          {getLessonsByModule(module.id).length === 0 && (
-                            <div className="text-center py-4 text-gray-500 text-xs md:text-sm">
+                          {getLessonsByModule(module.id).length === 0 && <div className="text-center py-4 text-gray-500 text-xs md:text-sm">
                               <Video className="h-4 w-4 md:h-6 md:w-6 mx-auto mb-2" />
                               <p>Nenhuma aula neste módulo ainda</p>
-                            </div>
-                          )}
+                            </div>}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 md:py-8 text-gray-500">
+                      </div>)}
+                  </div> : <div className="text-center py-6 md:py-8 text-gray-500">
                     <BookOpen className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2" />
                     <p className="text-sm md:text-base">Nenhum módulo criado ainda</p>
                     <Button onClick={() => setModuleDialogOpen(true)} className="mt-4" size="sm">
                       <Plus className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                       Criar primeiro módulo
                     </Button>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1323,14 +1152,10 @@ export default function Members() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 md:space-y-4">
-                {loadingProducts ? (
-                  <div className="text-center py-6 md:py-8">
+                {loadingProducts ? <div className="text-center py-6 md:py-8">
                     <LoadingSpinner size="sm" text="Carregando cursos..." />
-                  </div>
-                ) : products.length > 0 ? (
-                  <div className="space-y-2 md:space-y-3">
-                    {products.map((product) => (
-                      <div key={product.id} className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between p-3 border rounded-lg hover:bg-gray-50">
+                  </div> : products.length > 0 ? <div className="space-y-2 md:space-y-3">
+                    {products.map(product => <div key={product.id} className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between p-3 border rounded-lg hover:bg-gray-50">
                         <div className="flex items-center gap-2 md:gap-3 flex-1">
                           <div className="w-3 h-3 md:w-4 md:h-4 bg-blue-200 rounded flex-shrink-0"></div>
                           <div className="flex-1 min-w-0">
@@ -1366,34 +1191,27 @@ export default function Members() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 md:py-8 text-gray-500">
+                      </div>)}
+                  </div> : <div className="text-center py-6 md:py-8 text-gray-500">
                     <BookOpen className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2" />
                     <p className="text-sm md:text-base">Nenhum curso conectado a esta área ainda</p>
                     <Button onClick={() => navigate('/vendedor/produtos')} className="mt-4" size="sm">
                       <Plus className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                       Criar ou conectar curso
                     </Button>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="alunos" className="space-y-6">
-            <StudentsManager 
-              memberAreaId={selectedArea.id} 
-              memberAreaName={selectedArea.name}
-            />
+            <StudentsManager memberAreaId={selectedArea.id} memberAreaName={selectedArea.name} />
           </TabsContent>
 
           <TabsContent value="configuracoes">
             <div className="space-y-6">
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
-                <h3 className="font-semibold text-lg mb-2">🎨 Personalização Avançada da Área</h3>
+                <h3 className="font-semibold text-lg mb-2"> Personalização Avançada da Área</h3>
                 <p className="text-sm text-gray-600">Configure todos os aspectos visuais e funcionais da sua área de membros</p>
               </div>
 
@@ -1422,45 +1240,35 @@ export default function Members() {
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                           <Label htmlFor="area-name">Nome da Área *</Label>
-                          <Input
-                            id="area-name"
-                            value={areaCustomizationData.name}
-                            onChange={(e) => setAreaCustomizationData(prev => ({ ...prev, name: e.target.value }))}
-                            placeholder="Nome da sua área de membros"
-                          />
+                          <Input id="area-name" value={areaCustomizationData.name} onChange={e => setAreaCustomizationData(prev => ({
+                          ...prev,
+                          name: e.target.value
+                        }))} placeholder="Nome da sua área de membros" />
                         </div>
                         
                         <div className="space-y-2">
                           <Label htmlFor="hero-title">Título da Capa</Label>
-                          <Input
-                            id="hero-title"
-                            value={areaCustomizationData.hero_title}
-                            onChange={(e) => setAreaCustomizationData(prev => ({ ...prev, hero_title: e.target.value }))}
-                            placeholder="Título que aparece na capa"
-                          />
+                          <Input id="hero-title" value={areaCustomizationData.hero_title} onChange={e => setAreaCustomizationData(prev => ({
+                          ...prev,
+                          hero_title: e.target.value
+                        }))} placeholder="Título que aparece na capa" />
                         </div>
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="area-description">Descrição</Label>
-                        <Textarea
-                          id="area-description"
-                          value={areaCustomizationData.description}
-                          onChange={(e) => setAreaCustomizationData(prev => ({ ...prev, description: e.target.value }))}
-                          placeholder="Descrição geral da área"
-                          rows={3}
-                        />
+                        <Textarea id="area-description" value={areaCustomizationData.description} onChange={e => setAreaCustomizationData(prev => ({
+                        ...prev,
+                        description: e.target.value
+                      }))} placeholder="Descrição geral da área" rows={3} />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="hero-description">Descrição da Capa</Label>
-                        <Textarea
-                          id="hero-description"
-                          value={areaCustomizationData.hero_description}
-                          onChange={(e) => setAreaCustomizationData(prev => ({ ...prev, hero_description: e.target.value }))}
-                          placeholder="Texto que aparece na seção hero"
-                          rows={2}
-                        />
+                        <Textarea id="hero-description" value={areaCustomizationData.hero_description} onChange={e => setAreaCustomizationData(prev => ({
+                        ...prev,
+                        hero_description: e.target.value
+                      }))} placeholder="Texto que aparece na seção hero" rows={2} />
                       </div>
                     </CardContent>
                   </Card>
@@ -1478,28 +1286,20 @@ export default function Members() {
                       <div className="grid gap-6 md:grid-cols-2">
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <ImageUploader
-                              label="Logo Principal"
-                              value={areaCustomizationData.logo_url}
-                              onChange={(url) => setAreaCustomizationData(prev => ({ ...prev, logo_url: url || '' }))}
-                              bucket="member-area-assets"
-                              folder={`${user?.id}/branding`}
-                              aspectRatio="1/1"
-                            />
+                            <ImageUploader label="Logo Principal" value={areaCustomizationData.logo_url} onChange={url => setAreaCustomizationData(prev => ({
+                            ...prev,
+                            logo_url: url || ''
+                          }))} bucket="member-area-assets" folder={`${user?.id}/branding`} aspectRatio="1/1" />
                             <p className="text-xs text-muted-foreground">
                               Logo exibido no cabeçalho da área de membros
                             </p>
                           </div>
 
                           <div className="space-y-2">
-                            <ImageUploader
-                              label="Logo de Login"
-                              value={areaCustomizationData.login_logo_url}
-                              onChange={(url) => setAreaCustomizationData(prev => ({ ...prev, login_logo_url: url || '' }))}
-                              bucket="member-area-assets"
-                              folder={`${user?.id}/branding`}
-                              aspectRatio="1/1"
-                            />
+                            <ImageUploader label="Logo de Login" value={areaCustomizationData.login_logo_url} onChange={url => setAreaCustomizationData(prev => ({
+                            ...prev,
+                            login_logo_url: url || ''
+                          }))} bucket="member-area-assets" folder={`${user?.id}/branding`} aspectRatio="1/1" />
                             <p className="text-xs text-muted-foreground">
                               Logo específico para a página de login
                             </p>
@@ -1507,14 +1307,10 @@ export default function Members() {
                         </div>
 
                         <div className="space-y-2">
-                          <ImageUploader
-                            label="Imagem de Capa Hero"
-                            value={areaCustomizationData.hero_image_url}
-                            onChange={(url) => setAreaCustomizationData(prev => ({ ...prev, hero_image_url: url || '' }))}
-                            bucket="member-area-assets"
-                            folder={`${user?.id}/hero`}
-                            aspectRatio="16/9"
-                          />
+                          <ImageUploader label="Imagem de Capa Hero" value={areaCustomizationData.hero_image_url} onChange={url => setAreaCustomizationData(prev => ({
+                          ...prev,
+                          hero_image_url: url || ''
+                        }))} bucket="member-area-assets" folder={`${user?.id}/hero`} aspectRatio="16/9" />
                           <p className="text-xs text-muted-foreground">
                             Grande imagem de destaque no topo da área
                           </p>
@@ -1538,58 +1334,40 @@ export default function Members() {
                       </p>
                     </CardHeader>
                     <CardContent>
-                      {modules.length > 0 ? (
-                        <div className="grid gap-6 md:grid-cols-2">
-                          {modules.map((module) => (
-                            <Card key={module.id} className="border-2">
+                      {modules.length > 0 ? <div className="grid gap-6 md:grid-cols-2">
+                          {modules.map(module => <Card key={module.id} className="border-2">
                               <CardHeader className="pb-4">
                                 <CardTitle className="text-base">{module.title}</CardTitle>
-                                {module.description && (
-                                  <p className="text-sm text-muted-foreground">{module.description}</p>
-                                )}
+                                {module.description && <p className="text-sm text-muted-foreground">{module.description}</p>}
                               </CardHeader>
                               <CardContent>
                                 <div className="space-y-4">
                                   <div className="flex items-center justify-between">
                                     <Label>Orientação da Capa</Label>
-                                     <Select 
-                                       value={(module as any).cover_orientation || 'horizontal'} 
-                                       onValueChange={(value: 'horizontal' | 'vertical') =>
-                                         handleUpdateModuleOrientation(module.id, value)
-                                       }
-                                     >
+                                     <Select value={(module as any).cover_orientation || 'horizontal'} onValueChange={(value: 'horizontal' | 'vertical') => handleUpdateModuleOrientation(module.id, value)}>
                                        <SelectTrigger className="w-48">
                                          <SelectValue />
                                        </SelectTrigger>
-                                       <SelectContent className="z-[102]" style={{ zIndex: 102 }}>
+                                       <SelectContent className="z-[102]" style={{
+                                  zIndex: 102
+                                }}>
                                          <SelectItem value="horizontal">Horizontal (16:9)</SelectItem>
                                          <SelectItem value="vertical">Vertical (9:16)</SelectItem>
                                        </SelectContent>
                                      </Select>
                                   </div>
                                   
-                                  <ImageUploader
-                                    label="Capa do Módulo"
-                                    value={module.cover_image_url || ''}
-                                    onChange={(url) => handleUpdateModuleCover(module.id, url || '')}
-                                    bucket="member-area-assets"
-                                    folder={`${user?.id}/modules`}
-                                    aspectRatio={(module as any).cover_orientation === 'vertical' ? '9/16' : '16/9'}
-                                  />
+                                  <ImageUploader label="Capa do Módulo" value={module.cover_image_url || ''} onChange={url => handleUpdateModuleCover(module.id, url || '')} bucket="member-area-assets" folder={`${user?.id}/modules`} aspectRatio={(module as any).cover_orientation === 'vertical' ? '9/16' : '16/9'} />
                                   <p className="text-xs text-muted-foreground mt-2">
                                     Esta capa aparece na vitrine dos módulos com a orientação escolhida
                                   </p>
                                 </div>
                               </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 text-muted-foreground">
+                            </Card>)}
+                        </div> : <div className="text-center py-8 text-muted-foreground">
                           <p>Nenhum módulo encontrado</p>
                           <p className="text-sm">Crie módulos primeiro para personalizar suas capas</p>
-                        </div>
-                      )}
+                        </div>}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -1600,11 +1378,7 @@ export default function Members() {
                   <div className="text-sm text-gray-500">
                     URL de Acesso: {createMemberAreaLinks().getMemberAreaLoginUrl(selectedArea.id)}
                   </div>
-                  <Button
-                    onClick={handleUpdateArea}
-                    disabled={isUpdatingArea}
-                    className="flex items-center gap-2"
-                  >
+                  <Button onClick={handleUpdateArea} disabled={isUpdatingArea} className="flex items-center gap-2">
                     <Save className="w-4 h-4" />
                     {isUpdatingArea ? 'Salvando...' : 'Salvar Personalizações'}
                   </Button>
@@ -1628,35 +1402,25 @@ export default function Members() {
             <form onSubmit={handleSubmitModule} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="module-title">Título</Label>
-                <Input
-                  id="module-title"
-                  value={moduleFormData.title}
-                  onChange={(e) => setModuleFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Ex: Módulo 1 - Fundamentos"
-                  required
-                />
+                <Input id="module-title" value={moduleFormData.title} onChange={e => setModuleFormData(prev => ({
+                ...prev,
+                title: e.target.value
+              }))} placeholder="Ex: Módulo 1 - Fundamentos" required />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="module-description">Descrição</Label>
-                <Textarea
-                  id="module-description"
-                  value={moduleFormData.description}
-                  onChange={(e) => setModuleFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Descreva o conteúdo do módulo..."
-                  rows={3}
-                />
+                <Textarea id="module-description" value={moduleFormData.description} onChange={e => setModuleFormData(prev => ({
+                ...prev,
+                description: e.target.value
+              }))} placeholder="Descreva o conteúdo do módulo..." rows={3} />
               </div>
               
               <div className="space-y-2">
-                <ImageUploader
-                  label="Imagem de Capa do Módulo"
-                  value={moduleFormData.cover_image_url}
-                  onChange={(url) => setModuleFormData(prev => ({ ...prev, cover_image_url: url || '' }))}
-                  bucket="member-area-assets"
-                  folder={user?.id || 'anonymous'}
-                  aspectRatio={moduleFormData.cover_orientation === 'vertical' ? '9/16' : '16/9'}
-                />
+                <ImageUploader label="Imagem de Capa do Módulo" value={moduleFormData.cover_image_url} onChange={url => setModuleFormData(prev => ({
+                ...prev,
+                cover_image_url: url || ''
+              }))} bucket="member-area-assets" folder={user?.id || 'anonymous'} aspectRatio={moduleFormData.cover_orientation === 'vertical' ? '9/16' : '16/9'} />
                 <p className="text-xs text-muted-foreground">
                   Esta imagem será exibida na vitrine dos módulos
                 </p>
@@ -1664,17 +1428,16 @@ export default function Members() {
 
               <div className="space-y-2">
                 <Label htmlFor="cover-orientation">Orientação da Capa</Label>
-                <Select 
-                  value={moduleFormData.cover_orientation || 'horizontal'} 
-                  onValueChange={(value: 'horizontal' | 'vertical') => setModuleFormData(prev => ({ 
-                    ...prev, 
-                    cover_orientation: value 
-                  }))}
-                >
+                <Select value={moduleFormData.cover_orientation || 'horizontal'} onValueChange={(value: 'horizontal' | 'vertical') => setModuleFormData(prev => ({
+                ...prev,
+                cover_orientation: value
+              }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Escolha a orientação" />
                   </SelectTrigger>
-                  <SelectContent className="z-[102]" style={{ zIndex: 102 }}>
+                  <SelectContent className="z-[102]" style={{
+                  zIndex: 102
+                }}>
                     <SelectItem value="horizontal">Horizontal (16:9) - Estilo Netflix</SelectItem>
                     <SelectItem value="vertical">Vertical (9:16) - Estilo Stories</SelectItem>
                   </SelectContent>
@@ -1686,11 +1449,16 @@ export default function Members() {
               
               <div className="space-y-2">
                 <Label htmlFor="module-status">Status</Label>
-                <Select value={moduleFormData.status} onValueChange={(value: any) => setModuleFormData(prev => ({ ...prev, status: value }))}>
+                <Select value={moduleFormData.status} onValueChange={(value: any) => setModuleFormData(prev => ({
+                ...prev,
+                status: value
+              }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="z-[102]" style={{ zIndex: 102 }}>
+                  <SelectContent className="z-[102]" style={{
+                  zIndex: 102
+                }}>
                     <SelectItem value="draft">Rascunho</SelectItem>
                     <SelectItem value="published">Publicado</SelectItem>
                     <SelectItem value="archived">Arquivado</SelectItem>
@@ -1700,13 +1468,10 @@ export default function Members() {
               
               {/* Módulo Em Breve */}
               <div className="flex items-center space-x-3 p-4 border rounded-lg bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
-                <Checkbox
-                  id="coming-soon"
-                  checked={moduleFormData.coming_soon}
-                  onCheckedChange={(checked) => 
-                    setModuleFormData(prev => ({ ...prev, coming_soon: checked === true }))
-                  }
-                />
+                <Checkbox id="coming-soon" checked={moduleFormData.coming_soon} onCheckedChange={checked => setModuleFormData(prev => ({
+                ...prev,
+                coming_soon: checked === true
+              }))} />
                 <div className="flex-1">
                   <Label htmlFor="coming-soon" className="font-medium text-amber-900 dark:text-amber-100">
                     Módulo Em Breve
@@ -1731,15 +1496,15 @@ export default function Members() {
         </Dialog>
 
         {/* Dialog para criar/editar aula */}
-        <Dialog open={dialogOpen} onOpenChange={(open) => {
-          console.log('Dialog open change:', open, 'current dialogOpen state:', dialogOpen);
-          console.log('Current selectedArea:', selectedArea?.id, selectedArea?.name);
-          console.log('Current selectedModuleForLesson:', selectedModuleForLesson);
-          setDialogOpen(open);
-          if (!open) {
-            resetForm();
-          }
-        }}>
+        <Dialog open={dialogOpen} onOpenChange={open => {
+        console.log('Dialog open change:', open, 'current dialogOpen state:', dialogOpen);
+        console.log('Current selectedArea:', selectedArea?.id, selectedArea?.name);
+        console.log('Current selectedModuleForLesson:', selectedModuleForLesson);
+        setDialogOpen(open);
+        if (!open) {
+          resetForm();
+        }
+      }}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>
@@ -1752,112 +1517,79 @@ export default function Members() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Título *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => {
-                    console.log('Title changed:', e.target.value);
-                    setFormData(prev => ({ ...prev, title: e.target.value }));
-                  }}
-                  placeholder="Ex: Introdução ao React"
-                  required
-                />
+                <Input id="title" value={formData.title} onChange={e => {
+                console.log('Title changed:', e.target.value);
+                setFormData(prev => ({
+                  ...prev,
+                  title: e.target.value
+                }));
+              }} placeholder="Ex: Introdução ao React" required />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Descreva o conteúdo da aula..."
-                  rows={3}
-                />
+                <Textarea id="description" value={formData.description} onChange={e => setFormData(prev => ({
+                ...prev,
+                description: e.target.value
+              }))} placeholder="Descreva o conteúdo da aula..." rows={3} />
               </div>
 
               {/* Só mostra o seletor de módulo se não estiver editando e não foi pré-selecionado */}
-              {!editingLesson && !selectedModuleForLesson && (
-                <div className="space-y-2">
+              {!editingLesson && !selectedModuleForLesson && <div className="space-y-2">
                   <Label htmlFor="module_id">Módulo (opcional)</Label>
-                   <Select 
-                     value={formData.module_id || "none"} 
-                     onValueChange={(value) => {
-                       console.log('Module selected:', value);
-                       const moduleId = value === "none" ? "" : value;
-                       setFormData(prev => ({ ...prev, module_id: moduleId }));
-                     }}
-                   >
+                   <Select value={formData.module_id || "none"} onValueChange={value => {
+                console.log('Module selected:', value);
+                const moduleId = value === "none" ? "" : value;
+                setFormData(prev => ({
+                  ...prev,
+                  module_id: moduleId
+                }));
+              }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um módulo" />
                     </SelectTrigger>
-                     <SelectContent className="z-[102]" style={{ zIndex: 102 }}>
+                     <SelectContent className="z-[102]" style={{
+                  zIndex: 102
+                }}>
                        <SelectItem value="none">Sem módulo</SelectItem>
-                       {modules
-                         .filter(m => m.status === 'published')
-                         .map((module) => (
-                         <SelectItem key={module.id} value={module.id}>
+                       {modules.filter(m => m.status === 'published').map(module => <SelectItem key={module.id} value={module.id}>
                            {module.title}
-                         </SelectItem>
-                       ))}
+                         </SelectItem>)}
                      </SelectContent>
                   </Select>
-                </div>
-              )}
+                </div>}
 
               {/* Se está editando, mostra em qual módulo está */}
-              {editingLesson && editingLesson.module_id && (
-                <div className="space-y-2">
+              {editingLesson && editingLesson.module_id && <div className="space-y-2">
                   <Label>Módulo atual</Label>
-                  <Input 
-                    value={getModuleTitle(editingLesson.module_id)} 
-                    disabled 
-                    className="bg-gray-100" 
-                  />
-                </div>
-              )}
+                  <Input value={getModuleTitle(editingLesson.module_id)} disabled className="bg-gray-100" />
+                </div>}
               
               <div className="space-y-2">
                 <Label>Vídeo da Aula</Label>
                 <div className="flex gap-2">
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    onClick={() => setVideoUploaderOpen(true)}
-                    className="flex-1"
-                  >
+                  <Button type="button" variant="outline" onClick={() => setVideoUploaderOpen(true)} className="flex-1">
                     <Upload className="h-4 w-4 mr-2" />
                     {formData.video_url ? 'Alterar Vídeo' : 'Enviar Vídeo'}
                   </Button>
-                  {formData.video_url && (
-                    <Button 
-                      type="button"
-                      variant="ghost" 
-                      onClick={() => window.open(formData.video_url, '_blank')}
-                    >
+                  {formData.video_url && <Button type="button" variant="ghost" onClick={() => window.open(formData.video_url, '_blank')}>
                       <Video className="h-4 w-4" />
-                    </Button>
-                  )}
+                    </Button>}
                 </div>
-                {formData.video_url && (
-                  <p className="text-sm text-gray-500">Vídeo anexado ✓</p>
-                )}
+                {formData.video_url && <p className="text-sm text-gray-500">Vídeo anexado ✓</p>}
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="duration">Duração (em minutos)</Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={formData.duration / 60} // Converter segundos para minutos
-                  onChange={(e) => {
-                    const minutes = parseFloat(e.target.value) || 0;
-                    const seconds = Math.round(minutes * 60);
-                    setFormData(prev => ({ ...prev, duration: seconds }));
-                  }}
-                  placeholder="Ex: 15 (minutos)"
-                />
+                <Input id="duration" type="number" min="0" step="0.5" value={formData.duration / 60} // Converter segundos para minutos
+              onChange={e => {
+                const minutes = parseFloat(e.target.value) || 0;
+                const seconds = Math.round(minutes * 60);
+                setFormData(prev => ({
+                  ...prev,
+                  duration: seconds
+                }));
+              }} placeholder="Ex: 15 (minutos)" />
                 <p className="text-sm text-muted-foreground">
                   Para vídeos Bunny.net, insira a duração manualmente. Para outros vídeos, será detectado automaticamente.
                 </p>
@@ -1865,10 +1597,10 @@ export default function Members() {
               
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value: any) => setFormData(prev => ({ ...prev, status: value }))}
-                >
+                <Select value={formData.status} onValueChange={(value: any) => setFormData(prev => ({
+                ...prev,
+                status: value
+              }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -1883,17 +1615,11 @@ export default function Members() {
                  {/* Agendamento da Aula */}
                  <div className="space-y-4 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
                    <div className="flex items-center space-x-3">
-                     <Checkbox
-                       id="is-scheduled"
-                       checked={formData.is_scheduled}
-                       onCheckedChange={(checked) => 
-                         setFormData(prev => ({ 
-                           ...prev, 
-                           is_scheduled: checked === true,
-                           scheduled_at: checked === true ? prev.scheduled_at : null
-                         }))
-                       }
-                     />
+                     <Checkbox id="is-scheduled" checked={formData.is_scheduled} onCheckedChange={checked => setFormData(prev => ({
+                  ...prev,
+                  is_scheduled: checked === true,
+                  scheduled_at: checked === true ? prev.scheduled_at : null
+                }))} />
                      <div className="flex-1">
                        <Label htmlFor="is-scheduled" className="font-medium text-blue-900 dark:text-blue-100">
                          Agendar Liberação da Aula
@@ -1905,124 +1631,94 @@ export default function Members() {
                      <Timer className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                    </div>
                    
-                   {formData.is_scheduled && (
-                     <div className="space-y-2">
+                   {formData.is_scheduled && <div className="space-y-2">
                        <Label>Data de Liberação</Label>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !formData.scheduled_at && "text-muted-foreground"
-                              )}
-                            >
+                            <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !formData.scheduled_at && "text-muted-foreground")}>
                               <CalendarIcon className="mr-2 h-4 w-4" />
-                              {formData.scheduled_at ? (
-                                format(formData.scheduled_at, "dd/MM/yyyy HH:mm")
-                              ) : (
-                                <span>Selecionar data e hora</span>
-                              )}
+                              {formData.scheduled_at ? format(formData.scheduled_at, "dd/MM/yyyy HH:mm") : <span>Selecionar data e hora</span>}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
-                           <CalendarComponent
-                             mode="single"
-                             selected={formData.scheduled_at || undefined}
-                             onSelect={(date) => {
-                               if (date) {
-                                 // Manter a hora atual ou definir para meio-dia se não houver
-                                 const currentTime = formData.scheduled_at || new Date();
-                                 date.setHours(currentTime.getHours(), currentTime.getMinutes());
-                               }
-                               setFormData(prev => ({ ...prev, scheduled_at: date || null }));
-                             }}
-                             disabled={(date) => date < new Date()}
-                             initialFocus
-                             className={cn("p-3 pointer-events-auto")}
-                           />
-                           {formData.scheduled_at && (
-                             <div className="p-3 border-t">
+                           <CalendarComponent mode="single" selected={formData.scheduled_at || undefined} onSelect={date => {
+                      if (date) {
+                        // Manter a hora atual ou definir para meio-dia se não houver
+                        const currentTime = formData.scheduled_at || new Date();
+                        date.setHours(currentTime.getHours(), currentTime.getMinutes());
+                      }
+                      setFormData(prev => ({
+                        ...prev,
+                        scheduled_at: date || null
+                      }));
+                    }} disabled={date => date < new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
+                           {formData.scheduled_at && <div className="p-3 border-t">
                                <Label className="text-sm font-medium">Horário</Label>
                                <div className="flex gap-2 mt-2">
-                                 <Input
-                                   type="time"
-                                   value={formData.scheduled_at ? 
-                                     `${formData.scheduled_at.getHours().toString().padStart(2, '0')}:${formData.scheduled_at.getMinutes().toString().padStart(2, '0')}` : 
-                                     '12:00'
-                                   }
-                                   onChange={(e) => {
-                                     const [hours, minutes] = e.target.value.split(':');
-                                     if (formData.scheduled_at) {
-                                       const newDate = new Date(formData.scheduled_at);
-                                       newDate.setHours(parseInt(hours), parseInt(minutes));
-                                       setFormData(prev => ({ ...prev, scheduled_at: newDate }));
-                                     }
-                                   }}
-                                   className="w-full"
-                                 />
+                                 <Input type="time" value={formData.scheduled_at ? `${formData.scheduled_at.getHours().toString().padStart(2, '0')}:${formData.scheduled_at.getMinutes().toString().padStart(2, '0')}` : '12:00'} onChange={e => {
+                          const [hours, minutes] = e.target.value.split(':');
+                          if (formData.scheduled_at) {
+                            const newDate = new Date(formData.scheduled_at);
+                            newDate.setHours(parseInt(hours), parseInt(minutes));
+                            setFormData(prev => ({
+                              ...prev,
+                              scheduled_at: newDate
+                            }));
+                          }
+                        }} className="w-full" />
                                </div>
-                             </div>
-                           )}
+                             </div>}
                          </PopoverContent>
                        </Popover>
-                       {formData.scheduled_at && (
-                         <p className="text-xs text-blue-600 dark:text-blue-400">
+                       {formData.scheduled_at && <p className="text-xs text-blue-600 dark:text-blue-400">
                            A aula será liberada em: {format(formData.scheduled_at, "dd/MM/yyyy 'às' HH:mm")}
-                         </p>
-                       )}
-                     </div>
-                   )}
+                         </p>}
+                     </div>}
                  </div>
                 
                  {/* Links Complementares */}
                  <div className="space-y-2">
                    <Label className="text-sm font-medium">Links Complementares da Aula</Label>
-                   <LessonLinksManager 
-                     links={formData.complementary_links || []}
-                     onChange={(links) => {
-                       console.log('🔗 Links onChange called with:', links);
-                       console.log('🔗 Links type:', typeof links, 'Array?', Array.isArray(links));
-                       
-                       // Garantir que sempre seja um array válido
-                       const safeLinks = Array.isArray(links) ? links : [];
-                       
-                       setFormData(prev => {
-                         const updated = { ...prev, complementary_links: safeLinks };
-                         console.log('🔗 Updated form data complementary_links:', updated.complementary_links);
-                         console.log('🔗 Updated form data keys:', Object.keys(updated));
-                         return updated;
-                       });
-                     }}
-                   />
+                   <LessonLinksManager links={formData.complementary_links || []} onChange={links => {
+                console.log('🔗 Links onChange called with:', links);
+                console.log('🔗 Links type:', typeof links, 'Array?', Array.isArray(links));
+
+                // Garantir que sempre seja um array válido
+                const safeLinks = Array.isArray(links) ? links : [];
+                setFormData(prev => {
+                  const updated = {
+                    ...prev,
+                    complementary_links: safeLinks
+                  };
+                  console.log('🔗 Updated form data complementary_links:', updated.complementary_links);
+                  console.log('🔗 Updated form data keys:', Object.keys(updated));
+                  return updated;
+                });
+              }} />
                  </div>
                 
                 {/* Materiais da Aula */}
-                <LessonMaterialsManager
-                  materials={formData.lesson_materials || []}
-                  onChange={(materials) => {
-                    console.log('📁 Materials onChange called with:', materials);
-                    console.log('📁 Materials type:', typeof materials, 'Array?', Array.isArray(materials));
-                    setFormData(prev => {
-                      const updated = { ...prev, lesson_materials: materials };
-                      console.log('📁 Updated form data:', {
-                        ...updated,
-                        lesson_materials_length: updated.lesson_materials?.length
-                      });
-                      return updated;
-                    });
-                  }}
-                />
+                <LessonMaterialsManager materials={formData.lesson_materials || []} onChange={materials => {
+              console.log('📁 Materials onChange called with:', materials);
+              console.log('📁 Materials type:', typeof materials, 'Array?', Array.isArray(materials));
+              setFormData(prev => {
+                const updated = {
+                  ...prev,
+                  lesson_materials: materials
+                };
+                console.log('📁 Updated form data:', {
+                  ...updated,
+                  lesson_materials_length: updated.lesson_materials?.length
+                });
+                return updated;
+              });
+            }} />
                
                <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    console.log('Cancel clicked');
-                    setDialogOpen(false);
-                  }}
-                >
+                <Button type="button" variant="outline" onClick={() => {
+                console.log('Cancel clicked');
+                setDialogOpen(false);
+              }}>
                   Cancelar
                 </Button>
                 <Button type="submit">
@@ -2034,25 +1730,12 @@ export default function Members() {
         </Dialog>
 
         {/* Componente de pré-visualização */}
-        <MemberAreaPreview
-          open={previewOpen}
-          onOpenChange={setPreviewOpen}
-          memberArea={selectedArea}
-          lessons={lessons.filter(l => l.status === 'published')}
-          modules={modules}
-        />
+        <MemberAreaPreview open={previewOpen} onOpenChange={setPreviewOpen} memberArea={selectedArea} lessons={lessons.filter(l => l.status === 'published')} modules={modules} />
 
-        <VideoUploader
-          open={videoUploaderOpen}
-          onOpenChange={setVideoUploaderOpen}
-          onVideoUploaded={handleVideoUploaded}
-        />
-      </div>
-    );
+        <VideoUploader open={videoUploaderOpen} onOpenChange={setVideoUploaderOpen} onVideoUploaded={handleVideoUploaded} />
+      </div>;
   }
-
-  return (
-    <OptimizedPageWrapper>
+  return <OptimizedPageWrapper>
       <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-7xl mx-auto">
         <div className="flex flex-col gap-3 md:gap-4">
           <h1 className="text-xl md:text-3xl font-bold text-foreground">Área de Membros</h1>
@@ -2067,12 +1750,7 @@ export default function Members() {
             <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
               <div className="relative w-full md:max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 md:h-4 md:w-4" />
-                <Input
-                  placeholder="Buscar..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 md:pl-10 text-sm"
-                />
+                <Input placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 md:pl-10 text-sm" />
               </div>
               <Dialog open={areaDialogOpen} onOpenChange={setAreaDialogOpen}>
                 <DialogTrigger asChild>
@@ -2082,25 +1760,15 @@ export default function Members() {
                 </DialogTrigger>
               </Dialog>
               
-              <MemberAreaCreationForm
-                open={areaDialogOpen}
-                onOpenChange={setAreaDialogOpen}
-                onSuccess={loadData}
-              />
+              <MemberAreaCreationForm open={areaDialogOpen} onOpenChange={setAreaDialogOpen} onSuccess={loadData} />
             </div>
 
             <Card>
               <CardContent className="p-0">
                 {/* Versão móvel - Cards */}
                 <div className="block md:hidden">
-                  {memberAreas.length > 0 ? (
-                    <div className="divide-y">
-                      {memberAreas.map((area) => (
-                        <div 
-                          key={area.id} 
-                          className="p-4 cursor-pointer hover:bg-gray-50"
-                          onClick={() => setSelectedArea(area)}
-                        >
+                  {memberAreas.length > 0 ? <div className="divide-y">
+                      {memberAreas.map(area => <div key={area.id} className="p-4 cursor-pointer hover:bg-gray-50" onClick={() => setSelectedArea(area)}>
                             <div className="space-y-2">
                               <div className="font-medium text-sm">{area.name}</div>
                               <div className="text-xs text-blue-600 truncate">
@@ -2111,14 +1779,10 @@ export default function Members() {
                                 <Badge variant="secondary" className="text-xs">{area.students_count}</Badge>
                               </div>
                             </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
+                        </div>)}
+                    </div> : <div className="text-center py-8">
                       <p className="text-gray-500 text-sm">Nenhuma área de membros criada ainda</p>
-                    </div>
-                  )}
+                    </div>}
                 </div>
 
                 {/* Versão desktop - Tabela */}
@@ -2132,25 +1796,17 @@ export default function Members() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {memberAreas.map((area) => (
-                        <TableRow 
-                          key={area.id} 
-                          className="cursor-pointer hover:bg-gray-50"
-                          onClick={() => setSelectedArea(area)}
-                        >
+                      {memberAreas.map(area => <TableRow key={area.id} className="cursor-pointer hover:bg-gray-50" onClick={() => setSelectedArea(area)}>
                           <TableCell className="font-medium">{area.name}</TableCell>
                           <TableCell className="text-blue-600 underline">/login/{area.url}</TableCell>
                           <TableCell>{area.students_count}</TableCell>
-                        </TableRow>
-                      ))}
+                        </TableRow>)}
                     </TableBody>
                   </Table>
                   
-                  {memberAreas.length === 0 && (
-                    <div className="text-center py-8">
+                  {memberAreas.length === 0 && <div className="text-center py-8">
                       <p className="text-gray-500">Nenhuma área de membros criada ainda</p>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </CardContent>
             </Card>
@@ -2177,18 +1833,13 @@ export default function Members() {
 
             <Card>
               <CardContent className="p-0">
-                {loadingProducts ? (
-                  <div className="text-center py-6 md:py-8">
+                {loadingProducts ? <div className="text-center py-6 md:py-8">
                     <LoadingSpinner size="sm" text="Carregando cursos..." />
-                  </div>
-                ) : (
-                  <>
+                  </div> : <>
                     {/* Versão móvel - Cards */}
                     <div className="block md:hidden">
-                      {products.length > 0 ? (
-                        <div className="divide-y">
-                          {products.map((product) => (
-                            <div key={product.id} className="p-4 space-y-3">
+                      {products.length > 0 ? <div className="divide-y">
+                          {products.map(product => <div key={product.id} className="p-4 space-y-3">
                               <div>
                                 <div className="font-medium text-sm">{product.name}</div>
                                 <div className="text-xs text-gray-500 mt-1">
@@ -2203,33 +1854,20 @@ export default function Members() {
                                     {product.status}
                                   </Badge>
                                 </div>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => navigate('/vendedor/produtos')}
-                                  className="text-xs"
-                                >
+                                <Button variant="outline" size="sm" onClick={() => navigate('/vendedor/produtos')} className="text-xs">
                                   <Edit className="h-3 w-3 mr-1" />
                                   Editar
                                 </Button>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
+                            </div>)}
+                        </div> : <div className="text-center py-8">
                           <BookOpen className="h-6 w-6 mx-auto text-gray-400 mb-2" />
                           <p className="text-gray-500 text-sm">Nenhum curso criado ainda</p>
-                          <Button 
-                            onClick={() => navigate('/vendedor/produtos')} 
-                            className="mt-4"
-                            size="sm"
-                          >
+                          <Button onClick={() => navigate('/vendedor/produtos')} className="mt-4" size="sm">
                             <Plus className="h-3 w-3 mr-2" />
                             Criar primeiro curso
                           </Button>
-                        </div>
-                      )}
+                        </div>}
                     </div>
 
                     {/* Versão desktop - Tabela */}
@@ -2244,9 +1882,7 @@ export default function Members() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {products.length > 0 ? (
-                            products.map((product) => (
-                              <TableRow key={product.id}>
+                          {products.length > 0 ? products.map(product => <TableRow key={product.id}>
                                 <TableCell>
                                   <div>
                                     <div className="font-medium">{product.name}</div>
@@ -2263,37 +1899,25 @@ export default function Members() {
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => navigate('/vendedor/produtos')}
-                                  >
+                                  <Button variant="outline" size="sm" onClick={() => navigate('/vendedor/produtos')}>
                                     <Edit className="h-4 w-4 mr-2" />
                                     Editar
                                   </Button>
                                 </TableCell>
-                              </TableRow>
-                            ))
-                          ) : (
-                            <TableRow>
+                              </TableRow>) : <TableRow>
                               <TableCell colSpan={4} className="text-center py-8">
                                 <BookOpen className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                                 <p className="text-gray-500">Nenhum curso criado ainda</p>
-                                <Button 
-                                  onClick={() => navigate('/vendedor/produtos')} 
-                                  className="mt-4"
-                                >
+                                <Button onClick={() => navigate('/vendedor/produtos')} className="mt-4">
                                   <Plus className="h-4 w-4 mr-2" />
                                   Criar primeiro curso
                                 </Button>
                               </TableCell>
-                            </TableRow>
-                          )}
+                            </TableRow>}
                         </TableBody>
                       </Table>
                     </div>
-                  </>
-                )}
+                  </>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -2301,6 +1925,5 @@ export default function Members() {
         </Tabs>
             </div>
           </div>
-        </OptimizedPageWrapper>
-      );
+        </OptimizedPageWrapper>;
 }
