@@ -143,10 +143,9 @@ const handler = async (req: Request): Promise<Response> => {
               studentEmail: payload.buyer.email,
               studentName: payload.buyer.name,
               memberAreaName: 'Marca Milionária',
-              memberAreaId: MEMBER_AREA_ID,
+              memberAreaUrl: `https://membros.kambafy.com/login/${MEMBER_AREA_ID}`,
               isNewAccount: studentResult?.isNewAccount || false,
-              temporaryPassword: payload.temporaryPassword,
-              loginUrl: `https://membros.kambafy.com/login/${MEMBER_AREA_ID}`
+              temporaryPassword: payload.temporaryPassword
             }
           }
         );
