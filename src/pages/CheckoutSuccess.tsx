@@ -22,33 +22,66 @@ const CheckoutSuccess = () => {
       }
 
       try {
-        let query = supabase
-          .from('orders')
-          .select('*')
-          .limit(1);
+        // Tentar diferentes abordagens para encontrar o pedido
+        let orderData = null;
+        let error = null;
 
+        // Primeira tentativa: busca com order_id
         if (orderId) {
-          query = query.eq('order_id', orderId);
-        } else if (sessionId) {
-          query = query.eq('stripe_session_id', sessionId);
+          const { data, error: orderError } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('order_id', orderId)
+            .maybeSingle();
+          
+          if (data && !orderError) {
+            orderData = data;
+          } else {
+            error = orderError;
+          }
         }
 
-        const { data, error } = await query.maybeSingle();
+        // Segunda tentativa: busca com stripe_session_id
+        if (!orderData && sessionId) {
+          const { data, error: sessionError } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('stripe_session_id', sessionId)
+            .maybeSingle();
+          
+          if (data && !sessionError) {
+            orderData = data;
+          } else {
+            error = sessionError;
+          }
+        }
 
-        if (error) {
-          console.error('Erro ao buscar pedido:', error);
+        // Terceira tentativa: busca por ID UUID se um dos parâmetros for um UUID válido
+        const isUuid = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+        
+        if (!orderData && orderId && isUuid(orderId)) {
+          const { data, error: idError } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('id', orderId)
+            .maybeSingle();
+          
+          if (data && !idError) {
+            orderData = data;
+          } else {
+            error = idError;
+          }
+        }
+
+        if (!orderData) {
+          console.error('Pedido não encontrado:', { orderId, sessionId, error });
           setOrderStatus('error');
           return;
         }
 
-        if (!data) {
-          console.error('Pedido não encontrado');
-          setOrderStatus('error');
-          return;
-        }
-
-        setOrderData(data);
-        setOrderStatus(data.status === 'completed' ? 'completed' : 'pending');
+        console.log('Pedido encontrado:', orderData);
+        setOrderData(orderData);
+        setOrderStatus(orderData.status === 'completed' ? 'completed' : 'pending');
       } catch (error) {
         console.error('Erro ao verificar status do pedido:', error);
         setOrderStatus('error');
@@ -57,10 +90,17 @@ const CheckoutSuccess = () => {
 
     checkOrderStatus();
 
-    // Poll para verificar mudanças de status a cada 10 segundos
-    const interval = setInterval(checkOrderStatus, 10000);
-    return () => clearInterval(interval);
-  }, [orderId, sessionId]);
+    // Poll para verificar mudanças de status a cada 15 segundos apenas se o status for pending
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (orderStatus === 'pending' || orderStatus === 'loading') {
+      interval = setInterval(checkOrderStatus, 15000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [orderId, sessionId, orderStatus]);
 
   if (orderStatus === 'loading') {
     return (
