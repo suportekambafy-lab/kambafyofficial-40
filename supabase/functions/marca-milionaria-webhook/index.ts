@@ -131,6 +131,36 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('✅ Aluno adicionado com sucesso à área de membros Marca Milionária');
 
+    // Enviar email de acesso se for nova conta ou se há senha temporária
+    if (studentResult?.isNewAccount || payload.temporaryPassword) {
+      console.log('📧 Enviando email de acesso...');
+      
+      try {
+        const { error: emailError } = await supabase.functions.invoke(
+          'send-member-access-email',
+          {
+            body: {
+              studentEmail: payload.buyer.email,
+              studentName: payload.buyer.name,
+              memberAreaName: 'Marca Milionária',
+              memberAreaId: MEMBER_AREA_ID,
+              isNewAccount: studentResult?.isNewAccount || false,
+              temporaryPassword: payload.temporaryPassword,
+              loginUrl: `https://membros.kambafy.com/login/${MEMBER_AREA_ID}`
+            }
+          }
+        );
+
+        if (emailError) {
+          console.error('❌ Erro ao enviar email de acesso:', emailError);
+        } else {
+          console.log('✅ Email de acesso enviado com sucesso');
+        }
+      } catch (emailSendError) {
+        console.error('❌ Erro no envio do email:', emailSendError);
+      }
+    }
+
     // Log da transação para auditoria
     const logData = {
       member_area_id: MEMBER_AREA_ID,
