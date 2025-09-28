@@ -332,8 +332,8 @@ export function ModernSidebar({
              className={({ isActive }) =>
                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
                  isActive 
-                   ? "bg-primary/10 text-white border-l-2 border-primary ml-1" 
-                   : "text-white/70 hover:bg-sidebar-accent hover:text-white"
+                   ? "bg-primary/10 text-primary dark:text-white border-l-2 border-primary ml-1" 
+                   : "text-sidebar-foreground/70 dark:text-white/70 hover:bg-sidebar-accent hover:text-sidebar-foreground dark:hover:text-white"
                }`
              }
             title={collapsed ? item.label : undefined}
