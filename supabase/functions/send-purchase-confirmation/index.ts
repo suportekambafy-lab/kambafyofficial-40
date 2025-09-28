@@ -354,15 +354,8 @@ const handler = async (req: Request): Promise<Response> => {
         // Get member area URL if it's a course
         let memberAreaUrl = null;
         if (memberAreaId) {
-          const { data: memberAreaData, error: memberAreaError } = await supabase
-            .from('member_areas')
-            .select('url')
-            .eq('id', memberAreaId)
-            .single();
-
-          if (!memberAreaError && memberAreaData) {
-            memberAreaUrl = `https://app.kambafy.com/member/${memberAreaData.url}`;
-          }
+          // Usar a rota correta para login da área de membros
+          memberAreaUrl = `https://kambafy.com/members/login/${memberAreaId}`;
         }
 
         // Create access link
@@ -446,64 +439,84 @@ const handler = async (req: Request): Promise<Response> => {
           customerEmailHtml = `
             <html>
             <head>
-              <meta charset="utf-8">
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
               <title>Confirmação de Compra - Kambafy</title>
+              <style>
+                @media only screen and (max-width: 600px) {
+                  .container { width: 100% !important; padding: 15px !important; }
+                  .header-title { font-size: 20px !important; }
+                  .section { padding: 20px !important; }
+                }
+              </style>
             </head>
-            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">KAMBAFY</h1>
-                <div style="background-color: #16a34a; color: white; padding: 20px; border-radius: 8px;">
-                  <h2 style="margin: 0; font-size: 24px; font-weight: 600;">Compra Confirmada!</h2>
-                  <p style="margin: 10px 0 0 0; font-size: 16px; color: white;">Obrigado pela sua compra, ${customerName}!</p>
+            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155;">
+              <div class="container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+                
+                <!-- Header -->
+                <div style="text-align: center; padding: 40px 30px 30px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
+                  <h1 class="header-title" style="margin: 0; font-size: 28px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">KAMBAFY</h1>
+                  <p style="margin: 15px 0 0; font-size: 18px; font-weight: 500; color: #16a34a;">✅ Compra Confirmada!</p>
+                  <p style="margin: 8px 0 0; font-size: 16px; color: #64748b;">Obrigado pela sua compra, ${customerName}!</p>
                 </div>
-              </div>
 
-              <div style="text-align: center; margin: 30px 0;">
-                <h2 style="color: #16a34a; margin: 0 0 15px 0;">Você comprou: ${productName}</h2>
-                <p style="font-size: 18px; color: #666; margin: 0;">de ${sellerProfile?.full_name || 'Kambafy'}</p>
-              </div>
+                <!-- Product Info -->
+                <div style="padding: 30px 30px 0;">
+                  <h2 style="text-align: center; color: #16a34a; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">Você comprou: ${productName}</h2>
+                  <p style="text-align: center; font-size: 16px; color: #64748b; margin: 0 0 25px;">de ${sellerProfile?.full_name || 'Kambafy'}</p>
+                </div>
 
-              <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
-                <h3 style="color: #16a34a; margin: 0 0 15px 0;">Detalhes do Pedido</h3>
-                <table style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 8px 0; font-weight: bold;">Número do Pedido:</td>
-                    <td style="padding: 8px 0;">${orderId}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; font-weight: bold;">Valor Pago:</td>
-                    <td style="padding: 8px 0; font-size: 18px; color: #16a34a; font-weight: bold;">${amount} ${currency}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; font-weight: bold;">Data:</td>
-                    <td style="padding: 8px 0;">${new Date().toLocaleDateString('pt-BR')}</td>
-                  </tr>
-                </table>
-              </div>
+                <!-- Order Details -->
+                <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+                  <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Detalhes do Pedido</h3>
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <tr>
+                        <td style="padding: 12px 0; font-weight: 500; color: #475569; width: 40%;">Número do Pedido:</td>
+                        <td style="padding: 12px 0; color: #1e293b; font-family: 'Courier New', monospace;">${orderId}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0; font-weight: 500; color: #475569;">Valor Pago:</td>
+                        <td style="padding: 12px 0; font-size: 20px; font-weight: 700; color: #16a34a;">${amount} ${currency}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0; font-weight: 500; color: #475569;">Data:</td>
+                        <td style="padding: 12px 0; color: #1e293b;">${new Date().toLocaleDateString('pt-BR')}</td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
 
-              <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-                <h3 style="color: #16a34a; margin: 0 0 15px 0;">💚 Muito obrigado por comprar com a Kambafy!</h3>
-                <p style="margin: 0; color: #16a34a; font-size: 16px;">
-                  Sua confiança em nós é o que nos motiva a continuar oferecendo os melhores produtos digitais.
-                </p>
-              </div>
+                <!-- Thank You -->
+                <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+                  <div style="background-color: #f0fdf4; border: 1px solid #16a34a; border-radius: 8px; padding: 20px; text-align: center;">
+                    <h3 style="color: #16a34a; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">💚 Muito obrigado por comprar com a Kambafy!</h3>
+                    <p style="margin: 0; color: #15803d; font-size: 14px; line-height: 1.6;">
+                      Sua confiança em nós é o que nos motiva a continuar oferecendo os melhores produtos digitais.
+                    </p>
+                  </div>
+                </div>
 
-              <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="color: #856404; margin: 0 0 10px 0;">📞 Precisa de Ajuda?</h3>
-                <p style="margin: 0; color: #856404;">
-                  Se tiver alguma dúvida, entre em contato conosco:
-                </p>
-                <p style="margin: 10px 0 0 0; color: #856404;">
-                  <strong>Email:</strong> suporte@kambafy.com<br>
-                  <strong>WhatsApp:</strong> (+244) 900 000 000
-                </p>
-              </div>
+                <!-- Support -->
+                <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+                  <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">Precisa de Ajuda?</h3>
+                  <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
+                    Se tiver alguma dúvida, entre em contato conosco:
+                  </p>
+                  <div style="color: #475569; font-size: 14px;">
+                    <p style="margin: 0;"><strong>Email:</strong> suporte@kambafy.com</p>
+                    <p style="margin: 5px 0 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
+                  </div>
+                </div>
 
-              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-                <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
-                <p style="margin: 0; color: #64748b; font-size: 14px;">
-                  Obrigado por confiar em nós!
-                </p>
+                <!-- Footer -->
+                <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+                  <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
+                  <p style="margin: 0; color: #64748b; font-size: 14px;">
+                    Obrigado por confiar em nós!
+                  </p>
+                </div>
+
               </div>
             </body>
             </html>
@@ -622,7 +635,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Send SMS for purchase confirmation if phone number is provided
         if (customerPhone) {
-          const memberAreaUrl = memberAreaId ? `https://kambafy.com/members/${memberAreaId}` : shareLink;
+          const memberAreaUrl = memberAreaId ? `https://kambafy.com/members/login/${memberAreaId}` : shareLink;
           await sendSMSNotification(customerPhone, 'purchase_confirmation', {
             customerName,
             productName,

@@ -5,8 +5,7 @@ const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface MemberAccessEmailRequest {
@@ -15,7 +14,7 @@ interface MemberAccessEmailRequest {
   memberAreaName: string;
   memberAreaUrl: string;
   sellerName?: string;
-  isNewAccount: boolean;
+  isNewAccount?: boolean;
   temporaryPassword?: string;
   supportEmail?: string;
   supportWhatsapp?: string;
@@ -26,6 +25,10 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
   try {
     const {
       studentName,
@@ -33,7 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
       memberAreaName,
       memberAreaUrl,
       sellerName,
-      isNewAccount,
+      isNewAccount = false,
       temporaryPassword,
       supportEmail,
       supportWhatsapp
@@ -61,177 +64,124 @@ const handler = async (req: Request): Promise<Response> => {
     let loginInstructions = '';
     if (isNewAccount && temporaryPassword) {
       loginInstructions = `
-        <div style="padding: 20px; border: 1px solid #ddd; margin: 20px 0;">
-          <h3 style="color: #333; margin: 0 0 10px 0; font-size: 18px;">Conta Criada com Sucesso</h3>
-          <p style="margin: 0 0 15px; color: #666; font-size: 14px;">
-            Seus dados de acesso foram gerados automaticamente:
-          </p>
-          <p style="margin: 10px 0; color: #333;">
-            <strong>Email:</strong> ${studentEmail}<br>
-            <strong>Senha temporária:</strong> ${temporaryPassword}
-          </p>
-          <p style="margin: 15px 0 0; color: #666; font-size: 13px;">
-            <strong>Importante:</strong> Altere esta senha no primeiro acesso.
-          </p>
+        <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+          <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Conta Criada com Sucesso</h3>
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+            <p style="margin: 0 0 15px; color: #475569; font-size: 14px;">
+              Seus dados de acesso foram gerados automaticamente:
+            </p>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; font-weight: 500; color: #475569; width: 30%;">Email:</td>
+                <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${studentEmail}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: 500; color: #475569;">Senha temporária:</td>
+                <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace; font-weight: 700;">${temporaryPassword}</td>
+              </tr>
+            </table>
+            <div style="background-color: #fef3cd; border: 1px solid #fbbf24; border-radius: 6px; padding: 15px; margin: 15px 0 0;">
+              <p style="margin: 0; font-size: 13px; color: #92400e; line-height: 1.6;">
+                <strong>Importante:</strong> Altere esta senha no primeiro acesso por segurança.
+              </p>
+            </div>
+          </div>
         </div>
       `;
     } else {
       loginInstructions = `
-        <div style="padding: 20px; border: 1px solid #ddd; margin: 20px 0;">
-          <h3 style="color: #333; margin: 0 0 10px 0; font-size: 18px;">Acesso Liberado</h3>
-          <p style="margin: 0; color: #666; font-size: 14px;">
-            Use sua conta existente com o email: <strong>${studentEmail}</strong>
-          </p>
+        <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+          <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Acesso Liberado</h3>
+          <div style="background-color: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px;">
+            <p style="margin: 0; color: #0c4a6e; font-size: 14px;">
+              Use sua conta existente com o email: <strong>${studentEmail}</strong>
+            </p>
+          </div>
         </div>
       `;
     }
 
     // Create member access email HTML
     const memberAccessEmailHtml = `
-      <!DOCTYPE html>
-      <html lang="pt">
+      <html>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Acesso Liberado - ${memberAreaName}</title>
         <style>
-          body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-          }
-          
-          .email-container {
-            max-width: 600px;
-            margin: 20px auto;
-            background: #ffffff;
-            border: 1px solid #ddd;
-          }
-          
-          .header {
-            background: #fff;
-            padding: 30px 30px 20px;
-            border-bottom: 1px solid #eee;
-          }
-          
-          .header h1 {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            margin: 0 0 10px 0;
-          }
-          
-          .header p {
-            font-size: 14px;
-            color: #666;
-            margin: 0;
-          }
-          
-          .content {
-            padding: 30px;
-          }
-          
-          .content h2 {
-            font-size: 20px;
-            color: #333;
-            margin: 0 0 15px 0;
-          }
-          
-          .content p {
-            margin: 0 0 15px 0;
-            color: #666;
-            font-size: 14px;
-          }
-          
-          .cta-button {
-            display: inline-block;
-            background: #007cba;
-            color: white;
-            padding: 12px 25px;
-            text-decoration: none;
-            font-weight: bold;
-            margin: 20px 0;
-          }
-          
-          .url-box {
-            background: #f9f9f9;
-            padding: 15px;
-            border: 1px solid #ddd;
-            margin: 20px 0;
-            word-break: break-all;
-            font-size: 13px;
-            color: #666;
-          }
-          
-          .footer {
-            background: #f9f9f9;
-            padding: 20px 30px;
-            border-top: 1px solid #eee;
-            text-align: center;
-            font-size: 12px;
-            color: #999;
-          }
-          
           @media only screen and (max-width: 600px) {
-            .email-container { margin: 10px; }
-            .header, .content, .footer { padding: 20px; }
-            .cta-button { width: 100%; text-align: center; box-sizing: border-box; }
+            .container { width: 100% !important; padding: 15px !important; }
+            .header-title { font-size: 20px !important; }
+            .section { padding: 20px !important; }
           }
         </style>
       </head>
-      <body>
-        <div class="email-container">
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155;">
+        <div class="container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
           
           <!-- Header -->
-          <div class="header">
-            <h1>KAMBAFY</h1>
-            <p>Plataforma de Conteúdo Digital</p>
+          <div style="text-align: center; padding: 40px 30px 30px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
+            <h1 class="header-title" style="margin: 0; font-size: 28px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">KAMBAFY</h1>
+            <p style="margin: 15px 0 0; font-size: 18px; font-weight: 500; color: #16a34a;">🎓 Acesso Liberado!</p>
+            <p style="margin: 8px 0 0; font-size: 16px; color: #64748b;">Bem-vindo à ${memberAreaName}</p>
           </div>
 
-          <div class="content">
-            <!-- Welcome Section -->
-            <h2>Bem-vindo, ${studentName}!</h2>
-            <p>
-              Você foi adicionado à área de membros "<strong>${memberAreaName}</strong>"${sellerName ? ` por ${sellerName}` : ''}.
+          <!-- Greeting -->
+          <div style="padding: 30px 30px 0;">
+            <p style="font-size: 16px; color: #1e293b; margin: 0 0 20px;">
+              Olá <strong>${studentName}</strong>,
             </p>
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0 0 25px;">
+              Parabéns! Seu acesso à <strong>${memberAreaName}</strong> foi liberado com sucesso. ${sellerName ? `Você foi adicionado por <strong>${sellerName}</strong>.` : ''} Clique no botão abaixo para fazer login:
+            </p>
+          </div>
 
-            <!-- Login Instructions -->
-            ${loginInstructions}
+          ${loginInstructions}
 
-            <!-- CTA Section -->
-            <p>Para acessar o conteúdo, clique no botão abaixo:</p>
-            <a href="${memberAreaUrl}" class="cta-button">Acessar Área de Membros</a>
-            
-            <p>Ou copie e cole este link no seu navegador:</p>
-            <div class="url-box">${memberAreaUrl}</div>
+          <!-- Access Button -->
+          <div class="section" style="padding: 30px; text-align: center; border-bottom: 1px solid #e2e8f0;">
+            <a href="${memberAreaUrl}" style="display: inline-block; background-color: #16a34a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 20px;">
+              🚀 Acessar Área de Membros
+            </a>
+            <p style="margin: 20px 0 0; color: #64748b; font-size: 13px;">
+              Ou copie e cole este link: <br>
+              <code style="background: #f1f5f9; padding: 5px 10px; border-radius: 4px; font-size: 12px; color: #475569; word-break: break-all;">${memberAreaUrl}</code>
+            </p>
+          </div>
 
-            <!-- Info Section -->
-            <h3 style="color: #333; font-size: 16px; margin: 30px 0 10px 0;">O que você encontrará:</h3>
-            <ul style="color: #666; font-size: 14px; padding-left: 20px;">
-              <li>Acesso imediato a todo conteúdo</li>
-              <li>Materiais exclusivos e atualizados</li>
-              <li>Suporte da nossa equipe</li>
-              ${isNewAccount ? '<li style="color: #d63031; font-weight: bold;">Lembre-se de alterar sua senha temporária</li>' : ''}
-            </ul>
+          <!-- What You'll Find -->
+          <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+            <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">O que você encontrará:</h3>
+            <div style="color: #475569; line-height: 1.6;">
+              <p style="margin: 0 0 12px;">• Acesso imediato a todo conteúdo</p>
+              <p style="margin: 0 0 12px;">• Materiais exclusivos e atualizados</p>
+              <p style="margin: 0 0 12px;">• Suporte da nossa equipe</p>
+              ${isNewAccount ? '<p style="margin: 0; color: #dc2626; font-weight: 500;">• Lembre-se de alterar sua senha temporária</p>' : ''}
+            </div>
+          </div>
 
-            <!-- Support Section -->
-            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
-              <h3 style="color: #333; font-size: 16px; margin: 0 0 10px 0;">Precisa de Ajuda?</h3>
-              ${supportEmail ? `<p style="margin: 0 0 5px 0;"><strong>Email:</strong> ${supportEmail}</p>` : ''}
-              ${supportWhatsapp ? `<p style="margin: 0;"><strong>WhatsApp:</strong> ${supportWhatsapp}</p>` : ''}
+          <!-- Support -->
+          <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+            <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">Precisa de Ajuda?</h3>
+            <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
+              Se tiver alguma dúvida, entre em contato conosco:
+            </p>
+            <div style="color: #475569; font-size: 14px;">
+              ${supportEmail ? `<p style="margin: 0;"><strong>Email:</strong> ${supportEmail}</p>` : ''}
+              ${supportWhatsapp ? `<p style="margin: 5px 0 0;"><strong>WhatsApp:</strong> ${supportWhatsapp}</p>` : ''}
               ${!supportEmail && !supportWhatsapp ? `
-                <p style="margin: 0 0 5px 0;"><strong>Email:</strong> suporte@kambafy.com</p>
-                <p style="margin: 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
+                <p style="margin: 0;"><strong>Email:</strong> suporte@kambafy.com</p>
+                <p style="margin: 5px 0 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
               ` : ''}
             </div>
           </div>
 
           <!-- Footer -->
-          <div class="footer">
-            <p>KAMBAFY - Conectando você ao conhecimento</p>
+          <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+            <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">
+              Conectando você ao conhecimento
+            </p>
           </div>
 
         </div>
