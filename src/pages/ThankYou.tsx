@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { CheckCircle, Mail, Phone, ExternalLink, Clock, CreditCard, AlertCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ const ThankYou = () => {
   useEffect(() => {
     setTheme('light');
   }, [setTheme]);
-  const [orderDetails, setOrderDetails] = useState({
+  const orderDetails = useMemo(() => ({
     orderId: searchParams.get('order_id') || Math.random().toString(36).substr(2, 9).toUpperCase(),
     customerName: searchParams.get('customer_name') || 'Cliente',
     customerEmail: searchParams.get('customer_email') || '',
@@ -51,7 +51,7 @@ const ThankYou = () => {
     orderBumpPrice: searchParams.get('order_bump_price') || '',
     orderBumpDiscount: searchParams.get('order_bump_discount') || '',
     orderBumpDiscountedPrice: searchParams.get('order_bump_discounted_price') || ''
-  });
+  }), [searchParams]);
 
   // Estado para pedidos relacionados (upsells)
   const [relatedOrders, setRelatedOrders] = useState<any[]>([]);
@@ -82,10 +82,6 @@ const ThankYou = () => {
       if (order && order.status !== orderStatus) {
         console.log('✅ Status do pedido atualizado:', order.status);
         setOrderStatus(order.status);
-        setOrderDetails(prev => ({
-          ...prev,
-          status: order.status
-        }));
 
         // Se o status mudou para 'completed', parar verificações e atualizar
         if (order.status === 'completed') {
@@ -131,11 +127,7 @@ const ThankYou = () => {
           } = await supabase.from('orders').select('customer_name, customer_email').eq('order_id', orderDetails.orderId).single();
           if (orderData && !orderError) {
             console.log('✅ Nome do cliente encontrado:', orderData.customer_name);
-            setOrderDetails(prev => ({
-              ...prev,
-              customerName: orderData.customer_name || 'Cliente',
-              customerEmail: orderData.customer_email || prev.customerEmail
-            }));
+            // Não é mais necessário atualizar orderDetails pois vem dos searchParams
           }
         } catch (error) {
           console.error('❌ Erro ao buscar nome do cliente:', error);
@@ -239,11 +231,11 @@ const ThankYou = () => {
       }
     };
     loadProduct();
-  }, [orderDetails.productId, user, orderDetails]);
+  }, [orderDetails.productId, user?.email]);
 
-  // Verificar o status do pedido periodicamente para pagamentos pendentes + real-time updates
+  // Verificar o status do pedido periodicamente para pagamentos pendentes
   useEffect(() => {
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'bank_transfer', 'transferencia'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'bank_transfer', 'transferencia'].includes(orderDetails.paymentMethod) && orderDetails.orderId) {
       console.log('🔄 Iniciando verificação periódica do status do pedido...');
 
       // Verificar imediatamente
@@ -256,7 +248,7 @@ const ThankYou = () => {
         clearInterval(interval);
       };
     }
-  }, [orderStatus, orderDetails.paymentMethod, orderDetails.orderId]);
+  }, [orderStatus, orderDetails.paymentMethod]);
 
   // Real-time updates para pagamentos por transferência
   useEffect(() => {
@@ -273,10 +265,6 @@ const ThankYou = () => {
       if (newOrder && newOrder.status !== orderStatus) {
         console.log('✅ Status do pedido atualizado via real-time:', newOrder.status);
         setOrderStatus(newOrder.status);
-        setOrderDetails(prev => ({
-          ...prev,
-          status: newOrder.status
-        }));
 
         // Se foi aprovado via real-time, atualizar imediatamente
         if (newOrder.status === 'completed') {
