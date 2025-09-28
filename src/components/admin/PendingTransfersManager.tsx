@@ -270,6 +270,19 @@ export function PendingTransfersManager() {
         console.log('✅ Status do pedido atualizado com sucesso para:', newStatus);
       }
 
+      // Verificar se a atualização realmente aconteceu
+      const { data: verifyOrder, error: verifyError } = await supabase
+        .from('orders')
+        .select('status')
+        .eq('id', transferId)
+        .single();
+      
+      if (verifyError) {
+        console.error('❌ Erro ao verificar atualização:', verifyError);
+      } else {
+        console.log('🔍 Status verificado no banco:', verifyOrder.status);
+      }
+
       // Enviar notificação para o vendedor se aprovado
       if (action === 'approve') {
         try {
