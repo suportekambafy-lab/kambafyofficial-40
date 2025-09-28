@@ -8,10 +8,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
+
 const ThankYou = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const memberAreaLinks = createMemberAreaLinks();
+  
+  // Memoizar createMemberAreaLinks para evitar recriação a cada render
+  const memberAreaLinks = useMemo(() => createMemberAreaLinks(), []);
   const [product, setProduct] = useState<any>(null);
   const [sellerProfile, setSellerProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -230,8 +233,12 @@ const ThankYou = () => {
         console.log('🏁 ThankYou: ==> PROCESSAMENTO FINALIZADO <==');
       }
     };
-    loadProduct();
-  }, [orderDetails.productId, user?.email]);
+    
+    // Só executar uma vez no mount, não re-executar quando orderDetails muda
+    if (orderDetails.productId) {
+      loadProduct();
+    }
+  }, []); // Dependências vazias para executar apenas uma vez
 
   // Verificar o status do pedido periodicamente para pagamentos pendentes
   useEffect(() => {
@@ -252,13 +259,15 @@ const ThankYou = () => {
 
   // Real-time updates para pagamentos por transferência
   useEffect(() => {
-    if (!orderDetails.orderId || orderStatus !== 'pending') return;
-    console.log('🔴 Configurando real-time updates para pedido:', orderDetails.orderId);
-    const channel = supabase.channel(`order-status-${orderDetails.orderId}`).on('postgres_changes', {
+    const orderId = orderDetails.orderId;
+    if (!orderId || orderStatus !== 'pending') return;
+    
+    console.log('🔴 Configurando real-time updates para pedido:', orderId);
+    const channel = supabase.channel(`order-status-${orderId}`).on('postgres_changes', {
       event: 'UPDATE',
       schema: 'public',
       table: 'orders',
-      filter: `order_id=eq.${orderDetails.orderId}`
+      filter: `order_id=eq.${orderId}`
     }, payload => {
       console.log('🔄 Atualização real-time recebida:', payload);
       const newOrder = payload.new as any;
@@ -288,11 +297,12 @@ const ThankYou = () => {
     }).subscribe(status => {
       console.log('📡 Status da subscrição real-time:', status);
     });
+    
     return () => {
       console.log('🔌 Desconectando real-time updates');
       supabase.removeChannel(channel);
     };
-  }, [orderDetails.orderId, orderStatus]);
+  }, [orderStatus]); // Só depende do orderStatus, não do orderDetails completo
   const fetchMultibancoData = async () => {
     console.log('🏦 ThankYou: Buscando dados do Multibanco do Stripe...');
     console.log('Payment Intent ID:', orderDetails.paymentIntentId);
