@@ -364,7 +364,7 @@ export default function ModernMembersArea() {
                   </div>}
                 <div className="text-white">
                   <p className="text-sm text-emerald-400">Área de Membros</p>
-                  <p className="text-sm text-gray-300">Olá, {user?.email?.split('@')[0]}</p>
+                  <p className="text-sm text-gray-300">Olá, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}</p>
                 </div>
               </div>
             </motion.div>
