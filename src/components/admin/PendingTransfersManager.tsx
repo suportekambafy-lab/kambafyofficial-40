@@ -250,37 +250,33 @@ export function PendingTransfersManager() {
         }
       }
 
-      // Só atualizar o status APÓS todas as ações pós-aprovação serem bem-sucedidas
-      console.log('🔄 Atualizando status do pedido para:', newStatus);
+      // Usar função RPC específica para admin
+      console.log('🔄 Usando função RPC para processar transferência...');
       
-      const updateData: any = { 
-        status: newStatus,
-        updated_at: new Date().toISOString()
-      };
-      
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update(updateData)
-        .eq('id', transferId);
+      const { data: updateResult, error: updateError } = await supabase
+        .rpc('admin_process_transfer_request', {
+          p_transfer_id: transferId,
+          p_action: action
+        });
 
       if (updateError) {
-        console.error('❌ Erro ao atualizar status do pedido:', updateError);
+        console.error('❌ Erro na função RPC:', updateError);
         throw updateError;
-      } else {
-        console.log('✅ Status do pedido atualizado com sucesso para:', newStatus);
-      }
+      } 
+      
+      console.log('✅ Transferência processada via RPC:', updateResult);
 
-      // Verificar se a atualização realmente aconteceu
+      // Verificar se a atualização realmente aconteceu consultando novamente
       const { data: verifyOrder, error: verifyError } = await supabase
         .from('orders')
-        .select('status')
+        .select('status, updated_at')
         .eq('id', transferId)
         .single();
       
       if (verifyError) {
         console.error('❌ Erro ao verificar atualização:', verifyError);
       } else {
-        console.log('🔍 Status verificado no banco:', verifyOrder.status);
+        console.log('🔍 Status final verificado no banco:', verifyOrder);
       }
 
       // Enviar notificação para o vendedor se aprovado
@@ -312,7 +308,7 @@ export function PendingTransfersManager() {
       toast({
         title: action === 'approve' ? "Transferência Aprovada" : "Transferência Rejeitada",
         description: action === 'approve' 
-          ? "Pagamento aprovado! Cliente receberá acesso e vendedor será notificado."
+          ? "Pagamento processado! Cliente receberá acesso e vendedor será notificado."
           : `O pagamento foi rejeitado com sucesso`,
         variant: action === 'approve' ? "default" : "destructive"
       });
@@ -320,10 +316,8 @@ export function PendingTransfersManager() {
       // Remover imediatamente da lista local para melhor UX
       setPendingTransfers(prev => prev.filter(t => t.id !== transferId));
       
-      // Atualizar lista completa após delay para garantir que mudanças propagaram
-      setTimeout(() => {
-        fetchPendingTransfers();
-      }, 2000);
+      // NÃO recarregar a lista - confiar na remoção local
+      console.log('✅ Processamento concluído - transferência removida da lista');
       
     } catch (error) {
       console.error(`❌ Erro ao ${action === 'approve' ? 'aprovar' : 'rejeitar'} transferência:`, error);
