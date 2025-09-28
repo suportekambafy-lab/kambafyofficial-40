@@ -55,16 +55,27 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           <div className="bg-muted/30 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold">Seu Nível Atual</h3>
-              <Badge 
-                style={{ backgroundColor: currentLevel.color, color: 'white' }}
-                className="text-xs"
-              >
-                {currentLevel.emoji} {currentLevel.name}
-              </Badge>
+              {totalRevenue >= currentLevel.threshold ? (
+                <Badge 
+                  style={{ backgroundColor: currentLevel.color, color: 'white' }}
+                  className="text-xs"
+                >
+                  {currentLevel.emoji} {currentLevel.name}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs">
+                  Nenhum nível alcançado
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-muted-foreground">
               Faturamento total: {formatCurrency(totalRevenue)}
             </p>
+            {totalRevenue < currentLevel.threshold && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Próximo nível: {currentLevel.emoji} {currentLevel.name} - {formatCurrency(currentLevel.threshold)}
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">
