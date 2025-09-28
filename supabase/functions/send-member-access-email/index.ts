@@ -17,6 +17,8 @@ interface MemberAccessEmailRequest {
   sellerName?: string;
   isNewAccount: boolean;
   temporaryPassword?: string;
+  supportEmail?: string;
+  supportWhatsapp?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -32,7 +34,9 @@ const handler = async (req: Request): Promise<Response> => {
       memberAreaUrl,
       sellerName,
       isNewAccount,
-      temporaryPassword
+      temporaryPassword,
+      supportEmail,
+      supportWhatsapp
     }: MemberAccessEmailRequest = await req.json();
 
     console.log('=== MEMBER ACCESS EMAIL START ===');
@@ -43,7 +47,9 @@ const handler = async (req: Request): Promise<Response> => {
       memberAreaUrl,
       sellerName,
       isNewAccount,
-      temporaryPassword: temporaryPassword ? '***' : 'none'
+      temporaryPassword: temporaryPassword ? '***' : 'none',
+      supportEmail,
+      supportWhatsapp
     });
 
     // Validate required fields
@@ -214,8 +220,12 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Support Section -->
             <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
               <h3 style="color: #333; font-size: 16px; margin: 0 0 10px 0;">Precisa de Ajuda?</h3>
-              <p style="margin: 0 0 5px 0;"><strong>Email:</strong> suporte@kambafy.com</p>
-              <p style="margin: 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
+              ${supportEmail ? `<p style="margin: 0 0 5px 0;"><strong>Email:</strong> ${supportEmail}</p>` : ''}
+              ${supportWhatsapp ? `<p style="margin: 0;"><strong>WhatsApp:</strong> ${supportWhatsapp}</p>` : ''}
+              ${!supportEmail && !supportWhatsapp ? `
+                <p style="margin: 0 0 5px 0;"><strong>Email:</strong> suporte@kambafy.com</p>
+                <p style="margin: 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
+              ` : ''}
             </div>
           </div>
 
