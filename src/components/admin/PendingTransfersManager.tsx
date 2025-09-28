@@ -111,28 +111,11 @@ export function PendingTransfersManager() {
       
       console.log(`💰 ${action === 'approve' ? 'Aprovando' : 'Rejeitando'} transferência:`, transferId);
 
-      // Buscar dados completos do pedido antes de aprovar
-      const { data: orderData, error: orderFetchError } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          products (
-            id,
-            name,
-            type,
-            share_link,
-            member_area_id,
-            user_id,
-            access_duration_type,
-            access_duration_value,
-            member_areas (
-              id,
-              url
-            )
-          )
-        `)
-        .eq('id', transferId)
-        .single();
+      // Buscar dados completos do pedido antes de aprovar usando função RPC
+      const { data: orderDataArray, error: orderFetchError } = await supabase
+        .rpc('get_order_details_for_admin', { p_order_id: transferId });
+      
+      const orderData = orderDataArray?.[0];
 
       if (orderFetchError || !orderData) {
         console.error('❌ Erro ao buscar dados do pedido:', orderFetchError);
@@ -155,16 +138,14 @@ export function PendingTransfersManager() {
         console.log('✅ Executando ações pós-aprovação...');
         
         try {
-          const product = orderData.products as any;
-          
           // 1. Criar acesso ao produto (customer_access)
           console.log('🔑 Criando acesso ao produto...');
           const { error: accessError } = await supabase.rpc('extend_customer_access', {
             p_customer_email: orderData.customer_email,
             p_product_id: orderData.product_id,
             p_order_id: orderData.order_id,
-            p_extension_type: product?.access_duration_type || 'lifetime',
-            p_extension_value: product?.access_duration_value || 0
+            p_extension_type: orderData.product_access_duration_type || 'lifetime',
+            p_extension_value: orderData.product_access_duration_value || 0
           });
 
           if (accessError) {
@@ -174,12 +155,12 @@ export function PendingTransfersManager() {
           }
 
           // 2. Adicionar estudante à área de membros (se aplicável)
-          if (product?.member_area_id) {
+          if (orderData.product_member_area_id) {
             console.log('👨‍🎓 Adicionando estudante à área de membros...');
             const { error: studentError } = await supabase
               .from('member_area_students')
               .insert({
-                member_area_id: product.member_area_id,
+                member_area_id: orderData.product_member_area_id,
                 student_email: orderData.customer_email,
                 student_name: orderData.customer_name
               })
@@ -222,14 +203,14 @@ export function PendingTransfersManager() {
           const confirmationPayload = {
             customerName: orderData.customer_name,
             customerEmail: orderData.customer_email,
-            productName: product?.name || 'Produto',
+            productName: orderData.product_name || 'Produto',
             orderId: orderData.order_id,
             amount: orderData.amount,
             currency: orderData.currency || 'KZ',
             productId: orderData.product_id,
-            shareLink: product?.share_link,
-            memberAreaId: product?.member_area_id,
-            sellerId: product?.user_id,
+            shareLink: orderData.product_share_link,
+            memberAreaId: orderData.product_member_area_id,
+            sellerId: orderData.product_user_id,
             orderBump: orderBumpData,
             baseProductPrice: orderData.amount
           };

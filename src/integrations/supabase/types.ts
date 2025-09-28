@@ -2248,6 +2248,32 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_order_details_for_admin: {
+        Args: { p_order_id: string }
+        Returns: {
+          amount: string
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          id: string
+          member_area_url: string
+          order_bump_data: Json
+          order_id: string
+          payment_method: string
+          product_access_duration_type: string
+          product_access_duration_value: number
+          product_id: string
+          product_member_area_id: string
+          product_name: string
+          product_share_link: string
+          product_type: string
+          product_user_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_pending_transfers_for_admin: {
         Args: Record<PropertyKey, never>
         Returns: {
