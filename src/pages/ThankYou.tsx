@@ -767,8 +767,12 @@ const ThankYou = () => {
 
         {/* Footer */}
         <div className="mt-16 text-center space-y-4">
-          <div className="w-16 h-16 rounded-lg mx-auto flex items-center justify-center bg-green-600">
-            <span className="text-2xl font-bold text-slate-50">K</span>
+          <div className="w-16 h-16 rounded-lg mx-auto flex items-center justify-center bg-green-600 p-2">
+            <img 
+              src="/kambafy-symbol.svg" 
+              alt="Kambafy" 
+              className="w-full h-full object-contain filter brightness-0 invert"
+            />
           </div>
           <div>
             <h4 className="font-semibold text-green-600">Kambafy</h4>

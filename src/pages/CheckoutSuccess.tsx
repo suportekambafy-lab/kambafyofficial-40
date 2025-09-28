@@ -175,9 +175,18 @@ const CheckoutSuccess = () => {
             </Button>
           </div>
           
-          <p className="text-xs text-gray-400 mt-6">
-            Obrigado por escolher a Kambafy!
-          </p>
+          <div className="mt-8 flex flex-col items-center space-y-2">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-600 p-2">
+              <img 
+                src="/kambafy-symbol.svg" 
+                alt="Kambafy" 
+                className="w-full h-full object-contain filter brightness-0 invert"
+              />
+            </div>
+            <p className="text-xs text-gray-400">
+              Obrigado por escolher a Kambafy!
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
