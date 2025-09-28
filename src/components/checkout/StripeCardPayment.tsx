@@ -531,8 +531,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
       >
         {processing ? (
           <div className="flex items-center justify-center">
-            <div className="w-6 h-6 rounded bg-green-700 flex items-center justify-center mr-2">
-              <span className="text-xs font-bold text-white animate-bounce">K</span>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2">
             </div>
             PROCESSANDO PAGAMENTO...
           </div>

@@ -38,19 +38,8 @@ export const LoadingSpinner = ({
       aria-label={text}
     >
       <div className={cn(
-        "rounded-lg flex items-center justify-center bg-primary",
-        "animate-pulse",
-        "[animation-duration:1.5s]",
-        sizeClasses[size]
+        "w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"
       )}>
-        <span className={cn(
-          "font-bold text-primary-foreground",
-          "animate-bounce",
-          "[animation-duration:1s]",
-          iconSizeClasses[size]
-        )}>
-          K
-        </span>
       </div>
       {text && (
         <>
