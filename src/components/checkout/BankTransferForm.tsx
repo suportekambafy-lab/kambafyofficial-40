@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Copy, Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import { useCustomToast } from '@/hooks/useCustomToast';
@@ -67,12 +66,12 @@ export function BankTransferForm({
   onPaymentComplete,
   disabled 
 }: BankTransferFormProps) {
-  const [selectedBank, setSelectedBank] = useState<string>('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { toast: showToast } = useCustomToast();
 
-  const selectedBankData = BANKS.find(bank => bank.id === selectedBank);
+  // Always use BCI bank (first available bank)
+  const bankData = BANKS.find(bank => bank.available) || BANKS[0];
   const formattedAmount = formatPriceFromString(totalAmount, undefined, true);
 
   const copyToClipboard = (text: string, label: string) => {
@@ -118,25 +117,16 @@ export function BankTransferForm({
   };
 
   const handleConfirmPayment = () => {
-    if (!selectedBank || !proofFile) {
+    if (!proofFile) {
       showToast({
         title: 'Campos obrigatórios',
-        message: 'Selecione um banco e carregue o comprovativo',
+        message: 'Carregue o comprovativo',
         variant: 'error'
       });
       return;
     }
 
-    if (!selectedBankData?.available) {
-      showToast({
-        title: 'Banco indisponível',
-        message: 'O banco selecionado não está disponível no momento',
-        variant: 'error'
-      });
-      return;
-    }
-
-    onPaymentComplete?.(proofFile, selectedBank);
+    onPaymentComplete?.(proofFile, bankData.id);
   };
 
   return (
@@ -154,98 +144,68 @@ export function BankTransferForm({
         <Alert className="border-blue-200 bg-blue-100">
           <AlertCircle className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            Se o seu banco não estiver na lista, por favor, selecione qualquer outro banco 
-            disponível e realize o pagamento.
+            Realize a transferência para a conta bancária abaixo.
           </AlertDescription>
         </Alert>
 
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-gray-700">
-            Selecione o seu Banco
-          </Label>
-          <Select value={selectedBank} onValueChange={setSelectedBank}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Clica para selecionar" />
-            </SelectTrigger>
-            <SelectContent className="bg-white dark:bg-gray-800 z-50 border border-gray-200 shadow-lg">
-              {BANKS.map((bank) => (
-                <SelectItem key={bank.id} value={bank.id} className="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700">
-                  <div className="flex items-center justify-between w-full">
-                    <span>{bank.name}</span>
-                    <span className={`text-xs px-2 py-1 rounded ml-2 ${
-                      bank.available 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {bank.available ? 'Disponível' : 'Indisponível'}
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Card className="border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3 mb-4">
+              {bankData.logo && (
+                <img 
+                  src={bankData.logo} 
+                  alt={bankData.name}
+                  className="w-8 h-8 rounded"
+                />
+              )}
+              <h4 className="font-semibold text-gray-900">DADOS BANCÁRIOS PARA PAGAMENTO</h4>
+            </div>
 
-        {selectedBankData?.available && (
-          <Card className="border-gray-200">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-4">
-                {selectedBankData.logo && (
-                  <img 
-                    src={selectedBankData.logo} 
-                    alt={selectedBankData.name}
-                    className="w-8 h-8 rounded"
-                  />
-                )}
-                <h4 className="font-semibold text-gray-900">DADOS BANCÁRIOS PARA PAGAMENTO</h4>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-gray-600">IBAN:</span>
+                  <div className="text-lg font-mono">{bankData.iban}</div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyToClipboard(bankData.iban, 'IBAN')}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">IBAN:</span>
-                    <div className="text-lg font-mono">{selectedBankData.iban}</div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(selectedBankData.iban, 'IBAN')}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-gray-600">NÚMERO DA CONTA:</span>
+                  <div className="text-lg font-mono">{bankData.accountNumber}</div>
                 </div>
-
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">NÚMERO DA CONTA:</span>
-                    <div className="text-lg font-mono">{selectedBankData.accountNumber}</div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(selectedBankData.accountNumber, 'Número da conta')}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">TITULAR DA CONTA:</span>
-                    <div className="text-lg font-semibold">{selectedBankData.accountHolder}</div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(selectedBankData.accountHolder, 'Titular da conta')}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyToClipboard(bankData.accountNumber, 'Número da conta')}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        )}
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-gray-600">TITULAR DA CONTA:</span>
+                  <div className="text-lg font-semibold">{bankData.accountHolder}</div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyToClipboard(bankData.accountHolder, 'Titular da conta')}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="space-y-3">
           <Label className="text-sm font-medium text-gray-700">
@@ -312,14 +272,10 @@ export function BankTransferForm({
 
         <Button
           onClick={handleConfirmPayment}
-          disabled={disabled || !selectedBank || !proofFile || !selectedBankData?.available}
+          disabled={disabled || !proofFile}
           className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-semibold"
         >
-          {!selectedBank ? (
-            'Selecione um banco'
-          ) : !selectedBankData?.available ? (
-            'Banco indisponível'
-          ) : !proofFile ? (
+          {!proofFile ? (
             'Carregue o comprovativo'
           ) : (
             `COMPRAR AGORA - ${formattedAmount}`
