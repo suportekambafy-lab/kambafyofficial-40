@@ -22,6 +22,8 @@ import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { useKambaPayBalance } from "@/hooks/useKambaPayBalance";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
+import { TermsModal } from "@/components/checkout/TermsModal";
+import { PrivacyModal } from "@/components/checkout/PrivacyModal";
 
 // Importar componentes otimizados
 import { OptimizedCustomBanner, OptimizedCountdownTimer, OptimizedFakeReviews, OptimizedSocialProof, OptimizedOrderBump, OptimizedStripeCardPayment } from '@/components/checkout/OptimizedCheckoutComponents';
@@ -2251,8 +2253,12 @@ const Checkout = () => {
               <span className="text-green-600">
                 {product?.fantasy_name || 'produtor'}
               </span> não possui responsabilidade pelo conteúdo e/ou faz controle prévio deste (li) com os{' '}
-              <span className="underline cursor-pointer">Termos de uso</span> e{' '}
-              <span className="underline cursor-pointer">Política de privacidade</span>.
+              <TermsModal>
+                <span className="underline cursor-pointer">Termos de uso</span>
+              </TermsModal> e{' '}
+              <PrivacyModal>
+                <span className="underline cursor-pointer">Política de privacidade</span>
+              </PrivacyModal>.
             </p>
           </div>
         </div>
