@@ -253,7 +253,6 @@ export function PendingTransfersManager() {
       // Só atualizar o status APÓS todas as ações pós-aprovação serem bem-sucedidas
       console.log('🔄 Atualizando status do pedido para:', newStatus);
       
-      // Para rejeitar, limpar affiliate_code se estava incorreto
       const updateData: any = { 
         status: newStatus,
         updated_at: new Date().toISOString()
@@ -271,18 +270,46 @@ export function PendingTransfersManager() {
         console.log('✅ Status do pedido atualizado com sucesso para:', newStatus);
       }
 
+      // Enviar notificação para o vendedor se aprovado
+      if (action === 'approve') {
+        try {
+          console.log('📬 Enviando notificação para o vendedor...');
+          const { error: notificationError } = await supabase
+            .from('balance_transactions')
+            .insert({
+              user_id: orderData.product_user_id,
+              type: 'credit',
+              amount: 0, // Notificação apenas
+              currency: orderData.currency || 'KZ',
+              description: `🎉 Transferência aprovada! Pedido ${orderData.order_id} - ${orderData.product_name}`,
+              order_id: orderData.order_id
+            });
+
+          if (notificationError) {
+            console.error('⚠️ Erro ao enviar notificação:', notificationError);
+          } else {
+            console.log('✅ Notificação enviada para o vendedor');
+          }
+        } catch (notificationError) {
+          console.error('⚠️ Erro ao enviar notificação para vendedor:', notificationError);
+        }
+      }
+
       toast({
         title: action === 'approve' ? "Transferência Aprovada" : "Transferência Rejeitada",
         description: action === 'approve' 
-          ? "Pagamento aprovado! Cliente receberá acesso ao produto e email de confirmação."
+          ? "Pagamento aprovado! Cliente receberá acesso e vendedor será notificado."
           : `O pagamento foi rejeitado com sucesso`,
         variant: action === 'approve' ? "default" : "destructive"
       });
 
-      // Atualizar lista - aguardar um pouco para dar tempo da atualização propagar
+      // Remover imediatamente da lista local
+      setPendingTransfers(prev => prev.filter(t => t.id !== transferId));
+      
+      // Atualizar lista completa após delay
       setTimeout(() => {
         fetchPendingTransfers();
-      }, 1000);
+      }, 2000);
       
     } catch (error) {
       console.error(`❌ Erro ao ${action === 'approve' ? 'aprovar' : 'rejeitar'} transferência:`, error);

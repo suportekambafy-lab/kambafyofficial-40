@@ -87,10 +87,11 @@ const ThankYou = () => {
         setOrderStatus(order.status);
         setOrderDetails(prev => ({ ...prev, status: order.status }));
         
-        // Se o status mudou para 'completed', mostrar notificação
+        // Se o status mudou para 'completed', parar verificações e atualizar
         if (order.status === 'completed') {
-          console.log('🎉 Pagamento aprovado! Atualizando página...');
-          // Forçar uma atualização da página após 2 segundos para garantir que tudo carregue
+          console.log('🎉 Pagamento aprovado! Atualizando dados...');
+          
+          // Recarregar a página para garantir que tudo atualize
           setTimeout(() => {
             window.location.reload();
           }, 2000);
