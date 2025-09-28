@@ -46,10 +46,13 @@ export function PendingTransfersManager() {
             schema: 'public',
             table: 'orders'
           },
-          (payload) => {
-            console.log('💰 Pending transfers update triggered:', payload);
-            fetchPendingTransfers();
-          }
+           (payload) => {
+             console.log('💰 Pending transfers update triggered:', payload);
+             // Pequeno delay para permitir que a transação complete
+             setTimeout(() => {
+               fetchPendingTransfers();
+             }, 500);
+           }
         )
         .subscribe();
 
@@ -76,7 +79,12 @@ export function PendingTransfersManager() {
         throw error;
       }
 
-      const formattedTransfers: PendingTransfer[] = (orders || []).map(order => ({
+      const formattedTransfers: PendingTransfer[] = (orders || [])
+        .filter(order => 
+          order.status === 'pending' && 
+          ['transfer', 'bank_transfer', 'transferencia'].includes(order.payment_method)
+        )
+        .map(order => ({
         id: order.id,
         order_id: order.order_id,
         customer_name: order.customer_name,
@@ -87,8 +95,9 @@ export function PendingTransfersManager() {
         payment_proof_data: order.payment_proof_data,
         product_name: order.product_name,
         user_id: order.user_id
-      }));
+        }));
 
+      console.log(`💰 ${formattedTransfers.length} transferências realmente pendentes encontradas`);
       setPendingTransfers(formattedTransfers);
       console.log(`💰 ${formattedTransfers.length} transferências pendentes carregadas`);
     } catch (error) {
@@ -270,8 +279,10 @@ export function PendingTransfersManager() {
         variant: action === 'approve' ? "default" : "destructive"
       });
 
-      // Atualizar lista
-      fetchPendingTransfers();
+      // Atualizar lista - aguardar um pouco para dar tempo da atualização propagar
+      setTimeout(() => {
+        fetchPendingTransfers();
+      }, 1000);
       
     } catch (error) {
       console.error(`❌ Erro ao ${action === 'approve' ? 'aprovar' : 'rejeitar'} transferência:`, error);

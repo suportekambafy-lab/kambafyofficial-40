@@ -86,6 +86,15 @@ const ThankYou = () => {
         console.log('✅ Status do pedido atualizado:', order.status);
         setOrderStatus(order.status);
         setOrderDetails(prev => ({ ...prev, status: order.status }));
+        
+        // Se o status mudou para 'completed', mostrar notificação
+        if (order.status === 'completed') {
+          console.log('🎉 Pagamento aprovado! Atualizando página...');
+          // Forçar uma atualização da página após 2 segundos para garantir que tudo carregue
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        }
       }
     } catch (error) {
       console.error('❌ Erro na verificação do status:', error);
@@ -257,8 +266,8 @@ const ThankYou = () => {
       // Verificar imediatamente
       checkOrderStatus();
       
-      // Verificar a cada 10 segundos
-      const interval = setInterval(checkOrderStatus, 10000);
+      // Verificar a cada 5 segundos para ser mais responsivo
+      const interval = setInterval(checkOrderStatus, 5000);
       
       return () => {
         console.log('🛑 Parando verificação periódica do status do pedido');
@@ -291,6 +300,14 @@ const ThankYou = () => {
             console.log('✅ Status do pedido atualizado via real-time:', newOrder.status);
             setOrderStatus(newOrder.status);
             setOrderDetails(prev => ({ ...prev, status: newOrder.status }));
+            
+            // Se foi aprovado, recarregar a página para garantir que tudo atualize
+            if (newOrder.status === 'completed') {
+              console.log('🎉 Pagamento aprovado via real-time! Recarregando página...');
+              setTimeout(() => {
+                window.location.reload();
+              }, 2000);
+            }
           }
         }
       )
