@@ -165,7 +165,7 @@ export function SellerNotificationCenter() {
         onClick={() => setIsOpen(!isOpen)}
         className="relative"
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="h-5 w-5 text-foreground dark:text-white" />
         {unreadCount > 0 && (
           <Badge 
             variant="destructive" 
