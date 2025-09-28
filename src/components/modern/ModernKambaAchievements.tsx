@@ -7,6 +7,7 @@ import { KambaLevelsModal } from '@/components/KambaLevelsModal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Trophy, Eye } from 'lucide-react';
 export function ModernKambaAchievements() {
   const {
@@ -122,15 +123,24 @@ export function ModernKambaAchievements() {
             <p className="text-sm font-medium text-foreground">
               Selos Conquistados ({achievedLevels.length}/{allLevels.length})
             </p>
-            <div className="flex gap-2 flex-wrap">
-              {allLevels.map(level => {
-              const isAchieved = totalRevenue >= level.threshold;
-              return <div key={level.id} className={`relative transition-all duration-200 ${isAchieved ? 'scale-100' : 'scale-90 opacity-40'}`}>
-                    <img src={level.badge} alt={level.name} className="w-12 h-12 rounded-lg" title={`${level.name} - ${formatCurrency(level.threshold)}`} />
-                    {!isAchieved && <div className="absolute inset-0 bg-slate-500/20 rounded-lg" />}
-                  </div>;
-            })}
-            </div>
+            <TooltipProvider>
+              <div className="flex gap-2 flex-wrap">
+                {allLevels.map(level => {
+                const isAchieved = totalRevenue >= level.threshold;
+                return <Tooltip key={level.id}>
+                      <TooltipTrigger asChild>
+                        <div className={`relative transition-all duration-200 cursor-help ${isAchieved ? 'scale-100' : 'scale-90 opacity-40'}`}>
+                          <img src={level.badge} alt={level.name} className="w-12 h-12 rounded-lg" />
+                          {!isAchieved && <div className="absolute inset-0 bg-slate-500/20 rounded-lg" />}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{level.name} - {formatCurrency(level.threshold)}</p>
+                      </TooltipContent>
+                    </Tooltip>;
+              })}
+              </div>
+            </TooltipProvider>
           </div>
         </CardContent>
       </Card>
