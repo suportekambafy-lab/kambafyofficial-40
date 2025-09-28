@@ -22,66 +22,26 @@ const CheckoutSuccess = () => {
       }
 
       try {
-        // Tentar diferentes abordagens para encontrar o pedido
-        let orderData = null;
-        let error = null;
+        // Usar a edge function para verificar o status do pedido
+        const { data, error } = await supabase.functions.invoke('check-order-status', {
+          body: { orderId, sessionId }
+        });
 
-        // Primeira tentativa: busca com order_id
-        if (orderId) {
-          const { data, error: orderError } = await supabase
-            .from('orders')
-            .select('*')
-            .eq('order_id', orderId)
-            .maybeSingle();
-          
-          if (data && !orderError) {
-            orderData = data;
-          } else {
-            error = orderError;
-          }
-        }
-
-        // Segunda tentativa: busca com stripe_session_id
-        if (!orderData && sessionId) {
-          const { data, error: sessionError } = await supabase
-            .from('orders')
-            .select('*')
-            .eq('stripe_session_id', sessionId)
-            .maybeSingle();
-          
-          if (data && !sessionError) {
-            orderData = data;
-          } else {
-            error = sessionError;
-          }
-        }
-
-        // Terceira tentativa: busca por ID UUID se um dos parâmetros for um UUID válido
-        const isUuid = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
-        
-        if (!orderData && orderId && isUuid(orderId)) {
-          const { data, error: idError } = await supabase
-            .from('orders')
-            .select('*')
-            .eq('id', orderId)
-            .maybeSingle();
-          
-          if (data && !idError) {
-            orderData = data;
-          } else {
-            error = idError;
-          }
-        }
-
-        if (!orderData) {
-          console.error('Pedido não encontrado:', { orderId, sessionId, error });
+        if (error) {
+          console.error('Erro ao verificar status do pedido:', error);
           setOrderStatus('error');
           return;
         }
 
-        console.log('Pedido encontrado:', orderData);
-        setOrderData(orderData);
-        setOrderStatus(orderData.status === 'completed' ? 'completed' : 'pending');
+        if (!data.success || !data.order) {
+          console.error('Pedido não encontrado:', data);
+          setOrderStatus('error');
+          return;
+        }
+
+        console.log('Pedido encontrado:', data.order);
+        setOrderData(data.order);
+        setOrderStatus(data.order.status === 'completed' ? 'completed' : 'pending');
       } catch (error) {
         console.error('Erro ao verificar status do pedido:', error);
         setOrderStatus('error');
