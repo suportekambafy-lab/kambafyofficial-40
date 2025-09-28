@@ -243,12 +243,16 @@ export function PendingTransfersManager() {
 
       // Só atualizar o status APÓS todas as ações pós-aprovação serem bem-sucedidas
       console.log('🔄 Atualizando status do pedido para:', newStatus);
+      
+      // Para rejeitar, limpar affiliate_code se estava incorreto
+      const updateData: any = { 
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      };
+      
       const { error: updateError } = await supabase
         .from('orders')
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', transferId);
 
       if (updateError) {

@@ -922,7 +922,8 @@ const Checkout = () => {
           console.log('❌ Nenhum afiliado válido encontrado para o código:', affiliateCode, affiliateError);
           markAsInvalidAffiliate();
           seller_commission = totalAmount;
-          // Limpar código de afiliado inválido
+          // Limpar código de afiliado inválido e código da session
+          clearAffiliateCode();
           affiliate_commission = null;
         }
       } else {
@@ -939,6 +940,7 @@ const Checkout = () => {
         convertedAmount: totalAmountInKZ,
         exchangeRate: userCountry.exchangeRate
       });
+
       const orderData = {
         product_id: product.id,
         order_id: orderId,
@@ -946,14 +948,11 @@ const Checkout = () => {
         customer_email: formData.email,
         customer_phone: formData.phone,
         amount: totalAmountInKZ.toString(),
-        // Sempre em KZ
         currency: 'KZ',
-        // Sempre salvar como KZ
         payment_method: 'transfer',
         status: 'pending',
-        // Status padrão para transferência - fica pendente até aprovação
         user_id: null,
-        affiliate_code: hasAffiliate ? affiliateCode : null,
+        affiliate_code: affiliate_commission ? affiliateCode : null,
         affiliate_commission: affiliate_commission_kz,
         seller_commission: seller_commission_kz,
         order_bump_data: orderBump ? JSON.stringify({
@@ -1389,7 +1388,8 @@ const Checkout = () => {
           console.log('❌ Nenhum afiliado válido encontrado para o código:', affiliateCode, affiliateError);
           markAsInvalidAffiliate();
           seller_commission = totalAmount;
-          // Limpar código de afiliado inválido
+          // Limpar código de afiliado inválido e código da session
+          clearAffiliateCode();
           affiliate_commission = null;
         }
       } else {
@@ -1422,7 +1422,7 @@ const Checkout = () => {
         // Angola payment methods should start as pending
         user_id: null,
         // Always null for checkout page orders (guest orders)
-        affiliate_code: hasAffiliate ? affiliateCode : null,
+        affiliate_code: affiliate_commission ? affiliateCode : null,
         affiliate_commission: affiliate_commission_kz,
         seller_commission: seller_commission_kz,
         order_bump_data: orderBump ? JSON.stringify({
