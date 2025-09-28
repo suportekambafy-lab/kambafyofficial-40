@@ -8,12 +8,25 @@ const corsHeaders = {
 };
 
 interface WebhookPayload {
-  customerName: string;
-  customerEmail: string;
-  orderValue?: number;
-  orderId?: string;
-  paymentStatus: 'completed' | 'paid' | 'success';
-  temporaryPassword?: string;
+  order_id: string;
+  order_status: 'COMPLETED' | 'PAYMENT_RECEIVED' | 'DECLINED' | 'CANCELLED' | 'REFUNDED';
+  product_id: string;
+  product_name: string;
+  buyer: {
+    id: string;
+    email: string;
+    name: string;
+  };
+  seller: {
+    id: string;
+    email: string;
+    name: string;
+  };
+  total: number;
+  quantity: number;
+  integration_name: string;
+  timestamp: string;
+  temporaryPassword?: string; // Campo opcional para senha temporária
 }
 
 const MEMBER_AREA_ID = "290b0398-c5f4-4681-944b-edc40f6fe0a2"; // Marca Milionária
@@ -30,16 +43,16 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Webhook payload:', payload);
 
     // Validar campos obrigatórios
-    if (!payload.customerName || !payload.customerEmail) {
-      throw new Error('customerName e customerEmail são obrigatórios');
+    if (!payload.buyer?.name || !payload.buyer?.email || !payload.order_id) {
+      throw new Error('buyer.name, buyer.email e order_id são obrigatórios');
     }
 
     // Verificar se o pagamento foi concluído
-    if (!['completed', 'paid', 'success'].includes(payload.paymentStatus)) {
-      console.log('Pagamento não concluído, ignorando webhook');
+    if (!['COMPLETED', 'PAYMENT_RECEIVED'].includes(payload.order_status)) {
+      console.log('Pagamento não concluído, status:', payload.order_status);
       return new Response(JSON.stringify({
         success: false,
-        message: 'Pagamento não concluído'
+        message: `Pagamento não concluído. Status: ${payload.order_status}`
       }), {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -58,7 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from('member_area_students')
       .select('id')
       .eq('member_area_id', MEMBER_AREA_ID)
-      .eq('student_email', payload.customerEmail)
+      .eq('student_email', payload.buyer.email)
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -85,8 +98,8 @@ const handler = async (req: Request): Promise<Response> => {
       'add-member-area-student',
       {
         body: {
-          customerName: payload.customerName,
-          customerEmail: payload.customerEmail,
+          customerName: payload.buyer.name,
+          customerEmail: payload.buyer.email,
           temporaryPassword: payload.temporaryPassword
         }
       }
@@ -106,8 +119,8 @@ const handler = async (req: Request): Promise<Response> => {
       .from('member_area_students')
       .insert({
         member_area_id: MEMBER_AREA_ID,
-        student_email: payload.customerEmail,
-        student_name: payload.customerName,
+        student_email: payload.buyer.email,
+        student_name: payload.buyer.name,
         access_granted_at: new Date().toISOString()
       });
 
@@ -121,10 +134,13 @@ const handler = async (req: Request): Promise<Response> => {
     // Log da transação para auditoria
     const logData = {
       member_area_id: MEMBER_AREA_ID,
-      student_email: payload.customerEmail,
-      student_name: payload.customerName,
-      order_id: payload.orderId,
-      order_value: payload.orderValue,
+      student_email: payload.buyer.email,
+      student_name: payload.buyer.name,
+      order_id: payload.order_id,
+      order_value: payload.total,
+      order_status: payload.order_status,
+      product_name: payload.product_name,
+      seller_email: payload.seller.email,
       processed_at: new Date().toISOString(),
       webhook_source: 'external_checkout'
     };
@@ -136,8 +152,12 @@ const handler = async (req: Request): Promise<Response> => {
       message: 'Aluno cadastrado com sucesso na área de membros Marca Milionária',
       data: {
         member_area_id: MEMBER_AREA_ID,
-        student_email: payload.customerEmail,
-        student_name: payload.customerName,
+        student_email: payload.buyer.email,
+        student_name: payload.buyer.name,
+        order_id: payload.order_id,
+        order_status: payload.order_status,
+        total_value: payload.total,
+        product_name: payload.product_name,
         user_created: studentResult?.userCreated || false,
         password_provided: !!payload.temporaryPassword
       }
