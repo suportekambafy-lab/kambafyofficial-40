@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Play, BookOpen, LogOut, Clock, Users, Star, Search, Filter, GraduationCap, Trophy, Target, CheckCircle2, PlayCircle, MoreVertical, ArrowLeft, Menu, X, Lock, AlertCircle, ExternalLink, Download, FileText, Timer } from 'lucide-react';
+import { Play, BookOpen, Clock, CheckCircle2, ArrowLeft, Menu, X, Timer, AlertCircle } from 'lucide-react';
 import { CountdownTimer } from '@/components/ui/countdown-timer';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
@@ -334,53 +334,38 @@ export default function ModernMembersArea() {
     selectedLesson: !!selectedLesson
   });
 
-  return <div className="min-h-screen bg-gray-950 dark text-white">
+  return <div className="min-h-screen bg-white dark text-gray-900">
       {/* Menu Slide Lateral */}
       <MemberAreaSlideMenu lessons={lessons} modules={modules} lessonProgress={lessonProgress} getCourseProgress={getCourseProgress} getModuleProgress={getModuleProgress} getModuleStats={getModuleStats} totalDuration={totalDuration} completedLessons={completedLessons} onLessonSelect={setSelectedLesson} onLogout={handleLogout} />
       
       {/* Hero Section - Ocultar quando aula selecionada */}
-      {!selectedLesson && <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:40px_40px]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-          
-          {/* Hero Image Background */}
-          {currentMemberArea?.hero_image_url && <div className="absolute inset-0 opacity-40">
-              <img src={currentMemberArea.hero_image_url} alt={currentMemberArea.name} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-            </div>}
-          
-          <div className="relative container mx-auto px-4 py-20">
+      {!selectedLesson && <motion.section className="relative bg-gray-50 border-b overflow-hidden">
+          <div className="container mx-auto px-4 py-12">
             {/* Header */}
-            <motion.div className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10">
+            <motion.div className="flex justify-between items-center mb-8">
               <div className="flex items-center gap-3">
-                {currentMemberArea?.logo_url ? <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
+                {currentMemberArea?.logo_url ? <Avatar className="h-10 w-10">
                     <AvatarImage src={currentMemberArea.logo_url} alt={currentMemberArea.name} />
-                    <AvatarFallback className="bg-emerald-600">
-                      <GraduationCap className="h-6 w-6 text-white" />
+                    <AvatarFallback className="bg-gray-200 text-gray-600">
+                      <BookOpen className="h-5 w-5" />
                     </AvatarFallback>
-                  </Avatar> : <div className="h-12 w-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
-                    <GraduationCap className="h-6 w-6 text-white" />
+                  </Avatar> : <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    <BookOpen className="h-5 w-5 text-gray-600" />
                   </div>}
-                <div className="text-white">
-                  <p className="text-sm text-emerald-400">Área de Membros</p>
-                  <p className="text-sm text-gray-300">Olá, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}</p>
+                <div>
+                  <p className="text-sm text-gray-600">Área de Membros</p>
+                  <p className="text-sm text-gray-900">Olá, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}</p>
                 </div>
               </div>
             </motion.div>
 
-            {/* Course Hero */}
-            <motion.div className="text-center mb-12 mt-20 sm:mt-8">
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4">
-                <Trophy className="h-3 w-3 mr-1" />
-                Curso Premium
-              </Badge>
-              
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            {/* Course Title */}
+            <motion.div className="text-center mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
                 {currentMemberArea?.hero_title || currentMemberArea?.name}
               </h1>
               
-              <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
                 {currentMemberArea?.hero_description || currentMemberArea?.description}
               </p>
             </motion.div>
@@ -388,24 +373,24 @@ export default function ModernMembersArea() {
         </motion.section>}
 
       {/* Header fixo quando aula selecionada */}
-      {selectedLesson && <motion.header className="bg-black/95 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4 bg-zinc-950">
+      {selectedLesson && <motion.header className="bg-white border-b sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" onClick={() => setSelectedLesson(null)} className="text-white hover:text-emerald-400">
+                <Button variant="ghost" size="sm" onClick={() => setSelectedLesson(null)}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <Badge variant="outline" className="text-emerald-400 border-emerald-500/30">
+                <span className="text-sm text-gray-600">
                   Aula {lessons.indexOf(selectedLesson) + 1}
-                </Badge>
+                </span>
               </div>
               
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs bg-gray-800">
-                  <Clock className="h-3 w-3 mr-1" />
+                <span className="text-xs text-gray-500">
+                  <Clock className="h-3 w-3 mr-1 inline" />
                   {selectedLesson.duration > 0 ? `${Math.round(selectedLesson.duration / 60)} min` : 'Duração não definida'}
-                </Badge>
-                <Button variant="ghost" size="sm" onClick={() => setSidebarVisible(!sidebarVisible)} className="text-white hover:text-emerald-400">
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => setSidebarVisible(!sidebarVisible)}>
                   {sidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
                 </Button>
               </div>
@@ -414,7 +399,7 @@ export default function ModernMembersArea() {
         </motion.header>}
 
       {/* Main Content Area */}
-      <div className="bg-black min-h-screen">
+      <div className="bg-white min-h-screen">
         <div className={selectedLesson ? "" : "container mx-auto px-4 py-12"}>
           
           {/* Layout quando aula selecionada */}
@@ -438,10 +423,10 @@ export default function ModernMembersArea() {
               </div>
 
               {/* Sidebar com módulos e aulas - condicional */}
-              {sidebarVisible && <div className={`bg-gray-950 border-l border-gray-800 p-6 overflow-y-auto ${isMobile ? 'fixed top-0 right-0 h-full w-80 z-50 shadow-2xl' : 'w-96'}`}>
-                  {isMobile && <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-800">
-                      <h3 className="text-lg font-semibold text-white">Lista de Aulas</h3>
-                      <Button variant="ghost" size="sm" onClick={() => setSidebarVisible(false)} className="text-white hover:text-emerald-400">
+              {sidebarVisible && <div className={`bg-gray-50 border-l border-gray-200 p-6 overflow-y-auto ${isMobile ? 'fixed top-0 right-0 h-full w-80 z-50 shadow-lg' : 'w-96'}`}>
+                  {isMobile && <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-900">Lista de Aulas</h3>
+                      <Button variant="ghost" size="sm" onClick={() => setSidebarVisible(false)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>}
@@ -455,8 +440,7 @@ export default function ModernMembersArea() {
               delay: 0.2
             }} className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-emerald-400" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
                       Conteúdo do Curso
                     </h3>
                   </div>
@@ -465,13 +449,13 @@ export default function ModernMembersArea() {
                 const moduleLessons = lessons.filter(l => l.module_id === module.id);
                 const isExpanded = moduleLessons.some(l => l.id === selectedLesson.id);
                 return <div key={module.id} className="space-y-3">
-                        <div className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${isExpanded ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-gray-800 hover:bg-gray-700'}`} onClick={() => handleModuleClick(module)}>
-                          {module.cover_image_url ? <img src={module.cover_image_url} alt={module.title} className="w-12 h-12 object-cover rounded" /> : <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded flex items-center justify-center">
-                              <BookOpen className="h-6 w-6 text-emerald-400" />
+                        <div className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${isExpanded ? 'bg-gray-100 border border-gray-300' : 'bg-white border border-gray-200 hover:bg-gray-50'}`} onClick={() => handleModuleClick(module)}>
+                          {module.cover_image_url ? <img src={module.cover_image_url} alt={module.title} className="w-12 h-12 object-cover rounded" /> : <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                              <BookOpen className="h-6 w-6 text-gray-600" />
                             </div>}
                           <div className="flex-1">
-                            <h4 className="font-medium text-white text-sm">{module.title}</h4>
-                            <p className="text-xs text-gray-400">{moduleLessons.length} aulas</p>
+                            <h4 className="font-medium text-gray-900 text-sm">{module.title}</h4>
+                            <p className="text-xs text-gray-500">{moduleLessons.length} aulas</p>
                           </div>
                         </div>
 
@@ -487,25 +471,23 @@ export default function ModernMembersArea() {
                       opacity: 0,
                       height: 0
                     }} className="pl-4 space-y-2">
-                              {moduleLessons.map(lesson => <motion.div key={lesson.id} whileHover={{
-                        scale: 1.02
-                      }} className={`p-3 rounded cursor-pointer transition-colors ${lesson.id === selectedLesson.id ? 'bg-emerald-500/20 border-l-4 border-l-emerald-400' : 'bg-gray-800/50 hover:bg-gray-800'}`} onClick={() => handleLessonClick(lesson)}>
+                              {moduleLessons.map(lesson => <motion.div key={lesson.id} className={`p-3 rounded cursor-pointer transition-colors ${lesson.id === selectedLesson.id ? 'bg-gray-100 border-l-4 border-l-gray-400' : 'bg-white border border-gray-200 hover:bg-gray-50'}`} onClick={() => handleLessonClick(lesson)}>
                                   <div className="flex items-center gap-3">
                                     <div className="flex-shrink-0">
-                                      <Badge variant="outline" className="text-xs">
+                                      <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
                                         {lesson.order_number}
-                                      </Badge>
+                                      </span>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <p className="font-medium text-sm text-white line-clamp-1">
+                                      <p className="font-medium text-sm text-gray-900 line-clamp-1">
                                         {lesson.title}
                                       </p>
                                       <div className="flex items-center gap-2 mt-1">
-                                        <Clock className="h-3 w-3 text-gray-400" />
-                                        <span className="text-xs text-gray-400">
+                                        <Clock className="h-3 w-3 text-gray-500" />
+                                        <span className="text-xs text-gray-500">
                                           {Math.round(lesson.duration / 60)} min
                                         </span>
-                                        {lesson.id === selectedLesson.id && <PlayCircle className="h-3 w-3 text-emerald-400" />}
+                                        {lesson.id === selectedLesson.id && <Play className="h-3 w-3 text-gray-600" />}
                                       </div>
                                     </div>
                                   </div>
@@ -528,10 +510,10 @@ export default function ModernMembersArea() {
             delay: 0.2
           }}>
                 <div className="mb-8">
-                  <h2 className="text-3xl font-bold text-white mb-3">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-3">
                     {selectedModule ? selectedModule.title : 'Módulos do Curso'}
                   </h2>
-                  <p className="text-gray-400 text-lg">
+                  <p className="text-gray-600 text-lg">
                     {selectedModule ? selectedModule.description : 'Escolha um módulo para começar a aprender'}
                   </p>
                 </div>
@@ -540,7 +522,7 @@ export default function ModernMembersArea() {
                     {selectedModule ? (/* Aulas do Módulo Selecionado */
               <div className="space-y-6">
                         <div className="flex items-center gap-4 mb-6">
-                          <Button variant="outline" onClick={handleBackToModules} className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border-gray-600 text-white">
+                          <Button variant="outline" onClick={handleBackToModules} className="flex items-center gap-2">
                             <ArrowLeft className="h-4 w-4" />
                             Voltar aos Módulos
                           </Button>
@@ -558,35 +540,35 @@ export default function ModernMembersArea() {
                     }} transition={{
                       delay: 0.1 * index
                     }} className={`group transition-all duration-200 cursor-pointer`} onClick={() => handleLessonClick(lesson)}>
-                                <Card className={`bg-gray-900 transition-all duration-300 border border-gray-800 hover:bg-gray-800 ${isLessonContentAccessible(lesson) ? 'hover:border-emerald-500/50' : 'hover:border-amber-500/50'}`}>
+                                <Card className={`bg-white transition-all duration-300 border border-gray-200 ${isLessonContentAccessible(lesson) ? 'hover:border-gray-400' : 'hover:border-gray-400'}`}>
                                   <div className="p-6 flex items-center gap-4">
-                                    <div className={`flex-shrink-0 w-16 h-16 rounded-lg flex items-center justify-center ${isLessonContentAccessible(lesson) ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20' : 'bg-gradient-to-br from-amber-500/20 to-amber-600/20'}`}>
-                                      {!isLessonContentAccessible(lesson) && lesson.is_scheduled ? <Timer className="h-8 w-8 text-amber-400" /> : currentProgress?.completed ? <CheckCircle2 className="h-8 w-8 text-emerald-400" /> : <Play className="h-8 w-8 text-emerald-400" />}
+                                    <div className={`flex-shrink-0 w-16 h-16 rounded-lg flex items-center justify-center ${isLessonContentAccessible(lesson) ? 'bg-gray-100' : 'bg-gray-100'}`}>
+                                      {!isLessonContentAccessible(lesson) && lesson.is_scheduled ? <Timer className="h-8 w-8 text-gray-600" /> : currentProgress?.completed ? <CheckCircle2 className="h-8 w-8 text-gray-600" /> : <Play className="h-8 w-8 text-gray-600" />}
                                     </div>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-2">
-                                        <Badge className={`${isLessonContentAccessible(lesson) ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
+                                        <span className={`text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded`}>
                                           Aula {lesson.order_number}
-                                        </Badge>
-                                        <Badge variant="outline" className="text-gray-400 border-gray-600">
-                                          <Clock className="h-3 w-3 mr-1" />
+                                        </span>
+                                        <span className="text-xs px-2 py-1 bg-gray-50 text-gray-500 rounded border">
+                                          <Clock className="h-3 w-3 mr-1 inline" />
                                           {Math.round(lesson.duration / 60)} min
-                                        </Badge>
-                                        {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && <Badge variant="outline" className="text-amber-400 border-amber-400 bg-amber-400/10">
-                                            <Timer className="h-3 w-3 mr-1" />
+                                        </span>
+                                        {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && <span className="text-xs px-2 py-1 bg-yellow-50 text-yellow-600 rounded border border-yellow-200">
+                                            <Timer className="h-3 w-3 mr-1 inline" />
                                             Agendada
-                                          </Badge>}
+                                          </span>}
                                       </div>
-                                      <h4 className={`text-lg font-semibold transition-colors ${isLessonContentAccessible(lesson) ? 'text-white group-hover:text-emerald-400' : 'text-white group-hover:text-amber-400'}`}>
+                                      <h4 className={`text-lg font-semibold transition-colors text-gray-900`}>
                                         {lesson.title}
                                       </h4>
-                                      {lesson.description && <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                                      {lesson.description && <p className="text-gray-600 text-sm mt-1 line-clamp-2">
                                           {lesson.description}
                                         </p>}
 
                                       {/* Countdown para aulas agendadas */}
-                                      {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && <div className="mt-4 p-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg border border-amber-500/20">
-                                          <div className="text-sm font-medium text-amber-400 mb-2 flex items-center gap-2">
+                                      {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                          <div className="text-sm font-medium text-yellow-800 mb-2 flex items-center gap-2">
                                             <Timer className="h-4 w-4" />
                                             Aula será liberada em:
                                           </div>
@@ -599,18 +581,18 @@ export default function ModernMembersArea() {
 
                                       {/* Barra de progresso para aulas iniciadas */}
                                       {currentProgress && currentProgress.progress_percentage > 0 && !currentProgress.completed && <div className="mt-3">
-                                          <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                                          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
                                             <span>Progresso</span>
                                             <span>{currentProgress.progress_percentage}%</span>
                                           </div>
-                                          <div className="w-full bg-gray-700 rounded-full h-1.5">
-                                            <div className="bg-gradient-to-r from-yellow-500 to-yellow-400 h-1.5 rounded-full transition-all duration-300" style={{
+                                          <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                            <div className="bg-gray-600 h-1.5 rounded-full transition-all duration-300" style={{
                                             width: `${currentProgress.progress_percentage}%`
                                           }} />
                                           </div>
                                         </div>}
                                       {isLessonContentAccessible(lesson) && currentProgress && <div className="mt-3">
-                                          <div className="flex justify-between text-xs text-gray-400 mb-1">
+                                          <div className="flex justify-between text-xs text-gray-500 mb-1">
                                             <span>Progresso</span>
                                             <span>{currentProgress.progress_percentage}%</span>
                                           </div>
@@ -618,7 +600,7 @@ export default function ModernMembersArea() {
                                         </div>}
                                     </div>
                                     <div className={`flex-shrink-0 transition-opacity opacity-0 group-hover:opacity-100`}>
-                                      {!isLessonContentAccessible(lesson) && lesson.is_scheduled ? <Timer className="h-6 w-6 text-amber-400" /> : <Play className="h-6 w-6 text-emerald-400" />}
+                                      {!isLessonContentAccessible(lesson) && lesson.is_scheduled ? <Timer className="h-6 w-6 text-gray-600" /> : <Play className="h-6 w-6 text-gray-600" />}
                                     </div>
                                   </div>
                                 </Card>
@@ -626,8 +608,8 @@ export default function ModernMembersArea() {
                   })}
 
                           {filteredLessons.length === 0 && <div className="text-center py-12">
-                              <BookOpen className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                              <h3 className="text-lg font-medium text-gray-400 mb-2">
+                              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                              <h3 className="text-lg font-medium text-gray-600 mb-2">
                                 Nenhuma aula neste módulo ainda
                               </h3>
                               <p className="text-gray-500">
@@ -646,54 +628,51 @@ export default function ModernMembersArea() {
                     scale: 1
                   }} transition={{
                     delay: 0.1 * index
-                  }} whileHover={{
-                    scale: 1.05,
-                    y: -8
                   }} className={`group cursor-pointer flex-shrink-0 w-80 ${module.coming_soon ? 'opacity-75' : ''}`} onClick={() => handleModuleClick(module)}>
-                              <Card className={`overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 ${module.coming_soon ? 'hover:border-amber-500/50' : 'hover:border-emerald-500/50'} transform-gpu`}>
+                              <Card className={`overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-200 ${module.coming_soon ? 'hover:border-yellow-300' : 'hover:border-gray-400'} transform-gpu`}>
                                 <div className="relative">
-                                  {/* Module Cover - Netflix Style com orientação dinâmica */}
-                                  <div className={`${(module as any).cover_orientation === 'vertical' ? 'aspect-[9/16]' : 'aspect-[16/9]'} bg-gradient-to-br from-gray-900 to-black relative overflow-hidden`}>
+                                  {/* Module Cover */}
+                                  <div className={`${(module as any).cover_orientation === 'vertical' ? 'aspect-[9/16]' : 'aspect-[16/9]'} bg-gray-100 relative overflow-hidden`}>
                                     {module.cover_image_url ? <>
                                         <img src={module.cover_image_url} alt={module.title} className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${module.coming_soon ? 'grayscale' : ''}`} />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                                       </> : <div className="w-full h-full flex items-center justify-center">
-                                        {module.coming_soon ? <AlertCircle className="h-20 w-20 text-amber-500 group-hover:text-amber-400 transition-colors duration-300" /> : <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-emerald-500 transition-colors duration-300" />}
+                                        {module.coming_soon ? <AlertCircle className="h-20 w-20 text-yellow-600" /> : <BookOpen className="h-20 w-20 text-gray-400" />}
                                       </div>}
                                     
                                     {/* Module Number Badge */}
                                     <div className="absolute top-4 left-4">
-                                      <Badge className={`backdrop-blur-sm font-bold px-3 py-1 ${module.coming_soon ? 'bg-amber-500/90 hover:bg-amber-600 text-white' : 'bg-emerald-500/90 hover:bg-emerald-600 text-white'}`}>
+                                      <span className={`backdrop-blur-sm font-bold px-3 py-1 rounded text-sm ${module.coming_soon ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-white'}`}>
                                         {module.order_number}
-                                      </Badge>
+                                      </span>
                                     </div>
 
                                     {/* Coming Soon Badge */}
                                     {module.coming_soon && <div className="absolute top-4 right-4">
-                                        <Badge variant="outline" className="bg-amber-500/90 text-white border-amber-400">
-                                          <AlertCircle className="h-3 w-3 mr-1" />
+                                        <span className="bg-yellow-600 text-white border-yellow-400 px-2 py-1 rounded text-xs">
+                                          <AlertCircle className="h-3 w-3 mr-1 inline" />
                                           Em Breve
-                                        </Badge>
+                                        </span>
                                       </div>}
 
                                     {/* Progress Overlay */}
                                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                                      <h3 className={`font-bold text-lg mb-1 leading-tight transition-colors ${module.coming_soon ? 'group-hover:text-amber-300' : 'group-hover:text-emerald-300'}`}>
+                                      <h3 className={`font-bold text-lg mb-1 leading-tight`}>
                                         {module.title}
                                       </h3>
                                       <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-sm text-gray-300">
+                                        <span className="text-sm text-white">
                                           {lessons.filter(l => l.module_id === module.id).length} aulas
                                         </span>
-                                        {!module.coming_soon && <span className="text-xs font-medium text-emerald-400">
+                                        {!module.coming_soon && <span className="text-xs font-medium text-gray-300">
                                             {Math.floor(Math.random() * 100)}%
                                           </span>}
-                                        {module.coming_soon && <span className="text-xs font-medium text-amber-400">
+                                        {module.coming_soon && <span className="text-xs font-medium text-yellow-200">
                                             Em Breve
                                           </span>}
                                       </div>
-                                      {!module.coming_soon && <div className="w-full bg-gray-800 rounded-full h-2">
-                                          <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-700 shadow-sm shadow-emerald-500/30" style={{
+                                      {!module.coming_soon && <div className="w-full bg-gray-400 rounded-full h-2">
+                                          <div className="bg-gray-600 h-2 rounded-full transition-all duration-700" style={{
                                 width: `${Math.floor(Math.random() * 100)}%`
                               }} />
                                         </div>}
