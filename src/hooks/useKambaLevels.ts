@@ -67,8 +67,8 @@ export const KAMBA_LEVELS: KambaLevel[] = [
 
 export const useKambaLevels = (totalRevenue: number) => {
   return useMemo(() => {
-    // Encontrar nível atual - começar sem nível se não alcançou o primeiro
-    let currentLevel = KAMBA_LEVELS[0]; // Por padrão, primeiro nível
+    // Encontrar nível atual - null se não alcançou nenhum
+    let currentLevel = null;
     let currentLevelIndex = -1; // -1 significa que ainda não alcançou nenhum nível
     
     for (let i = 0; i < KAMBA_LEVELS.length; i++) {

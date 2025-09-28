@@ -42,11 +42,17 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <img 
-              src={currentLevel.badge} 
-              alt={currentLevel.name}
-              className="w-8 h-8 rounded"
-            />
+            {currentLevel ? (
+              <img 
+                src={currentLevel.badge} 
+                alt={currentLevel.name}
+                className="w-8 h-8 rounded"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs">
+                ?
+              </div>
+            )}
             Níveis de Reconhecimento Kamba
           </DialogTitle>
         </DialogHeader>
@@ -55,7 +61,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           <div className="bg-muted/30 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold">Seu Nível Atual</h3>
-              {totalRevenue >= currentLevel.threshold ? (
+              {currentLevel ? (
                 <Badge 
                   style={{ backgroundColor: currentLevel.color, color: 'white' }}
                   className="text-xs"
@@ -71,9 +77,9 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
             <p className="text-sm text-muted-foreground">
               Faturamento total: {formatCurrency(totalRevenue)}
             </p>
-            {totalRevenue < currentLevel.threshold && (
+            {!currentLevel && (
               <p className="text-sm text-muted-foreground mt-2">
-                Próximo nível: {currentLevel.emoji} {currentLevel.name} - {formatCurrency(currentLevel.threshold)}
+                Próximo nível: {allLevels[0].emoji} {allLevels[0].name} - {formatCurrency(allLevels[0].threshold)}
               </p>
             )}
           </div>
@@ -81,7 +87,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           <div className="space-y-4">
             {allLevels.map((level, index) => {
               const achieved = isAchieved(level.threshold);
-              const isCurrent = level.id === currentLevel.id;
+              const isCurrent = currentLevel && level.id === currentLevel.id;
               
               return (
                 <div
