@@ -94,13 +94,20 @@ const handler = async (req: Request): Promise<Response> => {
     // Chamar a função add-member-area-student para criar/atualizar o usuário
     console.log('🔧 Chamando função add-member-area-student...');
     
+    // Gerar senha temporária para todos os casos
+    const temporaryPassword = Math.random().toString(36).slice(-8) + 
+                             Math.random().toString(36).slice(-4).toUpperCase() +
+                             Math.floor(Math.random() * 100).toString().padStart(2, '0');
+    
+    console.log('🔐 Senha temporária gerada para:', payload.buyer.email);
+    
     const { data: studentResult, error: studentError } = await supabase.functions.invoke(
       'add-member-area-student',
       {
         body: {
           customerName: payload.buyer.name,
           customerEmail: payload.buyer.email,
-          temporaryPassword: payload.temporaryPassword
+          temporaryPassword: temporaryPassword
         }
       }
     );
@@ -140,8 +147,8 @@ const handler = async (req: Request): Promise<Response> => {
         studentName: payload.buyer.name,
         memberAreaName: 'Marca Milionária',
         memberAreaUrl: `https://membros.kambafy.com/login/${MEMBER_AREA_ID}`,
-        isNewAccount: studentResult?.isNewAccount || false,
-        temporaryPassword: payload.temporaryPassword
+        isNewAccount: studentResult?.isNewAccount || true,
+        temporaryPassword: temporaryPassword
       };
       
       console.log('📧 Dados para envio de email:', emailPayload);
@@ -190,7 +197,7 @@ const handler = async (req: Request): Promise<Response> => {
         total_value: payload.total,
         product_name: payload.product_name,
         user_created: studentResult?.userCreated || false,
-        password_provided: !!payload.temporaryPassword
+        password_provided: !!temporaryPassword
       }
     }), {
       status: 200,
