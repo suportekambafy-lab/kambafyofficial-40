@@ -23,7 +23,8 @@ import {
   Calendar,
   Package,
   User,
-  DollarSign
+  DollarSign,
+  Download
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -275,6 +276,85 @@ export default function Sales() {
     return formatPriceForSeller(amount, currency);
   };
 
+  const exportSalesToCSV = () => {
+    if (filteredSales.length === 0) {
+      toast({
+        title: "Nada para exportar",
+        description: "Não há vendas para exportar com os filtros aplicados",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Cabeçalhos do CSV
+    const headers = [
+      'ID do Pedido',
+      'Cliente',
+      'Email',
+      'Telefone',
+      'Produto',
+      'Valor',
+      'Moeda',
+      'Status',
+      'Método de Pagamento',
+      'Data da Venda',
+      'Tipo de Venda',
+      'Comissão Afiliado',
+      'Código Afiliado'
+    ];
+
+    // Converter dados para CSV
+    const csvData = filteredSales.map(sale => [
+      sale.order_id,
+      sale.customer_name,
+      sale.customer_email,
+      sale.customer_phone || '',
+      sale.products?.name || 'N/A',
+      sale.original_amount || sale.amount,
+      sale.original_currency || sale.currency,
+      sale.status === 'completed' ? 'Paga' : sale.status === 'pending' ? 'Pendente' : 'Cancelada',
+      getPaymentMethodName(sale.payment_method),
+      new Date(sale.created_at).toLocaleDateString('pt-BR'),
+      sale.sale_type === 'affiliate' ? 'Comissão Afiliado' : 
+        sale.sale_type === 'recovered' ? 'Recuperada' :
+        sale.affiliate_code ? 'Com Afiliado' : 'Direta',
+      sale.affiliate_commission ? formatCurrency(sale.affiliate_commission) : '',
+      sale.affiliate_code || ''
+    ]);
+
+    // Criar conteúdo CSV
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+
+    // Criar e baixar arquivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    
+    // Nome do arquivo com filtros aplicados
+    let fileName = 'vendas';
+    if (statusFilter !== 'todos') {
+      fileName += `_${statusFilter}`;
+    }
+    if (paymentFilter !== 'todos') {
+      fileName += `_${paymentFilter}`;
+    }
+    fileName += `_${new Date().toISOString().split('T')[0]}.csv`;
+    
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Exportação concluída",
+      description: `${filteredSales.length} vendas exportadas com sucesso`,
+    });
+  };
+
   return (
     <OptimizedPageWrapper skeletonVariant="list">
       {loading ? (
@@ -291,10 +371,22 @@ export default function Sales() {
             {totalCount > 0 ? `${totalCount} vendas registradas` : 'Gerencie e acompanhe suas vendas'}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={loadSales} className="text-xs md:text-sm text-foreground">
-          <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={exportSalesToCSV}
+            disabled={filteredSales.length === 0}
+            className="text-xs md:text-sm text-foreground"
+          >
+            <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            Exportar
+          </Button>
+          <Button variant="outline" size="sm" onClick={loadSales} className="text-xs md:text-sm text-foreground">
+            <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
