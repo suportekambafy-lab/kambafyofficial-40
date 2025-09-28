@@ -465,7 +465,7 @@ export default function ModernMembersArea() {
                 const moduleLessons = lessons.filter(l => l.module_id === module.id);
                 const isExpanded = moduleLessons.some(l => l.id === selectedLesson.id);
                 return <div key={module.id} className="space-y-3">
-                        <div className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${isExpanded ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-gray-800 hover:bg-gray-700'}`} onClick={() => handleModuleClick(module)}>
+                        <div className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${isExpanded ? 'bg-emerald-500/20 border border-emerald-500/30 shadow-emerald-500/20 shadow-lg' : 'bg-gray-800 hover:bg-gray-700 hover:border-emerald-500/30 border border-transparent'}`} onClick={() => handleModuleClick(module)}>
                           {module.cover_image_url ? <img src={module.cover_image_url} alt={module.title} className="w-12 h-12 object-cover rounded" /> : <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded flex items-center justify-center">
                               <BookOpen className="h-6 w-6 text-emerald-400" />
                             </div>}
