@@ -122,23 +122,12 @@ export function PendingTransfersManager() {
         throw new Error('Não foi possível buscar dados do pedido');
       }
 
-      // Atualizar status do pedido
-      const { error } = await supabase
-        .from('orders')
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', transferId);
-
-      if (error) throw error;
-
-      // Se aprovando, executar ações pós-aprovação
+      // Se aprovando, executar ações pós-aprovação ANTES de marcar como completed
       if (action === 'approve') {
         console.log('✅ Executando ações pós-aprovação...');
         
         try {
-          // 1. Criar acesso ao produto (customer_access)
+          // 1. Criar acesso ao produto (customer_access) - tratar duplicação como sucesso
           console.log('🔑 Criando acesso ao produto...');
           const { error: accessError } = await supabase.rpc('extend_customer_access', {
             p_customer_email: orderData.customer_email,
@@ -148,13 +137,14 @@ export function PendingTransfersManager() {
             p_extension_value: orderData.product_access_duration_value || 0
           });
 
-          if (accessError) {
+          if (accessError && !accessError.message.includes('already exists')) {
             console.error('❌ Erro ao criar acesso:', accessError);
+            throw accessError;
           } else {
-            console.log('✅ Acesso ao produto criado com sucesso');
+            console.log('✅ Acesso ao produto criado/verificado com sucesso');
           }
 
-          // 2. Adicionar estudante à área de membros (se aplicável)
+          // 2. Adicionar estudante à área de membros (se aplicável) - tratar duplicação como sucesso
           if (orderData.product_member_area_id) {
             console.log('👨‍🎓 Adicionando estudante à área de membros...');
             const { error: studentError } = await supabase
@@ -169,15 +159,33 @@ export function PendingTransfersManager() {
 
             if (studentError && !studentError.message.includes('duplicate key')) {
               console.error('❌ Erro ao adicionar estudante:', studentError);
+              throw studentError;
             } else {
-              console.log('✅ Estudante adicionado à área de membros');
+              console.log('✅ Estudante adicionado/verificado à área de membros');
             }
           }
 
-          // 3. Enviar email de confirmação
-          console.log('📧 Enviando email de confirmação...');
-          
-          // Processar dados do order bump se existirem
+          // 3. Criar transação de saldo para o vendedor
+          console.log('💰 Criando transação de saldo para o vendedor...');
+          const sellerCommission = parseFloat(orderData.amount);
+          const { error: balanceError } = await supabase
+            .from('balance_transactions')
+            .insert({
+              user_id: orderData.product_user_id,
+              type: 'sale_commission',
+              amount: sellerCommission,
+              currency: orderData.currency || 'KZ',
+              description: `Venda do produto: ${orderData.product_name}`,
+              order_id: orderData.order_id
+            });
+
+          if (balanceError && !balanceError.message.includes('duplicate key')) {
+            console.error('❌ Erro ao criar transação do vendedor:', balanceError);
+          } else {
+            console.log('✅ Transação do vendedor criada/verificada');
+          }
+
+          // 4. Processar dados do order bump se existirem
           let orderBumpData = null;
           if (orderData.order_bump_data) {
             try {
@@ -200,6 +208,8 @@ export function PendingTransfersManager() {
             }
           }
           
+          // 5. Enviar email de confirmação
+          console.log('📧 Enviando email de confirmação...');
           const confirmationPayload = {
             customerName: orderData.customer_name,
             customerEmail: orderData.customer_email,
@@ -215,7 +225,6 @@ export function PendingTransfersManager() {
             baseProductPrice: orderData.amount
           };
 
-          // Usar nova função de processo de registro que inclui criação de conta
           const { error: emailError } = await supabase.functions.invoke('process-customer-registration', {
             body: confirmationPayload
           });
@@ -227,9 +236,24 @@ export function PendingTransfersManager() {
           }
 
         } catch (postApprovalError) {
-          console.error('❌ Erro nas ações pós-aprovação:', postApprovalError);
-          // Não falhar a aprovação por causa de erros nas ações complementares
+          console.error('❌ Erro crítico nas ações pós-aprovação:', postApprovalError);
+          throw postApprovalError; // Falhar a aprovação se houver erro crítico
         }
+      }
+
+      // Só atualizar o status APÓS todas as ações pós-aprovação serem bem-sucedidas
+      console.log('🔄 Atualizando status do pedido para:', newStatus);
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', transferId);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar status do pedido:', updateError);
+        throw updateError;
       }
 
       toast({
