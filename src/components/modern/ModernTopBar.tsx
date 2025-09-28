@@ -450,7 +450,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
           <SellerNotificationCenter />
 
           {/* Divider */}
-          <div className="h-6 w-px bg-border/30 dark:bg-border/20 mx-2" />
+          <div className="h-6 w-px bg-black/30 dark:bg-white/20 mx-2" />
 
           {/* User menu - Desktop Dropdown, Mobile Drawer */}
           {isMobile ? (
