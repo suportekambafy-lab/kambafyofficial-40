@@ -129,12 +129,21 @@ export function ModernKambaAchievements() {
                 const isAchieved = totalRevenue >= level.threshold;
                 return <Tooltip key={level.id}>
                       <TooltipTrigger asChild>
-                        <div className={`relative transition-all duration-200 cursor-help ${isAchieved ? 'scale-100' : 'scale-90 opacity-40'}`}>
-                          <img src={level.badge} alt={level.name} className="w-12 h-12 rounded-lg" />
+                        <div className={`relative transition-all duration-200 cursor-help touch-manipulation ${isAchieved ? 'scale-100' : 'scale-90 opacity-40'}`}>
+                          <img 
+                            src={level.badge} 
+                            alt={level.name} 
+                            className="w-12 h-12 rounded-lg" 
+                            onClick={(e) => {
+                              // Force tooltip to show on mobile tap
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                          />
                           {!isAchieved && <div className="absolute inset-0 bg-slate-500/20 rounded-lg" />}
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>
+                      <TooltipContent side="top" className="z-50">
                         <p>{level.name} - {formatCurrency(level.threshold)}</p>
                       </TooltipContent>
                     </Tooltip>;
