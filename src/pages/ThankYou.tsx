@@ -622,34 +622,20 @@ const ThankYou = () => {
                           </div>}
                       </div>
                        <span className="text-green-600 font-medium">
-                        {/* Para Multibanco, usar proporção do valor principal */}
-                        {orderDetails.paymentMethod === 'multibanco' && multibancoData?.amount ? `+€${orderDetails.orderBumpDiscountedPrice ? (parseFloat(orderDetails.orderBumpDiscountedPrice) / parseFloat(orderDetails.amount) * parseFloat(multibancoData.amount)).toFixed(2) : (parseFloat(orderDetails.orderBumpPrice) / parseFloat(orderDetails.amount) * parseFloat(multibancoData.amount)).toFixed(2)}` : `+${orderDetails.orderBumpDiscountedPrice || orderDetails.orderBumpPrice} ${orderDetails.convertedCurrency || orderDetails.currency}`}
+                         {/* Mostrar valor correto do order bump */}
+                         +{orderDetails.orderBumpDiscountedPrice || orderDetails.orderBumpPrice} {orderDetails.currency}
                        </span>
                     </div>
                   </div>}
 
-                {/* Related Orders (Upsells) */}
-                {relatedOrders.length > 0 && <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Produtos Adicionais Comprados</label>
-                    {relatedOrders.map((relatedOrder, index) => <div key={relatedOrder.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-checkout-text font-medium">{relatedOrder.product?.name || 'Produto Upsell'}</p>
-                            <p className="text-xs text-blue-600">Pedido #{relatedOrder.order_id}</p>
-                          </div>
-                          <span className="text-green-600 font-medium">
-                            {/* Para Multibanco, usar proporção do valor principal */}
-                            {orderDetails.paymentMethod === 'multibanco' && multibancoData?.amount ? `€${(parseFloat(relatedOrder.amount) / parseFloat(orderDetails.amount) * parseFloat(multibancoData.amount)).toFixed(2)}` : `${relatedOrder.amount} ${relatedOrder.currency}`}
-                          </span>
-                        </div>
-                      </div>)}
-                  </div>}
+                {/* Related Orders - Remover seção incorreta */}
+                {/* Esta seção foi removida pois estava incorreta - order bumps são mostrados acima */}
                 
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Valor Total Pago</label>
                   <p className="text-2xl font-bold text-checkout-green">
-                    {/* Para Multibanco, tentar múltiplas fontes de dados */}
-                    {orderDetails.paymentMethod === 'multibanco' ? multibancoData?.amount ? `€${multibancoData.amount}` : orderDetails.convertedAmount ? `€${orderDetails.convertedAmount}` : `€${(parseFloat(orderDetails.amount) / 1050).toFixed(2)}` : orderDetails.convertedAmount && orderDetails.convertedCurrency ? `${orderDetails.convertedAmount} ${orderDetails.convertedCurrency}` : `${orderDetails.amount} ${orderDetails.currency}`}
+                    {/* Para Multibanco, usar valor correto */}
+                    {orderDetails.paymentMethod === 'multibanco' && multibancoData?.amount ? `€${multibancoData.amount}` : `${orderDetails.amount} ${orderDetails.currency}`}
                   </p>
                 </div>
                 <div>
