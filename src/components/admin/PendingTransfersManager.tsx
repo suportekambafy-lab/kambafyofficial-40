@@ -172,7 +172,7 @@ export function PendingTransfersManager() {
             .from('balance_transactions')
             .insert({
               user_id: orderData.product_user_id,
-              type: 'sale_commission',
+              type: 'credit',
               amount: sellerCommission,
               currency: orderData.currency || 'KZ',
               description: `Venda do produto: ${orderData.product_name}`,
@@ -254,6 +254,8 @@ export function PendingTransfersManager() {
       if (updateError) {
         console.error('❌ Erro ao atualizar status do pedido:', updateError);
         throw updateError;
+      } else {
+        console.log('✅ Status do pedido atualizado com sucesso para:', newStatus);
       }
 
       toast({
