@@ -41,26 +41,31 @@ const CheckoutSuccess = () => {
 
         console.log('Pedido encontrado:', data.order);
         setOrderData(data.order);
-        setOrderStatus(data.order.status === 'completed' ? 'completed' : 'pending');
+        const newStatus = data.order.status === 'completed' ? 'completed' : 'pending';
+        setOrderStatus(newStatus);
+        
+        // Se o pedido estiver completo, não precisa continuar verificando
+        if (newStatus === 'completed') {
+          return;
+        }
       } catch (error) {
         console.error('Erro ao verificar status do pedido:', error);
         setOrderStatus('error');
       }
     };
 
+    // Verificar status inicial
     checkOrderStatus();
 
-    // Poll para verificar mudanças de status a cada 15 segundos apenas se o status for pending
-    let interval: NodeJS.Timeout | null = null;
-    
-    if (orderStatus === 'pending' || orderStatus === 'loading') {
-      interval = setInterval(checkOrderStatus, 15000);
-    }
+    // Poll apenas se ainda não temos dados ou se o status for pending
+    const interval = setInterval(() => {
+      if (orderStatus === 'pending' || orderStatus === 'loading') {
+        checkOrderStatus();
+      }
+    }, 15000);
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [orderId, sessionId, orderStatus]);
+    return () => clearInterval(interval);
+  }, [orderId, sessionId]);
 
   if (orderStatus === 'loading') {
     return (
