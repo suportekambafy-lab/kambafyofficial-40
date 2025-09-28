@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { CheckCircle, Mail, Phone, ExternalLink, Clock, CreditCard, AlertCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -70,18 +70,22 @@ const ThankYou = () => {
   }, [searchParams, navigate, orderDetails.productId]);
 
   // Função para verificar o status do pedido no banco de dados
-  const checkOrderStatus = async () => {
-    if (!orderDetails.orderId) return;
+  const checkOrderStatus = useCallback(async () => {
+    const orderId = orderDetails.orderId;
+    if (!orderId) return;
+    
     try {
-      console.log('🔍 Verificando status do pedido:', orderDetails.orderId);
+      console.log('🔍 Verificando status do pedido:', orderId);
       const {
         data: order,
         error
-      } = await supabase.from('orders').select('status').eq('order_id', orderDetails.orderId).single();
+      } = await supabase.from('orders').select('status').eq('order_id', orderId).single();
+      
       if (error) {
         console.error('❌ Erro ao verificar status do pedido:', error);
         return;
       }
+      
       if (order && order.status !== orderStatus) {
         console.log('✅ Status do pedido atualizado:', order.status);
         setOrderStatus(order.status);
@@ -89,7 +93,6 @@ const ThankYou = () => {
         // Se o status mudou para 'completed', parar verificações e atualizar
         if (order.status === 'completed') {
           console.log('🎉 Pagamento aprovado! Atualizando dados...');
-
           // Recarregar a página para garantir que tudo atualize
           setTimeout(() => {
             window.location.reload();
@@ -99,7 +102,7 @@ const ThankYou = () => {
     } catch (error) {
       console.error('❌ Erro na verificação do status:', error);
     }
-  };
+  }, [orderDetails.orderId, orderStatus]);
 
   // Verificar se chegamos de uma página de upsell
   useEffect(() => {
@@ -130,17 +133,18 @@ const ThankYou = () => {
           } = await supabase.from('orders').select('customer_name, customer_email').eq('order_id', orderDetails.orderId).single();
           if (orderData && !orderError) {
             console.log('✅ Nome do cliente encontrado:', orderData.customer_name);
-            // Não é mais necessário atualizar orderDetails pois vem dos searchParams
           }
         } catch (error) {
           console.error('❌ Erro ao buscar nome do cliente:', error);
         }
       }
+      
       if (!orderDetails.productId) {
         console.log('⚠️ ThankYou: Sem product_id, finalizando...');
         setLoading(false);
         return;
       }
+      
       try {
         console.log('📦 ThankYou: Carregando dados do produto...');
 
@@ -154,9 +158,11 @@ const ThankYou = () => {
             member_areas(id, name, url),
             profiles!products_user_id_fkey(full_name, email)
           `).eq(isUUID ? 'id' : 'slug', orderDetails.productId).single();
+        
         if (productError) {
           console.error('❌ ThankYou: Erro ao carregar produto:', productError);
         }
+        
         if (productData) {
           setProduct(productData);
           console.log('✅ ThankYou: Produto carregado:', productData);
@@ -185,6 +191,7 @@ const ThankYou = () => {
           data: relatedOrdersData,
           error: relatedError
         } = await supabase.from('orders').select('*').eq('order_id', orderDetails.orderId);
+        
         if (relatedError) {
           console.error('❌ Erro ao buscar pedidos relacionados:', relatedError);
         } else if (relatedOrdersData?.length > 0) {
@@ -200,23 +207,27 @@ const ThankYou = () => {
         }
 
         // Verificar se o usuário está autenticado e redirecionar se necessário
-        if (user && productData?.type === 'Curso' && productData?.member_areas?.id) {
+        const currentUser = user;
+        if (currentUser && productData?.type === 'Curso' && productData?.member_areas?.id) {
           const {
             data: hasAccess,
             error: accessError
-          } = await supabase.from('member_area_students').select('*').eq('student_email', user.email).eq('member_area_id', productData.member_areas.id);
+          } = await supabase.from('member_area_students').select('*').eq('student_email', currentUser.email).eq('member_area_id', productData.member_areas.id);
+          
           if (accessError) {
             console.error('❌ ThankYou: Erro ao verificar acesso:', accessError);
           }
+          
           if (!hasAccess || hasAccess.length === 0) {
             console.log('🔒 ThankYou: Usuário sem acesso, registrando...');
             const {
               error: insertError
             } = await supabase.from('member_area_students').insert({
-              student_email: user.email || '',
-              student_name: user.email?.split('@')[0] || 'Usuario',
+              student_email: currentUser.email || '',
+              student_name: currentUser.email?.split('@')[0] || 'Usuario',
               member_area_id: productData.member_areas.id
             });
+            
             if (insertError) {
               console.error('❌ ThankYou: Erro ao registrar acesso:', insertError);
             } else {
@@ -226,6 +237,7 @@ const ThankYou = () => {
             console.log('✅ ThankYou: Usuário já tem acesso');
           }
         }
+        
       } catch (error) {
         console.error('❌ ThankYou: Erro no processamento:', error);
       } finally {
@@ -234,28 +246,34 @@ const ThankYou = () => {
       }
     };
     
-    // Só executar uma vez no mount, não re-executar quando orderDetails muda
-    if (orderDetails.productId) {
+    // Só executar se ainda não carregou
+    if (!product && orderDetails.productId) {
       loadProduct();
     }
-  }, []); // Dependências vazias para executar apenas uma vez
+  }, []); // Remove todas as dependências - só executa no mount
 
   // Verificar o status do pedido periodicamente para pagamentos pendentes
   useEffect(() => {
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'bank_transfer', 'transferencia'].includes(orderDetails.paymentMethod) && orderDetails.orderId) {
+    const orderId = orderDetails.orderId;
+    const paymentMethod = orderDetails.paymentMethod;
+    
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'bank_transfer', 'transferencia'].includes(paymentMethod) && orderId) {
       console.log('🔄 Iniciando verificação periódica do status do pedido...');
 
       // Verificar imediatamente
       checkOrderStatus();
 
       // Verificar a cada 5 segundos para ser mais responsivo
-      const interval = setInterval(checkOrderStatus, 5000);
+      const interval = setInterval(() => {
+        checkOrderStatus();
+      }, 5000);
+      
       return () => {
         console.log('🛑 Parando verificação periódica do status do pedido');
         clearInterval(interval);
       };
     }
-  }, [orderStatus, orderDetails.paymentMethod]);
+  }, [orderStatus]); // Só depende do orderStatus
 
   // Real-time updates para pagamentos por transferência
   useEffect(() => {
