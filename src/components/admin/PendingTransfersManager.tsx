@@ -275,14 +275,15 @@ export function PendingTransfersManager() {
         try {
           console.log('📬 Enviando notificação para o vendedor...');
           const { error: notificationError } = await supabase
-            .from('balance_transactions')
+            .from('seller_notifications')
             .insert({
               user_id: orderData.product_user_id,
-              type: 'credit',
-              amount: 0, // Notificação apenas
-              currency: orderData.currency || 'KZ',
-              description: `🎉 Transferência aprovada! Pedido ${orderData.order_id} - ${orderData.product_name}`,
-              order_id: orderData.order_id
+              type: 'payment_approved',
+              title: '🎉 Transferência Aprovada!',
+              message: `Sua transferência bancária foi aprovada para o produto "${orderData.product_name}". Valor: ${formatAmount(orderData.amount, orderData.currency)}`,
+              order_id: orderData.order_id,
+              amount: parseFloat(orderData.amount),
+              currency: orderData.currency || 'KZ'
             });
 
           if (notificationError) {
@@ -303,10 +304,10 @@ export function PendingTransfersManager() {
         variant: action === 'approve' ? "default" : "destructive"
       });
 
-      // Remover imediatamente da lista local
+      // Remover imediatamente da lista local para melhor UX
       setPendingTransfers(prev => prev.filter(t => t.id !== transferId));
       
-      // Atualizar lista completa após delay
+      // Atualizar lista completa após delay para garantir que mudanças propagaram
       setTimeout(() => {
         fetchPendingTransfers();
       }, 2000);

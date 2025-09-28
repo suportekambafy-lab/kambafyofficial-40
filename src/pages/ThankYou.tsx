@@ -302,12 +302,23 @@ const ThankYou = () => {
             setOrderStatus(newOrder.status);
             setOrderDetails(prev => ({ ...prev, status: newOrder.status }));
             
-            // Se foi aprovado, recarregar a página para garantir que tudo atualize
+            // Se foi aprovado via real-time, atualizar imediatamente
             if (newOrder.status === 'completed') {
-              console.log('🎉 Pagamento aprovado via real-time! Recarregando página...');
+              console.log('🎉 Pagamento aprovado via real-time! Atualizando...');
+              
+              // Mostrar toast de confirmação
+              const event = new CustomEvent('showTransferApproval', {
+                detail: { 
+                  message: 'Pagamento aprovado! Você receberá o acesso em instantes.',
+                  type: 'success' 
+                }
+              });
+              window.dispatchEvent(event);
+              
+              // Recarregar após 3 segundos para atualizar todos os dados
               setTimeout(() => {
                 window.location.reload();
-              }, 2000);
+              }, 3000);
             }
           }
         }

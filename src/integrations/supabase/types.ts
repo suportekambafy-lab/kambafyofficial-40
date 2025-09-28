@@ -1860,6 +1860,48 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_notifications: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          message: string
+          order_id: string | null
+          read: boolean | null
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          message: string
+          order_id?: string | null
+          read?: boolean | null
+          title: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          message?: string
+          order_id?: string | null
+          read?: boolean | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       trusted_devices: {
         Row: {
           created_at: string | null
