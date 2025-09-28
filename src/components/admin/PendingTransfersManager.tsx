@@ -283,6 +283,8 @@ export function PendingTransfersManager() {
       if (action === 'approve') {
         try {
           console.log('📬 Enviando notificação para o vendedor...');
+          
+          // 1. Notificação no banco de dados
           const { error: notificationError } = await supabase
             .from('seller_notifications')
             .insert({
@@ -296,22 +298,68 @@ export function PendingTransfersManager() {
             });
 
           if (notificationError) {
-            console.error('⚠️ Erro ao enviar notificação:', notificationError);
+            console.error('⚠️ Erro ao enviar notificação no banco:', notificationError);
           } else {
-            console.log('✅ Notificação enviada para o vendedor');
+            console.log('✅ Notificação salva no banco de dados');
           }
+
+          // 2. Buscar dados do vendedor para enviar email
+          console.log('📧 Buscando dados do vendedor para email...');
+          const { data: sellerProfile, error: sellerError } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('user_id', orderData.product_user_id)
+            .single();
+
+          if (sellerError || !sellerProfile) {
+            console.error('⚠️ Erro ao buscar dados do vendedor:', sellerError);
+          } else {
+            // 3. Enviar email de notificação
+            console.log('📬 Enviando email de notificação para o vendedor...');
+            const { error: emailError } = await supabase.functions.invoke('send-seller-notification-email', {
+              body: {
+                sellerEmail: sellerProfile.email,
+                sellerName: sellerProfile.full_name || 'Vendedor',
+                productName: orderData.product_name,
+                orderNumber: orderData.order_id,
+                amount: orderData.amount,
+                currency: orderData.currency || 'KZ',
+                customerName: orderData.customer_name,
+                customerEmail: orderData.customer_email
+              }
+            });
+
+            if (emailError) {
+              console.error('⚠️ Erro ao enviar email para vendedor:', emailError);
+            } else {
+              console.log('✅ Email de notificação enviado para o vendedor');
+            }
+          }
+          
+          console.log('✅ Notificação completa enviada para o vendedor');
         } catch (notificationError) {
           console.error('⚠️ Erro ao enviar notificação para vendedor:', notificationError);
         }
       }
 
       toast({
-        title: action === 'approve' ? "Transferência Aprovada" : "Transferência Rejeitada",
+        title: action === 'approve' ? "🎉 Transferência Aprovada com Sucesso!" : "Transferência Rejeitada",
         description: action === 'approve' 
-          ? "Pagamento processado! Cliente receberá acesso e vendedor será notificado."
+          ? "Pagamento processado! Cliente recebeu acesso, vendedor foi notificado por email e o valor foi creditado."
           : `O pagamento foi rejeitado com sucesso`,
         variant: action === 'approve' ? "default" : "destructive"
       });
+
+      // Mostrar toast adicional de sucesso com mais detalhes se aprovado
+      if (action === 'approve') {
+        setTimeout(() => {
+          toast({
+            title: "✅ Processamento Completo",
+            description: `Pedido #${orderData.order_id} - Cliente: ${orderData.customer_name} - Produto: ${orderData.product_name}`,
+            variant: "default"
+          });
+        }, 2000);
+      }
 
       // Remover imediatamente da lista local para melhor UX
       setPendingTransfers(prev => prev.filter(t => t.id !== transferId));
