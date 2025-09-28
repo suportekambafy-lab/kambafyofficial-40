@@ -11,10 +11,10 @@ export function MobileLoginChoice({ onChoice }: MobileLoginChoiceProps) {
     <div className="min-h-screen bg-gradient-to-b from-checkout-green to-checkout-green/90 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-12">
         {/* Logo inspirado no Cakto */}
-        <div className="text-center">
-          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <span className="text-checkout-green font-bold text-3xl">K</span>
-          </div>
+         <div className="text-center">
+           <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl p-4">
+             <img src="/kambafy-symbol.svg" alt="Kambafy" className="w-full h-full" />
+           </div>
           <h1 className="text-white text-3xl font-bold mb-2">kambafy</h1>
         </div>
 

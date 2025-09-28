@@ -29,10 +29,10 @@ const Mobile = () => {
   if (loading || !authReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-checkout-green">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="text-checkout-green font-bold text-2xl">K</span>
-          </div>
+         <div className="text-center">
+           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg p-3">
+             <img src="/kambafy-symbol.svg" alt="Kambafy" className="w-full h-full" />
+           </div>
           <LoadingSpinner text="Carregando..." size="lg" />
         </div>
       </div>

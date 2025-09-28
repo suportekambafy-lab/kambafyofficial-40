@@ -2226,8 +2226,7 @@ const Checkout = () => {
 
               {!['card', 'klarna', 'multibanco', 'apple_pay', 'transfer'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && <Button onClick={handlePurchase} disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing || selectedPayment === 'kambapay' && !!kambaPayEmailError} className={`w-full h-12 font-semibold relative transition-all ${!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing || selectedPayment === 'kambapay' && !!kambaPayEmailError ? 'bg-green-600/50 cursor-not-allowed text-white/70' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
                   {processing ? <div className="flex items-center justify-center">
-                      <div className="w-6 h-6 rounded bg-green-700 flex items-center justify-center mr-2">
-                        <span className="text-xs font-bold text-white animate-bounce">K</span>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2">
                       </div>
                       PROCESSANDO...
                     </div> : selectedPayment === 'reference' ? 'GERAR REFERÊNCIA' : 'COMPRAR AGORA'}

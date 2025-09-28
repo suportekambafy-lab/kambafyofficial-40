@@ -112,9 +112,9 @@ const ResetPassword = () => {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground text-xl font-bold">K</span>
-          </div>
+           <div className="mx-auto mb-4 w-12 h-12 bg-primary rounded-lg flex items-center justify-center p-2">
+             <img src="/kambafy-symbol.svg" alt="Kambafy" className="w-full h-full" />
+           </div>
           <CardTitle className="text-2xl">Criar Nova Senha</CardTitle>
           <CardDescription>
             Defina uma nova senha segura para sua conta
