@@ -131,33 +131,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('✅ Aluno adicionado com sucesso à área de membros Marca Milionária');
 
-    // Enviar email de acesso se for nova conta ou se há senha temporária
-    if (studentResult?.isNewAccount || payload.temporaryPassword) {
-      console.log('📧 Enviando email de acesso...');
+    // Sempre enviar email de acesso
+    console.log('📧 Enviando email de acesso...');
+    
+    try {
+      const emailPayload = {
+        studentEmail: payload.buyer.email,
+        studentName: payload.buyer.name,
+        memberAreaName: 'Marca Milionária',
+        memberAreaUrl: `https://membros.kambafy.com/login/${MEMBER_AREA_ID}`,
+        isNewAccount: studentResult?.isNewAccount || false,
+        temporaryPassword: payload.temporaryPassword
+      };
       
-      try {
-        const { error: emailError } = await supabase.functions.invoke(
-          'send-member-access-email',
-          {
-            body: {
-              studentEmail: payload.buyer.email,
-              studentName: payload.buyer.name,
-              memberAreaName: 'Marca Milionária',
-              memberAreaUrl: `https://membros.kambafy.com/login/${MEMBER_AREA_ID}`,
-              isNewAccount: studentResult?.isNewAccount || false,
-              temporaryPassword: payload.temporaryPassword
-            }
-          }
-        );
-
-        if (emailError) {
-          console.error('❌ Erro ao enviar email de acesso:', emailError);
-        } else {
-          console.log('✅ Email de acesso enviado com sucesso');
+      console.log('📧 Dados para envio de email:', emailPayload);
+      
+      const { data: emailResult, error: emailError } = await supabase.functions.invoke(
+        'send-member-access-email',
+        {
+          body: emailPayload
         }
-      } catch (emailSendError) {
-        console.error('❌ Erro no envio do email:', emailSendError);
+      );
+
+      if (emailError) {
+        console.error('❌ Erro ao invocar função de email:', emailError);
+      } else {
+        console.log('✅ Função de email invocada com sucesso:', emailResult);
       }
+    } catch (emailSendError) {
+      console.error('❌ Erro no envio do email:', emailSendError);
     }
 
     // Log da transação para auditoria
