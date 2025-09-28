@@ -137,7 +137,7 @@ export function PendingTransfersManager() {
             p_extension_value: orderData.product_access_duration_value || 0
           });
 
-          if (accessError && !accessError.message.includes('already exists')) {
+          if (accessError && !accessError.message.includes('already exists') && !accessError.message.includes('duplicate key')) {
             console.error('❌ Erro ao criar acesso:', accessError);
             throw accessError;
           } else {
@@ -157,7 +157,7 @@ export function PendingTransfersManager() {
               .select()
               .single();
 
-            if (studentError && !studentError.message.includes('duplicate key')) {
+            if (studentError && !studentError.message.includes('duplicate key') && !studentError.message.includes('already exists')) {
               console.error('❌ Erro ao adicionar estudante:', studentError);
               throw studentError;
             } else {
@@ -179,7 +179,7 @@ export function PendingTransfersManager() {
               order_id: orderData.order_id
             });
 
-          if (balanceError && !balanceError.message.includes('duplicate key')) {
+          if (balanceError && !balanceError.message.includes('duplicate key') && !balanceError.message.includes('already exists')) {
             console.error('❌ Erro ao criar transação do vendedor:', balanceError);
           } else {
             console.log('✅ Transação do vendedor criada/verificada');
