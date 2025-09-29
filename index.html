@@ -62,6 +62,9 @@
     <!-- Preload Google Fonts CSS for faster loading -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
     
+    <!-- Modulepreload for main JavaScript bundle to improve FCP -->
+    <link rel="modulepreload" href="/src/main.tsx" />
+    
     <!-- Google Fonts - Non-blocking with fallback -->
     <noscript>
       <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
