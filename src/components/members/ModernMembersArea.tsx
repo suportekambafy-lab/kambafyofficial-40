@@ -466,8 +466,7 @@ export default function ModernMembersArea() {
               delay: 0.2
             }} className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-emerald-400" />
+                    <h3 className="text-lg font-semibold text-white mb-4">
                       Conteúdo do Curso
                     </h3>
                   </div>
