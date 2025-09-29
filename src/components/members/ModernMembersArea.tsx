@@ -366,9 +366,14 @@ export default function ModernMembersArea() {
                   <p className="text-sm text-emerald-400">Área de Membros</p>
                   <p className="text-sm text-gray-300">
                     Olá, {(() => {
-                      const urlParams = new URLSearchParams(window.location.search);
-                      const nameParam = urlParams.get('name');
-                      return nameParam || user?.user_metadata?.full_name || session?.user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Estudante';
+                      console.log('🎯 ModernMembersArea - Debug name:', {
+                        user: user,
+                        session: session,
+                        userMetadata: user?.user_metadata,
+                        sessionUserMetadata: session?.user?.user_metadata,
+                        userEmail: user?.email
+                      });
+                      return user?.user_metadata?.full_name || session?.user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Estudante';
                     })()}
                   </p>
                 </div>
