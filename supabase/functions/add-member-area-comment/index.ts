@@ -34,24 +34,13 @@ serve(async (req) => {
       throw new Error('Lição não encontrada');
     }
 
-    // Gerar UUID determinístico baseado no email
-    const encoder = new TextEncoder();
-    const data = encoder.encode(studentEmail);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    // Formatação UUID válida
-    const hex = hashHex.substring(0, 32);
-    const userId = `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}`;
-
-    // Inserir comentário
+    // Inserir comentário sem user_id (usaremos apenas email/nome)
     const { data: commentData, error: commentError } = await supabase
       .from('lesson_comments')
       .insert({
         lesson_id: lessonId,
         comment: comment.trim(),
-        user_id: userId,
+        user_id: null, // Não usar user_id para estudantes da área de membros
         parent_comment_id: parentCommentId || null,
         user_email: studentEmail,
         user_name: studentName

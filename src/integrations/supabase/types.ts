@@ -595,7 +595,7 @@ export type Database = {
           parent_comment_id: string | null
           updated_at: string
           user_email: string | null
-          user_id: string
+          user_id: string | null
           user_name: string | null
         }
         Insert: {
@@ -606,7 +606,7 @@ export type Database = {
           parent_comment_id?: string | null
           updated_at?: string
           user_email?: string | null
-          user_id: string
+          user_id?: string | null
           user_name?: string | null
         }
         Update: {
@@ -617,7 +617,7 @@ export type Database = {
           parent_comment_id?: string | null
           updated_at?: string
           user_email?: string | null
-          user_id?: string
+          user_id?: string | null
           user_name?: string | null
         }
         Relationships: [
