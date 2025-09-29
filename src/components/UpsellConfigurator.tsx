@@ -31,6 +31,7 @@ export function UpsellConfigurator({ productId, onSaveSuccess }: UpsellConfigura
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 UpsellConfigurator: useEffect triggered', { user: user?.id, productId });
     if (user && productId) {
       loadSettings();
     }
@@ -39,6 +40,8 @@ export function UpsellConfigurator({ productId, onSaveSuccess }: UpsellConfigura
   const loadSettings = async () => {
     try {
       setLoading(true);
+      console.log('📥 Carregando configurações de upsell para:', { user: user?.id, productId });
+      
       const { data, error } = await supabase
         .from('checkout_customizations')
         .select('settings')
@@ -46,11 +49,14 @@ export function UpsellConfigurator({ productId, onSaveSuccess }: UpsellConfigura
         .eq('product_id', productId)
         .maybeSingle();
 
+      console.log('📊 Dados carregados:', { data, error });
+
       if (error) {
         console.error('Error loading upsell settings:', error);
       } else if (data?.settings && typeof data.settings === 'object' && data.settings !== null) {
         const settingsObj = data.settings as any;
         if (settingsObj.upsell) {
+          console.log('✅ Configurações de upsell encontradas:', settingsObj.upsell);
           setSettings(settingsObj.upsell);
         }
       }
@@ -73,14 +79,17 @@ export function UpsellConfigurator({ productId, onSaveSuccess }: UpsellConfigura
 
     try {
       setSaving(true);
+      console.log('🔄 Salvando configurações de upsell:', { settings, user: user.id, productId });
 
       // Primeiro, buscar configurações existentes
-      const { data: existingData } = await supabase
+      const { data: existingData, error: selectError } = await supabase
         .from('checkout_customizations')
         .select('settings')
         .eq('user_id', user.id)
         .eq('product_id', productId)
         .maybeSingle();
+
+      console.log('📊 Configurações existentes:', { existingData, selectError });
 
       // Mesclar configurações existentes com novas configurações de upsell
       const existingSettings = (existingData?.settings && typeof existingData.settings === 'object' && existingData.settings !== null) 
@@ -91,6 +100,7 @@ export function UpsellConfigurator({ productId, onSaveSuccess }: UpsellConfigura
         upsell: settings
       };
 
+      console.log('🔄 Tentando atualizar registro existente...');
       // Tentar atualizar o registro existente
       const { data: updateData, error: updateError } = await supabase
         .from('checkout_customizations')
@@ -99,18 +109,24 @@ export function UpsellConfigurator({ productId, onSaveSuccess }: UpsellConfigura
         .eq('product_id', productId)
         .select();
 
+      console.log('📝 Resultado do update:', { updateData, updateError });
+
       // Se não houve erro no update, significa que atualizou com sucesso
       if (!updateError && updateData && updateData.length > 0) {
         console.log('✅ Configurações de upsell atualizadas com sucesso!');
       } else {
+        console.log('🔄 Tentando criar novo registro...');
         // Se não encontrou registro para atualizar, criar um novo
-        const { error: insertError } = await supabase
+        const { data: insertData, error: insertError } = await supabase
           .from('checkout_customizations')
           .insert({
             user_id: user.id,
             product_id: productId,
             settings: updatedSettings
-          });
+          })
+          .select();
+
+        console.log('📝 Resultado do insert:', { insertData, insertError });
 
         if (insertError) {
           console.error('❌ Erro ao inserir:', insertError);
