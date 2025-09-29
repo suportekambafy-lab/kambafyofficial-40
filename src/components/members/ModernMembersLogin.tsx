@@ -23,6 +23,8 @@ export default function ModernMembersLogin() {
   const [newPassword, setNewPassword] = useState('');
   const [isResetting, setIsResetting] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [emailValidated, setEmailValidated] = useState(false);
+  const [isValidatingEmail, setIsValidatingEmail] = useState(false);
   const id = useId();
 
   useEffect(() => {
@@ -97,6 +99,74 @@ export default function ModernMembersLogin() {
     }
     
     setIsSubmitting(false);
+  };
+
+  const handleEmailValidation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isValidatingEmail) return;
+
+    if (!resetEmail.trim()) {
+      toast({
+        title: "⚠️ Campo obrigatório",
+        description: "Por favor, digite seu email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!memberAreaId) {
+      toast({
+        title: "❌ Erro de configuração",
+        description: "ID da área de membros não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsValidatingEmail(true);
+    
+    toast({
+      title: "🔄 Verificando acesso...",
+      description: "Validando se o email tem acesso a esta área",
+      variant: "default",
+    });
+
+    try {
+      // Verificar se o email tem acesso à área de membros
+      const { data: studentAccess, error } = await supabase
+        .from('member_area_students')
+        .select('*')
+        .eq('member_area_id', memberAreaId)
+        .eq('student_email', resetEmail.trim())
+        .single();
+
+      if (error || !studentAccess) {
+        toast({
+          title: "❌ Acesso negado",
+          description: "Este email não tem acesso a esta área de membros",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "✅ Email validado",
+        description: "Agora você pode definir uma nova senha",
+        variant: "default",
+      });
+
+      setEmailValidated(true);
+
+    } catch (error: any) {
+      console.error('Erro ao validar email:', error);
+      toast({
+        title: "❌ Erro na validação",
+        description: "Erro ao verificar acesso do email",
+        variant: "destructive",
+      });
+    } finally {
+      setIsValidatingEmail(false);
+    }
   };
 
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -213,6 +283,7 @@ export default function ModernMembersLogin() {
       setShowResetModal(false);
       setResetEmail('');
       setNewPassword('');
+      setEmailValidated(false);
       
       // Toast adicional de confirmação
       setTimeout(() => {
@@ -398,77 +469,137 @@ export default function ModernMembersLogin() {
                   <DialogHeader>
                     <DialogTitle className="text-white flex items-center gap-2">
                       <Lock className="h-5 w-5" />
-                      Definir Nova Senha
+                      {!emailValidated ? 'Verificar Acesso' : 'Definir Nova Senha'}
                     </DialogTitle>
                     <DialogDescription className="text-zinc-400">
-                      Digite seu email e uma nova senha para sua conta
+                      {!emailValidated 
+                        ? 'Digite seu email para verificar se você tem acesso a esta área'
+                        : 'Digite sua nova senha para sua conta'
+                      }
                     </DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handlePasswordReset} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="reset-email" className="text-zinc-200">
-                        Email
-                      </Label>
-                      <Input
-                        id="reset-email"
-                        type="email"
-                        value={resetEmail}
-                        onChange={(e) => setResetEmail(e.target.value)}
-                        placeholder="seu@email.com"
-                        className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
-                        required
-                        disabled={isResetting}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="new-password" className="text-zinc-200">
-                        Nova Senha
-                      </Label>
-                      <Input
-                        id="new-password"
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Digite sua nova senha (mín. 6 caracteres)"
-                        className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
-                        required
-                        disabled={isResetting}
-                        minLength={6}
-                      />
-                    </div>
-                    <div className="flex gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setShowResetModal(false)}
-                        disabled={isResetting}
-                        className="flex-1"
-                      >
-                        Cancelar
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={isResetting || !resetEmail.trim() || !newPassword.trim()}
-                        className="flex-1 bg-white text-black hover:bg-zinc-100"
-                      >
-                        {isResetting ? (
-                          <>
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                              className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
-                            />
-                            Definindo...
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="h-4 w-4 mr-2" />
-                            Definir Nova Senha
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
+                  
+                  {!emailValidated ? (
+                    <form onSubmit={handleEmailValidation} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-email" className="text-zinc-200">
+                          Email
+                        </Label>
+                        <Input
+                          id="reset-email"
+                          type="email"
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                          placeholder="seu@email.com"
+                          className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
+                          required
+                          disabled={isValidatingEmail}
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setShowResetModal(false);
+                            setResetEmail('');
+                            setEmailValidated(false);
+                          }}
+                          disabled={isValidatingEmail}
+                          className="flex-1"
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isValidatingEmail || !resetEmail.trim()}
+                          className="flex-1 bg-white text-black hover:bg-zinc-100"
+                        >
+                          {isValidatingEmail ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
+                              />
+                              Verificando...
+                            </>
+                          ) : (
+                            <>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Verificar Email
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <form onSubmit={handlePasswordReset} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="verified-email" className="text-zinc-200">
+                          Email (Verificado)
+                        </Label>
+                        <Input
+                          id="verified-email"
+                          type="email"
+                          value={resetEmail}
+                          disabled
+                          className="bg-zinc-800 border-zinc-600 text-zinc-300"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-password" className="text-zinc-200">
+                          Nova Senha
+                        </Label>
+                        <Input
+                          id="new-password"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Digite sua nova senha (mín. 6 caracteres)"
+                          className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
+                          required
+                          disabled={isResetting}
+                          minLength={6}
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setEmailValidated(false);
+                            setNewPassword('');
+                          }}
+                          disabled={isResetting}
+                          className="flex-1"
+                        >
+                          Voltar
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isResetting || !newPassword.trim()}
+                          className="flex-1 bg-white text-black hover:bg-zinc-100"
+                        >
+                          {isResetting ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
+                              />
+                              Definindo...
+                            </>
+                          ) : (
+                            <>
+                              <Lock className="h-4 w-4 mr-2" />
+                              Definir Nova Senha
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  )}
                 </DialogContent>
               </Dialog>
             </motion.div>
