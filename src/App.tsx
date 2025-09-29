@@ -1,7 +1,7 @@
 
 import CustomToaster from "@/components/ui/toast";
 import { setGlobalToasterRef } from "@/hooks/useCustomToast";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -76,12 +76,16 @@ const queryClient = new QueryClient({
 
 const App = () => {
   const toasterRef = useRef<any>(null);
+  const [toasterInitialized, setToasterInitialized] = useState(false);
 
   useEffect(() => {
-    if (toasterRef.current) {
+    // Garantir que o toaster seja inicializado apenas uma vez
+    if (toasterRef.current && !toasterInitialized) {
       setGlobalToasterRef(toasterRef.current);
+      setToasterInitialized(true);
+      console.log('🍞 Toast system inicializado apenas uma vez');
     }
-  }, []);
+  }, [toasterInitialized]);
 
   return (
     <EnhancedErrorBoundary>

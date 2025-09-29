@@ -1,4 +1,4 @@
-import { useState, useEffect, useId } from 'react';
+import { useState, useEffect, useId, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { LogIn, Mail, BookOpen, Lock } from 'lucide-react';
 import { useModernMembersAuth } from './ModernMembersAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomToast } from '@/hooks/useCustomToast';
+import { useDebounced } from '@/hooks/useDebounced';
 import kambafyLogo from '@/assets/kambafy-logo-gray.svg';
 
 export default function ModernMembersLogin() {
@@ -27,6 +28,97 @@ export default function ModernMembersLogin() {
   const [emailValidated, setEmailValidated] = useState(false);
   const [isValidatingEmail, setIsValidatingEmail] = useState(false);
   const id = useId();
+  
+  // Prevenção de múltiplos toasts
+  const submitTimeoutRef = useRef<NodeJS.Timeout>();
+  const resetTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  // Debounced functions para prevenir múltiplas chamadas
+  const { debouncedFunc: debouncedSubmit } = useDebounced(
+    async (email: string, password: string) => {
+      if (isSubmitting) return;
+      setIsSubmitting(true);
+      
+      const success = await login(email, password);
+      
+      if (success) {
+        toast({
+          title: "✅ Login realizado com sucesso!",
+          message: "Bem-vindo à área de membros",
+          variant: "success",
+        });
+        
+        setTimeout(() => {
+          window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(email)}`;
+        }, 800);
+      } else {
+        toast({
+          title: "❌ Erro no login",
+          message: "Email ou senha incorretos",
+          variant: "error",
+        });
+      }
+      
+      setIsSubmitting(false);
+    },
+    1000
+  );
+  
+  const { debouncedFunc: debouncedPasswordReset } = useDebounced(
+    async (email: string, newPassword: string) => {
+      if (isResetting) return;
+      setIsResetting(true);
+
+      try {
+        const { data, error } = await supabase.functions.invoke('member-area-reset-password', {
+          body: {
+            studentEmail: email.trim(),
+            memberAreaId: memberAreaId,
+            newPassword: newPassword.trim()
+          }
+        });
+
+        if (error) {
+          toast({
+            title: "❌ Erro",
+            message: "Erro ao processar solicitação",
+            variant: "error",
+          });
+          return;
+        }
+
+        if (data && !data.success) {
+          toast({
+            title: "❌ Erro",
+            message: data.error || "Erro desconhecido",
+            variant: "error",
+          });
+          return;
+        }
+
+        toast({
+          title: "✅ Senha atualizada com sucesso!",
+          message: "Agora você pode fazer login com sua nova senha.",
+          variant: "success",
+        });
+
+        setShowResetModal(false);
+        setResetEmail('');
+        setNewPassword('');
+        setEmailValidated(false);
+        
+      } catch (error: any) {
+        toast({
+          title: "❌ Erro Inesperado",
+          message: "Erro inesperado ao processar solicitação",
+          variant: "error",
+        });
+      } finally {
+        setIsResetting(false);
+      }
+    },
+    1000
+  );
 
   useEffect(() => {
     const fetchMemberArea = async () => {
@@ -48,9 +140,8 @@ export default function ModernMembersLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
-
-    // Validações com toasts específicos
+    
+    // Validações rápidas
     if (!email.trim()) {
       toast({
         title: "⚠️ Campo obrigatório",
@@ -78,40 +169,8 @@ export default function ModernMembersLogin() {
       return;
     }
 
-    setIsSubmitting(true);
-    
-    // Toast de carregamento
-    toast({
-      title: "🔄 Fazendo login...",
-      message: "Por favor, aguarde",
-      variant: "default",
-    });
-    
-    // Aguardar um pouco mais para dar tempo da verificação
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const success = await login(email, password);
-    
-    if (success) {
-      toast({
-        title: "✅ Login realizado com sucesso!",
-        message: "Bem-vindo à área de membros",
-        variant: "success",
-      });
-      
-      // Aguardar mais um pouco antes de redirecionar
-      await new Promise(resolve => setTimeout(resolve, 800));
-      // Redirecionar diretamente sem páginas intermediárias
-      window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(email)}`;
-    } else {
-      toast({
-        title: "❌ Erro no login",
-        message: "Email ou senha incorretos",
-        variant: "error",
-      });
-    }
-    
-    setIsSubmitting(false);
+    // Usar função debounced para evitar múltiplas chamadas
+    debouncedSubmit(email, password);
   };
 
   const handleEmailValidation = async (e: React.FormEvent) => {
@@ -137,12 +196,6 @@ export default function ModernMembersLogin() {
     }
 
     setIsValidatingEmail(true);
-    
-    toast({
-      title: "🔄 Verificando acesso...",
-      message: "Validando se o email tem acesso a esta área",
-      variant: "default",
-    });
 
     try {
       // Verificar se o email tem acesso à área de membros
@@ -184,15 +237,8 @@ export default function ModernMembersLogin() {
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isResetting) return;
 
-    console.log('🔄 Iniciando reset de senha...', { 
-      email: resetEmail, 
-      password: newPassword ? 'PROVIDED' : 'NOT_PROVIDED',
-      memberAreaId 
-    });
-
-    // Validações no frontend com toasts específicos
+    // Validações rápidas
     if (!resetEmail.trim()) {
       toast({
         title: "⚠️ Campo obrigatório",
@@ -229,93 +275,8 @@ export default function ModernMembersLogin() {
       return;
     }
 
-    setIsResetting(true);
-    
-    // Toast de início do processo
-    toast({
-      title: "🔄 Redefinindo senha...",
-      message: "Por favor, aguarde",
-      variant: "default",
-    });
-    
-    try {
-      console.log('📤 Enviando dados para edge function:', {
-        studentEmail: resetEmail.trim(),
-        memberAreaId: memberAreaId,
-        newPassword: newPassword.trim() ? 'PROVIDED' : 'EMPTY',
-        payload: {
-          studentEmail: resetEmail.trim(),
-          memberAreaId: memberAreaId,
-          newPassword: newPassword.trim()
-        }
-      });
-
-      const { data, error } = await supabase.functions.invoke('member-area-reset-password', {
-        body: {
-          studentEmail: resetEmail.trim(),
-          memberAreaId: memberAreaId,
-          newPassword: newPassword.trim()
-        }
-      });
-
-      console.log('🔄 Resposta da edge function:', { data, error });
-
-      if (error) {
-        console.error('Erro ao definir nova senha:', error);
-        let errorMessage = "Erro ao processar solicitação";
-        
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (typeof error === 'string') {
-          errorMessage = error;
-        }
-        
-        toast({
-          title: "❌ Erro",
-          message: errorMessage,
-          variant: "error",
-        });
-        return;
-      }
-
-      if (data && !data.success) {
-        toast({
-          title: "❌ Erro",
-          message: data.error || "Erro desconhecido",
-          variant: "error",
-        });
-        return;
-      }
-
-      toast({
-        title: "✅ Senha atualizada com sucesso!",
-        message: "Agora você pode fazer login com sua nova senha.",
-        variant: "success",
-      });
-
-      setShowResetModal(false);
-      setResetEmail('');
-      setNewPassword('');
-      setEmailValidated(false);
-      
-    } catch (error: any) {
-      console.error('Erro inesperado:', error);
-      let errorMessage = "Erro inesperado ao processar solicitação";
-      
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      toast({
-        title: "❌ Erro Inesperado",
-        message: errorMessage,
-        variant: "error",
-      });
-    } finally {
-      setIsResetting(false);
-    }
+    // Usar função debounced para evitar múltiplas chamadas
+    debouncedPasswordReset(resetEmail, newPassword);
   };
 
   // Remover completamente a tela de loading/verificando acesso
