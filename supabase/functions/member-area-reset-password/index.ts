@@ -90,16 +90,17 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (createError) {
           console.error('❌ Erro ao criar usuário:', createError);
-          // Se o usuário já existe, tentar encontrá-lo novamente
+          // Se o usuário já existe, tentar encontrá-lo diretamente
           if (createError.message?.includes('already been registered') || createError.message?.includes('email_exists')) {
-            console.log('🔄 Usuário já existe, buscando novamente...');
-            const { data: { users: refreshedUsers } } = await supabase.auth.admin.listUsers();
-            const foundUser = refreshedUsers.find(u => u.email === studentEmail);
-            if (foundUser) {
-              userId = foundUser.id;
-              console.log('✅ Usuário encontrado após refresh:', userId);
+            console.log('🔄 Usuário já existe, buscando diretamente...');
+            // Buscar usuário por email usando getUserByEmail
+            const { data: foundUser, error: getUserError } = await supabase.auth.admin.getUserByEmail(studentEmail);
+            if (foundUser && foundUser.user) {
+              userId = foundUser.user.id;
+              console.log('✅ Usuário encontrado:', userId);
             } else {
-              throw new Error('Não foi possível encontrar ou criar conta para este email');
+              console.error('❌ Erro ao buscar usuário:', getUserError);
+              throw new Error('Não foi possível encontrar conta para este email');
             }
           } else {
             throw createError;
