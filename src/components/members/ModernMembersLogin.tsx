@@ -1,5 +1,5 @@
 import { useState, useEffect, useId, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import kambafyLogo from '@/assets/kambafy-logo-gray.svg';
 export default function ModernMembersLogin() {
   const { id: memberAreaId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isLoading } = useModernMembersAuth();
   const { toast } = useCustomToast();
   const [email, setEmail] = useState('');
@@ -28,6 +29,16 @@ export default function ModernMembersLogin() {
   const [emailValidated, setEmailValidated] = useState(false);
   const [isValidatingEmail, setIsValidatingEmail] = useState(false);
   const id = useId();
+  
+  // Extrair email da URL se disponível
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const emailFromUrl = searchParams.get('email');
+    if (emailFromUrl) {
+      setResetEmail(decodeURIComponent(emailFromUrl));
+      setEmail(decodeURIComponent(emailFromUrl));
+    }
+  }, [location.search]);
   
   // Prevenção de múltiplos toasts
   const submitTimeoutRef = useRef<NodeJS.Timeout>();

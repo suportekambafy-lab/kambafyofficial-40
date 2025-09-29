@@ -77,6 +77,10 @@ const handler = async (req: Request): Promise<Response> => {
     let userId = '';
     const existingUser = users.find(u => u.email === studentEmail);
     
+    console.log('👥 Total de usuários encontrados:', users.length);
+    console.log('🔍 Buscando usuário com email:', studentEmail);
+    console.log('✅ Usuário encontrado:', existingUser ? 'SIM' : 'NÃO');
+    
     if (!existingUser) {
       console.log('⚠️ Usuário não encontrado no sistema de autenticação, criando nova conta...');
       
