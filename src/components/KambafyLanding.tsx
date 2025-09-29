@@ -351,14 +351,21 @@ const FeaturesSection = () => {
           </AnimatedGroup>
           <AnimatedGroup preset="scale">
             <div className="relative">
-              <img 
-                src="/lovable-uploads/be22ac17-d2d9-4d84-8ffa-3ed3d91cfaed.png" 
-                alt="Profissional jovem trabalhando" 
-                className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
-                fetchPriority="high"
-                width="1368"
-                height="900"
-              />
+              <picture>
+                <source 
+                  srcSet="/lovable-uploads/be22ac17-optimized-600w.webp 600w, /lovable-uploads/be22ac17-optimized-1200w.webp 1200w"
+                  sizes="(max-width: 768px) 100vw, 584px"
+                  type="image/webp"
+                />
+                <img 
+                  src="/lovable-uploads/be22ac17-optimized-600w.webp" 
+                  alt="Profissional jovem trabalhando" 
+                  className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
+                  fetchPriority="high"
+                  width="1200"
+                  height="800"
+                />
+              </picture>
               <div className="absolute inset-0 bg-gradient-to-t from-checkout-green/20 to-transparent rounded-2xl"></div>
             </div>
           </AnimatedGroup>
@@ -441,6 +448,7 @@ const TestimonialsSection = () => {
                     loading="lazy"
                     width="48"
                     height="48"
+                    style={{ maxWidth: '48px', maxHeight: '48px' }}
                   />
                 </div>
                 <div className="flex">
@@ -495,14 +503,21 @@ const AboutSection = () => {
           </AnimatedGroup>
           <AnimatedGroup preset="scale">
             <div className="relative">
-              <img 
-                src={professionalMan} 
-                alt="Profissional jovem focado" 
-                className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
-                loading="lazy"
-                width="1920"
-                height="1263"
-              />
+              <picture>
+                <source 
+                  srcSet="/lovable-uploads/730e6c93-optimized-600w.webp 600w, /lovable-uploads/730e6c93-optimized-1200w.webp 1200w"
+                  sizes="(max-width: 768px) 100vw, 584px"
+                  type="image/webp"
+                />
+                <img 
+                  src="/lovable-uploads/730e6c93-optimized-600w.webp" 
+                  alt="Profissional jovem focado" 
+                  className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
+                  loading="lazy"
+                  width="1200"
+                  height="800"
+                />
+              </picture>
               <div className="absolute inset-0 bg-gradient-to-t from-checkout-green/30 to-transparent rounded-2xl flex items-end">
                 <div className="p-6 text-white">
                   <h3 className="text-2xl font-bold mb-2">Junte-se à Revolução</h3>
