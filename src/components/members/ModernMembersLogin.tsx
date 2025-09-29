@@ -200,37 +200,19 @@ export default function ModernMembersLogin() {
             >
               <Button 
                 type="submit" 
-                className={`w-full font-medium transition-all duration-300 ${
-                  isSubmitting 
-                    ? 'bg-zinc-700 text-zinc-300 cursor-not-allowed scale-95' 
-                    : 'bg-white text-black hover:bg-zinc-100 hover:scale-105'
-                }`}
+                className="w-full bg-white text-black hover:bg-zinc-100 font-medium disabled:bg-zinc-700 disabled:text-zinc-300" 
                 disabled={isSubmitting || !email}
               >
-                <motion.div
-                  className="flex items-center justify-center gap-2"
-                  initial={false}
-                  animate={isSubmitting ? { scale: [1, 1.05, 1] } : { scale: 1 }}
-                  transition={{ duration: 1.5, repeat: isSubmitting ? Infinity : 0 }}
-                >
-                  {isSubmitting ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
-                    />
-                  ) : (
-                    <Mail className="h-4 w-4" />
-                  )}
-                  <motion.span
-                    key={isSubmitting ? 'processing' : 'idle'}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {isSubmitting ? 'Processando...' : 'Acessar Área'}
-                  </motion.span>
-                </motion.div>
+                {isSubmitting ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
+                  />
+                ) : (
+                  <Mail className="h-4 w-4 mr-2" />
+                )}
+                {isSubmitting ? 'Processando...' : 'Acessar Área'}
               </Button>
             </motion.div>
 
