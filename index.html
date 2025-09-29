@@ -4,8 +4,8 @@
   <head>
     <meta charset="UTF-8" />
     
-    <!-- Script para SEO dinâmico de produtos - DEVE executar PRIMEIRO -->
-    <script src="/product-seo-loader.js"></script>
+    <!-- Script para SEO dinâmico de produtos - async para não bloquear render -->
+    <script async src="/product-seo-loader.js"></script>
     
     <!-- SEO Meta Tags -->
     <title id="page-title">Kambafy - Transforme seu conhecimento em renda</title>
@@ -162,6 +162,7 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script src="/client-sound-listener.js"></script>
+    <!-- Defer non-critical sound listener to avoid blocking render -->
+    <script defer src="/client-sound-listener.js"></script>
   </body>
 </html>
