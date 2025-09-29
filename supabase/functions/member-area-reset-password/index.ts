@@ -57,15 +57,6 @@ const handler = async (req: Request): Promise<Response> => {
       throw usersError;
     }
 
-    const existingUser = users.find(u => u.email === studentEmail);
-    
-    if (!existingUser) {
-      console.log('❌ Usuário não encontrado no sistema de autenticação');
-      throw new Error('Conta não encontrada no sistema');
-    }
-
-    console.log('✅ Usuário encontrado:', existingUser.id);
-
     // Gerar nova senha temporária
     const newTempPassword = Math.random().toString(36).slice(-8) + 
                            Math.random().toString(36).slice(-4).toUpperCase() +
@@ -73,18 +64,43 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('🔐 Nova senha temporária gerada para:', studentEmail);
 
-    // Atualizar a senha do usuário
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
-      existingUser.id,
-      { password: newTempPassword }
-    );
+    let userId = '';
+    const existingUser = users.find(u => u.email === studentEmail);
+    
+    if (!existingUser) {
+      console.log('⚠️ Usuário não encontrado no sistema de autenticação, criando nova conta...');
+      
+      // Criar novo usuário com senha temporária
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        email: studentEmail,
+        password: newTempPassword,
+        email_confirm: true,
+      });
 
-    if (updateError) {
-      console.error('Erro ao atualizar senha:', updateError);
-      throw updateError;
+      if (createError) {
+        console.error('❌ Erro ao criar usuário:', createError);
+        throw createError;
+      }
+
+      console.log('✅ Nova conta criada:', newUser.user?.id);
+      userId = newUser.user!.id;
+    } else {
+      console.log('✅ Usuário encontrado:', existingUser.id);
+      userId = existingUser.id;
+
+      // Atualizar a senha do usuário existente
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        userId,
+        { password: newTempPassword }
+      );
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar senha:', updateError);
+        throw updateError;
+      }
+
+      console.log('✅ Senha atualizada com sucesso');
     }
-
-    console.log('✅ Senha atualizada com sucesso');
 
     // Buscar dados da área de membros para o email
     const { data: memberAreaData, error: memberAreaError } = await supabase
