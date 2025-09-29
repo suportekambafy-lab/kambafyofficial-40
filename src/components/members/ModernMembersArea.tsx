@@ -735,5 +735,22 @@ export default function ModernMembersArea() {
             </div>)}
         </div>
       </div>
+      
+      {/* Footer com mensagem da Kambafy */}
+      <footer className="bg-black/50 border-t border-gray-800 py-6 mt-20">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-400 text-sm">
+            Powered by{' '}
+            <a 
+              href="https://kambafy.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+            >
+              Kambafy
+            </a>
+          </p>
+        </div>
+      </footer>
     </div>;
 }
