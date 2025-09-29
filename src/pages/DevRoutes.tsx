@@ -53,7 +53,7 @@ const DevRoutes = () => {
       title: "Painel do Cliente",
       icon: <CreditCard className="w-4 h-4" />,
       routes: [
-        { path: "/minhas-compras", name: "Minhas Compras", description: "Histórico de compras" },
+        { path: "/meus-acessos", name: "Meus Acessos", description: "Produtos com acesso" },
         { path: "/identidade", name: "Verificação de Identidade", description: "Verificar identidade" },
       ]
     },

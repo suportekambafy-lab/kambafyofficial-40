@@ -208,7 +208,7 @@ const CheckoutSuccess = () => {
             <div className="space-y-3">
               <Button 
                 className="w-full" 
-                onClick={() => window.location.href = '/minhas-compras'}
+                onClick={() => window.location.href = '/meus-acessos'}
               >
                 <ArrowRight className="w-4 h-4 mr-2" />
                 Ver Minhas Compras

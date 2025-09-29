@@ -753,8 +753,8 @@ const ThankYou = () => {
         {/* Action Buttons */}
         <div className="flex justify-center">
           <Button asChild variant="outline" size="lg">
-            <Link to="/minhas-compras">
-              Ver Minhas Compras
+            <Link to="/meus-acessos">
+              Ver Meus Acessos
             </Link>
           </Button>
         </div>

@@ -15,7 +15,7 @@ export function PageLayout({ title, children }: PageLayoutProps) {
   const location = useLocation();
   
   // Verificar se estamos na área do cliente
-  const isCustomerArea = location.pathname.includes('/minhas-compras');
+  const isCustomerArea = location.pathname.includes('/meus-acessos');
 
   const handleLogout = async () => {
     await signOut();

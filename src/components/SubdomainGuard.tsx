@@ -82,10 +82,10 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     }
     
     // Define quais rotas são RESTRITAS de cada subdomínio (não permitidas)
-    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/login/', '/area/']; 
+    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/meus-acessos', '/admin', '/login/', '/area/']; 
     const restrictedFromApp = ['/checkout', '/obrigado', '/admin', '/area/', '/login/']; 
-    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/area/', '/login/']; 
-    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/minhas-compras', '/area/', '/login/']; 
+    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/meus-acessos', '/admin', '/area/', '/login/']; 
+    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/meus-acessos', '/area/', '/login/'];
     
     // Verifica se a rota atual é restrita do subdomínio atual
     let shouldRedirect = false;
@@ -153,7 +153,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         } else if (currentPath.startsWith('/checkout') || currentPath.startsWith('/obrigado')) {
           targetSubdomain = 'pay';
         } else if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || 
-            currentPath.startsWith('/apps') || currentPath.startsWith('/minhas-compras')) {
+            currentPath.startsWith('/apps') || currentPath.startsWith('/meus-acessos')) {
           targetSubdomain = 'app';
         } else {
           console.log('🚨 SubdomainGuard: MEMBROS - Redirecionando para MAIN', {
@@ -175,7 +175,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
           } else if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/')) {
             targetSubdomain = 'membros';
           } else if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || 
-              currentPath.startsWith('/apps') || currentPath.startsWith('/minhas-compras')) {
+              currentPath.startsWith('/apps') || currentPath.startsWith('/meus-acessos')) {
             targetSubdomain = 'app';
           } else {
             targetSubdomain = 'main';

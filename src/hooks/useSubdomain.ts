@@ -28,7 +28,7 @@ export function useSubdomain() {
         subdomain = 'admin';
       } else if (path.startsWith('/checkout') || path.startsWith('/obrigado')) {
         subdomain = 'pay'; 
-      } else if (path.startsWith('/auth') || path.startsWith('/vendedor') || path.startsWith('/apps') || path.startsWith('/minhas-compras')) {
+      } else if (path.startsWith('/auth') || path.startsWith('/vendedor') || path.startsWith('/apps') || path.startsWith('/meus-acessos')) {
         subdomain = 'app';
       } else if (path.startsWith('/login/') || path.startsWith('/area/') || path.startsWith('/members/')) {
         subdomain = 'membros';
