@@ -16,10 +16,10 @@ interface Comment {
   updated_at: string;
   user_id: string;
   lesson_id: string;
-  user?: {
-    full_name?: string;
-    email?: string;
-  };
+  parent_comment_id?: string | null;
+  user_email?: string;
+  user_name?: string;
+  replies?: Comment[];
 }
 interface LessonCommentsProps {
   lessonId: string;
@@ -33,16 +33,20 @@ export function LessonComments({
 }: LessonCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Carregar comentários
+  // Carregar comentários com informações de usuário
   useEffect(() => {
     if (!lessonId) return;
     const loadComments = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
+        
+        // Buscar comentários da aula
+        const { data: commentsData, error } = await supabase
           .from('lesson_comments')
           .select(`
             id,
@@ -50,7 +54,8 @@ export function LessonComments({
             created_at,
             updated_at,
             user_id,
-            lesson_id
+            lesson_id,
+            parent_comment_id
           `)
           .eq('lesson_id', lessonId)
           .order('created_at', { ascending: true });
@@ -61,16 +66,65 @@ export function LessonComments({
           return;
         }
 
-        // Mapear comentários com nomes de usuários genéricos
-        const commentsWithUsers = (data || []).map(comment => ({
-          ...comment,
-          user: {
-            full_name: comment.user_id?.startsWith('student_') ? 'Estudante' : studentName || 'Usuário',
-            email: studentEmail
-          }
-        }));
+        console.log('Comentários carregados:', commentsData);
+
+        // Buscar informações dos usuários dos comentários
+        const userIds = [...new Set(commentsData?.map(c => c.user_id) || [])];
+        const usersData: Record<string, { email: string; name: string }> = {};
         
-        setComments(commentsWithUsers);
+        // Para comentários de membros autenticados, buscar na tabela profiles
+        for (const userId of userIds) {
+          if (userId && !userId.startsWith('member_')) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('email, full_name')
+              .eq('user_id', userId)
+              .single();
+            
+            if (profile) {
+              usersData[userId] = {
+                email: profile.email || '',
+                name: profile.full_name || 'Usuário'
+              };
+            }
+          } else {
+            // Para comentários de sessões temporárias, usar dados da sessão
+            usersData[userId] = {
+              email: studentEmail || 'estudante@exemplo.com',
+              name: studentName || 'Estudante'
+            };
+          }
+        }
+
+        // Organizar comentários com replies
+        const commentsWithReplies = (commentsData || []).map(comment => ({
+          ...comment,
+          user_email: usersData[comment.user_id]?.email || studentEmail || '',
+          user_name: usersData[comment.user_id]?.name || studentName || 'Usuário',
+          replies: []
+        }));
+
+        // Organizar estrutura de replies
+        const topLevelComments: Comment[] = [];
+        const commentMap: Record<string, Comment> = {};
+        
+        commentsWithReplies.forEach(comment => {
+          commentMap[comment.id] = comment;
+          if (!comment.parent_comment_id) {
+            topLevelComments.push(comment);
+          }
+        });
+        
+        commentsWithReplies.forEach(comment => {
+          if (comment.parent_comment_id && commentMap[comment.parent_comment_id]) {
+            if (!commentMap[comment.parent_comment_id].replies) {
+              commentMap[comment.parent_comment_id].replies = [];
+            }
+            commentMap[comment.parent_comment_id].replies!.push(comment);
+          }
+        });
+        
+        setComments(topLevelComments);
       } catch (error) {
         console.error('Erro inesperado ao carregar comentários:', error);
         toast.error('Erro ao carregar comentários');
@@ -80,8 +134,10 @@ export function LessonComments({
     };
     loadComments();
   }, [lessonId, studentEmail, studentName]);
-  const handleSubmitComment = async () => {
-    if (!newComment.trim()) {
+  const handleSubmitComment = async (parentCommentId?: string) => {
+    const commentText = parentCommentId ? replyText : newComment;
+    
+    if (!commentText.trim()) {
       toast.error('Digite um comentário válido');
       return;
     }
@@ -97,9 +153,10 @@ export function LessonComments({
       const { data, error } = await supabase.functions.invoke('add-member-area-comment', {
         body: {
           lessonId: lessonId,
-          comment: newComment.trim(),
+          comment: commentText.trim(),
           studentEmail: studentEmail,
-          studentName: studentName
+          studentName: studentName,
+          parentCommentId: parentCommentId || null
         }
       });
         
@@ -109,28 +166,19 @@ export function LessonComments({
         return;
       }
 
-      // Adicionar comentário localmente
-      const newCommentData = {
-        id: data.id,
-        comment: data.comment,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        user_id: data.user_id,
-        lesson_id: data.lesson_id,
-        user: {
-          full_name: studentName,
-          email: studentEmail
-        }
-      };
-      
-      setComments(prev => [...prev, newCommentData]);
-      setNewComment('');
-      toast.success('Comentário adicionado com sucesso!');
+      // Recarregar comentários após adicionar
+      window.location.reload();
     } catch (error) {
       console.error('Erro inesperado ao adicionar comentário:', error);
       toast.error('Erro ao adicionar comentário');
     } finally {
       setIsSubmitting(false);
+      if (parentCommentId) {
+        setReplyingTo(null);
+        setReplyText('');
+      } else {
+        setNewComment('');
+      }
     }
   };
   const formatDate = (dateString: string) => {
@@ -139,7 +187,7 @@ export function LessonComments({
     });
   };
   const getInitials = (name?: string, email?: string) => {
-    if (name) {
+    if (name && name !== 'Usuário' && name !== 'Estudante') {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
     if (email) {
@@ -147,78 +195,154 @@ export function LessonComments({
     }
     return 'AN';
   };
-  return <Card className="mt-6 bg-zinc-950 border-0">
+
+  const renderComment = (comment: Comment, isReply = false) => (
+    <motion.div 
+      key={comment.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`flex gap-3 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 ${isReply ? 'ml-8 mt-2' : ''}`}
+    >
+      <Avatar className="h-10 w-10 ring-2 ring-gray-700">
+        <AvatarFallback className="bg-emerald-600 text-white text-sm">
+          {getInitials(comment.user_name, comment.user_email)}
+        </AvatarFallback>
+      </Avatar>
+      
+      <div className="flex-1 space-y-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-white">
+                {comment.user_name || 'Usuário'}
+              </p>
+              <p className="text-xs text-emerald-400">
+                {comment.user_email}
+              </p>
+            </div>
+            <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+              <Clock className="h-3 w-3" />
+              {formatDate(comment.created_at)}
+            </p>
+          </div>
+        </div>
+        
+        <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+          {comment.comment}
+        </p>
+        
+        {!isReply && (
+          <div className="flex items-center gap-2 mt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+              className="text-xs text-emerald-400 hover:text-emerald-300 h-7 px-2"
+            >
+              {replyingTo === comment.id ? 'Cancelar' : 'Responder'}
+            </Button>
+          </div>
+        )}
+        
+        {replyingTo === comment.id && (
+          <div className="mt-3 space-y-2">
+            <Textarea
+              placeholder="Digite sua resposta..."
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              rows={2}
+              className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-900"
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setReplyingTo(null);
+                  setReplyText('');
+                }}
+                className="text-xs"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => handleSubmitComment(comment.id)}
+                disabled={!replyText.trim() || isSubmitting}
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+              >
+                {isSubmitting ? 'Enviando...' : 'Responder'}
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {comment.replies.map(reply => renderComment(reply, true))}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+  return (
+    <Card className="mt-6 bg-zinc-950 border-0">
       <CardHeader className="bg-zinc-950">
         <CardTitle className="flex items-center gap-2 text-white">
           <MessageCircle className="h-5 w-5" />
-          Comentários ({comments.length})
+          Comentários ({comments.reduce((count, comment) => count + 1 + (comment.replies?.length || 0), 0)})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 bg-zinc-950">
         {/* Formulário para novo comentário */}
         <div className="space-y-3">
-          <Textarea placeholder="Deixe seu comentário sobre esta aula..." value={newComment} onChange={e => setNewComment(e.target.value)} rows={3} className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-950" />
+          <Textarea 
+            placeholder="Deixe seu comentário sobre esta aula..." 
+            value={newComment} 
+            onChange={(e) => setNewComment(e.target.value)} 
+            rows={3} 
+            className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-950" 
+          />
           <div className="flex justify-end">
-            <Button onClick={handleSubmitComment} disabled={!newComment.trim() || isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-              {isSubmitting ? <>
+            <Button 
+              onClick={() => handleSubmitComment()} 
+              disabled={!newComment.trim() || isSubmitting} 
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {isSubmitting ? (
+                <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   Enviando...
-                </> : <>
+                </>
+              ) : (
+                <>
                   <Send className="h-4 w-4 mr-2" />
                   Comentar
-                </>}
+                </>
+              )}
             </Button>
           </div>
         </div>
 
         {/* Lista de comentários */}
         <div className="space-y-4">
-          {isLoading ? <div className="text-center py-8">
+          {isLoading ? (
+            <div className="text-center py-8">
               <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <p className="text-gray-400">Carregando comentários...</p>
-            </div> : comments.length === 0 ? <div className="text-center py-8">
+            </div>
+          ) : comments.length === 0 ? (
+            <div className="text-center py-8">
               <MessageCircle className="h-12 w-12 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-400">Seja o primeiro a comentar nesta aula!</p>
-            </div> : <AnimatePresence>
-              {comments.map((comment, index) => <motion.div key={comment.id} initial={{
-            opacity: 0,
-            y: 20
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} exit={{
-            opacity: 0,
-            y: -20
-          }} transition={{
-            delay: index * 0.1
-          }} className="flex gap-3 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
-                  <Avatar className="h-10 w-10 ring-2 ring-gray-700">
-                    <AvatarImage src="" alt={comment.user?.full_name || studentName} />
-                    <AvatarFallback className="bg-emerald-600 text-white text-sm">
-                      {getInitials(comment.user?.full_name || studentName, comment.user?.email || studentEmail)}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-white">
-                          {comment.user?.full_name || studentName || 'Estudante'}
-                        </p>
-                        <p className="text-xs text-gray-400 flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatDate(comment.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
-                      {comment.comment}
-                    </p>
-                  </div>
-                </motion.div>)}
-            </AnimatePresence>}
+            </div>
+          ) : (
+            <AnimatePresence>
+              {comments.map(comment => renderComment(comment))}
+            </AnimatePresence>
+          )}
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 }
