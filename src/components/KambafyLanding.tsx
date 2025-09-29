@@ -355,7 +355,7 @@ const FeaturesSection = () => {
                 src="/lovable-uploads/be22ac17-d2d9-4d84-8ffa-3ed3d91cfaed.png" 
                 alt="Profissional jovem trabalhando" 
                 className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
-                loading="lazy"
+                fetchPriority="high"
                 width="1368"
                 height="900"
               />
