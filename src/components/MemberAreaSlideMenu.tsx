@@ -146,7 +146,7 @@ export function MemberAreaSlideMenu({
             </Button>
 
             <Button onClick={() => {
-            navigate('/seller/dashboard');
+            navigate('/vendedor');
             setOpen(false);
           }} variant="outline" className="w-full justify-start gap-3 bg-gray-900 border-gray-700 hover:bg-gray-800 hover:border-emerald-500/50 text-white">
               <LayoutDashboard className="w-4 h-4 text-emerald-400" />
