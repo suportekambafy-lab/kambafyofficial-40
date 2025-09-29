@@ -4,9 +4,11 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogIn, Mail, BookOpen } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { LogIn, Mail, BookOpen, Lock } from 'lucide-react';
 import { useModernMembersAuth } from './ModernMembersAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import kambafyLogo from '@/assets/kambafy-logo-gray.svg';
 
 export default function ModernMembersLogin() {
@@ -17,6 +19,9 @@ export default function ModernMembersLogin() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [memberArea, setMemberArea] = useState<any>(null);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const id = useId();
 
   useEffect(() => {
@@ -56,6 +61,51 @@ export default function ModernMembersLogin() {
     }
     
     setIsSubmitting(false);
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail.trim() || !memberAreaId || isResetting) return;
+
+    setIsResetting(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('member-area-reset-password', {
+        body: {
+          studentEmail: resetEmail.trim(),
+          memberAreaId: memberAreaId
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao resetar senha:', error);
+        toast({
+          title: "Erro",
+          description: error.message || "Erro ao processar solicitação",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Nova senha enviada para o seu email!",
+        variant: "default",
+      });
+
+      setShowResetModal(false);
+      setResetEmail('');
+      
+    } catch (error: any) {
+      console.error('Erro inesperado:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao processar solicitação",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   // Remover completamente a tela de loading/verificando acesso
@@ -191,6 +241,85 @@ export default function ModernMembersLogin() {
                 )}
                 {isSubmitting ? 'Entrando...' : 'Acessar'}
               </Button>
+            </motion.div>
+
+            {/* Link para reset de senha */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-center mt-4"
+            >
+              <Dialog open={showResetModal} onOpenChange={setShowResetModal}>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors underline"
+                  >
+                    Esqueci minha senha
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="bg-zinc-950 border-zinc-800">
+                  <DialogHeader>
+                    <DialogTitle className="text-white flex items-center gap-2">
+                      <Lock className="h-5 w-5" />
+                      Recuperar Senha
+                    </DialogTitle>
+                    <DialogDescription className="text-zinc-400">
+                      Digite seu email para receber uma nova senha temporária
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handlePasswordReset} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email" className="text-zinc-200">
+                        Email
+                      </Label>
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        placeholder="seu@email.com"
+                        className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
+                        required
+                        disabled={isResetting}
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowResetModal(false)}
+                        disabled={isResetting}
+                        className="flex-1"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={isResetting || !resetEmail.trim()}
+                        className="flex-1 bg-white text-black hover:bg-zinc-100"
+                      >
+                        {isResetting ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
+                            />
+                            Enviando...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Enviar Nova Senha
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </motion.div>
           </form>
         </div>

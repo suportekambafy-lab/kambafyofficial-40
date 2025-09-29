@@ -15,6 +15,7 @@ interface MemberAccessEmailRequest {
   memberAreaUrl: string;
   sellerName?: string;
   isNewAccount?: boolean;
+  isPasswordReset?: boolean;
   temporaryPassword?: string;
   supportEmail?: string;
   supportWhatsapp?: string;
@@ -37,6 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
       memberAreaUrl,
       sellerName,
       isNewAccount = false,
+      isPasswordReset = false,
       temporaryPassword,
       supportEmail,
       supportWhatsapp
@@ -60,9 +62,39 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Missing required fields: studentEmail, studentName, memberAreaName, or memberAreaUrl');
     }
 
-    // Create login instructions based on whether it's a new account
+    // Create login instructions based on whether it's a new account or password reset
     let loginInstructions = '';
-    if (isNewAccount && temporaryPassword) {
+    let emailSubject = '';
+    
+    if (isPasswordReset && temporaryPassword) {
+      emailSubject = `🔐 Nova Senha - ${memberAreaName}`;
+      loginInstructions = `
+        <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+          <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Nova Senha Gerada</h3>
+          <div style="background-color: #fef3cd; border: 1px solid #fbbf24; border-radius: 8px; padding: 20px;">
+            <p style="margin: 0 0 15px; color: #92400e; font-size: 14px;">
+              Uma nova senha temporária foi gerada para sua conta:
+            </p>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; font-weight: 500; color: #475569; width: 30%;">Email:</td>
+                <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${studentEmail}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: 500; color: #475569;">Nova senha:</td>
+                <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace; font-weight: 700; background-color: #fff; padding: 10px; border-radius: 4px;">${temporaryPassword}</td>
+              </tr>
+            </table>
+            <div style="background-color: #dc2626; color: white; border-radius: 6px; padding: 15px; margin: 15px 0 0;">
+              <p style="margin: 0; font-size: 13px; line-height: 1.6;">
+                <strong>⚠️ Importante:</strong> Por segurança, altere esta senha após fazer login.
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (isNewAccount && temporaryPassword) {
+      emailSubject = `🎓 Acesso Liberado - ${memberAreaName}`;
       loginInstructions = `
         <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
           <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Conta Criada com Sucesso</h3>
@@ -89,6 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
       `;
     } else {
+      emailSubject = `🎓 Acesso Liberado - ${memberAreaName}`;
       loginInstructions = `
         <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
           <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Acesso Liberado</h3>
@@ -151,12 +184,18 @@ const handler = async (req: Request): Promise<Response> => {
 
           <!-- What You'll Find -->
           <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
-            <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">O que você encontrará:</h3>
+            <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">${isPasswordReset ? 'Próximos Passos:' : 'O que você encontrará:'}</h3>
             <div style="color: #475569; line-height: 1.6;">
-              <p style="margin: 0 0 12px;">• Acesso imediato a todo conteúdo</p>
-              <p style="margin: 0 0 12px;">• Materiais exclusivos e atualizados</p>
-              <p style="margin: 0 0 12px;">• Suporte da nossa equipe</p>
-              ${isNewAccount ? '<p style="margin: 0; color: #dc2626; font-weight: 500;">• Lembre-se de alterar sua senha temporária</p>' : ''}
+              ${isPasswordReset ? `
+                <p style="margin: 0 0 12px;">• Faça login com sua nova senha</p>
+                <p style="margin: 0 0 12px;">• Altere a senha temporária por segurança</p>
+                <p style="margin: 0 0 12px;">• Continue acessando todo o conteúdo</p>
+              ` : `
+                <p style="margin: 0 0 12px;">• Acesso imediato a todo conteúdo</p>
+                <p style="margin: 0 0 12px;">• Materiais exclusivos e atualizados</p>
+                <p style="margin: 0 0 12px;">• Suporte da nossa equipe</p>
+                ${isNewAccount ? '<p style="margin: 0; color: #dc2626; font-weight: 500;">• Lembre-se de alterar sua senha temporária</p>' : ''}
+              `}
             </div>
           </div>
 
@@ -193,7 +232,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: emailResponse, error: emailError } = await resend.emails.send({
       from: "Kambafy <noreply@kambafy.com>",
       to: [studentEmail.trim()],
-      subject: `🎓 Acesso Liberado - ${memberAreaName}`,
+      subject: emailSubject || `🎓 Acesso Liberado - ${memberAreaName}`,
       html: memberAccessEmailHtml,
     });
 
