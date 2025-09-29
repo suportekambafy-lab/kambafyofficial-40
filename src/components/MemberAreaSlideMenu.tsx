@@ -141,8 +141,8 @@ export function MemberAreaSlideMenu({
                 navigate('/auth');
                 setOpen(false);
               }}
-              variant="outline"
-              className="w-full justify-start gap-3 bg-gray-900 border-gray-700 hover:bg-gray-800 hover:border-emerald-500/50 text-white"
+              variant="ghost"
+              className="w-full justify-start gap-3 bg-gray-900 hover:bg-gray-800 text-white"
             >
               <ShoppingBag className="w-4 h-4 text-emerald-400" />
               <div className="text-left">
@@ -156,8 +156,8 @@ export function MemberAreaSlideMenu({
                 navigate('/vendedor');
                 setOpen(false);
               }}
-              variant="outline"
-              className="w-full justify-start gap-3 bg-gray-900 border-gray-700 hover:bg-gray-800 hover:border-emerald-500/50 text-white"
+              variant="ghost"
+              className="w-full justify-start gap-3 bg-gray-900 hover:bg-gray-800 text-white"
             >
               <LayoutDashboard className="w-4 h-4 text-emerald-400" />
               <div className="text-left">
@@ -246,7 +246,7 @@ export function MemberAreaSlideMenu({
               <Button onClick={() => {
             onLogout();
             setOpen(false);
-          }} variant="outline" className="w-full flex items-center gap-2 text-red-400 border-red-400/50 bg-red-500/10 hover:bg-red-500/20 hover:border-red-400">
+          }} variant="ghost" className="w-full flex items-center gap-2 text-red-400 bg-red-500/10 hover:bg-red-500/20">
                 <LogOut className="w-4 h-4" />
                 Sair da Área
               </Button>
