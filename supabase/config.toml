@@ -42,8 +42,5 @@ verify_jwt = false
 [functions.marca-milionaria-webhook]
 verify_jwt = false
 
-[functions.ia-lucrativo-webhook]
-verify_jwt = false
-
 [functions.add-member-area-student]
 verify_jwt = false
