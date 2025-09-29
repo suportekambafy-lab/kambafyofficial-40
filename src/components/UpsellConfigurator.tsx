@@ -53,10 +53,27 @@ export function UpsellConfigurator({ productId, onSaveSuccess }: UpsellConfigura
         const settingsObj = data.settings as any;
         if (settingsObj.upsell) {
           setSettings(settingsObj.upsell);
+        } else {
+          // Se não há configurações de upsell, usar padrões
+          setSettings({
+            enabled: false,
+            link_pagina_upsell: ''
+          });
         }
+      } else {
+        // Se não há dados, usar padrões
+        setSettings({
+          enabled: false,
+          link_pagina_upsell: ''
+        });
       }
     } catch (error) {
       console.error('Error loading upsell settings:', error);
+      // Em caso de erro, usar padrões
+      setSettings({
+        enabled: false,
+        link_pagina_upsell: ''
+      });
     } finally {
       setLoading(false);
     }
