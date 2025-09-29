@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { SubdomainLink } from './SubdomainLink';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+// Optimized image paths with explicit dimensions for better loading
 const professionalWoman = '/lovable-uploads/09933f06-0001-46b9-9e43-62a0ebdd9868.png';
 const professionalMan = '/lovable-uploads/730e6c93-f015-4eb9-a5cb-a980f00fcde0.png';
 const transitionVariants = {
@@ -350,7 +351,14 @@ const FeaturesSection = () => {
           </AnimatedGroup>
           <AnimatedGroup preset="scale">
             <div className="relative">
-              <img src="/lovable-uploads/be22ac17-d2d9-4d84-8ffa-3ed3d91cfaed.png" alt="Profissional jovem trabalhando" className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" />
+              <img 
+                src="/lovable-uploads/be22ac17-d2d9-4d84-8ffa-3ed3d91cfaed.png" 
+                alt="Profissional jovem trabalhando" 
+                className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
+                loading="lazy"
+                width="1368"
+                height="900"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-checkout-green/20 to-transparent rounded-2xl"></div>
             </div>
           </AnimatedGroup>
@@ -426,7 +434,14 @@ const TestimonialsSection = () => {
           {testimonials.map((testimonial, index) => <div key={index} className="bg-background border border-checkout-green/10 rounded-2xl p-6 hover:shadow-lg hover:shadow-checkout-green/5 transition-all duration-300">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
-                  <img src={index === 1 ? professionalMan : professionalWoman} alt={testimonial.name} className="w-full h-full object-cover" />
+                  <img 
+                    src={index === 1 ? professionalMan : professionalWoman} 
+                    alt={testimonial.name} 
+                    className="w-full h-full object-cover" 
+                    loading="lazy"
+                    width="48"
+                    height="48"
+                  />
                 </div>
                 <div className="flex">
                   {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="w-5 h-5 text-checkout-orange fill-current" />)}
@@ -480,7 +495,14 @@ const AboutSection = () => {
           </AnimatedGroup>
           <AnimatedGroup preset="scale">
             <div className="relative">
-              <img src={professionalMan} alt="Profissional jovem focado" className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" />
+              <img 
+                src={professionalMan} 
+                alt="Profissional jovem focado" 
+                className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
+                loading="lazy"
+                width="1920"
+                height="1263"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-checkout-green/30 to-transparent rounded-2xl flex items-end">
                 <div className="p-6 text-white">
                   <h3 className="text-2xl font-bold mb-2">Junte-se à Revolução</h3>
