@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useLocation } from 'react-router-dom';
+
 interface Comment {
   id: string;
   comment: string;
@@ -21,16 +23,28 @@ interface Comment {
     email?: string;
   };
 }
+
 interface LessonCommentsProps {
   lessonId: string;
   studentEmail?: string;
   studentName?: string;
 }
+
 export function LessonComments({
   lessonId,
-  studentEmail,
-  studentName
+  studentEmail: propStudentEmail,
+  studentName: propStudentName
 }: LessonCommentsProps) {
+  const location = useLocation();
+  
+  // Obter dados de autenticação dos parâmetros da URL
+  const searchParams = new URLSearchParams(location.search);
+  const urlEmail = searchParams.get('email');
+  const isVerified = searchParams.get('verified') === 'true';
+  
+  // Usar email da URL se estiver verificado, senão usar props
+  const studentEmail = (isVerified && urlEmail) ? decodeURIComponent(urlEmail) : propStudentEmail;
+  const studentName = studentEmail ? studentEmail.split('@')[0] : propStudentName;
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
