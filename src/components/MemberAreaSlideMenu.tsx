@@ -138,7 +138,7 @@ export function MemberAreaSlideMenu({
             
             <Button
               onClick={() => {
-                navigate('/meus-acessos');
+                navigate('/auth');
                 setOpen(false);
               }}
               variant="outline"
