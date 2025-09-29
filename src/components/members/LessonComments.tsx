@@ -76,25 +76,22 @@ export function LessonComments({
       return;
     }
     
+    if (!studentEmail || !studentName) {
+      toast.error('Erro de autenticação. Tente fazer login novamente.');
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
-      // Usar autenticação regular do Supabase
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error('Você precisa estar logado para comentar');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('lesson_comments')
-        .insert({
-          lesson_id: lessonId,
+      // Usar uma abordagem que funciona com a sessão customizada da área de membros
+      const { data, error } = await supabase.functions.invoke('add-member-area-comment', {
+        body: {
+          lessonId,
           comment: newComment.trim(),
-          user_id: user.id
-        })
-        .select()
-        .single();
+          studentEmail,
+          studentName
+        }
+      });
         
       if (error) {
         console.error('Erro ao adicionar comentário:', error);
@@ -102,16 +99,21 @@ export function LessonComments({
         return;
       }
 
-      // Adicionar comentário localmente com dados do usuário
+      // Adicionar comentário localmente
       const newCommentData = {
-        ...data,
+        id: data.id || Date.now().toString(),
+        comment: newComment.trim(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: data.user_id || 'student',
+        lesson_id: lessonId,
         user: {
-          full_name: studentName || user.email?.split('@')[0] || 'Usuário',
-          email: user.email
+          full_name: studentName,
+          email: studentEmail
         }
       };
       
-      setComments(prev => [newCommentData, ...prev]);
+      setComments(prev => [...prev, newCommentData]);
       setNewComment('');
       toast.success('Comentário adicionado com sucesso!');
     } catch (error) {
