@@ -186,19 +186,39 @@ export function AppsTabLayout() {
       if (checkoutData && checkoutData.length > 0) {
         checkoutData.forEach(checkout => {
           const settings = checkout.settings as any;
-          const isActive = settings?.banner?.enabled || settings?.countdown?.enabled || 
-                          settings?.reviews?.enabled || settings?.socialProof?.enabled;
           
-          allIntegrations.push({
-            id: checkout.id,
-            type: 'custom-checkout',
-            name: 'Checkout Personalizado',
-            active: isActive || false,
-            createdAt: new Date(checkout.created_at || '').toLocaleDateString(),
-            icon: <Palette className="w-5 h-5 text-green-600" />,
-            productName: checkout.products?.name || 'Produto não encontrado',
-            productId: checkout.product_id
-          });
+          // Checkout Customization Integration
+          const isCheckoutActive = settings?.banner?.enabled || settings?.countdown?.enabled || 
+                                   settings?.reviews?.enabled || settings?.socialProof?.enabled;
+          
+          if (isCheckoutActive) {
+            allIntegrations.push({
+              id: checkout.id,
+              type: 'custom-checkout',
+              name: 'Checkout Personalizado',
+              active: isCheckoutActive || false,
+              createdAt: new Date(checkout.created_at || '').toLocaleDateString(),
+              icon: <Palette className="w-5 h-5 text-green-600" />,
+              productName: checkout.products?.name || 'Produto não encontrado',
+              productId: checkout.product_id
+            });
+          }
+
+          // Upsell Integration - check if upsell settings exist
+          const isUpsellActive = settings?.upsell?.enabled && settings?.upsell?.link_pagina_upsell;
+          
+          if (settings?.upsell) {
+            allIntegrations.push({
+              id: `${checkout.id}-upsell`,
+              type: 'upsell',
+              name: 'Upsell Pós-Compra',
+              active: isUpsellActive || false,
+              createdAt: new Date(checkout.created_at || '').toLocaleDateString(),
+              icon: <Mail className="w-5 h-5 text-indigo-600" />,
+              productName: checkout.products?.name || 'Produto não encontrado',
+              productId: checkout.product_id
+            });
+          }
         });
       }
 
@@ -277,6 +297,31 @@ export function AppsTabLayout() {
           .update({ enabled: active })
           .eq('id', integration.id)
           .select();
+      } else if (integration.type === 'upsell') {
+        // For upsell, we need to update the checkout_customizations settings
+        const realId = integration.id.replace('-upsell', '');
+        const { data: currentData } = await supabase
+          .from('checkout_customizations')
+          .select('settings')
+          .eq('id', realId)
+          .single();
+        
+        if (currentData) {
+          const currentSettings = currentData.settings as any;
+          const updatedSettings = {
+            ...currentSettings,
+            upsell: {
+              ...(currentSettings.upsell || {}),
+              enabled: active
+            }
+          };
+          
+          updateResult = await supabase
+            .from('checkout_customizations')
+            .update({ settings: updatedSettings })
+            .eq('id', realId)
+            .select();
+        }
       }
 
       if (updateResult?.error) {
@@ -338,6 +383,25 @@ export function AppsTabLayout() {
           .delete()
           .eq('id', integration.id)
           .select();
+      } else if (integration.type === 'upsell') {
+        // For upsell, we need to remove upsell settings from checkout_customizations
+        const realId = integration.id.replace('-upsell', '');
+        const { data: currentData } = await supabase
+          .from('checkout_customizations')
+          .select('settings')
+          .eq('id', realId)
+          .single();
+        
+        if (currentData) {
+          const currentSettings = currentData.settings as any;
+          const { upsell, ...otherSettings } = currentSettings;
+          
+          deleteResult = await supabase
+            .from('checkout_customizations')
+            .update({ settings: otherSettings })
+            .eq('id', realId)
+            .select();
+        }
       }
 
       if (deleteResult?.error) {
@@ -424,6 +488,14 @@ export function AppsTabLayout() {
         description: 'Adicione produtos extras ao checkout para aumentar o valor das vendas',
         icon: ({ className }: { className?: string }) => <Settings className={className || "w-6 h-6"} />,
         color: 'text-purple-600'
+      };
+    } else if (integration.type === 'upsell') {
+      integrationType = {
+        id: 'upsell',
+        name: 'Upsell Pós-Compra',
+        description: 'Configure ofertas especiais que aparecem após a compra principal',
+        icon: ({ className }: { className?: string }) => <Mail className={className || "w-6 h-6"} />,
+        color: 'text-indigo-600'
       };
     }
     
