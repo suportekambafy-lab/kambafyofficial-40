@@ -53,8 +53,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
+    <!-- Preload Google Fonts CSS for faster loading -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- Google Fonts - Non-blocking with fallback -->
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
+    </noscript>
+    
+    <!-- Polyfill for preload support in older browsers -->
+    <script>
+      !function(e){"use strict";var t=function(t,n,r){var o,i=e.document,s=i.createElement("link");if(n)o=n;else{var a=(i.body||i.getElementsByTagName("head")[0]).childNodes;o=a[a.length-1]}var l=i.styleSheets;if(r)for(var d=l.length;d--;){var h=l[d];if(h.href==t.href)return h}s.rel="stylesheet",s.href=t.href,o.parentNode.insertBefore(s,n?o:o.nextSibling);var u=function(e){for(var t=s.href,n=l.length;n--;)if(l[n].href==t)return e();setTimeout(function(){u(e)})};return s.addEventListener&&s.addEventListener("load",function(){this.media="all"}),s.onloadcssdefined=u,u(function(){s.media="all"}),s};"undefined"!=typeof exports?exports.loadCSS=t:e.loadCSS=t}("undefined"!=typeof global?global:this);
+    </script>
     
     <link rel="preconnect" href="https://pay.kambafy.com" crossorigin />
     <link rel="preconnect" href="https://hcbkqygdtzpxvctfdqbd.supabase.co" crossorigin />
