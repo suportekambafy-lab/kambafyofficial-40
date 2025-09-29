@@ -153,7 +153,7 @@ export function MemberAreaSlideMenu({
 
             <Button
               onClick={() => {
-                navigate('/dashboard');
+                navigate('/vendedor');
                 setOpen(false);
               }}
               variant="outline"
