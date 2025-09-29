@@ -66,7 +66,12 @@ serve(async (req) => {
     console.log('Student access verified');
 
     // Criar um "usuário" temporário para o comentário (usando o email como ID único)
-    const tempUserId = `member_${Buffer.from(studentEmail).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 20)}`;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(studentEmail);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const tempUserId = `member_${hashHex.substring(0, 20)}`;
 
     // Inserir o comentário
     const { data: commentData, error: commentError } = await supabase
@@ -101,13 +106,13 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('=== ERROR IN ADD MEMBER AREA COMMENT ===');
     console.error('Error:', error);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Erro interno do servidor',
+        error: error?.message || 'Erro interno do servidor',
         details: error
       }),
       { 

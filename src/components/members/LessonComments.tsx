@@ -42,25 +42,35 @@ export function LessonComments({
     const loadComments = async () => {
       try {
         setIsLoading(true);
-        const {
-          data,
-          error
-        } = await supabase.from('lesson_comments').select(`
+        const { data, error } = await supabase
+          .from('lesson_comments')
+          .select(`
             id,
             comment,
             created_at,
             updated_at,
             user_id,
             lesson_id
-          `).eq('lesson_id', lessonId).order('created_at', {
-          ascending: true
-        });
+          `)
+          .eq('lesson_id', lessonId)
+          .order('created_at', { ascending: true });
+        
         if (error) {
           console.error('Erro ao carregar comentários:', error);
           toast.error('Erro ao carregar comentários');
           return;
         }
-        setComments(data || []);
+
+        // Mapear comentários com nomes de usuários genéricos
+        const commentsWithUsers = (data || []).map(comment => ({
+          ...comment,
+          user: {
+            full_name: comment.user_id?.startsWith('student_') ? 'Estudante' : studentName || 'Usuário',
+            email: studentEmail
+          }
+        }));
+        
+        setComments(commentsWithUsers);
       } catch (error) {
         console.error('Erro inesperado ao carregar comentários:', error);
         toast.error('Erro ao carregar comentários');
@@ -69,7 +79,7 @@ export function LessonComments({
       }
     };
     loadComments();
-  }, [lessonId]);
+  }, [lessonId, studentEmail, studentName]);
   const handleSubmitComment = async () => {
     if (!newComment.trim()) {
       toast.error('Digite um comentário válido');
@@ -83,15 +93,18 @@ export function LessonComments({
     
     setIsSubmitting(true);
     try {
-      // Usar uma abordagem que funciona com a sessão customizada da área de membros
-      const { data, error } = await supabase.functions.invoke('add-member-area-comment', {
-        body: {
-          lessonId,
+      // Criar um ID único para o estudante baseado no email
+      const tempUserId = `student_${btoa(studentEmail).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20)}`;
+
+      const { data, error } = await supabase
+        .from('lesson_comments')
+        .insert({
+          lesson_id: lessonId,
           comment: newComment.trim(),
-          studentEmail,
-          studentName
-        }
-      });
+          user_id: tempUserId
+        })
+        .select()
+        .single();
         
       if (error) {
         console.error('Erro ao adicionar comentário:', error);
@@ -101,12 +114,7 @@ export function LessonComments({
 
       // Adicionar comentário localmente
       const newCommentData = {
-        id: data.id || Date.now().toString(),
-        comment: newComment.trim(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_id: data.user_id || 'student',
-        lesson_id: lessonId,
+        ...data,
         user: {
           full_name: studentName,
           email: studentEmail
