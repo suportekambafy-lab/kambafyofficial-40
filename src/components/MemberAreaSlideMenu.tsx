@@ -98,19 +98,19 @@ export function MemberAreaSlideMenu({
 
         <div className="space-y-6 mt-6">
           {/* Perfil do Usuário */}
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-4 rounded-lg border border-gray-700">
+          <div className="bg-background/50 p-4 rounded-lg border">
             <div className="flex items-center gap-4 mb-4">
-              <Avatar className="w-16 h-16 border-2 border-emerald-500">
+              <Avatar className="w-16 h-16">
                 <AvatarImage src={userAvatar} alt={userName || userEmail} />
-                <AvatarFallback className="bg-emerald-500/20 text-emerald-400 text-lg font-semibold">
+                <AvatarFallback className="bg-muted text-foreground text-lg font-semibold">
                   {(userName || userEmail || 'U').charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-white text-lg truncate">
+                <h3 className="font-semibold text-foreground text-lg truncate">
                   {userName || 'Estudante'}
                 </h3>
-                <div className="flex items-center gap-1 text-gray-400 text-sm">
+                <div className="flex items-center gap-1 text-muted-foreground text-sm">
                   <Mail className="w-3 h-3" />
                   <p className="truncate">{userEmail || 'Email não disponível'}</p>
                 </div>
@@ -119,13 +119,13 @@ export function MemberAreaSlideMenu({
 
             {/* Estatísticas do Perfil */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="text-center p-3 bg-gray-800 rounded-lg">
-                <p className="text-lg font-bold text-emerald-400">{completedLessons}</p>
-                <p className="text-xs text-gray-400">Aulas Concluídas</p>
+              <div className="text-center p-3 bg-muted rounded-lg">
+                <p className="text-lg font-bold text-foreground">{completedLessons}</p>
+                <p className="text-xs text-muted-foreground">Aulas Concluídas</p>
               </div>
-              <div className="text-center p-3 bg-gray-800 rounded-lg">
-                <p className="text-lg font-bold text-white">{getCourseProgress(totalLessonsCount)}%</p>
-                <p className="text-xs text-gray-400">Progresso</p>
+              <div className="text-center p-3 bg-muted rounded-lg">
+                <p className="text-lg font-bold text-foreground">{getCourseProgress(totalLessonsCount)}%</p>
+                <p className="text-xs text-muted-foreground">Progresso</p>
               </div>
             </div>
           </div>
