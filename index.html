@@ -109,7 +109,17 @@
   <meta property="og:description" content="Kambafy é a plataforma completa para criar, vender e gerenciar produtos digitais. Checkout otimizado, analytics avançados, integração com pagamentos e muito mais.">
   <meta name="twitter:description" content="Kambafy é a plataforma completa para criar, vender e gerenciar produtos digitais. Checkout otimizado, analytics avançados, integração com pagamentos e muito mais.">
   <meta name="twitter:card" content="summary_large_image">
-</head>
+    
+    <!-- Critical CSS for LCP optimization -->
+    <style>
+      /* Ensure hero text is immediately visible with fallback font */
+      .hero-heading {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+    </style>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

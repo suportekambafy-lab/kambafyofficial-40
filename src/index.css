@@ -3,6 +3,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Critical CSS for LCP optimization - ensure hero text is visible immediately */
+@layer base {
+  /* Fallback font loading with immediate visibility */
+  h1, h2, h3, h4, h5, h6 {
+    font-display: swap;
+  }
+  
+  /* Ensure hero heading is visible before JS loads */
+  .hero-heading {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

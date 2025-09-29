@@ -20,6 +20,17 @@ export default {
 		},
 		extend: {
 			fontFamily: {
+				sans: [
+					'Bricolage Grotesque',
+					'system-ui',
+					'-apple-system',
+					'BlinkMacSystemFont',
+					'"Segoe UI"',
+					'Roboto',
+					'"Helvetica Neue"',
+					'Arial',
+					'sans-serif'
+				],
 				'bricolage': ['Bricolage Grotesque', 'sans-serif'],
 			},
 			colors: {
