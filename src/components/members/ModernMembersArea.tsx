@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Play, BookOpen, LogOut, Clock, Users, Star, Search, Filter, GraduationCap, Trophy, Target, CheckCircle2, PlayCircle, MoreVertical, ArrowLeft, Menu, X, Lock, AlertCircle, ExternalLink, Download, FileText, Timer, MessageCircle } from 'lucide-react';
+import { Play, BookOpen, LogOut, Clock, Users, Star, Search, Filter, GraduationCap, Trophy, Target, CheckCircle2, PlayCircle, MoreVertical, ArrowLeft, Menu, X, Lock, AlertCircle, ExternalLink, Download, FileText, Timer } from 'lucide-react';
 import { CountdownTimer } from '@/components/ui/countdown-timer';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +15,6 @@ import { useModernMembersAuth } from './ModernMembersAuth';
 import { ModernLessonViewer } from './ModernLessonViewer';
 import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { LessonComments } from './LessonComments';
-import { CommentsManagement } from './CommentsManagement';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMemberLessonProgress } from '@/hooks/useMemberLessonProgress';
@@ -60,7 +59,6 @@ const detectAndUpdateVideoDuration = async (lesson: Lesson) => {
     }
   });
 };
-
 export default function ModernMembersArea() {
   const {
     id: memberAreaId
@@ -82,7 +80,6 @@ export default function ModernMembersArea() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
-  const [showCommentsManagement, setShowCommentsManagement] = useState(false);
   // Estado para dados da área quando acesso é verificado
   const [verifiedMemberArea, setVerifiedMemberArea] = useState<any>(null);
   const isMobile = useIsMobile();
@@ -96,9 +93,6 @@ export default function ModernMembersArea() {
   const emailParam = urlParams.get('email');
   const userEmail = user?.email || (isVerified ? emailParam : undefined);
   const userName = user?.user_metadata?.full_name || (isVerified && emailParam ? emailParam.split('@')[0] : 'Estudante');
-  
-  // Verificar se o usuário é o dono da área de membros
-  const isOwner = user && currentMemberArea && currentMemberArea.user_id === user.id;
 
   // Hook de progresso das aulas
   const {
@@ -131,6 +125,25 @@ export default function ModernMembersArea() {
     lessonsCount: lessons.length,
     modulesCount: modules.length
   });
+
+  // REMOVER verificação de acesso automática - apenas carregar se há dados necessários
+  // useEffect(() => {
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   const isVerified = urlParams.get('verified') === 'true';
+  //   
+  //   // Só verificar acesso se for autenticação normal (não verificada)
+  //   if (!authLoading && isAuthenticated && user && memberAreaId && !memberArea && !isVerified) {
+  //     console.log('🔑 Verificando acesso à área de membros...');
+  //     checkMemberAccess(memberAreaId).then(hasAccess => {
+  //       if (!hasAccess) {
+  //         toast.error('Acesso negado', {
+  //           description: 'Você não tem acesso a esta área de membros.'
+  //         });
+  //         window.location.href = '/';
+  //       }
+  //     });
+  //   }
+  // }, [authLoading, isAuthenticated, user, memberAreaId, memberArea, checkMemberAccess]);
 
   // Verificar query params para acesso direto verificado ou redirecionar para login se necessário
   useEffect(() => {
@@ -168,6 +181,8 @@ export default function ModernMembersArea() {
     console.log('📥 ModernMembersArea: Carregando conteúdo...');
     const loadContent = async () => {
       try {
+        // NÃO usar setIsLoading - nunca mostrar loading
+
         // Carregar lessons
         const { data: lessonsData, error: lessonsError } = await supabase
           .from('lessons')
@@ -232,9 +247,10 @@ export default function ModernMembersArea() {
       } catch (error) {
         console.error('❌ ModernMembersArea: Erro inesperado:', error);
       }
+      // NÃO fazer setIsLoading(false) - nunca usar loading
     };
     loadContent();
-  }, [memberAreaId]);
+  }, [memberAreaId]); // Apenas memberAreaId como dependência
 
   // Esconder sidebar automaticamente no mobile quando aula for selecionada
   useEffect(() => {
@@ -244,13 +260,11 @@ export default function ModernMembersArea() {
       setSidebarVisible(true);
     }
   }, [selectedLesson, isMobile]);
-
   const handleLogout = () => {
     logout();
     // Redirecionar para login da área de membros
     window.location.href = `/members/login/${memberAreaId}`;
   };
-
   const handleLessonClick = (lesson: Lesson) => {
     if (!isLessonAccessible(lesson)) {
       if (lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date()) {
@@ -266,7 +280,6 @@ export default function ModernMembersArea() {
     }
     setSelectedLesson(lesson);
   };
-
   const handleModuleClick = (module: Module) => {
     if (!isModuleAccessible(module)) {
       toast.error("Módulo em breve", {
@@ -277,11 +290,9 @@ export default function ModernMembersArea() {
     console.log('📚 Módulo selecionado:', module.title);
     setSelectedModule(module);
   };
-
   const handleBackToModules = () => {
     setSelectedModule(null);
   };
-
   const handleNavigateLesson = (lessonId: string) => {
     const lesson = lessons.find(l => l.id === lessonId);
     if (lesson) {
@@ -304,11 +315,9 @@ export default function ModernMembersArea() {
     }
     return true;
   };
-
   const isModuleAccessible = (module: Module) => {
     return module.status === 'published' && !module.coming_soon;
   };
-
   const filteredLessons = lessons.filter(lesson => {
     // Filtrar por módulo se um estiver selecionado
     const matchesModule = !selectedModule || lesson.module_id === selectedModule.id;
@@ -321,7 +330,6 @@ export default function ModernMembersArea() {
   const totalDuration = Math.round(lessons.reduce((sum, lesson) => sum + lesson.duration, 0) / 60);
   const completedLessons = lessons.filter(lesson => lessonProgress[lesson.id]?.completed).length;
   const courseProgress = getCourseProgress(lessons.length);
-  
   console.log('⏱️ Estatísticas do curso:', {
     totalDuration: totalDuration + ' minutos',
     totalLessons: lessons.length,
@@ -336,442 +344,396 @@ export default function ModernMembersArea() {
     selectedLesson: !!selectedLesson
   });
 
-  return (
-    <div className="min-h-screen bg-gray-950 dark text-white">
+  return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
-      <MemberAreaSlideMenu 
-        lessons={lessons} 
-        modules={modules} 
-        lessonProgress={lessonProgress} 
-        getCourseProgress={getCourseProgress} 
-        getModuleProgress={getModuleProgress} 
-        getModuleStats={getModuleStats} 
-        totalDuration={totalDuration} 
-        completedLessons={completedLessons} 
-        onLessonSelect={setSelectedLesson} 
-        onLogout={handleLogout} 
-      />
+      <MemberAreaSlideMenu lessons={lessons} modules={modules} lessonProgress={lessonProgress} getCourseProgress={getCourseProgress} getModuleProgress={getModuleProgress} getModuleStats={getModuleStats} totalDuration={totalDuration} completedLessons={completedLessons} onLessonSelect={setSelectedLesson} onLogout={handleLogout} />
       
-      {/* Mostrar gestão de comentários se ativado */}
-      {showCommentsManagement && isOwner ? (
-        <CommentsManagement memberAreaId={memberAreaId!} isOwner={isOwner} />
-      ) : (
-        <>
-          {/* Hero Section - Ocultar quando aula selecionada */}
-          {!selectedLesson && (
-            <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden">
-              {/* Background Pattern */}
-              <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:40px_40px]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-              
-              {/* Hero Image Background */}
-              {currentMemberArea?.hero_image_url && (
-                <div className="absolute inset-0 opacity-40">
-                  <img src={currentMemberArea.hero_image_url} alt={currentMemberArea.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+      {/* Hero Section - Ocultar quando aula selecionada */}
+      {!selectedLesson && <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:40px_40px]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+          
+          {/* Hero Image Background */}
+          {currentMemberArea?.hero_image_url && <div className="absolute inset-0 opacity-40">
+              <img src={currentMemberArea.hero_image_url} alt={currentMemberArea.name} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+            </div>}
+          
+          <div className="relative container mx-auto px-4 py-20">
+            {/* Header */}
+            <motion.div className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10">
+              <div className="flex items-center gap-3">
+                {currentMemberArea?.logo_url ? <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
+                    <AvatarImage src={currentMemberArea.logo_url} alt={currentMemberArea.name} />
+                    <AvatarFallback className="bg-emerald-600">
+                      <GraduationCap className="h-6 w-6 text-white" />
+                    </AvatarFallback>
+                  </Avatar> : <div className="h-12 w-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
+                    <GraduationCap className="h-6 w-6 text-white" />
+                  </div>}
+                <div className="text-white">
+                  <p className="text-sm text-emerald-400">Área de Membros</p>
+                  <p className="text-sm text-gray-300">
+                    Olá, {(() => {
+                      console.log('🎯 ModernMembersArea - Debug name:', {
+                        user: user,
+                        session: session,
+                        userMetadata: user?.user_metadata,
+                        sessionUserMetadata: session?.user?.user_metadata,
+                        userEmail: user?.email,
+                        emailParam,
+                        isVerified,
+                        userName
+                      });
+                      return userName;
+                    })()}
+                  </p>
                 </div>
-              )}
-              
-              <div className="relative container mx-auto px-4 py-20">
-                {/* Header */}
-                <motion.div className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10">
-                  <div className="flex items-center gap-3">
-                    {currentMemberArea?.logo_url ? (
-                      <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
-                        <AvatarImage src={currentMemberArea.logo_url} alt={currentMemberArea.name} />
-                        <AvatarFallback className="bg-emerald-600">
-                          <GraduationCap className="h-6 w-6 text-white" />
-                        </AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      <div className="h-12 w-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
-                        <GraduationCap className="h-6 w-6 text-white" />
-                      </div>
-                    )}
-                    <div className="text-white">
-                      <p className="text-sm text-emerald-400">Área de Membros</p>
-                      <p className="text-sm text-gray-300">
-                        Olá, {(() => {
-                          console.log('🎯 ModernMembersArea - Debug name:', {
-                            user: user,
-                            session: session,
-                            userMetadata: user?.user_metadata,
-                            sessionUserMetadata: session?.user?.user_metadata,
-                            userEmail: user?.email,
-                            emailParam,
-                            isVerified,
-                            userName
-                          });
-                          return userName;
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Botão de gestão de comentários para o dono */}
-                  {isOwner && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowCommentsManagement(!showCommentsManagement)}
-                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Gerir Comentários
-                    </Button>
-                  )}
-                </motion.div>
-                
-                {/* Main Content */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  transition={{ delay: 0.2 }}
-                  className="text-center pt-20"
-                >
-                  <h1 className="text-5xl font-bold text-white mb-6">
-                    {currentMemberArea?.name || 'Área de Membros'}
-                  </h1>
-                  {currentMemberArea?.description && (
-                    <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-                      {currentMemberArea.description}
-                    </p>
-                  )}
-                  
-                  {/* Course Stats */}
-                  <div className="flex flex-wrap justify-center gap-6 mb-12">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                      <div className="text-3xl font-bold text-emerald-400 mb-2">{lessons.length}</div>
-                      <div className="text-gray-300">Aulas</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                      <div className="text-3xl font-bold text-emerald-400 mb-2">{totalDuration} min</div>
-                      <div className="text-gray-300">Duração Total</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                      <div className="text-3xl font-bold text-emerald-400 mb-2">{courseProgress}%</div>
-                      <div className="text-gray-300">Progresso</div>
-                    </div>
-                  </div>
-                </motion.div>
               </div>
-            </motion.section>
-          )}
+            </motion.div>
 
-          {/* Main Content Area */}
-          <div className="flex-1">
-            {selectedLesson ? (
-              /* Lesson Viewer */
-              <div className="flex h-screen bg-gray-950">
-                {/* Lesson Content */}
-                <div className={`flex-1 transition-all duration-300 ${sidebarVisible ? 'mr-80' : ''}`}>
-                  <ModernLessonViewer 
-                    lesson={selectedLesson} 
-                    lessons={lessons}
-                    lessonProgress={lessonProgress}
-                    onUpdateProgress={updateVideoProgress}
-                    onNavigateLesson={handleNavigateLesson}
-                    onClose={() => setSelectedLesson(null)}
+            {/* Course Hero */}
+            <motion.div className="text-center mb-12 mt-20 sm:mt-8">
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4">
+                <Trophy className="h-3 w-3 mr-1" />
+                Curso Premium
+              </Badge>
+              
+              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                {currentMemberArea?.hero_title || currentMemberArea?.name}
+              </h1>
+              
+              <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+                {currentMemberArea?.hero_description || currentMemberArea?.description}
+              </p>
+            </motion.div>
+          </div>
+        </motion.section>}
+
+      {/* Header fixo quando aula selecionada */}
+      {selectedLesson && <motion.header className="bg-black/95 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4 bg-zinc-950">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="sm" onClick={() => setSelectedLesson(null)} className="text-white hover:text-emerald-400">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <Badge variant="outline" className="text-emerald-400 border-emerald-500/30">
+                  Aula {lessons.indexOf(selectedLesson) + 1}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs bg-gray-800">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {selectedLesson.duration > 0 ? `${Math.round(selectedLesson.duration / 60)} min` : 'Duração não definida'}
+                </Badge>
+                <Button variant="ghost" size="sm" onClick={() => setSidebarVisible(!sidebarVisible)} className="text-white hover:text-emerald-400">
+                  {sidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.header>}
+
+      {/* Main Content Area */}
+      <div className="bg-black min-h-screen">
+        <div className={selectedLesson ? "" : "container mx-auto px-4 py-12"}>
+          
+          {/* Layout quando aula selecionada */}
+          {selectedLesson ? <div className="flex min-h-screen relative">
+              {/* Overlay para mobile */}
+              {isMobile && sidebarVisible && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarVisible(false)} />}
+              
+              {/* Área do vídeo */}
+              <div className="flex-1 p-6 px-0 py-0">
+                <motion.div>
+                  <Card className="overflow-hidden mb-6 bg-zinc-950 rounded-none border-0">
+                    <ModernLessonViewer lesson={selectedLesson} lessons={lessons} lessonProgress={lessonProgress} onNavigateLesson={handleNavigateLesson} onClose={() => setSelectedLesson(null)} onUpdateProgress={updateVideoProgress} />
+                  </Card>
+                  
+                  {/* Info da aula */}
+                  
+                  
+                  {/* Seção de comentários */}
+                  <LessonComments 
+                    lessonId={selectedLesson.id} 
+                    studentEmail={userEmail} 
+                    studentName={userName} 
                   />
-                  
-                  {/* Comments Section */}
-                  <div className="p-6 bg-gray-900">
-                    <LessonComments 
-                      lessonId={selectedLesson.id} 
-                    />
-                  </div>
-                </div>
-
-                {/* Collapsible Sidebar */}
-                <motion.div 
-                  initial={false}
-                  animate={{ 
-                    x: sidebarVisible ? 0 : 320,
-                    opacity: sidebarVisible ? 1 : 0.95
-                  }}
-                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="fixed right-0 top-0 h-full w-80 bg-gray-900 border-l border-gray-800 shadow-2xl z-30"
-                >
-                  {/* Toggle Button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSidebarVisible(!sidebarVisible)}
-                    className="absolute -left-10 top-4 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700"
-                  >
-                    {sidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                  </Button>
-
-                  {/* Content */}
-                  <div className="h-full overflow-y-auto p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Aulas do Curso</h3>
-                    <div className="space-y-3">
-                      {lessons.map((lesson) => (
-                        <Card
-                          key={lesson.id}
-                          className={`cursor-pointer transition-all duration-200 bg-gray-800 border-gray-700 hover:bg-gray-750 ${
-                            selectedLesson?.id === lesson.id ? 'ring-2 ring-emerald-500 bg-emerald-900/20' : ''
-                          }`}
-                          onClick={() => handleLessonClick(lesson)}
-                        >
-                          <div className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                isLessonContentAccessible(lesson) ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-600/20 text-gray-500'
-                              }`}>
-                                {isLessonContentAccessible(lesson) ? <Play className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="text-sm font-medium text-white">{lesson.title}</h4>
-                                <p className="text-xs text-gray-400">{Math.round(lesson.duration / 60)} min</p>
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
                 </motion.div>
               </div>
-            ) : (
-              /* Module/Lesson Selection */
-              <div className="container mx-auto px-4 pb-20">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                  <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-white mb-3">
-                      {selectedModule ? selectedModule.title : 'Módulos do Curso'}
-                    </h2>
-                    <p className="text-gray-400 text-lg">
-                      {selectedModule ? selectedModule.description : 'Escolha um módulo para começar a aprender'}
-                    </p>
+
+              {/* Sidebar com módulos e aulas - condicional */}
+              {sidebarVisible && <div className={`bg-gray-950 border-l border-gray-800 p-6 overflow-y-auto ${isMobile ? 'fixed top-0 right-0 h-full w-80 z-50 shadow-2xl' : 'w-96'}`}>
+                  {isMobile && <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-800">
+                      <h3 className="text-lg font-semibold text-white">Lista de Aulas</h3>
+                      <Button variant="ghost" size="sm" onClick={() => setSidebarVisible(false)} className="text-white hover:text-emerald-400">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>}
+                  <motion.div initial={{
+              opacity: 0,
+              x: 20
+            }} animate={{
+              opacity: 1,
+              x: 0
+            }} transition={{
+              delay: 0.2
+            }} className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4">
+                      Conteúdo do Curso
+                    </h3>
                   </div>
 
-                  {modules.length > 0 ? (
-                    <div className="relative">
-                      {selectedModule ? (
-                        /* Aulas do Módulo Selecionado */
-                        <div className="space-y-6">
-                          <div className="flex items-center gap-4 mb-6">
-                            <Button 
-                              variant="outline" 
-                              onClick={handleBackToModules} 
-                              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border-gray-600 text-white"
-                            >
-                              <ArrowLeft className="h-4 w-4" />
-                              Voltar aos Módulos
-                            </Button>
-                          </div>
-
-                          <div className="grid gap-4">
-                            {filteredLessons.map((lesson, index) => {
-                              const currentProgress = lessonProgress[lesson.id];
-                              return (
-                                <motion.div 
-                                  key={lesson.id} 
-                                  initial={{ opacity: 0, y: 20 }} 
-                                  animate={{ opacity: 1, y: 0 }} 
-                                  transition={{ delay: 0.1 * index }} 
-                                  className={`group transition-all duration-200 cursor-pointer`} 
-                                  onClick={() => handleLessonClick(lesson)}
-                                >
-                                  <Card className={`bg-gray-900 transition-all duration-300 border border-gray-800 hover:bg-gray-800 ${
-                                    isLessonContentAccessible(lesson) ? 'hover:border-emerald-500/50' : 'hover:border-amber-500/50'
-                                  }`}>
-                                    <div className="p-6 flex items-center gap-4">
-                                      <div className={`flex-shrink-0 w-16 h-16 rounded-lg flex items-center justify-center ${
-                                        isLessonContentAccessible(lesson) ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20' : 'bg-gradient-to-br from-amber-500/20 to-amber-600/20'
-                                      }`}>
-                                        {isLessonContentAccessible(lesson) ? <Play className="h-8 w-8 text-emerald-400" /> : lesson.is_scheduled ? <Timer className="h-8 w-8 text-amber-400" /> : <Lock className="h-8 w-8 text-gray-500" />}
-                                      </div>
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <Badge variant="outline" className="text-gray-300 border-gray-600 bg-gray-800/50">
-                                            {Math.round(lesson.duration / 60)} min
-                                          </Badge>
-                                          {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && (
-                                            <Badge variant="outline" className="text-amber-400 border-amber-400 bg-amber-400/10">
-                                              <Timer className="h-3 w-3 mr-1" />
-                                              Agendada
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <h4 className={`text-lg font-semibold transition-colors ${
-                                          isLessonContentAccessible(lesson) ? 'text-white group-hover:text-emerald-400' : 'text-white group-hover:text-amber-400'
-                                        }`}>
-                                          {lesson.title}
-                                        </h4>
-                                        {lesson.description && (
-                                          <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                                            {lesson.description}
-                                          </p>
-                                        )}
-
-                                        {/* Countdown para aulas agendadas */}
-                                        {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && (
-                                          <div className="mt-4 p-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg border border-amber-500/20">
-                                            <div className="text-sm font-medium text-amber-400 mb-2 flex items-center gap-2">
-                                              <Timer className="h-4 w-4" />
-                                              Aula será liberada em:
-                                            </div>
-                                            <CountdownTimer 
-                                              targetDate={lesson.scheduled_at} 
-                                              className="justify-start" 
-                                              onComplete={() => {
-                                                toast.success("Aula liberada!", {
-                                                  description: `A aula "${lesson.title}" está agora disponível!`
-                                                });
-                                              }} 
-                                            />
-                                          </div>
-                                        )}
-
-                                        {/* Barra de progresso */}
-                                        {isLessonContentAccessible(lesson) && currentProgress && currentProgress.progress_percentage > 0 && (
-                                          <div className="mt-3">
-                                            <div className="flex justify-between text-xs text-gray-400 mb-1">
-                                              <span>Progresso</span>
-                                              <span>{currentProgress.progress_percentage}%</span>
-                                            </div>
-                                            <Progress 
-                                              value={currentProgress.progress_percentage} 
-                                              className="h-2" 
-                                              style={{
-                                                '--progress-background': currentProgress.completed ? '#10b981' : '#eab308'
-                                              } as React.CSSProperties}
-                                            />
-                                          </div>
-                                        )}
-                                      </div>
-                                      <div className={`flex-shrink-0 transition-opacity opacity-0 group-hover:opacity-100`}>
-                                        {!isLessonContentAccessible(lesson) && lesson.is_scheduled ? <Timer className="h-6 w-6 text-amber-400" /> : <Play className="h-6 w-6 text-emerald-400" />}
-                                      </div>
-                                    </div>
-                                  </Card>
-                                </motion.div>
-                              );
-                            })}
-
-                            {filteredLessons.length === 0 && (
-                              <div className="text-center py-12">
-                                <BookOpen className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-gray-400 mb-2">
-                                  Nenhuma aula neste módulo ainda
-                                </h3>
-                                <p className="text-gray-500">
-                                  Novas aulas serão adicionadas em breve
-                                </p>
-                              </div>
-                            )}
+                  {modules.map(module => {
+                const moduleLessons = lessons.filter(l => l.module_id === module.id);
+                const isExpanded = moduleLessons.some(l => l.id === selectedLesson.id);
+                return <div key={module.id} className="space-y-3">
+                        <div className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${isExpanded ? 'bg-emerald-500/20 border border-emerald-500/30 shadow-emerald-500/20 shadow-lg' : 'bg-gray-800 hover:bg-gray-700 hover:border-emerald-500/30 border border-transparent'}`} onClick={() => handleModuleClick(module)}>
+                          {module.cover_image_url ? <img src={module.cover_image_url} alt={module.title} className="w-12 h-12 object-cover rounded" /> : <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded flex items-center justify-center">
+                              <BookOpen className="h-6 w-6 text-emerald-400" />
+                            </div>}
+                          <div className="flex-1">
+                            <h4 className="font-medium text-white text-sm">{module.title}</h4>
+                            <p className="text-xs text-gray-400">{moduleLessons.length} aulas</p>
                           </div>
                         </div>
-                      ) : (
-                        /* Netflix Style Horizontal Scroll */
-                        <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide scroll-smooth">
-                          <div className="flex gap-6 min-w-max">
-                            {modules.map((module, index) => (
-                              <motion.div 
-                                key={module.id} 
-                                initial={{ opacity: 0, scale: 0.95 }} 
-                                animate={{ opacity: 1, scale: 1 }} 
-                                transition={{ delay: 0.1 * index }} 
-                                whileHover={{ scale: 1.05, y: -8 }} 
-                                className={`group cursor-pointer flex-shrink-0 w-80 ${module.coming_soon ? 'opacity-75' : ''}`} 
-                                onClick={() => handleModuleClick(module)}
-                              >
-                                <Card className={`overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 ${
-                                  module.coming_soon ? 'hover:border-amber-500/50' : 'hover:border-emerald-500/50'
-                                } transform-gpu`}>
-                                  <div className="relative">
-                                    {/* Module Cover */}
-                                    <div className={`${(module as any).cover_orientation === 'vertical' ? 'aspect-[9/16]' : 'aspect-[16/9]'} bg-gradient-to-br from-gray-900 to-black relative overflow-hidden`}>
-                                      {module.cover_image_url ? (
-                                        <>
-                                          <img 
-                                            src={module.cover_image_url} 
-                                            alt={module.title} 
-                                            className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${module.coming_soon ? 'grayscale' : ''}`} 
-                                          />
-                                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                                        </>
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                          {module.coming_soon ? 
-                                            <AlertCircle className="h-20 w-20 text-amber-500 group-hover:text-amber-400 transition-colors duration-300" /> : 
-                                            <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-emerald-500 transition-colors duration-300" />
-                                          }
-                                        </div>
-                                      )}
-                                      
-                                      {/* Module Number Badge */}
-                                      <div className="absolute top-4 left-4">
-                                        <Badge className={`backdrop-blur-sm font-bold px-3 py-1 ${
-                                          module.coming_soon ? 'bg-amber-500/90 hover:bg-amber-600 text-white' : 'bg-emerald-500/90 hover:bg-emerald-600 text-white'
-                                        }`}>
-                                          {module.order_number}
-                                        </Badge>
-                                      </div>
 
-                                      {/* Coming Soon Badge */}
-                                      {module.coming_soon && (
-                                        <div className="absolute top-4 right-4">
-                                          <Badge variant="outline" className="bg-amber-500/90 text-white border-amber-400">
-                                            <AlertCircle className="h-3 w-3 mr-1" />
-                                            Em Breve
-                                          </Badge>
-                                        </div>
-                                      )}
-
-                                      {/* Progress Overlay */}
-                                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                                        <h3 className={`font-bold text-lg mb-1 leading-tight transition-colors ${
-                                          module.coming_soon ? 'group-hover:text-amber-300' : 'group-hover:text-emerald-300'
-                                        }`}>
-                                          {module.title}
-                                        </h3>
-                                        <div className="flex items-center gap-2 mb-3">
-                                          <span className="text-sm text-gray-300">
-                                            {lessons.filter(l => l.module_id === module.id).length} aulas
-                                          </span>
-                                          {module.coming_soon && (
-                                            <span className="text-xs font-medium text-amber-400">
-                                              Em Breve
-                                            </span>
-                                          )}
-                                        </div>
+                        {/* Lista de aulas quando expandido */}
+                        <AnimatePresence>
+                          {isExpanded && <motion.div initial={{
+                      opacity: 0,
+                      height: 0
+                    }} animate={{
+                      opacity: 1,
+                      height: 'auto'
+                    }} exit={{
+                      opacity: 0,
+                      height: 0
+                    }} className="pl-4 space-y-2">
+                              {moduleLessons.map(lesson => <motion.div key={lesson.id} whileHover={{
+                        scale: 1.02
+                      }} className={`p-3 rounded cursor-pointer transition-colors ${lesson.id === selectedLesson.id ? 'bg-emerald-500/20 border-l-4 border-l-emerald-400' : 'bg-gray-800/50 hover:bg-gray-800'}`} onClick={() => handleLessonClick(lesson)}>
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm text-white line-clamp-1">
+                                        {lesson.title}
+                                      </p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <Clock className="h-3 w-3 text-gray-400" />
+                                        <span className="text-xs text-gray-400">
+                                          {Math.round(lesson.duration / 60)} min
+                                        </span>
+                                        {lesson.id === selectedLesson.id && <PlayCircle className="h-3 w-3 text-emerald-400" />}
                                       </div>
                                     </div>
                                   </div>
-                                </Card>
-                              </motion.div>
-                            ))}
-                          </div>
+                                </motion.div>)}
+                            </motion.div>}
+                        </AnimatePresence>
+                      </div>;
+              })}
+                 </motion.div>
+                </div>}
+            </div> : (/* Layout normal - módulos */
+        <div className="grid grid-cols-1 gap-8">
+              <motion.div initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            delay: 0.2
+          }}>
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-white mb-3">
+                    {selectedModule ? selectedModule.title : 'Módulos do Curso'}
+                  </h2>
+                  <p className="text-gray-400 text-lg">
+                    {selectedModule ? selectedModule.description : 'Escolha um módulo para começar a aprender'}
+                  </p>
+                </div>
+
+                {modules.length > 0 ? <div className="relative">
+                    {selectedModule ? (/* Aulas do Módulo Selecionado */
+              <div className="space-y-6">
+                        <div className="flex items-center gap-4 mb-6">
+                          <Button variant="outline" onClick={handleBackToModules} className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border-gray-600 text-white">
+                            <ArrowLeft className="h-4 w-4" />
+                            Voltar aos Módulos
+                          </Button>
                         </div>
-                      )}
+
+                        <div className="grid gap-4">
+                          {filteredLessons.map((lesson, index) => {
+                    const currentProgress = lessonProgress[lesson.id];
+                    return <motion.div key={lesson.id} initial={{
+                      opacity: 0,
+                      y: 20
+                    }} animate={{
+                      opacity: 1,
+                      y: 0
+                    }} transition={{
+                      delay: 0.1 * index
+                    }} className={`group transition-all duration-200 cursor-pointer`} onClick={() => handleLessonClick(lesson)}>
+                                <Card className={`bg-gray-900 transition-all duration-300 border border-gray-800 hover:bg-gray-800 ${isLessonContentAccessible(lesson) ? 'hover:border-emerald-500/50' : 'hover:border-amber-500/50'}`}>
+                                  <div className="p-6 flex items-center gap-4">
+                                    <div className={`flex-shrink-0 w-16 h-16 rounded-lg flex items-center justify-center ${isLessonContentAccessible(lesson) ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20' : 'bg-gradient-to-br from-amber-500/20 to-amber-600/20'}`}>
+                                      {!isLessonContentAccessible(lesson) && lesson.is_scheduled ? <Timer className="h-8 w-8 text-amber-400" /> : currentProgress?.completed ? <CheckCircle2 className="h-8 w-8 text-emerald-400" /> : <Play className="h-8 w-8 text-emerald-400" />}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <Badge className={`${isLessonContentAccessible(lesson) ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
+                                          Aula {lesson.order_number}
+                                        </Badge>
+                                        <Badge variant="outline" className="text-gray-400 border-gray-600">
+                                          <Clock className="h-3 w-3 mr-1" />
+                                          {Math.round(lesson.duration / 60)} min
+                                        </Badge>
+                                        {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && <Badge variant="outline" className="text-amber-400 border-amber-400 bg-amber-400/10">
+                                            <Timer className="h-3 w-3 mr-1" />
+                                            Agendada
+                                          </Badge>}
+                                      </div>
+                                      <h4 className={`text-lg font-semibold transition-colors ${isLessonContentAccessible(lesson) ? 'text-white group-hover:text-emerald-400' : 'text-white group-hover:text-amber-400'}`}>
+                                        {lesson.title}
+                                      </h4>
+                                      {lesson.description && <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                                          {lesson.description}
+                                        </p>}
+
+                                      {/* Countdown para aulas agendadas */}
+                                      {lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date() && <div className="mt-4 p-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg border border-amber-500/20">
+                                          <div className="text-sm font-medium text-amber-400 mb-2 flex items-center gap-2">
+                                            <Timer className="h-4 w-4" />
+                                            Aula será liberada em:
+                                          </div>
+                                          <CountdownTimer targetDate={lesson.scheduled_at} className="justify-start" onComplete={() => {
+                                toast.success("Aula liberada!", {
+                                  description: `A aula "${lesson.title}" está agora disponível!`
+                                });
+                              }} />
+                                        </div>}
+
+                                       {/* Barra de progresso real baseada em aulas assistidas */}
+                                       {isLessonContentAccessible(lesson) && currentProgress && currentProgress.progress_percentage > 0 && (
+                                         <div className="mt-3">
+                                           <div className="flex justify-between text-xs text-gray-400 mb-1">
+                                             <span>Progresso</span>
+                                             <span>{currentProgress.progress_percentage}%</span>
+                                           </div>
+                                           <Progress 
+                                             value={currentProgress.progress_percentage} 
+                                             className="h-2" 
+                                             style={{
+                                               '--progress-background': currentProgress.completed ? '#10b981' : '#eab308'
+                                             } as React.CSSProperties}
+                                           />
+                                         </div>
+                                       )}
+                                    </div>
+                                    <div className={`flex-shrink-0 transition-opacity opacity-0 group-hover:opacity-100`}>
+                                      {!isLessonContentAccessible(lesson) && lesson.is_scheduled ? <Timer className="h-6 w-6 text-amber-400" /> : <Play className="h-6 w-6 text-emerald-400" />}
+                                    </div>
+                                  </div>
+                                </Card>
+                              </motion.div>;
+                  })}
+
+                          {filteredLessons.length === 0 && <div className="text-center py-12">
+                              <BookOpen className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                              <h3 className="text-lg font-medium text-gray-400 mb-2">
+                                Nenhuma aula neste módulo ainda
+                              </h3>
+                              <p className="text-gray-500">
+                                Novas aulas serão adicionadas em breve
+                              </p>
+                            </div>}
+                        </div>
+                      </div>) : (/* Netflix Style Horizontal Scroll */
+              <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide scroll-smooth">
+                        <div className="flex gap-6 min-w-max">
+                          {modules.map((module, index) => <motion.div key={module.id} initial={{
+                    opacity: 0,
+                    scale: 0.95
+                  }} animate={{
+                    opacity: 1,
+                    scale: 1
+                  }} transition={{
+                    delay: 0.1 * index
+                  }} whileHover={{
+                    scale: 1.05,
+                    y: -8
+                  }} className={`group cursor-pointer flex-shrink-0 w-80 ${module.coming_soon ? 'opacity-75' : ''}`} onClick={() => handleModuleClick(module)}>
+                              <Card className={`overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 ${module.coming_soon ? 'hover:border-amber-500/50' : 'hover:border-emerald-500/50'} transform-gpu`}>
+                                <div className="relative">
+                                  {/* Module Cover - Netflix Style com orientação dinâmica */}
+                                  <div className={`${(module as any).cover_orientation === 'vertical' ? 'aspect-[9/16]' : 'aspect-[16/9]'} bg-gradient-to-br from-gray-900 to-black relative overflow-hidden`}>
+                                    {module.cover_image_url ? <>
+                                        <img src={module.cover_image_url} alt={module.title} className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${module.coming_soon ? 'grayscale' : ''}`} />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                      </> : <div className="w-full h-full flex items-center justify-center">
+                                        {module.coming_soon ? <AlertCircle className="h-20 w-20 text-amber-500 group-hover:text-amber-400 transition-colors duration-300" /> : <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-emerald-500 transition-colors duration-300" />}
+                                      </div>}
+                                    
+                                    {/* Module Number Badge */}
+                                    <div className="absolute top-4 left-4">
+                                      <Badge className={`backdrop-blur-sm font-bold px-3 py-1 ${module.coming_soon ? 'bg-amber-500/90 hover:bg-amber-600 text-white' : 'bg-emerald-500/90 hover:bg-emerald-600 text-white'}`}>
+                                        {module.order_number}
+                                      </Badge>
+                                    </div>
+
+                                    {/* Coming Soon Badge */}
+                                    {module.coming_soon && <div className="absolute top-4 right-4">
+                                        <Badge variant="outline" className="bg-amber-500/90 text-white border-amber-400">
+                                          <AlertCircle className="h-3 w-3 mr-1" />
+                                          Em Breve
+                                        </Badge>
+                                      </div>}
+
+                                    {/* Progress Overlay */}
+                                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                                      <h3 className={`font-bold text-lg mb-1 leading-tight transition-colors ${module.coming_soon ? 'group-hover:text-amber-300' : 'group-hover:text-emerald-300'}`}>
+                                        {module.title}
+                                      </h3>
+                                       <div className="flex items-center gap-2 mb-3">
+                                         <span className="text-sm text-gray-300">
+                                           {lessons.filter(l => l.module_id === module.id).length} aulas
+                                         </span>
+                                         {module.coming_soon && <span className="text-xs font-medium text-amber-400">
+                                             Em Breve
+                                           </span>}
+                                       </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Card>
+                            </motion.div>)}
+                        </div>
+                      </div>)}
+                  </div> : (/* Sem módulos disponíveis */
+            <motion.div initial={{
+              opacity: 0
+            }} animate={{
+              opacity: 1
+            }} className="text-center py-20">
+                    <div className="bg-gray-900 rounded-2xl p-12 border border-gray-800">
+                      <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-6" />
+                      <h3 className="text-2xl font-bold text-white mb-4">
+                        Nenhum módulo disponível ainda
+                      </h3>
+                      <p className="text-gray-400 text-lg max-w-md mx-auto">
+                        Novos módulos serão adicionados em breve. Fique atento!
+                      </p>
                     </div>
-                  ) : (
-                    /* Sem módulos disponíveis */
-                    <motion.div 
-                      initial={{ opacity: 0 }} 
-                      animate={{ opacity: 1 }} 
-                      className="text-center py-20"
-                    >
-                      <div className="bg-gray-900 rounded-2xl p-12 border border-gray-800">
-                        <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-6" />
-                        <h3 className="text-2xl font-bold text-white mb-4">
-                          Nenhum módulo disponível ainda
-                        </h3>
-                        <p className="text-gray-400 text-lg max-w-md mx-auto">
-                          Novos módulos serão adicionados em breve. Fique atento!
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </motion.div>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
+                  </motion.div>)}
+              </motion.div>
+            </div>)}
+        </div>
+      </div>
+    </div>;
 }
