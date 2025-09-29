@@ -87,13 +87,6 @@ export default function ModernMembersArea() {
   // Obter dados da área de membros (autenticada ou verificada)
   const currentMemberArea = memberArea || verifiedMemberArea;
 
-  // Extrair email da URL para acesso verificado
-  const urlParams = new URLSearchParams(window.location.search);
-  const isVerified = urlParams.get('verified') === 'true';
-  const emailParam = urlParams.get('email');
-  const userEmail = user?.email || (isVerified ? emailParam : undefined);
-  const userName = user?.user_metadata?.full_name || (isVerified && emailParam ? emailParam.split('@')[0] : 'Estudante');
-
   // Hook de progresso das aulas
   const {
     lessonProgress,
@@ -102,14 +95,11 @@ export default function ModernMembersArea() {
     getModuleProgress,
     getModuleStats,
     isLoadingProgress
-  } = useMemberLessonProgress(memberAreaId || '', userEmail);
+  } = useMemberLessonProgress(memberAreaId || '', user?.email);
 
   console.log('🎬 ModernMembersArea - Progress Hook State:', {
     memberAreaId,
-    userEmail,
-    originalUserEmail: user?.email,
-    emailParam,
-    isVerified,
+    userEmail: user?.email,
     lessonProgressCount: Object.keys(lessonProgress).length,
     isLoadingProgress,
     lessonProgress: Object.keys(lessonProgress).length > 0 ? lessonProgress : 'EMPTY'
@@ -381,12 +371,9 @@ export default function ModernMembersArea() {
                         session: session,
                         userMetadata: user?.user_metadata,
                         sessionUserMetadata: session?.user?.user_metadata,
-                        userEmail: user?.email,
-                        emailParam,
-                        isVerified,
-                        userName
+                        userEmail: user?.email
                       });
-                      return userName;
+                      return user?.user_metadata?.full_name || session?.user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Estudante';
                     })()}
                   </p>
                 </div>
@@ -457,11 +444,7 @@ export default function ModernMembersArea() {
                   
                   
                   {/* Seção de comentários */}
-                  <LessonComments 
-                    lessonId={selectedLesson.id} 
-                    studentEmail={userEmail} 
-                    studentName={userName} 
-                  />
+                  <LessonComments lessonId={selectedLesson.id} studentEmail={user?.email} studentName={user?.email?.split('@')[0]} />
                 </motion.div>
               </div>
 

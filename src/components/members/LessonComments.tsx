@@ -172,35 +172,33 @@ export function LessonComments({
     if (name && name !== 'Usuário') {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
-    if (!email) {
-      return 'US';
-    }
     return email.slice(0, 2).toUpperCase();
   };
 
   const renderComment = (comment: Comment, isReply = false) => (
-    <div key={comment.id} className={`p-3 sm:p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 ${isReply ? 'ml-4 sm:ml-8 mt-2' : ''}`}>
-      <div className="flex gap-2 sm:gap-3">
-        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-gray-700 flex-shrink-0">
-          <AvatarFallback className="bg-emerald-600 text-white text-xs sm:text-sm">
+    <div key={comment.id} className={`p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 ${isReply ? 'ml-8 mt-2' : ''}`}>
+      <div className="flex gap-3">
+        <Avatar className="h-10 w-10 ring-2 ring-gray-700">
+          <AvatarFallback className="bg-emerald-600 text-white text-sm">
             {getInitials(comment.user_name, comment.user_email)}
           </AvatarFallback>
         </Avatar>
         
-        <div className="flex-1 space-y-2 min-w-0">
-          <div className="flex items-center">
-            <p className="font-medium text-white text-sm sm:text-base truncate">{comment.user_name}</p>
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-white">{comment.user_name}</p>
+            <p className="text-xs text-emerald-400">{comment.user_email}</p>
           </div>
           
           <p className="text-xs text-gray-400 flex items-center gap-1">
-            <Clock className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">{formatDate(comment.created_at)}</span>
+            <Clock className="h-3 w-3" />
+            {formatDate(comment.created_at)}
           </p>
           
-          <p className="text-gray-300 leading-relaxed text-sm sm:text-base break-words">{comment.comment}</p>
+          <p className="text-gray-300 leading-relaxed">{comment.comment}</p>
           
           {!isReply && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -231,9 +229,9 @@ export function LessonComments({
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 rows={2}
-                className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-900 text-sm"
+                className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-900"
               />
-              <div className="flex flex-col sm:flex-row justify-end gap-2">
+              <div className="flex justify-end gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -241,7 +239,7 @@ export function LessonComments({
                     setReplyingTo(null);
                     setReplyText('');
                   }}
-                  className="text-xs w-full sm:w-auto"
+                  className="text-xs"
                 >
                   Cancelar
                 </Button>
@@ -249,7 +247,7 @@ export function LessonComments({
                   onClick={() => handleSubmitComment(comment.id)}
                   disabled={!replyText.trim() || isSubmitting}
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs w-full sm:w-auto"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
                 >
                   Responder
                 </Button>
@@ -282,13 +280,13 @@ export function LessonComments({
             value={newComment} 
             onChange={(e) => setNewComment(e.target.value)} 
             rows={3} 
-            className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-950 text-sm sm:text-base" 
+            className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-950" 
           />
           <div className="flex justify-end">
             <Button 
               onClick={() => handleSubmitComment()} 
               disabled={!newComment.trim() || isSubmitting} 
-              className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {isSubmitting ? (
                 <>
