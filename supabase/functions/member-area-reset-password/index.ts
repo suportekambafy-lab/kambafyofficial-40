@@ -10,6 +10,7 @@ const corsHeaders = {
 interface ResetPasswordRequest {
   studentEmail: string;
   memberAreaId: string;
+  newPassword: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -20,11 +21,15 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log('=== MEMBER AREA PASSWORD RESET START ===');
     
-    const { studentEmail, memberAreaId }: ResetPasswordRequest = await req.json();
+    const { studentEmail, memberAreaId, newPassword }: ResetPasswordRequest = await req.json();
     console.log('Reset request for:', studentEmail, 'Member Area:', memberAreaId);
 
-    if (!studentEmail || !memberAreaId) {
-      throw new Error('Email do estudante e ID da área de membros são obrigatórios');
+    if (!studentEmail || !memberAreaId || !newPassword) {
+      throw new Error('Email, ID da área de membros e nova senha são obrigatórios');
+    }
+
+    if (newPassword.length < 6) {
+      throw new Error('A nova senha deve ter pelo menos 6 caracteres');
     }
 
     // Criar Supabase client com service role
@@ -57,12 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw usersError;
     }
 
-    // Gerar nova senha temporária
-    const newTempPassword = Math.random().toString(36).slice(-8) + 
-                           Math.random().toString(36).slice(-4).toUpperCase() +
-                           Math.floor(Math.random() * 100).toString().padStart(2, '0');
-    
-    console.log('🔐 Nova senha temporária gerada para:', studentEmail);
+    console.log('🔐 Definindo nova senha para:', studentEmail);
 
     let userId = '';
     const existingUser = users.find(u => u.email === studentEmail);
@@ -70,10 +70,10 @@ const handler = async (req: Request): Promise<Response> => {
     if (!existingUser) {
       console.log('⚠️ Usuário não encontrado no sistema de autenticação, criando nova conta...');
       
-      // Criar novo usuário com senha temporária
+      // Criar novo usuário com a nova senha fornecida
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email: studentEmail,
-        password: newTempPassword,
+        password: newPassword,
         email_confirm: true,
       });
 
@@ -91,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Atualizar a senha do usuário existente
       const { error: updateError } = await supabase.auth.admin.updateUserById(
         userId,
-        { password: newTempPassword }
+        { password: newPassword }
       );
 
       if (updateError) {
@@ -102,55 +102,13 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('✅ Senha atualizada com sucesso');
     }
 
-    // Buscar dados da área de membros para o email
-    const { data: memberAreaData, error: memberAreaError } = await supabase
-      .from('member_areas')
-      .select('name')
-      .eq('id', memberAreaId)
-      .single();
-
-    if (memberAreaError) {
-      console.error('Erro ao buscar dados da área de membros:', memberAreaError);
-    }
-
-    // Enviar email com nova senha
-    console.log('📧 Enviando email com nova senha...');
-    
-    try {
-      const emailPayload = {
-        studentEmail: studentEmail,
-        studentName: studentAccess.student_name,
-        memberAreaName: memberAreaData?.name || 'Área de Membros',
-        memberAreaUrl: `https://kambafy.com/members/login/${memberAreaId}`,
-        isPasswordReset: true,
-        temporaryPassword: newTempPassword
-      };
-      
-      console.log('📧 Dados para envio de email:', emailPayload);
-      
-      const { data: emailResult, error: emailError } = await supabase.functions.invoke(
-        'send-member-access-email',
-        {
-          body: emailPayload
-        }
-      );
-
-      if (emailError) {
-        console.error('❌ Erro ao invocar função de email:', emailError);
-      } else {
-        console.log('✅ Email enviado com sucesso:', emailResult);
-      }
-    } catch (emailSendError) {
-      console.error('❌ Erro no envio do email:', emailSendError);
-    }
-
     return new Response(JSON.stringify({
       success: true,
-      message: 'Nova senha enviada para o seu email',
+      message: 'Nova senha definida com sucesso! Agora você pode fazer login.',
       data: {
         email: studentEmail,
         member_area_id: memberAreaId,
-        password_reset: true
+        password_updated: true
       }
     }), {
       status: 200,

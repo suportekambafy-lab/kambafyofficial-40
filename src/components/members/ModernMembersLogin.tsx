@@ -20,6 +20,7 @@ export default function ModernMembersLogin() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [memberArea, setMemberArea] = useState<any>(null);
   const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [isResetting, setIsResetting] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const id = useId();
@@ -65,7 +66,16 @@ export default function ModernMembersLogin() {
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resetEmail.trim() || !memberAreaId || isResetting) return;
+    if (!resetEmail.trim() || !newPassword.trim() || !memberAreaId || isResetting) return;
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A nova senha deve ter pelo menos 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsResetting(true);
     
@@ -73,12 +83,13 @@ export default function ModernMembersLogin() {
       const { data, error } = await supabase.functions.invoke('member-area-reset-password', {
         body: {
           studentEmail: resetEmail.trim(),
-          memberAreaId: memberAreaId
+          memberAreaId: memberAreaId,
+          newPassword: newPassword.trim()
         }
       });
 
       if (error) {
-        console.error('Erro ao resetar senha:', error);
+        console.error('Erro ao definir nova senha:', error);
         toast({
           title: "Erro",
           description: error.message || "Erro ao processar solicitação",
@@ -89,12 +100,13 @@ export default function ModernMembersLogin() {
 
       toast({
         title: "Sucesso",
-        description: "Nova senha enviada para o seu email!",
+        description: "Nova senha definida com sucesso! Agora você pode fazer login.",
         variant: "default",
       });
 
       setShowResetModal(false);
       setResetEmail('');
+      setNewPassword('');
       
     } catch (error: any) {
       console.error('Erro inesperado:', error);
@@ -263,10 +275,10 @@ export default function ModernMembersLogin() {
                   <DialogHeader>
                     <DialogTitle className="text-white flex items-center gap-2">
                       <Lock className="h-5 w-5" />
-                      Recuperar Senha
+                      Definir Nova Senha
                     </DialogTitle>
                     <DialogDescription className="text-zinc-400">
-                      Digite seu email para receber uma nova senha temporária
+                      Digite seu email e uma nova senha para sua conta
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handlePasswordReset} className="space-y-4">
@@ -285,6 +297,22 @@ export default function ModernMembersLogin() {
                         disabled={isResetting}
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password" className="text-zinc-200">
+                        Nova Senha
+                      </Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Digite sua nova senha (mín. 6 caracteres)"
+                        className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
+                        required
+                        disabled={isResetting}
+                        minLength={6}
+                      />
+                    </div>
                     <div className="flex gap-3">
                       <Button
                         type="button"
@@ -297,7 +325,7 @@ export default function ModernMembersLogin() {
                       </Button>
                       <Button
                         type="submit"
-                        disabled={isResetting || !resetEmail.trim()}
+                        disabled={isResetting || !resetEmail.trim() || !newPassword.trim()}
                         className="flex-1 bg-white text-black hover:bg-zinc-100"
                       >
                         {isResetting ? (
@@ -307,12 +335,12 @@ export default function ModernMembersLogin() {
                               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                               className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
                             />
-                            Enviando...
+                            Definindo...
                           </>
                         ) : (
                           <>
-                            <Mail className="h-4 w-4 mr-2" />
-                            Enviar Nova Senha
+                            <Lock className="h-4 w-4 mr-2" />
+                            Definir Nova Senha
                           </>
                         )}
                       </Button>

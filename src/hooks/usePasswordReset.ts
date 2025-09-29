@@ -5,11 +5,20 @@ import { toast } from '@/hooks/use-toast';
 export const usePasswordReset = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const resetPassword = async (email: string, memberAreaId: string): Promise<boolean> => {
-    if (!email.trim() || !memberAreaId) {
+  const resetPassword = async (email: string, memberAreaId: string, newPassword: string): Promise<boolean> => {
+    if (!email.trim() || !memberAreaId || !newPassword.trim()) {
       toast({
         title: "Erro",
-        description: "Email e ID da área de membros são obrigatórios",
+        description: "Email, ID da área de membros e nova senha são obrigatórios",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A nova senha deve ter pelo menos 6 caracteres",
         variant: "destructive",
       });
       return false;
@@ -21,12 +30,13 @@ export const usePasswordReset = () => {
       const { data, error } = await supabase.functions.invoke('member-area-reset-password', {
         body: {
           studentEmail: email.trim(),
-          memberAreaId: memberAreaId
+          memberAreaId: memberAreaId,
+          newPassword: newPassword.trim()
         }
       });
 
       if (error) {
-        console.error('Erro ao resetar senha:', error);
+        console.error('Erro ao definir nova senha:', error);
         toast({
           title: "Erro",
           description: error.message || "Erro ao processar solicitação",
@@ -37,7 +47,7 @@ export const usePasswordReset = () => {
 
       toast({
         title: "Sucesso",
-        description: "Nova senha enviada para o seu email!",
+        description: "Nova senha definida com sucesso! Agora você pode fazer login.",
         variant: "default",
       });
 
