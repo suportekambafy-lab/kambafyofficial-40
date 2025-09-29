@@ -28,16 +28,6 @@ serve(async (req) => {
       throw new Error('Dados obrigatórios não fornecidos');
     }
 
-    // Verificar se existe uma sessão ativa para este estudante na área de membros
-    const { data: sessionData } = await supabase
-      .from('member_area_sessions')
-      .select('*')
-      .eq('student_email', studentEmail)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-
-    console.log('Session data found:', !!sessionData);
-
     // Verificar se a lição existe e obter a área de membros
     const { data: lessonData, error: lessonError } = await supabase
       .from('lessons')
@@ -58,6 +48,17 @@ serve(async (req) => {
       .eq('member_area_id', lessonData.member_area_id)
       .eq('student_email', studentEmail)
       .single();
+
+    // Verificar se existe uma sessão ativa para este estudante na área de membros
+    const { data: sessionData } = await supabase
+      .from('member_area_sessions')
+      .select('*')
+      .eq('student_email', studentEmail)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    console.log('Student access found:', !!studentAccess);
+    console.log('Session data found:', !!sessionData);
 
     if (!studentAccess && !sessionData) {
       throw new Error('Acesso negado à área de membros');
