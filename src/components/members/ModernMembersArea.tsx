@@ -603,25 +603,22 @@ export default function ModernMembersArea() {
                               }} />
                                         </div>}
 
-                                      {/* Barra de progresso para aulas iniciadas */}
-                                      {currentProgress && currentProgress.progress_percentage > 0 && !currentProgress.completed && <div className="mt-3">
-                                          <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                                            <span>Progresso</span>
-                                            <span>{currentProgress.progress_percentage}%</span>
-                                          </div>
-                                          <div className="w-full bg-gray-700 rounded-full h-1.5">
-                                            <div className="bg-gradient-to-r from-yellow-500 to-yellow-400 h-1.5 rounded-full transition-all duration-300" style={{
-                                            width: `${currentProgress.progress_percentage}%`
-                                          }} />
-                                          </div>
-                                        </div>}
-                                      {isLessonContentAccessible(lesson) && currentProgress && <div className="mt-3">
-                                          <div className="flex justify-between text-xs text-gray-400 mb-1">
-                                            <span>Progresso</span>
-                                            <span>{currentProgress.progress_percentage}%</span>
-                                          </div>
-                                          <Progress value={currentProgress.progress_percentage} className="h-2" />
-                                        </div>}
+                                       {/* Barra de progresso real baseada em aulas assistidas */}
+                                       {isLessonContentAccessible(lesson) && currentProgress && currentProgress.progress_percentage > 0 && (
+                                         <div className="mt-3">
+                                           <div className="flex justify-between text-xs text-gray-400 mb-1">
+                                             <span>Progresso</span>
+                                             <span>{currentProgress.progress_percentage}%</span>
+                                           </div>
+                                           <Progress 
+                                             value={currentProgress.progress_percentage} 
+                                             className="h-2" 
+                                             style={{
+                                               '--progress-background': currentProgress.completed ? '#10b981' : '#eab308'
+                                             } as React.CSSProperties}
+                                           />
+                                         </div>
+                                       )}
                                     </div>
                                     <div className={`flex-shrink-0 transition-opacity opacity-0 group-hover:opacity-100`}>
                                       {!isLessonContentAccessible(lesson) && lesson.is_scheduled ? <Timer className="h-6 w-6 text-amber-400" /> : <Play className="h-6 w-6 text-emerald-400" />}
@@ -687,22 +684,14 @@ export default function ModernMembersArea() {
                                       <h3 className={`font-bold text-lg mb-1 leading-tight transition-colors ${module.coming_soon ? 'group-hover:text-amber-300' : 'group-hover:text-emerald-300'}`}>
                                         {module.title}
                                       </h3>
-                                      <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-sm text-gray-300">
-                                          {lessons.filter(l => l.module_id === module.id).length} aulas
-                                        </span>
-                                        {!module.coming_soon && <span className="text-xs font-medium text-emerald-400">
-                                            {Math.floor(Math.random() * 100)}%
-                                          </span>}
-                                        {module.coming_soon && <span className="text-xs font-medium text-amber-400">
-                                            Em Breve
-                                          </span>}
-                                      </div>
-                                      {!module.coming_soon && <div className="w-full bg-gray-800 rounded-full h-2">
-                                          <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-700 shadow-sm shadow-emerald-500/30" style={{
-                                width: `${Math.floor(Math.random() * 100)}%`
-                              }} />
-                                        </div>}
+                                       <div className="flex items-center gap-2 mb-3">
+                                         <span className="text-sm text-gray-300">
+                                           {lessons.filter(l => l.module_id === module.id).length} aulas
+                                         </span>
+                                         {module.coming_soon && <span className="text-xs font-medium text-amber-400">
+                                             Em Breve
+                                           </span>}
+                                       </div>
                                     </div>
                                   </div>
                                 </div>
