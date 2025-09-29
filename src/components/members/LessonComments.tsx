@@ -93,28 +93,30 @@ export function LessonComments({
     
     setIsSubmitting(true);
     try {
-      // Criar um ID único para o estudante baseado no email
-      const tempUserId = `student_${btoa(studentEmail).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20)}`;
-
-      const { data, error } = await supabase
-        .from('lesson_comments')
-        .insert({
-          lesson_id: lessonId,
+      // Usar a edge function para adicionar comentário
+      const { data, error } = await supabase.functions.invoke('add-member-area-comment', {
+        body: {
+          lessonId: lessonId,
           comment: newComment.trim(),
-          user_id: tempUserId
-        })
-        .select()
-        .single();
+          studentEmail: studentEmail,
+          studentName: studentName
+        }
+      });
         
       if (error) {
-        console.error('Erro ao adicionar comentário:', error);
+        console.error('Erro ao adicionar comentário via edge function:', error);
         toast.error('Erro ao adicionar comentário');
         return;
       }
 
       // Adicionar comentário localmente
       const newCommentData = {
-        ...data,
+        id: data.id,
+        comment: data.comment,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        user_id: data.user_id,
+        lesson_id: data.lesson_id,
         user: {
           full_name: studentName,
           email: studentEmail
