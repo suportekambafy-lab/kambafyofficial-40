@@ -92,12 +92,13 @@ export function ModernRecentSales() {
 
       const userAffiliateCodes = affiliateCodes?.map(a => a.affiliate_code) || [];
 
-      // Buscar total de vendas do vendedor para numeração
+      // Buscar total de vendas do vendedor para numeração (excluir member access)
       const { count: totalSales, error: countError } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
         .in('product_id', userProductIds.length > 0 ? userProductIds : [])
-        .eq('status', 'completed');
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
 
       if (!countError && totalSales !== null) {
         setTotalSalesCount(totalSales);
@@ -108,7 +109,7 @@ export function ModernRecentSales() {
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
       const recoveredOrderIds = new Set();
 
-      // ✅ Vendas próprias - usando product_id
+      // ✅ Vendas próprias - usando product_id (excluir member access)
       if (userProductIds.length > 0) {
         promises.push(
           supabase
@@ -133,6 +134,7 @@ export function ModernRecentSales() {
             `)
             .in('product_id', userProductIds)
             .eq('status', 'completed') // Apenas vendas pagas
+            .neq('payment_method', 'member_access') // Excluir acessos automáticos
             .order('created_at', { ascending: false })
             .limit(10)
         );
