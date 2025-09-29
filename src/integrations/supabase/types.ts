@@ -592,24 +592,33 @@ export type Database = {
           created_at: string
           id: string
           lesson_id: string
+          parent_comment_id: string | null
           updated_at: string
+          user_email: string | null
           user_id: string
+          user_name: string | null
         }
         Insert: {
           comment: string
           created_at?: string
           id?: string
           lesson_id: string
+          parent_comment_id?: string | null
           updated_at?: string
+          user_email?: string | null
           user_id: string
+          user_name?: string | null
         }
         Update: {
           comment?: string
           created_at?: string
           id?: string
           lesson_id?: string
+          parent_comment_id?: string | null
           updated_at?: string
+          user_email?: string | null
           user_id?: string
+          user_name?: string | null
         }
         Relationships: [
           {
@@ -617,6 +626,13 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_comments"
             referencedColumns: ["id"]
           },
         ]

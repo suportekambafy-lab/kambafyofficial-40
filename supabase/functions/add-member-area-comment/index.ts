@@ -20,9 +20,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { lessonId, comment, studentEmail, studentName } = await req.json();
+    const { lessonId, comment, studentEmail, studentName, parentCommentId } = await req.json();
 
-    console.log('Request data:', { lessonId, comment: comment?.substring(0, 50), studentEmail, studentName });
+    console.log('Request data:', { lessonId, comment: comment?.substring(0, 50), studentEmail, studentName, parentCommentId });
 
     if (!lessonId || !comment?.trim() || !studentEmail || !studentName) {
       throw new Error('Dados obrigatórios não fornecidos');
@@ -79,7 +79,10 @@ serve(async (req) => {
       .insert({
         lesson_id: lessonId,
         comment: comment.trim(),
-        user_id: tempUserId
+        user_id: tempUserId,
+        parent_comment_id: parentCommentId || null,
+        user_email: studentEmail,
+        user_name: studentName
       })
       .select()
       .single();

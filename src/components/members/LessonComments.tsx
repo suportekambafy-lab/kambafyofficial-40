@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
 interface Comment {
   id: string;
   comment: string;
@@ -21,11 +22,13 @@ interface Comment {
   user_name?: string;
   replies?: Comment[];
 }
+
 interface LessonCommentsProps {
   lessonId: string;
   studentEmail?: string;
   studentName?: string;
 }
+
 export function LessonComments({
   lessonId,
   studentEmail,
@@ -55,7 +58,9 @@ export function LessonComments({
             updated_at,
             user_id,
             lesson_id,
-            parent_comment_id
+            parent_comment_id,
+            user_email,
+            user_name
           `)
           .eq('lesson_id', lessonId)
           .order('created_at', { ascending: true });
@@ -68,54 +73,31 @@ export function LessonComments({
 
         console.log('Comentários carregados:', commentsData);
 
-        // Buscar informações dos usuários dos comentários
-        const userIds = [...new Set(commentsData?.map(c => c.user_id) || [])];
-        const usersData: Record<string, { email: string; name: string }> = {};
-        
-        // Para comentários de membros autenticados, buscar na tabela profiles
-        for (const userId of userIds) {
-          if (userId && !userId.startsWith('member_')) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('email, full_name')
-              .eq('user_id', userId)
-              .single();
-            
-            if (profile) {
-              usersData[userId] = {
-                email: profile.email || '',
-                name: profile.full_name || 'Usuário'
-              };
-            }
-          } else {
-            // Para comentários de sessões temporárias, usar dados da sessão
-            usersData[userId] = {
-              email: studentEmail || 'estudante@exemplo.com',
-              name: studentName || 'Estudante'
-            };
-          }
+        if (!commentsData) {
+          setComments([]);
+          return;
         }
 
-        // Organizar comentários com replies
-        const commentsWithReplies = (commentsData || []).map(comment => ({
+        // Organizar comentários com informações de usuário
+        const commentsWithUsers = commentsData.map(comment => ({
           ...comment,
-          user_email: usersData[comment.user_id]?.email || studentEmail || '',
-          user_name: usersData[comment.user_id]?.name || studentName || 'Usuário',
-          replies: []
+          user_email: comment.user_email || studentEmail || '',
+          user_name: comment.user_name || studentName || 'Usuário',
+          replies: [] as Comment[]
         }));
 
         // Organizar estrutura de replies
         const topLevelComments: Comment[] = [];
         const commentMap: Record<string, Comment> = {};
         
-        commentsWithReplies.forEach(comment => {
+        commentsWithUsers.forEach(comment => {
           commentMap[comment.id] = comment;
           if (!comment.parent_comment_id) {
             topLevelComments.push(comment);
           }
         });
         
-        commentsWithReplies.forEach(comment => {
+        commentsWithUsers.forEach(comment => {
           if (comment.parent_comment_id && commentMap[comment.parent_comment_id]) {
             if (!commentMap[comment.parent_comment_id].replies) {
               commentMap[comment.parent_comment_id].replies = [];
@@ -134,6 +116,7 @@ export function LessonComments({
     };
     loadComments();
   }, [lessonId, studentEmail, studentName]);
+
   const handleSubmitComment = async (parentCommentId?: string) => {
     const commentText = parentCommentId ? replyText : newComment;
     
@@ -181,11 +164,13 @@ export function LessonComments({
       }
     }
   };
+
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "d 'de' MMMM 'às' HH:mm", {
       locale: ptBR
     });
   };
+
   const getInitials = (name?: string, email?: string) => {
     if (name && name !== 'Usuário' && name !== 'Estudante') {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -285,6 +270,7 @@ export function LessonComments({
       </div>
     </motion.div>
   );
+
   return (
     <Card className="mt-6 bg-zinc-950 border-0">
       <CardHeader className="bg-zinc-950">
