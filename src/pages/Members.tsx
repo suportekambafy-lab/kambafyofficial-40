@@ -52,6 +52,11 @@ interface CustomizationData {
 
   // Logo de Login (separado do logo principal)
   login_logo_url: string;
+  
+  // Botão Personalizado
+  custom_button_enabled: boolean;
+  custom_button_text: string;
+  custom_button_url: string;
 }
 export default function Members() {
   const {
@@ -92,7 +97,10 @@ export default function Members() {
     hero_title: '',
     hero_description: '',
     logo_url: '',
-    login_logo_url: ''
+    login_logo_url: '',
+    custom_button_enabled: false,
+    custom_button_text: '',
+    custom_button_url: ''
   });
   const [formData, setFormData] = useState({
     title: '',
@@ -156,7 +164,10 @@ export default function Members() {
         hero_title: selectedArea.hero_title || '',
         hero_description: selectedArea.hero_description || '',
         logo_url: selectedArea.logo_url || '',
-        login_logo_url: (selectedArea as any).login_logo_url || ''
+        login_logo_url: (selectedArea as any).login_logo_url || '',
+        custom_button_enabled: (selectedArea as any).custom_button_enabled || false,
+        custom_button_text: (selectedArea as any).custom_button_text || '',
+        custom_button_url: (selectedArea as any).custom_button_url || ''
       });
     }
   }, [selectedArea]);
@@ -173,6 +184,9 @@ export default function Members() {
         hero_title: areaCustomizationData.hero_title || null,
         hero_description: areaCustomizationData.hero_description || null,
         logo_url: areaCustomizationData.logo_url || null,
+        custom_button_enabled: areaCustomizationData.custom_button_enabled,
+        custom_button_text: areaCustomizationData.custom_button_text || null,
+        custom_button_url: areaCustomizationData.custom_button_url || null,
         updated_at: new Date().toISOString()
       };
 
@@ -1270,8 +1284,75 @@ export default function Members() {
                         hero_description: e.target.value
                       }))} placeholder="Texto que aparece na seção hero" rows={2} />
                       </div>
-                    </CardContent>
-                  </Card>
+                      
+                      {/* Seção do Botão Personalizado */}
+                      <div className="border-t pt-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="custom-button-enabled" className="text-base font-medium">Botão Personalizado</Label>
+                            <p className="text-sm text-muted-foreground">Adicione um botão que aparecerá abaixo da descrição na área de membros</p>
+                          </div>
+                          <Checkbox
+                            id="custom-button-enabled"
+                            checked={areaCustomizationData.custom_button_enabled}
+                            onCheckedChange={(checked) => setAreaCustomizationData(prev => ({
+                              ...prev,
+                              custom_button_enabled: checked === true
+                            }))}
+                          />
+                        </div>
+                        
+                        {areaCustomizationData.custom_button_enabled && (
+                          <div className="grid gap-4 md:grid-cols-2 bg-muted/50 p-4 rounded-lg">
+                            <div className="space-y-2">
+                              <Label htmlFor="custom-button-text">Texto do Botão *</Label>
+                              <Input 
+                                id="custom-button-text" 
+                                value={areaCustomizationData.custom_button_text} 
+                                onChange={e => setAreaCustomizationData(prev => ({
+                                  ...prev,
+                                  custom_button_text: e.target.value
+                                }))} 
+                                placeholder="Ex: Acesse nosso WhatsApp" 
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="custom-button-url">Link do Botão *</Label>
+                              <Input 
+                                id="custom-button-url" 
+                                value={areaCustomizationData.custom_button_url} 
+                                onChange={e => setAreaCustomizationData(prev => ({
+                                  ...prev,
+                                  custom_button_url: e.target.value
+                                }))} 
+                                placeholder="https://wa.me/244900000000" 
+                              />
+                            </div>
+                          </div>
+                        )}
+                       </div>
+                     </CardContent>
+                     <div className="px-6 pb-6">
+                       <Button 
+                         onClick={handleUpdateArea} 
+                         disabled={isUpdatingArea}
+                         className="w-full"
+                       >
+                         {isUpdatingArea ? (
+                           <>
+                             <Save className="w-4 h-4 mr-2 animate-spin" />
+                             Salvando...
+                           </>
+                         ) : (
+                           <>
+                             <Save className="w-4 h-4 mr-2" />
+                             Salvar Configurações
+                           </>
+                         )}
+                       </Button>
+                     </div>
+                   </Card>
                 </TabsContent>
 
                 <TabsContent value="branding" className="space-y-6">

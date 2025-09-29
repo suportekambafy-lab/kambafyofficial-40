@@ -849,6 +849,9 @@ export type Database = {
           accent_color: string | null
           background_style: string | null
           created_at: string
+          custom_button_enabled: boolean | null
+          custom_button_text: string | null
+          custom_button_url: string | null
           description: string | null
           hero_description: string | null
           hero_image_url: string | null
@@ -866,6 +869,9 @@ export type Database = {
           accent_color?: string | null
           background_style?: string | null
           created_at?: string
+          custom_button_enabled?: boolean | null
+          custom_button_text?: string | null
+          custom_button_url?: string | null
           description?: string | null
           hero_description?: string | null
           hero_image_url?: string | null
@@ -883,6 +889,9 @@ export type Database = {
           accent_color?: string | null
           background_style?: string | null
           created_at?: string
+          custom_button_enabled?: boolean | null
+          custom_button_text?: string | null
+          custom_button_url?: string | null
           description?: string | null
           hero_description?: string | null
           hero_image_url?: string | null
