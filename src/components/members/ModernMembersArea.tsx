@@ -334,9 +334,27 @@ export default function ModernMembersArea() {
     selectedLesson: !!selectedLesson
   });
 
+  // Obter email verificado dos query params
+  const urlParams = new URLSearchParams(window.location.search);
+  const verifiedEmail = urlParams.get('email');
+
   return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral */}
-      <MemberAreaSlideMenu lessons={lessons} modules={modules} lessonProgress={lessonProgress} getCourseProgress={getCourseProgress} getModuleProgress={getModuleProgress} getModuleStats={getModuleStats} totalDuration={totalDuration} completedLessons={completedLessons} onLessonSelect={setSelectedLesson} onLogout={handleLogout} />
+      <MemberAreaSlideMenu 
+        lessons={lessons} 
+        modules={modules} 
+        lessonProgress={lessonProgress} 
+        getCourseProgress={getCourseProgress} 
+        getModuleProgress={getModuleProgress} 
+        getModuleStats={getModuleStats} 
+        totalDuration={totalDuration} 
+        completedLessons={completedLessons} 
+        onLessonSelect={setSelectedLesson} 
+        onLogout={handleLogout}
+        userEmail={user?.email || (verifiedEmail ? decodeURIComponent(verifiedEmail) : undefined)}
+        userName={user?.user_metadata?.full_name || user?.user_metadata?.name || (verifiedEmail ? decodeURIComponent(verifiedEmail).split('@')[0] : undefined)}
+        userAvatar={user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
+      />
       
       {/* Hero Section - Ocultar quando aula selecionada */}
       {!selectedLesson && <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden">

@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, BarChart3, Play, CheckCircle, Clock, LogOut } from 'lucide-react';
+import { Search, BarChart3, Play, CheckCircle, Clock, LogOut, User, ShoppingBag, LayoutDashboard, Mail } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useNavigate } from 'react-router-dom';
 import type { Lesson, Module } from '@/types/memberArea';
 interface MemberAreaSlideMenuProps {
   lessons: Lesson[];
@@ -17,6 +19,9 @@ interface MemberAreaSlideMenuProps {
   completedLessons: number;
   onLessonSelect?: (lesson: Lesson) => void;
   onLogout?: () => void;
+  userEmail?: string;
+  userName?: string;
+  userAvatar?: string;
 }
 export function MemberAreaSlideMenu({
   lessons,
@@ -28,10 +33,14 @@ export function MemberAreaSlideMenu({
   totalDuration,
   completedLessons,
   onLessonSelect,
-  onLogout
+  onLogout,
+  userEmail,
+  userName,
+  userAvatar
 }: MemberAreaSlideMenuProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   const publishedLessons = lessons.filter(lesson => lesson.status === 'published');
   const totalLessonsCount = publishedLessons.length;
 
@@ -90,45 +99,72 @@ export function MemberAreaSlideMenu({
         </SheetHeader>
 
         <div className="space-y-6 mt-6">
-          {/* Progresso do Curso */}
+          {/* Perfil do Usuário */}
           <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-4 rounded-lg border border-gray-700">
-            <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="w-5 h-5 text-emerald-400" />
-              <h3 className="font-semibold text-white">Progresso do Curso</h3>
-            </div>
-            
-            <div className="w-full bg-gray-700 rounded-full h-3 mb-2">
-              <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-3 rounded-full transition-all duration-500 ease-out" style={{
-              width: `${getCourseProgress(totalLessonsCount)}%`
-            }}></div>
-            </div>
-            
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-gray-300">
-                {completedLessons} de {totalLessonsCount} aulas
-              </p>
-              <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
-                {getCourseProgress(totalLessonsCount)}%
-              </Badge>
+            <div className="flex items-center gap-4 mb-4">
+              <Avatar className="w-16 h-16 border-2 border-emerald-500">
+                <AvatarImage src={userAvatar} alt={userName || userEmail} />
+                <AvatarFallback className="bg-emerald-500/20 text-emerald-400 text-lg font-semibold">
+                  {(userName || userEmail || 'U').charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-white text-lg truncate">
+                  {userName || 'Estudante'}
+                </h3>
+                <div className="flex items-center gap-1 text-gray-400 text-sm">
+                  <Mail className="w-3 h-3" />
+                  <p className="truncate">{userEmail || 'Email não disponível'}</p>
+                </div>
+              </div>
             </div>
 
-            {/* Estatísticas Adicionais */}
-            <div className="grid grid-cols-3 gap-3 mt-4">
+            {/* Estatísticas do Perfil */}
+            <div className="grid grid-cols-2 gap-3">
               <div className="text-center p-3 bg-gray-800 rounded-lg">
-                <p className="text-lg font-bold text-white">{totalLessonsCount}</p>
-                <p className="text-xs text-gray-400">Total</p>
-              </div>
-              <div className="text-center p-3 bg-emerald-500/20 rounded-lg">
                 <p className="text-lg font-bold text-emerald-400">{completedLessons}</p>
-                <p className="text-xs text-emerald-300">Concluídas</p>
+                <p className="text-xs text-gray-400">Aulas Concluídas</p>
               </div>
               <div className="text-center p-3 bg-gray-800 rounded-lg">
-                <p className="text-lg font-bold text-white">
-                  {totalDuration > 0 ? `${Math.floor(totalDuration / 60)}h ${totalDuration % 60}min` : 'N/A'}
-                </p>
-                <p className="text-xs text-gray-400">Duração</p>
+                <p className="text-lg font-bold text-white">{getCourseProgress(totalLessonsCount)}%</p>
+                <p className="text-xs text-gray-400">Progresso</p>
               </div>
             </div>
+          </div>
+
+          {/* Navegação Rápida */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-400 px-2">Navegação Rápida</h3>
+            
+            <Button
+              onClick={() => {
+                navigate('/sales');
+                setOpen(false);
+              }}
+              variant="outline"
+              className="w-full justify-start gap-3 bg-gray-900 border-gray-700 hover:bg-gray-800 hover:border-emerald-500/50 text-white"
+            >
+              <ShoppingBag className="w-4 h-4 text-emerald-400" />
+              <div className="text-left">
+                <p className="font-medium">Minhas Compras</p>
+                <p className="text-xs text-gray-400">Ver histórico de pedidos</p>
+              </div>
+            </Button>
+
+            <Button
+              onClick={() => {
+                navigate('/dashboard');
+                setOpen(false);
+              }}
+              variant="outline"
+              className="w-full justify-start gap-3 bg-gray-900 border-gray-700 hover:bg-gray-800 hover:border-emerald-500/50 text-white"
+            >
+              <LayoutDashboard className="w-4 h-4 text-emerald-400" />
+              <div className="text-left">
+                <p className="font-medium">Painel de Vendedor</p>
+                <p className="text-xs text-gray-400">Gerenciar produtos</p>
+              </div>
+            </Button>
           </div>
 
           {/* Pesquisa de Aulas */}
