@@ -1,18 +1,22 @@
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ModernMetricCard } from './ModernMetricCard';
-import { ModernSalesChart } from './ModernSalesChart';
-import { ModernRecentSales } from './ModernRecentSales';
 import { ModernKambaAchievements } from './ModernKambaAchievements';
 import { ProductFilter } from '@/components/ProductFilter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-period-selector';
 import { DollarSign, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
+
+// Lazy load chart components to reduce initial bundle size
+const ModernSalesChart = lazy(() => import('./ModernSalesChart').then(m => ({ default: m.ModernSalesChart })));
+const ModernRecentSales = lazy(() => import('./ModernRecentSales').then(m => ({ default: m.ModernRecentSales })));
+
 
 interface Order {
   id: string;
@@ -389,8 +393,26 @@ export function ModernDashboardHome() {
 
       {/* Gráfico e Vendas Recentes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <ModernSalesChart />
-        <ModernRecentSales />
+        <Suspense fallback={
+          <div className="bg-card rounded-lg border p-6">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        }>
+          <ModernSalesChart />
+        </Suspense>
+        <Suspense fallback={
+          <div className="bg-card rounded-lg border p-6">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <div className="space-y-3">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </div>
+        }>
+          <ModernRecentSales />
+        </Suspense>
       </div>
 
       {/* Conquistas Kamba */}
