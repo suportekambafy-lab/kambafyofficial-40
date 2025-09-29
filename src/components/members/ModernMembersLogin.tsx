@@ -159,7 +159,12 @@ export default function ModernMembersLogin() {
       console.log('📤 Enviando dados para edge function:', {
         studentEmail: resetEmail.trim(),
         memberAreaId: memberAreaId,
-        newPassword: newPassword.trim() ? 'PROVIDED' : 'EMPTY'
+        newPassword: newPassword.trim() ? 'PROVIDED' : 'EMPTY',
+        payload: {
+          studentEmail: resetEmail.trim(),
+          memberAreaId: memberAreaId,
+          newPassword: newPassword.trim()
+        }
       });
 
       const { data, error } = await supabase.functions.invoke('member-area-reset-password', {
@@ -169,6 +174,8 @@ export default function ModernMembersLogin() {
           newPassword: newPassword.trim()
         }
       });
+
+      console.log('🔄 Resposta da edge function:', { data, error });
 
       if (error) {
         console.error('Erro ao definir nova senha:', error);

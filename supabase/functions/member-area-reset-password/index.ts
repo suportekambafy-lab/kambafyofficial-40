@@ -21,8 +21,16 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log('=== MEMBER AREA PASSWORD RESET START ===');
     
-    const { studentEmail, memberAreaId, newPassword }: ResetPasswordRequest = await req.json();
+    const requestBody = await req.json();
+    console.log('📨 Raw request body:', requestBody);
+    
+    const { studentEmail, memberAreaId, newPassword }: ResetPasswordRequest = requestBody;
     console.log('Reset request for:', studentEmail, 'Member Area:', memberAreaId, 'Password provided:', !!newPassword);
+    console.log('Password details:', { 
+      hasPassword: !!newPassword, 
+      passwordLength: newPassword ? newPassword.length : 0,
+      passwordType: typeof newPassword 
+    });
 
     if (!studentEmail || !memberAreaId || !newPassword) {
       console.log('❌ Campos obrigatórios ausentes:', { studentEmail: !!studentEmail, memberAreaId: !!memberAreaId, newPassword: !!newPassword });
