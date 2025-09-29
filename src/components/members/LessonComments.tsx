@@ -172,6 +172,9 @@ export function LessonComments({
     if (name && name !== 'Usuário') {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
+    if (!email) {
+      return 'US';
+    }
     return email.slice(0, 2).toUpperCase();
   };
 
