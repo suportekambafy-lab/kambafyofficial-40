@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageCircle, Send, Clock } from 'lucide-react';
+import { MessageCircle, Send, Clock, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -132,6 +132,32 @@ export function LessonComments({
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!window.confirm('Tem certeza que deseja eliminar este comentário?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('lesson_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) {
+        console.error('Erro ao eliminar comentário:', error);
+        toast.error('Erro ao eliminar comentário');
+        return;
+      }
+
+      // Recarregar comentários
+      await loadComments();
+      toast.success('Comentário eliminado!');
+    } catch (error) {
+      console.error('Erro ao eliminar comentário:', error);
+      toast.error('Erro ao eliminar comentário');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('pt-BR', {
       day: '2-digit',
@@ -172,14 +198,28 @@ export function LessonComments({
           <p className="text-gray-300 leading-relaxed">{comment.comment}</p>
           
           {!isReply && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-              className="text-xs text-emerald-400 hover:text-emerald-300 h-7 px-2"
-            >
-              {replyingTo === comment.id ? 'Cancelar' : 'Responder'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                className="text-xs text-emerald-400 hover:text-emerald-300 h-7 px-2"
+              >
+                {replyingTo === comment.id ? 'Cancelar' : 'Responder'}
+              </Button>
+              
+              {comment.user_email === studentEmail && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteComment(comment.id)}
+                  className="text-xs text-red-400 hover:text-red-300 h-7 px-2"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Eliminar
+                </Button>
+              )}
+            </div>
           )}
           
           {replyingTo === comment.id && (
