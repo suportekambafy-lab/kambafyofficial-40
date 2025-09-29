@@ -459,7 +459,7 @@ const TestimonialsSection = () => {
                 "{testimonial.content}"
               </p>
               <div>
-                <h4 className="font-semibold">{testimonial.name}</h4>
+                <h3 className="font-semibold">{testimonial.name}</h3>
                 <p className="text-sm text-muted-foreground">{testimonial.role}</p>
               </div>
             </div>)}
@@ -578,7 +578,7 @@ const Footer = () => {
             </div>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Plataforma</h4>
+            <h3 className="font-semibold mb-4">Plataforma</h3>
             <ul className="space-y-2">
               <li><SubdomainLink to="/como-funciona" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Como Funciona</SubdomainLink></li>
               <li><SubdomainLink to="/precos" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Preços</SubdomainLink></li>
@@ -586,7 +586,7 @@ const Footer = () => {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Suporte</h4>
+            <h3 className="font-semibold mb-4">Suporte</h3>
             <ul className="space-y-2">
               <li><SubdomainLink to="/ajuda" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Central de Ajuda</SubdomainLink></li>
               <li><SubdomainLink to="/contato" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Contacto</SubdomainLink></li>
@@ -594,7 +594,7 @@ const Footer = () => {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
+            <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
               <li><SubdomainLink to="/privacidade" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Privacidade</SubdomainLink></li>
               <li><SubdomainLink to="/termos" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Termos</SubdomainLink></li>
