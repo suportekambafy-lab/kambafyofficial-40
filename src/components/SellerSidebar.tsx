@@ -194,7 +194,8 @@ export function SellerSidebar() {
         .from('orders')
         .select('id')
         .eq('user_id', user.id)
-        .eq('status', 'completed');
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
 
       if (error) {
         console.error('Error loading total sales:', error);

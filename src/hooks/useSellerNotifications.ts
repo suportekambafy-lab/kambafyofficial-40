@@ -80,6 +80,7 @@ export function useSellerNotifications() {
         .select('*')
         .eq('user_id', user?.id)
         .eq('status', 'completed')
+        .neq('payment_method', 'member_access')
         .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // últimas 24h
         .order('created_at', { ascending: false });
 

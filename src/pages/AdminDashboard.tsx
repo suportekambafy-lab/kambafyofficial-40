@@ -195,7 +195,7 @@ export default function AdminDashboard() {
       const [usersRes, productsRes, ordersRes, withdrawalsRes] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact' }),
         supabase.from('products').select('*', { count: 'exact' }),
-        supabase.from('orders').select('*', { count: 'exact' }),
+        supabase.from('orders').select('*', { count: 'exact' }).neq('payment_method', 'member_access'),
         supabase.from('withdrawal_requests').select('*', { count: 'exact' }).eq('status', 'pendente')
       ]);
 
@@ -255,11 +255,12 @@ export default function AdminDashboard() {
 
       const totalPaidOut = approvedWithdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-      // ✅ NOVA FUNCIONALIDADE: Calcular métricas financeiras da empresa
+      // ✅ NOVA FUNCIONALIDADE: Calcular métricas financeiras da empresa - EXCLUIR member_access
       const { data: allOrders } = await supabase
         .from('orders')
         .select('amount, created_at')
-        .eq('status', 'completed');
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
 
       setOrders(allOrders || []);
 

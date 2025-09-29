@@ -64,7 +64,8 @@ export function MobileDashboard() {
         .from('orders')
         .select('*')
         .in('product_id', userProductIds)
-        .eq('status', 'completed');
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
 
       if (error) {
         console.error('Error fetching orders data:', error);

@@ -96,12 +96,13 @@ export function ModernSidebar({
         return;
       }
 
-      // Buscar vendas usando product_id
+      // Buscar vendas usando product_id - EXCLUIR member_access
       const { data: allOrders, error: ordersError } = await supabase
         .from('orders')
         .select('amount, seller_commission, currency')
         .in('product_id', userProductIds)
-        .eq('status', 'completed');
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
 
       if (ordersError) {
         console.error('Error loading orders:', ordersError);

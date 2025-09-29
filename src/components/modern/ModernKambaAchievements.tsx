@@ -42,11 +42,11 @@ export function ModernKambaAchievements() {
         return;
       }
 
-      // Buscar vendas usando product_id
+      // Buscar vendas usando product_id - EXCLUIR member_access
       const {
         data: orders,
         error
-      } = await supabase.from('orders').select('amount, seller_commission, currency').in('product_id', userProductIds).eq('status', 'completed');
+      } = await supabase.from('orders').select('amount, seller_commission, currency').in('product_id', userProductIds).eq('status', 'completed').neq('payment_method', 'member_access');
       if (error) {
         console.error('Error loading orders:', error);
         return;

@@ -34,7 +34,7 @@ export const useSmartPreload = () => {
             .order('created_at', { ascending: false })
             .limit(5),
           
-          // 4. Pedidos recentes (limitado)
+          // 4. Pedidos recentes (limitado) - EXCLUIR member_access
           supabase
             .from('orders')
             .select(`
@@ -42,6 +42,7 @@ export const useSmartPreload = () => {
               products!inner(user_id)
             `)
             .eq('products.user_id', user.id)
+            .neq('payment_method', 'member_access')
             .order('created_at', { ascending: false })
             .limit(5)
         ];

@@ -112,6 +112,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
         `)
         .eq('products.user_id', user.id)
         .eq('status', 'completed')
+        .neq('payment_method', 'member_access')
         .gte('created_at', twentyFourHoursAgo.toISOString());
 
       if (error) {
@@ -139,7 +140,8 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
           )
         `)
         .eq('products.user_id', user.id)
-        .eq('status', 'completed');
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
 
       if (ordersError) {
         console.error('Error loading orders:', ordersError);

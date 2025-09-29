@@ -51,6 +51,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
         .from('orders')
         .select('*')
         .eq('status', 'completed')
+        .neq('payment_method', 'member_access')
         .gte('created_at', yesterday.toISOString())
         .order('created_at', { ascending: false });
 
