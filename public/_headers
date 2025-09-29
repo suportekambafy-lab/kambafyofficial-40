@@ -1,41 +1,19 @@
-# Cache versioned static assets for 1 year (immutable)
+/*
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Cache images for 1 year (they have unique filenames)
-/lovable-uploads/*
-  Cache-Control: public, max-age=31536000, immutable
+*.js
+  Cache-Control: public, max-age=86400, must-revalidate
 
-# Cache fonts for 1 year
-*.woff2
-  Cache-Control: public, max-age=31536000, immutable
+*.css
+  Cache-Control: public, max-age=86400, must-revalidate
 
-*.woff
-  Cache-Control: public, max-age=31536000, immutable
-
-# Cache SVG icons for 1 year
-*.svg
-  Cache-Control: public, max-age=31536000, immutable
-
-# Short cache for potentially updatable scripts
-/product-seo-loader.js
-  Cache-Control: public, max-age=3600, must-revalidate
-
-/client-sound-listener.js
-  Cache-Control: public, max-age=3600, must-revalidate
-
-# No cache for HTML files
-/*.html
+*.html
   Cache-Control: no-cache, no-store, must-revalidate
 
-# No cache for service worker
-/sw.js
+/api/*
   Cache-Control: no-cache, no-store, must-revalidate
-
-# No cache for manifest
-/manifest.json
-  Cache-Control: public, max-age=3600, must-revalidate
-
-# Default for root and other files
-/*
-  Cache-Control: public, max-age=0, must-revalidate

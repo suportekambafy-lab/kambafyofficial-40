@@ -7,9 +7,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { SubdomainLink } from './SubdomainLink';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-// Optimized WebP image paths for better performance
-const professionalWoman = '/lovable-uploads/09933f06-0001-46b9-9e43-62a0ebdd9868.png'; // Used for small avatars
-const professionalMan = '/lovable-uploads/730e6c93-f015-4eb9-a5cb-a980f00fcde0.png'; // Fallback for compatibility
+const professionalWoman = '/lovable-uploads/09933f06-0001-46b9-9e43-62a0ebdd9868.png';
+const professionalMan = '/lovable-uploads/730e6c93-f015-4eb9-a5cb-a980f00fcde0.png';
 const transitionVariants = {
   item: {
     hidden: {
@@ -284,7 +283,7 @@ const HeroSection = () => {
                   </div>
                 </div>
               </div>
-              <h1 className="hero-heading mt-8 max-w-4xl mx-auto text-balance sm:text-4xl lg:text-6xl xl:text-7xl lg:mt-16 font-bold md:text-4xl text-3xl text-checkout-green">TRANSFORME SEU CONHECIMENTO EM RENDA</h1>
+              <h1 className="mt-8 max-w-4xl mx-auto text-balance sm:text-4xl lg:text-6xl xl:text-7xl lg:mt-16 font-bold md:text-4xl text-3xl text-checkout-green">TRANSFORME SEU CONHECIMENTO EM RENDA</h1>
               <p className="mx-auto mt-6 sm:mt-8 max-w-2xl text-balance text-muted-foreground px-4 sm:px-0 sm:text-base text-base">A Kambafy é uma plataforma digital inovadora que permite a criadores, educadores, marcas e especialistas em toda a lusofonia partilharem conhecimento, criarem infoprodutos e transformarem a sua audiência em rendimento real.</p>
             </AnimatedGroup>
 
@@ -351,21 +350,7 @@ const FeaturesSection = () => {
           </AnimatedGroup>
           <AnimatedGroup preset="scale">
             <div className="relative">
-              <picture>
-                <source 
-                  srcSet="/lovable-uploads/be22ac17-optimized-600w.webp 600w, /lovable-uploads/be22ac17-optimized-1200w.webp 1200w"
-                  sizes="(max-width: 768px) 100vw, 584px"
-                  type="image/webp"
-                />
-                <img 
-                  src="/lovable-uploads/be22ac17-optimized-600w.webp" 
-                  alt="Profissional jovem trabalhando" 
-                  className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
-                  fetchPriority="high"
-                  width="1200"
-                  height="800"
-                />
-              </picture>
+              <img src="/lovable-uploads/be22ac17-d2d9-4d84-8ffa-3ed3d91cfaed.png" alt="Profissional jovem trabalhando" className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" />
               <div className="absolute inset-0 bg-gradient-to-t from-checkout-green/20 to-transparent rounded-2xl"></div>
             </div>
           </AnimatedGroup>
@@ -441,15 +426,7 @@ const TestimonialsSection = () => {
           {testimonials.map((testimonial, index) => <div key={index} className="bg-background border border-checkout-green/10 rounded-2xl p-6 hover:shadow-lg hover:shadow-checkout-green/5 transition-all duration-300">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
-                  <img 
-                    src={index === 1 ? professionalMan : professionalWoman} 
-                    alt={testimonial.name} 
-                    className="w-full h-full object-cover" 
-                    loading="lazy"
-                    width="48"
-                    height="48"
-                    decoding="async"
-                  />
+                  <img src={index === 1 ? professionalMan : professionalWoman} alt={testimonial.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex">
                   {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="w-5 h-5 text-checkout-orange fill-current" />)}
@@ -459,7 +436,7 @@ const TestimonialsSection = () => {
                 "{testimonial.content}"
               </p>
               <div>
-                <h3 className="font-semibold">{testimonial.name}</h3>
+                <h4 className="font-semibold">{testimonial.name}</h4>
                 <p className="text-sm text-muted-foreground">{testimonial.role}</p>
               </div>
             </div>)}
@@ -503,21 +480,7 @@ const AboutSection = () => {
           </AnimatedGroup>
           <AnimatedGroup preset="scale">
             <div className="relative">
-              <picture>
-                <source 
-                  srcSet="/lovable-uploads/730e6c93-optimized-600w.webp 600w, /lovable-uploads/730e6c93-optimized-1200w.webp 1200w"
-                  sizes="(max-width: 768px) 100vw, 584px"
-                  type="image/webp"
-                />
-                <img 
-                  src="/lovable-uploads/730e6c93-optimized-600w.webp" 
-                  alt="Profissional jovem focado" 
-                  className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
-                  loading="lazy"
-                  width="1200"
-                  height="800"
-                />
-              </picture>
+              <img src={professionalMan} alt="Profissional jovem focado" className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" />
               <div className="absolute inset-0 bg-gradient-to-t from-checkout-green/30 to-transparent rounded-2xl flex items-end">
                 <div className="p-6 text-white">
                   <h3 className="text-2xl font-bold mb-2">Junte-se à Revolução</h3>
@@ -578,7 +541,7 @@ const Footer = () => {
             </div>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">Plataforma</h3>
+            <h4 className="font-semibold mb-4">Plataforma</h4>
             <ul className="space-y-2">
               <li><SubdomainLink to="/como-funciona" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Como Funciona</SubdomainLink></li>
               <li><SubdomainLink to="/precos" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Preços</SubdomainLink></li>
@@ -586,7 +549,7 @@ const Footer = () => {
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">Suporte</h3>
+            <h4 className="font-semibold mb-4">Suporte</h4>
             <ul className="space-y-2">
               <li><SubdomainLink to="/ajuda" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Central de Ajuda</SubdomainLink></li>
               <li><SubdomainLink to="/contato" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Contacto</SubdomainLink></li>
@@ -594,7 +557,7 @@ const Footer = () => {
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">Legal</h3>
+            <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
               <li><SubdomainLink to="/privacidade" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Privacidade</SubdomainLink></li>
               <li><SubdomainLink to="/termos" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Termos</SubdomainLink></li>

@@ -1,18 +1,15 @@
 
-import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MobileDashboardHeader } from './MobileDashboardHeader';
 import { MobileMetricCards } from './MobileMetricCards';
 import { MobileFilters } from './MobileFilters';
 import { MobileProfile } from './MobileProfile';
+import { MobileSalesChart } from './MobileSalesChart';
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { Home, BarChart3, User } from 'lucide-react';
-
-// Lazy load chart component to reduce initial bundle size
-const MobileSalesChart = lazy(() => import('./MobileSalesChart').then(m => ({ default: m.MobileSalesChart })));
 
 interface Order {
   id: string;
@@ -225,14 +222,7 @@ export function MobileDashboard() {
         return (
           <div className="p-4 space-y-6">
             <h2 className="text-xl font-semibold">Relatórios</h2>
-            <Suspense fallback={
-              <div className="bg-card rounded-lg border p-6">
-                <Skeleton className="h-6 w-32 mb-4" />
-                <Skeleton className="h-64 w-full" />
-              </div>
-            }>
-              <MobileSalesChart />
-            </Suspense>
+            <MobileSalesChart />
           </div>
         );
       default:
@@ -258,14 +248,7 @@ export function MobileDashboard() {
                 formatPrice={formatPrice}
               />
 
-              <Suspense fallback={
-                <div className="bg-card rounded-lg border p-6">
-                  <Skeleton className="h-6 w-32 mb-4" />
-                  <Skeleton className="h-64 w-full" />
-                </div>
-              }>
-                <MobileSalesChart />
-              </Suspense>
+              <MobileSalesChart />
             </div>
           </>
         );
