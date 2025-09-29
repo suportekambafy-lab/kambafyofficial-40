@@ -88,13 +88,6 @@ export function KambafyLanding() {
     (window as any).testRealAreaMembros = testRealMemberArea;
     (window as any).testRealLogin = testRealLogin;
     (window as any).testSubdomainRedirect = testSubdomainRedirect;
-    
-    console.log('🧪 TESTE: Funções disponíveis no console:');
-    console.log('🧪 testAreaMembros() - Testa /area/teste (pula guard)');
-    console.log('🧪 testLogin() - Testa /login/teste (pula guard)');
-    console.log('🧪 testRealAreaMembros() - Testa /area/real-member-test');
-    console.log('🧪 testRealLogin() - Testa /login/real-login-test');
-    console.log('🧪 testSubdomainRedirect() - DEVE redirecionar para membros.kambafy.com');
   }, []);
   useEffect(() => {
     // Carregar apenas o script do Chatbase

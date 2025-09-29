@@ -76,27 +76,3 @@ export function useMembersLinks() {
     navigateToMembersArea,
   };
 }
-
-// Função para testar a nova estrutura
-export function testMembersStructure() {
-  const memberAreaId = '290b0398-c5f4-4681-944b-edc40f6fe0a2';
-  
-  console.log('🚀 NOVA ESTRUTURA DE MEMBROS - Testando...');
-  console.log('🔗 URL de Login:', getMembersLoginUrl(memberAreaId));
-  console.log('🏠 URL da Área:', getMembersAreaUrl(memberAreaId));
-  
-  console.log('📧 Dados para teste:');
-  console.log('   Email: victormuabi20@gmail.com');
-  console.log('   Nome: Victor Muabi');
-  
-  navigateToMembersLogin(memberAreaId);
-}
-
-// Disponibilizar globalmente para teste
-declare global {
-  interface Window {
-    testMembersStructure: () => void;
-  }
-}
-
-window.testMembersStructure = testMembersStructure;

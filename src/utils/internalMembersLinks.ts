@@ -34,10 +34,7 @@ export function useInternalMembersNavigation() {
   };
 }
 
-// Função utilitária para gerar URLs internas
 export const internalMembersUrls = {
   login: (id: string) => `/members/login/${id}`,
   area: (id: string) => `/members/area/${id}`,
 };
-
-console.log('✅ Sistema de links INTERNOS para membros carregado - sem redirecionamentos');
