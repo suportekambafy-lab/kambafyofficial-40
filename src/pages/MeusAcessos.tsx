@@ -19,16 +19,13 @@ import professionalManImage from "@/assets/professional-man.jpg";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { toast } from 'sonner';
 
-interface Order {
+interface Access {
   id: string;
-  order_id: string;
-  customer_name: string;
   customer_email: string;
-  amount: string;
-  currency: string;
-  status: string;
-  created_at: string;
+  customer_name: string;
   product_id: string;
+  access_granted_at: string;
+  is_active: boolean;
   products: {
     id: string;
     name: string;
@@ -43,11 +40,11 @@ interface Order {
   } | null;
 }
 
-export default function MinhasCompras() {
+export default function MeusAcessos() {
   const navigate = useNavigate();
   const memberAreaLinks = createMemberAreaLinks();
   const { user, signOut } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [accesses, setAccesses] = useState<Access[]>([]);
   const [loading, setLoading] = useState(true);
   const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
   
@@ -55,7 +52,7 @@ export default function MinhasCompras() {
   const { balance, fetchBalanceByEmail } = useKambaPayBalance();
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchAccesses = async () => {
       if (!user?.email) {
         console.log('No user email found');
         setLoading(false);
@@ -63,12 +60,12 @@ export default function MinhasCompras() {
       }
 
       try {
-        console.log('Fetching orders for user email:', user.email);
+        console.log('Fetching accesses for user email:', user.email);
         setLoading(true);
         
-        // Buscar apenas pedidos do usuário logado usando o email
-        const { data: orders, error } = await supabase
-          .from('orders')
+        // Buscar todos os acessos do usuário logado via customer_access
+        const { data: accesses, error } = await supabase
+          .from('customer_access')
           .select(`
             *,
             products (
@@ -85,30 +82,30 @@ export default function MinhasCompras() {
             )
           `)
           .eq('customer_email', user.email)
-          .eq('status', 'completed')
-          .order('created_at', { ascending: false });
+          .eq('is_active', true)
+          .order('access_granted_at', { ascending: false });
 
         if (error) {
-          console.error('Error fetching orders:', error);
+          console.error('Error fetching accesses:', error);
         } else {
-          console.log('Orders found for user:', orders);
-          // Filtrar apenas pedidos que têm produtos válidos
-          const validOrders = orders?.filter(order => order.products !== null) || [];
-          setOrders(validOrders);
+          console.log('Accesses found for user:', accesses);
+          // Filtrar apenas acessos que têm produtos válidos
+          const validAccesses = accesses?.filter(access => access.products !== null) || [];
+          setAccesses(validAccesses);
         }
       } catch (error) {
-        console.error('Error fetching orders:', error);
+        console.error('Error fetching accesses:', error);
       } finally {
         setLoading(false);
       }
     };
 
     if (user) {
-      fetchOrders();
+      fetchAccesses();
       
       // Configurar atualização automática dos dados
       const interval = setInterval(() => {
-        fetchOrders();
+        fetchAccesses();
       }, 60000); // Atualizar a cada 1 minuto
       
       return () => clearInterval(interval);
@@ -160,24 +157,16 @@ export default function MinhasCompras() {
           throw new Error('Área de membros não encontrada');
         }
 
-        // Verificar se tem compra válida
-        const { data: orders, error: ordersError } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            products!inner (
-              member_area_id,
-              member_areas!inner (
-                id,
-                name
-              )
-            )
-          `)
+        // Verificar se tem acesso válido via customer_access
+        const { data: customerAccess, error: accessError } = await supabase
+          .from('customer_access')
+          .select('*')
           .eq('customer_email', user?.email)
-          .eq('status', 'completed')
-          .eq('products.member_areas.id', product.member_areas.id);
+          .eq('product_id', product.id)
+          .eq('is_active', true)
+          .maybeSingle();
 
-        if (ordersError || !orders || orders.length === 0) {
+        if (accessError || !customerAccess) {
           throw new Error('Você não tem acesso a esta área de membros');
         }
 
@@ -205,13 +194,13 @@ export default function MinhasCompras() {
     await signOut();
   };
 
-  // Calcular estatísticas corretamente
-  const totalCompras = orders.length;
-  const cursosDisponiveis = orders.filter(order => 
-    order.products?.type === 'Curso' && order.products?.member_areas
+  // Calcular estatísticas dos acessos
+  const totalAcessos = accesses.length;
+  const cursosDisponiveis = accesses.filter(access => 
+    access.products?.type === 'Curso' && access.products?.member_areas
   ).length;
-  const ebooksDisponiveis = orders.filter(order => 
-    order.products?.type === 'Ebook'
+  const ebooksDisponiveis = accesses.filter(access => 
+    access.products?.type === 'Ebook'
   ).length;
 
   return (
@@ -226,7 +215,7 @@ export default function MinhasCompras() {
                 className="h-12 w-auto brightness-0 invert"
               />
               <div>
-                <p className="text-green-100 text-sm">Suas compras</p>
+                <p className="text-green-100 text-sm">Meus acessos</p>
               </div>
             </div>
             
@@ -253,41 +242,41 @@ export default function MinhasCompras() {
           <div className="grid grid-cols-1 gap-4">
             <HighlightedCard highlightColor="blue">
               <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <HighlightedCardTitle className="text-sm font-medium">Total de Compras</HighlightedCardTitle>
+                <HighlightedCardTitle className="text-sm font-medium">Total de Acessos</HighlightedCardTitle>
                 <ShoppingBag className="h-4 w-4 text-muted-foreground" />
               </HighlightedCardHeader>
               <HighlightedCardContent>
-                <div className="text-2xl font-bold">{totalCompras}</div>
+                <div className="text-2xl font-bold">{totalAcessos}</div>
                 <p className="text-xs text-muted-foreground">
-                  {totalCompras === 0 ? 'Nenhuma compra realizada' : `${totalCompras} compra${totalCompras > 1 ? 's' : ''} realizada${totalCompras > 1 ? 's' : ''}`}
+                  {totalAcessos === 0 ? 'Nenhum acesso disponível' : `${totalAcessos} acesso${totalAcessos > 1 ? 's' : ''} disponível${totalAcessos > 1 ? 'eis' : ''}`}
                 </p>
               </HighlightedCardContent>
             </HighlightedCard>
           </div>
 
-          {/* Purchases List */}
+          {/* Accesses List */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShoppingBag className="h-5 w-5" />
-                Minhas Compras
+                Meus Acessos
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
                 <div className="flex items-center justify-center py-16">
-                  <LoadingSpinner text="Carregando suas compras..." />
+                  <LoadingSpinner text="Carregando seus acessos..." />
                 </div>
-              ) : orders.length === 0 ? (
+              ) : accesses.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4">
                   <div className="text-center space-y-4">
                     <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                       <ShoppingBag className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold">Nenhuma compra realizada</h3>
+                      <h3 className="text-lg font-semibold">Nenhum acesso disponível</h3>
                       <p className="text-muted-foreground">
-                        Suas compras aparecerão aqui quando você adquirir produtos.
+                        Seus acessos aparecerão aqui quando você adquirir produtos ou receber acessos.
                       </p>
                     </div>
                     <Button asChild className="bg-checkout-green hover:bg-checkout-green/90">
@@ -297,50 +286,48 @@ export default function MinhasCompras() {
                 </div>
               ) : (
                 <div className="divide-y">
-                  {orders.map((order) => (
-                    <div key={order.id} className="p-6 hover:bg-muted/50 transition-colors">
+                  {accesses.map((access) => (
+                    <div key={access.id} className="p-6 hover:bg-muted/50 transition-colors">
                       <div className="flex items-start space-x-4">
                         <img
-                          src={getProductImage(order.products?.cover || '')}
-                          alt={order.products?.name || 'Produto'}
+                          src={getProductImage(access.products?.cover || '')}
+                          alt={access.products?.name || 'Produto'}
                           className="w-16 h-20 object-cover rounded-lg shadow-sm"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h3 className="font-semibold text-lg">{order.products?.name || 'Produto'}</h3>
-                              <p className="text-sm text-muted-foreground">Pedido #{order.order_id}</p>
+                              <h3 className="font-semibold text-lg">{access.products?.name || 'Produto'}</h3>
                               <p className="text-sm text-muted-foreground">
-                                {new Date(order.created_at).toLocaleDateString('pt-BR')}
+                                Acesso liberado em {new Date(access.access_granted_at).toLocaleDateString('pt-BR')}
                               </p>
-                              {order.products?.type === 'Curso' && order.products?.member_areas && (
+                              {access.products?.type === 'Curso' && access.products?.member_areas && (
                                 <Badge variant="secondary" className="mt-1 bg-blue-100 text-blue-800">
-                                  Curso: {order.products.member_areas.name}
+                                  Curso: {access.products.member_areas.name}
                                 </Badge>
                               )}
-                              {order.products?.type === 'Ebook' && (
+                              {access.products?.type === 'Ebook' && (
                                 <Badge variant="secondary" className="mt-1 bg-purple-100 text-purple-800">
                                   Ebook
                                 </Badge>
                               )}
                             </div>
                             <div className="text-right">
-                              <p className="font-bold text-lg">{order.amount} {order.currency}</p>
                               <Badge variant="secondary" className="bg-green-100 text-green-800">
-                                {order.status === 'completed' ? 'Pago' : order.status}
+                                Acesso Ativo
                               </Badge>
                             </div>
                           </div>
                           <div className="mt-4 flex items-center space-x-2">
-                            {order.products ? (
-                              order.products.type === 'Curso' && order.products.member_areas ? (
+                            {access.products ? (
+                              access.products.type === 'Curso' && access.products.member_areas ? (
                                 <Button
-                                  onClick={() => handleAccessProduct(order.products)}
+                                  onClick={() => handleAccessProduct(access.products)}
                                   size="sm"
                                   className="bg-checkout-green hover:bg-checkout-green/90"
-                                  disabled={accessingProduct === order.products.id}
+                                  disabled={accessingProduct === access.products.id}
                                 >
-                                  {accessingProduct === order.products.id ? (
+                                  {accessingProduct === access.products.id ? (
                                     <>
                                       <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin mr-2" />
                                       Verificando...
@@ -352,14 +339,14 @@ export default function MinhasCompras() {
                                     </>
                                   )}
                                 </Button>
-                              ) : order.products.share_link ? (
+                              ) : access.products.share_link ? (
                                 <Button
-                                  onClick={() => handleAccessProduct(order.products)}
+                                  onClick={() => handleAccessProduct(access.products)}
                                   size="sm"
                                   className="bg-checkout-green hover:bg-checkout-green/90"
-                                  disabled={accessingProduct === order.products.id}
+                                  disabled={accessingProduct === access.products.id}
                                 >
-                                  {accessingProduct === order.products.id ? (
+                                  {accessingProduct === access.products.id ? (
                                     <>
                                       <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin mr-2" />
                                       Verificando...

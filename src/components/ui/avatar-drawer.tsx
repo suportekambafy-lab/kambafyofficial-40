@@ -69,7 +69,7 @@ export function AvatarDrawer({
       onClick: () => handleNavigation("/vendedor/configuracoes")
     },
     {
-      label: "Mudar para painel de cliente",
+      label: "Mudar para painel de acessos",
       href: "/minhas-compras",
       icon: ArrowLeftRight,
       onClick: () => handleNavigation("/minhas-compras")

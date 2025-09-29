@@ -101,8 +101,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       <span className="text-2xl">🛒</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">Acessar Minhas Compras</h3>
-                      <p className="text-sm text-muted-foreground">Ver meus cursos e produtos comprados</p>
+                      <h3 className="font-semibold text-lg">Acessar Meus Acessos</h3>
+                      <p className="text-sm text-muted-foreground">Ver meus cursos e produtos com acesso</p>
                     </div>
                   </div>
                 </button>

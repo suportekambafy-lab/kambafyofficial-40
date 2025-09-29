@@ -127,7 +127,7 @@ const App = () => {
                       <Route path="/apps" element={<OptimizedRoutes.Apps />} />
                        <Route path="/vendedor/*" element={<OptimizedRoutes.SellerDashboard />} />
                         <Route path="/meus-afiliados" element={<OptimizedRoutes.MeusAfiliados />} />
-                        <Route path="/minhas-compras" element={<OptimizedRoutes.MinhasCompras />} />
+                        <Route path="/minhas-compras" element={<OptimizedRoutes.MeusAcessos />} />
                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                         
                         {/* Member Area Routes - Modern Authentication System */}

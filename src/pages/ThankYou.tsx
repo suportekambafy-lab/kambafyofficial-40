@@ -754,7 +754,7 @@ const ThankYou = () => {
         <div className="flex justify-center">
           <Button asChild variant="outline" size="lg">
             <Link to="/minhas-compras">
-              Ver Minhas Compras
+              Ver Meus Acessos
             </Link>
           </Button>
         </div>

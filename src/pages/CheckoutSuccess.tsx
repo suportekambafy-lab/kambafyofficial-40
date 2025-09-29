@@ -211,7 +211,7 @@ const CheckoutSuccess = () => {
                 onClick={() => window.location.href = '/minhas-compras'}
               >
                 <ArrowRight className="w-4 h-4 mr-2" />
-                Ver Minhas Compras
+                Ver Meus Acessos
               </Button>
               
               <Button 

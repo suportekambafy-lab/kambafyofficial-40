@@ -194,7 +194,7 @@ export default function ProtectedMemberArea({ children }: ProtectedMemberAreaPro
                 onClick={() => navigate('/minhas-compras')}
                 className="w-full bg-checkout-green hover:bg-checkout-green/90"
               >
-                Ver Minhas Compras
+                Ver Meus Acessos
               </Button>
               <Button 
                 onClick={() => navigate('/')}

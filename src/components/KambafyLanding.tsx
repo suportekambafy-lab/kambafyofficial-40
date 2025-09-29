@@ -207,7 +207,7 @@ const Header = ({
                       </ul>
                       <div className="flex flex-col space-y-3">
                         <Button variant="outline" size="sm" onClick={() => onLoginOptionSelect('customer')}>
-                          Acessar minhas compras
+                          Acessar meus acessos
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => onLoginOptionSelect('business')}>
                           Gerenciar meus negócios
@@ -244,7 +244,7 @@ const Header = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem onClick={() => onLoginOptionSelect('customer')}>
-                    Acessar minhas compras
+                    Acessar meus acessos
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onLoginOptionSelect('business')}>
                     Gerenciar meus negócios
