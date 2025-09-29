@@ -109,17 +109,9 @@ export default function ModernMembersLogin() {
 
         toast({
           title: "✅ Senha atualizada com sucesso!",
-          message: "Fazendo login automático...",
+          message: "Agora você pode fazer login com sua nova senha",
           variant: "success",
         });
-
-        // Fazer login automático após redefinir senha
-        setTimeout(async () => {
-          const loginSuccess = await login(email.trim(), newPassword.trim());
-          if (loginSuccess) {
-            window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(email.trim())}`;
-          }
-        }, 1000);
 
         setShowResetModal(false);
         setResetEmail('');
