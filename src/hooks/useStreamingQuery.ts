@@ -65,6 +65,7 @@ export const useStreamingQuery = () => {
         .from('orders')
         .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id')
         .in('product_id', userProductIds)
+        .neq('payment_method', 'member_access') // Excluir acessos automáticos
         .in('status', ['completed', 'pending', 'cancelled', 'failed']); // Incluir todas as vendas
 
       if (ownSalesError) throw ownSalesError;
@@ -195,6 +196,7 @@ export const useStreamingQuery = () => {
             seller_commission
           `)
           .in('product_id', userProductIds)
+          .neq('payment_method', 'member_access') // Excluir acessos automáticos
           .order('created_at', { ascending: false })
           .range(offset, offset + chunkSize - 1);
 
@@ -251,6 +253,7 @@ export const useStreamingQuery = () => {
             .from('orders')
             .select('id')
             .in('product_id', userProductIds)
+            .neq('payment_method', 'member_access') // Excluir acessos automáticos
             .order('created_at', { ascending: false })
             .range(offset + chunkSize, offset + chunkSize);
           

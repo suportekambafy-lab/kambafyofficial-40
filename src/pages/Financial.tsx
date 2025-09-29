@@ -170,12 +170,13 @@ export default function Financial() {
 
       const userProductIds = userProducts?.map(p => p.id) || [];
 
-      // Buscar vendas dos produtos do usuário
+      // Buscar vendas dos produtos do usuário (excluir member access)
       const { data: ownOrders, error: ordersError } = await supabase
         .from('orders')
         .select('order_id, amount, currency, created_at, status, affiliate_commission, seller_commission, product_id')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
+        .neq('payment_method', 'member_access')
         .order('created_at', { ascending: false })
         .limit(200);
 
