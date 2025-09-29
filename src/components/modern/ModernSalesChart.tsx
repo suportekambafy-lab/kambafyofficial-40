@@ -78,7 +78,6 @@ export function ModernSalesChart() {
         .select('created_at, amount, currency, product_id, order_id')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
-        .neq('payment_method', 'member_access') // Excluir acessos automáticos
         .gte('created_at', sevenDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 

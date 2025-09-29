@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { MobileLoginChoice } from '@/components/mobile/MobileLoginChoice';
 import { MobileDashboard } from '@/components/mobile/MobileDashboard';
 import Auth from './Auth';
-import MeusAcessos from './MeusAcessos';
+import MinhasCompras from './MinhasCompras';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -62,7 +62,7 @@ const Mobile = () => {
   if (userType === 'seller') {
     return <MobileDashboard />;
   } else if (userType === 'customer') {
-    return <MeusAcessos />;
+    return <MinhasCompras />;
   }
 
   // Fallback

@@ -111,24 +111,22 @@ export function ComparativeSalesChart({ dateFilter }: ComparativeSalesChartProps
         return;
       }
 
-      // Buscar dados do período atual - usando product_id (excluir member access)
+      // Buscar dados do período atual - usando product_id
       const { data: currentOrders, error: currentError } = await supabase
         .from('orders')
         .select('amount, created_at, status, product_id, currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
-        .neq('payment_method', 'member_access')
         .gte('created_at', currentStart.toISOString())
         .lt('created_at', currentEnd.toISOString())
         .order('created_at', { ascending: true });
 
-      // Buscar dados do período anterior - usando product_id (excluir member access)
+      // Buscar dados do período anterior - usando product_id
       const { data: previousOrders, error: previousError } = await supabase
         .from('orders')
         .select('amount, created_at, status, product_id, currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
-        .neq('payment_method', 'member_access')
         .gte('created_at', previousStart.toISOString())
         .lt('created_at', previousEnd.toISOString())
         .order('created_at', { ascending: true });

@@ -70,9 +70,9 @@ export function AvatarDrawer({
     },
     {
       label: "Mudar para painel de cliente",
-      href: "/meus-acessos",
+      href: "/minhas-compras",
       icon: ArrowLeftRight,
-      onClick: () => handleNavigation("/meus-acessos")
+      onClick: () => handleNavigation("/minhas-compras")
     },
     {
       label: "Ajuda",

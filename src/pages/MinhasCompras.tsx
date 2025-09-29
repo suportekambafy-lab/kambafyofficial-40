@@ -43,7 +43,7 @@ interface Order {
   } | null;
 }
 
-export default function MeusAcessos() {
+export default function MinhasCompras() {
   const navigate = useNavigate();
   const memberAreaLinks = createMemberAreaLinks();
   const { user, signOut } = useAuth();
@@ -138,7 +138,7 @@ export default function MeusAcessos() {
   const [accessingProduct, setAccessingProduct] = useState<string | null>(null);
 
   const handleAccessProduct = async (product: any) => {
-    console.log('🚀 MeusAcessos - Tentando acessar produto:', {
+    console.log('🚀 MinhasCompras - Tentando acessar produto:', {
       product,
       productType: product.type,
       memberAreaId: product.member_areas?.id
@@ -193,10 +193,10 @@ export default function MeusAcessos() {
         setAccessingProduct(null);
       }
     } else if (product.share_link) {
-      console.log('🔗 MeusAcessos - Abrindo share_link:', product.share_link);
+      console.log('🔗 MinhasCompras - Abrindo share_link:', product.share_link);
       window.open(product.share_link, '_blank');
     } else {
-      console.log('❌ MeusAcessos - Nenhum link de acesso disponível');
+      console.log('❌ MinhasCompras - Nenhum link de acesso disponível');
       alert('Link de acesso não disponível para este produto.');
     }
   };
@@ -226,7 +226,7 @@ export default function MeusAcessos() {
                 className="h-12 w-auto brightness-0 invert"
               />
               <div>
-                <p className="text-green-100 text-sm">Seus acessos</p>
+                <p className="text-green-100 text-sm">Suas compras</p>
               </div>
             </div>
             
@@ -253,13 +253,13 @@ export default function MeusAcessos() {
           <div className="grid grid-cols-1 gap-4">
             <HighlightedCard highlightColor="blue">
               <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <HighlightedCardTitle className="text-sm font-medium">Total de Acessos</HighlightedCardTitle>
+                <HighlightedCardTitle className="text-sm font-medium">Total de Compras</HighlightedCardTitle>
                 <ShoppingBag className="h-4 w-4 text-muted-foreground" />
               </HighlightedCardHeader>
               <HighlightedCardContent>
                 <div className="text-2xl font-bold">{totalCompras}</div>
                 <p className="text-xs text-muted-foreground">
-                  {totalCompras === 0 ? 'Nenhum acesso disponível' : `${totalCompras} acesso${totalCompras > 1 ? 's' : ''} disponível${totalCompras > 1 ? 'is' : ''}`}
+                  {totalCompras === 0 ? 'Nenhuma compra realizada' : `${totalCompras} compra${totalCompras > 1 ? 's' : ''} realizada${totalCompras > 1 ? 's' : ''}`}
                 </p>
               </HighlightedCardContent>
             </HighlightedCard>
@@ -270,13 +270,13 @@ export default function MeusAcessos() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShoppingBag className="h-5 w-5" />
-                Meus Acessos
+                Minhas Compras
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
                 <div className="flex items-center justify-center py-16">
-                  <LoadingSpinner text="Carregando seus acessos..." />
+                  <LoadingSpinner text="Carregando suas compras..." />
                 </div>
               ) : orders.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -285,9 +285,9 @@ export default function MeusAcessos() {
                       <ShoppingBag className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold">Nenhum acesso disponível</h3>
+                      <h3 className="text-lg font-semibold">Nenhuma compra realizada</h3>
                       <p className="text-muted-foreground">
-                        Seus acessos aparecerão aqui quando você adquirir produtos.
+                        Suas compras aparecerão aqui quando você adquirir produtos.
                       </p>
                     </div>
                     <Button asChild className="bg-checkout-green hover:bg-checkout-green/90">
@@ -325,8 +325,9 @@ export default function MeusAcessos() {
                               )}
                             </div>
                             <div className="text-right">
+                              <p className="font-bold text-lg">{order.amount} {order.currency}</p>
                               <Badge variant="secondary" className="bg-green-100 text-green-800">
-                                Acesso Ativo
+                                {order.status === 'completed' ? 'Pago' : order.status}
                               </Badge>
                             </div>
                           </div>

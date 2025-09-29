@@ -84,13 +84,12 @@ export function SalesChart({ dateFilter }: SalesChartProps) {
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
       const recoveredOrderIds = new Set();
 
-      // Buscar pedidos do período usando product_id (excluir member access)
+      // Buscar pedidos do período usando product_id
       const { data: orders, error } = await supabase
         .from('orders')
         .select('amount, created_at, status, product_id, order_id, currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
-        .neq('payment_method', 'member_access')
         .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: true });
 

@@ -70,7 +70,7 @@ export function ModernDashboardHome() {
 
       const promises = [];
 
-      // ✅ Vendas próprias - usando product_id (excluir member access)
+      // ✅ Vendas próprias - usando product_id
       if (userProductIds.length > 0) {
         promises.push(
           supabase
@@ -78,7 +78,6 @@ export function ModernDashboardHome() {
             .select('*')
             .in('product_id', userProductIds)
             .eq('status', 'completed')
-            .neq('payment_method', 'member_access')
             .order('created_at', { ascending: false })
         );
       }

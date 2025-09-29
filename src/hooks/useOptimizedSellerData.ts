@@ -50,7 +50,6 @@ export const useSellerData = () => {
           .from('orders')
           .select('id, amount, created_at, status, product_id, customer_name')
           .eq('user_id', user.id)
-          .neq('payment_method', 'member_access') // Excluir acessos automáticos
           .order('created_at', { ascending: false })
           .limit(10), // Limitar resultados iniciais
         

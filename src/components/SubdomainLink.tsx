@@ -20,7 +20,7 @@ export function SubdomainLink({ to, children, className, onClick }: SubdomainLin
       return 'mobile';
     } else if (path.startsWith('/area/') || path.startsWith('/login/')) {
       return 'membros';
-    } else if (path.startsWith('/auth') || path.startsWith('/vendedor') || path.startsWith('/apps') || path.startsWith('/meus-acessos')) {
+    } else if (path.startsWith('/auth') || path.startsWith('/vendedor') || path.startsWith('/apps') || path.startsWith('/minhas-compras')) {
       return 'app';
     } else if (path.startsWith('/checkout') || path.startsWith('/obrigado')) {
       return 'pay';
