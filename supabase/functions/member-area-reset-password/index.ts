@@ -64,82 +64,91 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('✅ Estudante encontrado na área de membros');
 
-    // Verificar se o usuário existe no auth.users
-    const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+    // Usar admin API para buscar ou criar usuário
+    let userId: string | null = null;
     
-    if (usersError) {
-      console.error('Erro ao listar usuários:', usersError);
-      throw usersError;
-    }
-
-    console.log('🔐 Definindo nova senha para:', studentEmail);
-
-    let userId = '';
-    const existingUser = users.find(u => u.email === studentEmail);
-    
-    console.log('👥 Total de usuários encontrados:', users.length);
-    console.log('🔍 Buscando usuário com email:', studentEmail);
-    console.log('✅ Usuário encontrado:', existingUser ? 'SIM' : 'NÃO');
-    
-    if (!existingUser) {
-      console.log('⚠️ Usuário não encontrado no sistema de autenticação, criando nova conta...');
+    try {
+      // Primeiro, tentar atualizar senha de usuário existente
+      const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
       
-      try {
-        // Criar novo usuário com a nova senha fornecida
+      if (listError) {
+        console.error('❌ Erro ao buscar usuários:', listError);
+        throw new Error('Erro ao acessar sistema de usuários');
+      }
+
+      const existingUser = users.find(u => u.email === studentEmail);
+      
+      if (existingUser) {
+        console.log('✅ Usuário encontrado, atualizando senha...');
+        userId = existingUser.id;
+        
+        // Atualizar senha do usuário existente
+        const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+          password: newPassword,
+          email_confirm: true
+        });
+
+        if (updateError) {
+          console.error('❌ Erro ao atualizar senha:', updateError);
+          throw new Error('Erro ao atualizar senha');
+        }
+
+        console.log('✅ Senha atualizada com sucesso');
+        
+      } else {
+        console.log('⚠️ Usuário não encontrado, criando nova conta...');
+        
+        // Tentar criar novo usuário
         const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
           email: studentEmail,
           password: newPassword,
           email_confirm: true,
+          user_metadata: {
+            full_name: studentEmail.split('@')[0] // Usar parte do email como nome
+          }
         });
 
         if (createError) {
-          console.error('❌ Erro ao criar usuário:', createError);
-          // Se o usuário já existe, tentar encontrá-lo novamente
+          // Se erro de email existente, buscar o usuário novamente
           if (createError.message?.includes('already been registered') || createError.message?.includes('email_exists')) {
-            console.log('🔄 Usuário já existe, buscando novamente...');
-            // Buscar novamente na lista de usuários
-            const { data: { users: refreshedUsers }, error: refreshError } = await supabase.auth.admin.listUsers();
-            if (refreshError) {
-              console.error('❌ Erro ao buscar usuários:', refreshError);
-              throw new Error('Erro ao buscar usuários existentes');
-            }
+            console.log('🔄 Email já existe, buscando usuário...');
             
-            const foundUser = refreshedUsers.find(u => u.email === studentEmail);
-            if (foundUser) {
-              userId = foundUser.id;
-              console.log('✅ Usuário encontrado após refresh:', userId);
+            // Buscar novamente
+            const { data: { users: refreshedUsers }, error: refreshError } = await supabase.auth.admin.listUsers();
+            if (!refreshError) {
+              const foundUser = refreshedUsers.find(u => u.email === studentEmail);
+              if (foundUser) {
+                console.log('✅ Usuário encontrado após busca, atualizando senha...');
+                userId = foundUser.id;
+                
+                const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+                  password: newPassword,
+                  email_confirm: true
+                });
+
+                if (updateError) {
+                  throw new Error('Erro ao atualizar senha');
+                }
+              } else {
+                throw new Error('Não foi possível localizar conta do usuário');
+              }
             } else {
-              console.error('❌ Usuário não encontrado mesmo após refresh');
-              throw new Error('Não foi possível encontrar conta para este email');
+              throw new Error('Erro ao buscar usuários');
             }
           } else {
+            console.error('❌ Erro ao criar usuário:', createError);
             throw createError;
           }
         } else {
-          console.log('✅ Nova conta criada:', newUser.user?.id);
-          userId = newUser.user!.id;
+          console.log('✅ Nova conta criada com sucesso');
+          userId = newUser.user.id;
         }
-      } catch (creationError: any) {
-        console.error('❌ Erro na criação/localização do usuário:', creationError);
-        throw new Error('Erro ao processar conta do usuário: ' + creationError.message);
       }
-    } else {
-      console.log('✅ Usuário encontrado:', existingUser.id);
-      userId = existingUser.id;
+
+    } catch (authError: any) {
+      console.error('❌ Erro de autenticação:', authError);
+      throw new Error('Erro ao processar conta: ' + authError.message);
     }
-
-    // Atualizar a senha do usuário (seja novo ou existente)
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
-      userId,
-      { password: newPassword }
-    );
-
-    if (updateError) {
-      console.error('❌ Erro ao atualizar senha:', updateError);
-      throw new Error('Erro ao definir nova senha: ' + updateError.message);
-    }
-
-    console.log('✅ Senha atualizada com sucesso para usuário:', userId);
 
     return new Response(JSON.stringify({
       success: true,
