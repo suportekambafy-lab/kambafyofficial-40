@@ -244,7 +244,7 @@ const Header = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem onClick={() => onLoginOptionSelect('customer')}>
-                    Acessar meus acessos
+                    Área do cliente
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onLoginOptionSelect('business')}>
                     Gerenciar meus negócios
