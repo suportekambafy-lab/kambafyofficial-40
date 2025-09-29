@@ -89,7 +89,7 @@ export function MemberAreaSlideMenu({
           </div>
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+      <SheetContent side="right" className="w-[400px] sm:w-[540px] bg-gray-950 border-gray-800">
         <SheetHeader>
           
           
