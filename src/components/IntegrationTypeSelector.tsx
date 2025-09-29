@@ -45,17 +45,17 @@ const integrationTypes: IntegrationType[] = [
     description: 'Personalize seu checkout com banners, countdown, avaliações e prova social',
     icon: ({ className }: { className?: string }) => <Palette className={className} />,
     color: 'text-green-600'
+  },
+  {
+    id: 'upsell',
+    name: 'Upsell Pós-Compra',
+    description: 'Configure ofertas especiais que aparecem após a compra principal',
+    icon: ({ className }: { className?: string }) => <Settings className={className} />,
+    color: 'text-indigo-600'
   }
 ];
 
 const comingSoonTypes: IntegrationType[] = [
-  {
-    id: 'upsell',
-    name: 'Upsell Pós-Compra',
-    description: 'Em breve - Configure ofertas especiais que aparecem após a compra principal',
-    icon: ({ className }: { className?: string }) => <Settings className={className} />,
-    color: 'text-gray-500'
-  },
   {
     id: 'quiz-builder',
     name: 'Quiz Builder',

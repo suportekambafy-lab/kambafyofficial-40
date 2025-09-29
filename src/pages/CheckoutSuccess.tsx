@@ -13,6 +13,7 @@ const CheckoutSuccess = () => {
   const sessionId = searchParams.get('session_id');
   const [orderStatus, setOrderStatus] = useState<'loading' | 'pending' | 'completed' | 'error'>('loading');
   const [orderData, setOrderData] = useState<any>(null);
+  const [upsellConfig, setUpsellConfig] = useState<any>(null);
 
   useEffect(() => {
     const checkOrderStatus = async () => {
@@ -44,13 +45,38 @@ const CheckoutSuccess = () => {
         const newStatus = data.order.status === 'completed' ? 'completed' : 'pending';
         setOrderStatus(newStatus);
         
-        // Se o pedido estiver completo, não precisa continuar verificando
-        if (newStatus === 'completed') {
+        // Se o pedido estiver completo, verificar configurações de upsell
+        if (newStatus === 'completed' && data.order.product_id) {
+          await checkUpsellConfig(data.order.product_id);
           return;
         }
       } catch (error) {
         console.error('Erro ao verificar status do pedido:', error);
         setOrderStatus('error');
+      }
+    };
+
+    const checkUpsellConfig = async (productId: string) => {
+      try {
+        const { data: upsellData } = await supabase
+          .from('checkout_customizations')
+          .select('settings')
+          .eq('product_id', productId)
+          .maybeSingle();
+
+        if (upsellData?.settings && typeof upsellData.settings === 'object') {
+          const settings = upsellData.settings as any;
+          if (settings.upsell?.enabled && settings.upsell?.link_pagina_upsell) {
+            console.log('Configuração de upsell encontrada, redirecionando...');
+            setUpsellConfig(settings.upsell);
+            // Redirecionar após 3 segundos
+            setTimeout(() => {
+              window.location.href = settings.upsell.link_pagina_upsell;
+            }, 3000);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar configurações de upsell:', error);
       }
     };
 
@@ -140,10 +166,31 @@ const CheckoutSuccess = () => {
           
           <p className="text-gray-600 mb-6">
             {orderStatus === 'completed' 
-              ? 'Sua compra foi processada com sucesso. Você receberá um email com os detalhes do seu pedido em breve.'
+              ? upsellConfig 
+                ? 'Sua compra foi processada com sucesso! Você será redirecionado para uma oferta especial em instantes...'
+                : 'Sua compra foi processada com sucesso. Você receberá um email com os detalhes do seu pedido em breve.'
               : 'Seu pedido foi recebido e está sendo processado. Você será notificado assim que o pagamento for confirmado.'
             }
           </p>
+          
+          {upsellConfig && orderStatus === 'completed' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <p className="text-sm font-medium text-blue-800">
+                  Redirecionando para oferta especial...
+                </p>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => window.location.href = upsellConfig.link_pagina_upsell}
+                className="text-xs"
+              >
+                Ir agora
+              </Button>
+            </div>
+          )}
           
           {orderData && (
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -157,23 +204,25 @@ const CheckoutSuccess = () => {
             </div>
           )}
           
-          <div className="space-y-3">
-            <Button 
-              className="w-full" 
-              onClick={() => window.location.href = '/minhas-compras'}
-            >
-              <ArrowRight className="w-4 h-4 mr-2" />
-              Ver Minhas Compras
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => window.open('mailto:suporte@kambafy.com', '_blank')}
-            >
-              Falar com Suporte
-            </Button>
-          </div>
+          {!upsellConfig && (
+            <div className="space-y-3">
+              <Button 
+                className="w-full" 
+                onClick={() => window.location.href = '/minhas-compras'}
+              >
+                <ArrowRight className="w-4 h-4 mr-2" />
+                Ver Minhas Compras
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => window.open('mailto:suporte@kambafy.com', '_blank')}
+              >
+                Falar com Suporte
+              </Button>
+            </div>
+          )}
           
           <div className="mt-8 flex flex-col items-center space-y-2">
             <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-600 p-2">
