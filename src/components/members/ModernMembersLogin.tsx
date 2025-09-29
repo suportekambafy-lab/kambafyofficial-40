@@ -8,13 +8,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { LogIn, Mail, BookOpen, Lock } from 'lucide-react';
 import { useModernMembersAuth } from './ModernMembersAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useCustomToast } from '@/hooks/useCustomToast';
 import kambafyLogo from '@/assets/kambafy-logo-gray.svg';
 
 export default function ModernMembersLogin() {
   const { id: memberAreaId } = useParams();
   const navigate = useNavigate();
   const { login, isLoading } = useModernMembersAuth();
+  const { toast } = useCustomToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,8 +54,8 @@ export default function ModernMembersLogin() {
     if (!email.trim()) {
       toast({
         title: "⚠️ Campo obrigatório",
-        description: "Por favor, digite seu email",
-        variant: "destructive",
+        message: "Por favor, digite seu email",
+        variant: "error",
       });
       return;
     }
@@ -62,8 +63,8 @@ export default function ModernMembersLogin() {
     if (!password.trim()) {
       toast({
         title: "⚠️ Campo obrigatório", 
-        description: "Por favor, digite sua senha",
-        variant: "destructive",
+        message: "Por favor, digite sua senha",
+        variant: "error",
       });
       return;
     }
@@ -71,8 +72,8 @@ export default function ModernMembersLogin() {
     if (!memberAreaId) {
       toast({
         title: "❌ Erro de configuração",
-        description: "ID da área de membros não encontrado",
-        variant: "destructive",
+        message: "ID da área de membros não encontrado",
+        variant: "error",
       });
       return;
     }
@@ -82,7 +83,7 @@ export default function ModernMembersLogin() {
     // Toast de carregamento
     toast({
       title: "🔄 Fazendo login...",
-      description: "Por favor, aguarde",
+      message: "Por favor, aguarde",
       variant: "default",
     });
     
@@ -108,8 +109,8 @@ export default function ModernMembersLogin() {
     if (!resetEmail.trim()) {
       toast({
         title: "⚠️ Campo obrigatório",
-        description: "Por favor, digite seu email",
-        variant: "destructive",
+        message: "Por favor, digite seu email",
+        variant: "error",
       });
       return;
     }
@@ -117,8 +118,8 @@ export default function ModernMembersLogin() {
     if (!memberAreaId) {
       toast({
         title: "❌ Erro de configuração",
-        description: "ID da área de membros não encontrado",
-        variant: "destructive",
+        message: "ID da área de membros não encontrado",
+        variant: "error",
       });
       return;
     }
@@ -127,7 +128,7 @@ export default function ModernMembersLogin() {
     
     toast({
       title: "🔄 Verificando acesso...",
-      description: "Validando se o email tem acesso a esta área",
+      message: "Validando se o email tem acesso a esta área",
       variant: "default",
     });
 
@@ -143,16 +144,16 @@ export default function ModernMembersLogin() {
       if (error || !studentAccess) {
         toast({
           title: "❌ Acesso negado",
-          description: "Este email não tem acesso a esta área de membros",
-          variant: "destructive",
+          message: "Este email não tem acesso a esta área de membros",
+          variant: "error",
         });
         return;
       }
 
       toast({
         title: "✅ Email validado",
-        description: "Agora você pode definir uma nova senha",
-        variant: "default",
+        message: "Agora você pode definir uma nova senha",
+        variant: "success",
       });
 
       setEmailValidated(true);
@@ -161,8 +162,8 @@ export default function ModernMembersLogin() {
       console.error('Erro ao validar email:', error);
       toast({
         title: "❌ Erro na validação",
-        description: "Erro ao verificar acesso do email",
-        variant: "destructive",
+        message: "Erro ao verificar acesso do email",
+        variant: "error",
       });
     } finally {
       setIsValidatingEmail(false);
@@ -183,8 +184,8 @@ export default function ModernMembersLogin() {
     if (!resetEmail.trim()) {
       toast({
         title: "⚠️ Campo obrigatório",
-        description: "Por favor, digite seu email",
-        variant: "destructive",
+        message: "Por favor, digite seu email",
+        variant: "error",
       });
       return;
     }
@@ -192,8 +193,8 @@ export default function ModernMembersLogin() {
     if (!newPassword.trim()) {
       toast({
         title: "⚠️ Campo obrigatório",
-        description: "Por favor, digite uma nova senha",
-        variant: "destructive",
+        message: "Por favor, digite uma nova senha",
+        variant: "error",
       });
       return;
     }
@@ -201,8 +202,8 @@ export default function ModernMembersLogin() {
     if (newPassword.length < 6) {
       toast({
         title: "⚠️ Senha muito curta",
-        description: "A nova senha deve ter pelo menos 6 caracteres",
-        variant: "destructive",
+        message: "A nova senha deve ter pelo menos 6 caracteres",
+        variant: "error",
       });
       return;
     }
@@ -210,8 +211,8 @@ export default function ModernMembersLogin() {
     if (!memberAreaId) {
       toast({
         title: "❌ Erro de configuração",
-        description: "ID da área de membros não encontrado",
-        variant: "destructive",
+        message: "ID da área de membros não encontrado",
+        variant: "error",
       });
       return;
     }
@@ -221,7 +222,7 @@ export default function ModernMembersLogin() {
     // Toast de início do processo
     toast({
       title: "🔄 Redefinindo senha...",
-      description: "Por favor, aguarde",
+      message: "Por favor, aguarde",
       variant: "default",
     });
     
@@ -259,8 +260,8 @@ export default function ModernMembersLogin() {
         
         toast({
           title: "❌ Erro",
-          description: errorMessage,
-          variant: "destructive",
+          message: errorMessage,
+          variant: "error",
         });
         return;
       }
@@ -268,16 +269,16 @@ export default function ModernMembersLogin() {
       if (data && !data.success) {
         toast({
           title: "❌ Erro",
-          description: data.error || "Erro desconhecido",
-          variant: "destructive",
+          message: data.error || "Erro desconhecido",
+          variant: "error",
         });
         return;
       }
 
       toast({
         title: "✅ Sucesso",
-        description: "Nova senha definida com sucesso! Agora você pode fazer login.",
-        variant: "default",
+        message: "Nova senha definida com sucesso! Agora você pode fazer login.",
+        variant: "success",
       });
 
       setShowResetModal(false);
@@ -289,8 +290,8 @@ export default function ModernMembersLogin() {
       setTimeout(() => {
         toast({
           title: "🎉 Senha atualizada!",
-          description: "Agora você pode usar sua nova senha para fazer login.",
-          variant: "default",
+          message: "Agora você pode usar sua nova senha para fazer login.",
+          variant: "success",
         });
       }, 1000);
       
@@ -306,8 +307,8 @@ export default function ModernMembersLogin() {
       
       toast({
         title: "❌ Erro Inesperado",
-        description: errorMessage,
-        variant: "destructive",
+        message: errorMessage,
+        variant: "error",
       });
     } finally {
       setIsResetting(false);
