@@ -502,11 +502,6 @@ export default function ModernMembersArea() {
                         scale: 1.02
                       }} className={`p-3 rounded cursor-pointer transition-colors ${lesson.id === selectedLesson.id ? 'bg-emerald-500/20 border-l-4 border-l-emerald-400' : 'bg-gray-800/50 hover:bg-gray-800'}`} onClick={() => handleLessonClick(lesson)}>
                                   <div className="flex items-center gap-3">
-                                    <div className="flex-shrink-0">
-                                      <Badge variant="outline" className="text-xs">
-                                        {lesson.order_number}
-                                      </Badge>
-                                    </div>
                                     <div className="flex-1 min-w-0">
                                       <p className="font-medium text-sm text-white line-clamp-1">
                                         {lesson.title}
