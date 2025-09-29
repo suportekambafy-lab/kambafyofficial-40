@@ -7,14 +7,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('=== ADD MEMBER AREA COMMENT START ===');
-    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -22,23 +19,11 @@ serve(async (req) => {
 
     const { lessonId, comment, studentEmail, studentName, parentCommentId } = await req.json();
 
-    console.log('Request data:', { lessonId, comment: comment?.substring(0, 50), studentEmail, studentName, parentCommentId });
-
     if (!lessonId || !comment?.trim() || !studentEmail || !studentName) {
       throw new Error('Dados obrigatórios não fornecidos');
     }
 
-    // Verificar se existe uma sessão ativa para este estudante na área de membros
-    const { data: sessionData } = await supabase
-      .from('member_area_sessions')
-      .select('*')
-      .eq('student_email', studentEmail)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-
-    console.log('Session data found:', !!sessionData);
-
-    // Verificar se a lição existe e obter a área de membros
+    // Verificar se a lição existe
     const { data: lessonData, error: lessonError } = await supabase
       .from('lessons')
       .select('id, member_area_id')
@@ -49,40 +34,24 @@ serve(async (req) => {
       throw new Error('Lição não encontrada');
     }
 
-    console.log('Lesson data:', lessonData);
-
-    // Verificar se o estudante tem acesso à área de membros
-    const { data: studentAccess } = await supabase
-      .from('member_area_students')
-      .select('*')
-      .eq('member_area_id', lessonData.member_area_id)
-      .eq('student_email', studentEmail)
-      .single();
-
-    if (!studentAccess && !sessionData) {
-      throw new Error('Acesso negado à área de membros');
-    }
-
-    console.log('Student access verified');
-
-    // Criar um UUID baseado no hash do email do estudante
+    // Gerar UUID determinístico baseado no email
     const encoder = new TextEncoder();
     const data = encoder.encode(studentEmail);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     
-    // Converter para formato UUID válido (8-4-4-4-12)
-    const uuidString = hashHex.substring(0, 32);
-    const tempUserId = `${uuidString.substring(0, 8)}-${uuidString.substring(8, 12)}-${uuidString.substring(12, 16)}-${uuidString.substring(16, 20)}-${uuidString.substring(20, 32)}`;
+    // Formatação UUID válida
+    const hex = hashHex.substring(0, 32);
+    const userId = `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}`;
 
-    // Inserir o comentário
+    // Inserir comentário
     const { data: commentData, error: commentError } = await supabase
       .from('lesson_comments')
       .insert({
         lesson_id: lessonId,
         comment: comment.trim(),
-        user_id: tempUserId,
+        user_id: userId,
         parent_comment_id: parentCommentId || null,
         user_email: studentEmail,
         user_name: studentName
@@ -91,19 +60,12 @@ serve(async (req) => {
       .single();
 
     if (commentError) {
-      console.error('Error inserting comment:', commentError);
-      throw commentError;
+      console.error('Erro ao inserir comentário:', commentError);
+      throw new Error('Erro ao salvar comentário');
     }
 
-    console.log('Comment inserted successfully:', commentData);
-
     return new Response(
-      JSON.stringify({
-        ...commentData,
-        user_id: tempUserId,
-        student_name: studentName,
-        student_email: studentEmail
-      }),
+      JSON.stringify({ success: true, data: commentData }),
       { 
         headers: { 
           ...corsHeaders, 
@@ -113,13 +75,11 @@ serve(async (req) => {
     );
 
   } catch (error: any) {
-    console.error('=== ERROR IN ADD MEMBER AREA COMMENT ===');
-    console.error('Error:', error);
+    console.error('Erro na função:', error);
     
     return new Response(
       JSON.stringify({ 
-        error: error?.message || 'Erro interno do servidor',
-        details: error
+        error: error?.message || 'Erro interno do servidor'
       }),
       { 
         status: 400,
