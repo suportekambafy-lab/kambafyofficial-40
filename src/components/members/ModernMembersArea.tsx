@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Play, BookOpen, LogOut, Clock, Users, Star, Search, Filter, GraduationCap, Trophy, Target, CheckCircle2, PlayCircle, MoreVertical, ArrowLeft, Menu, X, Lock, AlertCircle, ExternalLink, Download, FileText, Timer } from 'lucide-react';
+import { Play, BookOpen, LogOut, Clock, Users, Star, Search, Filter, GraduationCap, Trophy, Target, CheckCircle2, PlayCircle, MoreVertical, ArrowLeft, Menu, X, Lock, AlertCircle, ExternalLink, Download, FileText, Timer, MessageCircle } from 'lucide-react';
 import { CountdownTimer } from '@/components/ui/countdown-timer';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,7 @@ import { useModernMembersAuth } from './ModernMembersAuth';
 import { ModernLessonViewer } from './ModernLessonViewer';
 import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { LessonComments } from './LessonComments';
+import { CommentsManagement } from './CommentsManagement';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMemberLessonProgress } from '@/hooks/useMemberLessonProgress';
@@ -80,6 +81,7 @@ export default function ModernMembersArea() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [showCommentsManagement, setShowCommentsManagement] = useState(false);
   // Estado para dados da área quando acesso é verificado
   const [verifiedMemberArea, setVerifiedMemberArea] = useState<any>(null);
   const isMobile = useIsMobile();
@@ -93,6 +95,9 @@ export default function ModernMembersArea() {
   const emailParam = urlParams.get('email');
   const userEmail = user?.email || (isVerified ? emailParam : undefined);
   const userName = user?.user_metadata?.full_name || (isVerified && emailParam ? emailParam.split('@')[0] : 'Estudante');
+  
+  // Verificar se o usuário é o dono da área de membros
+  const isOwner = user && currentMemberArea && currentMemberArea.user_id === user.id;
 
   // Hook de progresso das aulas
   const {
@@ -391,6 +396,19 @@ export default function ModernMembersArea() {
                   </p>
                 </div>
               </div>
+              
+              {/* Botão de gestão de comentários para o dono */}
+              {isOwner && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCommentsManagement(!showCommentsManagement)}
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  {showCommentsManagement ? 'Voltar' : 'Gerir Comentários'}
+                </Button>
+              )}
             </motion.div>
 
             {/* Course Hero */}
@@ -411,7 +429,24 @@ export default function ModernMembersArea() {
           </div>
         </motion.section>}
 
-      {/* Header fixo quando aula selecionada */}
+      {/* Gestão de Comentários (só para donos) */}
+      {showCommentsManagement && isOwner && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="container mx-auto px-4 py-8"
+        >
+          <CommentsManagement 
+            memberAreaId={memberAreaId || ''} 
+            isOwner={isOwner} 
+          />
+        </motion.div>
+      )}
+
+      {/* Conteúdo principal - ocultar quando gestão de comentários ativa */}
+      {!showCommentsManagement && (
+        <>
+          {/* Header fixo quando aula selecionada */}
       {selectedLesson && <motion.header className="bg-black/95 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4 bg-zinc-950">
             <div className="flex items-center justify-between">
@@ -735,5 +770,8 @@ export default function ModernMembersArea() {
             </div>)}
         </div>
       </div>
-    </div>;
+        </>
+      )}
+    </div>
+  );
 }
