@@ -65,13 +65,16 @@ serve(async (req) => {
 
     console.log('Student access verified');
 
-    // Criar um "usuário" temporário para o comentário (usando o email como ID único)
+    // Criar um UUID baseado no hash do email do estudante
     const encoder = new TextEncoder();
     const data = encoder.encode(studentEmail);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    const tempUserId = `member_${hashHex.substring(0, 20)}`;
+    
+    // Converter para formato UUID válido (8-4-4-4-12)
+    const uuidString = hashHex.substring(0, 32);
+    const tempUserId = `${uuidString.substring(0, 8)}-${uuidString.substring(8, 12)}-${uuidString.substring(12, 16)}-${uuidString.substring(16, 20)}-${uuidString.substring(20, 32)}`;
 
     // Inserir o comentário
     const { data: commentData, error: commentError } = await supabase
