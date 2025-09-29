@@ -29,7 +29,7 @@ interface WebhookPayload {
   temporaryPassword?: string; // Campo opcional para senha temporária
 }
 
-const MEMBER_AREA_ID = "a8f7e2d1-4c9b-4e5f-8a2d-1b3c4d5e6f7a"; // IA Lucrativo
+const MEMBER_AREA_ID = "c13f3dc7-66e7-4b90-8821-9e23767e7561"; // AI Lucrativo
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
