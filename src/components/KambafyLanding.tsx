@@ -7,9 +7,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { SubdomainLink } from './SubdomainLink';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-// Optimized image paths with explicit dimensions for better loading
-const professionalWoman = '/lovable-uploads/09933f06-0001-46b9-9e43-62a0ebdd9868.png';
-const professionalMan = '/lovable-uploads/730e6c93-f015-4eb9-a5cb-a980f00fcde0.png';
+// Optimized WebP image paths for better performance
+const professionalWoman = '/lovable-uploads/09933f06-0001-46b9-9e43-62a0ebdd9868.png'; // Used for small avatars
+const professionalMan = '/lovable-uploads/730e6c93-f015-4eb9-a5cb-a980f00fcde0.png'; // Fallback for compatibility
 const transitionVariants = {
   item: {
     hidden: {
@@ -448,7 +448,7 @@ const TestimonialsSection = () => {
                     loading="lazy"
                     width="48"
                     height="48"
-                    style={{ maxWidth: '48px', maxHeight: '48px' }}
+                    decoding="async"
                   />
                 </div>
                 <div className="flex">
