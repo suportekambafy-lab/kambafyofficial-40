@@ -93,10 +93,22 @@ export default function ModernMembersLogin() {
     const success = await login(email, password);
     
     if (success) {
+      toast({
+        title: "✅ Login realizado com sucesso!",
+        message: "Bem-vindo à área de membros",
+        variant: "success",
+      });
+      
       // Aguardar mais um pouco antes de redirecionar
       await new Promise(resolve => setTimeout(resolve, 800));
       // Redirecionar diretamente sem páginas intermediárias
       window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(email)}`;
+    } else {
+      toast({
+        title: "❌ Erro no login",
+        message: "Email ou senha incorretos",
+        variant: "error",
+      });
     }
     
     setIsSubmitting(false);
@@ -276,8 +288,8 @@ export default function ModernMembersLogin() {
       }
 
       toast({
-        title: "✅ Sucesso",
-        message: "Nova senha definida com sucesso! Agora você pode fazer login.",
+        title: "✅ Senha atualizada com sucesso!",
+        message: "Agora você pode fazer login com sua nova senha.",
         variant: "success",
       });
 
@@ -285,15 +297,6 @@ export default function ModernMembersLogin() {
       setResetEmail('');
       setNewPassword('');
       setEmailValidated(false);
-      
-      // Toast adicional de confirmação
-      setTimeout(() => {
-        toast({
-          title: "🎉 Senha atualizada!",
-          message: "Agora você pode usar sua nova senha para fazer login.",
-          variant: "success",
-        });
-      }, 1000);
       
     } catch (error: any) {
       console.error('Erro inesperado:', error);

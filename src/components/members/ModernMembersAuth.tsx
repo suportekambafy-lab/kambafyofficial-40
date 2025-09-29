@@ -147,11 +147,6 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
 
       if (error) {
         console.error('❌ ModernAuth: Erro no login customizado:', error);
-        toast({
-          title: 'Erro no login',
-          message: 'Email ou senha incorretos',
-          variant: 'error'
-        });
         return false;
       }
 
@@ -203,12 +198,6 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
         
         setUser(customUser);
         setSession(customSession);
-        
-        toast({
-          title: 'Login realizado com sucesso!',
-          message: 'Bem-vindo à área de membros.',
-          variant: 'success'
-        });
 
         return true;
       }
@@ -216,11 +205,6 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
       return false;
     } catch (error) {
       console.error('❌ ModernAuth: Erro inesperado no login:', error);
-      toast({
-        title: 'Erro inesperado',
-        message: 'Algo deu errado. Tente novamente.',
-        variant: 'error'
-      });
       return false;
     } finally {
       setIsLoading(false);
@@ -232,12 +216,6 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
     
     await supabase.auth.signOut();
     setMemberArea(null);
-    
-    toast({
-      title: 'Logout realizado com sucesso',
-      message: 'Até a próxima!',
-      variant: 'success'
-    });
   };
 
   const contextValue: ModernMembersAuthContextType = {
