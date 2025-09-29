@@ -138,7 +138,7 @@ export function MemberAreaSlideMenu({
             
             <Button
               onClick={() => {
-                navigate('/sales');
+                navigate('/meus-acessos');
                 setOpen(false);
               }}
               variant="outline"
@@ -146,8 +146,8 @@ export function MemberAreaSlideMenu({
             >
               <ShoppingBag className="w-4 h-4 text-emerald-400" />
               <div className="text-left">
-                <p className="font-medium">Minhas Compras</p>
-                <p className="text-xs text-gray-400">Ver histórico de pedidos</p>
+                <p className="font-medium">Meus Acessos</p>
+                <p className="text-xs text-gray-400">Ver meus cursos e produtos</p>
               </div>
             </Button>
 
