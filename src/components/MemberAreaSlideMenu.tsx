@@ -100,7 +100,7 @@ export function MemberAreaSlideMenu({
 
         <div className="space-y-6 mt-6">
           {/* Perfil do Usuário */}
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-4 rounded-lg border border-gray-700">
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-4 rounded-lg">
             <div className="flex items-center gap-4 mb-4">
               <Avatar className="w-16 h-16 border-2 border-emerald-500">
                 <AvatarImage src={userAvatar} alt={userName || userEmail} />
