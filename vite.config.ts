@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    sourcemap: true,
     rollupOptions: {
       output: {
         // Cache busting para arquivos estáticos
