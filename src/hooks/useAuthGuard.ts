@@ -11,25 +11,31 @@ export function useAuthGuard() {
   const { currentSubdomain } = useSubdomain();
 
   useEffect(() => {
-    if (!loading) {
-      setAuthReady(true);
-      
-      // Não fazer verificação de auth para o domínio principal (kambafy.com)
-      // A landing page é pública e não requer autenticação
-      if (currentSubdomain === 'main') {
-        return;
-      }
-      
-      // Para Mobile subdomain, não fazer redirecionamentos
-      if (currentSubdomain === 'mobile') {
-        return;
-      }
-      
-      // Não interferir nas rotas de área de membros - elas têm sua própria proteção
-      if (window.location.pathname.includes('/area/') || window.location.pathname.includes('/login/')) {
-        return;
-      }
-      
+    // Só processar quando não estiver carregando
+    if (loading) {
+      return;
+    }
+
+    setAuthReady(true);
+    
+    // Não fazer verificação de auth para o domínio principal (kambafy.com)
+    // A landing page é pública e não requer autenticação
+    if (currentSubdomain === 'main') {
+      return;
+    }
+    
+    // Para Mobile subdomain, não fazer redirecionamentos
+    if (currentSubdomain === 'mobile') {
+      return;
+    }
+    
+    // Não interferir nas rotas de área de membros - elas têm sua própria proteção
+    if (window.location.pathname.includes('/area/') || window.location.pathname.includes('/login/')) {
+      return;
+    }
+
+    // Aguardar um momento para garantir que a sessão foi carregada
+    const timer = setTimeout(() => {
       // Se não há usuário ou sessão válida, redirecionar para login
       if (!user || !session) {
         console.log('🔒 useAuthGuard: Usuário não autenticado, redirecionando para /auth');
@@ -43,7 +49,9 @@ export function useAuthGuard() {
         navigate('/auth', { replace: true });
         return;
       }
-    }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [loading, user, session, navigate, currentSubdomain]);
 
   const isAuthenticated = !loading && !!user && !!session;
