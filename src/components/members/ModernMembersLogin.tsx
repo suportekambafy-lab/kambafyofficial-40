@@ -188,7 +188,8 @@ export default function ModernMembersLogin() {
     e.preventDefault();
     if (isValidatingEmail) return;
 
-    if (!resetEmail.trim()) {
+    const emailToValidate = resetEmail.trim();
+    if (!emailToValidate) {
       toast({
         title: "⚠️ Campo obrigatório",
         message: "Por favor, digite seu email",
@@ -214,7 +215,7 @@ export default function ModernMembersLogin() {
         .from('member_area_students')
         .select('*')
         .eq('member_area_id', memberAreaId)
-        .eq('student_email', resetEmail.trim())
+        .eq('student_email', emailToValidate)
         .single();
 
       if (error || !studentAccess) {
@@ -249,8 +250,11 @@ export default function ModernMembersLogin() {
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validações rápidas
-    if (!resetEmail.trim()) {
+    // Validações rápidas - usar valores atuais dos estados
+    const currentResetEmail = resetEmail.trim();
+    const currentNewPassword = newPassword.trim();
+    
+    if (!currentResetEmail) {
       toast({
         title: "⚠️ Campo obrigatório",
         message: "Por favor, digite seu email",
@@ -259,7 +263,7 @@ export default function ModernMembersLogin() {
       return;
     }
 
-    if (!newPassword.trim()) {
+    if (!currentNewPassword) {
       toast({
         title: "⚠️ Campo obrigatório",
         message: "Por favor, digite uma nova senha",
@@ -268,7 +272,7 @@ export default function ModernMembersLogin() {
       return;
     }
 
-    if (newPassword.length < 6) {
+    if (currentNewPassword.length < 6) {
       toast({
         title: "⚠️ Senha muito curta",
         message: "A nova senha deve ter pelo menos 6 caracteres",
@@ -287,7 +291,7 @@ export default function ModernMembersLogin() {
     }
 
     // Usar função debounced para evitar múltiplas chamadas
-    debouncedPasswordReset(resetEmail, newPassword);
+    debouncedPasswordReset(currentResetEmail, currentNewPassword);
   };
 
   // Remover completamente a tela de loading/verificando acesso
