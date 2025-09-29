@@ -45,9 +45,44 @@ export default function ModernMembersLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!memberAreaId || !email || !password || isSubmitting) return;
+    if (isSubmitting) return;
+
+    // Validações com toasts específicos
+    if (!email.trim()) {
+      toast({
+        title: "⚠️ Campo obrigatório",
+        description: "Por favor, digite seu email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!password.trim()) {
+      toast({
+        title: "⚠️ Campo obrigatório", 
+        description: "Por favor, digite sua senha",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!memberAreaId) {
+      toast({
+        title: "❌ Erro de configuração",
+        description: "ID da área de membros não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSubmitting(true);
+    
+    // Toast de carregamento
+    toast({
+      title: "🔄 Fazendo login...",
+      description: "Por favor, aguarde",
+      variant: "default",
+    });
     
     // Aguardar um pouco mais para dar tempo da verificação
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -66,12 +101,40 @@ export default function ModernMembersLogin() {
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resetEmail.trim() || !newPassword.trim() || !memberAreaId || isResetting) return;
+    if (isResetting) return;
+
+    // Validações no frontend com toasts específicos
+    if (!resetEmail.trim()) {
+      toast({
+        title: "⚠️ Campo obrigatório",
+        description: "Por favor, digite seu email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newPassword.trim()) {
+      toast({
+        title: "⚠️ Campo obrigatório",
+        description: "Por favor, digite uma nova senha",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (newPassword.length < 6) {
       toast({
-        title: "Erro",
+        title: "⚠️ Senha muito curta",
         description: "A nova senha deve ter pelo menos 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!memberAreaId) {
+      toast({
+        title: "❌ Erro de configuração",
+        description: "ID da área de membros não encontrado",
         variant: "destructive",
       });
       return;
@@ -90,16 +153,33 @@ export default function ModernMembersLogin() {
 
       if (error) {
         console.error('Erro ao definir nova senha:', error);
+        let errorMessage = "Erro ao processar solicitação";
+        
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        }
+        
         toast({
-          title: "Erro",
-          description: error.message || "Erro ao processar solicitação",
+          title: "❌ Erro",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data && !data.success) {
+        toast({
+          title: "❌ Erro",
+          description: data.error || "Erro desconhecido",
           variant: "destructive",
         });
         return;
       }
 
       toast({
-        title: "Sucesso",
+        title: "✅ Sucesso",
         description: "Nova senha definida com sucesso! Agora você pode fazer login.",
         variant: "default",
       });
@@ -108,11 +188,28 @@ export default function ModernMembersLogin() {
       setResetEmail('');
       setNewPassword('');
       
+      // Toast adicional de confirmação
+      setTimeout(() => {
+        toast({
+          title: "🎉 Senha atualizada!",
+          description: "Agora você pode usar sua nova senha para fazer login.",
+          variant: "default",
+        });
+      }, 1000);
+      
     } catch (error: any) {
       console.error('Erro inesperado:', error);
+      let errorMessage = "Erro inesperado ao processar solicitação";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
-        title: "Erro",
-        description: "Erro inesperado ao processar solicitação",
+        title: "❌ Erro Inesperado",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -22,13 +22,15 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('=== MEMBER AREA PASSWORD RESET START ===');
     
     const { studentEmail, memberAreaId, newPassword }: ResetPasswordRequest = await req.json();
-    console.log('Reset request for:', studentEmail, 'Member Area:', memberAreaId);
+    console.log('Reset request for:', studentEmail, 'Member Area:', memberAreaId, 'Password provided:', !!newPassword);
 
     if (!studentEmail || !memberAreaId || !newPassword) {
+      console.log('❌ Campos obrigatórios ausentes:', { studentEmail: !!studentEmail, memberAreaId: !!memberAreaId, newPassword: !!newPassword });
       throw new Error('Email, ID da área de membros e nova senha são obrigatórios');
     }
 
     if (newPassword.length < 6) {
+      console.log('❌ Senha muito curta:', newPassword.length);
       throw new Error('A nova senha deve ter pelo menos 6 caracteres');
     }
 
@@ -70,37 +72,55 @@ const handler = async (req: Request): Promise<Response> => {
     if (!existingUser) {
       console.log('⚠️ Usuário não encontrado no sistema de autenticação, criando nova conta...');
       
-      // Criar novo usuário com a nova senha fornecida
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-        email: studentEmail,
-        password: newPassword,
-        email_confirm: true,
-      });
+      try {
+        // Criar novo usuário com a nova senha fornecida
+        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+          email: studentEmail,
+          password: newPassword,
+          email_confirm: true,
+        });
 
-      if (createError) {
-        console.error('❌ Erro ao criar usuário:', createError);
-        throw createError;
+        if (createError) {
+          console.error('❌ Erro ao criar usuário:', createError);
+          // Se o usuário já existe, tentar encontrá-lo novamente
+          if (createError.message?.includes('already been registered') || createError.message?.includes('email_exists')) {
+            console.log('🔄 Usuário já existe, buscando novamente...');
+            const { data: { users: refreshedUsers } } = await supabase.auth.admin.listUsers();
+            const foundUser = refreshedUsers.find(u => u.email === studentEmail);
+            if (foundUser) {
+              userId = foundUser.id;
+              console.log('✅ Usuário encontrado após refresh:', userId);
+            } else {
+              throw new Error('Não foi possível encontrar ou criar conta para este email');
+            }
+          } else {
+            throw createError;
+          }
+        } else {
+          console.log('✅ Nova conta criada:', newUser.user?.id);
+          userId = newUser.user!.id;
+        }
+      } catch (creationError: any) {
+        console.error('❌ Erro na criação/localização do usuário:', creationError);
+        throw new Error('Erro ao processar conta do usuário: ' + creationError.message);
       }
-
-      console.log('✅ Nova conta criada:', newUser.user?.id);
-      userId = newUser.user!.id;
     } else {
       console.log('✅ Usuário encontrado:', existingUser.id);
       userId = existingUser.id;
-
-      // Atualizar a senha do usuário existente
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        userId,
-        { password: newPassword }
-      );
-
-      if (updateError) {
-        console.error('❌ Erro ao atualizar senha:', updateError);
-        throw updateError;
-      }
-
-      console.log('✅ Senha atualizada com sucesso');
     }
+
+    // Atualizar a senha do usuário (seja novo ou existente)
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      userId,
+      { password: newPassword }
+    );
+
+    if (updateError) {
+      console.error('❌ Erro ao atualizar senha:', updateError);
+      throw new Error('Erro ao definir nova senha: ' + updateError.message);
+    }
+
+    console.log('✅ Senha atualizada com sucesso para usuário:', userId);
 
     return new Response(JSON.stringify({
       success: true,
