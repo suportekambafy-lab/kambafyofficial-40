@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.member-area-reset-password]
 verify_jwt = false
+
+[functions.add-member-area-comment]
+verify_jwt = false
