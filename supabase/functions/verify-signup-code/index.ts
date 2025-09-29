@@ -67,38 +67,14 @@ serve(async (req) => {
 
     console.log('✅ Email confirmado com sucesso!');
 
-    // Criar cliente normal para tentar fazer login automático
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
-
-    // Tentar fazer login automático
-    const { data: loginData, error: loginError } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-
-    if (loginError) {
-      console.log('⚠️ Email confirmado mas login falhou:', loginError.message);
-      return Response.json(
-        { 
-          success: true, 
-          message: 'Conta confirmada com sucesso! Faça login manualmente.',
-          autoLoginFailed: true 
-        },
-        { status: 200, headers: corsHeaders }
-      );
-    }
-
-    console.log('✅ Login automático realizado com sucesso!');
-
+    // Retornar sucesso sem fazer login automático
+    // O usuário deve definir sua senha posteriormente
     return Response.json(
       { 
         success: true, 
-        message: 'Conta confirmada e login realizado com sucesso!',
-        session: loginData.session,
-        user: loginData.user
+        message: 'Email confirmado com sucesso! Agora você pode definir sua senha.',
+        emailConfirmed: true,
+        email: email
       },
       { status: 200, headers: corsHeaders }
     );
