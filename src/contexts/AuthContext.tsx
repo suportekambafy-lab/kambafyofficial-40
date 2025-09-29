@@ -87,6 +87,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Verificar sessão inicial com timeout para evitar hanging
     const getInitialSession = async () => {
       try {
+        // NÃO verificar sessão nas rotas de área de membros - elas têm seu próprio sistema
+        if (window.location.pathname.includes('/members/area/') || 
+            window.location.pathname.includes('/members/login/')) {
+          console.log('ℹ️ Rota de área de membros detectada, pulando verificação de sessão principal');
+          if (mounted) {
+            setLoading(false);
+          }
+          return;
+        }
+
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -138,6 +148,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!mounted) return;
 
         console.log('🔄 Auth state change:', event);
+        
+        // NÃO interferir nas rotas de área de membros - elas têm seu próprio sistema
+        if (window.location.pathname.includes('/members/area/') || 
+            window.location.pathname.includes('/members/login/')) {
+          console.log('ℹ️ Rota de área de membros detectada, ignorando auth change');
+          setLoading(false);
+          return;
+        }
         
         if (event === 'SIGNED_OUT' || !session) {
           console.log('👋 Usuário desconectado');

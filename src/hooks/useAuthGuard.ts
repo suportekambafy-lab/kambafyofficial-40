@@ -26,7 +26,9 @@ export function useAuthGuard() {
       }
       
       // Não interferir nas rotas de área de membros - elas têm sua própria proteção
-      if (window.location.pathname.includes('/area/') || window.location.pathname.includes('/login/')) {
+      if (window.location.pathname.includes('/members/area/') || 
+          window.location.pathname.includes('/members/login/')) {
+        console.log('ℹ️ useAuthGuard: Rota de área de membros detectada, ignorando');
         return;
       }
       
