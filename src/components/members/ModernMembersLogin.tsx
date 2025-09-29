@@ -103,6 +103,12 @@ export default function ModernMembersLogin() {
     e.preventDefault();
     if (isResetting) return;
 
+    console.log('🔄 Iniciando reset de senha...', { 
+      email: resetEmail, 
+      password: newPassword ? 'PROVIDED' : 'NOT_PROVIDED',
+      memberAreaId 
+    });
+
     // Validações no frontend com toasts específicos
     if (!resetEmail.trim()) {
       toast({
@@ -142,7 +148,20 @@ export default function ModernMembersLogin() {
 
     setIsResetting(true);
     
+    // Toast de início do processo
+    toast({
+      title: "🔄 Redefinindo senha...",
+      description: "Por favor, aguarde",
+      variant: "default",
+    });
+    
     try {
+      console.log('📤 Enviando dados para edge function:', {
+        studentEmail: resetEmail.trim(),
+        memberAreaId: memberAreaId,
+        newPassword: newPassword.trim() ? 'PROVIDED' : 'EMPTY'
+      });
+
       const { data, error } = await supabase.functions.invoke('member-area-reset-password', {
         body: {
           studentEmail: resetEmail.trim(),
