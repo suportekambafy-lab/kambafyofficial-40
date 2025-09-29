@@ -235,6 +235,29 @@ export default function ModernMembersLogin() {
             </motion.div>
           </form>
         </div>
+        
+        {/* Footer com mensagem da Kambafy */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mt-8 text-center"
+        >
+          <div className="flex items-center justify-center gap-1 text-xs text-zinc-600">
+            <span>Plataforma desenvolvida por</span>
+            <a 
+              href="https://kambafy.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-zinc-300 font-medium transition-colors"
+            >
+              Kambafy
+            </a>
+          </div>
+          <p className="text-xs text-zinc-700 mt-1">
+            Criação e gestão de áreas de membros profissionais
+          </p>
+        </motion.div>
       </motion.div>
     </div>
   );
