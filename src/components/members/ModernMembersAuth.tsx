@@ -51,20 +51,117 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
   useEffect(() => {
     console.log('🔍 ModernAuth: Configurando listener de auth...');
     
-    // Configurar listener de mudanças de autenticação
+    // Verificar query params para acesso verificado
+    const urlParams = new URLSearchParams(window.location.search);
+    const verified = urlParams.get('verified') === 'true';
+    const email = urlParams.get('email');
+    
+    if (verified && email) {
+      console.log('🔑 ModernAuth: Acesso verificado detectado via URL:', email);
+      
+      // Criar sessão virtual persistente
+      const virtualUser = {
+        id: crypto.randomUUID(),
+        email: decodeURIComponent(email),
+        app_metadata: { provider: 'email', providers: ['email'] },
+        user_metadata: { full_name: decodeURIComponent(email).split('@')[0] },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+        email_confirmed_at: new Date().toISOString(),
+        confirmed_at: new Date().toISOString(),
+        last_sign_in_at: new Date().toISOString(),
+        role: 'authenticated',
+        updated_at: new Date().toISOString(),
+      } as unknown as User;
+      
+      const virtualSession = {
+        user: virtualUser,
+        access_token: crypto.randomUUID(),
+        refresh_token: crypto.randomUUID(),
+        expires_in: 86400,
+        expires_at: Math.floor(Date.now() / 1000) + 86400,
+        token_type: 'bearer'
+      } as Session;
+      
+      // Salvar no localStorage para persistência
+      localStorage.setItem('memberAreaSession', JSON.stringify({
+        user: virtualUser,
+        session: virtualSession,
+        timestamp: Date.now()
+      }));
+      
+      setUser(virtualUser);
+      setSession(virtualSession);
+      setIsLoading(false);
+      
+      console.log('✅ ModernAuth: Sessão virtual criada e persistida');
+      return;
+    }
+    
+    // Tentar recuperar sessão do localStorage
+    const savedSession = localStorage.getItem('memberAreaSession');
+    if (savedSession) {
+      try {
+        const { user: savedUser, session: savedSessionData, timestamp } = JSON.parse(savedSession);
+        
+        // Verificar se a sessão não expirou (24h)
+        if (Date.now() - timestamp < 86400000) {
+          console.log('✅ ModernAuth: Sessão recuperada do localStorage');
+          setUser(savedUser);
+          setSession(savedSessionData);
+          setIsLoading(false);
+          return;
+        } else {
+          console.log('⏰ ModernAuth: Sessão expirada, removendo');
+          localStorage.removeItem('memberAreaSession');
+        }
+      } catch (error) {
+        console.error('❌ ModernAuth: Erro ao recuperar sessão:', error);
+        localStorage.removeItem('memberAreaSession');
+      }
+    }
+    
+    // Configurar listener de mudanças de autenticação Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('🔄 ModernAuth: Auth state changed:', event, !!session);
-        setSession(session);
-        setUser(session?.user ?? null);
+        
+        if (session) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          // Salvar no localStorage também
+          localStorage.setItem('memberAreaSession', JSON.stringify({
+            user: session.user,
+            session: session,
+            timestamp: Date.now()
+          }));
+        } else {
+          // Só limpar se não houver sessão salva
+          if (!localStorage.getItem('memberAreaSession')) {
+            setSession(null);
+            setUser(null);
+          }
+        }
       }
     );
 
-    // Verificar sessão existente
+    // Verificar sessão Supabase existente
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('📋 ModernAuth: Sessão inicial:', !!session);
-      setSession(session);
-      setUser(session?.user ?? null);
+      console.log('📋 ModernAuth: Sessão Supabase inicial:', !!session);
+      
+      if (session) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Salvar no localStorage
+        localStorage.setItem('memberAreaSession', JSON.stringify({
+          user: session.user,
+          session: session,
+          timestamp: Date.now()
+        }));
+      }
+      
       setIsLoading(false);
     });
 
@@ -214,8 +311,13 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
   const logout = async () => {
     console.log('🚪 ModernAuth: Fazendo logout...');
     
+    // Limpar localStorage
+    localStorage.removeItem('memberAreaSession');
+    
     await supabase.auth.signOut();
     setMemberArea(null);
+    setUser(null);
+    setSession(null);
   };
 
   const contextValue: ModernMembersAuthContextType = {
