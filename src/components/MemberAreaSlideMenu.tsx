@@ -93,9 +93,7 @@ export function MemberAreaSlideMenu({
       <SheetContent side="right" className="w-[400px] sm:w-[540px] bg-gray-950 text-white border-gray-800">
         <SheetHeader>
           
-          <SheetDescription className="text-slate-300">
-            Acompanhe seu progresso e pesquise aulas
-          </SheetDescription>
+          
         </SheetHeader>
 
         <div className="space-y-6 mt-6">
@@ -136,14 +134,10 @@ export function MemberAreaSlideMenu({
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-gray-400 px-2">Navegação Rápida</h3>
             
-            <Button
-              onClick={() => {
-                navigate('/sales');
-                setOpen(false);
-              }}
-              variant="outline"
-              className="w-full justify-start gap-3 bg-gray-900 border-gray-700 hover:bg-gray-800 hover:border-emerald-500/50 text-white"
-            >
+            <Button onClick={() => {
+            navigate('/sales');
+            setOpen(false);
+          }} variant="outline" className="w-full justify-start gap-3 bg-gray-900 border-gray-700 hover:bg-gray-800 hover:border-emerald-500/50 text-white">
               <ShoppingBag className="w-4 h-4 text-emerald-400" />
               <div className="text-left">
                 <p className="font-medium">Minhas Compras</p>
@@ -151,14 +145,10 @@ export function MemberAreaSlideMenu({
               </div>
             </Button>
 
-            <Button
-              onClick={() => {
-                navigate('/dashboard');
-                setOpen(false);
-              }}
-              variant="outline"
-              className="w-full justify-start gap-3 bg-gray-900 border-gray-700 hover:bg-gray-800 hover:border-emerald-500/50 text-white"
-            >
+            <Button onClick={() => {
+            navigate('/dashboard');
+            setOpen(false);
+          }} variant="outline" className="w-full justify-start gap-3 bg-gray-900 border-gray-700 hover:bg-gray-800 hover:border-emerald-500/50 text-white">
               <LayoutDashboard className="w-4 h-4 text-emerald-400" />
               <div className="text-left">
                 <p className="font-medium">Painel de Vendedor</p>
