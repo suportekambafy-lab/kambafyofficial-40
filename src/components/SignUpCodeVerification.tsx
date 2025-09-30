@@ -252,14 +252,7 @@ const SignUpCodeVerification = ({
             className="w-full"
             size="lg"
           >
-            {loading ? (
-              <>
-                <LoadingSpinner className="mr-2 h-4 w-4" />
-                Verificando...
-              </>
-            ) : (
-              'Confirmar Código'
-            )}
+            {loading ? 'Verificando...' : 'Confirmar Código'}
           </Button>
 
           <div className="text-center space-y-2">
@@ -274,14 +267,7 @@ const SignUpCodeVerification = ({
                 disabled={resendLoading}
                 className="text-sm"
               >
-                {resendLoading ? (
-                  <>
-                    <LoadingSpinner className="mr-2 h-4 w-4" />
-                    Enviando...
-                  </>
-                ) : (
-                  'Reenviar código'
-                )}
+                {resendLoading ? 'Enviando...' : 'Reenviar código'}
               </Button>
             )}
           </div>
