@@ -101,6 +101,11 @@ const Auth = () => {
       return;
     }
 
+    if (!selectedUserType) {
+      setErrorField("Por favor, selecione o tipo de usuário.");
+      return;
+    }
+
     setLoading(true);
     setErrorField('');
 
