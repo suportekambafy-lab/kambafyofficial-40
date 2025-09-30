@@ -94,7 +94,7 @@ export function MemberAreaSlideMenu({
         <SheetHeader>
           
           <SheetDescription className="text-slate-300">
-            Acompanhe seu progresso e pesquise aulas
+            Meu perfil
           </SheetDescription>
         </SheetHeader>
 
