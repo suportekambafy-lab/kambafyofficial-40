@@ -47,24 +47,14 @@ const TwoFactorVerification = ({
     
     setResendLoading(true);
     try {
-      const newCode = generateCode();
+      console.log('📧 Reenviando código de confirmação do Supabase');
       
-      console.log('📧 Enviando código 2FA:', newCode);
-      
-      // Armazenar código temporariamente no localStorage com timestamp
-      const codeData = {
-        code: newCode,
+      // Usar resend nativo do Supabase para signup
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
         email: email,
-        context: context,
-        timestamp: Date.now()
-      };
-      localStorage.setItem('2fa_code', JSON.stringify(codeData));
-
-      const { error } = await supabase.functions.invoke('send-2fa-code', {
-        body: {
-          email: email,
-          event_type: context === 'login' ? 'admin_login' : context,
-          context: context
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
         }
       });
 
@@ -72,17 +62,17 @@ const TwoFactorVerification = ({
         throw error;
       }
 
-      console.log('✅ Código 2FA enviado com sucesso');
+      console.log('✅ Código reenviado com sucesso pelo Supabase');
       setCodeAlreadySent(true);
       setInitialSendComplete(true);
       toast({
         title: "Código enviado!",
-        description: "Verifique seu email para o código de verificação.",
+        description: "Verifique seu email para o código de verificação de 6 dígitos.",
       });
 
       setTimeLeft(300); // Reset timer
     } catch (error) {
-      console.error('❌ Erro ao enviar código 2FA:', error);
+      console.error('❌ Erro ao reenviar código:', error);
       toast({
         title: "Erro",
         description: "Erro ao enviar código. Tente novamente.",
@@ -91,41 +81,16 @@ const TwoFactorVerification = ({
     } finally {
       setResendLoading(false);
     }
-  }, [email, context, generateCode, toast]);
+  }, [email, toast]);
 
-  // Envio inicial do código - usando useRef para evitar loop
-  const hasInitialSendRun = useRef(false);
-  
+  // Marcar que o código já foi enviado automaticamente pelo Supabase
   useEffect(() => {
-    if (!initialSendComplete && !skipInitialSend && !hasInitialSendRun.current) {
-      console.log('🔒 TwoFactorVerification mount - enviando código inicial');
-      hasInitialSendRun.current = true;
-      sendVerificationCode();
-    } else if (skipInitialSend && !hasInitialSendRun.current) {
-      console.log('🔒 TwoFactorVerification - pulando envio inicial (sessão restaurada)');
-      hasInitialSendRun.current = true;
+    if (!skipInitialSend) {
+      console.log('🔒 Email de confirmação já enviado pelo Supabase no signup');
       setCodeAlreadySent(true);
       setInitialSendComplete(true);
-      
-      // Verificar se há código válido armazenado
-      const storedData = localStorage.getItem('2fa_code');
-      if (storedData) {
-        try {
-          const { timestamp } = JSON.parse(storedData);
-          const remainingTime = Math.max(0, 300 - Math.floor((Date.now() - timestamp) / 1000));
-          if (remainingTime > 0) {
-            setTimeLeft(remainingTime);
-          } else {
-            // Código expirado, limpar
-            localStorage.removeItem('2fa_code');
-          }
-        } catch (error) {
-          console.error('Erro ao processar código armazenado:', error);
-          localStorage.removeItem('2fa_code');
-        }
-      }
     }
-  }, [skipInitialSend, initialSendComplete]); // Removido sendVerificationCode das dependências
+  }, [skipInitialSend]);
 
   // Countdown timer
   useEffect(() => {
@@ -147,41 +112,36 @@ const TwoFactorVerification = ({
 
     setLoading(true);
     try {
-      console.log('🔍 Verificando código:', code);
+      console.log('🔍 Verificando código do Supabase:', code);
       
-      // Usar a edge function para verificar o código
-      const { data, error } = await supabase.functions.invoke('verify-2fa-code', {
-        body: {
-          email: email,
-          code: code,
-          event_type: context === 'login' ? 'admin_login' : context
-        }
+      // Usar verifyOtp nativo do Supabase para confirmar email
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email,
+        token: code,
+        type: 'signup'
       });
 
       if (error) {
         throw error;
       }
 
-      if (!data || !data.valid) {
-        throw new Error(data?.message || 'Código incorreto');
+      if (!data.session) {
+        throw new Error('Código incorreto ou expirado');
       }
 
-      // Limpar código armazenado localmente se existir
-      localStorage.removeItem('2fa_code');
-      
-      console.log('✅ Código verificado com sucesso');
+      console.log('✅ Código verificado com sucesso pelo Supabase');
       toast({
         title: "Verificado!",
-        description: "Código verificado com sucesso.",
+        description: "Email confirmado com sucesso.",
       });
 
       console.log('✅ Chamando onVerificationSuccess');
       onVerificationSuccess();
     } catch (error: any) {
-      console.error('❌ Erro na verificação 2FA:', error);
+      console.error('❌ Erro na verificação:', error);
       let message = "Código incorreto ou expirado.";
       
-      if (error.message?.includes('inválido') || error.message?.includes('expirado')) {
+      if (error.message) {
         message = error.message;
       }
 

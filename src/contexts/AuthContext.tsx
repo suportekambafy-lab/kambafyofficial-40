@@ -283,17 +283,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🔑 Iniciando signup:', { email, fullName });
     
     try {
-      // Desabilitar envio automático de email de confirmação do Supabase
+      // Usar signup nativo do Supabase que enviará email automático com código
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
         options: {
-          emailRedirectTo: undefined, // Não usar redirect
           data: {
             full_name: fullName,
           },
-          // Desabilitar envio de email automático
-          // Vamos usar apenas o nosso sistema de 2FA
+          emailRedirectTo: `${window.location.origin}/`,
         },
       });
 
@@ -302,10 +300,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      console.log('✅ Signup realizado - usuário criado mas não confirmado:', data);
+      console.log('✅ Usuário criado - Email de confirmação enviado pelo Supabase com código');
       
-      // NÃO fazer signOut - manter a sessão para que após confirmar o email
-      // o usuário já esteja autenticado
+      // Fazer logout para forçar verificação do código enviado por email
+      await supabase.auth.signOut();
+      console.log('🔒 Logout automático - usuário deve confirmar email com código de 6 dígitos');
 
       return { error: null, data };
     } catch (err) {
