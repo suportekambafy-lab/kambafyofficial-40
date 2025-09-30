@@ -120,30 +120,17 @@ export function MemberAreaSlideMenu({
             </div>
 
             {/* Estatísticas do Perfil */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="text-center p-3 bg-gray-800 rounded-lg">
-                <p className="text-lg font-bold text-emerald-400">{completedLessons}</p>
-                <p className="text-xs text-gray-400">Aulas Concluídas</p>
-              </div>
-              <div className="text-center p-3 bg-gray-800 rounded-lg">
-                <p className="text-lg font-bold text-white">{getCourseProgress(totalLessonsCount)}%</p>
-                <p className="text-xs text-gray-400">Progresso</p>
-              </div>
-            </div>
+            
           </div>
 
           {/* Navegação Rápida */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-gray-400 px-2">Navegação Rápida</h3>
             
-            <Button
-              onClick={() => {
-                navigate('/auth');
-                setOpen(false);
-              }}
-              variant="ghost"
-              className="w-full justify-start gap-3 bg-gray-900 hover:bg-gray-800 text-white"
-            >
+            <Button onClick={() => {
+            navigate('/auth');
+            setOpen(false);
+          }} variant="ghost" className="w-full justify-start gap-3 bg-gray-900 hover:bg-gray-800 text-white">
               <ShoppingBag className="w-4 h-4 text-emerald-400" />
               <div className="text-left">
                 <p className="font-medium">Meus Acessos</p>
@@ -151,14 +138,10 @@ export function MemberAreaSlideMenu({
               </div>
             </Button>
 
-            <Button
-              onClick={() => {
-                navigate('/vendedor');
-                setOpen(false);
-              }}
-              variant="ghost"
-              className="w-full justify-start gap-3 bg-gray-900 hover:bg-gray-800 text-white"
-            >
+            <Button onClick={() => {
+            navigate('/vendedor');
+            setOpen(false);
+          }} variant="ghost" className="w-full justify-start gap-3 bg-gray-900 hover:bg-gray-800 text-white">
               <LayoutDashboard className="w-4 h-4 text-emerald-400" />
               <div className="text-left">
                 <p className="font-medium">Painel de Vendedor</p>
