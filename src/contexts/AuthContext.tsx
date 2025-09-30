@@ -283,34 +283,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🔑 Iniciando signup:', { email, fullName });
     
     try {
-      // Usar Admin API para criar usuário SEM enviar email automático do Supabase
-      const { data: adminData, error: adminError } = await supabase.functions.invoke('admin-create-user', {
-        body: { 
-          email: email.trim().toLowerCase(), 
-          password, 
-          fullName 
-        }
+      // Desabilitar envio automático de email de confirmação do Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          emailRedirectTo: undefined, // Não usar redirect
+          data: {
+            full_name: fullName,
+          },
+          // Desabilitar envio de email automático
+          // Vamos usar apenas o nosso sistema de 2FA
+        },
       });
 
-      if (adminError || !adminData?.success) {
-        console.error('❌ Erro ao criar usuário via Admin API:', adminError);
-        return { 
-          error: adminError || { 
-            message: adminData?.message || 'Erro ao criar usuário' 
-          } as AuthError 
-        };
+      if (error) {
+        console.error('❌ Erro no signup:', error);
+        return { error };
       }
 
-      console.log('✅ Usuário criado via Admin API - não confirmado:', adminData.user);
+      console.log('✅ Signup realizado - usuário criado mas não confirmado:', data);
+      
+      // NÃO fazer signOut - manter a sessão para que após confirmar o email
+      // o usuário já esteja autenticado
 
-      // Retornar no formato esperado
-      return { 
-        error: null, 
-        data: {
-          user: adminData.user,
-          session: null
-        }
-      };
+      return { error: null, data };
     } catch (err) {
       console.error('❌ Erro inesperado no signup:', err);
       return { error: err as AuthError };
