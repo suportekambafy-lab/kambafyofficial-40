@@ -30,29 +30,30 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Buscar usuário pelo email usando query filter
-    const { data: { users }, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    // Buscar usuário pelo email usando filtro direto
+    const { data: { users }, error: userError } = await supabaseAdmin.auth.admin.listUsers({
+      filter: `email.eq.${email}`
+    });
     
     if (userError) {
-      console.error('❌ Erro ao buscar usuários:', userError);
+      console.error('❌ Erro ao buscar usuário:', userError);
       return Response.json(
-        { success: false, error: 'Erro interno do servidor' },
+        { success: false, error: 'Erro ao buscar usuário' },
         { status: 500, headers: corsHeaders }
       );
     }
 
-    // Buscar usuário específico (incluindo não confirmados)
-    const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    console.log('📋 Resultado da busca:', users.length, 'usuários encontrados');
     
-    if (!user) {
+    if (!users || users.length === 0) {
       console.error('❌ Usuário não encontrado:', email);
-      console.log('📋 Total de usuários na busca:', users.length);
       return Response.json(
         { success: false, error: 'Usuário não encontrado. Por favor, tente criar a conta novamente.' },
         { status: 404, headers: corsHeaders }
       );
     }
 
+    const user = users[0];
     console.log('👤 Usuário encontrado:', user.id, 'Email confirmado:', user.email_confirmed_at);
 
     // Confirmar o email do usuário
