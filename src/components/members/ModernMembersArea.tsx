@@ -589,7 +589,7 @@ export default function ModernMembersArea() {
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-2">
                                         <Badge className={`${isLessonContentAccessible(lesson) ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
-                                          Aula {lesson.order_number}
+                                          Aula {index + 1}
                                         </Badge>
                                         <Badge variant="outline" className="text-gray-400 border-gray-600">
                                           <Clock className="h-3 w-3 mr-1" />
