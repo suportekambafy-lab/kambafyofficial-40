@@ -30,8 +30,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Buscar usuário pelo email
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    // Buscar usuário pelo email usando query filter
+    const { data: { users }, error: userError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (userError) {
       console.error('❌ Erro ao buscar usuários:', userError);
@@ -41,18 +41,22 @@ serve(async (req) => {
       );
     }
 
-    const user = userData.users.find(u => u.email === email);
+    // Buscar usuário específico (incluindo não confirmados)
+    const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
     
     if (!user) {
       console.error('❌ Usuário não encontrado:', email);
+      console.log('📋 Total de usuários na busca:', users.length);
       return Response.json(
-        { success: false, error: 'Usuário não encontrado' },
+        { success: false, error: 'Usuário não encontrado. Por favor, tente criar a conta novamente.' },
         { status: 404, headers: corsHeaders }
       );
     }
 
+    console.log('👤 Usuário encontrado:', user.id, 'Email confirmado:', user.email_confirmed_at);
+
     // Confirmar o email do usuário
-    const { error: confirmError } = await supabaseAdmin.auth.admin.updateUserById(
+    const { data: updateData, error: confirmError } = await supabaseAdmin.auth.admin.updateUserById(
       user.id,
       { email_confirm: true }
     );
@@ -65,16 +69,40 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ Email confirmado com sucesso!');
+    console.log('✅ Email confirmado com sucesso!', updateData);
 
-    // Retornar sucesso sem fazer login automático
-    // O usuário deve definir sua senha posteriormente
+    // Tentar fazer login automático
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
+
+    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (signInError) {
+      console.error('⚠️ Login automático falhou:', signInError.message);
+      return Response.json(
+        { 
+          success: true, 
+          message: 'Email confirmado! Faça login manualmente.',
+          autoLoginFailed: true,
+          email: email
+        },
+        { status: 200, headers: corsHeaders }
+      );
+    }
+
+    console.log('✅ Login automático realizado com sucesso!');
+
     return Response.json(
       { 
         success: true, 
-        message: 'Email confirmado com sucesso! Agora você pode definir sua senha.',
-        emailConfirmed: true,
-        email: email
+        message: 'Conta confirmada e login realizado com sucesso!',
+        session: signInData.session,
+        user: signInData.user
       },
       { status: 200, headers: corsHeaders }
     );
