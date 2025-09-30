@@ -39,7 +39,11 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const requestData: CustomerRegistrationRequest = await req.json();
-    const { customerEmail, customerName, orderId } = requestData;
+    let { customerEmail, customerName, orderId } = requestData;
+    
+    // Normalizar email para lowercase
+    customerEmail = customerEmail.toLowerCase().trim();
+    requestData.customerEmail = customerEmail;
 
     console.log('=== CUSTOMER REGISTRATION PROCESS START ===');
     console.log('Customer:', customerName, customerEmail);
@@ -58,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw userCheckError;
     }
 
-    const existingUser = existingUsers?.users?.find(user => user.email === customerEmail);
+    const existingUser = existingUsers?.users?.find(user => user.email?.toLowerCase() === customerEmail);
     let needsPasswordReset = false;
     let temporaryPassword = null;
 

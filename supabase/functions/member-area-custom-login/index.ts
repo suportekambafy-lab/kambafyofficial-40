@@ -20,9 +20,12 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { memberAreaId, email, password }: CustomLoginRequest = await req.json();
+    
+    // Normalizar email para lowercase
+    const normalizedEmail = email.toLowerCase().trim();
 
     console.log('=== CUSTOM MEMBER AREA LOGIN START ===');
-    console.log('Member Area:', memberAreaId, 'Email:', email);
+    console.log('Member Area:', memberAreaId, 'Email:', normalizedEmail);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -33,7 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseAnon = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!);
     
     const { data: authData, error: authError } = await supabaseAnon.auth.signInWithPassword({
-      email,
+      email: normalizedEmail,
       password,
     });
 
@@ -45,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
         .from('member_area_students')
         .select('*')
         .eq('member_area_id', memberAreaId)
-        .eq('student_email', email)
+        .ilike('student_email', normalizedEmail)
         .single();
 
       if (studentData) {
@@ -58,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
           .from('member_area_sessions')
           .insert({
             member_area_id: memberAreaId,
-            student_email: email,
+            student_email: normalizedEmail,
             student_name: studentData.student_name,
             session_token: sessionToken,
             expires_at: expiresAt.toISOString(),
@@ -92,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
         throw usersError;
       }
 
-      const user = users.users.find(u => u.email === email);
+      const user = users.users.find(u => u.email?.toLowerCase() === normalizedEmail);
       
       if (!user) {
         throw new Error('Usuário não encontrado');
@@ -101,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Verificar senha usando admin API (tentar fazer login para validar senha)
       const { data: tempSession, error: tempAuthError } = await supabase.auth.admin.generateLink({
         type: 'recovery',
-        email: email,
+        email: normalizedEmail,
       });
 
       if (tempAuthError) {
@@ -114,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
         .from('member_area_students')
         .select('*')
         .eq('member_area_id', memberAreaId)
-        .eq('student_email', email)
+        .ilike('student_email', normalizedEmail)
         .single();
 
       if (studentData) {
@@ -127,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
           .from('member_area_sessions')
           .insert({
             member_area_id: memberAreaId,
-            student_email: email,
+            student_email: normalizedEmail,
             student_name: studentData.student_name,
             session_token: sessionToken,
             expires_at: expiresAt.toISOString(),

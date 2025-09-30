@@ -42,6 +42,9 @@ serve(async (req) => {
       throw new Error('Área de membros não encontrada');
     }
 
+    // Normalizar email para lowercase
+    const normalizedEmail = studentEmail.toLowerCase().trim();
+    
     // Check if student has access (purchased a product with this member area)
     const { data: orders, error: ordersError } = await supabase
       .from('orders')
@@ -52,7 +55,7 @@ serve(async (req) => {
           member_area_id
         )
       `)
-      .eq('customer_email', studentEmail)
+      .ilike('customer_email', normalizedEmail)
       .eq('status', 'completed')
       .eq('products.member_area_id', memberAreaId);
 
@@ -65,7 +68,7 @@ serve(async (req) => {
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
       .select('user_id, email')
-      .eq('email', studentEmail)
+      .ilike('email', normalizedEmail)
       .eq('user_id', memberArea.user_id)
       .single();
 
@@ -99,14 +102,14 @@ serve(async (req) => {
       .from('member_area_sessions')
       .delete()
       .eq('member_area_id', memberAreaId)
-      .eq('student_email', studentEmail);
+      .ilike('student_email', normalizedEmail);
 
-    // Create new session
+    // Create new session (armazenar email em lowercase)
     const { data: session, error: sessionError } = await supabase
       .from('member_area_sessions')
       .insert({
         member_area_id: memberAreaId,
-        student_email: studentEmail,
+        student_email: normalizedEmail,
         student_name: studentName,
         session_token: sessionToken,
         expires_at: expiresAt.toISOString(),

@@ -195,11 +195,14 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
     if (!user?.email) return false;
 
     try {
+      // Normalizar email para lowercase
+      const normalizedEmail = user.email.toLowerCase().trim();
+      
       const { data: student } = await supabase
         .from('member_area_students')
         .select('*')
         .eq('member_area_id', memberAreaId)
-        .eq('student_email', user.email)
+        .ilike('student_email', normalizedEmail)
         .maybeSingle();
 
       const hasAccess = !!student;
@@ -222,7 +225,10 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      console.log('🚀 ModernAuth: Iniciando login customizado...', { email });
+      // Normalizar email para lowercase
+      const normalizedEmail = email.toLowerCase().trim();
+      
+      console.log('🚀 ModernAuth: Iniciando login customizado...', { email: normalizedEmail });
       setIsLoading(true);
 
       // Obter memberAreaId da URL atual
@@ -237,7 +243,7 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
       const { data, error } = await supabase.functions.invoke('member-area-custom-login', {
         body: {
           memberAreaId,
-          email,
+          email: normalizedEmail,
           password,
         },
       });
@@ -253,7 +259,7 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
         // Para login customizado, simular user/session com os dados retornados
         const customUser = {
           id: crypto.randomUUID(),
-          email: email,
+          email: normalizedEmail,
           app_metadata: { provider: 'email', providers: ['email'] },
           user_metadata: { full_name: data.studentName },
           aud: 'authenticated',
