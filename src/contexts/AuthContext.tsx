@@ -300,13 +300,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      console.log('✅ Signup realizado - trigger deve ter prevenido confirmação automática:', data);
+      console.log('✅ Signup realizado - usuário criado mas não confirmado:', data);
       
-      // Imediatamente deslogar para garantir que não há sessão ativa
-      if (data.user) {
-        console.log('🔒 Desconectando usuário para forçar verificação por código...');
-        await supabase.auth.signOut();
-      }
+      // NÃO fazer signOut - manter a sessão para que após confirmar o email
+      // o usuário já esteja autenticado
 
       return { error: null, data };
     } catch (err) {
