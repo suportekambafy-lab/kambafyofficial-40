@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Volume2, Volume1, VolumeX, SkipForward, SkipBack } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -60,6 +60,17 @@ interface VideoPlayerProps {
   crossOrigin?: "" | "anonymous" | "use-credentials";
 }
 
+// Melhorar detecção de URLs de embed do Bunny.net
+const isBunnyEmbedUrl = (url?: string): boolean => {
+  if (!url) return false;
+  const bunnyPatterns = [
+    'iframe.mediadelivery.net',
+    'mediadelivery.net/embed',
+    'bunnycdn.com/embed'
+  ];
+  return bunnyPatterns.some(pattern => url.includes(pattern));
+};
+
 const VideoPlayer = ({ 
   src, 
   embedUrl,
@@ -74,6 +85,7 @@ const VideoPlayer = ({
   crossOrigin = "anonymous"
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [progress, setProgress] = useState(0);
@@ -82,6 +94,18 @@ const VideoPlayer = ({
   const [showControls, setShowControls] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [iframeError, setIframeError] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+
+  // Log detalhado para debugging
+  useEffect(() => {
+    console.log('🎬 VideoPlayer montado:', {
+      src,
+      embedUrl,
+      isBunnyEmbed: isBunnyEmbedUrl(embedUrl),
+      timestamp: new Date().toISOString()
+    });
+  }, [src, embedUrl]);
 
   const togglePlay = async () => {
     if (!videoRef.current) return;
@@ -207,8 +231,9 @@ const VideoPlayer = ({
   };
 
   // Se for uma URL do Bunny.net embed ou similar, usar iframe
-  if (embedUrl && (embedUrl.includes('mediadelivery.net') || embedUrl.includes('iframe.mediadelivery.net'))) {
+  if (embedUrl && isBunnyEmbedUrl(embedUrl)) {
     console.log('🎬 Usando iframe para embed URL:', embedUrl);
+    
     return (
       <motion.div 
         className="relative w-full overflow-hidden bg-black"
@@ -216,13 +241,56 @@ const VideoPlayer = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
+        {!iframeLoaded && !iframeError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+            <div className="text-center text-white">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
+              <p className="text-sm text-gray-400">Carregando vídeo...</p>
+            </div>
+          </div>
+        )}
+        
+        {iframeError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+            <div className="text-center text-white p-8 max-w-md">
+              <Play className="h-16 w-16 mx-auto mb-4 text-red-400" />
+              <h3 className="text-xl font-semibold mb-2">Problema ao carregar vídeo</h3>
+              <p className="text-gray-400 mb-4">
+                O vídeo não pôde ser carregado. Isto pode ser devido a problemas de DNS ou bloqueios de rede.
+              </p>
+              <a 
+                href={embedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                Abrir vídeo em nova aba
+              </a>
+            </div>
+          </div>
+        )}
+        
         <iframe
+          ref={iframeRef}
           src={embedUrl}
           className="w-full aspect-video border-0"
           frameBorder="0"
           allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="Player de vídeo"
           loading="lazy"
+          onLoad={() => {
+            console.log('✅ Iframe carregado com sucesso');
+            setIframeLoaded(true);
+            setIframeError(false);
+          }}
+          onError={() => {
+            console.error('❌ Erro ao carregar iframe');
+            setIframeError(true);
+            onError?.();
+          }}
         />
       </motion.div>
     );
