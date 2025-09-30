@@ -25,17 +25,23 @@ export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchin
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  console.log('🎬 ContinueWatching render:', { memberAreaId, studentEmail, lastLesson, isLoading });
+
   useEffect(() => {
+    console.log('🔄 ContinueWatching useEffect triggered');
     loadLastWatchedLesson();
   }, [memberAreaId, studentEmail]);
 
   const loadLastWatchedLesson = async () => {
+    console.log('🔍 Carregando última aula assistida...');
     try {
       setIsLoading(true);
       
       // Primeiro buscar user_id do email se existir
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData?.user?.id;
+      
+      console.log('👤 User data:', { userId, studentEmail });
 
       // Buscar o progresso mais recente - tentar primeiro com user_id, depois com join de sessions
       let progressQuery = supabase
@@ -59,21 +65,30 @@ export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchin
         .order('last_watched_at', { ascending: false })
         .limit(1);
 
-      // Se temos userId, buscar por ele, senão buscar via email nas sessions ativas
+      // Se temos userId, buscar por ele
       if (userId) {
         progressQuery = progressQuery.eq('user_id', userId);
       }
 
       const { data: progressData, error: progressError } = await progressQuery.maybeSingle();
 
-      if (progressError || !progressData) {
+      console.log('📊 Progress query result:', { progressData, progressError });
+
+      if (progressError) {
+        console.error('❌ Erro ao buscar progresso:', progressError);
+        setLastLesson(null);
+        return;
+      }
+
+      if (!progressData) {
+        console.log('ℹ️ Nenhum progresso encontrado');
         setLastLesson(null);
         return;
       }
 
       const lesson = progressData.lessons as any;
       
-      setLastLesson({
+      const lessonData = {
         id: lesson.id,
         title: lesson.title,
         progress_percentage: progressData.progress_percentage,
@@ -81,12 +96,16 @@ export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchin
         duration: lesson.duration || 0,
         module_id: lesson.module_id,
         last_watched_at: progressData.last_watched_at
-      });
+      };
+
+      console.log('✅ Última aula carregada:', lessonData);
+      setLastLesson(lessonData);
     } catch (error) {
-      console.error('Erro ao carregar última aula:', error);
+      console.error('❌ Erro ao carregar última aula:', error);
       setLastLesson(null);
     } finally {
       setIsLoading(false);
+      console.log('🏁 Carregamento finalizado');
     }
   };
 
@@ -103,12 +122,28 @@ export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchin
   };
 
   if (isLoading) {
-    return null;
+    console.log('⏳ ContinueWatching ainda carregando...');
+    return (
+      <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-16 h-16 rounded-full bg-primary/20 animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-primary/10 rounded animate-pulse w-32" />
+              <div className="h-3 bg-primary/10 rounded animate-pulse w-48" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (!lastLesson) {
+    console.log('❌ ContinueWatching: Nenhuma aula para continuar');
     return null;
   }
+
+  console.log('✅ ContinueWatching renderizando card:', lastLesson);
 
   return (
     <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20 overflow-hidden">
