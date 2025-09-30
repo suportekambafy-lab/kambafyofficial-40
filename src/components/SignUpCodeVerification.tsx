@@ -147,20 +147,31 @@ const SignUpCodeVerification = ({
         return;
       }
 
-      console.log('✅ Conta confirmada com sucesso!');
+      console.log('✅ Conta confirmada com sucesso! Fazendo login...');
       
-      // Se teve sucesso, mostrar mensagem apropriada
-      if (confirmResponse.autoLoginFailed) {
+      // Fazer login com as credenciais
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (signInError) {
+        console.error('❌ Erro ao fazer login:', signInError);
         toast({
           title: "Conta confirmada!",
-          description: "Sua conta foi confirmada. Faça login manualmente.",
+          description: "Sua conta foi confirmada. Por favor, faça login manualmente.",
         });
-      } else {
-        toast({
-          title: "Bem-vindo!",
-          description: "Conta criada e login realizado com sucesso!",
-        });
+        setTimeout(() => {
+          onVerificationSuccess();
+        }, 1500);
+        return;
       }
+
+      console.log('✅ Login realizado com sucesso!');
+      toast({
+        title: "Bem-vindo!",
+        description: "Conta criada e login realizado com sucesso!",
+      });
       
       // Pequeno delay para mostrar o toast antes de redirecionar
       setTimeout(() => {

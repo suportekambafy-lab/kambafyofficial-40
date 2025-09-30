@@ -72,38 +72,12 @@ serve(async (req) => {
 
     console.log('✅ Email confirmado com sucesso!', updateData);
 
-    // Tentar fazer login automático
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
-
-    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-
-    if (signInError) {
-      console.error('⚠️ Login automático falhou:', signInError.message);
-      return Response.json(
-        { 
-          success: true, 
-          message: 'Email confirmado! Faça login manualmente.',
-          autoLoginFailed: true,
-          email: email
-        },
-        { status: 200, headers: corsHeaders }
-      );
-    }
-
-    console.log('✅ Login automático realizado com sucesso!');
-
+    // Retornar sucesso para que o frontend faça o login
     return Response.json(
       { 
         success: true, 
-        message: 'Conta confirmada e login realizado com sucesso!',
-        session: signInData.session,
-        user: signInData.user
+        message: 'Email confirmado com sucesso! Você já pode fazer login.',
+        email: email
       },
       { status: 200, headers: corsHeaders }
     );
