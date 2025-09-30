@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.verify-2fa-code]
 verify_jwt = false
+
+[functions.admin-create-user]
+verify_jwt = false
