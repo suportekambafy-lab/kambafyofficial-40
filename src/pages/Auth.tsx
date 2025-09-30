@@ -101,11 +101,6 @@ const Auth = () => {
       return;
     }
 
-    if (!selectedUserType) {
-      setErrorField("Por favor, selecione o tipo de usuário.");
-      return;
-    }
-
     setLoading(true);
     setErrorField('');
 
@@ -148,11 +143,6 @@ const Auth = () => {
 
     if (!email || !password || !fullName) {
       setErrorField("Por favor, preencha todos os campos.");
-      return;
-    }
-
-    if (!selectedUserType) {
-      setErrorField("Por favor, selecione o tipo de usuário.");
       return;
     }
 
