@@ -93,49 +93,52 @@ export default function AdminWithdrawals() {
   return (
     <div className="min-h-screen bg-slate-50">
       <SEO title="Kambafy Admin – Saques" description="Aprovar ou rejeitar solicitações de saque dos vendedores" canonical="https://kambafy.com/admin/withdrawals" noIndex />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-4 mb-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Button 
-            variant="ghost" 
+            variant="ghost"
+            size="sm"
             onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 hover:bg-accent"
+            className="flex items-center gap-2 hover:bg-accent self-start"
           >
             <ArrowLeft className="h-4 w-4" />
-            Voltar ao Dashboard
+            <span className="hidden sm:inline">Voltar ao Dashboard</span>
+            <span className="sm:hidden">Voltar</span>
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">Gerenciar Saques</h1>
-            <p className="text-gray-600 mt-1">Aprovar ou rejeitar solicitações de saque dos vendedores</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gerenciar Saques</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">Aprovar ou rejeitar solicitações</p>
           </div>
           <Button 
             onClick={loadWithdrawalRequests}
             disabled={loading}
-            className="flex items-center gap-2"
+            size="sm"
+            className="flex items-center gap-2 self-start sm:self-auto"
           >
             <RefreshCw className={`${loading ? 'animate-spin' : ''} h-4 w-4`} />
-            Atualizar
+            <span className="hidden sm:inline">Atualizar</span>
           </Button>
         </div>
 
-        {/* Filtros */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+        {/* Filtros - Responsivo */}
+        <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 shadow-sm mb-4 sm:mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Buscar</label>
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="ID, nome ou email"
-                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Status</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               >
                 <option value="todos">Todos</option>
                 <option value="pendente">Pendente</option>
@@ -144,39 +147,39 @@ export default function AdminWithdrawals() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data inicial</label>
-              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2" />
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Data inicial</label>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data final</label>
-              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2" />
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Data final</label>
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
             </div>
             <div className="flex gap-2">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Min (KZ)</label>
-                <input type="number" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2" />
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Min (KZ)</label>
+                <input type="number" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max (KZ)</label>
-                <input type="number" value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2" />
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Max (KZ)</label>
+                <input type="number" value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
               </div>
             </div>
           </div>
-          <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-4 text-xs sm:text-sm text-gray-600">
             <span>{filteredRequests.length} resultado(s)</span>
             <button
               onClick={() => { setStatusFilter('todos'); setSearchTerm(''); setStartDate(''); setEndDate(''); setMinAmount(''); setMaxAmount(''); }}
-              className="text-blue-600 hover:underline"
+              className="text-blue-600 hover:underline text-left sm:text-right"
             >
               Limpar filtros
             </button>
           </div>
         </div>
         {pendingRequests.length > 0 && (
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Gerenciamento em Lote</h3>
+          <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 shadow-sm">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Gerenciamento em Lote</h3>
             
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4">
               <Button
                 onClick={() => selectAll(pendingRequests.map(r => r.id))}
                 variant="outline"
@@ -184,7 +187,7 @@ export default function AdminWithdrawals() {
                 className="flex items-center gap-2"
               >
                 <CheckSquare className="h-4 w-4" />
-                Selecionar Todos
+                <span className="text-xs sm:text-sm">Selecionar Todos</span>
               </Button>
               
               <Button
@@ -194,14 +197,14 @@ export default function AdminWithdrawals() {
                 className="flex items-center gap-2"
               >
                 <Square className="h-4 w-4" />
-                Limpar Seleção
+                <span className="text-xs sm:text-sm">Limpar</span>
               </Button>
               
-              <span className="text-sm text-gray-600">
-                {selectedIds.size} de {pendingRequests.length} selecionados
+              <span className="text-xs sm:text-sm text-gray-600">
+                {selectedIds.size} de {pendingRequests.length}
               </span>
-              <span className="ml-auto text-sm text-gray-600">
-                Total selecionado: {Array.from(selectedIds).reduce((sum, id) => {
+              <span className="w-full sm:w-auto sm:ml-auto text-xs sm:text-sm text-gray-600">
+                Total: {Array.from(selectedIds).reduce((sum, id) => {
                   const r = filteredRequests.find(fr => fr.id === id);
                   return sum + (r ? Number(r.amount) : 0);
                 }, 0).toLocaleString('pt-AO')} KZ
@@ -209,37 +212,39 @@ export default function AdminWithdrawals() {
             </div>
 
             {selectedIds.size > 0 && (
-              <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+              <div className="space-y-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-900">
-                    Observações para todos os saques selecionados (opcional)
+                  <label className="block text-xs sm:text-sm font-medium mb-2 text-gray-900">
+                    Observações (opcional)
                   </label>
                   <Textarea
                     value={bulkNotes}
                     onChange={(e) => setBulkNotes(e.target.value)}
-                    placeholder="Adicione observações que serão aplicadas a todos os saques selecionados..."
+                    placeholder="Observações para todos os saques selecionados..."
                     rows={3}
-                    className="bg-white border-gray-300"
+                    className="bg-white border-gray-300 text-sm"
                   />
                 </div>
                 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <Button
                     onClick={() => handleBulkProcess('aprovado')}
                     disabled={bulkProcessing}
-                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-0 shadow-sm flex items-center gap-2"
+                    size="sm"
+                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-0 shadow-sm flex items-center gap-2 justify-center"
                   >
                     <CheckCircle className="h-4 w-4" />
-                    {bulkProcessing ? 'Aprovando...' : `Aprovar ${selectedIds.size} Saque(s)`}
+                    <span className="text-xs sm:text-sm">{bulkProcessing ? 'Aprovando...' : `Aprovar ${selectedIds.size}`}</span>
                   </Button>
                   
                   <Button
                     onClick={() => handleBulkProcess('rejeitado')}
                     disabled={bulkProcessing}
-                    className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 shadow-sm flex items-center gap-2"
+                    size="sm"
+                    className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 shadow-sm flex items-center gap-2 justify-center"
                   >
                     <XCircle className="h-4 w-4" />
-                    {bulkProcessing ? 'Rejeitando...' : `Rejeitar ${selectedIds.size} Saque(s)`}
+                    <span className="text-xs sm:text-sm">{bulkProcessing ? 'Rejeitando...' : `Rejeitar ${selectedIds.size}`}</span>
                   </Button>
                 </div>
               </div>
@@ -247,7 +252,7 @@ export default function AdminWithdrawals() {
           </div>
         )}
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {filteredRequests.map((request) => {
             // Calcular o índice apenas para solicitações pendentes
             let pendingIndex = -1;
@@ -282,12 +287,13 @@ export default function AdminWithdrawals() {
           
           {filteredRequests.length === 0 && !loading && (
             <Card className="shadow-lg border bg-white">
-              <CardContent className="text-center py-16">
-                <DollarSign className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma solicitação encontrada</h3>
-                <p className="text-gray-600">Ajuste os filtros ou tente novamente.</p>
+              <CardContent className="text-center py-12 sm:py-16">
+                <DollarSign className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Nenhuma solicitação encontrada</h3>
+                <p className="text-sm sm:text-base text-gray-600">Ajuste os filtros ou tente novamente.</p>
                 <Button 
                   onClick={loadWithdrawalRequests}
+                  size="sm"
                   className="mt-4"
                 >
                   Recarregar dados

@@ -90,63 +90,65 @@ export default function AdminLogs() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-4 mb-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Button 
-            variant="ghost" 
+            variant="ghost"
+            size="sm"
             onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 hover:bg-accent"
+            className="flex items-center gap-2 hover:bg-accent self-start"
           >
             <ArrowLeft className="h-4 w-4" />
-            Voltar ao Dashboard
+            <span className="hidden sm:inline">Voltar ao Dashboard</span>
+            <span className="sm:hidden">Voltar</span>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Logs de Ações</h1>
-            <p className="text-muted-foreground mt-1">Histórico completo de ações administrativas</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Logs de Ações</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">Histórico de ações administrativas</p>
           </div>
         </div>
 
         <div className="space-y-4">
           {logs.map((log) => (
             <Card key={log.id} className="shadow-lg border bg-card hover:shadow-xl transition-shadow">
-              <CardHeader className="pb-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <Activity className="h-6 w-6 text-white" />
+              <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
-                    <div>
-                      <CardTitle className="text-lg text-foreground flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        {log.admin_users?.full_name || log.admin_users?.email || 'Administrador'}
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base sm:text-lg text-foreground flex items-center gap-2">
+                        <User className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <span className="truncate">{log.admin_users?.full_name || log.admin_users?.email || 'Administrador'}</span>
                       </CardTitle>
-                      <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        {new Date(log.created_at).toLocaleString('pt-AO', {
+                      <div className="flex items-center gap-2 mt-1 text-xs sm:text-sm text-muted-foreground">
+                        <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <span className="truncate">{new Date(log.created_at).toLocaleString('pt-AO', {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric',
                           hour: '2-digit',
                           minute: '2-digit'
-                        })}
+                        })}</span>
                       </div>
                     </div>
                   </div>
                   {getActionBadge(log.action)}
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <CardContent className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-xs sm:text-sm">
                   <div className="bg-slate-50 p-3 rounded-lg">
-                    <span className="font-medium text-slate-900">Tipo de Alvo:</span>
-                    <p className="text-slate-600 capitalize">{log.target_type}</p>
+                    <span className="font-medium text-slate-900">Tipo:</span>
+                    <p className="text-slate-600 capitalize truncate">{log.target_type}</p>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-lg">
-                    <span className="font-medium text-slate-900">ID do Alvo:</span>
-                    <p className="text-slate-600 font-mono text-xs">{log.target_id || 'N/A'}</p>
+                    <span className="font-medium text-slate-900">ID:</span>
+                    <p className="text-slate-600 font-mono text-xs truncate">{log.target_id || 'N/A'}</p>
                   </div>
                   {log.details && (
-                    <div className="bg-slate-50 p-3 rounded-lg md:col-span-3">
+                    <div className="bg-slate-50 p-3 rounded-lg sm:col-span-2 lg:col-span-3">
                       <span className="font-medium text-slate-900">Detalhes:</span>
                       <pre className="mt-2 text-xs bg-white p-3 rounded border overflow-x-auto">
                         {JSON.stringify(log.details, null, 2)}
@@ -160,10 +162,10 @@ export default function AdminLogs() {
           
           {logs.length === 0 && (
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardContent className="text-center py-16">
-                <Activity className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhum log encontrado</h3>
-                <p className="text-slate-600">Não há ações administrativas registradas ainda.</p>
+              <CardContent className="text-center py-12 sm:py-16">
+                <Activity className="h-12 w-12 sm:h-16 sm:w-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">Nenhum log encontrado</h3>
+                <p className="text-sm sm:text-base text-slate-600">Não há ações administrativas registradas ainda.</p>
               </CardContent>
             </Card>
           )}

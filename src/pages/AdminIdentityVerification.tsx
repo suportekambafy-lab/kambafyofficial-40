@@ -240,26 +240,27 @@ export default function AdminIdentityVerification() {
   return (
     <div className="min-h-screen bg-slate-50">
       <SEO title="Kambafy Admin – KYC" description="Aprovar ou reprovar verificações de identidade" canonical="https://kambafy.com/admin/identity" noIndex />
-      {/* Header */}
+      {/* Header - Responsivo */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
-            <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4 sm:py-6">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={() => navigate('/admin')}
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Voltar
+                <span className="hidden sm:inline">Voltar</span>
               </Button>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Shield className="text-white h-5 w-5" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Shield className="text-white h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Verificação de Identidade</h1>
-                  <p className="text-gray-600">Gerencie as verificações de identidade dos vendedores</p>
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Verificação de Identidade</h1>
+                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Gerencie verificações dos vendedores</p>
                 </div>
               </div>
             </div>
@@ -267,13 +268,13 @@ export default function AdminIdentityVerification() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filters */}
-        <div className="mb-6">
-          <Label htmlFor="status-filter">Filtrar por Status</Label>
+      {/* Main Content - Responsivo */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Filters - Responsivo */}
+        <div className="mb-4 sm:mb-6">
+          <Label htmlFor="status-filter" className="text-xs sm:text-sm">Filtrar por Status</Label>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -285,7 +286,7 @@ export default function AdminIdentityVerification() {
           </Select>
         </div>
 
-        {/* Verifications List */}
+        {/* Verifications List - Responsivo */}
         <div className="space-y-4">
           {verifications.length === 0 ? (
             <Card>
@@ -304,15 +305,15 @@ export default function AdminIdentityVerification() {
           ) : (
             verifications.map((verification) => (
               <Card key={verification.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-gray-600" />
-                      <div>
-                        <CardTitle className="text-lg">
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-base sm:text-lg truncate">
                           {verification.profiles?.full_name || 'Nome não informado'}
                         </CardTitle>
-                        <CardDescription>
+                        <CardDescription className="text-xs sm:text-sm truncate">
                           {verification.profiles?.email}
                         </CardDescription>
                       </div>
@@ -320,29 +321,29 @@ export default function AdminIdentityVerification() {
                     {getStatusBadge(verification.status)}
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
                     <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">Tipo:</span>
-                      <span className="text-sm font-medium">{verification.document_type}</span>
+                      <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-gray-600">Tipo:</span>
+                      <span className="text-xs sm:text-sm font-medium truncate">{verification.document_type}</span>
+                    </div>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Hash className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-gray-600">Número:</span>
+                      <span className="text-xs sm:text-sm font-medium truncate">{verification.document_number}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">Número:</span>
-                      <span className="text-sm font-medium">{verification.document_number}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">Nascimento:</span>
-                      <span className="text-sm font-medium">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-gray-600">Nascimento:</span>
+                      <span className="text-xs sm:text-sm font-medium">
                         {format(new Date(verification.birth_date), 'dd/MM/yyyy')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">Enviado:</span>
-                      <span className="text-sm font-medium">
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-gray-600">Enviado:</span>
+                      <span className="text-xs sm:text-sm font-medium">
                         {format(new Date(verification.created_at), 'dd/MM/yyyy')}
                       </span>
                     </div>
@@ -350,13 +351,13 @@ export default function AdminIdentityVerification() {
 
                   {verification.status === 'rejeitado' && verification.rejection_reason && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                      <p className="text-red-800 font-medium mb-1">Motivo da rejeição:</p>
-                      <p className="text-red-700 text-sm">{verification.rejection_reason}</p>
+                      <p className="text-red-800 font-medium mb-1 text-xs sm:text-sm">Motivo da rejeição:</p>
+                      <p className="text-red-700 text-xs sm:text-sm">{verification.rejection_reason}</p>
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-sm font-medium text-gray-700">Documentos:</span>
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Documentos:</span>
                     {verification.document_front_url && (
                       <Button
                         variant="outline"
@@ -365,7 +366,7 @@ export default function AdminIdentityVerification() {
                         className="flex items-center gap-1"
                       >
                         <Eye className="h-3 w-3" />
-                        Frente
+                        <span className="text-xs">Frente</span>
                         <ExternalLink className="h-3 w-3" />
                       </Button>
                     )}
@@ -377,18 +378,19 @@ export default function AdminIdentityVerification() {
                         className="flex items-center gap-1"
                       >
                         <Eye className="h-3 w-3" />
-                        Verso
+                        <span className="text-xs">Verso</span>
                         <ExternalLink className="h-3 w-3" />
                       </Button>
                     )}
                   </div>
 
                   {verification.status === 'pendente' && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-center gap-2">
                       <Button
                         onClick={() => updateVerificationStatus(verification.id, 'aprovado')}
                         disabled={processingId === verification.id}
-                        className="bg-green-600 hover:bg-green-700"
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
                       >
                         <CheckCircle className="h-4 w-4 mr-1" />
                         Aprovar
@@ -398,36 +400,40 @@ export default function AdminIdentityVerification() {
                         <DialogTrigger asChild>
                           <Button
                             variant="destructive"
+                            size="sm"
                             onClick={() => setSelectedVerification(verification)}
+                            className="w-full sm:w-auto"
                           >
                             <AlertCircle className="h-4 w-4 mr-1" />
                             Reprovar
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-w-md">
                           <DialogHeader>
-                            <DialogTitle>Reprovar Verificação</DialogTitle>
-                            <DialogDescription>
-                              Informe o motivo da reprovação para {verification.profiles?.full_name}
+                            <DialogTitle className="text-base sm:text-lg">Reprovar Verificação</DialogTitle>
+                            <DialogDescription className="text-xs sm:text-sm">
+                              Informe o motivo para {verification.profiles?.full_name}
                             </DialogDescription>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div>
-                              <Label htmlFor="rejection-reason">Motivo da Reprovação</Label>
+                              <Label htmlFor="rejection-reason" className="text-xs sm:text-sm">Motivo da Reprovação</Label>
                               <Textarea
                                 id="rejection-reason"
                                 value={rejectionReason}
                                 onChange={(e) => setRejectionReason(e.target.value)}
-                                placeholder="Ex: Documento ilegível, informações não conferem, etc."
+                                placeholder="Ex: Documento ilegível, informações não conferem..."
                                 rows={3}
+                                className="text-sm"
                               />
                             </div>
-                            <div className="flex justify-end gap-2">
-                              <Button variant="outline" onClick={() => setRejectionReason('')}>
+                            <div className="flex flex-col sm:flex-row justify-end gap-2">
+                              <Button variant="outline" size="sm" onClick={() => setRejectionReason('')}>
                                 Cancelar
                               </Button>
                               <Button
                                 variant="destructive"
+                                size="sm"
                                 onClick={() => updateVerificationStatus(verification.id, 'rejeitado', rejectionReason)}
                                 disabled={!rejectionReason.trim() || processingId === verification.id}
                               >

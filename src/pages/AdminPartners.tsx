@@ -155,91 +155,91 @@ export default function AdminPartners() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Gestão de Parceiros</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Gestão de Parceiros</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gerir aplicações e parceiros da API KambaPay
           </p>
         </div>
         <AdminNotificationCenter />
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Stats - Responsivo */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Parceiros</CardTitle>
+          <CardHeader className="pb-2 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Parceiros</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{partners.length}</div>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold">{partners.length}</div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+          <CardHeader className="pb-2 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Pendentes</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-yellow-600">
               {partners.filter(p => p.status === "pending").length}
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Aprovados</CardTitle>
+          <CardHeader className="pb-2 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Aprovados</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">
               {partners.filter(p => p.status === "approved").length}
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+          <CardHeader className="pb-2 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Receita Total</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-lg sm:text-2xl font-bold">
               {partners.reduce((sum, p) => sum + (p.total_revenue || 0), 0).toLocaleString()} KZ
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Search */}
+      {/* Search - Responsivo */}
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Pesquisar por empresa ou email..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          className="pl-10 text-sm"
         />
       </div>
 
-      {/* Partners List */}
+      {/* Partners List - Responsivo */}
       <div className="space-y-4">
         {filteredPartners.map((partner) => (
           <Card key={partner.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-primary/10 rounded-lg p-3">
-                    <Building2 className="w-6 h-6 text-primary" />
+            <CardHeader className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+                  <div className="bg-primary/10 rounded-lg p-2 sm:p-3 flex-shrink-0">
+                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">{partner.company_name}</CardTitle>
-                    <CardDescription>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-base sm:text-lg truncate">{partner.company_name}</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm truncate">
                       {partner.contact_name} • {partner.contact_email}
                     </CardDescription>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge className={getStatusColor(partner.status)}>
                     {getStatusLabel(partner.status)}
                   </Badge>
@@ -248,36 +248,36 @@ export default function AdminPartners() {
                     size="sm"
                     onClick={() => setSelectedPartner(partner)}
                   >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Ver Detalhes
+                    <Eye className="w-3 w-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="text-xs sm:text-sm">Detalhes</span>
                   </Button>
                 </div>
               </div>
             </CardHeader>
             
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <CardContent className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">Transações</div>
-                  <div className="font-semibold">{partner.total_transactions || 0}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Transações</div>
+                  <div className="text-sm sm:text-base font-semibold">{partner.total_transactions || 0}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Receita Total</div>
-                  <div className="font-semibold">{(partner.total_revenue || 0).toLocaleString()} KZ</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Receita Total</div>
+                  <div className="text-sm sm:text-base font-semibold">{(partner.total_revenue || 0).toLocaleString()} KZ</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Comissão</div>
-                  <div className="font-semibold">{partner.commission_rate}%</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Comissão</div>
+                  <div className="text-sm sm:text-base font-semibold">{partner.commission_rate}%</div>
                 </div>
               </div>
 
               {partner.status === "pending" && (
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     onClick={() => handleApprove(partner.id)}
                     disabled={processing === partner.id}
                     size="sm"
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-green-600 hover:bg-green-700 flex-1"
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Aprovar
@@ -287,6 +287,7 @@ export default function AdminPartners() {
                     disabled={processing === partner.id}
                     variant="destructive"
                     size="sm"
+                    className="flex-1"
                   >
                     <XCircle className="w-4 h-4 mr-2" />
                     Rejeitar
@@ -298,27 +299,27 @@ export default function AdminPartners() {
         ))}
       </div>
 
-      {/* Partner Details Modal */}
+      {/* Partner Details Modal - Responsivo */}
       <Dialog open={!!selectedPartner} onOpenChange={() => setSelectedPartner(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedPartner?.company_name}</DialogTitle>
-            <DialogDescription>Detalhes completos do parceiro</DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">{selectedPartner?.company_name}</DialogTitle>
+            <DialogDescription className="text-sm">Detalhes completos do parceiro</DialogDescription>
           </DialogHeader>
           
           {selectedPartner && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="font-semibold mb-2">Informações de Contacto</h4>
-                  <div className="space-y-2 text-sm">
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Contacto</h4>
+                  <div className="space-y-2 text-xs sm:text-sm">
                     <div><strong>Nome:</strong> {selectedPartner.contact_name}</div>
-                    <div><strong>Email:</strong> {selectedPartner.contact_email}</div>
+                    <div className="break-all"><strong>Email:</strong> {selectedPartner.contact_email}</div>
                     {selectedPartner.phone && (
                       <div><strong>Telefone:</strong> {selectedPartner.phone}</div>
                     )}
                     {selectedPartner.website && (
-                      <div><strong>Website:</strong> 
+                      <div className="break-all"><strong>Website:</strong> 
                         <a href={selectedPartner.website} target="_blank" rel="noopener noreferrer" 
                            className="text-primary hover:underline ml-1">
                           {selectedPartner.website}
@@ -329,28 +330,28 @@ export default function AdminPartners() {
                 </div>
                 
                 <div>
-                  <h4 className="font-semibold mb-2">Configurações</h4>
-                  <div className="space-y-2 text-sm">
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Configurações</h4>
+                  <div className="space-y-2 text-xs sm:text-sm">
                     <div><strong>Comissão:</strong> {selectedPartner.commission_rate}%</div>
-                    <div><strong>Limite Mensal:</strong> {selectedPartner.monthly_transaction_limit.toLocaleString()} KZ</div>
-                    <div><strong>Uso Atual:</strong> {selectedPartner.current_month_transactions.toLocaleString()} KZ</div>
+                    <div><strong>Limite:</strong> {selectedPartner.monthly_transaction_limit.toLocaleString()} KZ</div>
+                    <div><strong>Uso:</strong> {selectedPartner.current_month_transactions.toLocaleString()} KZ</div>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h4 className="font-semibold mb-2">Estatísticas</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <h4 className="font-semibold mb-2 text-sm sm:text-base">Estatísticas</h4>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <Card>
-                    <CardContent className="pt-4">
-                      <div className="text-2xl font-bold">{selectedPartner.total_transactions}</div>
-                      <div className="text-sm text-muted-foreground">Total de Transações</div>
+                    <CardContent className="pt-3 sm:pt-4 p-3 sm:p-4">
+                      <div className="text-xl sm:text-2xl font-bold">{selectedPartner.total_transactions}</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">Transações</div>
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardContent className="pt-4">
-                      <div className="text-2xl font-bold">{selectedPartner.total_revenue.toLocaleString()} KZ</div>
-                      <div className="text-sm text-muted-foreground">Receita Total</div>
+                    <CardContent className="pt-3 sm:pt-4 p-3 sm:p-4">
+                      <div className="text-lg sm:text-2xl font-bold">{selectedPartner.total_revenue.toLocaleString()} KZ</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">Receita</div>
                     </CardContent>
                   </Card>
                 </div>
@@ -358,21 +359,21 @@ export default function AdminPartners() {
 
               {selectedPartner.api_key && (
                 <div>
-                  <h4 className="font-semibold mb-2">API Key</h4>
-                  <div className="bg-muted p-3 rounded font-mono text-sm break-all">
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">API Key</h4>
+                  <div className="bg-muted p-3 rounded font-mono text-xs sm:text-sm break-all">
                     {selectedPartner.api_key}
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4 mr-2" />
-                Aplicação submetida em {new Date(selectedPartner.created_at).toLocaleDateString('pt-PT')}
+              <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                <Calendar className="w-3 w-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="break-words">Aplicação em {new Date(selectedPartner.created_at).toLocaleDateString('pt-PT')}
                 {selectedPartner.approved_at && (
-                  <span className="ml-4">
+                  <span className="ml-2 sm:ml-4">
                     • Aprovado em {new Date(selectedPartner.approved_at).toLocaleDateString('pt-PT')}
                   </span>
-                )}
+                )}</span>
               </div>
             </div>
           )}

@@ -137,43 +137,45 @@ export default function AdminSellers() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-4 mb-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Button 
-            variant="ghost" 
+            variant="ghost"
+            size="sm"
             onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 hover:bg-accent"
+            className="flex items-center gap-2 hover:bg-accent self-start"
           >
             <ArrowLeft className="h-4 w-4" />
-            Voltar ao Dashboard
+            <span className="hidden sm:inline">Voltar ao Dashboard</span>
+            <span className="sm:hidden">Voltar</span>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Relatórios de Vendedores</h1>
-            <p className="text-muted-foreground mt-1">Visão geral do desempenho dos vendedores</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Relatórios de Vendedores</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">Desempenho dos vendedores</p>
           </div>
         </div>
 
-        {/* Resumo Geral */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Resumo Geral - Responsivo */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <Users className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Total Vendedores</p>
-                  <p className="text-2xl font-bold">{sellers.length}</p>
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Vendedores</p>
+                  <p className="text-xl sm:text-2xl font-bold">{sellers.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <TrendingUp className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Total Vendas</p>
-                  <p className="text-2xl font-bold">
+                <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Vendas</p>
+                  <p className="text-xl sm:text-2xl font-bold">
                     {sellers.reduce((sum, s) => sum + s.totalSales, 0)}
                   </p>
                 </div>
@@ -182,12 +184,12 @@ export default function AdminSellers() {
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <DollarSign className="h-8 w-8 text-yellow-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Receita Total</p>
-                  <p className="text-2xl font-bold">
+                <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Receita Total</p>
+                  <p className="text-lg sm:text-2xl font-bold">
                     {sellers.reduce((sum, s) => sum + s.totalRevenue, 0).toLocaleString('pt-AO')} KZ
                   </p>
                 </div>
@@ -196,12 +198,12 @@ export default function AdminSellers() {
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <FileText className="h-8 w-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Produtos Ativos</p>
-                  <p className="text-2xl font-bold">
+                <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Produtos Ativos</p>
+                  <p className="text-xl sm:text-2xl font-bold">
                     {sellers.reduce((sum, s) => sum + s.activeProducts, 0)}
                   </p>
                 </div>
@@ -210,21 +212,21 @@ export default function AdminSellers() {
           </Card>
         </div>
 
-        {/* Lista de Vendedores */}
-        <div className="space-y-6">
+        {/* Lista de Vendedores - Responsivo */}
+        <div className="space-y-4 sm:space-y-6">
           {sellers.map((seller, index) => (
             <Card key={seller.user_id} className="shadow-lg border bg-white hover:shadow-xl transition-shadow">
-              <CardHeader className="pb-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">#{index + 1}</span>
+              <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-bold text-base sm:text-lg">#{index + 1}</span>
                     </div>
-                    <div>
-                      <CardTitle className="text-xl text-slate-900">
+                    <div className="min-w-0">
+                      <CardTitle className="text-base sm:text-xl text-slate-900 truncate">
                         {seller.profile.full_name || 'Nome não informado'}
                       </CardTitle>
-                      <p className="text-sm text-slate-600">{seller.profile.email}</p>
+                      <p className="text-xs sm:text-sm text-slate-600 truncate">{seller.profile.email}</p>
                       <p className="text-xs text-slate-500">
                         Membro desde: {new Date(seller.profile.created_at).toLocaleDateString('pt-AO')}
                       </p>
@@ -233,43 +235,43 @@ export default function AdminSellers() {
                   
                   <div className="flex gap-2">
                     {seller.bannedProducts > 0 && (
-                      <Badge className="bg-red-100 text-red-800 border-red-200">
+                      <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">
                         {seller.bannedProducts} Banido(s)
                       </Badge>
                     )}
-                    <Badge className="bg-green-100 text-green-800 border-green-200">
+                    <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
                       {seller.activeProducts} Ativo(s)
                     </Badge>
                   </div>
                 </div>
               </CardHeader>
 
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <p className="text-2xl font-bold text-blue-600">{seller.totalSales}</p>
-                    <p className="text-sm text-blue-800">Vendas Realizadas</p>
+              <CardContent className="p-4 sm:p-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                  <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
+                    <p className="text-xl sm:text-2xl font-bold text-blue-600">{seller.totalSales}</p>
+                    <p className="text-xs sm:text-sm text-blue-800">Vendas</p>
                   </div>
                   
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <p className="text-2xl font-bold text-green-600">
+                  <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
+                    <p className="text-base sm:text-2xl font-bold text-green-600">
                       {seller.totalRevenue.toLocaleString('pt-AO')} KZ
                     </p>
-                    <p className="text-sm text-green-800">Receita Total</p>
+                    <p className="text-xs sm:text-sm text-green-800">Receita</p>
                   </div>
                   
-                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                    <p className="text-2xl font-bold text-yellow-600">
+                  <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-lg">
+                    <p className="text-base sm:text-2xl font-bold text-yellow-600">
                       {seller.totalWithdrawals.toLocaleString('pt-AO')} KZ
                     </p>
-                    <p className="text-sm text-yellow-800">Total Sacado</p>
+                    <p className="text-xs sm:text-sm text-yellow-800">Sacado</p>
                   </div>
                   
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <p className="text-2xl font-bold text-purple-600">
+                  <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg">
+                    <p className="text-xl sm:text-2xl font-bold text-purple-600">
                       {((seller.totalWithdrawals / seller.totalRevenue) * 100 || 0).toFixed(1)}%
                     </p>
-                    <p className="text-sm text-purple-800">Taxa de Saque</p>
+                    <p className="text-xs sm:text-sm text-purple-800">Taxa</p>
                   </div>
                 </div>
               </CardContent>
@@ -278,10 +280,10 @@ export default function AdminSellers() {
           
           {sellers.length === 0 && (
             <Card className="shadow-lg border bg-white">
-              <CardContent className="text-center py-16">
-                <Users className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhum vendedor encontrado</h3>
-                <p className="text-slate-600">Não há vendedores cadastrados no sistema.</p>
+              <CardContent className="text-center py-12 sm:py-16">
+                <Users className="h-12 w-12 sm:h-16 sm:w-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">Nenhum vendedor encontrado</h3>
+                <p className="text-sm sm:text-base text-slate-600">Não há vendedores cadastrados no sistema.</p>
               </CardContent>
             </Card>
           )}

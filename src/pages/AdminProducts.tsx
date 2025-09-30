@@ -471,26 +471,28 @@ export default function AdminProducts() {
   return (
     <div className="min-h-screen bg-background">
       <SEO title="Kambafy Admin – Produtos" description="Revisar, aprovar e banir produtos com justificativa" canonical="https://kambafy.com/admin/products" noIndex />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-4 mb-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Button 
-            variant="ghost" 
+            variant="ghost"
+            size="sm"
             onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 hover:bg-accent"
+            className="flex items-center gap-2 hover:bg-accent self-start"
           >
             <ArrowLeft className="h-4 w-4" />
-            Voltar ao Dashboard
+            <span className="hidden sm:inline">Voltar ao Dashboard</span>
+            <span className="sm:hidden">Voltar</span>
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-foreground">Gerenciar Produtos</h1>
-            <p className="text-muted-foreground mt-1">Revisar e aprovar produtos antes da publicação</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gerenciar Produtos</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">Revisar e aprovar produtos</p>
           </div>
           
-          {/* Filtros */}
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+          {/* Filtros - Responsivo */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
@@ -504,7 +506,7 @@ export default function AdminProducts() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((product) => (
             <Card key={product.id} className="shadow-sm border hover:shadow-md transition-shadow">
               <CardHeader className="pb-2 p-4">
