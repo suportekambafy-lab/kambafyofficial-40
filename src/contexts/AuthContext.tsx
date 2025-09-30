@@ -283,7 +283,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🔑 Iniciando signup:', { email, fullName });
     
     try {
-      // O trigger do banco de dados agora previne confirmação automática
+      // Desabilitar envio automático de email de confirmação do Supabase
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
@@ -292,6 +292,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             full_name: fullName,
           },
+          // Desabilitar envio de email automático
+          // Vamos usar apenas o nosso sistema de 2FA
         },
       });
 

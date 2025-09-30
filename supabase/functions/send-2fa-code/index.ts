@@ -240,7 +240,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Enviar email
     const emailResponse = await resend.emails.send({
-      from: "KambaPay <noreply@kambafy.com>",
+      from: "Kambafy <noreply@kambafy.com>",
       to: [email],
       subject: subject,
       html: htmlContent
