@@ -30,21 +30,23 @@ export default function AdminPaymentApprovals() {
         description="Painel de aprovação de pagamentos por transferência bancária"
       />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="mb-4 sm:mb-6">
           <Button
             variant="ghost"
+            size="sm"
             onClick={() => navigate('/admin')}
-            className="mb-4"
+            className="mb-3 sm:mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Dashboard
+            <span className="hidden sm:inline">Voltar ao Dashboard</span>
+            <span className="sm:hidden">Voltar</span>
           </Button>
           
           <div className="flex items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Aprovar Pagamentos</h1>
-              <p className="text-gray-600 mt-1">Gerencie transferências bancárias pendentes de aprovação</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Aprovar Pagamentos</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Gerencie transferências bancárias pendentes</p>
             </div>
           </div>
         </div>

@@ -339,37 +339,41 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 transition-colors duration-300">
       <SEO title="Kambafy Admin – Dashboard" description="Dashboard administrativo com métricas e relatórios" canonical="https://kambafy.com/admin" noIndex />
-      {/* Modern Header */}
+      {/* Modern Header - Responsivo */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4 sm:py-6">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Button
                 onClick={() => setDrawerOpen(true)}
                 variant="outline"
                 size="icon"
-                className="hover:bg-accent"
+                className="hover:bg-accent h-9 w-9 sm:h-10 sm:w-10"
                 aria-label="Abrir menu"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
-              <div className="h-12 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Shield className="text-white h-6 w-6" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Shield className="text-white h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
-                <p className="text-gray-600">Bem-vindo, {admin.full_name || admin.email}</p>
+              <div className="hidden sm:block">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Painel Administrativo</h1>
+                <p className="text-sm text-gray-600">Bem-vindo, {admin.full_name || admin.email}</p>
+              </div>
+              <div className="block sm:hidden">
+                <h1 className="text-lg font-bold text-gray-900">Admin</h1>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <NotificationCenter />
               <Button 
                 onClick={handleSecureLogout}
                 variant="outline"
-                className="flex items-center gap-2 hover:bg-destructive/10 hover:border-destructive hover:text-destructive transition-colors"
+                size="sm"
+                className="flex items-center gap-1 sm:gap-2 hover:bg-destructive/10 hover:border-destructive hover:text-destructive transition-colors h-9 px-2 sm:px-4"
               >
                 <LogOut className="h-4 w-4" />
-                Sair
+                <span className="hidden sm:inline">Sair</span>
               </Button>
             </div>
           </div>
@@ -386,18 +390,18 @@ export default function AdminDashboard() {
         onCountrySelect={setSelectedCountry}
       />
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Country Filter Section */}
+      {/* Main Content - Responsivo */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Country Filter Section - Responsivo */}
         {usersByCountry.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center gap-4 mb-4">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4">
               <div className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold text-foreground">Usuários por País</h2>
+                <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                <h2 className="text-base sm:text-lg font-semibold text-foreground">Usuários por País</h2>
               </div>
               <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Selecionar país" />
                 </SelectTrigger>
                 <SelectContent>
@@ -420,7 +424,7 @@ export default function AdminDashboard() {
               </Select>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
               {usersByCountry.map((country) => (
                 <Card 
                   key={country.country}
@@ -430,28 +434,28 @@ export default function AdminDashboard() {
                   )}
                   onClick={() => setSelectedCountry(country.country)}
                 >
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl mb-2">{country.flag}</div>
-                    <div className="font-semibold text-sm">{country.country}</div>
-                    <div className="text-lg font-bold text-primary">{country.count}</div>
+                  <CardContent className="p-3 sm:p-4 text-center">
+                    <div className="text-xl sm:text-2xl mb-1 sm:mb-2">{country.flag}</div>
+                    <div className="font-semibold text-xs sm:text-sm truncate">{country.country}</div>
+                    <div className="text-base sm:text-lg font-bold text-primary">{country.count}</div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </div>
         )}
-        {/* Modern Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+        {/* Modern Stats Cards - Responsivo */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <Card className="p-4 sm:p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
             <CardContent className="p-0">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
                     {stats?.total_users?.toString() || '0'}
                   </h3>
-                  <p className="text-gray-600 text-sm">Total de Usuários</p>
+                  <p className="text-gray-600 text-xs sm:text-sm">Total de Usuários</p>
                 </div>
-                <div className="flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
+                <div className="flex items-center gap-1 text-xs sm:text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
                   <TrendingUp className="w-3 h-3" />
                   +12%
                 </div>
@@ -459,16 +463,16 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+          <Card className="p-4 sm:p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
             <CardContent className="p-0">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
                     {stats?.total_products?.toString() || '0'}
                   </h3>
-                  <p className="text-gray-600 text-sm">Produtos Ativos</p>
+                  <p className="text-gray-600 text-xs sm:text-sm">Produtos Ativos</p>
                 </div>
-                <div className="flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
+                <div className="flex items-center gap-1 text-xs sm:text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
                   <TrendingUp className="w-3 h-3" />
                   +8%
                 </div>
@@ -476,16 +480,16 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+          <Card className="p-4 sm:p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
             <CardContent className="p-0">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
                     {stats?.total_transactions?.toString() || '0'}
                   </h3>
-                  <p className="text-gray-600 text-sm">Transações</p>
+                  <p className="text-gray-600 text-xs sm:text-sm">Transações</p>
                 </div>
-                <div className="flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
+                <div className="flex items-center gap-1 text-xs sm:text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
                   <TrendingUp className="w-3 h-3" />
                   +23%
                 </div>
@@ -496,27 +500,27 @@ export default function AdminDashboard() {
 
         </div>
 
-        {/* Company Financials Section - Modern Style */}
+        {/* Company Financials Section - Responsivo */}
         {companyFinancials && (
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-8 w-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-4 w-4 text-white" />
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <div className="h-7 w-7 sm:h-8 sm:w-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
+                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Receita da Empresa</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Receita da Empresa</h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+              <Card className="p-4 sm:p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                 <CardContent className="p-0">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                      <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-1">
                         {`${companyFinancials.totalRevenue.toLocaleString('pt-AO')} KZ`}
                       </h3>
-                      <p className="text-gray-600 text-sm">Receita Total</p>
+                      <p className="text-gray-600 text-xs sm:text-sm">Receita Total</p>
                     </div>
-                    <div className="flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
+                    <div className="flex items-center gap-1 text-xs sm:text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
                       <TrendingUp className="w-3 h-3" />
                       +18%
                     </div>
@@ -524,16 +528,16 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+              <Card className="p-4 sm:p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                 <CardContent className="p-0">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                      <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-1">
                         {`${companyFinancials.companyCommission.toLocaleString('pt-AO')} KZ`}
                       </h3>
-                      <p className="text-gray-600 text-sm">Comissão da Empresa (8%)</p>
+                      <p className="text-gray-600 text-xs sm:text-sm">Comissão (8%)</p>
                     </div>
-                    <div className="flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
+                    <div className="flex items-center gap-1 text-xs sm:text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
                       <TrendingUp className="w-3 h-3" />
                       +18%
                     </div>
@@ -541,16 +545,16 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+              <Card className="p-4 sm:p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                 <CardContent className="p-0">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                      <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-1">
                         {`${companyFinancials.sellersEarnings.toLocaleString('pt-AO')} KZ`}
                       </h3>
-                      <p className="text-gray-600 text-sm">Receita dos Vendedores (92%)</p>
+                      <p className="text-gray-600 text-xs sm:text-sm">Vendedores (92%)</p>
                     </div>
-                    <div className="flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
+                    <div className="flex items-center gap-1 text-xs sm:text-sm font-medium px-2 py-1 rounded-full text-green-600 bg-green-50">
                       <TrendingUp className="w-3 h-3" />
                       +18%
                     </div>
@@ -559,26 +563,26 @@ export default function AdminDashboard() {
               </Card>
             </div>
 
-            {/* Monthly Revenue Chart - Modern Style */}
+            {/* Monthly Revenue Chart - Responsivo */}
             <Card className="bg-white shadow-sm border border-gray-200">
-              <CardHeader className="border-b border-gray-200">
-                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-blue-600" />
-                  Crescimento Mensal da Receita
+              <CardHeader className="border-b border-gray-200 p-4 sm:p-6">
+                <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                  Crescimento Mensal
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="text-sm text-muted-foreground">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+                  <div className="text-xs sm:text-sm text-muted-foreground">
                     {dateRange.from && dateRange.to
                       ? `Período: ${format(dateRange.from, 'dd/MM/yyyy')} – ${format(dateRange.to, 'dd/MM/yyyy')}`
                       : 'Filtrar por período'}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="justify-start">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                        <Button variant="outline" size="sm" className="justify-start w-full sm:w-auto text-xs sm:text-sm">
+                          <CalendarIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                           {dateRange.from && dateRange.to
                             ? `${format(dateRange.from, 'dd/MM/yyyy')} – ${format(dateRange.to, 'dd/MM/yyyy')}`
                             : 'Escolher data'}
@@ -595,31 +599,31 @@ export default function AdminDashboard() {
                       </PopoverContent>
                     </Popover>
                     {(dateRange.from || dateRange.to) && (
-                      <Button variant="ghost" size="sm" onClick={() => setDateRange({})}>
+                      <Button variant="ghost" size="sm" onClick={() => setDateRange({})} className="text-xs sm:text-sm">
                         Limpar
                       </Button>
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                   <div>
-                    <h4 className="font-medium text-gray-700 mb-4">Receita Total por Mês</h4>
-                    <div className="space-y-3">
+                    <h4 className="font-medium text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base">Receita Total</h4>
+                    <div className="space-y-2 sm:space-y-3">
                       {revenueToDisplay.map((month: any, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                          <span className="font-medium text-gray-700">{month.month}</span>
-                          <span className="font-bold text-gray-900">{month.revenue.toLocaleString('pt-AO')} KZ</span>
+                        <div key={index} className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <span className="font-medium text-gray-700 text-xs sm:text-sm">{month.month}</span>
+                          <span className="font-bold text-gray-900 text-xs sm:text-sm">{month.revenue.toLocaleString('pt-AO')} KZ</span>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-700 mb-4">Comissão da Empresa por Mês</h4>
-                    <div className="space-y-3">
+                    <h4 className="font-medium text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base">Comissão</h4>
+                    <div className="space-y-2 sm:space-y-3">
                       {revenueToDisplay.map((month: any, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <span className="font-medium text-blue-700">{month.month}</span>
-                          <span className="font-bold text-blue-900">{month.commission.toLocaleString('pt-AO')} KZ</span>
+                        <div key={index} className="flex items-center justify-between p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <span className="font-medium text-blue-700 text-xs sm:text-sm">{month.month}</span>
+                          <span className="font-bold text-blue-900 text-xs sm:text-sm">{month.commission.toLocaleString('pt-AO')} KZ</span>
                         </div>
                       ))}
                     </div>

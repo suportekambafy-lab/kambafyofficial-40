@@ -498,8 +498,8 @@ export function PendingTransfersManager() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Aprovar Pagamentos - Transferências
+          <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <span className="text-lg sm:text-xl">Aprovar Pagamentos - Transferências</span>
             <Badge variant="secondary">{pendingTransfers.length} pendentes</Badge>
           </CardTitle>
         </CardHeader>
@@ -511,19 +511,19 @@ export function PendingTransfersManager() {
           ) : (
             <div className="space-y-4">
               {pendingTransfers.map((transfer) => (
-                <div key={transfer.id} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between">
+                <div key={transfer.id} className="border rounded-lg p-3 sm:p-4">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                         <h3 className="font-medium">{transfer.customer_name}</h3>
-                        <Badge variant="outline">#{transfer.order_id}</Badge>
+                        <Badge variant="outline" className="w-fit">#{transfer.order_id}</Badge>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-3">
-                        <div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm text-muted-foreground mb-3">
+                        <div className="break-all">
                           <span className="font-medium">Email:</span> {transfer.customer_email}
                         </div>
-                        <div>
+                        <div className="break-words">
                           <span className="font-medium">Produto:</span> {transfer.product_name || 'N/A'}
                         </div>
                         <div>
@@ -537,7 +537,7 @@ export function PendingTransfersManager() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
                         <Button
                           variant="outline"
                           size="sm"
@@ -569,13 +569,13 @@ export function PendingTransfersManager() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex flex-row lg:flex-col gap-2 w-full lg:w-auto lg:ml-4">
                       <Button
                         variant="default"
                         size="sm"
                         onClick={() => processTransfer(transfer.id, 'approve')}
                         disabled={processingId === transfer.id}
-                        className="bg-green-600 hover:bg-green-700"
+                        className="bg-green-600 hover:bg-green-700 flex-1 lg:flex-none lg:w-full"
                       >
                         <CheckCircle className="h-4 w-4 mr-1" />
                         Aprovar
@@ -586,6 +586,7 @@ export function PendingTransfersManager() {
                         size="sm"
                         onClick={() => processTransfer(transfer.id, 'reject')}
                         disabled={processingId === transfer.id}
+                        className="flex-1 lg:flex-none lg:w-full"
                       >
                         <XCircle className="h-4 w-4 mr-1" />
                         Rejeitar
@@ -599,9 +600,9 @@ export function PendingTransfersManager() {
         </CardContent>
       </Card>
 
-      {/* Dialog para ver comprovativo */}
+      {/* Dialog para ver comprovativo - Responsivo */}
       <Dialog open={showProofDialog} onOpenChange={setShowProofDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Comprovativo de Transferência</DialogTitle>
           </DialogHeader>
@@ -629,10 +630,10 @@ export function PendingTransfersManager() {
                   </div>
                 )}
                 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
                     <label className="font-medium">Nome do arquivo:</label>
-                    <p className="text-muted-foreground">{selectedProof.fileName || 'N/A'}</p>
+                    <p className="text-muted-foreground break-all">{selectedProof.fileName || 'N/A'}</p>
                   </div>
                   <div>
                     <label className="font-medium">Banco:</label>
