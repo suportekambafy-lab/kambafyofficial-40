@@ -143,10 +143,13 @@ export function LessonComments({
   };
 
   const getInitials = (name: string, email: string) => {
-    if (name && name !== 'Usuário') {
+    if (name && name !== 'Usuário' && name.length > 0) {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
-    return email.slice(0, 2).toUpperCase();
+    if (email && email.length >= 2) {
+      return email.slice(0, 2).toUpperCase();
+    }
+    return 'US'; // Fallback caso ambos sejam inválidos
   };
 
   const renderComment = (comment: Comment, isReply = false) => (
