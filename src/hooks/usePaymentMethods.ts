@@ -25,6 +25,12 @@ const DEFAULT_PAYMENT_METHODS = [
     name: 'Transferência Bancária',
     image: '/lovable-uploads/809ca111-22ef-4df7-92fc-ebe47ba15021.png',
     enabled: true
+  },
+  {
+    id: 'apple_pay',
+    name: 'Apple Pay',
+    image: '/payment-logos/apple-pay-logo.png',
+    enabled: true
   }
 ];
 
