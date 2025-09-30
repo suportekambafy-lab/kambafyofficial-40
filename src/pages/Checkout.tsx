@@ -1980,65 +1980,82 @@ const Checkout = () => {
 
               <OptimizedOrderBump productId={productId || ''} position="after_payment_method" onToggle={handleOrderBumpToggle} userCountry={userCountry} formatPrice={formatPrice} resetSelection={resetOrderBumps} />
 
-              {selectedPayment === 'apple_pay' && <div className="mt-6">
-                  <Button 
-                    onClick={async () => {
-                      if (!formData.fullName || !formData.email || !formData.phone) {
-                        toast({
-                          title: "Dados incompletos",
-                          message: "Preencha todos os campos antes de continuar",
-                          variant: "error"
-                        });
-                        return;
-                      }
-                      
-                      setProcessing(true);
-                      try {
-                        console.log('Opening Stripe Checkout Session for Apple Pay...');
-                        const { data, error } = await supabase.functions.invoke('create-stripe-checkout-session', {
-                          body: {
-                            amount: convertedTotalPrice,
-                            currency: userCountry.currency === 'KZ' ? 'USD' : userCountry.currency,
-                            productId: productId,
-                            productName: product?.name || 'Produto Digital',
-                            customerData: {
-                              name: formData.fullName,
-                              email: formData.email,
-                              phone: formData.phone
-                            },
-                            paymentMethod: selectedPayment
-                          }
-                        });
-
-                        if (error) throw error;
-
-                        if (data?.url) {
-                          window.open(data.url, '_blank');
+              {selectedPayment === 'apple_pay' && (
+                <>
+                  {(() => {
+                    console.log('🍎 Selected payment:', selectedPayment);
+                    console.log('🍎 Is Apple Pay?', selectedPayment === 'apple_pay');
+                    return null;
+                  })()}
+                  <div className="mt-6">
+                    <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                      <p className="text-sm text-blue-700">✅ Apple Pay selecionado - Botão ativo</p>
+                    </div>
+                    <Button 
+                      onClick={async () => {
+                        console.log('🍎 Apple Pay button clicked!');
+                        if (!formData.fullName || !formData.email || !formData.phone) {
+                          console.log('🍎 Missing form data');
+                          toast({
+                            title: "Dados incompletos",
+                            message: "Preencha todos os campos antes de continuar",
+                            variant: "error"
+                          });
+                          return;
                         }
-                      } catch (error) {
-                        console.error('Error opening Stripe checkout:', error);
-                        toast({
-                          title: "Erro",
-                          message: "Erro ao abrir checkout do Stripe",
-                          variant: "error"
-                        });
-                      } finally {
-                        setProcessing(false);
-                      }
-                    }}
-                    disabled={!formData.fullName || !formData.email || !formData.phone || processing}
-                    className="w-full h-12 font-semibold bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {processing ? (
-                      <div className="flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                        PROCESSANDO...
-                      </div>
-                    ) : (
-                      `PAGAR COM APPLE PAY ${getDisplayPrice(totalPrice, true)}`
-                    )}
-                  </Button>
-                </div>}
+                        
+                        setProcessing(true);
+                        try {
+                          console.log('🍎 Opening Stripe Checkout Session for Apple Pay...');
+                          const { data, error } = await supabase.functions.invoke('create-stripe-checkout-session', {
+                            body: {
+                              amount: convertedTotalPrice,
+                              currency: userCountry.currency === 'KZ' ? 'USD' : userCountry.currency,
+                              productId: productId,
+                              productName: product?.name || 'Produto Digital',
+                              customerData: {
+                                name: formData.fullName,
+                                email: formData.email,
+                                phone: formData.phone
+                              },
+                              paymentMethod: selectedPayment
+                            }
+                          });
+
+                          console.log('🍎 Response:', { data, error });
+
+                          if (error) throw error;
+
+                          if (data?.url) {
+                            console.log('🍎 Opening URL:', data.url);
+                            window.open(data.url, '_blank');
+                          }
+                        } catch (error) {
+                          console.error('🍎 Error opening Stripe checkout:', error);
+                          toast({
+                            title: "Erro",
+                            message: "Erro ao abrir checkout do Stripe",
+                            variant: "error"
+                          });
+                        } finally {
+                          setProcessing(false);
+                        }
+                      }}
+                      disabled={!formData.fullName || !formData.email || !formData.phone || processing}
+                      className="w-full h-12 font-semibold bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      {processing ? (
+                        <div className="flex items-center justify-center">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          PROCESSANDO...
+                        </div>
+                      ) : (
+                        `PAGAR COM APPLE PAY ${getDisplayPrice(totalPrice, true)}`
+                      )}
+                    </Button>
+                  </div>
+                </>
+              )}
 
               {['card', 'klarna', 'multibanco'].includes(selectedPayment) && <div className="mt-6">
                   <OptimizedStripeCardPayment amount={totalPrice} originalAmountKZ={originalPriceKZ} currency={userCountry.currency} productId={productId || ''} customerData={{
