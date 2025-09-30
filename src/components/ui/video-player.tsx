@@ -64,6 +64,7 @@ interface VideoPlayerProps {
 const isBunnyEmbedUrl = (url?: string): boolean => {
   if (!url) return false;
   const bunnyPatterns = [
+    'videos.kambafy.com',
     'iframe.mediadelivery.net',
     'mediadelivery.net/embed',
     'bunnycdn.com/embed'
