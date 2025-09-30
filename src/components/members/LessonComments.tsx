@@ -142,14 +142,11 @@ export function LessonComments({
     });
   };
 
-  const getInitials = (name: string, email: string) => {
+  const getInitials = (name: string) => {
     if (name && name !== 'Usuário' && name.length > 0) {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
-    if (email && email.length >= 2) {
-      return email.slice(0, 2).toUpperCase();
-    }
-    return 'US'; // Fallback caso ambos sejam inválidos
+    return 'US';
   };
 
   const renderComment = (comment: Comment, isReply = false) => (
@@ -157,14 +154,13 @@ export function LessonComments({
       <div className="flex gap-2 sm:gap-3">
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-gray-700 flex-shrink-0">
           <AvatarFallback className="bg-emerald-600 text-white text-xs sm:text-sm">
-            {getInitials(comment.user_name, comment.user_email)}
+            {getInitials(comment.user_name)}
           </AvatarFallback>
         </Avatar>
         
         <div className="flex-1 min-w-0 space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-            <p className="font-medium text-white text-sm truncate">{comment.user_name}</p>
-            <p className="text-xs text-emerald-400 truncate">{comment.user_email}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-white text-sm truncate">{comment.user_name || 'Usuário'}</p>
           </div>
           
           <p className="text-xs text-gray-400 flex items-center gap-1">
