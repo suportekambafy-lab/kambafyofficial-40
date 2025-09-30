@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useModernMembersAuth } from './ModernMembersAuth';
 import { ModernLessonViewer } from './ModernLessonViewer';
+import { ContinueWatching } from './ContinueWatching';
 import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { LessonComments } from './LessonComments';
 import { Lesson, Module } from '@/types/memberArea';
@@ -560,6 +561,16 @@ export default function ModernMembersArea() {
                     {selectedModule ? selectedModule.description : 'Escolha um módulo para começar a aprender'}
                   </p>
                 </div>
+
+                {/* Continue Watching Section */}
+                {!selectedModule && user?.email && memberAreaId && (
+                  <div className="mb-8">
+                    <ContinueWatching 
+                      memberAreaId={memberAreaId} 
+                      studentEmail={user.email}
+                    />
+                  </div>
+                )}
 
                 {modules.length > 0 ? <div className="relative">
                     {selectedModule ? (/* Aulas do Módulo Selecionado */
