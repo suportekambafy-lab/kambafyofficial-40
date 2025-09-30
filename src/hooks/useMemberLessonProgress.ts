@@ -35,7 +35,7 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
   const getStorageKey = (lessonId: string) => `lesson_progress_${memberAreaId}_${userEmail}_${lessonId}`;
   const getCourseStorageKey = () => `course_progress_${memberAreaId}_${userEmail}`;
 
-  // Load lesson progress from localStorage for member areas
+  // Load lesson progress from Supabase database
   const loadLessonProgress = async () => {
     console.log('🔄 loadLessonProgress called for member area:', { memberAreaId, userEmail });
     
@@ -47,26 +47,41 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
     try {
       setIsLoadingProgress(true);
       
-      // Get saved progress from localStorage
-      const savedProgress = localStorage.getItem(getCourseStorageKey());
-      if (savedProgress) {
-        const progressData = JSON.parse(savedProgress);
-        setLessonProgress(progressData);
-        console.log('✅ Progresso carregado do localStorage:', {
-          count: Object.keys(progressData).length,
-          data: progressData
-        });
-      } else {
-        console.log('ℹ️ Nenhum progresso encontrado no localStorage');
-        // Create some demo progress data for testing
-        const demoProgress: Record<string, LessonProgress> = {};
-        
-        // Simulate some lesson progress for demo
-        // This will be replaced by real data when users actually watch lessons
-        console.log('🎭 Creating demo progress data for testing...');
-        
-        setLessonProgress(demoProgress);
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('❌ No authenticated user');
+        return;
       }
+
+      // Load progress from Supabase
+      const { data: progressData, error } = await supabase
+        .from('lesson_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('member_area_id', memberAreaId);
+
+      if (error) {
+        console.error('Error loading progress from Supabase:', error);
+        return;
+      }
+
+      // Transform array to object keyed by lesson_id
+      const progressMap: Record<string, LessonProgress> = {};
+      progressData?.forEach(progress => {
+        progressMap[progress.lesson_id] = progress;
+      });
+
+      setLessonProgress(progressMap);
+      
+      // Also save to localStorage as cache
+      localStorage.setItem(getCourseStorageKey(), JSON.stringify(progressMap));
+      
+      console.log('✅ Progresso carregado do Supabase:', {
+        count: Object.keys(progressMap).length,
+        data: progressMap
+      });
     } catch (error) {
       console.error('Error loading lesson progress:', error);
     } finally {
@@ -74,28 +89,54 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
     }
   };
 
-  // Save lesson progress to localStorage
+  // Save lesson progress to Supabase database
   const updateLessonProgress = async (lessonId: string, progressData: Partial<LessonProgress & { video_current_time?: number }>) => {
     console.log('💾 updateLessonProgress called:', { lessonId, progressData });
 
     try {
-      const updatedProgress = {
-        ...lessonProgress,
-        [lessonId]: {
-          ...lessonProgress[lessonId],
-          lesson_id: lessonId,
-          progress_percentage: progressData.progress_percentage || lessonProgress[lessonId]?.progress_percentage || 0,
-          completed: progressData.completed !== undefined ? progressData.completed : lessonProgress[lessonId]?.completed || false,
-          rating: progressData.rating !== undefined ? progressData.rating : lessonProgress[lessonId]?.rating,
-          video_current_time: progressData.video_current_time || lessonProgress[lessonId]?.video_current_time || 0,
-          last_watched_at: new Date().toISOString()
-        }
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('❌ No authenticated user');
+        return;
+      }
+
+      const progressRecord = {
+        lesson_id: lessonId,
+        user_id: user.id,
+        member_area_id: memberAreaId,
+        progress_percentage: progressData.progress_percentage || lessonProgress[lessonId]?.progress_percentage || 0,
+        completed: progressData.completed !== undefined ? progressData.completed : lessonProgress[lessonId]?.completed || false,
+        rating: progressData.rating !== undefined ? progressData.rating : lessonProgress[lessonId]?.rating,
+        video_current_time: progressData.video_current_time || lessonProgress[lessonId]?.video_current_time || 0,
+        last_watched_at: new Date().toISOString()
       };
 
+      // Update local state immediately
+      const updatedProgress = {
+        ...lessonProgress,
+        [lessonId]: progressRecord
+      };
       setLessonProgress(updatedProgress);
+      
+      // Save to localStorage as cache
       localStorage.setItem(getCourseStorageKey(), JSON.stringify(updatedProgress));
 
-      console.log('✅ Progresso salvo no localStorage:', lessonId, {
+      // Save to Supabase with upsert
+      const { error } = await supabase
+        .from('lesson_progress')
+        .upsert(progressRecord, {
+          onConflict: 'user_id,lesson_id,member_area_id'
+        });
+
+      if (error) {
+        console.error('Error saving progress to Supabase:', error);
+        toast.error('Erro ao salvar progresso');
+        return;
+      }
+
+      console.log('✅ Progresso salvo no Supabase:', lessonId, {
         progress: progressData.progress_percentage,
         completed: progressData.completed,
         currentTime: progressData.video_current_time
