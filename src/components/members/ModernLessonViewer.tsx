@@ -64,7 +64,7 @@ export function ModernLessonViewer({
   // Verificar se a aula está agendada para liberação futura
   const isScheduled = lesson.is_scheduled && lesson.scheduled_at;
   const isNotYetReleased = isScheduled && new Date(lesson.scheduled_at) > new Date();
-  return <div className="space-y-8 bg-zinc-950">
+  return <div className="space-y-4 sm:space-y-8 bg-zinc-950 w-full max-w-full overflow-x-hidden">
       {/* Video Player */}
       <motion.div initial={{
       opacity: 0,
@@ -75,7 +75,7 @@ export function ModernLessonViewer({
     }} transition={{
       delay: 0.1
     }}>
-        <div className="overflow-hidden bg-black border border-gray-800 rounded-none my-0 py-0 px-0 mx-0">
+        <div className="overflow-hidden bg-black border border-gray-800 rounded-none my-0 py-0 px-0 mx-0 w-full">
           {isNotYetReleased ? (
             <LessonReleaseTimer 
               releaseDate={new Date(lesson.scheduled_at!)} 

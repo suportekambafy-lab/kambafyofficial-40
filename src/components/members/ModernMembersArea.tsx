@@ -447,14 +447,14 @@ export default function ModernMembersArea() {
         <div className={selectedLesson ? "" : "container mx-auto px-4 py-12"}>
           
           {/* Layout quando aula selecionada */}
-          {selectedLesson ? <div className="flex min-h-screen relative">
+          {selectedLesson ? <div className="flex min-h-screen relative w-full max-w-full overflow-x-hidden">
               {/* Overlay para mobile */}
               {isMobile && sidebarVisible && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarVisible(false)} />}
               
               {/* Área do vídeo */}
-              <div className="flex-1 p-6 px-0 py-0">
-                <motion.div>
-                  <Card className="overflow-hidden mb-6 bg-zinc-950 rounded-none border-0">
+              <div className="flex-1 p-3 sm:p-6 px-0 py-0 w-full max-w-full min-w-0">
+                <motion.div className="w-full max-w-full overflow-x-hidden">
+                  <Card className="overflow-hidden mb-4 sm:mb-6 bg-zinc-950 rounded-none border-0 w-full max-w-full">
                     <ModernLessonViewer lesson={selectedLesson} lessons={lessons} lessonProgress={lessonProgress} onNavigateLesson={handleNavigateLesson} onClose={() => setSelectedLesson(null)} onUpdateProgress={updateVideoProgress} />
                   </Card>
                   
@@ -462,12 +462,14 @@ export default function ModernMembersArea() {
                   
                   
                   {/* Seção de comentários */}
-                  <LessonComments lessonId={selectedLesson.id} studentEmail={user?.email} studentName={user?.email?.split('@')[0]} />
+                  <div className="w-full max-w-full overflow-x-hidden">
+                    <LessonComments lessonId={selectedLesson.id} studentEmail={user?.email} studentName={user?.email?.split('@')[0]} />
+                  </div>
                 </motion.div>
               </div>
 
               {/* Sidebar com módulos e aulas - condicional */}
-              {sidebarVisible && <div className={`bg-gray-950 border-l border-gray-800 p-6 overflow-y-auto ${isMobile ? 'fixed top-0 right-0 h-full w-80 z-50 shadow-2xl' : 'w-96'}`}>
+              {sidebarVisible && <div className={`bg-gray-950 border-l border-gray-800 p-4 sm:p-6 overflow-y-auto ${isMobile ? 'fixed top-0 right-0 h-full w-80 z-50 shadow-2xl' : 'w-96'}`}>
                   {isMobile && <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-800">
                       <h3 className="text-lg font-semibold text-white">Lista de Aulas</h3>
                       <Button variant="ghost" size="sm" onClick={() => setSidebarVisible(false)} className="text-white hover:text-emerald-400">

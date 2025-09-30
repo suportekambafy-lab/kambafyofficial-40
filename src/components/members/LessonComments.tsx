@@ -153,33 +153,33 @@ export function LessonComments({
   };
 
   const renderComment = (comment: Comment, isReply = false) => (
-    <div key={comment.id} className={`p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 ${isReply ? 'ml-8 mt-2' : ''}`}>
-      <div className="flex gap-3">
-        <Avatar className="h-10 w-10 ring-2 ring-gray-700">
-          <AvatarFallback className="bg-emerald-600 text-white text-sm">
+    <div key={comment.id} className={`p-3 sm:p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 ${isReply ? 'ml-4 sm:ml-8 mt-2' : ''}`}>
+      <div className="flex gap-2 sm:gap-3">
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-gray-700 flex-shrink-0">
+          <AvatarFallback className="bg-emerald-600 text-white text-xs sm:text-sm">
             {getInitials(comment.user_name, comment.user_email)}
           </AvatarFallback>
         </Avatar>
         
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-white">{comment.user_name}</p>
-            <p className="text-xs text-emerald-400">{comment.user_email}</p>
+        <div className="flex-1 min-w-0 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <p className="font-medium text-white text-sm truncate">{comment.user_name}</p>
+            <p className="text-xs text-emerald-400 truncate">{comment.user_email}</p>
           </div>
           
           <p className="text-xs text-gray-400 flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {formatDate(comment.created_at)}
+            <Clock className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{formatDate(comment.created_at)}</span>
           </p>
           
-          <p className="text-gray-300 leading-relaxed">{comment.comment}</p>
+          <p className="text-sm sm:text-base text-gray-300 leading-relaxed break-words overflow-wrap-anywhere whitespace-pre-wrap">{comment.comment}</p>
           
           {!isReply && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-              className="text-xs text-emerald-400 hover:text-emerald-300 h-7 px-2"
+              className="text-xs text-emerald-400 hover:text-emerald-300 h-7 px-2 mt-2"
             >
               {replyingTo === comment.id ? 'Cancelar' : 'Responder'}
             </Button>
@@ -192,9 +192,9 @@ export function LessonComments({
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 rows={2}
-                className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-900"
+                className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-900 text-sm w-full"
               />
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col sm:flex-row justify-end gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -202,7 +202,7 @@ export function LessonComments({
                     setReplyingTo(null);
                     setReplyText('');
                   }}
-                  className="text-xs"
+                  className="text-xs w-full sm:w-auto"
                 >
                   Cancelar
                 </Button>
@@ -210,7 +210,7 @@ export function LessonComments({
                   onClick={() => handleSubmitComment(comment.id)}
                   disabled={!replyText.trim() || isSubmitting}
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs w-full sm:w-auto"
                 >
                   Responder
                 </Button>
@@ -229,27 +229,27 @@ export function LessonComments({
   );
 
   return (
-    <Card className="mt-6 bg-zinc-950 border-0">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
-          <MessageCircle className="h-5 w-5" />
-          Comentários ({comments.reduce((count, comment) => count + 1 + (comment.replies?.length || 0), 0)})
+    <Card className="mt-6 bg-zinc-950 border-0 mx-0 sm:mx-0">
+      <CardHeader className="px-3 sm:px-6">
+        <CardTitle className="flex items-center gap-2 text-white text-base sm:text-lg">
+          <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+          <span className="truncate">Comentários ({comments.reduce((count, comment) => count + 1 + (comment.replies?.length || 0), 0)})</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-3 sm:px-6">
         <div className="space-y-3">
           <Textarea 
             placeholder="Deixe seu comentário sobre esta aula..." 
             value={newComment} 
             onChange={(e) => setNewComment(e.target.value)} 
             rows={3} 
-            className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-950" 
+            className="border-gray-700 text-sm sm:text-base text-white placeholder-gray-400 resize-none bg-zinc-950 w-full" 
           />
           <div className="flex justify-end">
             <Button 
               onClick={() => handleSubmitComment()} 
               disabled={!newComment.trim() || isSubmitting} 
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto text-sm"
             >
               {isSubmitting ? (
                 <>

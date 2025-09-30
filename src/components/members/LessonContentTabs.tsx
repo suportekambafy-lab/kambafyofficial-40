@@ -37,9 +37,9 @@ export function LessonContentTabs({
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
-  return <div className="mt-4 sm:mt-8 pt-4 sm:pt-6 rounded-3xl">
+  return <div className="mt-4 sm:mt-8 pt-4 sm:pt-6 rounded-3xl w-full max-w-full overflow-x-hidden">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="h-auto rounded-none border-b border-border bg-transparent p-0 w-full justify-start overflow-x-auto">
+        <TabsList className="h-auto rounded-none border-b border-border bg-transparent p-0 w-full justify-start overflow-x-auto flex-nowrap">
           <TabsTrigger value="description" className="relative rounded-none py-2 px-3 sm:px-4 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary">
             <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Descrição</span>
@@ -60,13 +60,13 @@ export function LessonContentTabs({
         <TabsContent value="description" className="mt-4">
           <Card className="border-0 shadow-none">
             <CardContent className="p-4 sm:p-6">
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4">
+              <div className="space-y-4 w-full max-w-full overflow-x-hidden">
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 break-words">
                     {lesson.title}
                   </h2>
                   {lesson.description && <div className="prose prose-gray max-w-none">
-                      <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
+                      <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base break-words overflow-wrap-anywhere">
                         {lesson.description}
                       </p>
                     </div>}
