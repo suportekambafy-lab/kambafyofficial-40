@@ -111,15 +111,15 @@ const VideoPlayer = ({
 
   // Função para verificar se a URL é válida
   const isValidVideoUrl = (url: string): boolean => {
-    if (!url || url.includes('example.com')) {
+    if (!url || url.trim() === '' || url.includes('example.com')) {
       return false;
     }
     
     const validExtensions = ['.mp4', '.webm', '.ogg', '.m4v', '.mov'];
-    const validDomains = ['mediadelivery.net', 'bunnycdn.com', 'vimeo.com', 'youtube.com'];
+    const validDomains = ['mediadelivery.net', 'bunnycdn.com', 'vimeo.com', 'youtube.com', 'cloudflare'];
     
     return validExtensions.some(ext => url.toLowerCase().includes(ext)) ||
-           validDomains.some(domain => url.includes(domain));
+           validDomains.some(domain => url.toLowerCase().includes(domain));
   };
 
   const handleVolumeChange = (value: number) => {
@@ -206,8 +206,9 @@ const VideoPlayer = ({
     }
   };
 
-  // Se for uma URL do Bunny.net embed, usar iframe
-  if (embedUrl && embedUrl.includes('mediadelivery.net/embed')) {
+  // Se for uma URL do Bunny.net embed ou similar, usar iframe
+  if (embedUrl && (embedUrl.includes('mediadelivery.net') || embedUrl.includes('iframe.mediadelivery.net'))) {
+    console.log('🎬 Usando iframe para embed URL:', embedUrl);
     return (
       <motion.div 
         className="relative w-full overflow-hidden bg-black"
@@ -221,6 +222,7 @@ const VideoPlayer = ({
           frameBorder="0"
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          loading="lazy"
         />
       </motion.div>
     );

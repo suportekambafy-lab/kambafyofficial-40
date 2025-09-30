@@ -81,7 +81,12 @@ export function ModernLessonViewer({
               releaseDate={new Date(lesson.scheduled_at!)} 
               lessonTitle={lesson.title}
             />
-          ) : lesson.video_url || lesson.bunny_embed_url ? <VideoPlayer src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed') ? lesson.video_url : ''} embedUrl={lesson.bunny_embed_url || (lesson.video_url?.includes('mediadelivery.net/embed') ? lesson.video_url : undefined)} startTime={startTime} onProgress={setProgress} onTimeUpdate={(currentTime, duration) => {
+          ) : lesson.video_url || lesson.bunny_embed_url ? <VideoPlayer 
+              src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net') ? lesson.video_url : ''} 
+              embedUrl={lesson.bunny_embed_url || (lesson.video_url?.includes('mediadelivery.net') ? lesson.video_url : undefined)} 
+              startTime={startTime} 
+              onProgress={setProgress} 
+              onTimeUpdate={(currentTime, duration) => {
           setCurrentTime(currentTime);
 
           // Salvar progresso automaticamente
