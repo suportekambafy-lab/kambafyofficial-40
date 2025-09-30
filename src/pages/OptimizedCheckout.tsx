@@ -206,6 +206,7 @@ const OptimizedCheckout = () => {
     availablePaymentMethods: productPaymentMethods,
     handleInputChange,
     handleCountryChange,
+    handlePhoneCountryChange,
     handleProductExtraToggle,
     handleAccessExtensionToggle,
     fetchBalanceByEmail
@@ -549,7 +550,7 @@ const OptimizedCheckout = () => {
                           value={formData.phone}
                           onChange={(value) => handleInputChange('phone', value)}
                           selectedCountry={formData.phoneCountry}
-                          onCountryChange={(country) => handleInputChange('phoneCountry', country)}
+                          onCountryChange={handlePhoneCountryChange}
                         />
                       </div>
                     </div>

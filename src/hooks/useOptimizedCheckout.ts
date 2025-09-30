@@ -302,11 +302,29 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     }));
   }, []);
 
-  // Função otimizada para mudança de país
+  // Função para mudar apenas o código do telefone (NÃO muda o país do checkout)
+  const handlePhoneCountryChange = useCallback((countryCode: string) => {
+    const phoneCodes: Record<string, string> = {
+      'AO': '+244', 'PT': '+351', 'MZ': '+258', 'BR': '+55', 'US': '+1',
+      'ES': '+34', 'FR': '+33', 'GB': '+44', 'DE': '+49', 'IT': '+39',
+      'ZA': '+27', 'CV': '+238'
+    };
+    const phoneCode = phoneCodes[countryCode] || '+244';
+    
+    setFormData(prev => ({
+      ...prev,
+      phoneCountry: countryCode,
+      phone: phoneCode + " "
+    }));
+  }, []);
+
+  // Função para mudança de país do checkout (muda métodos de pagamento disponíveis)
   const handleCountryChange = useCallback((countryCode: string) => {
     changeCountry(countryCode);
     const phoneCodes: Record<string, string> = {
-      'AO': '+244', 'PT': '+351', 'MZ': '+258'
+      'AO': '+244', 'PT': '+351', 'MZ': '+258', 'BR': '+55', 'US': '+1',
+      'ES': '+34', 'FR': '+33', 'GB': '+44', 'DE': '+49', 'IT': '+39',
+      'ZA': '+27', 'CV': '+238'
     };
     const phoneCode = phoneCodes[countryCode] || '+244';
     
@@ -495,6 +513,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     // Funções
     handleInputChange,
     handleCountryChange,
+    handlePhoneCountryChange,
     handleProductExtraToggle,
     handleAccessExtensionToggle,
     fetchBalanceByEmail

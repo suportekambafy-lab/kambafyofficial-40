@@ -246,8 +246,9 @@ const Checkout = () => {
       'GB': '+44',
       'ES': '+34',
       'FR': '+33',
-      'IT': '+39',
       'DE': '+49',
+      'IT': '+39',
+      'ZA': '+27',
       'CV': '+238',
       'ST': '+239'
     };
@@ -533,6 +534,17 @@ const Checkout = () => {
       setKambaPayEmailError(null);
     }
   };
+  const handlePhoneCountryChange = (countryCode: string) => {
+    // APENAS atualiza o código do país do telefone
+    // NÃO muda o país do checkout
+    const phoneCode = getPhoneCodeByCountry(countryCode);
+    setFormData(prev => ({
+      ...prev,
+      phoneCountry: countryCode,
+      phone: phoneCode + " "
+    }));
+  };
+  
   const handleCountryChange = (countryCode: string) => {
     changeCountry(countryCode);
     const phoneCode = getPhoneCodeByCountry(countryCode);
@@ -1919,7 +1931,7 @@ const Checkout = () => {
                 <Label htmlFor="phone" className="text-gray-700 font-medium">
                   Telefone ou Whatsapp
                 </Label>
-                <PhoneInput value={formData.phone} onChange={value => handleInputChange("phone", value)} selectedCountry={formData.phoneCountry} onCountryChange={handleCountryChange} placeholder="Digite seu telefone" className="h-12" />
+                <PhoneInput value={formData.phone} onChange={value => handleInputChange("phone", value)} selectedCountry={formData.phoneCountry} onCountryChange={handlePhoneCountryChange} placeholder="Digite seu telefone" className="h-12" />
               </div>
 
 
