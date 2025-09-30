@@ -35,7 +35,6 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode');
   const userTypeParam = searchParams.get('type') as 'customer' | 'seller' | null;
-  const errorParam = searchParams.get('error');
   const [currentView, setCurrentView] = useState<'login' | 'signup' | 'password-recovery' | 'reset-password' | 'signup-verification'>('login');
   const [selectedUserType, setSelectedUserType] = useState<'customer' | 'seller' | null>(userTypeParam);
   
@@ -76,17 +75,7 @@ const Auth = () => {
     if (userTypeParam && (userTypeParam === 'customer' || userTypeParam === 'seller')) {
       setSelectedUserType(userTypeParam);
     }
-    
-    // Verificar se há erro de login com Google
-    if (errorParam === 'google-account-not-found') {
-      setErrorField('Esta conta do Google não está cadastrada. Por favor, crie uma conta primeiro usando o botão "Criar conta" ou faça o cadastro com email e senha.');
-      setCurrentView('signup');
-      // Limpar o erro da URL
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete('error');
-      navigate(`/auth?${newSearchParams.toString()}`, { replace: true });
-    }
-  }, [mode, userTypeParam, errorParam, searchParams, navigate]);
+  }, [mode, userTypeParam]);
 
   useEffect(() => {
     if (user) {
@@ -156,78 +145,6 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    if (!selectedUserType) {
-      setErrorField("Por favor, selecione o tipo de usuário primeiro.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setErrorField('');
-      
-      // Primeiro verificar se o usuário já existe tentando fazer login silencioso
-      const { data: { user: existingUser }, error: sessionError } = await supabase.auth.getUser();
-      
-      if (sessionError && sessionError.message.includes('Invalid JWT')) {
-        // Usuário não está logado, podemos prosseguir
-      }
-      
-      const userType = selectedUserType === 'customer' ? 'customer' : 'business';
-      localStorage.setItem('userType', userType);
-      
-      // Marcar que é tentativa de login (não signup)
-      localStorage.setItem('googleAuthMode', 'signin');
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth?type=${selectedUserType}&mode=google-callback`
-        }
-      });
-
-      if (error) {
-        setErrorField('Erro ao fazer login com Google. Tente novamente.');
-      }
-    } catch (error) {
-      setErrorField('Erro inesperado. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignUp = async () => {
-    if (!selectedUserType) {
-      setErrorField("Por favor, selecione o tipo de usuário primeiro.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setErrorField('');
-      
-      const userType = selectedUserType === 'customer' ? 'customer' : 'business';
-      localStorage.setItem('userType', userType);
-      
-      // Marcar que é signup com Google
-      localStorage.setItem('googleAuthMode', 'signup');
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth?type=${selectedUserType}&mode=google-callback`
-        }
-      });
-
-      if (error) {
-        setErrorField('Erro ao criar conta com Google. Tente novamente.');
-      }
-    } catch (error) {
-      setErrorField('Erro inesperado. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -575,27 +492,7 @@ const Auth = () => {
                 </button>
               </form>
 
-              <div className="animate-element animate-delay-650 flex items-center gap-4">
-                <div className="flex-1 h-px bg-border"></div>
-                <span className="text-xs text-muted-foreground font-medium">OU</span>
-                <div className="flex-1 h-px bg-border"></div>
-              </div>
-
-              <button 
-                onClick={handleGoogleSignUp} 
-                className="animate-element animate-delay-700 w-full flex items-center justify-center gap-3 border border-border rounded-2xl py-4 hover:bg-secondary transition-colors disabled:opacity-50"
-                disabled={loading}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 48 48">
-                  <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s12-5.373 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-2.641-.21-5.236-.611-7.743z" />
-                  <path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" />
-                  <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
-                  <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-2.624-.2-5.235-.389-7.917z" />
-                </svg>
-                Criar conta com Google
-              </button>
-
-              <p className="animate-element animate-delay-750 text-center text-sm text-muted-foreground">
+              <p className="animate-element animate-delay-650 text-center text-sm text-muted-foreground">
                 Já tem uma conta? <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('login'); }} className="text-violet-400 hover:underline transition-colors">Fazer Login</a>
               </p>
             </div>
@@ -641,7 +538,6 @@ const Auth = () => {
       heroImageSrc="https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80"
       testimonials={sampleTestimonials}
       onSignIn={handleSignIn}
-      onGoogleSignIn={handleGoogleSignIn}
       onResetPassword={() => setCurrentView('password-recovery')}
       onCreateAccount={() => setCurrentView('signup')}
       loading={loading}
