@@ -7,8 +7,6 @@ import PasswordRecovery from '@/components/PasswordRecovery';
 import SignUpCodeVerification from '@/components/SignUpCodeVerification';
 import { supabase } from '@/integrations/supabase/client';
 import { SignInPage, Testimonial } from '@/components/ui/sign-in';
-import { CountrySelector } from '@/components/auth/CountrySelector';
-import { useGeoLocation } from '@/hooks/useGeoLocation';
 
 const sampleTestimonials: Testimonial[] = [
   {
@@ -54,10 +52,6 @@ const Auth = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
-  
-  // Estados para seleção de país
-  const [selectedCountry, setSelectedCountry] = useState<string>('AO');
-  const { supportedCountries } = useGeoLocation();
   
   const { signUp, signIn, user } = useAuth();
   const navigate = useNavigate();
@@ -162,18 +156,12 @@ const Auth = () => {
       return;
     }
 
-    if (!selectedCountry) {
-      setErrorField("Por favor, selecione o país da conta.");
-      return;
-    }
-
     setLoading(true);
     setErrorField('');
 
     try {
       const userType = selectedUserType === 'customer' ? 'customer' : 'business';
       localStorage.setItem('userType', userType);
-      localStorage.setItem('userCountry', selectedCountry);
       
       // Fazer o signup AGORA (mas ficará não-confirmado)
       console.log('🔄 Fazendo signup inicial...');
@@ -460,15 +448,6 @@ const Auth = () => {
                 </div>
 
                 <div className="animate-element animate-delay-450">
-                  <CountrySelector
-                    selectedCountry={selectedCountry}
-                    onCountryChange={setSelectedCountry}
-                    supportedCountries={supportedCountries}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="animate-element animate-delay-500">
                   <label className="text-sm font-medium text-muted-foreground">Senha</label>
                   <div className="rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors focus-within:border-violet-400/70 focus-within:bg-violet-500/10">
                     <input 
@@ -485,14 +464,14 @@ const Auth = () => {
 
                 <button 
                   type="submit" 
-                  className="animate-element animate-delay-600 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="animate-element animate-delay-500 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
                   disabled={loading}
                 >
                   {loading ? "Criando conta..." : "Criar Conta"}
                 </button>
               </form>
 
-              <p className="animate-element animate-delay-650 text-center text-sm text-muted-foreground">
+              <p className="animate-element animate-delay-550 text-center text-sm text-muted-foreground">
                 Já tem uma conta? <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('login'); }} className="text-violet-400 hover:underline transition-colors">Fazer Login</a>
               </p>
             </div>
