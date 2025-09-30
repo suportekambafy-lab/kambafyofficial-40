@@ -20,9 +20,12 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { customerName, customerEmail, temporaryPassword }: AddStudentRequest = await req.json();
+    
+    // Normalizar email para lowercase
+    const normalizedEmail = customerEmail.toLowerCase().trim();
 
     console.log('=== ADD STUDENT TO MEMBER AREA START ===');
-    console.log('Student:', customerName, customerEmail);
+    console.log('Student:', customerName, normalizedEmail);
 
     // Create Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -38,7 +41,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw userCheckError;
     }
 
-    const existingUser = existingUsers?.users?.find(user => user.email === customerEmail);
+    const existingUser = existingUsers?.users?.find(user => user.email?.toLowerCase() === normalizedEmail);
     let isNewAccount = false;
     let passwordToReturn = temporaryPassword;
 
@@ -52,7 +55,7 @@ const handler = async (req: Request): Promise<Response> => {
                            Math.floor(Math.random() * 100).toString().padStart(2, '0');
       
       const { data: newUser, error: createUserError } = await supabase.auth.admin.createUser({
-        email: customerEmail,
+        email: normalizedEmail,
         password: finalPassword,
         email_confirm: true, // Confirmar email automaticamente
         user_metadata: {
@@ -96,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
         .insert({
           user_id: newUser.user.id,
           full_name: customerName,
-          email: customerEmail
+          email: normalizedEmail
         });
 
       if (profileError) {

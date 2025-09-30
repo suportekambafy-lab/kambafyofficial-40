@@ -40,6 +40,9 @@ function generateTemporaryPassword(): string {
 // Function to create Kambafy account
 async function createKambafyAccount(email: string, name: string, tempPassword: string) {
   try {
+    // Normalizar email
+    const normalizedEmail = email.toLowerCase().trim();
+    
     // First check if user already exists by listing users with email filter
     const { data: listResponse, error: listError } = await supabase.auth.admin.listUsers();
     
@@ -48,7 +51,7 @@ async function createKambafyAccount(email: string, name: string, tempPassword: s
       throw listError;
     }
 
-    const existingUser = listResponse.users.find(user => user.email === email);
+    const existingUser = listResponse.users.find(user => user.email?.toLowerCase() === normalizedEmail);
     
     if (existingUser) {
       console.log('User already exists in Kambafy, skipping account creation');
@@ -57,7 +60,7 @@ async function createKambafyAccount(email: string, name: string, tempPassword: s
 
     // Create new user with temporary password
     const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-      email: email,
+      email: normalizedEmail,
       password: tempPassword,
       email_confirm: true, // Auto-confirm email
       user_metadata: {
@@ -70,7 +73,7 @@ async function createKambafyAccount(email: string, name: string, tempPassword: s
       throw createError;
     }
 
-    console.log('Kambafy account created successfully for:', email);
+    console.log('Kambafy account created successfully for:', normalizedEmail);
     return { exists: false, user: newUser.user };
     
   } catch (error) {
@@ -101,11 +104,14 @@ const handler = async (req: Request): Promise<Response> => {
       supportEmail,
       supportWhatsapp
     }: MemberAccessEmailRequest = await req.json();
+    
+    // Normalizar email para lowercase
+    const normalizedEmail = studentEmail.toLowerCase().trim();
 
     console.log('=== MEMBER ACCESS EMAIL START ===');
     console.log('Request data:', {
       studentName,
-      studentEmail,
+      studentEmail: normalizedEmail,
       memberAreaName,
       memberAreaUrl,
       sellerName,
@@ -116,7 +122,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Validate required fields
-    if (!studentEmail || !studentName || !memberAreaName || !memberAreaUrl) {
+    if (!normalizedEmail || !studentName || !memberAreaName || !memberAreaUrl) {
       throw new Error('Missing required fields: studentEmail, studentName, memberAreaName, or memberAreaUrl');
     }
 
@@ -136,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px 0; font-weight: 500; color: #475569; width: 30%;">Email:</td>
-                <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${studentEmail}</td>
+                <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${normalizedEmail}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; font-weight: 500; color: #475569;">Nova senha:</td>
@@ -163,7 +169,7 @@ const handler = async (req: Request): Promise<Response> => {
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px 0; font-weight: 500; color: #475569; width: 30%;">Email:</td>
-                <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${studentEmail}</td>
+                <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${normalizedEmail}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; font-weight: 500; color: #475569;">Senha temporária:</td>
@@ -185,7 +191,7 @@ const handler = async (req: Request): Promise<Response> => {
           <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">Acesso Liberado</h3>
           <div style="background-color: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px;">
             <p style="margin: 0; color: #0c4a6e; font-size: 14px;">
-              Use sua conta existente com o email: <strong>${studentEmail}</strong>
+              Use sua conta existente com o email: <strong>${normalizedEmail}</strong>
             </p>
           </div>
         </div>
@@ -289,7 +295,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Sending member access email...');
     const { data: emailResponse, error: emailError } = await resend.emails.send({
       from: "Kambafy <noreply@kambafy.com>",
-      to: [studentEmail.trim()],
+      to: [normalizedEmail],
       subject: emailSubject || `🎓 Acesso Liberado - ${memberAreaName}`,
       html: memberAccessEmailHtml,
     });
@@ -305,7 +311,7 @@ const handler = async (req: Request): Promise<Response> => {
     const newTemporaryPassword = generateTemporaryPassword();
     
     try {
-      const accountResult = await createKambafyAccount(studentEmail, studentName, newTemporaryPassword);
+      const accountResult = await createKambafyAccount(normalizedEmail, studentName, newTemporaryPassword);
       
       // Send Kambafy panel access email
       const panelEmailHtml = `
@@ -341,7 +347,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr>
                     <td style="padding: 8px 0; font-weight: 500; color: #475569; width: 30%;">Email:</td>
-                    <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${studentEmail}</td>
+                    <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${normalizedEmail}</td>
                   </tr>
                   <tr>
                     <td style="padding: 8px 0; font-weight: 500; color: #475569;">Senha:</td>
@@ -395,7 +401,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       const { data: panelEmailResponse, error: panelEmailError } = await resend.emails.send({
         from: "Kambafy <noreply@kambafy.com>",
-        to: [studentEmail.trim()],
+        to: [normalizedEmail],
         subject: `🚀 Acesso ao Painel Kambafy - ${studentName}`,
         html: panelEmailHtml,
       });

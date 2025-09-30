@@ -120,11 +120,14 @@ const handler = async (req: Request): Promise<Response> => {
       isNewAccount,
       temporaryPassword
     }: PurchaseConfirmationRequest = await req.json();
+    
+    // Normalizar email para lowercase
+    const normalizedEmail = customerEmail.toLowerCase().trim();
 
     console.log('=== PURCHASE CONFIRMATION START ===');
     console.log('Request data:', {
       customerName,
-      customerEmail,
+      customerEmail: normalizedEmail,
       customerPhone, // Adicionar telefone no log
       productName,
       orderId,
@@ -142,7 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Validate required fields
-    if (!customerEmail || !customerName || !productName || !orderId) {
+    if (!normalizedEmail || !customerName || !productName || !orderId) {
       throw new Error('Missing required fields: customerEmail, customerName, productName, or orderId');
     }
 
@@ -266,7 +269,7 @@ const handler = async (req: Request): Promise<Response> => {
           console.log('Background task: Sending pending payment email');
           const { data: pendingEmailResponse, error: pendingEmailError } = await resend.emails.send({
             from: "Kambafy <noreply@kambafy.com>",
-            to: [customerEmail.trim()],
+            to: [normalizedEmail],
             subject: `Pagamento Pendente - ${productName} - Pedido #${orderId}`,
             html: pendingEmailHtml,
           });
@@ -564,7 +567,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <table style="width: 100%; border-collapse: collapse;">
                     <tr>
                       <td style="padding: 8px 0; font-weight: 500; color: #475569; width: 30%;">Email:</td>
-                      <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${customerEmail}</td>
+                      <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${normalizedEmail}</td>
                     </tr>
                     <tr>
                       <td style="padding: 8px 0; font-weight: 500; color: #475569;">Senha:</td>
@@ -632,7 +635,7 @@ const handler = async (req: Request): Promise<Response> => {
         // Send the customer email
         const { data: emailResponse, error: emailError } = await resend.emails.send({
           from: "Kambafy <noreply@kambafy.com>",
-          to: [customerEmail.trim()],
+          to: [normalizedEmail],
           subject: `Confirmação de Compra - ${productName} - Pedido #${orderId}`,
           html: customerEmailHtml,
         });

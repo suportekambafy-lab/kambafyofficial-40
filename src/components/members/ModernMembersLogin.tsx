@@ -25,7 +25,8 @@ export default function ModernMembersLogin() {
     const searchParams = new URLSearchParams(location.search);
     const emailFromUrl = searchParams.get('email');
     if (emailFromUrl) {
-      setEmail(decodeURIComponent(emailFromUrl));
+      // Normalizar email para lowercase
+      setEmail(decodeURIComponent(emailFromUrl).toLowerCase().trim());
     }
   }, [location.search]);
   
@@ -36,12 +37,15 @@ export default function ModernMembersLogin() {
       setIsSubmitting(true);
       
       try {
+        // Normalizar email para lowercase
+        const normalizedEmail = email.toLowerCase().trim();
+        
         // Verificar se o email tem acesso à área de membros
         const { data: studentAccess, error } = await supabase
           .from('member_area_students')
           .select('*')
           .eq('member_area_id', memberAreaId)
-          .eq('student_email', email.trim())
+          .ilike('student_email', normalizedEmail)
           .single();
 
         if (error || !studentAccess) {
@@ -61,7 +65,7 @@ export default function ModernMembersLogin() {
         
         // Redirecionar para a área de membros com acesso verificado
         setTimeout(() => {
-          window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(email.trim())}`;
+          window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`;
         }, 800);
         
       } catch (error: any) {

@@ -57,14 +57,16 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
     const email = urlParams.get('email');
     
     if (verified && email) {
-      console.log('🔑 ModernAuth: Acesso verificado detectado via URL:', email);
+      // Normalizar email para lowercase
+      const normalizedEmail = decodeURIComponent(email).toLowerCase().trim();
+      console.log('🔑 ModernAuth: Acesso verificado detectado via URL:', normalizedEmail);
       
       // Criar sessão virtual persistente
       const virtualUser = {
         id: crypto.randomUUID(),
-        email: decodeURIComponent(email),
+        email: normalizedEmail,
         app_metadata: { provider: 'email', providers: ['email'] },
-        user_metadata: { full_name: decodeURIComponent(email).split('@')[0] },
+        user_metadata: { full_name: normalizedEmail.split('@')[0] },
         aud: 'authenticated',
         created_at: new Date().toISOString(),
         email_confirmed_at: new Date().toISOString(),
