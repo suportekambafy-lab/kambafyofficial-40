@@ -9,6 +9,12 @@ const CARD_PAYMENT_METHODS: never[] = [];
 // Métodos de pagamento padrão (Angola, Portugal, Moçambique)
 const DEFAULT_PAYMENT_METHODS = [
   {
+    id: 'apple_pay',
+    name: 'Apple Pay',
+    image: '/payment-logos/apple-pay-logo.png',
+    enabled: true
+  },
+  {
     id: 'express',
     name: 'Multicaixa Express',
     image: '/lovable-uploads/e9a7b374-3f3c-4e2b-ad03-9cdefa7be8a8.png',
@@ -24,12 +30,6 @@ const DEFAULT_PAYMENT_METHODS = [
     id: 'transfer',
     name: 'Transferência Bancária',
     image: '/lovable-uploads/809ca111-22ef-4df7-92fc-ebe47ba15021.png',
-    enabled: true
-  },
-  {
-    id: 'apple_pay',
-    name: 'Apple Pay',
-    image: '/payment-logos/apple-pay-logo.png',
     enabled: true
   }
 ];
