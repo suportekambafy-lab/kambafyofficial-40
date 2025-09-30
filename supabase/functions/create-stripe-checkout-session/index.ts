@@ -80,7 +80,13 @@ serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    console.log('Checkout Session created:', session.id);
+    console.log('✅ Checkout Session created:', session.id);
+    console.log('🔗 Session URL:', session.url);
+
+    if (!session.url) {
+      console.error('❌ No URL in session:', session);
+      throw new Error('Stripe não retornou URL do checkout');
+    }
 
     return new Response(
       JSON.stringify({ 
