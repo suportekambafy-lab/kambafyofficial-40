@@ -90,11 +90,13 @@ const SignUpCodeVerification = ({
     }
   }, [timeLeft, codeAlreadySent]);
 
-  const verifyCode = async () => {
-    if (!code || code.length !== 6) {
+  const verifyCode = async (codeToVerify?: string) => {
+    const finalCode = codeToVerify || code;
+    
+    if (!finalCode || finalCode.length !== 6) {
       toast({
-        title: "Código inválido",
-        description: "Por favor, insira o código de 6 dígitos.",
+        title: "Código incompleto",
+        description: "Por favor, insira todos os 6 dígitos do código.",
         variant: "destructive"
       });
       return;
@@ -102,13 +104,13 @@ const SignUpCodeVerification = ({
 
     setLoading(true);
     try {
-      console.log('🔐 Verificando código:', code);
+      console.log('🔐 Verificando código:', finalCode);
       
       // Verificar o código 2FA
       const { data: verifyResponse, error: verifyError } = await supabase.functions.invoke('verify-2fa-code', {
         body: {
           email: email,
-          code: code,
+          code: finalCode,
           event_type: 'signup'
         }
       });
@@ -218,7 +220,15 @@ const SignUpCodeVerification = ({
               <InputOTP 
                 maxLength={6} 
                 value={code} 
-                onChange={setCode}
+                onChange={(value) => {
+                  console.log('📝 Código digitado:', value, 'Comprimento:', value.length);
+                  setCode(value);
+                  // Auto-verificar quando completar os 6 dígitos
+                  if (value.length === 6) {
+                    console.log('✅ Código completo! Auto-verificando...');
+                    setTimeout(() => verifyCode(value), 500);
+                  }
+                }}
                 disabled={loading}
               >
                 <InputOTPGroup>
@@ -231,16 +241,25 @@ const SignUpCodeVerification = ({
                 </InputOTPGroup>
               </InputOTP>
             </div>
+            <p className="text-xs text-center text-muted-foreground">
+              O código será verificado automaticamente
+            </p>
           </div>
 
           <Button 
-            onClick={verifyCode}
+            onClick={() => verifyCode()}
             disabled={loading || code.length !== 6}
             className="w-full"
             size="lg"
           >
-            {loading && <LoadingSpinner className="mr-2 h-4 w-4" />}
-            Confirmar Código
+            {loading ? (
+              <>
+                <LoadingSpinner className="mr-2 h-4 w-4" />
+                Verificando...
+              </>
+            ) : (
+              'Confirmar Código'
+            )}
           </Button>
 
           <div className="text-center space-y-2">
