@@ -2246,6 +2246,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_passwordless_users: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       detect_abandoned_purchase: {
         Args: {
           _amount: number

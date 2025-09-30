@@ -147,13 +147,32 @@ const SignUpCodeVerification = ({
         return;
       }
 
-      console.log('✅ Conta confirmada com sucesso!');
+      console.log('✅ Conta confirmada com sucesso! Fazendo login...');
       
-      // Atualizar a sessão atual para refletir o email confirmado
-      const { data: { session: updatedSession }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !updatedSession) {
-        console.error('❌ Erro ao obter sessão atualizada:', sessionError);
+      // Agora fazer login com as credenciais
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (signInError) {
+        console.error('❌ Erro ao fazer login após confirmação:', signInError);
+        
+        // Se o erro for de credenciais inválidas, pode ser que o usuário seja órfão
+        // Vamos tentar deletar o usuário antigo e pedir para fazer signup novamente
+        if (signInError.message.includes('Invalid login credentials')) {
+          console.log('🔄 Detectado usuário órfão, tentando limpar...');
+          toast({
+            title: "Atenção",
+            description: "Detectamos um problema com sua conta. Por favor, tente fazer o cadastro novamente.",
+            variant: "destructive"
+          });
+          setTimeout(() => {
+            window.location.href = '/auth?mode=signup';
+          }, 2000);
+          return;
+        }
+        
         toast({
           title: "Conta confirmada!",
           description: "Sua conta foi confirmada. Por favor, faça login.",
@@ -164,10 +183,10 @@ const SignUpCodeVerification = ({
         return;
       }
 
-      console.log('✅ Sessão atualizada com sucesso!');
+      console.log('✅ Login realizado com sucesso após confirmação!');
       toast({
         title: "Bem-vindo!",
-        description: "Conta criada e confirmada com sucesso!",
+        description: "Conta criada e login realizado com sucesso!",
       });
       
       // Pequeno delay para mostrar o toast antes de redirecionar
