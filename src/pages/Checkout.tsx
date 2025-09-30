@@ -1980,7 +1980,7 @@ const Checkout = () => {
 
               <OptimizedOrderBump productId={productId || ''} position="after_payment_method" onToggle={handleOrderBumpToggle} userCountry={userCountry} formatPrice={formatPrice} resetSelection={resetOrderBumps} />
 
-              {['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment) && <div className="mt-6">
+              {selectedPayment === 'apple_pay' && <div className="mt-6">
                   <Button 
                     onClick={async () => {
                       if (!formData.fullName || !formData.email || !formData.phone) {
@@ -1994,7 +1994,7 @@ const Checkout = () => {
                       
                       setProcessing(true);
                       try {
-                        console.log('Opening Stripe Checkout Session...');
+                        console.log('Opening Stripe Checkout Session for Apple Pay...');
                         const { data, error } = await supabase.functions.invoke('create-stripe-checkout-session', {
                           body: {
                             amount: convertedTotalPrice,
@@ -2035,9 +2035,17 @@ const Checkout = () => {
                         PROCESSANDO...
                       </div>
                     ) : (
-                      `PAGAR ${getDisplayPrice(totalPrice, true)}`
+                      `PAGAR COM APPLE PAY ${getDisplayPrice(totalPrice, true)}`
                     )}
                   </Button>
+                </div>}
+
+              {['card', 'klarna', 'multibanco'].includes(selectedPayment) && <div className="mt-6">
+                  <OptimizedStripeCardPayment amount={totalPrice} originalAmountKZ={originalPriceKZ} currency={userCountry.currency} productId={productId || ''} customerData={{
+                name: formData.fullName,
+                email: formData.email,
+                phone: formData.phone
+              }} paymentMethod={selectedPayment} onSuccess={handleCardPaymentSuccess} onError={handleCardPaymentError} processing={processing} setProcessing={setProcessing} displayPrice={getDisplayPrice(totalPrice, true)} convertedAmount={convertedTotalPrice} />
                 </div>}
 
 
