@@ -292,8 +292,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             full_name: fullName,
           },
-          // Desabilitar envio de email automático
-          // Vamos usar apenas o nosso sistema de 2FA
         },
       });
 
@@ -302,10 +300,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      console.log('✅ Signup realizado - usuário criado mas não confirmado:', data);
+      console.log('✅ Signup realizado - fazendo logout para forçar verificação 2FA');
       
-      // NÃO fazer signOut - manter a sessão para que após confirmar o email
-      // o usuário já esteja autenticado
+      // Fazer logout imediato para que o usuário precise verificar o código 2FA
+      // antes de ter acesso à plataforma
+      await supabase.auth.signOut();
+      
+      // Limpar estado local
+      clearAuth();
 
       return { error: null, data };
     } catch (err) {
