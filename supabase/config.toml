@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.create-appypay-charge]
 verify_jwt = false
 
+[functions.create-stripe-checkout-session]
+verify_jwt = false
+
 [functions.kambapay-public-api]
 verify_jwt = false
 
