@@ -171,7 +171,7 @@ export function MemberAreaSlideMenu({
             </Button>
 
             <Button onClick={() => {
-            navigate('/vendedor');
+            window.location.href = 'https://app.kambafy.com/auth?type=seller';
             setOpen(false);
           }} variant="ghost" className="w-full justify-start gap-3 bg-gray-900 hover:bg-gray-800 text-white">
               <LayoutDashboard className="w-4 h-4 text-emerald-400" />
