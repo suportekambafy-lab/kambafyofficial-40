@@ -196,6 +196,81 @@ const handler = async (req: Request): Promise<Response> => {
             console.log('[APPYPAY-WEBHOOK] Webhooks triggered successfully');
           }
 
+          // Process order bumps and send separate access emails if applicable
+          if (order.order_bump_data) {
+            try {
+              console.log('[APPYPAY-WEBHOOK] Processing order bump access emails...');
+              const orderBumpData = typeof order.order_bump_data === 'string' 
+                ? JSON.parse(order.order_bump_data)
+                : order.order_bump_data;
+              
+              if (orderBumpData && orderBumpData.bump_product_id) {
+                console.log(`[APPYPAY-WEBHOOK] Processing email for order bump: ${orderBumpData.bump_product_name}`);
+                
+                // Fetch order bump product details
+                const { data: bumpProduct, error: bumpProductError } = await supabase
+                  .from('products')
+                  .select('name, member_area_id, user_id')
+                  .eq('id', orderBumpData.bump_product_id)
+                  .single();
+                
+                if (!bumpProductError && bumpProduct && bumpProduct.member_area_id) {
+                  console.log(`[APPYPAY-WEBHOOK] Order bump has member area: ${bumpProduct.member_area_id}`);
+                  
+                  // Get member area details
+                  const { data: memberArea, error: memberAreaError } = await supabase
+                    .from('member_areas')
+                    .select('name, url')
+                    .eq('id', bumpProduct.member_area_id)
+                    .single();
+                  
+                  if (!memberAreaError && memberArea) {
+                    const bumpMemberAreaUrl = `https://kambafy.com/members/login/${bumpProduct.member_area_id}`;
+                    
+                    // Generate temporary password for order bump access
+                    function generateTemporaryPassword(): string {
+                      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+                      let password = '';
+                      for (let i = 0; i < 10; i++) {
+                        password += chars.charAt(Math.floor(Math.random() * chars.length));
+                      }
+                      return password;
+                    }
+                    
+                    const bumpTemporaryPassword = generateTemporaryPassword();
+                    
+                    // Send member access email for order bump
+                    const memberAccessPayload = {
+                      studentName: order.customer_name,
+                      studentEmail: order.customer_email.toLowerCase().trim(),
+                      memberAreaName: memberArea.name,
+                      memberAreaUrl: bumpMemberAreaUrl,
+                      sellerName: 'Kambafy',
+                      isNewAccount: false,
+                      temporaryPassword: bumpTemporaryPassword
+                    };
+                    
+                    console.log('[APPYPAY-WEBHOOK] Sending member access email for order bump:', memberAccessPayload);
+                    
+                    const { error: bumpEmailError } = await supabase.functions.invoke('send-member-access-email', {
+                      body: memberAccessPayload
+                    });
+                    
+                    if (bumpEmailError) {
+                      console.error(`[APPYPAY-WEBHOOK] Error sending order bump access email for ${orderBumpData.bump_product_name}:`, bumpEmailError);
+                    } else {
+                      console.log(`[APPYPAY-WEBHOOK] Order bump access email sent successfully for: ${orderBumpData.bump_product_name}`);
+                    }
+                  }
+                } else {
+                  console.log(`[APPYPAY-WEBHOOK] Order bump ${orderBumpData.bump_product_name} does not have member area, skipping separate access email`);
+                }
+              }
+            } catch (bumpEmailError) {
+              console.error('[APPYPAY-WEBHOOK] Error processing order bump emails:', bumpEmailError);
+            }
+          }
+
         } catch (postPaymentError) {
           console.error('[APPYPAY-WEBHOOK] Error in post-payment actions:', postPaymentError);
         }

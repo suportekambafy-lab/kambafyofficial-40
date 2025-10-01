@@ -185,6 +185,79 @@ serve(async (req) => {
           }
         }
 
+        // Process order bumps and send separate access emails if applicable
+        if (orderData.order_bump_data) {
+          try {
+            console.log('📧 Processing order bump access emails...');
+            const orderBumpDataParsed = JSON.parse(orderData.order_bump_data);
+            
+            if (orderBumpDataParsed && orderBumpDataParsed.bump_product_id) {
+              console.log(`📧 Processing email for order bump: ${orderBumpDataParsed.bump_product_name}`);
+              
+              // Fetch order bump product details
+              const { data: bumpProduct, error: bumpProductError } = await supabase
+                .from('products')
+                .select('name, member_area_id, user_id')
+                .eq('id', orderBumpDataParsed.bump_product_id)
+                .single();
+              
+              if (!bumpProductError && bumpProduct && bumpProduct.member_area_id) {
+                console.log(`✅ Order bump has member area: ${bumpProduct.member_area_id}`);
+                
+                // Get member area details
+                const { data: memberArea, error: memberAreaError } = await supabase
+                  .from('member_areas')
+                  .select('name, url')
+                  .eq('id', bumpProduct.member_area_id)
+                  .single();
+                
+                if (!memberAreaError && memberArea) {
+                  const bumpMemberAreaUrl = `https://kambafy.com/members/login/${bumpProduct.member_area_id}`;
+                  
+                  // Generate temporary password for order bump access
+                  function generateTemporaryPassword(): string {
+                    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+                    let password = '';
+                    for (let i = 0; i < 10; i++) {
+                      password += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                    return password;
+                  }
+                  
+                  const bumpTemporaryPassword = generateTemporaryPassword();
+                  
+                  // Send member access email for order bump
+                  const memberAccessPayload = {
+                    studentName: orderData.customer_name,
+                    studentEmail: orderData.customer_email.toLowerCase().trim(),
+                    memberAreaName: memberArea.name,
+                    memberAreaUrl: bumpMemberAreaUrl,
+                    sellerName: 'Kambafy',
+                    isNewAccount: false,
+                    temporaryPassword: bumpTemporaryPassword
+                  };
+                  
+                  console.log('📧 Sending member access email for order bump:', memberAccessPayload);
+                  
+                  const { error: bumpEmailError } = await supabase.functions.invoke('send-member-access-email', {
+                    body: memberAccessPayload
+                  });
+                  
+                  if (bumpEmailError) {
+                    console.error(`❌ Error sending order bump access email for ${orderBumpDataParsed.bump_product_name}:`, bumpEmailError);
+                  } else {
+                    console.log(`✅ Order bump access email sent successfully for: ${orderBumpDataParsed.bump_product_name}`);
+                  }
+                }
+              } else {
+                console.log(`ℹ️ Order bump ${orderBumpDataParsed.bump_product_name} does not have member area, skipping separate access email`);
+              }
+            }
+          } catch (bumpEmailError) {
+            console.error('❌ Error processing order bump emails:', bumpEmailError);
+          }
+        }
+
         console.log('✅ All webhooks triggered successfully');
       }
     }

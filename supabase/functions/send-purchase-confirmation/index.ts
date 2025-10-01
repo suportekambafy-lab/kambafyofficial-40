@@ -656,6 +656,109 @@ const handler = async (req: Request): Promise<Response> => {
           });
         }
 
+        // Process order bump and send separate email if applicable
+        if (orderBump && orderBump.bump_product_name) {
+          console.log('=== PROCESSING ORDER BUMP EMAIL ===');
+          console.log('Order bump data:', orderBump);
+          
+          try {
+            // Try to fetch order bump product details from database
+            let bumpProductData = null;
+            let bumpMemberAreaId = null;
+            let bumpMemberAreaUrl = null;
+            let bumpProductId = null;
+            
+            // Fetch order bump product from order_bump_data
+            const { data: orderDataWithBump, error: orderFetchError } = await supabase
+              .from('orders')
+              .select('order_bump_data')
+              .eq('order_id', orderId)
+              .single();
+            
+            if (!orderFetchError && orderDataWithBump?.order_bump_data) {
+              const bumpData = typeof orderDataWithBump.order_bump_data === 'string' 
+                ? JSON.parse(orderDataWithBump.order_bump_data)
+                : orderDataWithBump.order_bump_data;
+              
+              bumpProductId = bumpData.bump_product_id;
+              
+              if (bumpProductId) {
+                console.log('Fetching order bump product details for:', bumpProductId);
+                const { data: product, error: productError } = await supabase
+                  .from('products')
+                  .select('name, member_area_id, user_id')
+                  .eq('id', bumpProductId)
+                  .single();
+                
+                if (!productError && product) {
+                  bumpProductData = product;
+                  bumpMemberAreaId = product.member_area_id;
+                  console.log('Order bump product found:', {
+                    name: product.name,
+                    member_area_id: product.member_area_id
+                  });
+                }
+              }
+            }
+            
+            // If order bump has a member area, send access email
+            if (bumpMemberAreaId) {
+              console.log('Order bump has member area, sending access email...');
+              
+              // Get member area details
+              const { data: memberArea, error: memberAreaError } = await supabase
+                .from('member_areas')
+                .select('name, url')
+                .eq('id', bumpMemberAreaId)
+                .single();
+              
+              if (!memberAreaError && memberArea) {
+                bumpMemberAreaUrl = `https://kambafy.com/members/login/${bumpMemberAreaId}`;
+                
+                // Generate temporary password for order bump access
+                function generateTemporaryPassword(): string {
+                  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+                  let password = '';
+                  for (let i = 0; i < 10; i++) {
+                    password += chars.charAt(Math.floor(Math.random() * chars.length));
+                  }
+                  return password;
+                }
+                
+                const bumpTemporaryPassword = generateTemporaryPassword();
+                
+                // Send member access email for order bump
+                const memberAccessPayload = {
+                  studentName: customerName,
+                  studentEmail: normalizedEmail,
+                  memberAreaName: memberArea.name,
+                  memberAreaUrl: bumpMemberAreaUrl,
+                  sellerName: sellerProfile?.full_name || 'Kambafy',
+                  isNewAccount: false, // Account already exists from main product
+                  temporaryPassword: bumpTemporaryPassword
+                };
+                
+                console.log('Sending member access email for order bump:', memberAccessPayload);
+                
+                const { error: bumpEmailError } = await supabase.functions.invoke('send-member-access-email', {
+                  body: memberAccessPayload
+                });
+                
+                if (bumpEmailError) {
+                  console.error('Error sending order bump access email:', bumpEmailError);
+                } else {
+                  console.log('✅ Order bump access email sent successfully');
+                }
+              }
+            } else {
+              console.log('Order bump does not have member area, skipping separate access email');
+            }
+            
+          } catch (bumpError) {
+            console.error('Error processing order bump email:', bumpError);
+          }
+        }
+
       } catch (error) {
         console.error('Background task error:', error);
       }

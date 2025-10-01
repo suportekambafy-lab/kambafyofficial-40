@@ -352,6 +352,83 @@ serve(async (req) => {
                 console.error('❌ Error in email sending process:', emailError);
               }
 
+              // Process order bumps and send separate access emails if applicable
+              if (paymentIntent.metadata.order_bump_data) {
+                try {
+                  console.log('📧 Processing order bump access emails...');
+                  const orderBumpData = JSON.parse(paymentIntent.metadata.order_bump_data);
+                  
+                  if (Array.isArray(orderBumpData)) {
+                    for (const bump of orderBumpData) {
+                      if (bump.bump_product_id) {
+                        console.log(`📧 Processing email for order bump: ${bump.bump_product_name}`);
+                        
+                        // Fetch order bump product details
+                        const { data: bumpProduct, error: bumpProductError } = await supabase
+                          .from('products')
+                          .select('name, member_area_id, user_id')
+                          .eq('id', bump.bump_product_id)
+                          .single();
+                        
+                        if (!bumpProductError && bumpProduct && bumpProduct.member_area_id) {
+                          console.log(`✅ Order bump has member area: ${bumpProduct.member_area_id}`);
+                          
+                          // Get member area details
+                          const { data: memberArea, error: memberAreaError } = await supabase
+                            .from('member_areas')
+                            .select('name, url')
+                            .eq('id', bumpProduct.member_area_id)
+                            .single();
+                          
+                          if (!memberAreaError && memberArea) {
+                            const bumpMemberAreaUrl = `https://kambafy.com/members/login/${bumpProduct.member_area_id}`;
+                            
+                            // Generate temporary password for order bump access
+                            function generateTemporaryPassword(): string {
+                              const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+                              let password = '';
+                              for (let i = 0; i < 10; i++) {
+                                password += chars.charAt(Math.floor(Math.random() * chars.length));
+                              }
+                              return password;
+                            }
+                            
+                            const bumpTemporaryPassword = generateTemporaryPassword();
+                            
+                            // Send member access email for order bump
+                            const memberAccessPayload = {
+                              studentName: order.customer_name,
+                              studentEmail: order.customer_email.toLowerCase().trim(),
+                              memberAreaName: memberArea.name,
+                              memberAreaUrl: bumpMemberAreaUrl,
+                              sellerName: 'Kambafy',
+                              isNewAccount: false,
+                              temporaryPassword: bumpTemporaryPassword
+                            };
+                            
+                            console.log('📧 Sending member access email for order bump:', memberAccessPayload);
+                            
+                            const { error: bumpEmailError } = await supabase.functions.invoke('send-member-access-email', {
+                              body: memberAccessPayload
+                            });
+                            
+                            if (bumpEmailError) {
+                              console.error(`❌ Error sending order bump access email for ${bump.bump_product_name}:`, bumpEmailError);
+                            } else {
+                              console.log(`✅ Order bump access email sent successfully for: ${bump.bump_product_name}`);
+                            }
+                          }
+                        } else {
+                          console.log(`ℹ️ Order bump ${bump.bump_product_name} does not have member area, skipping separate access email`);
+                        }
+                      }
+                    }
+                  }
+                } catch (bumpEmailError) {
+                  console.error('❌ Error processing order bump emails:', bumpEmailError);
+                }
+              }
+
               // Disparar webhooks para eventos de pagamento e compra
               try {
                 console.log('🔔 Triggering webhooks for payment success...');
