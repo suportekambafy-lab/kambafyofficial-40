@@ -765,7 +765,7 @@ export function AppHome() {
             {/* Logo Kambafy */}
             <div className="flex justify-center pt-2 pb-4">
               <img 
-                src="/kambafy-symbol.svg" 
+                src="/kambafy-logo-new.svg" 
                 alt="Kambafy" 
                 className="h-12 w-auto"
               />
