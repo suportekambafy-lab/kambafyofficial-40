@@ -74,6 +74,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Enviar email com o link de reset
     const resetLink = data.properties.action_link;
+    
+    // Log para debug
+    console.log("Reset link gerado:", resetLink);
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "Kambafy <noreply@kambafy.com>",
