@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 
@@ -165,20 +165,37 @@ export function AppHome() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-3">
-              <Card className="p-4 text-center shadow-sm border border-primary/20 rounded-xl">
-                <p className="text-2xl font-bold text-foreground mb-1">{stats.totalSales}</p>
-                <p className="text-xs text-muted-foreground">Vendas</p>
+            <div className="space-y-4">
+              <Card className="rounded-2xl shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950 rounded-full flex items-center justify-center">
+                      <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-muted-foreground mb-1">Faturamento</div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {loading ? '...' : formatPriceForSeller(stats.totalRevenue, 'KZ')}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
               </Card>
-              <Card className="p-4 text-center shadow-sm border border-primary/20 rounded-xl">
-                <p className="text-2xl font-bold text-foreground mb-1">{stats.totalProducts}</p>
-                <p className="text-xs text-muted-foreground">Produtos</p>
-              </Card>
-              <Card className="p-4 text-center shadow-sm border border-primary/20 rounded-xl">
-                <p className="text-lg font-bold text-foreground mb-1">
-                  {formatPriceForSeller(stats.totalRevenue, 'KZ').split(' ')[0]}
-                </p>
-                <p className="text-xs text-muted-foreground">Receita</p>
+
+              <Card className="rounded-2xl shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-green-50 dark:bg-green-950 rounded-full flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-muted-foreground mb-1">Vendas</div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {loading ? '...' : stats.totalSales}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
               </Card>
             </div>
 
