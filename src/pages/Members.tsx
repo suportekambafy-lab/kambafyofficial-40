@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import VideoUploader from "@/components/VideoUploader";
 import StudentsManager from "@/components/StudentsManager";
+import { MemberAreaSettings } from '@/components/MemberAreaSettings';
 import MemberAreaPreview from "@/components/MemberAreaPreview";
 import { ImageUploader } from "@/components/ImageUploader";
 import { MemberAreaCreationForm } from "@/components/MemberAreaCreationForm";
@@ -1252,9 +1253,12 @@ export default function Members() {
           <TabsContent value="configuracoes">
             <div className="space-y-6">
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
-                <h3 className="font-semibold text-lg mb-2"> Personalização Avançada da Área</h3>
+                <h3 className="font-semibold text-lg mb-2">💎 Personalização Avançada da Área</h3>
                 <p className="text-sm text-gray-600">Configure todos os aspectos visuais e funcionais da sua área de membros</p>
               </div>
+
+              {/* Configurações de Comentários */}
+              <MemberAreaSettings memberAreaId={selectedArea.id} />
 
               <Tabs value={customizationTab} onValueChange={setCustomizationTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-3">

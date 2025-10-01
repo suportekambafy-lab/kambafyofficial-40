@@ -38,6 +38,7 @@ export function LessonComments({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAreaOwner, setIsAreaOwner] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [commentsEnabled, setCommentsEnabled] = useState(true);
 
   const loadComments = async () => {
     try {
@@ -85,7 +86,7 @@ export function LessonComments({
     }
   }, [lessonId]);
 
-  // Verificar se o usuário atual é o dono da área de membros
+  // Verificar se o usuário atual é o dono da área de membros e se comentários estão habilitados
   useEffect(() => {
     const checkAreaOwner = async () => {
       if (!memberAreaId) return;
@@ -95,12 +96,15 @@ export function LessonComments({
 
       const { data: memberArea } = await supabase
         .from('member_areas')
-        .select('user_id')
+        .select('user_id, comments_enabled')
         .eq('id', memberAreaId)
         .single();
 
-      if (memberArea && memberArea.user_id === user.id) {
-        setIsAreaOwner(true);
+      if (memberArea) {
+        if (memberArea.user_id === user.id) {
+          setIsAreaOwner(true);
+        }
+        setCommentsEnabled(memberArea.comments_enabled ?? true);
       }
     };
 
@@ -302,6 +306,11 @@ export function LessonComments({
       </div>
     </div>
   );
+
+  // Se comentários estão desabilitados, não mostrar nada
+  if (!commentsEnabled) {
+    return null;
+  }
 
   return (
     <Card className="mt-6 bg-zinc-950 border-0 mx-0 sm:mx-0">
