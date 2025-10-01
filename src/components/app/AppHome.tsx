@@ -1012,7 +1012,7 @@ export function AppHome() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-20 bg-black shadow-md">
+      <header className="fixed top-0 left-0 right-0 z-20 bg-green-900 shadow-md">
         <div className="flex items-center justify-between px-4 py-4">
           <div className="w-10" /> {/* Spacer for centering */}
           <img 
