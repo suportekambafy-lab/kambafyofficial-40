@@ -339,7 +339,12 @@ const VideoPlayer = ({
   };
 
   const changeQuality = (quality: string) => {
-    if (!hlsRef.current) return;
+    console.log('🎯 changeQuality chamado com:', quality);
+    
+    if (!hlsRef.current) {
+      console.warn('❌ hlsRef.current não existe');
+      return;
+    }
     
     setCurrentQuality(quality);
     
@@ -354,6 +359,8 @@ const VideoPlayer = ({
       if (levelIndex !== -1) {
         hlsRef.current.currentLevel = levelIndex;
         console.log(`📺 Qualidade alterada para: ${quality}p`);
+      } else {
+        console.warn('❌ Nível não encontrado para altura:', qualityHeight);
       }
     }
     
@@ -528,17 +535,35 @@ const VideoPlayer = ({
                       side="top"
                       align="end"
                       onOpenAutoFocus={(e) => e.preventDefault()}
+                      onInteractOutside={(e) => {
+                        // Impedir que cliques dentro do popover o fechem
+                        const target = e.target as HTMLElement;
+                        if (target.closest('[role="dialog"]')) {
+                          e.preventDefault();
+                        }
+                      }}
                     >
-                      <div className="space-y-1">
+                      <div className="space-y-1" onClick={(e) => {
+                        console.log('🖱️ Clique no container detectado');
+                        e.stopPropagation();
+                      }}>
                         <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
                         <button
-                          onPointerDown={(e) => {
+                          type="button"
+                          onMouseDown={(e) => {
+                            console.log('🖱️ MouseDown em Automática');
+                            e.preventDefault();
+                            e.stopPropagation();
+                            changeQuality('auto');
+                          }}
+                          onClick={(e) => {
+                            console.log('🖱️ Click em Automática');
                             e.preventDefault();
                             e.stopPropagation();
                             changeQuality('auto');
                           }}
                           className={cn(
-                            "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
+                            "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors cursor-pointer",
                             currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70"
                           )}
                         >
@@ -546,14 +571,22 @@ const VideoPlayer = ({
                         </button>
                         {availableQualities.map((quality) => (
                           <button
+                            type="button"
                             key={quality.height}
-                            onPointerDown={(e) => {
+                            onMouseDown={(e) => {
+                              console.log('🖱️ MouseDown em', quality.label);
+                              e.preventDefault();
+                              e.stopPropagation();
+                              changeQuality(quality.height.toString());
+                            }}
+                            onClick={(e) => {
+                              console.log('🖱️ Click em', quality.label);
                               e.preventDefault();
                               e.stopPropagation();
                               changeQuality(quality.height.toString());
                             }}
                             className={cn(
-                              "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
+                              "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors cursor-pointer",
                               currentQuality === quality.height.toString() 
                                 ? "text-white bg-white/10" 
                                 : "text-white/70"
@@ -836,17 +869,35 @@ const VideoPlayer = ({
                       side="top"
                       align="end"
                       onOpenAutoFocus={(e) => e.preventDefault()}
+                      onInteractOutside={(e) => {
+                        // Impedir que cliques dentro do popover o fechem
+                        const target = e.target as HTMLElement;
+                        if (target.closest('[role="dialog"]')) {
+                          e.preventDefault();
+                        }
+                      }}
                     >
-                      <div className="space-y-1">
+                      <div className="space-y-1" onClick={(e) => {
+                        console.log('🖱️ Clique no container detectado');
+                        e.stopPropagation();
+                      }}>
                         <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
                         <button
-                          onPointerDown={(e) => {
+                          type="button"
+                          onMouseDown={(e) => {
+                            console.log('🖱️ MouseDown em Automática');
+                            e.preventDefault();
+                            e.stopPropagation();
+                            changeQuality('auto');
+                          }}
+                          onClick={(e) => {
+                            console.log('🖱️ Click em Automática');
                             e.preventDefault();
                             e.stopPropagation();
                             changeQuality('auto');
                           }}
                           className={cn(
-                            "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
+                            "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors cursor-pointer",
                             currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70"
                           )}
                         >
@@ -854,14 +905,22 @@ const VideoPlayer = ({
                         </button>
                         {availableQualities.map((quality) => (
                           <button
+                            type="button"
                             key={quality.height}
-                            onPointerDown={(e) => {
+                            onMouseDown={(e) => {
+                              console.log('🖱️ MouseDown em', quality.label);
+                              e.preventDefault();
+                              e.stopPropagation();
+                              changeQuality(quality.height.toString());
+                            }}
+                            onClick={(e) => {
+                              console.log('🖱️ Click em', quality.label);
                               e.preventDefault();
                               e.stopPropagation();
                               changeQuality(quality.height.toString());
                             }}
                             className={cn(
-                              "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
+                              "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors cursor-pointer",
                               currentQuality === quality.height.toString() 
                                 ? "text-white bg-white/10" 
                                 : "text-white/70"
