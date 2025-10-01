@@ -615,30 +615,36 @@ export function AppHome() {
 
             {/* Stats Cards */}
             <div className="space-y-3">
-              <Card className="overflow-hidden border-none shadow-sm">
+              <Card className="overflow-hidden border-l-4 border-primary shadow-sm bg-card">
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Total de Vendas</p>
-                      <p className="text-3xl font-bold tracking-tight text-foreground">{stats.totalSales}</p>
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <p className="text-sm font-medium text-muted-foreground">Total de Vendas</p>
+                      <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>+100%</span>
+                      </div>
                     </div>
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                      <TrendingUp className="h-7 w-7 text-primary" />
+                    <div className="flex items-center justify-between">
+                      <p className="text-3xl font-bold tracking-tight text-foreground">{stats.totalSales}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card className="overflow-hidden border-none shadow-sm">
+              <Card className="overflow-hidden border-l-4 border-primary shadow-sm bg-card">
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Receita Total</p>
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <p className="text-sm font-medium text-muted-foreground">Receita Total</p>
+                      <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>+100%</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
                       <p className="text-3xl font-bold tracking-tight text-foreground">
                         {formatPriceForSeller(stats.totalRevenue, 'KZ')}
                       </p>
-                    </div>
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500/10 to-green-500/5 flex items-center justify-center">
-                      <DollarSign className="h-7 w-7 text-green-600 dark:text-green-500" />
                     </div>
                   </div>
                 </CardContent>
@@ -827,33 +833,35 @@ export function AppHome() {
 
             {/* Quick Stats */}
             <div className="space-y-3">
-              <Card className="overflow-hidden border-none shadow-sm">
+              <Card className="overflow-hidden border-l-4 border-primary shadow-sm bg-card">
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-muted-foreground mb-2">Faturamento Total</div>
-                      <div className="text-3xl font-bold tracking-tight text-foreground">
-                        {loading ? '...' : formatPriceForSeller(stats.totalRevenue, 'KZ')}
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="text-sm font-medium text-muted-foreground">Faturamento Total</div>
+                      <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>+100%</span>
                       </div>
                     </div>
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                      <DollarSign className="w-7 h-7 text-primary" />
+                    <div className="text-3xl font-bold tracking-tight text-foreground">
+                      {loading ? '...' : formatPriceForSeller(stats.totalRevenue, 'KZ')}
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden border-none shadow-sm">
+              <Card className="overflow-hidden border-l-4 border-primary shadow-sm bg-card">
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-muted-foreground mb-2">Total de Vendas</div>
-                      <div className="text-3xl font-bold tracking-tight text-foreground">
-                        {loading ? '...' : stats.totalSales}
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="text-sm font-medium text-muted-foreground">Total de Vendas</div>
+                      <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>+100%</span>
                       </div>
                     </div>
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500/10 to-green-500/5 flex items-center justify-center">
-                      <TrendingUp className="w-7 h-7 text-green-600 dark:text-green-500" />
+                    <div className="text-3xl font-bold tracking-tight text-foreground">
+                      {loading ? '...' : stats.totalSales}
                     </div>
                   </div>
                 </CardContent>
