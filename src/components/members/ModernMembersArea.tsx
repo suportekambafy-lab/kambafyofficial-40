@@ -102,6 +102,8 @@ export default function ModernMembersArea() {
   console.log('🎬 ModernMembersArea - Progress Hook State:', {
     memberAreaId,
     userEmail: user?.email,
+    hasUser: !!user,
+    hasUserEmail: !!user?.email,
     lessonProgressCount: Object.keys(lessonProgress).length,
     isLoadingProgress,
     lessonProgress: Object.keys(lessonProgress).length > 0 ? lessonProgress : 'EMPTY'

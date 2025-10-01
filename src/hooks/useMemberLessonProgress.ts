@@ -31,7 +31,10 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
 
   console.log('🔧 useMemberLessonProgress initialized:', {
     memberAreaId,
-    normalizedEmail
+    userEmail,
+    normalizedEmail,
+    hasEmail: !!normalizedEmail,
+    hasMemberAreaId: !!memberAreaId
   });
 
   // Load lesson progress from Supabase ONLY (no localStorage)
@@ -312,11 +315,20 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
   useEffect(() => {
     console.log('🔄 useMemberLessonProgress useEffect triggered:', {
       memberAreaId,
-      normalizedEmail
+      normalizedEmail,
+      hasEmail: !!normalizedEmail,
+      hasMemberAreaId: !!memberAreaId,
+      willLoad: !!(memberAreaId && normalizedEmail)
     });
     
     if (memberAreaId && normalizedEmail) {
+      console.log('✅ Carregando progresso...');
       loadLessonProgress();
+    } else {
+      console.warn('❌ NÃO carregando progresso - falta:', {
+        missingEmail: !normalizedEmail,
+        missingMemberAreaId: !memberAreaId
+      });
     }
   }, [memberAreaId, normalizedEmail]);
 
