@@ -516,16 +516,6 @@ const VideoPlayer = ({
                   🔗 Abrir em nova aba
                 </a>
               )}
-
-              {(hlsUrl || src) && (
-                <a 
-                  href={hlsUrl || src}
-                  download
-                  className="block w-full px-4 py-3 bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
-                >
-                  ⬇️ Baixar vídeo
-                </a>
-              )}
             </div>
 
             <p className="text-xs text-gray-500 mt-4">
