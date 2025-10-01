@@ -17,8 +17,8 @@ export function AppHome() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
   
-  // Meta mensal (pode ser configurável no futuro)
-  const monthlyGoal = 100000; // 100.000 KZ
+  // Meta mensal - mesma lógica da versão web
+  const monthlyGoal = 1000000; // 1M KZ
   const goalProgress = Math.min((stats.totalRevenue / monthlyGoal) * 100, 100);
 
   useEffect(() => {
@@ -264,46 +264,23 @@ export function AppHome() {
               <p className="text-muted-foreground">Bem-vindo à sua central de vendas</p>
             </div>
 
-            {/* Goal Progress */}
+            {/* Goal Progress - Simple Style */}
             <Card className="overflow-hidden border-none shadow-sm">
-              <CardContent className="p-6">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Meta do Mês</p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {formatPriceForSeller(stats.totalRevenue, 'KZ')}
-                      </p>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground mb-2">Meta: 1M KZ</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-yellow-400 rounded-full transition-all duration-500"
+                          style={{ width: `${goalProgress}%` }}
+                        />
+                      </div>
+                      <span className="text-yellow-500 font-semibold text-sm min-w-[45px]">
+                        {goalProgress.toFixed(0)}%
+                      </span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground mb-1">Objetivo</p>
-                      <p className="text-lg font-semibold text-foreground">
-                        {formatPriceForSeller(monthlyGoal, 'KZ')}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progresso</span>
-                      <span className="font-semibold text-primary">{goalProgress.toFixed(1)}%</span>
-                    </div>
-                    <div className="h-3 bg-secondary rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500 ease-out rounded-full"
-                        style={{ width: `${goalProgress}%` }}
-                      />
-                    </div>
-                    {goalProgress >= 100 ? (
-                      <p className="text-xs text-green-600 dark:text-green-400 font-medium">
-                        🎉 Meta atingida! Parabéns!
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        Faltam {formatPriceForSeller(Math.max(0, monthlyGoal - stats.totalRevenue), 'KZ')} para atingir a meta
-                      </p>
-                    )}
                   </div>
                 </div>
               </CardContent>
