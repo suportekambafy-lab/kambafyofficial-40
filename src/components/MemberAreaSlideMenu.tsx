@@ -137,10 +137,9 @@ export function MemberAreaSlideMenu({
 
             <div className="space-y-3">
               <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
-                <div 
-                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${getCourseProgress(totalLessonsCount)}%` }}
-                />
+                <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-3 rounded-full transition-all duration-500" style={{
+                width: `${getCourseProgress(totalLessonsCount)}%`
+              }} />
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -151,13 +150,7 @@ export function MemberAreaSlideMenu({
                     <p className="font-semibold text-white">{completedLessons}/{totalLessonsCount}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 bg-gray-900/50 p-2 rounded">
-                  <Clock className="w-4 h-4 text-blue-400" />
-                  <div>
-                    <p className="text-gray-400 text-xs">Duração Total</p>
-                    <p className="font-semibold text-white">{Math.floor(totalDuration / 60)}min</p>
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>
