@@ -3,10 +3,22 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Volume2, Volume1, VolumeX, SkipForward, SkipBack } from "lucide-react";
+import { Play, Pause, Volume2, Volume1, VolumeX, SkipForward, SkipBack, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Hls from 'hls.js';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -102,6 +114,9 @@ const VideoPlayer = ({
   const [iframeError, setIframeError] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [hlsError, setHlsError] = useState(false);
+  const [availableQualities, setAvailableQualities] = useState<Array<{label: string, height: number}>>([]);
+  const [currentQuality, setCurrentQuality] = useState<string>('auto');
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
 
   // Carregar HLS com suporte a hls.js para navegadores que não suportam nativamente
   useEffect(() => {
@@ -154,6 +169,27 @@ const VideoPlayer = ({
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         if (mounted) {
           console.log('✅ HLS manifest carregado');
+          
+          // Extrair qualidades disponíveis
+          const levels = hls.levels.map((level, index) => ({
+            label: level.height >= 2160 ? '4K' : 
+                   level.height >= 1080 ? '1080p' : 
+                   level.height >= 720 ? '720p' : 
+                   level.height >= 480 ? '480p' : 
+                   level.height >= 360 ? '360p' : 
+                   `${level.height}p`,
+            height: level.height,
+            index
+          }));
+          
+          // Remover duplicatas e ordenar por qualidade
+          const uniqueQualities = Array.from(
+            new Map(levels.map(item => [item.height, item])).values()
+          ).sort((a, b) => b.height - a.height);
+          
+          setAvailableQualities(uniqueQualities);
+          console.log('📺 Qualidades disponíveis:', uniqueQualities);
+          
           if (startTime && startTime > 0) {
             video.currentTime = startTime;
           }
@@ -300,6 +336,28 @@ const VideoPlayer = ({
       const newTime = Math.max(0, Math.min(videoRef.current.duration, videoRef.current.currentTime + seconds));
       videoRef.current.currentTime = newTime;
     }
+  };
+
+  const changeQuality = (quality: string) => {
+    if (!hlsRef.current) return;
+    
+    setCurrentQuality(quality);
+    
+    if (quality === 'auto') {
+      hlsRef.current.currentLevel = -1; // Ativa ABR automático
+      console.log('📺 Qualidade: Automática (ABR)');
+    } else {
+      // Encontrar o nível correspondente à qualidade selecionada
+      const qualityHeight = parseInt(quality);
+      const levelIndex = hlsRef.current.levels.findIndex(level => level.height === qualityHeight);
+      
+      if (levelIndex !== -1) {
+        hlsRef.current.currentLevel = levelIndex;
+        console.log(`📺 Qualidade alterada para: ${quality}p`);
+      }
+    }
+    
+    setShowQualityMenu(false);
   };
 
   const handleLoadedMetadata = () => {
@@ -449,26 +507,76 @@ const VideoPlayer = ({
                   </div>
                 </div>
 
-                <div className="hidden md:flex items-center gap-1">
-                  {[0.5, 1, 1.5, 2].map((speed) => (
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      key={speed}
+                <div className="flex items-center gap-1">
+                  {/* Seletor de Qualidade */}
+                  <Popover open={showQualityMenu} onOpenChange={setShowQualityMenu}>
+                    <PopoverTrigger asChild>
+                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-white hover:bg-[#111111d1] hover:text-white h-8 w-8 sm:h-10 sm:w-10"
+                        >
+                          <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
+                        </Button>
+                      </motion.div>
+                    </PopoverTrigger>
+                    <PopoverContent 
+                      className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10"
+                      side="top"
+                      align="end"
                     >
-                      <Button
-                        onClick={() => setSpeed(speed)}
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          "text-white hover:bg-[#111111d1] hover:text-white h-8 px-2 text-xs",
-                          playbackSpeed === speed && "bg-[#111111d1]"
-                        )}
+                      <div className="space-y-1">
+                        <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
+                        <button
+                          onClick={() => changeQuality('auto')}
+                          className={cn(
+                            "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
+                            currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70"
+                          )}
+                        >
+                          Automática
+                        </button>
+                        {availableQualities.map((quality) => (
+                          <button
+                            key={quality.height}
+                            onClick={() => changeQuality(quality.height.toString())}
+                            className={cn(
+                              "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
+                              currentQuality === quality.height.toString() 
+                                ? "text-white bg-white/10" 
+                                : "text-white/70"
+                            )}
+                          >
+                            {quality.label}
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  
+                  {/* Velocidade - oculto em mobile */}
+                  <div className="hidden md:flex items-center gap-1">
+                    {[0.5, 1, 1.5, 2].map((speed) => (
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        key={speed}
                       >
-                        {speed}x
-                      </Button>
-                    </motion.div>
-                  ))}
+                        <Button
+                          onClick={() => setSpeed(speed)}
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            "text-white hover:bg-[#111111d1] hover:text-white h-8 px-2 text-xs",
+                            playbackSpeed === speed && "bg-[#111111d1]"
+                          )}
+                        >
+                          {speed}x
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -696,6 +804,55 @@ const VideoPlayer = ({
             </div>
 
               <div className="flex items-center gap-2">
+                {/* Seletor de Qualidade - só para HLS */}
+                {hlsRef.current && availableQualities.length > 0 && (
+                  <Popover open={showQualityMenu} onOpenChange={setShowQualityMenu}>
+                    <PopoverTrigger asChild>
+                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-white hover:bg-[#111111d1] hover:text-white"
+                        >
+                          <Settings className="h-5 w-5" />
+                        </Button>
+                      </motion.div>
+                    </PopoverTrigger>
+                    <PopoverContent 
+                      className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10"
+                      side="top"
+                      align="end"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
+                        <button
+                          onClick={() => changeQuality('auto')}
+                          className={cn(
+                            "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
+                            currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70"
+                          )}
+                        >
+                          Automática
+                        </button>
+                        {availableQualities.map((quality) => (
+                          <button
+                            key={quality.height}
+                            onClick={() => changeQuality(quality.height.toString())}
+                            className={cn(
+                              "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
+                              currentQuality === quality.height.toString() 
+                                ? "text-white bg-white/10" 
+                                : "text-white/70"
+                            )}
+                          >
+                            {quality.label}
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+                
                 {[0.5, 1, 1.5, 2].map((speed) => (
                   <motion.div
                     whileHover={{ scale: 1.1 }}
