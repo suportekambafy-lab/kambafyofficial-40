@@ -109,6 +109,22 @@ export function MemberAreaCreationForm({ open, onOpenChange, onSuccess }: Member
         throw error;
       }
 
+      // Adicionar o email do vendedor como estudante automaticamente
+      if (data && user.email) {
+        const { error: studentError } = await supabase
+          .from('member_area_students')
+          .insert({
+            member_area_id: data.id,
+            student_email: user.email.toLowerCase().trim(),
+            student_name: user.user_metadata?.full_name || user.email,
+            access_granted_at: new Date().toISOString()
+          });
+
+        if (studentError) {
+          console.error('Erro ao adicionar vendedor como estudante:', studentError);
+        }
+      }
+
       toast({
         title: "Sucesso",
         description: "Área de membros criada com sucesso!"
