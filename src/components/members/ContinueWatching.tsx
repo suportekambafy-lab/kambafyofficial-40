@@ -30,6 +30,43 @@ export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchin
   useEffect(() => {
     console.log('🔄 ContinueWatching useEffect triggered');
     loadLastWatchedLesson();
+
+    // Recarregar quando a página recebe foco (usuário volta da aula)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('👁️ Página visível novamente, recarregando última aula...');
+        loadLastWatchedLesson();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Configurar realtime subscription para mudanças no progresso
+    const normalizedEmail = studentEmail.toLowerCase().trim();
+    const channel = supabase
+      .channel('lesson-progress-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'lesson_progress',
+          filter: `member_area_id=eq.${memberAreaId}`,
+        },
+        (payload) => {
+          console.log('🔔 Progresso atualizado:', payload);
+          // Verificar se é do usuário atual
+          if (payload.new && (payload.new as any).user_email === normalizedEmail) {
+            loadLastWatchedLesson();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      supabase.removeChannel(channel);
+    };
   }, [memberAreaId, studentEmail]);
 
   const loadLastWatchedLesson = async () => {
