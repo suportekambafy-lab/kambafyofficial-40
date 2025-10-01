@@ -279,6 +279,8 @@ export default function ModernMembersArea() {
       return;
     }
     console.log('📚 Módulo selecionado:', module.title);
+    // Limpar aula selecionada ao clicar em módulo
+    setSelectedLesson(null);
     setSelectedModule(module);
   };
   const handleBackToModules = () => {
@@ -495,7 +497,7 @@ export default function ModernMembersArea() {
                   {modules.map(module => {
                 const moduleLessons = lessons.filter(l => l.module_id === module.id);
                 const isExpanded = moduleLessons.some(l => l.id === selectedLesson.id);
-                return <div key={module.id} className="space-y-3">
+                return <div key={`${module.id}-${selectedLesson?.id || 'none'}`} className="space-y-3">
                         <div className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${isExpanded ? 'bg-emerald-500/20 border border-emerald-500/30 shadow-emerald-500/20 shadow-lg' : 'bg-gray-800 hover:bg-gray-700 hover:border-emerald-500/30 border border-transparent'}`} onClick={() => handleModuleClick(module)}>
                           {module.cover_image_url ? <img src={module.cover_image_url} alt={module.title} className="w-12 h-12 object-cover rounded" /> : <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded flex items-center justify-center">
                               <BookOpen className="h-6 w-6 text-emerald-400" />
@@ -518,9 +520,12 @@ export default function ModernMembersArea() {
                       opacity: 0,
                       height: 0
                     }} className="pl-4 space-y-2">
-                              {moduleLessons.map(lesson => <motion.div key={lesson.id} whileHover={{
+                              {moduleLessons.map(lesson => <motion.div key={`lesson-${lesson.id}`} whileHover={{
                         scale: 1.02
-                      }} className={`p-3 rounded cursor-pointer transition-colors ${lesson.id === selectedLesson.id ? 'bg-emerald-500/20 border-l-4 border-l-emerald-400' : 'bg-gray-800/50 hover:bg-gray-800'}`} onClick={() => handleLessonClick(lesson)}>
+                      }} className={`p-3 rounded cursor-pointer transition-colors ${lesson.id === selectedLesson.id ? 'bg-emerald-500/20 border-l-4 border-l-emerald-400' : 'bg-gray-800/50 hover:bg-gray-800'}`} onClick={(e) => {
+                        e.stopPropagation();
+                        handleLessonClick(lesson);
+                      }}>
                                   <div className="flex items-center gap-3">
                                     <div className="flex-1 min-w-0">
                                       <p className="font-medium text-sm text-white line-clamp-1">
