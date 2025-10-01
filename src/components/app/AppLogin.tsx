@@ -46,29 +46,31 @@ export function AppLogin() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="p-6 pb-8">
-        <div className="flex items-center justify-center">
-          <img 
-            src="/kambafy-logo-new.svg" 
-            alt="Kambafy" 
-            className="h-16 w-auto"
-          />
+      {/* Modern Clean Header */}
+      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-center">
+            <img 
+              src="/kambafy-logo-new.svg" 
+              alt="Kambafy" 
+              className="h-12 w-auto"
+            />
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 pb-20">
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
-          <Card className="p-8 shadow-sm border border-primary/20 rounded-xl">
-            <div className="space-y-6">
+          <Card className="overflow-hidden border-none shadow-sm">
+            <div className="p-8 space-y-6">
               {/* Title */}
               <div className="text-center space-y-2">
-                <h1 className="text-2xl font-bold text-foreground">
-                  {isSignUp ? 'Criar Conta' : 'Entrar'}
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  {isSignUp ? 'Criar Conta' : 'Bem-vindo'}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {isSignUp ? 'Comece a vender online hoje' : 'Acesse sua conta'}
+                  {isSignUp ? 'Comece a vender online hoje' : 'Entre na sua conta Kambafy'}
                 </p>
               </div>
 
@@ -88,7 +90,7 @@ export function AppLogin() {
                         placeholder="Seu nome"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 h-11"
                       />
                     </div>
                   </div>
@@ -107,7 +109,7 @@ export function AppLogin() {
                       placeholder="seu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 h-11"
                       required
                     />
                   </div>
@@ -126,13 +128,13 @@ export function AppLogin() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10"
+                      className="pl-10 pr-10 h-11"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -143,8 +145,7 @@ export function AppLogin() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                  size="lg"
+                  className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
                 >
                   {isLoading ? 'Aguarde...' : isSignUp ? 'Criar Conta' : 'Entrar'}
                 </Button>
@@ -154,7 +155,7 @@ export function AppLogin() {
               <div className="text-center pt-2">
                 <button
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium"
                 >
                   {isSignUp ? 'Já tem conta? Entre aqui' : 'Não tem conta? Crie uma'}
                 </button>
