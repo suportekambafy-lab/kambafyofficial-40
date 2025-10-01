@@ -32,6 +32,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: ''
@@ -71,6 +72,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
     
     if (!user || !memberAreaId) return;
 
+    setIsSubmitting(true);
     try {
       // 1. Primeiro, verificar se o usuário já existe consultando a tabela profiles
       const { data: existingProfile } = await supabase
@@ -190,6 +192,8 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
     } catch (error) {
       console.error('Exception adding student:', error);
       toast.error("Erro inesperado ao adicionar estudante");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -368,11 +372,12 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
               </div>
               
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={isSubmitting}>
                   Cancelar
                 </Button>
-                <Button type="submit">
-                  Adicionar Estudante
+                <Button type="submit" disabled={isSubmitting}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  {isSubmitting ? "Adicionando..." : "Adicionar Estudante"}
                 </Button>
               </DialogFooter>
             </form>
