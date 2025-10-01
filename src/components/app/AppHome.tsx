@@ -8,7 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,7 @@ import { WithdrawalModal } from '@/components/WithdrawalModal';
 export function AppHome() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('home');
   const [stats, setStats] = useState({
     totalSales: 0,
@@ -1017,8 +1019,32 @@ export function AppHome() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Content */}
-      {renderContent()}
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-20 bg-green-900 shadow-md">
+        <div className="flex items-center justify-between px-4 py-4">
+          <div className="w-10" /> {/* Spacer for centering */}
+          <img 
+            src="/kambafy-app-logo.svg" 
+            alt="Kambafy" 
+            className="h-12 w-auto"
+          />
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-5 w-5 text-white" />
+            ) : (
+              <Moon className="h-5 w-5 text-white" />
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Content with padding for fixed header */}
+      <div className="pt-20">
+        {renderContent()}
+      </div>
 
       {/* Horizontal Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-md pb-safe">
