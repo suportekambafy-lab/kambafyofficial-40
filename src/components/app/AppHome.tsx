@@ -1154,7 +1154,7 @@ export function AppHome() {
                   activeTab === 'products' ? 'bg-primary/10' : 'hover:bg-accent'
                 }`}
               >
-                <ShoppingCart className={`h-5 w-5 ${activeTab === 'products' ? 'text-primary' : 'text-foreground'}`} />
+                <Package className={`h-5 w-5 ${activeTab === 'products' ? 'text-primary' : 'text-foreground'}`} />
               </button>
             </div>
 
