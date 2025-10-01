@@ -37,42 +37,23 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
     hasUser: !!user
   });
 
-  // Load lesson progress - funciona tanto com user autenticado quanto com sessão de member area
+  // Load lesson progress - carrega progresso baseado no email do estudante
   const loadLessonProgress = async () => {
-    console.log('🔄 loadLessonProgress called with:', { memberAreaId, userId: user?.id, studentEmail });
+    console.log('🔄 loadLessonProgress called with:', { memberAreaId, studentEmail });
     
-    if (!memberAreaId) {
-      console.log('❌ No memberAreaId provided');
-      return;
-    }
-    
-    // Usar user_id se autenticado, ou buscar por email da sessão de member area
-    const userId = user?.id;
-    const email = studentEmail;
-    
-    if (!userId && !email) {
-      console.log('❌ Nenhum user_id ou email disponível para carregar progresso');
+    if (!memberAreaId || !studentEmail) {
+      console.log('❌ No memberAreaId or studentEmail provided');
       return;
     }
 
     try {
       setIsLoadingProgress(true);
       
-      let query = supabase
+      const { data, error } = await supabase
         .from('lesson_progress')
         .select('*')
-        .eq('member_area_id', memberAreaId);
-        
-      if (userId) {
-        query = query.eq('user_id', userId);
-      } else if (email) {
-        // Para sessões de member area, usar uma query personalizada se necessário
-        // Por agora, vamos assumir que temos user_id via sessão
-        console.log('Usando email para carregar progresso:', email);
-        return; // Implementar lógica para buscar por sessão se necessário
-      }
-
-      const { data, error } = await query;
+        .eq('member_area_id', memberAreaId)
+        .eq('user_email', studentEmail);
 
       if (error) throw error;
 
@@ -102,8 +83,8 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
 
   // Save lesson progress with proper conflict resolution
   const updateLessonProgress = async (lessonId: string, progressData: Partial<LessonProgress & { video_current_time?: number }>) => {
-    if (!user) {
-      console.log('Não é possível salvar progresso sem usuário autenticado');
+    if (!studentEmail) {
+      console.log('Não é possível salvar progresso sem email do estudante');
       return;
     }
 
@@ -111,7 +92,8 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
       const { error } = await supabase
         .from('lesson_progress')
         .upsert({
-          user_id: user.id,
+          user_id: user?.id || '00000000-0000-0000-0000-000000000000',
+          user_email: studentEmail,
           member_area_id: memberAreaId,
           lesson_id: lessonId,
           progress_percentage: progressData.progress_percentage || 0,
@@ -120,7 +102,7 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
           video_current_time: progressData.video_current_time || 0,
           last_watched_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id,lesson_id',
+          onConflict: 'user_email,lesson_id,member_area_id',
           ignoreDuplicates: false
         });
 
@@ -160,16 +142,16 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
 
   // Função específica para salvar progresso do vídeo (chamada frequentemente)
   const updateVideoProgress = async (lessonId: string, currentTime: number, duration: number) => {
-    if (!user || !duration || duration === 0) return;
+    if (!studentEmail || !duration || duration === 0) return;
 
     const progressPercentage = Math.round((currentTime / duration) * 100);
     const isCompleted = progressPercentage >= 90; // Considera completo quando assiste 90% ou mais
 
     // Salvar no banco apenas a cada 10 segundos para evitar spam
     const now = Date.now();
-    const lastUpdate = lessonProgress[lessonId]?.last_watched_at 
-      ? new Date(lessonProgress[lessonId].last_watched_at).getTime() 
-      : 0;
+    const storageKey = `video_progress_${lessonId}_${studentEmail}`;
+    const lastUpdateStr = sessionStorage.getItem(storageKey);
+    const lastUpdate = lastUpdateStr ? parseInt(lastUpdateStr, 10) : 0;
     
     if (now - lastUpdate < 10000) { // 10 segundos
       // Apenas atualizar estado local
@@ -186,6 +168,9 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
       }));
       return;
     }
+
+    // Atualizar timestamp no sessionStorage
+    sessionStorage.setItem(storageKey, now.toString());
 
     // Salvar no banco de dados
     await updateLessonProgress(lessonId, {
