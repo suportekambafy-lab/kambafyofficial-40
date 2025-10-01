@@ -24,12 +24,26 @@ export function AppHome() {
     if (!user) return;
 
     try {
-      const { data: products } = await supabase
+      const { data: products, error: productsError } = await supabase
         .from('products')
-        .select('id')
+        .select('id, name, status')
         .eq('user_id', user.id);
 
+      if (productsError) {
+        console.error('Products error:', productsError);
+        setStats({ totalSales: 0, totalRevenue: 0, totalProducts: 0 });
+        setLoading(false);
+        return;
+      }
+
       const productIds = products?.map(p => p.id) || [];
+      const activeProducts = products?.filter(p => p.status === 'Ativo') || [];
+
+      if (productIds.length === 0) {
+        setStats({ totalSales: 0, totalRevenue: 0, totalProducts: 0 });
+        setLoading(false);
+        return;
+      }
 
       const { data: orders } = await supabase
         .from('orders')
@@ -52,10 +66,11 @@ export function AppHome() {
       setStats({
         totalSales: orders?.length || 0,
         totalRevenue,
-        totalProducts: products?.length || 0
+        totalProducts: activeProducts.length
       });
     } catch (error) {
       console.error('Error loading stats:', error);
+      setStats({ totalSales: 0, totalRevenue: 0, totalProducts: 0 });
     } finally {
       setLoading(false);
     }
@@ -203,14 +218,18 @@ export function AppHome() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* App Bar */}
-      <div className="bg-background border-b border-border p-4 sticky top-0 z-10 backdrop-blur-sm bg-background/95">
-        <div className="flex items-center justify-center">
+      {/* Modern App Bar */}
+      <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground p-6 shadow-sm">
+        <div className="flex items-center justify-between max-w-md mx-auto">
           <img 
             src="/kambafy-logo-new.svg" 
             alt="Kambafy" 
-            className="h-12 w-auto"
+            className="h-10 w-auto brightness-0 invert"
           />
+          <div className="text-right">
+            <p className="text-xs opacity-90">Olá!</p>
+            <p className="text-sm font-semibold">{user?.email?.split('@')[0]}</p>
+          </div>
         </div>
       </div>
 
