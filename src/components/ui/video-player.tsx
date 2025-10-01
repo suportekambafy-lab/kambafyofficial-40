@@ -428,6 +428,8 @@ const VideoPlayer = ({
               animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
               exit={{ y: 20, opacity: 0, filter: "blur(10px)" }}
               transition={{ duration: 0.6, ease: "circInOut", type: "spring" }}
+              onMouseEnter={() => setShowControls(true)}
+              onMouseLeave={() => setShowControls(false)}
             >
               <div className="flex items-center gap-1 sm:gap-2 mb-2">
                 <span className="text-white text-xs sm:text-sm">
@@ -522,9 +524,10 @@ const VideoPlayer = ({
                       </motion.div>
                     </PopoverTrigger>
                     <PopoverContent 
-                      className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10"
+                      className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10 z-[200]"
                       side="top"
                       align="end"
+                      onOpenAutoFocus={(e) => e.preventDefault()}
                     >
                       <div className="space-y-1">
                         <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
@@ -712,6 +715,8 @@ const VideoPlayer = ({
             animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
             exit={{ y: 20, opacity: 0, filter: "blur(10px)" }}
             transition={{ duration: 0.6, ease: "circInOut", type: "spring" }}
+            onMouseEnter={() => setShowControls(true)}
+            onMouseLeave={() => setShowControls(false)}
           >
             <div className="flex items-center gap-2 mb-2">
               <span className="text-white text-sm">
@@ -819,9 +824,10 @@ const VideoPlayer = ({
                       </motion.div>
                     </PopoverTrigger>
                     <PopoverContent 
-                      className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10"
+                      className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10 z-[200]"
                       side="top"
                       align="end"
+                      onOpenAutoFocus={(e) => e.preventDefault()}
                     >
                       <div className="space-y-1">
                         <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
