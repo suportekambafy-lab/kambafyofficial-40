@@ -72,83 +72,103 @@ export function MemberAreaOffers({
   }
   return <section className="py-12 px-4">
       <div className="container mx-auto max-w-6xl">
-        {/* Header */}
-        <motion.div initial={{
-        opacity: 0,
-        y: 20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} className="text-center mb-12">
-          
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        {/* Header - Seguindo padrão dos módulos */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ delay: 0.2 }}
+          className="mb-8"
+        >
+          <h2 className="text-3xl font-bold text-white mb-3">
             Aproveite Nossas Ofertas
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-gray-400 text-lg">
             Produtos especiais selecionados para você continuar sua jornada
           </p>
         </motion.div>
 
-        {/* Grid de Ofertas */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {offers.map((offer, index) => <motion.div key={offer.id} initial={{
-          opacity: 0,
-          y: 20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          delay: index * 0.1
-        }}>
-              <Card className="group overflow-hidden border-border/50 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10">
-                <CardContent className="p-0">
-                  {/* Imagem */}
-                  <div className="relative h-48 overflow-hidden bg-gradient-to-br from-emerald-500/10 to-purple-500/10">
-                    {offer.image_url ? <img src={offer.image_url} alt={offer.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-16 h-16 text-muted-foreground/30" />
-                      </div>}
-                    
-                    {offer.discount_percentage > 0 && <div className="absolute top-4 right-4">
-                        <Badge className="bg-red-500 text-white font-bold shadow-lg">
-                          -{offer.discount_percentage}%
-                        </Badge>
-                      </div>}
-                  </div>
-
-                  {/* Conteúdo */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2 group-hover:text-emerald-400 transition-colors">
-                      {offer.title}
-                    </h3>
-                    
-                    {offer.description && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                        {offer.description}
-                      </p>}
-
-                    {/* Preço */}
-                    <div className="flex items-center gap-3 mb-4">
-                      {offer.discount_percentage > 0 ? <>
-                          <span className="text-sm text-muted-foreground line-through">
-                            {offer.price} KZ
-                          </span>
-                          <span className="text-2xl font-bold text-emerald-400">
-                            {calculateDiscountedPrice(offer.price, offer.discount_percentage)} KZ
-                          </span>
-                        </> : <span className="text-2xl font-bold text-emerald-400">
-                          {offer.price} KZ
-                        </span>}
+        {/* Carrossel de Ofertas - Estilo Netflix */}
+        <div className="relative">
+          <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide scroll-smooth">
+            <div className="flex gap-6 min-w-max">
+              {offers.map((offer, index) => (
+                <motion.div 
+                  key={offer.id} 
+                  initial={{ opacity: 0, scale: 0.95 }} 
+                  animate={{ opacity: 1, scale: 1 }} 
+                  transition={{ delay: 0.1 * index }}
+                  whileHover={{ scale: 1.05, y: -8 }}
+                  className="group cursor-pointer flex-shrink-0 w-80"
+                >
+                  <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 hover:border-emerald-500/50 transform-gpu">
+                    {/* Imagem */}
+                    <div className="relative h-44 overflow-hidden bg-gradient-to-br from-emerald-500/10 to-purple-500/10">
+                      {offer.image_url ? (
+                        <img 
+                          src={offer.image_url} 
+                          alt={offer.title} 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="w-12 h-12 text-gray-600" />
+                        </div>
+                      )}
+                      
+                      {offer.discount_percentage > 0 && (
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-red-500 text-white font-bold shadow-lg">
+                            -{offer.discount_percentage}%
+                          </Badge>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Botão de Ação */}
-                    <Button onClick={() => handleOfferClick(offer)} className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 group">
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Ver Oferta
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>)}
+                    {/* Conteúdo */}
+                    <CardContent className="p-5">
+                      <h3 className="text-lg font-bold mb-2 text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
+                        {offer.title}
+                      </h3>
+                      
+                      {offer.description && (
+                        <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+                          {offer.description}
+                        </p>
+                      )}
+
+                      {/* Preço */}
+                      <div className="flex items-center gap-2 mb-4">
+                        {offer.discount_percentage > 0 ? (
+                          <>
+                            <span className="text-xs text-gray-500 line-through">
+                              {offer.price} KZ
+                            </span>
+                            <span className="text-xl font-bold text-emerald-400">
+                              {calculateDiscountedPrice(offer.price, offer.discount_percentage)} KZ
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-xl font-bold text-emerald-400">
+                            {offer.price} KZ
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Botão de Ação */}
+                      <Button 
+                        onClick={() => handleOfferClick(offer)} 
+                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        Ver Oferta
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>;
