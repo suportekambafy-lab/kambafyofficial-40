@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut, ChevronLeft, ShoppingCart } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 
@@ -447,81 +447,64 @@ export function AppHome() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Modern Clean Header */}
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border shadow-sm">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between max-w-md mx-auto">
-            <img 
-              src="/kambafy-logo-new.svg" 
-              alt="Kambafy" 
-              className="h-12 w-auto"
-            />
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Olá!</p>
-                <p className="text-sm font-semibold text-foreground">{user?.email?.split('@')[0]}</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-5 w-5 text-primary" />
-              </div>
+    <div className="min-h-screen bg-background">
+      {/* Horizontal Top Navigation */}
+      <nav className="sticky top-0 z-10 bg-background/80 backdrop-blur-md">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between gap-3 max-w-2xl mx-auto">
+            {/* Back Button */}
+            <button
+              onClick={() => activeTab !== 'home' ? setActiveTab('home') : window.history.back()}
+              className="w-12 h-12 rounded-full bg-card shadow-md flex items-center justify-center hover:shadow-lg transition-shadow flex-shrink-0"
+            >
+              <ChevronLeft className="h-5 w-5 text-foreground" />
+            </button>
+
+            {/* Navigation Icons - Centered Group */}
+            <div className="flex items-center gap-4 flex-1 justify-center bg-card rounded-full shadow-md px-6 py-2">
+              <button
+                onClick={() => setActiveTab('stats')}
+                className={`p-2.5 rounded-full transition-colors ${
+                  activeTab === 'stats' ? 'bg-primary/10' : 'hover:bg-accent'
+                }`}
+              >
+                <BarChart3 className={`h-5 w-5 ${activeTab === 'stats' ? 'text-primary' : 'text-foreground'}`} />
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`p-2.5 rounded-full transition-colors ${
+                  activeTab === 'products' ? 'bg-primary/10' : 'hover:bg-accent'
+                }`}
+              >
+                <ShoppingCart className={`h-5 w-5 ${activeTab === 'products' ? 'text-primary' : 'text-foreground'}`} />
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('home')}
+                className={`p-2.5 rounded-full transition-colors ${
+                  activeTab === 'home' ? 'bg-primary/10' : 'hover:bg-accent'
+                }`}
+              >
+                <DollarSign className={`h-5 w-5 ${activeTab === 'home' ? 'text-primary' : 'text-foreground'}`} />
+              </button>
             </div>
+
+            {/* Profile Button */}
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`w-12 h-12 rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow flex-shrink-0 ${
+                activeTab === 'profile' ? 'bg-primary/10' : 'bg-muted'
+              }`}
+            >
+              <User className={`h-5 w-5 ${activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'}`} />
+            </button>
           </div>
         </div>
-      </header>
+      </nav>
 
       {/* Content */}
       {renderContent()}
-
-      {/* Modern Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border">
-        <div className="flex justify-around items-center h-16 px-2 max-w-md mx-auto">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-none transition-colors ${
-              activeTab === 'home' ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-foreground'
-            }`}
-            onClick={() => setActiveTab('home')}
-          >
-            <Home className="h-5 w-5" />
-            <span className="text-xs font-medium">Início</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-none transition-colors ${
-              activeTab === 'stats' ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-foreground'
-            }`}
-            onClick={() => setActiveTab('stats')}
-          >
-            <BarChart3 className="h-5 w-5" />
-            <span className="text-xs font-medium">Stats</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-none transition-colors ${
-              activeTab === 'products' ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-foreground'
-            }`}
-            onClick={() => setActiveTab('products')}
-          >
-            <Package className="h-5 w-5" />
-            <span className="text-xs font-medium">Produtos</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-none transition-colors ${
-              activeTab === 'profile' ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-foreground'
-            }`}
-            onClick={() => setActiveTab('profile')}
-          >
-            <User className="h-5 w-5" />
-            <span className="text-xs font-medium">Perfil</span>
-          </Button>
-        </div>
-      </nav>
     </div>
   );
 }
