@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut, ChevronLeft, ShoppingCart } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 
@@ -335,10 +335,12 @@ export function AppHome() {
       
       case 'profile':
         return (
-          <div className="p-4 space-y-6">
+          <div className="p-4 space-y-4">
             <h2 className="text-xl font-bold px-2 text-foreground">Meu Perfil</h2>
+            
+            {/* User Info Card */}
             <Card className="overflow-hidden border-none shadow-sm">
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-4">
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-16 h-16 rounded-2xl flex-shrink-0">
                     <AvatarImage src={profileAvatar} alt="Profile" />
@@ -351,18 +353,93 @@ export function AppHome() {
                     <p className="text-sm text-muted-foreground">Vendedor Kambafy</p>
                   </div>
                 </div>
-                <div className="pt-4 border-t border-border">
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-11 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20 transition-colors"
-                    onClick={() => signOut()}
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    <span className="font-medium">Sair da conta</span>
-                  </Button>
-                </div>
               </CardContent>
             </Card>
+
+            {/* Settings Options */}
+            <Card className="overflow-hidden border-none shadow-sm">
+              <CardContent className="p-2">
+                <button
+                  onClick={() => window.location.href = '/user-settings'}
+                  className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Settings className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium text-foreground">Dados Pessoais</p>
+                      <p className="text-xs text-muted-foreground">Ver e editar informações</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+
+                <div className="h-px bg-border my-1" />
+
+                <button
+                  onClick={() => window.location.href = '/user-settings'}
+                  className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium text-foreground">Notificações</p>
+                      <p className="text-xs text-muted-foreground">Gerir preferências</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </CardContent>
+            </Card>
+
+            {/* Danger Zone */}
+            <Card className="overflow-hidden border-none shadow-sm">
+              <CardContent className="p-2">
+                <button
+                  onClick={() => {
+                    if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
+                      // TODO: Implementar lógica de encerramento de conta
+                      alert('Funcionalidade de encerramento de conta em desenvolvimento.');
+                    }
+                  }}
+                  className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                      <Trash2 className="h-5 w-5 text-destructive" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium text-destructive">Encerrar Conta</p>
+                      <p className="text-xs text-muted-foreground">Eliminar permanentemente</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </CardContent>
+            </Card>
+
+            {/* Logout Button */}
+            <Card className="overflow-hidden border-none shadow-sm">
+              <CardContent className="p-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full h-11 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20 transition-colors"
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span className="font-medium">Sair da conta</span>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* App Version */}
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2">
+              <Info className="h-3 w-3" />
+              <span>Versão 1.0.0</span>
+            </div>
           </div>
         );
       
