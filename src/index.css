@@ -134,9 +134,14 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html,
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    position: relative;
     /* Prevent orientation change and zoom */
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
@@ -144,6 +149,13 @@ All colors MUST be HSL.
     /* Transição suave para evitar flash */
     opacity: 1;
     transition: opacity 0.2s ease-in-out;
+  }
+  
+  #root {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    position: relative;
   }
 
   /* Evitar flash de conteúdo durante carregamento */
