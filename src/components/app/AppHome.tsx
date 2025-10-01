@@ -447,9 +447,12 @@ export function AppHome() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Horizontal Top Navigation */}
-      <nav className="sticky top-0 z-10 bg-background/80 backdrop-blur-md">
+    <div className="min-h-screen bg-background pb-24">
+      {/* Content */}
+      {renderContent()}
+
+      {/* Horizontal Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-md pb-safe">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between gap-3 max-w-2xl mx-auto">
             {/* Back Button */}
@@ -502,9 +505,6 @@ export function AppHome() {
           </div>
         </div>
       </nav>
-
-      {/* Content */}
-      {renderContent()}
     </div>
   );
 }
