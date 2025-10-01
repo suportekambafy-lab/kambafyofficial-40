@@ -875,6 +875,15 @@ export function AppHome() {
             {/* Navigation Icons - Centered Group */}
             <div className="flex items-center gap-4 flex-1 justify-center bg-card rounded-full shadow-md px-6 py-2">
               <button
+                onClick={() => setActiveTab('home')}
+                className={`p-2.5 rounded-full transition-colors ${
+                  activeTab === 'home' ? 'bg-primary/10' : 'hover:bg-accent'
+                }`}
+              >
+                <DollarSign className={`h-5 w-5 ${activeTab === 'home' ? 'text-primary' : 'text-foreground'}`} />
+              </button>
+              
+              <button
                 onClick={() => setActiveTab('stats')}
                 className={`p-2.5 rounded-full transition-colors ${
                   activeTab === 'stats' ? 'bg-primary/10' : 'hover:bg-accent'
@@ -890,15 +899,6 @@ export function AppHome() {
                 }`}
               >
                 <ShoppingCart className={`h-5 w-5 ${activeTab === 'products' ? 'text-primary' : 'text-foreground'}`} />
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('home')}
-                className={`p-2.5 rounded-full transition-colors ${
-                  activeTab === 'home' ? 'bg-primary/10' : 'hover:bg-accent'
-                }`}
-              >
-                <DollarSign className={`h-5 w-5 ${activeTab === 'home' ? 'text-primary' : 'text-foreground'}`} />
               </button>
             </div>
 
