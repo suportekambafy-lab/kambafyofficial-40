@@ -27,8 +27,9 @@ export function AppHome() {
     try {
       const { data: products, error: productsError } = await supabase
         .from('products')
-        .select('id, name, status')
-        .eq('user_id', user.id);
+        .select('id, name, status, price, sales, cover')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (productsError) {
         console.error('Products error:', productsError);
@@ -112,35 +113,58 @@ export function AppHome() {
             ) : (
               <div className="space-y-3">
                 {products.map((product) => (
-                  <Card key={product.id} className="overflow-hidden border-none shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        {product.product_image ? (
-                          <img 
-                            src={product.product_image} 
-                            alt={product.name}
-                            className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0">
-                            <Package className="h-6 w-6 text-primary" />
+                  <Card key={product.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-0">
+                      <div className="flex gap-4 p-4">
+                        {/* Product Image */}
+                        <div className="relative flex-shrink-0">
+                          {product.cover ? (
+                            <img 
+                              src={product.cover} 
+                              alt={product.name}
+                              className="w-24 h-24 rounded-xl object-cover"
+                            />
+                          ) : (
+                            <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                              <Package className="h-8 w-8 text-primary" />
+                            </div>
+                          )}
+                          {product.status === 'Ativo' && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                          )}
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between">
+                          <div>
+                            <h3 className="font-semibold text-base text-foreground line-clamp-2 mb-2">
+                              {product.name}
+                            </h3>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                product.status === 'Ativo' 
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400' 
+                                  : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                              }`}>
+                                {product.status}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-base text-foreground truncate mb-1">
-                            {product.name}
-                          </h3>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                              product.status === 'Ativo' 
-                                ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400' 
-                                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                            }`}>
-                              {product.status}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {formatPriceForSeller(parseFloat(product.price || '0'), product.currency || 'KZ')}
-                            </span>
+
+                          {/* Price and Sales */}
+                          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-0.5">Preço</p>
+                              <p className="font-bold text-base text-foreground">
+                                {formatPriceForSeller(parseFloat(product.price || '0'), 'KZ')}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground mb-0.5">Vendas</p>
+                              <p className="font-bold text-base text-primary">
+                                {product.sales || 0}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
