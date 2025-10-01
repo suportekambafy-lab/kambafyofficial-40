@@ -270,12 +270,7 @@ const handler = async (req: Request): Promise<Response> => {
               Se tiver alguma dúvida, entre em contato conosco:
             </p>
             <div style="color: #475569; font-size: 14px;">
-              ${supportEmail ? `<p style="margin: 0;"><strong>Email:</strong> ${supportEmail}</p>` : ''}
-              ${supportWhatsapp ? `<p style="margin: 5px 0 0;"><strong>WhatsApp:</strong> ${supportWhatsapp}</p>` : ''}
-              ${!supportEmail && !supportWhatsapp ? `
-                <p style="margin: 0;"><strong>Email:</strong> suporte@kambafy.com</p>
-                <p style="margin: 5px 0 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
-              ` : ''}
+              ${supportEmail ? `<p style="margin: 0;"><strong>Email:</strong> ${supportEmail}</p>` : '<p style="margin: 0;"><strong>Email:</strong> suporte@kambafy.com</p>'}
             </div>
           </div>
 

@@ -246,7 +246,6 @@ const handler = async (req: Request): Promise<Response> => {
               </p>
               <div style="color: #475569; font-size: 14px;">
                 <p style="margin: 0;"><strong>Email:</strong> suporte@kambafy.com</p>
-                <p style="margin: 5px 0 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
               </div>
             </div>
 
@@ -508,7 +507,6 @@ const handler = async (req: Request): Promise<Response> => {
                   </p>
                   <div style="color: #475569; font-size: 14px;">
                     <p style="margin: 0;"><strong>Email:</strong> suporte@kambafy.com</p>
-                    <p style="margin: 5px 0 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
                   </div>
                 </div>
 
@@ -616,7 +614,6 @@ const handler = async (req: Request): Promise<Response> => {
                 </p>
                 <div style="color: #475569; font-size: 14px;">
                   <p style="margin: 0;"><strong>Email:</strong> suporte@kambafy.com</p>
-                  <p style="margin: 5px 0 0;"><strong>WhatsApp:</strong> (+244) 900 000 000</p>
                 </div>
               </div>
 
