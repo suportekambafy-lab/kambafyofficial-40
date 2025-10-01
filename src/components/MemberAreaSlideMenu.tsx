@@ -123,6 +123,45 @@ export function MemberAreaSlideMenu({
             
           </div>
 
+          {/* Progresso Total do Curso */}
+          <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-800/20 p-4 rounded-lg border border-emerald-500/30">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-semibold text-white">Progresso do Curso</h3>
+              </div>
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                {getCourseProgress(totalLessonsCount)}%
+              </Badge>
+            </div>
+
+            <div className="space-y-3">
+              <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${getCourseProgress(totalLessonsCount)}%` }}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center gap-2 bg-gray-900/50 p-2 rounded">
+                  <CheckCircle className="w-4 h-4 text-emerald-400" />
+                  <div>
+                    <p className="text-gray-400 text-xs">Concluídas</p>
+                    <p className="font-semibold text-white">{completedLessons}/{totalLessonsCount}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 bg-gray-900/50 p-2 rounded">
+                  <Clock className="w-4 h-4 text-blue-400" />
+                  <div>
+                    <p className="text-gray-400 text-xs">Duração Total</p>
+                    <p className="font-semibold text-white">{Math.floor(totalDuration / 60)}min</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Navegação Rápida */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-gray-400 px-2">Navegação Rápida</h3>
