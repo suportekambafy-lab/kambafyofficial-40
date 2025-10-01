@@ -94,7 +94,7 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
     try {
       const progressRecord = {
         lesson_id: lessonId,
-        user_id: '00000000-0000-0000-0000-000000000000',
+        user_id: null, // NULL para membros não autenticados via auth tradicional
         user_email: normalizedEmail,
         member_area_id: memberAreaId,
         progress_percentage: progressData.progress_percentage || lessonProgress[lessonId]?.progress_percentage || 0,
