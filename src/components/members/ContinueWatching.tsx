@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 interface ContinueWatchingProps {
   memberAreaId: string;
   studentEmail: string;
+  onLessonSelect?: (lesson: any) => void;
 }
 
 interface LastLesson {
@@ -20,7 +21,7 @@ interface LastLesson {
   last_watched_at: string;
 }
 
-export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchingProps) {
+export function ContinueWatching({ memberAreaId, studentEmail, onLessonSelect }: ContinueWatchingProps) {
   const [lastLesson, setLastLesson] = useState<LastLesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -138,9 +139,39 @@ export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchin
     }
   };
 
-  const handleContinueWatching = () => {
-    if (lastLesson) {
-      navigate(`/member-areas/${memberAreaId}/lessons/${lastLesson.id}`);
+  const handleContinueWatching = async () => {
+    if (!lastLesson) return;
+    
+    try {
+      // Buscar dados completos da aula
+      const { data: lessonData, error } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('id', lastLesson.id)
+        .single();
+      
+      if (error) throw error;
+      
+      if (lessonData && onLessonSelect) {
+        // Processar dados da aula para converter JSON
+        const processedLesson = {
+          ...lessonData,
+          complementary_links: lessonData.complementary_links ? 
+            typeof lessonData.complementary_links === 'string' ? 
+              JSON.parse(lessonData.complementary_links) : lessonData.complementary_links : [],
+          lesson_materials: lessonData.lesson_materials ? 
+            typeof lessonData.lesson_materials === 'string' ? 
+              JSON.parse(lessonData.lesson_materials) : lessonData.lesson_materials : []
+        };
+        
+        // Usar a função de callback se disponível
+        onLessonSelect(processedLesson);
+      } else {
+        // Fallback para navegação direta
+        navigate(`/members/area/${memberAreaId}?lesson=${lastLesson.id}`);
+      }
+    } catch (error) {
+      console.error('Erro ao abrir aula:', error);
     }
   };
 

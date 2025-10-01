@@ -589,6 +589,7 @@ export default function ModernMembersArea() {
                     <ContinueWatching 
                       memberAreaId={memberAreaId} 
                       studentEmail={user.email}
+                      onLessonSelect={handleLessonClick}
                     />
                   </div>
                 )}
