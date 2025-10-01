@@ -756,6 +756,15 @@ export function AppHome() {
               <Info className="h-3 w-3" />
               <span>Versão 1.0.0</span>
             </div>
+
+            {/* Logo Kambafy */}
+            <div className="flex justify-center pt-4 pb-2">
+              <img 
+                src="/kambafy-logo-new.svg" 
+                alt="Kambafy" 
+                className="h-10 w-auto"
+              />
+            </div>
           </div>
         );
       
