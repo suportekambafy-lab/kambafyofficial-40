@@ -41,23 +41,10 @@ export function MemberAreaOffers({
       setIsLoading(false);
     }
   };
-  const handleOfferClick = async (offer: MemberAreaOffer) => {
-    try {
-      // Buscar dados completos do produto
-      const {
-        data: product,
-        error
-      } = await supabase.from('products').select('share_link').eq('id', offer.product_id).single();
-      if (error) throw error;
-      if (product?.share_link) {
-        window.open(product.share_link, '_blank');
-      } else {
-        toast.error('Link do produto não encontrado');
-      }
-    } catch (error) {
-      console.error('Erro ao abrir produto:', error);
-      toast.error('Erro ao abrir produto');
-    }
+  const handleOfferClick = (offer: MemberAreaOffer) => {
+    // Construir URL do checkout
+    const checkoutUrl = `/checkout/${offer.product_id}`;
+    window.open(checkoutUrl, '_blank');
   };
   const calculateDiscountedPrice = (price: string, discount: number) => {
     const numPrice = parseFloat(price.replace(/[^\d.-]/g, ''));
