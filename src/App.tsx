@@ -124,7 +124,7 @@ const App = () => {
                       <Route path="/privacidade" element={<OptimizedRoutes.Privacy />} />
                       <Route path="/termos" element={<OptimizedRoutes.Terms />} />
                       <Route path="/cookies" element={<OptimizedRoutes.Cookies />} />
-                      <Route path="/apps" element={<OptimizedRoutes.Apps />} />
+                      <Route path="/apps/*" element={<OptimizedRoutes.Apps />} />
                        <Route path="/vendedor/*" element={<OptimizedRoutes.SellerDashboard />} />
                         <Route path="/meus-afiliados" element={<OptimizedRoutes.MeusAfiliados />} />
                         <Route path="/minhas-compras" element={<OptimizedRoutes.MeusAcessos />} />
