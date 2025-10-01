@@ -11,15 +11,15 @@ const HighlightedCard = React.forwardRef<HTMLDivElement, HighlightedCardProps>(
     const getHighlightClasses = () => {
       switch (highlightColor) {
         case "green":
-          return "border-l-[6px] border-l-border"
+          return "border-l-[6px] border-l-primary/30"
         case "yellow":
-          return "border-l-[6px] border-l-border"
+          return "border-l-[6px] border-l-primary/30"
         case "blue":
-          return "border-l-[6px] border-l-border"
+          return "border-l-[6px] border-l-primary/30"
         case "orange":
-          return "border-l-[6px] border-l-border"
+          return "border-l-[6px] border-l-primary/30"
         case "purple":
-          return "border-l-[6px] border-l-border"
+          return "border-l-[6px] border-l-primary/30"
         default:
           return ""
       }
