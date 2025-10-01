@@ -56,6 +56,22 @@ interface OrderDetails extends Order {
   updated_at: string;
 }
 
+// Helper function to convert currency code
+const formatCurrency = (amount: number, currencyCode: string) => {
+  // Convert KZ to AOA (valid ISO 4217 code)
+  const validCurrency = currencyCode === 'KZ' ? 'AOA' : currencyCode;
+  
+  try {
+    return amount.toLocaleString('pt-AO', { 
+      style: 'currency', 
+      currency: validCurrency 
+    });
+  } catch (error) {
+    // Fallback if currency code is still invalid
+    return `${amount.toLocaleString('pt-AO')} ${currencyCode}`;
+  }
+};
+
 export default function AdminSales() {
   const { admin } = useAdminAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -248,7 +264,7 @@ export default function AdminSales() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Receita Total</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {stats.totalRevenue.toLocaleString('pt-AO', { style: 'currency', currency: 'AOA' })}
+                    {formatCurrency(stats.totalRevenue, 'KZ')}
                   </p>
                 </div>
                 <DollarSign className="h-8 w-8 text-green-600" />
@@ -356,10 +372,7 @@ export default function AdminSales() {
                         <TableCell className="text-sm">{order.customer_phone || 'N/A'}</TableCell>
                         <TableCell className="text-sm">{order.products?.name || 'N/A'}</TableCell>
                         <TableCell className="font-semibold">
-                          {parseFloat(order.amount).toLocaleString('pt-AO', { 
-                            style: 'currency', 
-                            currency: order.currency || 'AOA' 
-                          })}
+                          {formatCurrency(parseFloat(order.amount), order.currency || 'KZ')}
                         </TableCell>
                         <TableCell>{getStatusBadge(order.status)}</TableCell>
                         <TableCell className="text-sm capitalize">
@@ -427,10 +440,7 @@ export default function AdminSales() {
                 <div>
                   <p className="text-sm text-gray-600">Valor</p>
                   <p className="font-semibold text-lg">
-                    {parseFloat(selectedOrder.amount).toLocaleString('pt-AO', { 
-                      style: 'currency', 
-                      currency: selectedOrder.currency || 'AOA' 
-                    })}
+                    {formatCurrency(parseFloat(selectedOrder.amount), selectedOrder.currency || 'KZ')}
                   </p>
                 </div>
                 <div>
