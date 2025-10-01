@@ -13,6 +13,7 @@ import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
 import { useKambaLevels } from '@/hooks/useKambaLevels';
+import { WithdrawalModal } from '@/components/WithdrawalModal';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -42,6 +43,7 @@ export function AppHome() {
     bio: ''
   });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   
   // Sistema de conquistas Kamba - metas dinâmicas
   const { currentLevel, nextLevel, progress: kambaProgress } = useKambaLevels(stats.totalRevenue);
@@ -655,6 +657,15 @@ export function AppHome() {
                     <div className="text-3xl font-bold tracking-tight text-foreground">
                       {formatPriceForSeller(financialData.availableBalance, 'KZ')}
                     </div>
+                    <Button 
+                      onClick={() => setShowWithdrawalModal(true)}
+                      disabled={financialData.availableBalance === 0}
+                      className="w-full mt-2"
+                      size="sm"
+                    >
+                      <ArrowDownToLine className="h-4 w-4 mr-2" />
+                      Solicitar Saque
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -1063,6 +1074,20 @@ export function AppHome() {
           </div>
         </div>
       </nav>
+
+      {/* Withdrawal Modal */}
+      <WithdrawalModal
+        open={showWithdrawalModal}
+        onOpenChange={setShowWithdrawalModal}
+        availableBalance={financialData.availableBalance}
+        onWithdrawalSuccess={() => {
+          loadStats();
+          toast({
+            title: "Saque Solicitado",
+            description: "Sua solicitação de saque está sendo processada"
+          });
+        }}
+      />
     </div>
   );
 }
