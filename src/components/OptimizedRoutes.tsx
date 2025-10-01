@@ -152,8 +152,8 @@ export const OptimizedRoutes = {
   MeusAcessos: withLazyLoading(MeusAcessos, 'dashboard'),
   MeusAfiliados: withLazyLoading(MeusAfiliados, 'dashboard'),
   UserIdentity: withLazyLoading(UserIdentity, 'settings'),
-  Mobile: withLazyLoading(Mobile, 'dashboard'),
-  AppMobile: withLazyLoading(AppMobile, 'dashboard'),
+  Mobile: withLazyLoading(Mobile, 'minimal'),
+  AppMobile: withLazyLoading(AppMobile, 'minimal'),
   KambaPay: withLazyLoading(KambaPay, 'settings'),
   
   
