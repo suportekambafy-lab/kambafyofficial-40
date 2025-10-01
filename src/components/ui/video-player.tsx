@@ -100,6 +100,27 @@ const VideoPlayer = ({
   const [iframeError, setIframeError] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
 
+  // Auto-play quando o vídeo carregar metadados
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video && (hlsUrl || src)) {
+      const attemptAutoplay = async () => {
+        try {
+          await video.play();
+          setIsPlaying(true);
+          onPlay?.();
+          console.log('✅ Autoplay iniciado com sucesso');
+        } catch (error) {
+          console.log('⚠️ Autoplay bloqueado pelo navegador:', error);
+          // Navegador bloqueou autoplay, usuário precisa clicar
+        }
+      };
+      
+      video.addEventListener('loadedmetadata', attemptAutoplay);
+      return () => video.removeEventListener('loadedmetadata', attemptAutoplay);
+    }
+  }, [hlsUrl, src]);
+
   // Log detalhado para debugging
   useEffect(() => {
     console.log('🎬 VideoPlayer montado:', {
@@ -262,6 +283,8 @@ const VideoPlayer = ({
           crossOrigin={crossOrigin}
           preload="metadata"
           controls={false}
+          autoPlay
+          playsInline
         >
           <source src={hlsUrl} type="application/x-mpegURL" />
           <source src={hlsUrl} type="application/vnd.apple.mpegurl" />
@@ -493,6 +516,8 @@ const VideoPlayer = ({
         onClick={togglePlay}
         crossOrigin={crossOrigin}
         preload="metadata"
+        autoPlay
+        playsInline
       >
         <source src={src} type="video/mp4" />
         <source src={src} type="video/webm" />
