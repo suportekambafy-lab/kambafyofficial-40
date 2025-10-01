@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
@@ -1040,7 +1040,7 @@ export function AppHome() {
                   activeTab === 'home' ? 'bg-primary/10' : 'hover:bg-accent'
                 }`}
               >
-                <DollarSign className={`h-5 w-5 ${activeTab === 'home' ? 'text-primary' : 'text-foreground'}`} />
+                <LayoutDashboard className={`h-5 w-5 ${activeTab === 'home' ? 'text-primary' : 'text-foreground'}`} />
               </button>
               
               <button
