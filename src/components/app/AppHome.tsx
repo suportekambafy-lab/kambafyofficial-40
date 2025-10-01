@@ -340,9 +340,12 @@ export function AppHome() {
             <Card className="overflow-hidden border-none shadow-sm">
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0">
-                    <User className="h-8 w-8 text-primary" />
-                  </div>
+                  <Avatar className="w-16 h-16 rounded-2xl flex-shrink-0">
+                    <AvatarImage src={profileAvatar} alt="Profile" />
+                    <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
+                      <User className="h-8 w-8 text-primary" />
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-base text-foreground truncate">{user?.email}</p>
                     <p className="text-sm text-muted-foreground">Vendedor Kambafy</p>
