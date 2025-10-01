@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/hooks/useTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';

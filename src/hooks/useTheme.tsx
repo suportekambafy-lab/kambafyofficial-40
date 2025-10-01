@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'light';
+type Theme = 'light' | 'dark';
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -31,19 +31,30 @@ export function ThemeProvider({
   forceLightMode = false,
   ...props
 }: ThemeProviderProps) {
-  const [theme] = useState<Theme>('light');
-  const [isDark] = useState(false);
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (forceLightMode) return 'light';
+    return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
-    root.classList.add('light');
-  }, []);
+    
+    if (forceLightMode) {
+      root.classList.add('light');
+    } else {
+      root.classList.add(theme);
+    }
+  }, [theme, forceLightMode]);
 
   const value = {
-    theme: 'light' as Theme,
-    setTheme: () => {},
-    isDark: false,
+    theme: forceLightMode ? 'light' : theme,
+    setTheme: (newTheme: Theme) => {
+      if (forceLightMode) return;
+      localStorage.setItem(storageKey, newTheme);
+      setTheme(newTheme);
+    },
+    isDark: forceLightMode ? false : theme === 'dark',
   };
 
   return (
