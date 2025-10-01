@@ -113,11 +113,11 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
         record: progressRecord
       });
 
-      // Save to Supabase FIRST - usar nome exato da constraint
+      // Save to Supabase usando constraint única correta
       const { data, error } = await supabase
         .from('lesson_progress')
         .upsert(progressRecord, {
-          onConflict: 'lesson_progress_user_email_lesson_member_unique',
+          onConflict: 'user_email,lesson_id,member_area_id',
           ignoreDuplicates: false
         })
         .select();
