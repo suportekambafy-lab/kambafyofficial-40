@@ -27,15 +27,18 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('🔍 Buscando usuários sem senha...');
+    console.log('🔍 Buscando todos os usuários cadastrados...');
 
-    // Buscar usuários que não têm senha definida (passwordless users)
-    const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+    // Buscar todos os usuários da tabela profiles
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('email, full_name, user_id')
+      .not('email', 'is', null);
 
-    if (usersError) {
-      console.error('❌ Erro ao buscar usuários:', usersError);
+    if (profilesError) {
+      console.error('❌ Erro ao buscar usuários:', profilesError);
       return new Response(
-        JSON.stringify({ error: usersError.message }),
+        JSON.stringify({ error: profilesError.message }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -43,46 +46,63 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Filtrar usuários sem senha (aqueles criados via admin sem senha)
-    const passwordlessUsers = users.users.filter(user => {
-      // Usuários sem encrypted_password ou criados recentemente sem login
-      return user.encrypted_password === null || user.encrypted_password === '';
-    });
-
-    console.log(`📧 Encontrados ${passwordlessUsers.length} usuários sem senha`);
+    console.log(`📧 Encontrados ${profiles?.length || 0} usuários para enviar emails`);
 
     const results = {
-      total: passwordlessUsers.length,
+      total: profiles?.length || 0,
       sent: 0,
       failed: 0,
       errors: [] as string[]
     };
 
+    if (!profiles || profiles.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          message: "Nenhum usuário encontrado para enviar emails",
+          results
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
+    }
+
     // Enviar emails para cada usuário
-    for (const user of passwordlessUsers) {
+    for (const profile of profiles) {
       try {
+        if (!profile.email) {
+          console.log('⚠️ Usuário sem email, pulando...');
+          continue;
+        }
+
         // Gerar link de recuperação
         const { data, error } = await supabase.auth.admin.generateLink({
           type: 'recovery',
-          email: user.email!,
+          email: profile.email,
           options: {
             redirectTo: 'https://app.kambafy.com/reset-password'
           }
         });
 
         if (error) {
-          console.error(`❌ Erro ao gerar link para ${user.email}:`, error);
+          console.error(`❌ Erro ao gerar link para ${profile.email}:`, error);
           results.failed++;
-          results.errors.push(`${user.email}: ${error.message}`);
+          results.errors.push(`${profile.email}: ${error.message}`);
           continue;
         }
 
         const resetLink = data.properties.action_link;
         
+        const userName = profile.full_name || 'Usuário';
+        
         // Enviar email
         const { error: emailError } = await resend.emails.send({
           from: "Kambafy <noreply@kambafy.com>",
-          to: [user.email!],
+          to: [profile.email],
           subject: "Defina sua Senha - Kambafy",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -96,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
               
               <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
                 <p style="color: #374151; font-size: 16px; margin-bottom: 20px;">
-                  Olá! Sua conta foi criada na plataforma Kambafy. Para começar a usar, você precisa definir uma senha.
+                  Olá ${userName}! Para garantir a segurança da sua conta Kambafy, recomendamos que você defina uma senha permanente.
                 </p>
                 
                 <div style="text-align: center; margin: 30px 0;">
@@ -131,21 +151,21 @@ const handler = async (req: Request): Promise<Response> => {
         });
 
         if (emailError) {
-          console.error(`❌ Erro ao enviar email para ${user.email}:`, emailError);
+          console.error(`❌ Erro ao enviar email para ${profile.email}:`, emailError);
           results.failed++;
-          results.errors.push(`${user.email}: Erro ao enviar email`);
+          results.errors.push(`${profile.email}: Erro ao enviar email`);
         } else {
-          console.log(`✅ Email enviado para ${user.email}`);
+          console.log(`✅ Email enviado para ${profile.email}`);
           results.sent++;
         }
 
         // Pequeno delay para não sobrecarregar o servidor de email
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
 
       } catch (error: any) {
-        console.error(`❌ Erro ao processar ${user.email}:`, error);
+        console.error(`❌ Erro ao processar ${profile.email}:`, error);
         results.failed++;
-        results.errors.push(`${user.email}: ${error.message}`);
+        results.errors.push(`${profile.email}: ${error.message}`);
       }
     }
 
