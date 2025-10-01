@@ -890,8 +890,8 @@ export function AppHome() {
           <div className="p-4 space-y-6">
             {/* Welcome */}
             <div className="px-2">
-              <h1 className="text-2xl font-bold mb-1">Olá! 👋</h1>
-              <p className="text-muted-foreground">Bem-vindo à sua central de vendas</p>
+              <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
+              <p className="text-muted-foreground">Acompanhe o desempenho do seu negócio</p>
             </div>
 
             {/* Goal Progress - Metas Dinâmicas Kamba */}
