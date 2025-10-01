@@ -329,6 +329,7 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
                     {!videoError && (selectedLesson.hls_url || selectedLesson.bunny_embed_url || selectedLesson.video_url) ? (
                       <div className="w-full h-full">
                         <VideoPlayer
+                          key={selectedLesson.id}
                           hlsUrl={selectedLesson.hls_url}
                           embedUrl={selectedLesson.bunny_embed_url || selectedLesson.video_url}
                           onError={handleVideoError}

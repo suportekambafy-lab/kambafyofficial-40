@@ -84,6 +84,7 @@ export function ModernLessonViewer({
           ) : lesson.hls_url || lesson.video_url || lesson.bunny_embed_url ? (
             <div className="w-full aspect-video bg-black">
               <VideoPlayer
+                key={lesson.id}
                 hlsUrl={lesson.hls_url}
                 embedUrl={lesson.bunny_embed_url || lesson.video_url}
                 startTime={startTime}
