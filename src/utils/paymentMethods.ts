@@ -95,15 +95,6 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     isPortugal: true,
     countryFlag: "🇵🇹",
     countryName: "Portugal"
-  },
-  {
-    id: "kambapay",
-    name: "KambaPay",
-    image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzI1NjNFQiIvPgo8cGF0aCBkPSJNMTIgMTJIMjhWMjhIMTJWMTJaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTYgMTZIMjBWMjRIMTZWMTZaIiBmaWxsPSIjMjU2M0VCIi8+CjxwYXRoIGQ9Ik0yMCAxNkgyNFYyNEgyMFYxNloiIGZpbGw9IiMyNTYzRUIiLz4KPC9zdmc+",
-    enabled: false,
-    custom: true,
-    countryFlag: "🇦🇴",
-    countryName: "Saldo Digital"
   }
 ];
 
@@ -114,8 +105,6 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     'express': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
     'reference': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
     'transfer': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
-    
-    'kambapay': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
     
     // Portugal  
     'card': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
@@ -148,15 +137,15 @@ export const getEnabledPaymentMethods = (): PaymentMethod[] => {
 };
 
 export const getAngolaPaymentMethods = (): PaymentMethod[] => {
-  return PAYMENT_METHODS.filter(method => method.isAngola || method.id === 'kambapay');
+  return PAYMENT_METHODS.filter(method => method.isAngola);
 };
 
 export const getMozambiquePaymentMethods = (): PaymentMethod[] => {
-  return PAYMENT_METHODS.filter(method => method.isMozambique || method.id === 'kambapay');
+  return PAYMENT_METHODS.filter(method => method.isMozambique);
 };
 
 export const getPortugalPaymentMethods = (): PaymentMethod[] => {
-  return PAYMENT_METHODS.filter(method => method.isPortugal || method.id === 'kambapay');
+  return PAYMENT_METHODS.filter(method => method.isPortugal);
 };
 
 export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[] => {
