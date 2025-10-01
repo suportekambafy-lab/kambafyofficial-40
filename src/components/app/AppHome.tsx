@@ -20,6 +20,8 @@ export function AppHome() {
   const [products, setProducts] = useState<any[]>([]);
   const [salesData, setSalesData] = useState<any[]>([]);
   const [profileAvatar, setProfileAvatar] = useState<string>('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
   
   // Meta mensal - mesma lógica da versão web
   const monthlyGoal = 1000000; // 1M KZ
@@ -28,7 +30,61 @@ export function AppHome() {
   useEffect(() => {
     loadStats();
     loadProfile();
+    loadNotifications();
   }, [user]);
+
+  const loadNotifications = async () => {
+    if (!user) return;
+
+    try {
+      const notificationsList: any[] = [];
+
+      // Verificar produtos pendentes de aprovação
+      const { data: pendingProducts } = await supabase
+        .from('products')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .eq('status', 'Pendente')
+        .limit(5);
+
+      if (pendingProducts && pendingProducts.length > 0) {
+        notificationsList.push({
+          id: 'pending-products',
+          type: 'info',
+          title: 'Produtos Pendentes',
+          message: `Você tem ${pendingProducts.length} produto(s) aguardando aprovação`,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Verificar vendas recentes (últimas 24h)
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const { data: recentOrders } = await supabase
+        .from('orders')
+        .select('id, amount, currency, created_at, product_id')
+        .in('product_id', products.map(p => p.id))
+        .eq('status', 'completed')
+        .gte('created_at', yesterday.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      recentOrders?.forEach(order => {
+        notificationsList.push({
+          id: `order-${order.id}`,
+          type: 'success',
+          title: 'Nova Venda!',
+          message: `Venda de ${order.amount} ${order.currency} realizada`,
+          timestamp: order.created_at,
+        });
+      });
+
+      setNotifications(notificationsList.slice(0, 10)); // Máximo 10 notificações
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
 
   const loadProfile = async () => {
     if (!user) return;
@@ -145,6 +201,79 @@ export function AppHome() {
   };
 
   const renderContent = () => {
+    if (showNotifications) {
+      return (
+        <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-xl font-bold text-foreground">Notificações</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowNotifications(false)}
+            >
+              Fechar
+            </Button>
+          </div>
+
+          {notifications.length === 0 ? (
+            <Card className="overflow-hidden border-none shadow-sm">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
+                  <Bell className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="font-semibold text-base mb-2 text-foreground">Sem notificações</h3>
+                <p className="text-sm text-muted-foreground">
+                  Você está em dia com todas as suas atividades
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {notifications.map((notification) => (
+                <Card key={notification.id} className="overflow-hidden border-none shadow-sm">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        notification.type === 'success' 
+                          ? 'bg-green-500/10' 
+                          : notification.type === 'info'
+                          ? 'bg-blue-500/10'
+                          : 'bg-yellow-500/10'
+                      }`}>
+                        <Bell className={`h-5 w-5 ${
+                          notification.type === 'success'
+                            ? 'text-green-600 dark:text-green-400'
+                            : notification.type === 'info'
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-yellow-600 dark:text-yellow-400'
+                        }`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm text-foreground mb-1">
+                          {notification.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(notification.timestamp).toLocaleString('pt-AO', {
+                            day: '2-digit',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case 'products':
         return (
@@ -378,16 +507,23 @@ export function AppHome() {
                 <div className="h-px bg-border my-1" />
 
                 <button
-                  onClick={() => window.location.href = '/user-settings'}
+                  onClick={() => setShowNotifications(true)}
                   className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center relative">
                       <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      {notifications.length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-white text-xs rounded-full flex items-center justify-center">
+                          {notifications.length}
+                        </span>
+                      )}
                     </div>
                     <div className="text-left">
                       <p className="font-medium text-foreground">Notificações</p>
-                      <p className="text-xs text-muted-foreground">Gerir preferências</p>
+                      <p className="text-xs text-muted-foreground">
+                        {notifications.length > 0 ? `${notifications.length} nova(s)` : 'Nenhuma notificação'}
+                      </p>
                     </div>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
