@@ -138,11 +138,12 @@ const App = () => {
                             {/* Rotas para subdomínio membros (sem prefixo /members) */}
                             <Route path="/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
                             <Route path="/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
-                       <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
+                        <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
+                        <Route path="/app" element={<OptimizedRoutes.AppMobile />} />
+                         
+                         
                         
-                        
-                       
-                       {/* Admin Routes */}
+                        {/* Admin Routes */}
                        <Route path="/admin/login" element={<OptimizedRoutes.AdminLogin />} />
                        <Route path="/admin" element={<AdminProtectedRoute><OptimizedRoutes.AdminDashboard /></AdminProtectedRoute>} />
                        <Route path="/admin/sales" element={<AdminProtectedRoute><OptimizedRoutes.AdminSales /></AdminProtectedRoute>} />

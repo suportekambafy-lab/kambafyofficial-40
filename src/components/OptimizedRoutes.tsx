@@ -56,6 +56,7 @@ const MeusAcessos = createLazyWithRetry(() => import('@/pages/MeusAcessos'), "Me
 const MeusAfiliados = createLazyWithRetry(() => import('@/pages/MeusAfiliados'), "MeusAfiliados");
 const UserIdentity = createLazyWithRetry(() => import('@/pages/UserIdentity'), "UserIdentity");
 const Mobile = createLazyWithRetry(() => import('@/pages/Mobile'), "Mobile");
+const AppMobile = createLazyWithRetry(() => import('@/pages/AppMobile'), "AppMobile");
 const KambaPay = createLazyWithRetry(() => import('@/pages/KambaPay'), "KambaPay");
 
 
@@ -152,6 +153,7 @@ export const OptimizedRoutes = {
   MeusAfiliados: withLazyLoading(MeusAfiliados, 'dashboard'),
   UserIdentity: withLazyLoading(UserIdentity, 'settings'),
   Mobile: withLazyLoading(Mobile, 'dashboard'),
+  AppMobile: withLazyLoading(AppMobile, 'dashboard'),
   KambaPay: withLazyLoading(KambaPay, 'settings'),
   
   
