@@ -25,16 +25,30 @@ const ResetPassword = () => {
   const refreshToken = searchParams.get('refresh_token');
 
   useEffect(() => {
-    if (!accessToken || !refreshToken) {
-      setError('Link de redefinição inválido ou expirado.');
-      return;
-    }
+    const setupSession = async () => {
+      if (!accessToken || !refreshToken) {
+        setError('Link de redefinição inválido ou expirado.');
+        return;
+      }
 
-    // Set the session with the tokens from URL
-    supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken
-    });
+      try {
+        // Set the session with the tokens from URL
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+
+        if (error) {
+          console.error('Erro ao estabelecer sessão:', error);
+          setError('Erro ao validar link de redefinição. Por favor, solicite um novo link.');
+        }
+      } catch (err) {
+        console.error('Erro inesperado:', err);
+        setError('Erro ao validar link de redefinição. Por favor, solicite um novo link.');
+      }
+    };
+
+    setupSession();
   }, [accessToken, refreshToken]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
