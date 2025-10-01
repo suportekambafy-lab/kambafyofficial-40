@@ -23,6 +23,11 @@ export function AppHome() {
     totalRevenue: 0,
     totalProducts: 0
   });
+  const [financialData, setFinancialData] = useState({
+    availableBalance: 0,
+    pendingBalance: 0,
+    totalWithdrawn: 0
+  });
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
   const [salesData, setSalesData] = useState<any[]>([]);
@@ -316,11 +321,80 @@ export function AppHome() {
         totalProducts: activeProducts.length
       });
       setSalesData(chartData);
+      
+      // Calcular dados financeiros (mesma lógica da versão web)
+      await loadFinancialData(orders || [], productIds);
+      
     } catch (error) {
       console.error('Error loading stats:', error);
       setStats({ totalSales: 0, totalRevenue: 0, totalProducts: 0 });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadFinancialData = async (orders: any[], productIds: string[]) => {
+    if (!user) return;
+
+    try {
+      // Buscar payment_releases
+      const { data: releases } = await supabase
+        .from('payment_releases')
+        .select('order_id, amount, processed_at')
+        .eq('user_id', user.id);
+
+      // Buscar withdrawal_requests
+      const { data: withdrawals } = await supabase
+        .from('withdrawal_requests')
+        .select('amount, status')
+        .eq('user_id', user.id);
+
+      const now = new Date();
+      let availableBalance = 0;
+      let pendingBalance = 0;
+
+      orders.forEach(order => {
+        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        
+        // Converter para KZ se necessário
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053,
+            'MZN': 14.3
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          amount = Math.round(amount * rate);
+        }
+
+        const orderDate = new Date(order.created_at);
+        const releaseDate = new Date(orderDate.getTime() + 3 * 24 * 60 * 60 * 1000); // +3 dias
+
+        // Verificar se foi liberado manualmente via payment_releases
+        const wasReleased = releases?.some(r => r.order_id === order.order_id) || false;
+
+        if (wasReleased || now >= releaseDate) {
+          availableBalance += amount;
+        } else {
+          pendingBalance += amount;
+        }
+      });
+
+      // Calcular total de saques
+      const totalWithdrawnAmount = withdrawals
+        ?.filter(w => w.status === 'aprovado')
+        .reduce((sum, w) => sum + (parseFloat(w.amount?.toString() || '0')), 0) || 0;
+
+      // Subtrair saques do saldo disponível
+      const finalAvailableBalance = Math.max(0, availableBalance - totalWithdrawnAmount);
+
+      setFinancialData({
+        availableBalance: finalAvailableBalance,
+        pendingBalance,
+        totalWithdrawn: totalWithdrawnAmount
+      });
+
+    } catch (error) {
+      console.error('Error loading financial data:', error);
     }
   };
 
@@ -577,13 +651,9 @@ export function AppHome() {
                         </div>
                         <p className="text-sm font-medium text-muted-foreground">Disponível para Saque</p>
                       </div>
-                      <div className="flex items-center gap-1 text-sm font-semibold text-primary">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>+100%</span>
-                      </div>
                     </div>
                     <div className="text-3xl font-bold tracking-tight text-foreground">
-                      {formatPriceForSeller(stats.totalRevenue, 'KZ')}
+                      {formatPriceForSeller(financialData.availableBalance, 'KZ')}
                     </div>
                   </div>
                 </CardContent>
@@ -601,7 +671,7 @@ export function AppHome() {
                       </div>
                     </div>
                     <div className="text-3xl font-bold tracking-tight text-foreground">
-                      {formatPriceForSeller(0, 'KZ')}
+                      {formatPriceForSeller(financialData.pendingBalance, 'KZ')}
                     </div>
                   </div>
                 </CardContent>
@@ -619,7 +689,7 @@ export function AppHome() {
                       </div>
                     </div>
                     <div className="text-3xl font-bold tracking-tight text-foreground">
-                      {formatPriceForSeller(0, 'KZ')}
+                      {formatPriceForSeller(financialData.totalWithdrawn, 'KZ')}
                     </div>
                   </div>
                 </CardContent>
