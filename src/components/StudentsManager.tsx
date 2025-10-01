@@ -181,10 +181,10 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
       }
 
       toast({
-        title: "Sucesso",
+        title: "✅ Estudante Adicionado",
         description: isNewAccount 
-          ? "Estudante adicionado e conta criada! Email de acesso enviado."
-          : "Estudante adicionado com sucesso! Email de acesso enviado."
+          ? "Conta criada com sucesso! Email de acesso enviado com credenciais."
+          : "Estudante adicionado! Email de acesso enviado."
       });
       
       setFormData({ name: '', email: '' });

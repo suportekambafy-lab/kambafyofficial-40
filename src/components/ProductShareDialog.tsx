@@ -1,10 +1,10 @@
-
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { X, Copy, Share, Link, Users } from "lucide-react";
+import { X, Copy, Share, Link, Users, Check } from "lucide-react";
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 
 interface ProductShareDialogProps {
@@ -16,6 +16,14 @@ interface ProductShareDialogProps {
 export default function ProductShareDialog({ product, open, onOpenChange }: ProductShareDialogProps) {
   const { toast } = useToast();
   const memberAreaLinks = createMemberAreaLinks();
+  const [copiedLinks, setCopiedLinks] = useState<Record<string, boolean>>({});
+
+  // Reset copied state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setCopiedLinks({});
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -24,12 +32,20 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
   console.log('Product for sharing:', product);
   console.log('Product ID:', product.id, 'Type:', typeof product.id);
 
-  const copyToClipboard = (text: string, type: string) => {
+  const copyToClipboard = (text: string, type: string, linkId: string) => {
     navigator.clipboard.writeText(text);
     toast({
       title: "Copiado!",
       description: `${type} copiado para a área de transferência.`
     });
+    
+    // Mark as copied
+    setCopiedLinks(prev => ({ ...prev, [linkId]: true }));
+    
+    // Reset after 2 seconds
+    setTimeout(() => {
+      setCopiedLinks(prev => ({ ...prev, [linkId]: false }));
+    }, 2000);
   };
 
   // Função para obter o link correto da área de membros - sempre usar membros.kambafy.com
@@ -113,9 +129,13 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
                 />
                 <Button 
                   size="sm" 
-                  onClick={() => copyToClipboard(previewLink, "Link com preview")}
+                  onClick={() => copyToClipboard(previewLink, "Link com preview", "checkout")}
                 >
-                  <Copy className="h-4 w-4" />
+                  {copiedLinks.checkout ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -149,9 +169,13 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
                   />
                   <Button 
                     size="sm" 
-                    onClick={() => copyToClipboard(getMemberAreaLink(), "Link da área de membros")}
+                    onClick={() => copyToClipboard(getMemberAreaLink(), "Link da área de membros", "member-area")}
                   >
-                    <Copy className="h-4 w-4" />
+                    {copiedLinks["member-area"] ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
