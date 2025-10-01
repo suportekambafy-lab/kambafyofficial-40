@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
@@ -563,8 +563,69 @@ export function AppHome() {
       case 'stats':
         return (
           <div className="p-4 space-y-4">
-            <h2 className="text-xl font-bold px-2 text-foreground">Estatísticas</h2>
+            <h2 className="text-xl font-bold px-2 text-foreground">Financeiro</h2>
             
+            {/* Financial Cards */}
+            <div className="space-y-3">
+              <Card className="overflow-hidden border-l-4 border-primary shadow-sm bg-card">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Wallet className="h-5 w-5 text-primary" />
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground">Saldo Disponível</p>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>+100%</span>
+                      </div>
+                    </div>
+                    <div className="text-3xl font-bold tracking-tight text-foreground">
+                      {formatPriceForSeller(stats.totalRevenue, 'KZ')}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden border-l-4 border-primary shadow-sm bg-card">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                          <Clock className="h-5 w-5 text-orange-600 dark:text-orange-500" />
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground">Saldo Pendente</p>
+                      </div>
+                    </div>
+                    <div className="text-3xl font-bold tracking-tight text-foreground">
+                      {formatPriceForSeller(0, 'KZ')}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden border-l-4 border-primary shadow-sm bg-card">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                          <ArrowDownToLine className="h-5 w-5 text-green-600 dark:text-green-500" />
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground">Total de Saques</p>
+                      </div>
+                    </div>
+                    <div className="text-3xl font-bold tracking-tight text-foreground">
+                      {formatPriceForSeller(0, 'KZ')}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Daily Sales Chart */}
             <Card className="overflow-hidden border-none shadow-sm">
               <CardContent className="p-6">
@@ -612,44 +673,6 @@ export function AppHome() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Stats Cards */}
-            <div className="space-y-3">
-              <Card className="overflow-hidden border-l-4 border-primary shadow-sm bg-card">
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <p className="text-sm font-medium text-muted-foreground">Total de Vendas</p>
-                      <div className="flex items-center gap-1 text-sm font-semibold text-primary">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>+100%</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-3xl font-bold tracking-tight text-foreground">{stats.totalSales}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="overflow-hidden border-l-4 border-primary shadow-sm bg-card">
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <p className="text-sm font-medium text-muted-foreground">Receita Total</p>
-                      <div className="flex items-center gap-1 text-sm font-semibold text-primary">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>+100%</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-3xl font-bold tracking-tight text-foreground">
-                        {formatPriceForSeller(stats.totalRevenue, 'KZ')}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         );
       
@@ -878,8 +901,8 @@ export function AppHome() {
                     className="w-full justify-start h-12 hover:bg-primary/5 hover:text-primary transition-colors"
                     onClick={() => setActiveTab('stats')}
                   >
-                    <BarChart3 className="h-5 w-5 mr-3" />
-                    <span className="font-medium">Ver estatísticas</span>
+                    <Wallet className="h-5 w-5 mr-3" />
+                    <span className="font-medium">Ver financeiro</span>
                   </Button>
                   <Button 
                     variant="outline" 
@@ -940,7 +963,7 @@ export function AppHome() {
                   activeTab === 'stats' ? 'bg-primary/10' : 'hover:bg-accent'
                 }`}
               >
-                <BarChart3 className={`h-5 w-5 ${activeTab === 'stats' ? 'text-primary' : 'text-foreground'}`} />
+                <Wallet className={`h-5 w-5 ${activeTab === 'stats' ? 'text-primary' : 'text-foreground'}`} />
               </button>
               
               <button
