@@ -166,27 +166,12 @@ export function ModernLessonViewer({
                     className="absolute inset-0 bg-black/95 flex items-center justify-center z-50 overflow-y-auto"
                   >
                     <div className="w-full max-w-md sm:max-w-xl text-center space-y-4 sm:space-y-6 p-4 sm:p-8 my-auto">
-                      {/* Mensagem de conclusão */}
-                      <motion.div
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.1 }}
-                        className="space-y-2"
-                      >
-                        <h3 className="text-xl sm:text-2xl font-bold text-white">
-                          Aula Concluída! 🎉
-                        </h3>
-                        <p className="text-sm sm:text-base text-gray-400">
-                          Parabéns por completar &quot;{lesson.title}&quot;
-                        </p>
-                      </motion.div>
-
                       {/* Próxima aula (se existir) */}
                       {nextLesson && (
                         <motion.div
                           initial={{ y: 20, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.2 }}
+                          transition={{ delay: 0.1 }}
                           className="bg-white/5 border border-white/10 rounded-lg p-4 sm:p-6 space-y-3"
                         >
                           <p className="text-xs sm:text-sm text-gray-400">Próxima aula</p>
@@ -206,7 +191,7 @@ export function ModernLessonViewer({
                       <motion.div
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
+                        transition={{ delay: 0.2 }}
                         className="flex flex-col sm:flex-row gap-3 justify-center"
                       >
                         <Button
@@ -234,7 +219,7 @@ export function ModernLessonViewer({
                         <motion.div
                           initial={{ scaleX: 0 }}
                           animate={{ scaleX: 1 }}
-                          transition={{ delay: 0.4 }}
+                          transition={{ delay: 0.3 }}
                         >
                           <Progress 
                             value={(10 - autoplayCountdown) * 10} 
