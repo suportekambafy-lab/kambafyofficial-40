@@ -759,53 +759,6 @@ export function AppHome() {
               </CardContent>
             </Card>
 
-            {/* Daily Sales Chart */}
-            <Card className="overflow-hidden border-none shadow-sm">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <h3 className="font-semibold text-base text-foreground mb-1">Vendas Diárias</h3>
-                  <p className="text-sm text-muted-foreground">Últimos 7 dias</p>
-                </div>
-                <div className="h-56">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart 
-                      data={salesData}
-                      margin={{ top: 10, right: 10, left: -20, bottom: 10 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                      <XAxis 
-                        dataKey="date" 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11 }}
-                        height={30}
-                      />
-                      <YAxis 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11 }}
-                        width={30}
-                      />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                        labelStyle={{ color: 'hsl(var(--foreground))' }}
-                      />
-                      <Bar
-                        dataKey="sales"
-                        fill="hsl(var(--primary))"
-                        radius={[4, 4, 0, 0]}
-                        name="Vendas"
-                      />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         );
       
