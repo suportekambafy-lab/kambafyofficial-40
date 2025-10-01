@@ -61,7 +61,8 @@ export const OptimizedProductCard = memo(({
 
   return (
     <Card className={cn(
-      'h-32 transition-all duration-200 hover:shadow-md border-l-[6px] border-l-muted-foreground/20'
+      'h-32 transition-all duration-200 hover:shadow-md border-l-4',
+      isActive ? 'border-l-green-500' : 'border-l-gray-300'
     )}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
