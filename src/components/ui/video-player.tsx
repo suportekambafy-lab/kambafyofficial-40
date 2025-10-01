@@ -219,15 +219,9 @@ const VideoPlayer = ({
         setIsPlaying(false);
         onPause?.();
       } else {
-        // Verificar se a URL é válida antes de tentar reproduzir
-        if (isValidVideoUrl(src) || (embedUrl && embedUrl.includes('mediadelivery.net'))) {
-          await videoRef.current.play();
-          setIsPlaying(true);
-          onPlay?.();
-        } else {
-          console.warn('URL de vídeo inválida:', src);
-          onError?.();
-        }
+        await videoRef.current.play();
+        setIsPlaying(true);
+        onPlay?.();
       }
     } catch (error) {
       console.error('Erro ao reproduzir vídeo:', error);
