@@ -354,7 +354,7 @@ export function ModernDashboardHome() {
           icon={<DollarSign className="w-5 h-5" />}
           trend={calculateTrend(dashboardData.totalRevenue, dashboardData.previousRevenue)}
           trendUp={dashboardData.totalRevenue >= dashboardData.previousRevenue}
-          className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow duration-200"
+          className="border-l-[6px] border-l-muted-foreground/20 hover:shadow-lg transition-shadow duration-200"
           action={
             <Button
               variant="ghost"
@@ -373,7 +373,7 @@ export function ModernDashboardHome() {
           icon={<TrendingUp className="w-5 h-5" />}
           trend={calculateTrend(dashboardData.totalSales, dashboardData.previousSales)}
           trendUp={dashboardData.totalSales >= dashboardData.previousSales}
-          className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow duration-200"
+          className="border-l-[6px] border-l-muted-foreground/20 hover:shadow-lg transition-shadow duration-200"
           action={
             <Button
               variant="ghost"

@@ -186,7 +186,7 @@ export function MultipleOrderBumpManager({ productId, onSaveSuccess }: MultipleO
               orderBumps.map((orderBump) => {
                 const Icon = getBumpTypeIcon(orderBump.bump_category);
                 return (
-                  <Card key={orderBump.id} className={`border-l-4 ${orderBump.enabled ? 'border-l-green-500' : 'border-l-gray-300'}`}>
+                  <Card key={orderBump.id} className="border-l-[6px] border-l-muted-foreground/20">
                     <CardContent className="pt-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-start gap-3">
