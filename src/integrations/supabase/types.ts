@@ -702,6 +702,7 @@ export type Database = {
           created_at: string
           description: string | null
           duration: number
+          hls_url: string | null
           id: string
           is_scheduled: boolean | null
           lesson_materials: Json | null
@@ -723,6 +724,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration?: number
+          hls_url?: string | null
           id?: string
           is_scheduled?: boolean | null
           lesson_materials?: Json | null
@@ -744,6 +746,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration?: number
+          hls_url?: string | null
           id?: string
           is_scheduled?: boolean | null
           lesson_materials?: Json | null

@@ -9,6 +9,7 @@ import { Play } from 'lucide-react';
 import { Lesson } from '@/types/memberArea';
 import { LessonContentTabs } from './LessonContentTabs';
 import { LessonReleaseTimer } from '@/components/ui/lesson-release-timer';
+import VideoPlayer from '@/components/ui/video-player';
 interface ModernLessonViewerProps {
   lesson: Lesson;
   lessons: Lesson[];
@@ -80,15 +81,17 @@ export function ModernLessonViewer({
               releaseDate={new Date(lesson.scheduled_at!)} 
               lessonTitle={lesson.title}
             />
-          ) : lesson.video_url || lesson.bunny_embed_url ? (
-            <iframe
-              src={lesson.bunny_embed_url || lesson.video_url}
-              className="w-full aspect-video border-0"
-              frameBorder="0"
-              allowFullScreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              title={lesson.title}
-            />
+          ) : lesson.hls_url || lesson.video_url || lesson.bunny_embed_url ? (
+            <div className="w-full aspect-video bg-black">
+              <VideoPlayer
+                hlsUrl={lesson.hls_url}
+                embedUrl={lesson.bunny_embed_url || lesson.video_url}
+                startTime={startTime}
+                onTimeUpdate={onUpdateProgress ? (currentTime, duration) => {
+                  onUpdateProgress(lesson.id, currentTime, duration);
+                } : undefined}
+              />
+            </div>
           ) : <div className="aspect-video bg-black relative">
               {/* Video placeholder para aulas sem vídeo */}
               <div className="absolute inset-0 flex items-center justify-center">

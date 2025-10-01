@@ -48,7 +48,8 @@ const CustomSlider = ({
 
 interface VideoPlayerProps {
   src?: string;
-  embedUrl?: string; // For Bunny.net embeds
+  hlsUrl?: string; // HLS URL for native playback (preferred)
+  embedUrl?: string; // For Bunny.net embeds (fallback)
   startTime?: number; // Tempo inicial para continuar de onde parou
   onProgress?: (progress: number) => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
@@ -73,7 +74,8 @@ const isBunnyEmbedUrl = (url?: string): boolean => {
 };
 
 const VideoPlayer = ({ 
-  src, 
+  src,
+  hlsUrl,
   embedUrl,
   startTime = 0,
   onProgress,
@@ -101,12 +103,13 @@ const VideoPlayer = ({
   // Log detalhado para debugging
   useEffect(() => {
     console.log('🎬 VideoPlayer montado:', {
-      src,
+      hlsUrl,
       embedUrl,
-      isBunnyEmbed: isBunnyEmbedUrl(embedUrl),
+      src,
+      priority: hlsUrl ? 'HLS' : embedUrl ? 'iframe' : 'direct',
       timestamp: new Date().toISOString()
     });
-  }, [src, embedUrl]);
+  }, [hlsUrl, embedUrl, src]);
 
   const togglePlay = async () => {
     if (!videoRef.current) return;
@@ -231,9 +234,159 @@ const VideoPlayer = ({
     }
   };
 
-  // Se houver embedUrl, sempre usar iframe
+  // Prioridade: HLS URL > Embed URL (iframe) > Direct src
+  // Se houver HLS URL, usar player HTML5 nativo
+  if (hlsUrl) {
+    console.log('🎬 Usando HLS nativo:', hlsUrl);
+    
+    return (
+      <motion.div
+        className="relative w-full max-w-4xl mx-auto overflow-hidden bg-[#11111198] shadow-[0_0_20px_rgba(0,0,0,0.2)] backdrop-blur-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        onMouseEnter={() => setShowControls(true)}
+        onMouseLeave={() => setShowControls(false)}
+      >
+        <video
+          ref={videoRef}
+          className="w-full aspect-video object-contain bg-black"
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={() => {
+            setIsPlaying(false);
+            onEnded?.();
+          }}
+          onError={handleError}
+          onClick={togglePlay}
+          crossOrigin={crossOrigin}
+          preload="metadata"
+          controls={false}
+        >
+          <source src={hlsUrl} type="application/x-mpegURL" />
+          <source src={hlsUrl} type="application/vnd.apple.mpegurl" />
+          Seu navegador não suporta HLS.
+        </video>
+
+        <AnimatePresence>
+          {showControls && (
+            <motion.div
+              className="absolute bottom-0 mx-auto max-w-xl left-0 right-0 p-4 m-2 bg-[#11111198] backdrop-blur-md"
+              initial={{ y: 20, opacity: 0, filter: "blur(10px)" }}
+              animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+              exit={{ y: 20, opacity: 0, filter: "blur(10px)" }}
+              transition={{ duration: 0.6, ease: "circInOut", type: "spring" }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-white text-sm">
+                  {formatTime(currentTime)}
+                </span>
+                <CustomSlider
+                  value={progress}
+                  onChange={handleSeek}
+                  className="flex-1"
+                />
+                <span className="text-white text-sm">{formatTime(duration)}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                    <Button
+                      onClick={() => skipTime(-10)}
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:bg-[#111111d1] hover:text-white"
+                    >
+                      <SkipBack className="h-5 w-5" />
+                    </Button>
+                  </motion.div>
+                  
+                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                    <Button
+                      onClick={togglePlay}
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:bg-[#111111d1] hover:text-white"
+                    >
+                      {isPlaying ? (
+                        <Pause className="h-5 w-5" />
+                      ) : (
+                        <Play className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </motion.div>
+                  
+                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                    <Button
+                      onClick={() => skipTime(10)}
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:bg-[#111111d1] hover:text-white"
+                    >
+                      <SkipForward className="h-5 w-5" />
+                    </Button>
+                  </motion.div>
+                  
+                  <div className="flex items-center gap-x-1">
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        onClick={toggleMute}
+                        variant="ghost"
+                        size="icon"
+                        className="text-white hover:bg-[#111111d1] hover:text-white"
+                      >
+                        {isMuted ? (
+                          <VolumeX className="h-5 w-5" />
+                        ) : volume > 0.5 ? (
+                          <Volume2 className="h-5 w-5" />
+                        ) : (
+                          <Volume1 className="h-5 w-5" />
+                        )}
+                      </Button>
+                    </motion.div>
+
+                    <div className="w-24">
+                      <CustomSlider
+                        value={volume * 100}
+                        onChange={handleVolumeChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {[0.5, 1, 1.5, 2].map((speed) => (
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      key={speed}
+                    >
+                      <Button
+                        onClick={() => setSpeed(speed)}
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "text-white hover:bg-[#111111d1] hover:text-white",
+                          playbackSpeed === speed && "bg-[#111111d1]"
+                        )}
+                      >
+                        {speed}x
+                      </Button>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    );
+  }
+  
+  // Se houver embedUrl, usar iframe como fallback
   if (embedUrl) {
-    console.log('🎬 Usando iframe para embed URL:', embedUrl);
+    console.log('🎬 Usando iframe (fallback) para embed URL:', embedUrl);
     
     return (
       <motion.div 

@@ -97,16 +97,20 @@ serve(async (req) => {
       const videoData = await createVideoResponse.json();
       console.log('Video created successfully:', videoData);
 
-      // Return the video data including upload URL and access key
+      // Return the video data including upload URL, embed URL, and HLS URL
       const uploadUrl = `https://video.bunnycdn.com/library/${bunnyLibraryId}/videos/${videoData.guid}`;
+      const embedUrl = `https://iframe.mediadelivery.net/embed/${bunnyLibraryId}/${videoData.guid}`;
+      const hlsUrl = `https://vz-5c879716-268.b-cdn.net/${videoData.guid}/playlist.m3u8`;
       
-      // Usar formato correto de iframe do Bunny.net
+      console.log('Generated URLs:', { embedUrl, hlsUrl });
+      
       return new Response(
         JSON.stringify({
           videoId: videoData.guid,
           uploadUrl: uploadUrl,
           accessKey: bunnyApiKey,
-          embedUrl: `https://iframe.mediadelivery.net/embed/${bunnyLibraryId}/${videoData.guid}`,
+          embedUrl: embedUrl,
+          hlsUrl: hlsUrl,
           videoData: videoData
         }),
         {

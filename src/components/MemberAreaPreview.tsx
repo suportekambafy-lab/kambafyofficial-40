@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLessonProgress } from "@/hooks/useLessonProgress";
 import { useAuth } from "@/contexts/AuthContext";
 import { MemberAreaSlideMenu } from "@/components/MemberAreaSlideMenu";
+import VideoPlayer from "@/components/ui/video-player";
 import type { Lesson, Module, MemberArea } from "@/types/memberArea";
 
 interface MemberAreaPreviewProps {
@@ -325,16 +326,16 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
               {selectedLesson ? (
                 <>
                   <div className="flex-1 bg-black relative">
-                    {!videoError ? (
-                      <iframe
-                        src={selectedLesson.bunny_embed_url || selectedLesson.video_url}
-                        className="w-full h-full border-0"
-                        frameBorder="0"
-                        allowFullScreen
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                        title={selectedLesson.title}
-                      />
-                    ) : (
+                    {!videoError && (selectedLesson.hls_url || selectedLesson.bunny_embed_url || selectedLesson.video_url) ? (
+                      <div className="w-full h-full">
+                        <VideoPlayer
+                          hlsUrl={selectedLesson.hls_url}
+                          embedUrl={selectedLesson.bunny_embed_url || selectedLesson.video_url}
+                          onError={handleVideoError}
+                          onLoadedMetadata={handleVideoLoadedMetadata}
+                        />
+                      </div>
+                    ) : videoError ? (
                       <div className="h-full flex items-center justify-center text-white">
                         <div className="text-center">
                           <AlertCircle className="h-16 w-16 mx-auto mb-4 text-red-400" />
@@ -350,7 +351,7 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
                           </Button>
                         </div>
                       </div>
-                    )}
+                    ) : null}
 
                     {/* Video Info Overlay */}
                     {!videoError && (

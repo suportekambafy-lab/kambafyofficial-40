@@ -18,6 +18,7 @@ export interface Lesson {
   title: string;
   description: string;
   video_url?: string;
+  hls_url?: string; // HLS URL for native playback
   bunny_video_id?: string;
   bunny_embed_url?: string;
   video_data?: any;
