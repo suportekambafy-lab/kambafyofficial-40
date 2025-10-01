@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { ShoppingCart, Sparkles, Tag, ArrowRight, Package } from 'lucide-react';
 import { toast } from 'sonner';
+import { useGeoLocation } from '@/hooks/useGeoLocation';
+import { formatPrice } from '@/utils/priceFormatting';
 interface MemberAreaOffer {
   id: string;
   product_id: string;
@@ -15,6 +17,7 @@ interface MemberAreaOffer {
   price: string;
   discount_percentage: number;
   enabled: boolean;
+  custom_prices?: Record<string, string>;
 }
 interface MemberAreaOffersProps {
   memberAreaId: string;
@@ -24,17 +27,37 @@ export function MemberAreaOffers({
 }: MemberAreaOffersProps) {
   const [offers, setOffers] = useState<MemberAreaOffer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { userCountry, isReady } = useGeoLocation();
   useEffect(() => {
     loadOffers();
   }, [memberAreaId]);
   const loadOffers = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('member_area_offers').select('*').eq('member_area_id', memberAreaId).eq('enabled', true).order('order_number');
+      const { data, error } = await supabase
+        .from('member_area_offers')
+        .select(`
+          *,
+          products!inner(custom_prices)
+        `)
+        .eq('member_area_id', memberAreaId)
+        .eq('enabled', true)
+        .order('order_number');
+      
       if (error) throw error;
-      setOffers(data || []);
+      
+      const offersWithCustomPrices = (data || []).map(offer => ({
+        id: offer.id,
+        product_id: offer.product_id,
+        title: offer.title,
+        description: offer.description,
+        image_url: offer.image_url,
+        price: offer.price,
+        discount_percentage: offer.discount_percentage,
+        enabled: offer.enabled,
+        custom_prices: (offer.products?.custom_prices as Record<string, string>) || {}
+      }));
+      
+      setOffers(offersWithCustomPrices);
     } catch (error) {
       console.error('Erro ao carregar ofertas:', error);
     } finally {
@@ -46,10 +69,15 @@ export function MemberAreaOffers({
     const checkoutUrl = `/checkout/${offer.product_id}`;
     window.open(checkoutUrl, '_blank');
   };
-  const calculateDiscountedPrice = (price: string, discount: number) => {
-    const numPrice = parseFloat(price.replace(/[^\d.-]/g, ''));
-    const discountedPrice = numPrice - numPrice * discount / 100;
-    return discountedPrice.toFixed(2);
+  const getFormattedPrice = (offer: MemberAreaOffer) => {
+    const priceInKZ = parseFloat(offer.price.replace(/[^\d.-]/g, ''));
+    return formatPrice(priceInKZ, userCountry, true, offer.custom_prices);
+  };
+
+  const getDiscountedPrice = (offer: MemberAreaOffer) => {
+    const priceInKZ = parseFloat(offer.price.replace(/[^\d.-]/g, ''));
+    const discountedPriceInKZ = priceInKZ - (priceInKZ * offer.discount_percentage / 100);
+    return formatPrice(discountedPriceInKZ, userCountry, true, offer.custom_prices);
   };
   if (isLoading) {
     return null;
@@ -128,15 +156,15 @@ export function MemberAreaOffers({
                         {offer.discount_percentage > 0 ? (
                           <>
                             <span className="text-xs text-gray-500 line-through">
-                              {offer.price} KZ
+                              {getFormattedPrice(offer)}
                             </span>
                             <span className="text-lg font-bold text-emerald-400">
-                              {calculateDiscountedPrice(offer.price, offer.discount_percentage)} KZ
+                              {getDiscountedPrice(offer)}
                             </span>
                           </>
                         ) : (
                           <span className="text-lg font-bold text-emerald-400">
-                            {offer.price} KZ
+                            {getFormattedPrice(offer)}
                           </span>
                         )}
                       </div>
