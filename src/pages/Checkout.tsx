@@ -2026,18 +2026,9 @@ const Checkout = () => {
                         }
 
                         if (data?.url) {
-                          console.log('🍎 Opening URL:', data.url);
-                          const newWindow = window.open(data.url, '_blank');
-                          if (!newWindow) {
-                            console.error('🍎 Pop-up blocked!');
-                            toast({
-                              title: "Pop-up bloqueado",
-                              message: "Por favor, permita pop-ups para este site",
-                              variant: "error"
-                            });
-                          } else {
-                            console.log('🍎 Window opened successfully');
-                          }
+                          console.log('🍎 Redirecionando para:', data.url);
+                          // Abrir na mesma aba para evitar bloqueio de pop-up
+                          window.location.href = data.url;
                         } else {
                           console.error('🍎 No URL in response');
                           toast({
