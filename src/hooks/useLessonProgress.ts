@@ -28,21 +28,24 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
   const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
   const [comments, setComments] = useState<Record<string, LessonComment[]>>({});
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
+  
+  // Normalizar email SEMPRE para garantir consistência entre navegadores
+  const normalizedEmail = (studentEmail || user?.email)?.toLowerCase().trim();
 
   console.log('🔧 useLessonProgress initialized:', {
     memberAreaId,
-    studentEmail,
+    normalizedEmail,
     userId: user?.id,
     hasSession: !!session,
     hasUser: !!user
   });
 
-  // Load lesson progress - carrega progresso baseado no email do estudante
+  // Load lesson progress - carrega progresso baseado no email normalizado do estudante
   const loadLessonProgress = async () => {
-    console.log('🔄 loadLessonProgress called with:', { memberAreaId, studentEmail });
+    console.log('🔄 loadLessonProgress called with:', { memberAreaId, normalizedEmail });
     
-    if (!memberAreaId || !studentEmail) {
-      console.log('❌ No memberAreaId or studentEmail provided');
+    if (!memberAreaId || !normalizedEmail) {
+      console.log('❌ No memberAreaId or normalizedEmail provided');
       return;
     }
 
@@ -53,7 +56,7 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
         .from('lesson_progress')
         .select('*')
         .eq('member_area_id', memberAreaId)
-        .eq('user_email', studentEmail);
+        .eq('user_email', normalizedEmail);
 
       if (error) throw error;
 
@@ -83,8 +86,8 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
 
   // Save lesson progress with proper conflict resolution
   const updateLessonProgress = async (lessonId: string, progressData: Partial<LessonProgress & { video_current_time?: number }>) => {
-    if (!studentEmail) {
-      console.log('Não é possível salvar progresso sem email do estudante');
+    if (!normalizedEmail) {
+      console.log('Não é possível salvar progresso sem email normalizado do estudante');
       return;
     }
 
@@ -93,7 +96,7 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
         .from('lesson_progress')
         .upsert({
           user_id: user?.id || '00000000-0000-0000-0000-000000000000',
-          user_email: studentEmail,
+          user_email: normalizedEmail,
           member_area_id: memberAreaId,
           lesson_id: lessonId,
           progress_percentage: progressData.progress_percentage || 0,
@@ -142,14 +145,14 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
 
   // Função específica para salvar progresso do vídeo (chamada frequentemente)
   const updateVideoProgress = async (lessonId: string, currentTime: number, duration: number) => {
-    if (!studentEmail || !duration || duration === 0) return;
+    if (!normalizedEmail || !duration || duration === 0) return;
 
     const progressPercentage = Math.round((currentTime / duration) * 100);
     const isCompleted = progressPercentage >= 90; // Considera completo quando assiste 90% ou mais
 
     // Salvar no banco apenas a cada 10 segundos para evitar spam
     const now = Date.now();
-    const storageKey = `video_progress_${lessonId}_${studentEmail}`;
+    const storageKey = `video_progress_${lessonId}_${normalizedEmail}`;
     const lastUpdateStr = sessionStorage.getItem(storageKey);
     const lastUpdate = lastUpdateStr ? parseInt(lastUpdateStr, 10) : 0;
     
@@ -361,16 +364,15 @@ export const useLessonProgress = (memberAreaId: string, studentEmail?: string) =
   useEffect(() => {
     console.log('🔄 useLessonProgress useEffect triggered:', {
       memberAreaId,
-      userId: user?.id,
-      studentEmail,
-      hasUser: !!user,
-      hasSession: !!session
+      normalizedEmail,
+      user: !!user,
+      session: !!session
     });
     
-    if (memberAreaId) {
+    if (memberAreaId && normalizedEmail) {
       loadLessonProgress();
     }
-  }, [memberAreaId, user, studentEmail]);
+  }, [memberAreaId, normalizedEmail]);
 
   return {
     lessonProgress,

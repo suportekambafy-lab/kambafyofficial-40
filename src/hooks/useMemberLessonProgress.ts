@@ -20,61 +20,38 @@ interface LessonComment {
   user_name: string;
 }
 
-// Hook específico para áreas de membros com autenticação regular
+// Hook específico para áreas de membros com autenticação baseada em email
 export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string) => {
   const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
   const [comments, setComments] = useState<Record<string, LessonComment[]>>({});
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
 
+  // Normalizar email SEMPRE para garantir consistência entre navegadores
+  const normalizedEmail = userEmail?.toLowerCase().trim();
+
   console.log('🔧 useMemberLessonProgress initialized:', {
     memberAreaId,
-    userEmail
+    normalizedEmail
   });
 
-  // Para áreas de membros, vamos usar localStorage por usuário
-  const getStorageKey = (lessonId: string) => `lesson_progress_${memberAreaId}_${userEmail}_${lessonId}`;
-  const getCourseStorageKey = () => `course_progress_${memberAreaId}_${userEmail}`;
-
-  // Load lesson progress from Supabase database
+  // Load lesson progress from Supabase ONLY (no localStorage)
   const loadLessonProgress = async () => {
-    console.log('🔄 loadLessonProgress called for member area:', { memberAreaId, userEmail });
+    console.log('🔄 loadLessonProgress called:', { memberAreaId, normalizedEmail });
     
-    if (!memberAreaId || !userEmail) {
-      console.log('❌ No memberAreaId or userEmail provided');
+    if (!memberAreaId || !normalizedEmail) {
+      console.log('❌ No memberAreaId or normalizedEmail provided');
       return;
     }
 
     try {
       setIsLoadingProgress(true);
       
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Try to load from Supabase using user_id OR user_email
-      let progressData = null;
-      let error = null;
-
-      if (user) {
-        console.log('✅ User authenticated, loading from Supabase by user_id');
-        const result = await supabase
-          .from('lesson_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('member_area_id', memberAreaId);
-        
-        progressData = result.data;
-        error = result.error;
-      } else if (userEmail) {
-        console.log('✅ Loading from Supabase by user_email:', userEmail);
-        const result = await supabase
-          .from('lesson_progress')
-          .select('*')
-          .eq('user_email', userEmail)
-          .eq('member_area_id', memberAreaId);
-        
-        progressData = result.data;
-        error = result.error;
-      }
+      // Load from Supabase using normalized email
+      const { data: progressData, error } = await supabase
+        .from('lesson_progress')
+        .select('*')
+        .eq('user_email', normalizedEmail)
+        .eq('member_area_id', memberAreaId);
 
       if (error) {
         console.error('Error loading progress from Supabase:', error);
@@ -87,27 +64,13 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
 
         setLessonProgress(progressMap);
         
-        // Also save to localStorage as cache
-        localStorage.setItem(getCourseStorageKey(), JSON.stringify(progressMap));
-        
         console.log('✅ Progresso carregado do Supabase:', {
           count: Object.keys(progressMap).length,
           data: progressMap
         });
-        return;
-      }
-      
-      // Fallback to localStorage if no data from Supabase
-      console.log('📦 No data from Supabase, loading from localStorage');
-      const cached = localStorage.getItem(getCourseStorageKey());
-      if (cached) {
-        try {
-          const progressMap = JSON.parse(cached);
-          setLessonProgress(progressMap);
-          console.log('✅ Progresso carregado do localStorage:', Object.keys(progressMap).length);
-        } catch (e) {
-          console.error('Error parsing cached progress:', e);
-        }
+      } else {
+        console.log('📭 Nenhum progresso encontrado no Supabase');
+        setLessonProgress({});
       }
     } catch (error) {
       console.error('Error loading lesson progress:', error);
@@ -116,18 +79,20 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
     }
   };
 
-  // Save lesson progress to Supabase database
+  // Save lesson progress to Supabase ONLY (no localStorage)
   const updateLessonProgress = async (lessonId: string, progressData: Partial<LessonProgress & { video_current_time?: number }>) => {
+    if (!normalizedEmail) {
+      console.log('Não é possível salvar progresso sem email normalizado');
+      return;
+    }
+
     console.log('💾 updateLessonProgress called:', { lessonId, progressData });
 
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
       const progressRecord = {
         lesson_id: lessonId,
-        user_id: user?.id || 'anonymous',
-        user_email: userEmail || null,
+        user_id: '00000000-0000-0000-0000-000000000000',
+        user_email: normalizedEmail,
         member_area_id: memberAreaId,
         progress_percentage: progressData.progress_percentage || lessonProgress[lessonId]?.progress_percentage || 0,
         completed: progressData.completed !== undefined ? progressData.completed : lessonProgress[lessonId]?.completed || false,
@@ -136,40 +101,36 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
         last_watched_at: new Date().toISOString()
       };
 
-      // Update local state immediately
+      // Update local state immediately for smooth UI
       const updatedProgress = {
         ...lessonProgress,
         [lessonId]: progressRecord
       };
       setLessonProgress(updatedProgress);
-      
-      // Always save to localStorage
-      localStorage.setItem(getCourseStorageKey(), JSON.stringify(updatedProgress));
 
-      // Try to save to Supabase if user is authenticated OR we have userEmail
-      if (user || userEmail) {
-        const { error } = await supabase
-          .from('lesson_progress')
-          .upsert(progressRecord, {
-            onConflict: user ? 'user_id,lesson_id,member_area_id' : 'user_email,lesson_id,member_area_id'
-          });
+      // Save to Supabase
+      const { error } = await supabase
+        .from('lesson_progress')
+        .upsert(progressRecord, {
+          onConflict: 'user_email,lesson_id,member_area_id',
+          ignoreDuplicates: false
+        });
 
-        if (error) {
-          console.error('Error saving progress to Supabase:', error);
-        } else {
-          console.log('✅ Progresso salvo no Supabase:', lessonId);
-        }
+      if (error) {
+        console.error('Error saving progress to Supabase:', error);
+        toast.error('Erro ao salvar progresso');
       } else {
-        console.log('📦 Progresso salvo apenas no localStorage (sem auth ou email)');
+        console.log('✅ Progresso salvo no Supabase:', lessonId);
       }
     } catch (error) {
       console.error('Error updating lesson progress:', error);
+      toast.error('Erro ao salvar progresso');
     }
   };
 
-  // Update video progress with throttling
+  // Update video progress with throttling (uses sessionStorage only for throttle timing)
   const updateVideoProgress = async (lessonId: string, currentTime: number, duration: number) => {
-    if (!duration || duration === 0) return;
+    if (!normalizedEmail || !duration || duration === 0) return;
 
     const progressPercentage = Math.round((currentTime / duration) * 100);
     const isCompleted = progressPercentage >= 90;
@@ -195,13 +156,14 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
       }
     }));
 
-    // Save to localStorage (throttled)
+    // Throttle Supabase saves using sessionStorage (per email)
     const now = Date.now();
-    const lastUpdateKey = `last_update_${lessonId}`;
-    const lastUpdate = parseInt(localStorage.getItem(lastUpdateKey) || '0');
+    const storageKey = `video_progress_${lessonId}_${normalizedEmail}`;
+    const lastUpdateStr = sessionStorage.getItem(storageKey);
+    const lastUpdate = lastUpdateStr ? parseInt(lastUpdateStr, 10) : 0;
     
-    if (now - lastUpdate > 5000) { // Save every 5 seconds
-      localStorage.setItem(lastUpdateKey, now.toString());
+    if (now - lastUpdate > 10000) { // Save every 10 seconds
+      sessionStorage.setItem(storageKey, now.toString());
       await updateLessonProgress(lessonId, {
         progress_percentage: progressPercentage,
         completed: isCompleted,
@@ -216,35 +178,67 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
     toast.success(`Avaliação salva: ${rating} estrelas`);
   };
 
-  // Load comments (simplified for member area)
+  // Load comments from Supabase
   const loadComments = async (lessonId: string) => {
+    if (!normalizedEmail) return;
+    
     console.log('💬 loadComments called for:', lessonId);
-    // For member areas, we'll use a simplified comment system
-    const savedComments = localStorage.getItem(`comments_${memberAreaId}_${userEmail}_${lessonId}`);
-    if (savedComments) {
-      const commentsData = JSON.parse(savedComments);
-      setComments(prev => ({ ...prev, [lessonId]: commentsData }));
+    
+    try {
+      const { data, error } = await supabase
+        .from('lesson_comments')
+        .select('*')
+        .eq('lesson_id', lessonId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading comments:', error);
+      } else if (data) {
+        const formattedComments: LessonComment[] = data.map(comment => ({
+          id: comment.id,
+          lesson_id: comment.lesson_id,
+          user_id: comment.user_id || 'member',
+          comment: comment.comment,
+          created_at: comment.created_at,
+          user_name: comment.user_name || 'Estudante'
+        }));
+        
+        setComments(prev => ({ ...prev, [lessonId]: formattedComments }));
+      }
+    } catch (error) {
+      console.error('Error loading comments:', error);
     }
   };
 
-  // Save comment (simplified for member area)
+  // Save comment to Supabase
   const saveComment = async (lessonId: string, commentText: string) => {
-    if (!commentText.trim()) return;
+    if (!normalizedEmail || !commentText.trim()) {
+      console.log('Não é possível salvar comentário sem email ou texto');
+      return;
+    }
 
-    const newComment: LessonComment = {
-      id: Date.now().toString(),
-      lesson_id: lessonId,
-      user_id: 'member',
-      comment: commentText.trim(),
-      created_at: new Date().toISOString(),
-      user_name: userEmail?.split('@')[0] || 'Estudante'
-    };
+    try {
+      const { data, error } = await supabase.functions.invoke('add-member-area-comment', {
+        body: {
+          lesson_id: lessonId,
+          user_email: normalizedEmail,
+          user_name: normalizedEmail.split('@')[0],
+          comment: commentText.trim()
+        }
+      });
 
-    const updatedComments = [newComment, ...(comments[lessonId] || [])];
-    setComments(prev => ({ ...prev, [lessonId]: updatedComments }));
-    localStorage.setItem(`comments_${memberAreaId}_${userEmail}_${lessonId}`, JSON.stringify(updatedComments));
-
-    toast.success('Comentário adicionado');
+      if (error) {
+        console.error('Error saving comment:', error);
+        toast.error('Erro ao salvar comentário');
+      } else {
+        toast.success('Comentário adicionado');
+        // Reload comments after saving
+        await loadComments(lessonId);
+      }
+    } catch (error) {
+      console.error('Error saving comment:', error);
+      toast.error('Erro ao salvar comentário');
+    }
   };
 
   // Calculate course progress
@@ -303,13 +297,13 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
   useEffect(() => {
     console.log('🔄 useMemberLessonProgress useEffect triggered:', {
       memberAreaId,
-      userEmail
+      normalizedEmail
     });
     
-    if (memberAreaId && userEmail) {
+    if (memberAreaId && normalizedEmail) {
       loadLessonProgress();
     }
-  }, [memberAreaId, userEmail]);
+  }, [memberAreaId, normalizedEmail]);
 
   return {
     lessonProgress,
