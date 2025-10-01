@@ -100,13 +100,13 @@ serve(async (req) => {
       // Return the video data including upload URL and access key
       const uploadUrl = `https://video.bunnycdn.com/library/${bunnyLibraryId}/videos/${videoData.guid}`;
       
-      // Usar domínio personalizado videos.kambafy.com para embeds
+      // Usar formato correto de iframe do Bunny.net
       return new Response(
         JSON.stringify({
           videoId: videoData.guid,
           uploadUrl: uploadUrl,
           accessKey: bunnyApiKey,
-          embedUrl: `https://videos.kambafy.com/embed/${bunnyLibraryId}/${videoData.guid}`,
+          embedUrl: `https://iframe.mediadelivery.net/embed/${bunnyLibraryId}/${videoData.guid}`,
           videoData: videoData
         }),
         {
