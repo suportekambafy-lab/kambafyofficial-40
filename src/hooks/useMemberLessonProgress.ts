@@ -100,7 +100,7 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
         progress_percentage: progressData.progress_percentage || lessonProgress[lessonId]?.progress_percentage || 0,
         completed: progressData.completed !== undefined ? progressData.completed : lessonProgress[lessonId]?.completed || false,
         rating: progressData.rating !== undefined ? progressData.rating : lessonProgress[lessonId]?.rating,
-        video_current_time: progressData.video_current_time || lessonProgress[lessonId]?.video_current_time || 0,
+        video_current_time: Math.floor(progressData.video_current_time || lessonProgress[lessonId]?.video_current_time || 0),
         last_watched_at: new Date().toISOString()
       };
 
@@ -189,7 +189,7 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
         lesson_id: lessonId,
         progress_percentage: progressPercentage,
         completed: isCompleted,
-        video_current_time: currentTime,
+        video_current_time: Math.floor(currentTime),
         last_watched_at: new Date().toISOString()
       }
     }));
