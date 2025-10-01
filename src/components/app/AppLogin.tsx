@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function AppLogin() {
@@ -44,106 +45,126 @@ export function AppLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary to-primary/80 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl p-4">
-            <img src="/kambafy-symbol.svg" alt="Kambafy" className="w-full h-full" />
+    <div className="min-h-screen bg-background flex flex-col p-4">
+      {/* Header */}
+      <div className="flex items-center justify-center py-8">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center p-2 shadow-sm">
+            <img src="/kambafy-symbol.svg" alt="Kambafy" className="w-full h-full brightness-0 invert" />
           </div>
-          <h1 className="text-white text-3xl font-bold">kambafy</h1>
-          <p className="text-white/80 text-sm mt-2">Sua plataforma de vendas</p>
+          <span className="text-2xl font-bold text-foreground">kambafy</span>
         </div>
+      </div>
 
-        {/* Form */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 shadow-2xl border border-white/20">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name (only for signup) */}
-            {isSignUp && (
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center">
+        <Card className="w-full max-w-md p-8 shadow-lg">
+          <div className="space-y-6">
+            {/* Title */}
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl font-bold text-foreground">
+                {isSignUp ? 'Criar Conta' : 'Entrar'}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {isSignUp ? 'Comece a vender online hoje' : 'Acesse sua conta de vendedor'}
+              </p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Name (only for signup) */}
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Nome completo
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Seu nome"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-white text-sm font-medium">
-                  Nome
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email
                 </Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Seu nome"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20"
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
               </div>
-            )}
 
-            {/* Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-white text-sm font-medium">
-                Email
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20"
-                  required
-                />
+              {/* Password */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Senha
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
+
+              {/* Submit */}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-primary hover:bg-primary/90"
+                size="lg"
+              >
+                {isLoading ? 'Aguarde...' : isSignUp ? 'Criar Conta' : 'Entrar'}
+              </Button>
+            </form>
+
+            {/* Toggle */}
+            <div className="text-center">
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-primary hover:underline"
+              >
+                {isSignUp ? 'Já tem conta? Entre aqui' : 'Não tem conta? Crie uma'}
+              </button>
             </div>
-
-            {/* Password */}
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-white text-sm font-medium">
-                Senha
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit */}
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-white hover:bg-white/90 text-primary py-6 text-lg font-semibold rounded-2xl shadow-lg"
-            >
-              {isLoading ? 'Aguarde...' : isSignUp ? 'Criar Conta' : 'Entrar'}
-            </Button>
-          </form>
-
-          {/* Toggle Sign Up/Login */}
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-white/80 text-sm hover:text-white underline"
-            >
-              {isSignUp ? 'Já tem conta? Entre' : 'Não tem conta? Crie uma'}
-            </button>
           </div>
-        </div>
+        </Card>
+      </div>
 
-        {/* Footer */}
-        <p className="text-center text-white/60 text-xs mt-6">
-          Kambafy © 2025
+      {/* Footer */}
+      <div className="py-6 text-center">
+        <p className="text-xs text-muted-foreground">
+          Kambafy © 2025 - Plataforma de vendas digitais
         </p>
       </div>
     </div>

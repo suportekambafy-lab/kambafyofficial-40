@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Home, BarChart3, Package, User, TrendingUp, DollarSign } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 
 export function AppHome() {
@@ -24,7 +24,6 @@ export function AppHome() {
     if (!user) return;
 
     try {
-      // Buscar produtos
       const { data: products } = await supabase
         .from('products')
         .select('id')
@@ -32,7 +31,6 @@ export function AppHome() {
 
       const productIds = products?.map(p => p.id) || [];
 
-      // Buscar vendas
       const { data: orders } = await supabase
         .from('orders')
         .select('amount, currency')
@@ -68,11 +66,12 @@ export function AppHome() {
       case 'products':
         return (
           <div className="p-6 space-y-4">
-            <h2 className="text-2xl font-bold">Produtos</h2>
-            <Card className="p-6 text-center">
-              <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">
-                Gerencie seus produtos na versão desktop
+            <h2 className="text-xl font-bold">Meus Produtos</h2>
+            <Card className="p-8 text-center">
+              <Package className="h-12 w-12 mx-auto mb-4 text-primary" />
+              <h3 className="font-semibold mb-2">Gerencie no Desktop</h3>
+              <p className="text-sm text-muted-foreground">
+                Para criar e editar produtos, acesse a versão completa no computador
               </p>
             </Card>
           </div>
@@ -81,26 +80,30 @@ export function AppHome() {
       case 'stats':
         return (
           <div className="p-6 space-y-4">
-            <h2 className="text-2xl font-bold">Estatísticas</h2>
+            <h2 className="text-xl font-bold">Estatísticas</h2>
             <div className="grid gap-4">
               <Card className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total de Vendas</p>
-                    <p className="text-3xl font-bold">{stats.totalSales}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Total de Vendas</p>
+                    <p className="text-3xl font-bold text-primary">{stats.totalSales}</p>
                   </div>
-                  <TrendingUp className="h-10 w-10 text-primary" />
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <TrendingUp className="h-6 w-6 text-primary" />
+                  </div>
                 </div>
               </Card>
               <Card className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Receita Total</p>
-                    <p className="text-2xl font-bold">
+                    <p className="text-sm text-muted-foreground mb-1">Receita Total</p>
+                    <p className="text-2xl font-bold text-primary">
                       {formatPriceForSeller(stats.totalRevenue, 'KZ')}
                     </p>
                   </div>
-                  <DollarSign className="h-10 w-10 text-primary" />
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <DollarSign className="h-6 w-6 text-primary" />
+                  </div>
                 </div>
               </Card>
             </div>
@@ -110,24 +113,27 @@ export function AppHome() {
       case 'profile':
         return (
           <div className="p-6 space-y-6">
-            <h2 className="text-2xl font-bold">Perfil</h2>
+            <h2 className="text-xl font-bold">Meu Perfil</h2>
             <Card className="p-6 space-y-4">
               <div className="flex items-center space-x-4">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                   <User className="h-8 w-8 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">{user?.email}</p>
-                  <p className="text-sm text-muted-foreground">Vendedor</p>
+                  <p className="font-semibold text-lg">{user?.email}</p>
+                  <p className="text-sm text-muted-foreground">Vendedor Kambafy</p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => signOut()}
-              >
-                Sair
-              </Button>
+              <div className="pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair da conta
+                </Button>
+              </div>
             </Card>
           </div>
         );
@@ -135,35 +141,57 @@ export function AppHome() {
       default:
         return (
           <div className="p-6 space-y-6">
-            {/* Header */}
+            {/* Welcome */}
             <div>
-              <h1 className="text-2xl font-bold">Olá! 👋</h1>
-              <p className="text-muted-foreground">Bem-vindo ao Kambafy</p>
+              <h1 className="text-2xl font-bold mb-1">Olá! 👋</h1>
+              <p className="text-muted-foreground">Bem-vindo à sua central de vendas</p>
             </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-3">
               <Card className="p-4 text-center">
-                <p className="text-2xl font-bold text-primary">{stats.totalSales}</p>
-                <p className="text-xs text-muted-foreground mt-1">Vendas</p>
+                <p className="text-2xl font-bold text-primary mb-1">{stats.totalSales}</p>
+                <p className="text-xs text-muted-foreground">Vendas</p>
               </Card>
               <Card className="p-4 text-center">
-                <p className="text-2xl font-bold text-primary">{stats.totalProducts}</p>
-                <p className="text-xs text-muted-foreground mt-1">Produtos</p>
+                <p className="text-2xl font-bold text-primary mb-1">{stats.totalProducts}</p>
+                <p className="text-xs text-muted-foreground">Produtos</p>
               </Card>
               <Card className="p-4 text-center">
-                <p className="text-lg font-bold text-primary">
-                  {formatPriceForSeller(stats.totalRevenue, 'KZ').replace(/\s/g, '')}
+                <p className="text-lg font-bold text-primary mb-1">
+                  {formatPriceForSeller(stats.totalRevenue, 'KZ').split(' ')[0]}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">Receita</p>
+                <p className="text-xs text-muted-foreground">Receita</p>
               </Card>
             </div>
 
-            {/* Recent Activity */}
+            {/* Quick Actions */}
             <Card className="p-6">
-              <h3 className="font-semibold mb-4">Atividade Recente</h3>
-              <p className="text-muted-foreground text-sm">
-                Acesse a versão desktop para ver detalhes completos
+              <h3 className="font-semibold mb-4">Acesso Rápido</h3>
+              <div className="space-y-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('stats')}
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Ver estatísticas detalhadas
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('products')}
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  Gerenciar produtos
+                </Button>
+              </div>
+            </Card>
+
+            {/* Info Card */}
+            <Card className="p-6 bg-primary/5 border-primary/20">
+              <p className="text-sm text-muted-foreground">
+                <strong>Dica:</strong> Para acessar todos os recursos, use a versão desktop do Kambafy no seu computador.
               </p>
             </Card>
           </div>
@@ -174,7 +202,7 @@ export function AppHome() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* App Bar */}
-      <div className="bg-primary text-white p-4 shadow-lg">
+      <div className="bg-primary text-primary-foreground p-4 shadow-sm sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-2">
@@ -190,49 +218,49 @@ export function AppHome() {
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg">
-        <div className="flex justify-around py-3">
+        <div className="flex justify-around py-2 px-2">
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`flex flex-col items-center space-y-1 ${
+            className={`flex flex-col items-center gap-1 flex-1 ${
               activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'
             }`}
             onClick={() => setActiveTab('home')}
           >
-            <Home className="h-6 w-6" />
+            <Home className="h-5 w-5" />
             <span className="text-xs">Início</span>
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`flex flex-col items-center space-y-1 ${
+            className={`flex flex-col items-center gap-1 flex-1 ${
               activeTab === 'stats' ? 'text-primary' : 'text-muted-foreground'
             }`}
             onClick={() => setActiveTab('stats')}
           >
-            <BarChart3 className="h-6 w-6" />
+            <BarChart3 className="h-5 w-5" />
             <span className="text-xs">Stats</span>
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`flex flex-col items-center space-y-1 ${
+            className={`flex flex-col items-center gap-1 flex-1 ${
               activeTab === 'products' ? 'text-primary' : 'text-muted-foreground'
             }`}
             onClick={() => setActiveTab('products')}
           >
-            <Package className="h-6 w-6" />
+            <Package className="h-5 w-5" />
             <span className="text-xs">Produtos</span>
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`flex flex-col items-center space-y-1 ${
+            className={`flex flex-col items-center gap-1 flex-1 ${
               activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'
             }`}
             onClick={() => setActiveTab('profile')}
           >
-            <User className="h-6 w-6" />
+            <User className="h-5 w-5" />
             <span className="text-xs">Perfil</span>
           </Button>
         </div>
