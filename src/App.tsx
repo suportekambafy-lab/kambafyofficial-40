@@ -139,7 +139,7 @@ const App = () => {
                             <Route path="/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
                             <Route path="/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
                        <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
-                        <Route path="/kambapay" element={<OptimizedRoutes.KambaPay />} />
+                        
                         
                        
                        {/* Admin Routes */}
