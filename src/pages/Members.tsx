@@ -19,6 +19,7 @@ import StudentsManager from "@/components/StudentsManager";
 import MemberAreaPreview from "@/components/MemberAreaPreview";
 import { ImageUploader } from "@/components/ImageUploader";
 import { MemberAreaCreationForm } from "@/components/MemberAreaCreationForm";
+import { MemberAreaOffersManager } from "@/components/MemberAreaOffersManager";
 import { useNavigate } from "react-router-dom";
 import type { Lesson, Module, MemberArea, ComplementaryLink, LessonMaterial } from "@/types/memberArea";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -1006,11 +1007,12 @@ export default function Members() {
         </div>
 
         <Tabs defaultValue="conteudo" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-5 h-auto">
             <TabsTrigger value="conteudo" className="text-xs md:text-sm py-2">Conteúdo</TabsTrigger>
+            <TabsTrigger value="ofertas" className="text-xs md:text-sm py-2">Ofertas</TabsTrigger>
             <TabsTrigger value="cursos" className="text-xs md:text-sm py-2">Cursos</TabsTrigger>
             <TabsTrigger value="alunos" className="text-xs md:text-sm py-2">Alunos</TabsTrigger>
-            <TabsTrigger value="configuracoes" className="text-xs md:text-sm py-2">Configurações</TabsTrigger>
+            <TabsTrigger value="configuracoes" className="text-xs md:text-sm py-2">Config</TabsTrigger>
           </TabsList>
           
           <TabsContent value="conteudo" className="space-y-6">
@@ -1163,6 +1165,19 @@ export default function Members() {
                       Criar primeiro módulo
                     </Button>
                   </div>}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="ofertas" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <span className="text-sm md:text-base">🎁 Ofertas na Área de Membros</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MemberAreaOffersManager memberAreaId={selectedArea.id} userId={user.id} />
               </CardContent>
             </Card>
           </TabsContent>

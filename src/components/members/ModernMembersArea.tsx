@@ -16,6 +16,7 @@ import { ModernLessonViewer } from './ModernLessonViewer';
 import { ContinueWatching } from './ContinueWatching';
 import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { LessonComments } from './LessonComments';
+import { MemberAreaOffers } from './MemberAreaOffers';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMemberLessonProgress } from '@/hooks/useMemberLessonProgress';
@@ -768,6 +769,11 @@ export default function ModernMembersArea() {
               </motion.div>
             </div>)}
         </div>
+
+        {/* Ofertas na Área de Membros - Abaixo dos Módulos */}
+        {!selectedLesson && memberAreaId && (
+          <MemberAreaOffers memberAreaId={memberAreaId} />
+        )}
       </div>
     </div>;
 }
