@@ -89,8 +89,8 @@ export function MemberAreaOffers({
 
         {/* Carrossel de Ofertas - Estilo Netflix */}
         <div className="relative">
-          <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide scroll-smooth">
-            <div className="flex gap-6 min-w-max">
+          <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide scroll-smooth">
+            <div className="flex gap-4 min-w-max">
               {offers.map((offer, index) => (
                 <motion.div 
                   key={offer.id} 
@@ -98,11 +98,11 @@ export function MemberAreaOffers({
                   animate={{ opacity: 1, scale: 1 }} 
                   transition={{ delay: 0.1 * index }}
                   whileHover={{ scale: 1.05, y: -8 }}
-                  className="group cursor-pointer flex-shrink-0 w-80"
+                  className="group cursor-pointer flex-shrink-0 w-64"
                 >
                   <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 hover:border-emerald-500/50 transform-gpu">
                     {/* Imagem */}
-                    <div className="relative h-44 overflow-hidden bg-gradient-to-br from-emerald-500/10 to-purple-500/10">
+                    <div className="relative h-36 overflow-hidden bg-gradient-to-br from-emerald-500/10 to-purple-500/10">
                       {offer.image_url ? (
                         <img 
                           src={offer.image_url} 
@@ -111,13 +111,13 @@ export function MemberAreaOffers({
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <Package className="w-12 h-12 text-gray-600" />
+                          <Package className="w-10 h-10 text-gray-600" />
                         </div>
                       )}
                       
                       {offer.discount_percentage > 0 && (
-                        <div className="absolute top-3 right-3">
-                          <Badge className="bg-red-500 text-white font-bold shadow-lg">
+                        <div className="absolute top-2 right-2">
+                          <Badge className="bg-red-500 text-white font-bold shadow-lg text-xs">
                             -{offer.discount_percentage}%
                           </Badge>
                         </div>
@@ -125,30 +125,30 @@ export function MemberAreaOffers({
                     </div>
 
                     {/* Conteúdo */}
-                    <CardContent className="p-5">
-                      <h3 className="text-lg font-bold mb-2 text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
+                    <CardContent className="p-4">
+                      <h3 className="text-base font-bold mb-1 text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
                         {offer.title}
                       </h3>
                       
                       {offer.description && (
-                        <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+                        <p className="text-xs text-gray-400 mb-3 line-clamp-2">
                           {offer.description}
                         </p>
                       )}
 
                       {/* Preço */}
-                      <div className="flex items-center gap-2 mb-4">
+                      <div className="flex items-center gap-2 mb-3">
                         {offer.discount_percentage > 0 ? (
                           <>
                             <span className="text-xs text-gray-500 line-through">
                               {offer.price} KZ
                             </span>
-                            <span className="text-xl font-bold text-emerald-400">
+                            <span className="text-lg font-bold text-emerald-400">
                               {calculateDiscountedPrice(offer.price, offer.discount_percentage)} KZ
                             </span>
                           </>
                         ) : (
-                          <span className="text-xl font-bold text-emerald-400">
+                          <span className="text-lg font-bold text-emerald-400">
                             {offer.price} KZ
                           </span>
                         )}
@@ -157,11 +157,12 @@ export function MemberAreaOffers({
                       {/* Botão de Ação */}
                       <Button 
                         onClick={() => handleOfferClick(offer)} 
+                        size="sm"
                         className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
                       >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        <ShoppingCart className="w-3 h-3 mr-1" />
                         Ver Oferta
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </CardContent>
                   </Card>
