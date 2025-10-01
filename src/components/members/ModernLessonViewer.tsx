@@ -64,6 +64,22 @@ export function ModernLessonViewer({
   // Verificar se a aula está agendada para liberação futura
   const isScheduled = lesson.is_scheduled && lesson.scheduled_at;
   const isNotYetReleased = isScheduled && new Date(lesson.scheduled_at) > new Date();
+
+  // Derivar HLS URL do embed URL do Bunny se necessário
+  const getHlsUrl = () => {
+    if (lesson.hls_url) return lesson.hls_url;
+    
+    // Se temos um embed URL do Bunny, derivar o HLS URL
+    const embedUrl = lesson.bunny_embed_url || lesson.video_url;
+    if (embedUrl?.includes('iframe.mediadelivery.net/embed/')) {
+      const videoId = embedUrl.split('/').pop();
+      return `https://vz-5c879716-268.b-cdn.net/${videoId}/playlist.m3u8`;
+    }
+    
+    return null;
+  };
+
+  const hlsUrl = getHlsUrl();
   return <div className="space-y-4 sm:space-y-8 bg-zinc-950 w-full max-w-full overflow-x-hidden">
       {/* Video Player */}
       <motion.div initial={{
@@ -81,12 +97,12 @@ export function ModernLessonViewer({
               releaseDate={new Date(lesson.scheduled_at!)} 
               lessonTitle={lesson.title}
             />
-          ) : lesson.hls_url || lesson.video_url || lesson.bunny_embed_url ? (
+          ) : hlsUrl || lesson.video_url || lesson.bunny_embed_url ? (
             <div className="w-full aspect-video bg-black">
               <VideoPlayer
                 key={lesson.id}
-                hlsUrl={lesson.hls_url}
-                embedUrl={lesson.bunny_embed_url || lesson.video_url}
+                hlsUrl={hlsUrl}
+                embedUrl={!hlsUrl ? (lesson.bunny_embed_url || lesson.video_url) : undefined}
                 startTime={startTime}
                 onTimeUpdate={onUpdateProgress ? (currentTime, duration) => {
                   onUpdateProgress(lesson.id, currentTime, duration);
