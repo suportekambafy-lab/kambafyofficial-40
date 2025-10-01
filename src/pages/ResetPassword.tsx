@@ -27,9 +27,18 @@ const ResetPassword = () => {
     const setupSession = async () => {
       console.log('🔍 URL completa:', window.location.href);
       console.log('🔍 Hash:', window.location.hash);
-      console.log('🔍 Search:', window.location.search);
       
-      // Verificar se há erro na URL (link expirado ou inválido)
+      // PRIMEIRO: Verificar se já existe uma sessão válida (Supabase já processou o link)
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        console.log('✅ Sessão já válida, usuário pode redefinir senha');
+        setAccessToken(session.access_token);
+        setRefreshToken(session.refresh_token);
+        return;
+      }
+      
+      // Se não há sessão, verificar se há erro na URL
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const errorCode = hashParams.get('error');
       const errorDescription = hashParams.get('error_description');
@@ -45,43 +54,9 @@ const ResetPassword = () => {
         return;
       }
       
-      // Tentar extrair tokens
-      let access = hashParams.get('access_token');
-      let refresh = hashParams.get('refresh_token');
-      
-      // Se não encontrar no hash, tentar nos query params
-      if (!access || !refresh) {
-        const searchParams = new URLSearchParams(window.location.search);
-        access = searchParams.get('access_token');
-        refresh = searchParams.get('refresh_token');
-      }
-
-      setAccessToken(access);
-      setRefreshToken(refresh);
-
-      if (!access || !refresh) {
-        console.error('❌ Tokens não encontrados na URL');
-        setError('Link de redefinição inválido. Por favor, solicite um novo link de recuperação.');
-        return;
-      }
-
-      try {
-        console.log('🔑 Estabelecendo sessão com tokens...');
-        const { data, error } = await supabase.auth.setSession({
-          access_token: access,
-          refresh_token: refresh
-        });
-
-        if (error) {
-          console.error('❌ Erro ao estabelecer sessão:', error);
-          setError(`Link inválido ou expirado. Por favor, solicite um novo link.`);
-        } else {
-          console.log('✅ Sessão estabelecida com sucesso:', data);
-        }
-      } catch (err: any) {
-        console.error('❌ Erro inesperado:', err);
-        setError(`Erro inesperado. Por favor, solicite um novo link.`);
-      }
+      // Se não há sessão nem erro, o link é inválido
+      console.error('❌ Nenhuma sessão válida e nenhum token na URL');
+      setError('Link de redefinição inválido. Por favor, solicite um novo link de recuperação.');
     };
 
     setupSession();
