@@ -29,6 +29,7 @@ export function AppHome() {
     pendingBalance: 0,
     totalWithdrawn: 0
   });
+  const [withdrawalHistory, setWithdrawalHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
   const [salesData, setSalesData] = useState<any[]>([]);
@@ -348,8 +349,9 @@ export function AppHome() {
       // Buscar withdrawal_requests
       const { data: withdrawals } = await supabase
         .from('withdrawal_requests')
-        .select('amount, status')
-        .eq('user_id', user.id);
+        .select('id, amount, status, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       const now = new Date();
       let availableBalance = 0;
@@ -394,6 +396,9 @@ export function AppHome() {
         pendingBalance,
         totalWithdrawn: totalWithdrawnAmount
       });
+
+      // Buscar histórico de saques
+      setWithdrawalHistory(withdrawals || []);
 
     } catch (error) {
       console.error('Error loading financial data:', error);
@@ -705,6 +710,54 @@ export function AppHome() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Withdrawal History */}
+            <Card className="overflow-hidden border-none shadow-sm">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <h3 className="font-semibold text-base text-foreground mb-1">Histórico de Saques</h3>
+                  <p className="text-sm text-muted-foreground">Últimas solicitações</p>
+                </div>
+                
+                {withdrawalHistory.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-sm">Nenhum saque solicitado ainda</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {withdrawalHistory.slice(0, 5).map((withdrawal) => (
+                      <div key={withdrawal.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-foreground">
+                              {formatPriceForSeller(parseFloat(withdrawal.amount || '0'), 'KZ')}
+                            </span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              withdrawal.status === 'aprovado' 
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                                : withdrawal.status === 'rejeitado'
+                                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                            }`}>
+                              {withdrawal.status === 'aprovado' ? 'Aprovado' 
+                                : withdrawal.status === 'rejeitado' ? 'Rejeitado' 
+                                : 'Pendente'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(withdrawal.created_at).toLocaleDateString('pt-AO', { 
+                              day: '2-digit', 
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Daily Sales Chart */}
             <Card className="overflow-hidden border-none shadow-sm">
