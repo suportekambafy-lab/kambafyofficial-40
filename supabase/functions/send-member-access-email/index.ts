@@ -303,10 +303,11 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Member access email sent successfully:", emailResponse);
 
     // Now create Kambafy account and send panel access email
-    const newTemporaryPassword = generateTemporaryPassword();
+    // USAR A MESMA SENHA TEMPORÁRIA que foi passada ou gerar apenas uma vez
+    const passwordToUse = temporaryPassword || generateTemporaryPassword();
     
     try {
-      const accountResult = await createKambafyAccount(normalizedEmail, studentName, newTemporaryPassword);
+      const accountResult = await createKambafyAccount(normalizedEmail, studentName, passwordToUse);
       
       // Send Kambafy panel access email
       const panelEmailHtml = `
@@ -346,7 +347,7 @@ const handler = async (req: Request): Promise<Response> => {
                   </tr>
                   <tr>
                     <td style="padding: 8px 0; font-weight: 500; color: #475569;">Senha:</td>
-                    <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace; font-weight: 700; background-color: #fff; padding: 10px; border-radius: 4px;">${newTemporaryPassword}</td>
+                    <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace; font-weight: 700; background-color: #fff; padding: 10px; border-radius: 4px;">${passwordToUse}</td>
                   </tr>
                 </table>
                 ${!accountResult.exists ? `
