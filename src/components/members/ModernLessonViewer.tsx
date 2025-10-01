@@ -163,19 +163,19 @@ export function ModernLessonViewer({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/95 flex items-center justify-center z-50"
+                    className="absolute inset-0 bg-black/95 flex items-center justify-center z-50 p-4"
                   >
-                    <div className="max-w-2xl w-full p-8 text-center space-y-6">
+                    <div className="max-w-xl w-full text-center space-y-4 sm:space-y-6">
                       {/* Mensagem de conclusão */}
                       <motion.div
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.1 }}
                       >
-                        <h3 className="text-2xl font-bold text-white mb-2">
+                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
                           Aula Concluída! 🎉
                         </h3>
-                        <p className="text-gray-400">
+                        <p className="text-sm sm:text-base text-gray-400 px-2">
                           Parabéns por completar "{lesson.title}"
                         </p>
                       </motion.div>
@@ -186,15 +186,16 @@ export function ModernLessonViewer({
                           initial={{ y: 20, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
                           transition={{ delay: 0.2 }}
-                          className="bg-white/5 border border-white/10 rounded-lg p-6"
+                          className="bg-white/5 border border-white/10 rounded-lg p-4 sm:p-6"
                         >
-                          <p className="text-sm text-gray-400 mb-3">Próxima aula</p>
-                          <h4 className="text-lg font-semibold text-white mb-4">
+                          <p className="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3">Próxima aula</p>
+                          <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 line-clamp-2">
                             {nextLesson.title}
                           </h4>
-                          <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
-                            <span>Iniciando automaticamente em</span>
-                            <span className="text-2xl font-bold text-primary">
+                          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-gray-400">
+                            <span className="hidden sm:inline">Iniciando automaticamente em</span>
+                            <span className="sm:hidden">Auto-play em</span>
+                            <span className="text-xl sm:text-2xl font-bold text-primary">
                               {autoplayCountdown}s
                             </span>
                           </div>
@@ -206,26 +207,26 @@ export function ModernLessonViewer({
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.3 }}
-                        className="flex flex-col sm:flex-row gap-4 justify-center"
+                        className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
                       >
                         <Button
                           onClick={handleReplay}
                           variant="outline"
-                          size="lg"
-                          className="gap-2"
+                          size="default"
+                          className="gap-2 w-full sm:w-auto"
                         >
-                          <RotateCcw className="h-5 w-5" />
-                          Repetir Aula
+                          <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
+                          <span className="text-sm sm:text-base">Repetir Aula</span>
                         </Button>
                         
                         {nextLesson && (
                           <Button
                             onClick={handleNextLesson}
-                            size="lg"
-                            className="gap-2"
+                            size="default"
+                            className="gap-2 w-full sm:w-auto"
                           >
-                            <SkipForward className="h-5 w-5" />
-                            Próxima Aula Agora
+                            <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
+                            <span className="text-sm sm:text-base">Próxima Aula</span>
                           </Button>
                         )}
                       </motion.div>
@@ -236,7 +237,7 @@ export function ModernLessonViewer({
                           initial={{ scaleX: 0 }}
                           animate={{ scaleX: 1 }}
                           transition={{ delay: 0.4 }}
-                          className="w-full"
+                          className="w-full px-2"
                         >
                           <Progress 
                             value={(10 - autoplayCountdown) * 10} 
