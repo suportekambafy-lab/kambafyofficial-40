@@ -27,6 +27,31 @@ export function AppHome() {
   const monthlyGoal = 1000000; // 1M KZ
   const goalProgress = Math.min((stats.totalRevenue / monthlyGoal) * 100, 100);
 
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      alert('Este navegador não suporta notificações push');
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      setShowNotifications(true);
+      return;
+    }
+
+    if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        new Notification('Notificações Ativadas!', {
+          body: 'Você receberá notificações sobre suas vendas e produtos.',
+          icon: '/kambafy-symbol.svg'
+        });
+        setShowNotifications(true);
+      }
+    } else {
+      alert('Permissão de notificações negada. Habilite nas configurações do navegador.');
+    }
+  };
+
   useEffect(() => {
     loadStats();
     loadProfile();
@@ -507,7 +532,7 @@ export function AppHome() {
                 <div className="h-px bg-border my-1" />
 
                 <button
-                  onClick={() => setShowNotifications(true)}
+                  onClick={requestNotificationPermission}
                   className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
