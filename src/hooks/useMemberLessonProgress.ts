@@ -110,7 +110,7 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
       const { data, error } = await supabase
         .from('lesson_progress')
         .upsert(progressRecord, {
-          onConflict: 'user_email, lesson_id, member_area_id',
+          onConflict: 'user_email,lesson_id,member_area_id',
           ignoreDuplicates: false
         })
         .select();
