@@ -142,18 +142,19 @@ const App = () => {
                         <Route path="/kambapay" element={<OptimizedRoutes.KambaPay />} />
                         
                        
-                      {/* Admin Routes */}
-                      <Route path="/admin/login" element={<OptimizedRoutes.AdminLogin />} />
-                      <Route path="/admin" element={<AdminProtectedRoute><OptimizedRoutes.AdminDashboard /></AdminProtectedRoute>} />
-                      <Route path="/admin/withdrawals" element={<AdminProtectedRoute><OptimizedRoutes.AdminWithdrawals /></AdminProtectedRoute>} />
-                      <Route path="/admin/products" element={<AdminProtectedRoute><OptimizedRoutes.AdminProducts /></AdminProtectedRoute>} />
-                      <Route path="/admin/users" element={<AdminProtectedRoute><OptimizedRoutes.AdminUsers /></AdminProtectedRoute>} />
-                       <Route path="/admin/logs" element={<AdminProtectedRoute><OptimizedRoutes.AdminLogs /></AdminProtectedRoute>} />
-                       <Route path="/admin/sellers" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellers /></AdminProtectedRoute>} />
-                       <Route path="/admin/identity" element={<AdminProtectedRoute><OptimizedRoutes.AdminIdentityVerification /></AdminProtectedRoute>} />
-                       <Route path="/admin/partners" element={<AdminProtectedRoute><OptimizedRoutes.AdminPartners /></AdminProtectedRoute>} />
-                       <Route path="/admin/seller-reports" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellerReports /></AdminProtectedRoute>} />
-                       <Route path="/admin/payment-approvals" element={<AdminProtectedRoute><OptimizedRoutes.AdminPaymentApprovals /></AdminProtectedRoute>} />
+                       {/* Admin Routes */}
+                       <Route path="/admin/login" element={<OptimizedRoutes.AdminLogin />} />
+                       <Route path="/admin" element={<AdminProtectedRoute><OptimizedRoutes.AdminDashboard /></AdminProtectedRoute>} />
+                       <Route path="/admin/sales" element={<AdminProtectedRoute><OptimizedRoutes.AdminSales /></AdminProtectedRoute>} />
+                       <Route path="/admin/withdrawals" element={<AdminProtectedRoute><OptimizedRoutes.AdminWithdrawals /></AdminProtectedRoute>} />
+                       <Route path="/admin/products" element={<AdminProtectedRoute><OptimizedRoutes.AdminProducts /></AdminProtectedRoute>} />
+                       <Route path="/admin/users" element={<AdminProtectedRoute><OptimizedRoutes.AdminUsers /></AdminProtectedRoute>} />
+                        <Route path="/admin/logs" element={<AdminProtectedRoute><OptimizedRoutes.AdminLogs /></AdminProtectedRoute>} />
+                        <Route path="/admin/sellers" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellers /></AdminProtectedRoute>} />
+                        <Route path="/admin/identity" element={<AdminProtectedRoute><OptimizedRoutes.AdminIdentityVerification /></AdminProtectedRoute>} />
+                        <Route path="/admin/partners" element={<AdminProtectedRoute><OptimizedRoutes.AdminPartners /></AdminProtectedRoute>} />
+                        <Route path="/admin/seller-reports" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellerReports /></AdminProtectedRoute>} />
+                        <Route path="/admin/payment-approvals" element={<AdminProtectedRoute><OptimizedRoutes.AdminPaymentApprovals /></AdminProtectedRoute>} />
                       
                        {/* Partner Routes */}
                        <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />

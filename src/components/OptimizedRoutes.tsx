@@ -77,6 +77,7 @@ const SellerDashboard = createLazyWithRetry(() =>
 // Admin pages - lazy load com retry
 const AdminLogin = createLazyWithRetry(() => import('@/pages/AdminLogin'), "AdminLogin");
 const AdminDashboard = createLazyWithRetry(() => import('@/pages/AdminDashboard'), "AdminDashboard");
+const AdminSales = createLazyWithRetry(() => import('@/pages/AdminSales'), "AdminSales");
 const AdminWithdrawals = createLazyWithRetry(() => import('@/pages/AdminWithdrawals'), "AdminWithdrawals");
 const AdminProducts = createLazyWithRetry(() => import('@/pages/AdminProducts'), "AdminProducts");
 const AdminUsers = createLazyWithRetry(() => import('@/pages/AdminUsers'), "AdminUsers");
@@ -157,6 +158,7 @@ export const OptimizedRoutes = {
   SellerDashboard: withLazyLoading(SellerDashboard, 'dashboard'),
   AdminLogin: withLazyLoading(AdminLogin, 'settings'),
   AdminDashboard: withLazyLoading(AdminDashboard, 'dashboard'),
+  AdminSales: withLazyLoading(AdminSales, 'sales'),
   AdminWithdrawals: withLazyLoading(AdminWithdrawals, 'financial'),
   AdminProducts: withLazyLoading(AdminProducts, 'sales'),
   AdminUsers: withLazyLoading(AdminUsers, 'dashboard'),

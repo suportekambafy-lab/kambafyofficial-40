@@ -47,6 +47,13 @@ const menuItems = [
     description: 'Visão geral do sistema'
   },
   {
+    href: '/admin/sales',
+    label: 'Vendas',
+    icon: TrendingUp,
+    description: 'Todas as transações',
+    badge: 'transactions'
+  },
+  {
     href: '/admin/users',
     label: 'Usuários',
     icon: Users,
@@ -132,6 +139,8 @@ export default function AdminDrawer({
         return stats.total_products > 0 ? stats.total_products.toString() : undefined;
       case 'withdrawals':
         return stats.pending_withdrawals > 0 ? stats.pending_withdrawals.toString() : undefined;
+      case 'transactions':
+        return stats.total_transactions > 0 ? stats.total_transactions.toString() : undefined;
       case 'pending_transfers':
         // Esta será calculada dinamicamente na página
         return undefined;
