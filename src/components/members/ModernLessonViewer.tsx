@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Play } from 'lucide-react';
+import { Play, RotateCcw, SkipForward } from 'lucide-react';
 import { Lesson } from '@/types/memberArea';
 import { LessonContentTabs } from './LessonContentTabs';
 import { LessonReleaseTimer } from '@/components/ui/lesson-release-timer';
@@ -31,6 +31,9 @@ export function ModernLessonViewer({
   const [currentTime, setCurrentTime] = useState(0);
   const [rating, setRating] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [videoEnded, setVideoEnded] = useState(false);
+  const [autoplayCountdown, setAutoplayCountdown] = useState(10);
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Obter progresso da aula atual
   const currentProgress = lessonProgress[lesson.id];
@@ -80,6 +83,49 @@ export function ModernLessonViewer({
   };
 
   const hlsUrl = getHlsUrl();
+
+  // Gerenciar countdown quando vídeo termina
+  useEffect(() => {
+    if (videoEnded && nextLesson && autoplayCountdown > 0) {
+      countdownTimerRef.current = setTimeout(() => {
+        setAutoplayCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (videoEnded && nextLesson && autoplayCountdown === 0) {
+      onNavigateLesson(nextLesson.id);
+    }
+
+    return () => {
+      if (countdownTimerRef.current) {
+        clearTimeout(countdownTimerRef.current);
+      }
+    };
+  }, [videoEnded, autoplayCountdown, nextLesson]);
+
+  // Reset estados quando mudar de aula
+  useEffect(() => {
+    setVideoEnded(false);
+    setAutoplayCountdown(10);
+    if (countdownTimerRef.current) {
+      clearTimeout(countdownTimerRef.current);
+    }
+  }, [lesson.id]);
+
+  const handleVideoEnd = () => {
+    setVideoEnded(true);
+    setAutoplayCountdown(10);
+  };
+
+  const handleReplay = () => {
+    setVideoEnded(false);
+    setAutoplayCountdown(10);
+    window.location.reload(); // Força reload para reiniciar vídeo
+  };
+
+  const handleNextLesson = () => {
+    if (nextLesson) {
+      onNavigateLesson(nextLesson.id);
+    }
+  };
   return <div className="space-y-4 sm:space-y-8 bg-zinc-950 w-full max-w-full overflow-x-hidden">
       {/* Video Player */}
       <motion.div initial={{
@@ -98,7 +144,7 @@ export function ModernLessonViewer({
               lessonTitle={lesson.title}
             />
           ) : hlsUrl || lesson.video_url || lesson.bunny_embed_url ? (
-            <div className="w-full aspect-video bg-black">
+            <div className="w-full aspect-video bg-black relative">
               <VideoPlayer
                 key={lesson.id}
                 hlsUrl={hlsUrl}
@@ -107,7 +153,101 @@ export function ModernLessonViewer({
                 onTimeUpdate={onUpdateProgress ? (currentTime, duration) => {
                   onUpdateProgress(lesson.id, currentTime, duration);
                 } : undefined}
+                onEnded={handleVideoEnd}
               />
+              
+              {/* Overlay de fim de vídeo */}
+              <AnimatePresence>
+                {videoEnded && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-black/95 flex items-center justify-center z-50"
+                  >
+                    <div className="max-w-2xl w-full p-8 text-center space-y-6">
+                      {/* Mensagem de conclusão */}
+                      <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                      >
+                        <h3 className="text-2xl font-bold text-white mb-2">
+                          Aula Concluída! 🎉
+                        </h3>
+                        <p className="text-gray-400">
+                          Parabéns por completar "{lesson.title}"
+                        </p>
+                      </motion.div>
+
+                      {/* Próxima aula (se existir) */}
+                      {nextLesson && (
+                        <motion.div
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ delay: 0.2 }}
+                          className="bg-white/5 border border-white/10 rounded-lg p-6"
+                        >
+                          <p className="text-sm text-gray-400 mb-3">Próxima aula</p>
+                          <h4 className="text-lg font-semibold text-white mb-4">
+                            {nextLesson.title}
+                          </h4>
+                          <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                            <span>Iniciando automaticamente em</span>
+                            <span className="text-2xl font-bold text-primary">
+                              {autoplayCountdown}s
+                            </span>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Botões de ação */}
+                      <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex flex-col sm:flex-row gap-4 justify-center"
+                      >
+                        <Button
+                          onClick={handleReplay}
+                          variant="outline"
+                          size="lg"
+                          className="gap-2"
+                        >
+                          <RotateCcw className="h-5 w-5" />
+                          Repetir Aula
+                        </Button>
+                        
+                        {nextLesson && (
+                          <Button
+                            onClick={handleNextLesson}
+                            size="lg"
+                            className="gap-2"
+                          >
+                            <SkipForward className="h-5 w-5" />
+                            Próxima Aula Agora
+                          </Button>
+                        )}
+                      </motion.div>
+
+                      {/* Barra de progresso do countdown */}
+                      {nextLesson && (
+                        <motion.div
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                          transition={{ delay: 0.4 }}
+                          className="w-full"
+                        >
+                          <Progress 
+                            value={(10 - autoplayCountdown) * 10} 
+                            className="h-1"
+                          />
+                        </motion.div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ) : <div className="aspect-video bg-black relative">
               {/* Video placeholder para aulas sem vídeo */}
