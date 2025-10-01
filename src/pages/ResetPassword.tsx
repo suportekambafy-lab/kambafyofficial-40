@@ -28,17 +28,7 @@ const ResetPassword = () => {
       console.log('🔍 URL completa:', window.location.href);
       console.log('🔍 Hash:', window.location.hash);
       
-      // PRIMEIRO: Verificar se já existe uma sessão válida (Supabase já processou o link)
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        console.log('✅ Sessão já válida, usuário pode redefinir senha');
-        setAccessToken(session.access_token);
-        setRefreshToken(session.refresh_token);
-        return;
-      }
-      
-      // Se não há sessão, verificar se há erro na URL
+      // Verificar se há erro na URL primeiro
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const errorCode = hashParams.get('error');
       const errorDescription = hashParams.get('error_description');
@@ -54,8 +44,22 @@ const ResetPassword = () => {
         return;
       }
       
+      // Verificar se já existe uma sessão válida
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        console.log('✅ Sessão válida encontrada:', {
+          hasAccessToken: !!session.access_token,
+          hasRefreshToken: !!session.refresh_token,
+          expiresAt: session.expires_at
+        });
+        setAccessToken(session.access_token);
+        setRefreshToken(session.refresh_token);
+        return;
+      }
+      
       // Se não há sessão nem erro, o link é inválido
-      console.error('❌ Nenhuma sessão válida e nenhum token na URL');
+      console.error('❌ Nenhuma sessão válida encontrada');
       setError('Link de redefinição inválido. Por favor, solicite um novo link de recuperação.');
     };
 
@@ -84,11 +88,30 @@ const ResetPassword = () => {
     setError('');
 
     try {
+      console.log('🔄 Reestabelecendo sessão antes de atualizar senha...');
+      
+      // Reestabelecer a sessão antes de atualizar a senha
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      if (sessionError) {
+        console.error("❌ Erro ao reestabelecer sessão:", sessionError);
+        setError("Sessão expirada. Por favor, solicite um novo link de recuperação.");
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ Sessão reestabelecida, atualizando senha...');
+
       const { error } = await supabase.auth.updateUser({
         password: password
       });
 
       if (error) throw error;
+
+      console.log('✅ Senha atualizada com sucesso!');
 
       toast({
         variant: 'success',
@@ -103,7 +126,7 @@ const ResetPassword = () => {
       }, 2000);
 
     } catch (error: any) {
-      console.error('Erro ao definir senha:', error);
+      console.error('❌ Erro ao definir senha:', error);
       setError(error.message || 'Erro ao definir nova senha. Tente novamente.');
     } finally {
       setLoading(false);
