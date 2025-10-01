@@ -9,7 +9,20 @@ export interface HighlightedCardProps extends React.HTMLAttributes<HTMLDivElemen
 const HighlightedCard = React.forwardRef<HTMLDivElement, HighlightedCardProps>(
   ({ className, highlightColor, children, ...props }, ref) => {
     const getHighlightClasses = () => {
-      return "border-l-[6px] border-l-muted-foreground/20"
+      switch (highlightColor) {
+        case "green":
+          return "border-l-4 border-l-green-500"
+        case "yellow":
+          return "border-l-4 border-l-yellow-500"
+        case "blue":
+          return "border-l-4 border-l-blue-500"
+        case "orange":
+          return "border-l-4 border-l-orange-500"
+        case "purple":
+          return "border-l-4 border-l-purple-500"
+        default:
+          return ""
+      }
     }
 
     return (
