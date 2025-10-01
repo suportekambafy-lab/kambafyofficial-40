@@ -649,7 +649,7 @@ export type Database = {
           rating: number | null
           updated_at: string
           user_email: string | null
-          user_id: string
+          user_id: string | null
           video_current_time: number | null
         }
         Insert: {
@@ -663,7 +663,7 @@ export type Database = {
           rating?: number | null
           updated_at?: string
           user_email?: string | null
-          user_id: string
+          user_id?: string | null
           video_current_time?: number | null
         }
         Update: {
@@ -677,7 +677,7 @@ export type Database = {
           rating?: number | null
           updated_at?: string
           user_email?: string | null
-          user_id?: string
+          user_id?: string | null
           video_current_time?: number | null
         }
         Relationships: [
