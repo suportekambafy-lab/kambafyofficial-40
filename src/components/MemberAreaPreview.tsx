@@ -328,7 +328,7 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
                   <div className="flex-1 bg-black relative">
                     {!videoError ? (
                       <VideoPlayer
-                        src={selectedLesson.video_url || ''}
+                        embedUrl={selectedLesson.bunny_embed_url || selectedLesson.video_url}
                         onError={handleVideoError}
                         onLoadedMetadata={handleVideoLoadedMetadata}
                         onTimeUpdate={handleVideoTimeUpdate}

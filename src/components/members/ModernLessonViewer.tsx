@@ -82,8 +82,7 @@ export function ModernLessonViewer({
               lessonTitle={lesson.title}
             />
           ) : lesson.video_url || lesson.bunny_embed_url ? <VideoPlayer 
-              src={lesson.video_url && !lesson.video_url.includes('mediadelivery.net') ? lesson.video_url : ''} 
-              embedUrl={lesson.bunny_embed_url || (lesson.video_url?.includes('mediadelivery.net') ? lesson.video_url : undefined)} 
+              embedUrl={lesson.bunny_embed_url || lesson.video_url}
               startTime={startTime} 
               onProgress={setProgress} 
               onTimeUpdate={(currentTime, duration) => {

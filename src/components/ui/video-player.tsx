@@ -47,7 +47,7 @@ const CustomSlider = ({
 };
 
 interface VideoPlayerProps {
-  src: string;
+  src?: string;
   embedUrl?: string; // For Bunny.net embeds
   startTime?: number; // Tempo inicial para continuar de onde parou
   onProgress?: (progress: number) => void;
