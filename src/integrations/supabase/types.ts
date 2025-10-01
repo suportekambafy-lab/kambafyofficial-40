@@ -648,6 +648,7 @@ export type Database = {
           progress_percentage: number
           rating: number | null
           updated_at: string
+          user_email: string | null
           user_id: string
           video_current_time: number | null
         }
@@ -661,6 +662,7 @@ export type Database = {
           progress_percentage?: number
           rating?: number | null
           updated_at?: string
+          user_email?: string | null
           user_id: string
           video_current_time?: number | null
         }
@@ -674,6 +676,7 @@ export type Database = {
           progress_percentage?: number
           rating?: number | null
           updated_at?: string
+          user_email?: string | null
           user_id?: string
           video_current_time?: number | null
         }

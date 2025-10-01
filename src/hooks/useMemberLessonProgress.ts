@@ -50,40 +50,55 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
+      // Try to load from Supabase using user_id OR user_email
+      let progressData = null;
+      let error = null;
+
       if (user) {
-        console.log('✅ User authenticated, loading from Supabase');
-        
-        // Load progress from Supabase
-        const { data: progressData, error } = await supabase
+        console.log('✅ User authenticated, loading from Supabase by user_id');
+        const result = await supabase
           .from('lesson_progress')
           .select('*')
           .eq('user_id', user.id)
           .eq('member_area_id', memberAreaId);
+        
+        progressData = result.data;
+        error = result.error;
+      } else if (userEmail) {
+        console.log('✅ Loading from Supabase by user_email:', userEmail);
+        const result = await supabase
+          .from('lesson_progress')
+          .select('*')
+          .eq('user_email', userEmail)
+          .eq('member_area_id', memberAreaId);
+        
+        progressData = result.data;
+        error = result.error;
+      }
 
-        if (error) {
-          console.error('Error loading progress from Supabase:', error);
-        } else {
-          // Transform array to object keyed by lesson_id
-          const progressMap: Record<string, LessonProgress> = {};
-          progressData?.forEach(progress => {
-            progressMap[progress.lesson_id] = progress;
-          });
+      if (error) {
+        console.error('Error loading progress from Supabase:', error);
+      } else if (progressData && progressData.length > 0) {
+        // Transform array to object keyed by lesson_id
+        const progressMap: Record<string, LessonProgress> = {};
+        progressData.forEach(progress => {
+          progressMap[progress.lesson_id] = progress;
+        });
 
-          setLessonProgress(progressMap);
-          
-          // Also save to localStorage as cache
-          localStorage.setItem(getCourseStorageKey(), JSON.stringify(progressMap));
-          
-          console.log('✅ Progresso carregado do Supabase:', {
-            count: Object.keys(progressMap).length,
-            data: progressMap
-          });
-          return;
-        }
+        setLessonProgress(progressMap);
+        
+        // Also save to localStorage as cache
+        localStorage.setItem(getCourseStorageKey(), JSON.stringify(progressMap));
+        
+        console.log('✅ Progresso carregado do Supabase:', {
+          count: Object.keys(progressMap).length,
+          data: progressMap
+        });
+        return;
       }
       
-      // Fallback to localStorage for verified access without auth
-      console.log('📦 No auth user, loading from localStorage');
+      // Fallback to localStorage if no data from Supabase
+      console.log('📦 No data from Supabase, loading from localStorage');
       const cached = localStorage.getItem(getCourseStorageKey());
       if (cached) {
         try {
@@ -112,6 +127,7 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
       const progressRecord = {
         lesson_id: lessonId,
         user_id: user?.id || 'anonymous',
+        user_email: userEmail || null,
         member_area_id: memberAreaId,
         progress_percentage: progressData.progress_percentage || lessonProgress[lessonId]?.progress_percentage || 0,
         completed: progressData.completed !== undefined ? progressData.completed : lessonProgress[lessonId]?.completed || false,
@@ -130,12 +146,12 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
       // Always save to localStorage
       localStorage.setItem(getCourseStorageKey(), JSON.stringify(updatedProgress));
 
-      // Try to save to Supabase if user is authenticated
-      if (user) {
+      // Try to save to Supabase if user is authenticated OR we have userEmail
+      if (user || userEmail) {
         const { error } = await supabase
           .from('lesson_progress')
           .upsert(progressRecord, {
-            onConflict: 'user_id,lesson_id,member_area_id'
+            onConflict: user ? 'user_id,lesson_id,member_area_id' : 'user_email,lesson_id,member_area_id'
           });
 
         if (error) {
@@ -144,7 +160,7 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
           console.log('✅ Progresso salvo no Supabase:', lessonId);
         }
       } else {
-        console.log('📦 Progresso salvo apenas no localStorage (sem auth)');
+        console.log('📦 Progresso salvo apenas no localStorage (sem auth ou email)');
       }
     } catch (error) {
       console.error('Error updating lesson progress:', error);
