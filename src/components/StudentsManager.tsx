@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Search, UserPlus, Mail, Calendar, MoreHorizontal, ExternalLink } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -27,7 +27,6 @@ interface StudentsManagerProps {
 }
 
 export default function StudentsManager({ memberAreaId, memberAreaName }: StudentsManagerProps) {
-  const { toast } = useToast();
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,11 +52,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
         if (error) {
           console.error('Error fetching students:', error);
-          toast({
-            title: "Erro",
-            description: "Erro ao carregar estudantes",
-            variant: "destructive"
-          });
+          toast.error("Erro ao carregar estudantes");
         } else {
           setStudents(data || []);
         }
@@ -123,11 +118,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
       if (error) {
         console.error('Error adding student:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao adicionar estudante",
-          variant: "destructive"
-        });
+        toast.error("Erro ao adicionar estudante");
         return;
       }
 
@@ -172,20 +163,15 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
         if (emailError) {
           console.error('Error sending access email:', emailError);
-          toast({
-            title: "Atenção",
-            description: "Estudante adicionado, mas houve erro ao enviar email de acesso",
-            variant: "default"
-          });
+          toast.warning("Estudante adicionado, mas houve erro ao enviar email de acesso");
         }
       }
 
-      toast({
-        title: "✅ Estudante Adicionado",
-        description: isNewAccount 
-          ? "Conta criada com sucesso! Email de acesso enviado com credenciais."
-          : "Estudante adicionado! Email de acesso enviado."
-      });
+      toast.success(
+        isNewAccount 
+          ? "✅ Conta criada com sucesso! Email de acesso enviado com credenciais."
+          : "✅ Estudante adicionado! Email de acesso enviado."
+      );
       
       setFormData({ name: '', email: '' });
       setDialogOpen(false);
@@ -203,11 +189,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
     } catch (error) {
       console.error('Exception adding student:', error);
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao adicionar estudante",
-        variant: "destructive"
-      });
+      toast.error("Erro inesperado ao adicionar estudante");
     }
   };
 
@@ -257,11 +239,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
       if (memberAreaError) {
         console.error('Error fetching member area:', memberAreaError);
-        toast({
-          title: "Erro",
-          description: "Erro ao buscar dados da área de membros",
-          variant: "destructive"
-        });
+        toast.error("Erro ao buscar dados da área de membros");
         return;
       }
 
@@ -293,26 +271,17 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
       if (emailError) {
         console.error('Error sending access email:', emailError);
-        toast({
-          title: "Erro",
-          description: "Erro ao reenviar email de acesso",
-          variant: "destructive"
-        });
+        toast.error("Erro ao reenviar email de acesso");
       } else {
-        toast({
-          title: "Sucesso",
-          description: isNewAccount 
+        toast.success(
+          isNewAccount 
             ? "Conta criada e email de acesso enviado com senha temporária!"
             : "Email de acesso reenviado com sucesso!"
-        });
+        );
       }
     } catch (error) {
       console.error('Exception resending access:', error);
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao reenviar acesso",
-        variant: "destructive"
-      });
+      toast.error("Erro inesperado ao reenviar acesso");
     }
   };
 
@@ -327,17 +296,9 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
       if (error) {
         console.error('Error removing student:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao remover estudante",
-          variant: "destructive"
-        });
+        toast.error("Erro ao remover estudante");
       } else {
-        toast({
-          title: "Sucesso",
-          description: "Estudante removido com sucesso"
-        });
-        
+        toast.success("Estudante removido com sucesso");
         setStudents(prev => prev.filter(s => s.id !== studentId));
       }
     } catch (error) {
