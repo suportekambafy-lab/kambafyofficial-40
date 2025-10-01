@@ -35,6 +35,7 @@ export function ModernLessonViewer({
   const [autoplayCountdown, setAutoplayCountdown] = useState(10);
   const [videoKey, setVideoKey] = useState(0);
   const [shouldRestart, setShouldRestart] = useState(false);
+  const [isReplayMode, setIsReplayMode] = useState(false);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Obter progresso da aula atual
@@ -108,6 +109,7 @@ export function ModernLessonViewer({
     setVideoEnded(false);
     setAutoplayCountdown(10);
     setShouldRestart(false);
+    setIsReplayMode(false);
     if (countdownTimerRef.current) {
       clearTimeout(countdownTimerRef.current);
     }
@@ -122,6 +124,7 @@ export function ModernLessonViewer({
     setVideoEnded(false);
     setAutoplayCountdown(10);
     setShouldRestart(true);
+    setIsReplayMode(true);
     setVideoKey(prev => prev + 1); // Reinicia o vídeo mudando a key
     // Reset do flag após um pequeno delay
     setTimeout(() => setShouldRestart(false), 100);
@@ -156,7 +159,7 @@ export function ModernLessonViewer({
                 hlsUrl={hlsUrl}
                 embedUrl={!hlsUrl ? (lesson.bunny_embed_url || lesson.video_url) : undefined}
                 startTime={startTime}
-                onTimeUpdate={onUpdateProgress ? (currentTime, duration) => {
+                onTimeUpdate={onUpdateProgress && !isReplayMode ? (currentTime, duration) => {
                   onUpdateProgress(lesson.id, currentTime, duration);
                 } : undefined}
                 onEnded={handleVideoEnd}
