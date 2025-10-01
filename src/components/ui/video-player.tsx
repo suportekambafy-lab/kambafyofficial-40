@@ -532,7 +532,11 @@ const VideoPlayer = ({
                       <div className="space-y-1">
                         <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
                         <button
-                          onClick={() => changeQuality('auto')}
+                          onPointerDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            changeQuality('auto');
+                          }}
                           className={cn(
                             "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
                             currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70"
@@ -543,7 +547,11 @@ const VideoPlayer = ({
                         {availableQualities.map((quality) => (
                           <button
                             key={quality.height}
-                            onClick={() => changeQuality(quality.height.toString())}
+                            onPointerDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              changeQuality(quality.height.toString());
+                            }}
                             className={cn(
                               "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
                               currentQuality === quality.height.toString() 
@@ -832,7 +840,11 @@ const VideoPlayer = ({
                       <div className="space-y-1">
                         <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
                         <button
-                          onClick={() => changeQuality('auto')}
+                          onPointerDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            changeQuality('auto');
+                          }}
                           className={cn(
                             "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
                             currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70"
@@ -843,7 +855,11 @@ const VideoPlayer = ({
                         {availableQualities.map((quality) => (
                           <button
                             key={quality.height}
-                            onClick={() => changeQuality(quality.height.toString())}
+                            onPointerDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              changeQuality(quality.height.toString());
+                            }}
                             className={cn(
                               "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors",
                               currentQuality === quality.height.toString() 
