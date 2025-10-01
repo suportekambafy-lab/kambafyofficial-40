@@ -9,6 +9,7 @@ import { ArrowLeft, UserX, UserCheck, User, Calendar, Mail, Shield } from 'lucid
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { BanUserDialog } from '@/components/BanUserDialog';
+import { Send } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -33,6 +34,7 @@ export default function AdminUsers() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [sendingEmails, setSendingEmails] = useState(false);
 
   useEffect(() => {
     if (admin) {
@@ -142,6 +144,42 @@ export default function AdminUsers() {
     }
   };
 
+  const sendBulkPasswordResetEmails = async () => {
+    setSendingEmails(true);
+    
+    try {
+      console.log('Disparando emails de redefinição de senha em lote...');
+      
+      const { data, error } = await supabase.functions.invoke('send-bulk-password-reset');
+
+      if (error) {
+        console.error('Erro ao enviar emails:', error);
+        throw error;
+      }
+
+      const results = data.results;
+      
+      toast({
+        title: 'Emails Enviados',
+        description: `${results.sent} emails enviados com sucesso. ${results.failed} falharam.`,
+        variant: results.failed > 0 ? 'destructive' : 'default'
+      });
+
+      if (results.errors.length > 0) {
+        console.error('Erros ao enviar emails:', results.errors);
+      }
+    } catch (error) {
+      console.error('Error sending bulk password reset emails:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao enviar emails de redefinição de senha',
+        variant: 'destructive'
+      });
+    } finally {
+      setSendingEmails(false);
+    }
+  };
+
   const updateUserStatus = async (userId: string, banned: boolean) => {
     setProcessingId(userId);
     
@@ -206,19 +244,44 @@ export default function AdminUsers() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 hover:bg-accent"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar ao Dashboard
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Gerenciar Usuários</h1>
-            <p className="text-muted-foreground mt-1">Banir ou desbloquear contas de usuários da plataforma</p>
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/admin')}
+              className="flex items-center gap-2 hover:bg-accent"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar ao Dashboard
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-foreground">Gerenciar Usuários</h1>
+              <p className="text-muted-foreground mt-1">Banir ou desbloquear contas de usuários da plataforma</p>
+            </div>
           </div>
+
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                    Enviar Links de Redefinição de Senha
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    Envia emails para todos os usuários que precisam definir uma senha permanente
+                  </p>
+                </div>
+                <Button
+                  onClick={sendBulkPasswordResetEmails}
+                  disabled={sendingEmails}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {sendingEmails ? 'Enviando...' : 'Enviar Emails'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
