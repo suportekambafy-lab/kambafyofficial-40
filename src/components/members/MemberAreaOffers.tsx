@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { ShoppingCart, Sparkles, Tag, ArrowRight, Package } from 'lucide-react';
 import { toast } from 'sonner';
-
 interface MemberAreaOffer {
   id: string;
   product_id: string;
@@ -17,28 +16,23 @@ interface MemberAreaOffer {
   discount_percentage: number;
   enabled: boolean;
 }
-
 interface MemberAreaOffersProps {
   memberAreaId: string;
 }
-
-export function MemberAreaOffers({ memberAreaId }: MemberAreaOffersProps) {
+export function MemberAreaOffers({
+  memberAreaId
+}: MemberAreaOffersProps) {
   const [offers, setOffers] = useState<MemberAreaOffer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     loadOffers();
   }, [memberAreaId]);
-
   const loadOffers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('member_area_offers')
-        .select('*')
-        .eq('member_area_id', memberAreaId)
-        .eq('enabled', true)
-        .order('order_number');
-
+      const {
+        data,
+        error
+      } = await supabase.from('member_area_offers').select('*').eq('member_area_id', memberAreaId).eq('enabled', true).order('order_number');
       if (error) throw error;
       setOffers(data || []);
     } catch (error) {
@@ -47,18 +41,14 @@ export function MemberAreaOffers({ memberAreaId }: MemberAreaOffersProps) {
       setIsLoading(false);
     }
   };
-
   const handleOfferClick = async (offer: MemberAreaOffer) => {
     try {
       // Buscar dados completos do produto
-      const { data: product, error } = await supabase
-        .from('products')
-        .select('share_link')
-        .eq('id', offer.product_id)
-        .single();
-
+      const {
+        data: product,
+        error
+      } = await supabase.from('products').select('share_link').eq('id', offer.product_id).single();
       if (error) throw error;
-
       if (product?.share_link) {
         window.open(product.share_link, '_blank');
       } else {
@@ -69,34 +59,28 @@ export function MemberAreaOffers({ memberAreaId }: MemberAreaOffersProps) {
       toast.error('Erro ao abrir produto');
     }
   };
-
   const calculateDiscountedPrice = (price: string, discount: number) => {
     const numPrice = parseFloat(price.replace(/[^\d.-]/g, ''));
-    const discountedPrice = numPrice - (numPrice * discount / 100);
+    const discountedPrice = numPrice - numPrice * discount / 100;
     return discountedPrice.toFixed(2);
   };
-
   if (isLoading) {
     return null;
   }
-
   if (offers.length === 0) {
     return null;
   }
-
-  return (
-    <section className="py-12 px-4">
+  return <section className="py-12 px-4">
       <div className="container mx-auto max-w-6xl">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-4">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-medium text-emerald-400">Ofertas Exclusivas</span>
-          </div>
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} className="text-center mb-12">
+          
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Aproveite Nossas Ofertas
           </h2>
@@ -107,36 +91,28 @@ export function MemberAreaOffers({ memberAreaId }: MemberAreaOffersProps) {
 
         {/* Grid de Ofertas */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {offers.map((offer, index) => (
-            <motion.div
-              key={offer.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
+          {offers.map((offer, index) => <motion.div key={offer.id} initial={{
+          opacity: 0,
+          y: 20
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: index * 0.1
+        }}>
               <Card className="group overflow-hidden border-border/50 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10">
                 <CardContent className="p-0">
                   {/* Imagem */}
                   <div className="relative h-48 overflow-hidden bg-gradient-to-br from-emerald-500/10 to-purple-500/10">
-                    {offer.image_url ? (
-                      <img
-                        src={offer.image_url}
-                        alt={offer.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
+                    {offer.image_url ? <img src={offer.image_url} alt={offer.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center">
                         <Package className="w-16 h-16 text-muted-foreground/30" />
-                      </div>
-                    )}
+                      </div>}
                     
-                    {offer.discount_percentage > 0 && (
-                      <div className="absolute top-4 right-4">
+                    {offer.discount_percentage > 0 && <div className="absolute top-4 right-4">
                         <Badge className="bg-red-500 text-white font-bold shadow-lg">
                           -{offer.discount_percentage}%
                         </Badge>
-                      </div>
-                    )}
+                      </div>}
                   </div>
 
                   {/* Conteúdo */}
@@ -145,35 +121,26 @@ export function MemberAreaOffers({ memberAreaId }: MemberAreaOffersProps) {
                       {offer.title}
                     </h3>
                     
-                    {offer.description && (
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                    {offer.description && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                         {offer.description}
-                      </p>
-                    )}
+                      </p>}
 
                     {/* Preço */}
                     <div className="flex items-center gap-3 mb-4">
-                      {offer.discount_percentage > 0 ? (
-                        <>
+                      {offer.discount_percentage > 0 ? <>
                           <span className="text-sm text-muted-foreground line-through">
                             {offer.price} KZ
                           </span>
                           <span className="text-2xl font-bold text-emerald-400">
                             {calculateDiscountedPrice(offer.price, offer.discount_percentage)} KZ
                           </span>
-                        </>
-                      ) : (
-                        <span className="text-2xl font-bold text-emerald-400">
+                        </> : <span className="text-2xl font-bold text-emerald-400">
                           {offer.price} KZ
-                        </span>
-                      )}
+                        </span>}
                     </div>
 
                     {/* Botão de Ação */}
-                    <Button
-                      onClick={() => handleOfferClick(offer)}
-                      className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 group"
-                    >
+                    <Button onClick={() => handleOfferClick(offer)} className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 group">
                       <ShoppingCart className="w-4 h-4 mr-2" />
                       Ver Oferta
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -181,10 +148,8 @@ export function MemberAreaOffers({ memberAreaId }: MemberAreaOffersProps) {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
-          ))}
+            </motion.div>)}
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
