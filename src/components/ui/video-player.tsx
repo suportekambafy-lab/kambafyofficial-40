@@ -231,8 +231,8 @@ const VideoPlayer = ({
     }
   };
 
-  // Se for uma URL do Bunny.net embed ou similar, usar iframe
-  if (embedUrl && isBunnyEmbedUrl(embedUrl)) {
+  // Se houver embedUrl, sempre usar iframe
+  if (embedUrl) {
     console.log('🎬 Usando iframe para embed URL:', embedUrl);
     
     return (
