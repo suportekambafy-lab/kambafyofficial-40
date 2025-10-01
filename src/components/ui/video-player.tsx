@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, Volume2, Volume1, VolumeX, SkipForward, SkipBack } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import Hls from 'hls.js';
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -89,6 +90,7 @@ const VideoPlayer = ({
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [progress, setProgress] = useState(0);
@@ -99,11 +101,76 @@ const VideoPlayer = ({
   const [duration, setDuration] = useState(0);
   const [iframeError, setIframeError] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [hlsError, setHlsError] = useState(false);
+
+  // Carregar HLS com suporte a hls.js para navegadores que não suportam nativamente
+  useEffect(() => {
+    if (!hlsUrl || !videoRef.current) return;
+
+    const video = videoRef.current;
+    
+    // Cleanup função anterior
+    const cleanup = () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+
+    // Safari e iOS suportam HLS nativamente
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      console.log('🎬 Usando HLS nativo (Safari/iOS):', hlsUrl);
+      video.src = hlsUrl;
+      setHlsError(false);
+      
+      if (startTime && startTime > 0) {
+        video.addEventListener('loadedmetadata', () => {
+          video.currentTime = startTime;
+        }, { once: true });
+      }
+    } 
+    // Outros navegadores usam hls.js
+    else if (Hls.isSupported()) {
+      console.log('🎬 Usando hls.js (Chrome/Firefox/Edge):', hlsUrl);
+      
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 90,
+      });
+      
+      hlsRef.current = hls;
+      hls.loadSource(hlsUrl);
+      hls.attachMedia(video);
+      
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.log('✅ HLS manifest carregado com sucesso');
+        setHlsError(false);
+        if (startTime && startTime > 0) {
+          video.currentTime = startTime;
+        }
+      });
+      
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        console.error('❌ Erro HLS:', data);
+        if (data.fatal) {
+          console.error('❌ Erro fatal HLS, caindo para iframe fallback');
+          setHlsError(true);
+          cleanup();
+        }
+      });
+    } else {
+      console.warn('⚠️ HLS não suportado neste navegador, usando iframe fallback');
+      setHlsError(true);
+    }
+
+    return cleanup;
+  }, [hlsUrl, startTime]);
 
   // Auto-play quando o vídeo carregar metadados
   useEffect(() => {
     const video = videoRef.current;
-    if (video && (hlsUrl || src)) {
+    if (video && hlsUrl && !hlsError) {
       const attemptAutoplay = async () => {
         try {
           await video.play();
@@ -119,7 +186,7 @@ const VideoPlayer = ({
       video.addEventListener('loadedmetadata', attemptAutoplay);
       return () => video.removeEventListener('loadedmetadata', attemptAutoplay);
     }
-  }, [hlsUrl, src]);
+  }, [hlsUrl, hlsError]);
 
   // Log detalhado para debugging
   useEffect(() => {
@@ -127,10 +194,11 @@ const VideoPlayer = ({
       hlsUrl,
       embedUrl,
       src,
-      priority: hlsUrl ? 'HLS' : embedUrl ? 'iframe' : 'direct',
+      hlsError,
+      priority: (hlsUrl && !hlsError) ? 'HLS' : embedUrl ? 'iframe' : 'direct',
       timestamp: new Date().toISOString()
     });
-  }, [hlsUrl, embedUrl, src]);
+  }, [hlsUrl, embedUrl, src, hlsError]);
 
   const togglePlay = async () => {
     if (!videoRef.current) return;
@@ -255,10 +323,9 @@ const VideoPlayer = ({
     }
   };
 
-  // Prioridade: HLS URL > Embed URL (iframe) > Direct src
-  // Se houver HLS URL, usar player HTML5 nativo
-  if (hlsUrl) {
-    console.log('🎬 Usando HLS nativo:', hlsUrl);
+  // Prioridade: HLS URL (se não tiver erro fatal) > Embed URL (iframe) > Direct src
+  // Se houver HLS URL e não houver erro, usar player HTML5 com hls.js
+  if (hlsUrl && !hlsError) {
     
     return (
       <motion.div
