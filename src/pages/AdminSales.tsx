@@ -47,6 +47,9 @@ interface Order {
   products?: {
     name: string;
   } | null;
+  seller?: {
+    full_name: string;
+  } | null;
 }
 
 interface OrderDetails extends Order {
@@ -54,6 +57,9 @@ interface OrderDetails extends Order {
   user_id: string;
   order_bump_data: any;
   updated_at: string;
+  seller?: {
+    full_name: string;
+  } | null;
 }
 
 // Helper function to convert currency code
@@ -103,7 +109,25 @@ export default function AdminSales() {
 
       if (error) throw error;
       
-      setOrders(data || []);
+      // Obter IDs únicos de usuários/vendedores
+      const userIds = [...new Set(data?.map(order => order.user_id).filter(Boolean))];
+      
+      // Buscar profiles dos vendedores
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', userIds);
+      
+      // Criar um mapa de user_id para full_name
+      const profilesMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+      
+      // Adicionar informação do vendedor a cada pedido
+      const ordersWithSeller = data?.map(order => ({
+        ...order,
+        seller: order.user_id ? { full_name: profilesMap.get(order.user_id) || 'N/A' } : null
+      })) || [];
+      
+      setOrders(ordersWithSeller);
     } catch (error) {
       console.error('Erro ao carregar vendas:', error);
     } finally {
@@ -121,7 +145,22 @@ export default function AdminSales() {
 
       if (error) throw error;
       
-      setSelectedOrder(data);
+      // Buscar informação do vendedor se existir user_id
+      if (data?.user_id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', data.user_id)
+          .single();
+        
+        setSelectedOrder({
+          ...data,
+          seller: profile ? { full_name: profile.full_name } : null
+        });
+      } else {
+        setSelectedOrder(data);
+      }
+      
       setDetailsDialogOpen(true);
     } catch (error) {
       console.error('Erro ao carregar detalhes da venda:', error);
@@ -177,12 +216,14 @@ export default function AdminSales() {
   };
 
   const exportToCSV = () => {
-    const headers = ['ID Pedido', 'Cliente', 'Email', 'Telefone', 'Valor', 'Moeda', 'Status', 'Método', 'Data'];
+    const headers = ['ID Pedido', 'Cliente', 'Email', 'Telefone', 'Produto', 'Vendedor', 'Valor', 'Moeda', 'Status', 'Método', 'Data'];
     const rows = filteredOrders.map(order => [
       order.order_id,
       order.customer_name,
       order.customer_email,
       order.customer_phone || 'N/A',
+      order.products?.name || 'N/A',
+      order.seller?.full_name || 'N/A',
       order.amount,
       order.currency,
       order.status,
@@ -349,6 +390,7 @@ export default function AdminSales() {
                     <TableHead>Email</TableHead>
                     <TableHead>Telefone</TableHead>
                     <TableHead>Produto</TableHead>
+                    <TableHead>Vendedor</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Método</TableHead>
@@ -371,6 +413,7 @@ export default function AdminSales() {
                         <TableCell className="text-sm text-gray-600">{order.customer_email}</TableCell>
                         <TableCell className="text-sm">{order.customer_phone || 'N/A'}</TableCell>
                         <TableCell className="text-sm">{order.products?.name || 'N/A'}</TableCell>
+                        <TableCell className="text-sm font-medium">{order.seller?.full_name || 'N/A'}</TableCell>
                         <TableCell className="font-semibold">
                           {formatCurrency(parseFloat(order.amount), order.currency || 'KZ')}
                         </TableCell>
@@ -432,6 +475,10 @@ export default function AdminSales() {
                 <div>
                   <p className="text-sm text-gray-600">Telefone</p>
                   <p className="text-sm">{selectedOrder.customer_phone || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Vendedor</p>
+                  <p className="font-medium">{selectedOrder.seller?.full_name || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Método de Pagamento</p>
