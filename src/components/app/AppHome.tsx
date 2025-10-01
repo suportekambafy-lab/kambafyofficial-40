@@ -65,10 +65,12 @@ export function AppHome() {
     switch (activeTab) {
       case 'products':
         return (
-          <div className="p-6 space-y-4">
-            <h2 className="text-xl font-bold">Meus Produtos</h2>
-            <Card className="p-8 text-center">
-              <Package className="h-12 w-12 mx-auto mb-4 text-primary" />
+          <div className="p-4 space-y-4">
+            <h2 className="text-xl font-bold px-2">Meus Produtos</h2>
+            <Card className="p-8 text-center shadow-sm border border-primary/20 rounded-xl">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Package className="h-8 w-8 text-primary" />
+              </div>
               <h3 className="font-semibold mb-2">Gerencie no Desktop</h3>
               <p className="text-sm text-muted-foreground">
                 Para criar e editar produtos, acesse a versão completa no computador
@@ -79,25 +81,25 @@ export function AppHome() {
       
       case 'stats':
         return (
-          <div className="p-6 space-y-4">
-            <h2 className="text-xl font-bold">Estatísticas</h2>
+          <div className="p-4 space-y-4">
+            <h2 className="text-xl font-bold px-2">Estatísticas</h2>
             <div className="grid gap-4">
-              <Card className="p-6">
+              <Card className="p-6 shadow-sm border border-primary/20 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Total de Vendas</p>
-                    <p className="text-3xl font-bold text-primary">{stats.totalSales}</p>
+                    <p className="text-2xl font-bold text-foreground">{stats.totalSales}</p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                     <TrendingUp className="h-6 w-6 text-primary" />
                   </div>
                 </div>
               </Card>
-              <Card className="p-6">
+              <Card className="p-6 shadow-sm border border-primary/20 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Receita Total</p>
-                    <p className="text-2xl font-bold text-primary">
+                    <p className="text-2xl font-bold text-foreground">
                       {formatPriceForSeller(stats.totalRevenue, 'KZ')}
                     </p>
                   </div>
@@ -112,15 +114,15 @@ export function AppHome() {
       
       case 'profile':
         return (
-          <div className="p-6 space-y-6">
-            <h2 className="text-xl font-bold">Meu Perfil</h2>
-            <Card className="p-6 space-y-4">
+          <div className="p-4 space-y-6">
+            <h2 className="text-xl font-bold px-2">Meu Perfil</h2>
+            <Card className="p-6 space-y-4 shadow-sm border border-primary/20 rounded-xl">
               <div className="flex items-center space-x-4">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                   <User className="h-8 w-8 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-lg">{user?.email}</p>
+                  <p className="font-semibold text-base">{user?.email}</p>
                   <p className="text-sm text-muted-foreground">Vendedor Kambafy</p>
                 </div>
               </div>
@@ -140,25 +142,25 @@ export function AppHome() {
       
       default:
         return (
-          <div className="p-6 space-y-6">
+          <div className="p-4 space-y-6">
             {/* Welcome */}
-            <div>
+            <div className="px-2">
               <h1 className="text-2xl font-bold mb-1">Olá! 👋</h1>
               <p className="text-muted-foreground">Bem-vindo à sua central de vendas</p>
             </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-3">
-              <Card className="p-4 text-center">
-                <p className="text-2xl font-bold text-primary mb-1">{stats.totalSales}</p>
+              <Card className="p-4 text-center shadow-sm border border-primary/20 rounded-xl">
+                <p className="text-2xl font-bold text-foreground mb-1">{stats.totalSales}</p>
                 <p className="text-xs text-muted-foreground">Vendas</p>
               </Card>
-              <Card className="p-4 text-center">
-                <p className="text-2xl font-bold text-primary mb-1">{stats.totalProducts}</p>
+              <Card className="p-4 text-center shadow-sm border border-primary/20 rounded-xl">
+                <p className="text-2xl font-bold text-foreground mb-1">{stats.totalProducts}</p>
                 <p className="text-xs text-muted-foreground">Produtos</p>
               </Card>
-              <Card className="p-4 text-center">
-                <p className="text-lg font-bold text-primary mb-1">
+              <Card className="p-4 text-center shadow-sm border border-primary/20 rounded-xl">
+                <p className="text-lg font-bold text-foreground mb-1">
                   {formatPriceForSeller(stats.totalRevenue, 'KZ').split(' ')[0]}
                 </p>
                 <p className="text-xs text-muted-foreground">Receita</p>
@@ -166,7 +168,7 @@ export function AppHome() {
             </div>
 
             {/* Quick Actions */}
-            <Card className="p-6">
+            <Card className="p-6 shadow-sm border border-primary/20 rounded-xl">
               <h3 className="font-semibold mb-4">Acesso Rápido</h3>
               <div className="space-y-3">
                 <Button 
@@ -175,7 +177,7 @@ export function AppHome() {
                   onClick={() => setActiveTab('stats')}
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
-                  Ver estatísticas detalhadas
+                  Ver estatísticas
                 </Button>
                 <Button 
                   variant="outline" 
@@ -183,15 +185,15 @@ export function AppHome() {
                   onClick={() => setActiveTab('products')}
                 >
                   <Package className="h-4 w-4 mr-2" />
-                  Gerenciar produtos
+                  Meus produtos
                 </Button>
               </div>
             </Card>
 
             {/* Info Card */}
-            <Card className="p-6 bg-primary/5 border-primary/20">
+            <Card className="p-6 bg-primary/5 border-primary/20 shadow-sm rounded-xl">
               <p className="text-sm text-muted-foreground">
-                <strong>Dica:</strong> Para acessar todos os recursos, use a versão desktop do Kambafy no seu computador.
+                <strong className="text-foreground">Dica:</strong> Para criar produtos e acessar todos os recursos, use a versão desktop.
               </p>
             </Card>
           </div>
@@ -202,14 +204,13 @@ export function AppHome() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* App Bar */}
-      <div className="bg-primary text-primary-foreground p-4 shadow-sm sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-2">
-              <img src="/kambafy-symbol.svg" alt="Kambafy" className="w-full h-full" />
-            </div>
-            <span className="font-bold text-lg">kambafy</span>
-          </div>
+      <div className="bg-background border-b border-border p-4 sticky top-0 z-10 backdrop-blur-sm bg-background/95">
+        <div className="flex items-center justify-center">
+          <img 
+            src="/kambafy-logo-new.svg" 
+            alt="Kambafy" 
+            className="h-12 w-auto"
+          />
         </div>
       </div>
 
@@ -217,51 +218,51 @@ export function AppHome() {
       {renderContent()}
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg">
-        <div className="flex justify-around py-2 px-2">
+      <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-sm">
+        <div className="flex justify-around py-3 px-2">
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`flex flex-col items-center gap-1 flex-1 ${
+            className={`flex flex-col items-center gap-1 flex-1 h-auto py-2 ${
               activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'
             }`}
             onClick={() => setActiveTab('home')}
           >
             <Home className="h-5 w-5" />
-            <span className="text-xs">Início</span>
+            <span className="text-xs font-medium">Início</span>
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`flex flex-col items-center gap-1 flex-1 ${
+            className={`flex flex-col items-center gap-1 flex-1 h-auto py-2 ${
               activeTab === 'stats' ? 'text-primary' : 'text-muted-foreground'
             }`}
             onClick={() => setActiveTab('stats')}
           >
             <BarChart3 className="h-5 w-5" />
-            <span className="text-xs">Stats</span>
+            <span className="text-xs font-medium">Stats</span>
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`flex flex-col items-center gap-1 flex-1 ${
+            className={`flex flex-col items-center gap-1 flex-1 h-auto py-2 ${
               activeTab === 'products' ? 'text-primary' : 'text-muted-foreground'
             }`}
             onClick={() => setActiveTab('products')}
           >
             <Package className="h-5 w-5" />
-            <span className="text-xs">Produtos</span>
+            <span className="text-xs font-medium">Produtos</span>
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`flex flex-col items-center gap-1 flex-1 ${
+            className={`flex flex-col items-center gap-1 flex-1 h-auto py-2 ${
               activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'
             }`}
             onClick={() => setActiveTab('profile')}
           >
             <User className="h-5 w-5" />
-            <span className="text-xs">Perfil</span>
+            <span className="text-xs font-medium">Perfil</span>
           </Button>
         </div>
       </div>
