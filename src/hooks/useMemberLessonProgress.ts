@@ -82,11 +82,11 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
   // Save lesson progress to Supabase ONLY (no localStorage)
   const updateLessonProgress = async (lessonId: string, progressData: Partial<LessonProgress & { video_current_time?: number }>) => {
     if (!normalizedEmail) {
-      console.log('Não é possível salvar progresso sem email normalizado');
+      console.log('❌ Não é possível salvar progresso sem email normalizado');
       return;
     }
 
-    console.log('💾 updateLessonProgress called:', { lessonId, progressData });
+    console.log('💾 updateLessonProgress called:', { lessonId, progressData, normalizedEmail, memberAreaId });
 
     try {
       const progressRecord = {
@@ -101,30 +101,45 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
         last_watched_at: new Date().toISOString()
       };
 
-      // Update local state immediately for smooth UI
+      console.log('📤 Enviando para Supabase:', progressRecord);
+
+      // Save to Supabase FIRST
+      const { data, error } = await supabase
+        .from('lesson_progress')
+        .upsert(progressRecord, {
+          onConflict: 'user_email,lesson_id,member_area_id',
+          ignoreDuplicates: false
+        })
+        .select();
+
+      if (error) {
+        console.error('❌ Error saving progress to Supabase:', {
+          error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        toast.error(`Erro ao salvar progresso: ${error.message}`);
+        return;
+      }
+
+      console.log('✅ Progresso salvo no Supabase:', { lessonId, data });
+
+      // Update local state AFTER successful save
       const updatedProgress = {
         ...lessonProgress,
         [lessonId]: progressRecord
       };
       setLessonProgress(updatedProgress);
 
-      // Save to Supabase
-      const { error } = await supabase
-        .from('lesson_progress')
-        .upsert(progressRecord, {
-          onConflict: 'user_email,lesson_id,member_area_id',
-          ignoreDuplicates: false
-        });
-
-      if (error) {
-        console.error('Error saving progress to Supabase:', error);
-        toast.error('Erro ao salvar progresso');
-      } else {
-        console.log('✅ Progresso salvo no Supabase:', lessonId);
-      }
-    } catch (error) {
-      console.error('Error updating lesson progress:', error);
-      toast.error('Erro ao salvar progresso');
+    } catch (error: any) {
+      console.error('❌ Exception updating lesson progress:', {
+        error,
+        message: error?.message,
+        stack: error?.stack
+      });
+      toast.error(`Erro crítico ao salvar progresso: ${error?.message || 'Erro desconhecido'}`);
     }
   };
 
