@@ -674,7 +674,7 @@ export function AppHome() {
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden border-l-[6px] border-l-green-500 shadow-sm bg-card">
+              <Card className="overflow-hidden border-l-[6px] border-l-yellow-500 shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
