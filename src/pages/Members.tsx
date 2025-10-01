@@ -106,6 +106,8 @@ export default function Members() {
     title: '',
     description: '',
     video_url: '',
+    bunny_embed_url: '',
+    hls_url: '',
     duration: 0,
     // Duração em segundos
     status: 'draft' as 'draft' | 'published' | 'archived',
@@ -569,6 +571,8 @@ export default function Members() {
         title: formData.title.trim(),
         description: formData.description?.trim() || null,
         video_url: formData.video_url?.trim() || null,
+        bunny_embed_url: formData.bunny_embed_url?.trim() || null,
+        hls_url: formData.hls_url?.trim() || null,
         duration: formData.duration,
         // Already in seconds from form
         status: formData.status,
@@ -663,6 +667,8 @@ export default function Members() {
       title: lesson.title,
       description: lesson.description || '',
       video_url: lesson.video_url || '',
+      bunny_embed_url: (lesson as any).bunny_embed_url || '',
+      hls_url: (lesson as any).hls_url || '',
       duration: lesson.duration || 0,
       status: lesson.status,
       module_id: lesson.module_id || '',
@@ -790,6 +796,8 @@ export default function Members() {
       title: '',
       description: '',
       video_url: '',
+      bunny_embed_url: '',
+      hls_url: '',
       duration: 0,
       status: 'draft',
       module_id: 'none',
@@ -814,12 +822,14 @@ export default function Members() {
     });
     setEditingModule(null);
   };
-  const handleVideoUploaded = (videoUrl: string) => {
-    console.log('Video uploaded callback received:', videoUrl);
+  const handleVideoUploaded = (videoUrl: string, videoData?: any) => {
+    console.log('Video uploaded callback received:', videoUrl, videoData);
     setFormData(prev => {
       const newFormData = {
         ...prev,
-        video_url: videoUrl
+        video_url: videoData?.hlsUrl || videoUrl, // Priorizar HLS URL para video_url
+        bunny_embed_url: videoData?.embedUrl || videoUrl, // Guardar embed como fallback
+        hls_url: videoData?.hlsUrl || null // Guardar HLS URL explicitamente
       };
       console.log('Updated formData with video:', newFormData);
       return newFormData;
@@ -828,7 +838,7 @@ export default function Members() {
     setVideoUploaderOpen(false);
     toast({
       title: "Sucesso",
-      description: "Vídeo enviado com sucesso! Agora preencha os dados da aula."
+      description: "Vídeo enviado com sucesso! HLS ativado automaticamente."
     });
   };
   const handlePreview = () => {
@@ -901,6 +911,8 @@ export default function Members() {
       title: '',
       description: '',
       video_url: '',
+      bunny_embed_url: '',
+      hls_url: '',
       duration: 0,
       status: 'draft',
       module_id: moduleId || 'none',

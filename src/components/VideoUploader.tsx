@@ -94,8 +94,8 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       setUploadProgress(100);
       console.log('Upload successful to Bunny.net:', uploadResponse);
 
-      // Chamar callback com a URL do embed
-      onVideoUploaded(videoData.embedUrl, videoData);
+      // Chamar callback com HLS URL como prioridade e passar dados completos
+      onVideoUploaded(videoData.hlsUrl, videoData);
       
       // Resetar estados
       setSelectedFile(null);
