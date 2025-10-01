@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageCircle, Send, Clock } from 'lucide-react';
+import { MessageCircle, Send, Clock, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -21,12 +21,14 @@ interface LessonCommentsProps {
   lessonId: string;
   studentEmail?: string;
   studentName?: string;
+  memberAreaId?: string;
 }
 
 export function LessonComments({
   lessonId,
   studentEmail,
-  studentName
+  studentName,
+  memberAreaId
 }: LessonCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -34,6 +36,8 @@ export function LessonComments({
   const [replyText, setReplyText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAreaOwner, setIsAreaOwner] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   const loadComments = async () => {
     try {
@@ -80,6 +84,28 @@ export function LessonComments({
       loadComments();
     }
   }, [lessonId]);
+
+  // Verificar se o usuário atual é o dono da área de membros
+  useEffect(() => {
+    const checkAreaOwner = async () => {
+      if (!memberAreaId) return;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: memberArea } = await supabase
+        .from('member_areas')
+        .select('user_id')
+        .eq('id', memberAreaId)
+        .single();
+
+      if (memberArea && memberArea.user_id === user.id) {
+        setIsAreaOwner(true);
+      }
+    };
+
+    checkAreaOwner();
+  }, [memberAreaId]);
 
   const handleSubmitComment = async (parentCommentId?: string) => {
     const commentText = parentCommentId ? replyText : newComment;
@@ -132,6 +158,35 @@ export function LessonComments({
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('Tem certeza que deseja apagar este comentário?')) {
+      return;
+    }
+
+    setDeletingCommentId(commentId);
+    try {
+      const { error } = await supabase
+        .from('lesson_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) {
+        console.error('Erro ao apagar comentário:', error);
+        toast.error('Erro ao apagar comentário');
+        return;
+      }
+
+      // Recarregar comentários
+      await loadComments();
+      toast.success('Comentário apagado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao apagar comentário:', error);
+      toast.error('Erro ao apagar comentário');
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('pt-BR', {
       day: '2-digit',
@@ -170,16 +225,40 @@ export function LessonComments({
           
           <p className="text-sm sm:text-base text-gray-300 leading-relaxed break-words overflow-wrap-anywhere whitespace-pre-wrap">{comment.comment}</p>
           
-          {!isReply && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-              className="text-xs text-emerald-400 hover:text-emerald-300 h-7 px-2 mt-2"
-            >
-              {replyingTo === comment.id ? 'Cancelar' : 'Responder'}
-            </Button>
-          )}
+          <div className="flex gap-2 mt-2">
+            {!isReply && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                className="text-xs text-emerald-400 hover:text-emerald-300 h-7 px-2"
+              >
+                {replyingTo === comment.id ? 'Cancelar' : 'Responder'}
+              </Button>
+            )}
+            
+            {isAreaOwner && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDeleteComment(comment.id)}
+                disabled={deletingCommentId === comment.id}
+                className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 px-2"
+              >
+                {deletingCommentId === comment.id ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin mr-1" />
+                    Apagando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Apagar
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
           
           {replyingTo === comment.id && (
             <div className="mt-3 space-y-2">

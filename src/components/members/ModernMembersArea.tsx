@@ -482,7 +482,12 @@ export default function ModernMembersArea() {
                   
                   {/* Seção de comentários */}
                   <div className="w-full max-w-full overflow-x-hidden">
-                    <LessonComments lessonId={selectedLesson.id} studentEmail={user?.email} studentName={user?.email?.split('@')[0]} />
+                    <LessonComments 
+                      lessonId={selectedLesson.id} 
+                      studentEmail={user?.email} 
+                      studentName={user?.email?.split('@')[0]} 
+                      memberAreaId={memberAreaId}
+                    />
                   </div>
                 </motion.div>
               </div>
