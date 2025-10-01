@@ -25,28 +25,35 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const setupSession = async () => {
-      // Debug: mostrar toda a URL
       console.log('🔍 URL completa:', window.location.href);
       console.log('🔍 Hash:', window.location.hash);
       console.log('🔍 Search:', window.location.search);
       
-      // Tentar extrair tokens do hash primeiro
-      let access = null;
-      let refresh = null;
+      // Verificar se há erro na URL (link expirado ou inválido)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const errorCode = hashParams.get('error');
+      const errorDescription = hashParams.get('error_description');
       
-      if (window.location.hash) {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        access = hashParams.get('access_token');
-        refresh = hashParams.get('refresh_token');
-        console.log('🔍 Tokens do hash:', { access: !!access, refresh: !!refresh });
+      if (errorCode) {
+        console.error('❌ Erro na URL:', { errorCode, errorDescription });
+        
+        if (errorCode === 'access_denied' && errorDescription?.includes('expired')) {
+          setError('O link de recuperação expirou. Links de recuperação são válidos por apenas 1 hora. Por favor, solicite um novo link.');
+        } else {
+          setError(`Link inválido: ${errorDescription || errorCode}. Por favor, solicite um novo link.`);
+        }
+        return;
       }
+      
+      // Tentar extrair tokens
+      let access = hashParams.get('access_token');
+      let refresh = hashParams.get('refresh_token');
       
       // Se não encontrar no hash, tentar nos query params
       if (!access || !refresh) {
         const searchParams = new URLSearchParams(window.location.search);
         access = searchParams.get('access_token');
         refresh = searchParams.get('refresh_token');
-        console.log('🔍 Tokens dos query params:', { access: !!access, refresh: !!refresh });
       }
 
       setAccessToken(access);
@@ -54,7 +61,7 @@ const ResetPassword = () => {
 
       if (!access || !refresh) {
         console.error('❌ Tokens não encontrados na URL');
-        setError('Link de redefinição inválido ou expirado. Por favor, solicite um novo link.');
+        setError('Link de redefinição inválido. Por favor, solicite um novo link de recuperação.');
         return;
       }
 
@@ -67,13 +74,13 @@ const ResetPassword = () => {
 
         if (error) {
           console.error('❌ Erro ao estabelecer sessão:', error);
-          setError(`Erro ao validar link: ${error.message}. Por favor, solicite um novo link.`);
+          setError(`Link inválido ou expirado. Por favor, solicite um novo link.`);
         } else {
           console.log('✅ Sessão estabelecida com sucesso:', data);
         }
       } catch (err: any) {
         console.error('❌ Erro inesperado:', err);
-        setError(`Erro inesperado: ${err.message}. Por favor, solicite um novo link.`);
+        setError(`Erro inesperado. Por favor, solicite um novo link.`);
       }
     };
 
