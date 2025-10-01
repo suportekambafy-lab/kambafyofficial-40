@@ -277,13 +277,13 @@ export default function ModernMembersArea() {
     }
   };
   const handleModuleToggle = (moduleId: string) => {
-    const newExpanded = new Set(expandedModules);
-    if (newExpanded.has(moduleId)) {
-      newExpanded.delete(moduleId);
+    // Se o módulo clicado já está expandido, fechar ele
+    if (expandedModules.has(moduleId)) {
+      setExpandedModules(new Set());
     } else {
-      newExpanded.add(moduleId);
+      // Caso contrário, fechar todos e abrir apenas este
+      setExpandedModules(new Set([moduleId]));
     }
-    setExpandedModules(newExpanded);
   };
   
   const handleModuleClick = (module: Module) => {
