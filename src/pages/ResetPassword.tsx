@@ -25,36 +25,55 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const setupSession = async () => {
-      // Extrair tokens do hash da URL (Supabase envia tokens no hash, não em query params)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const access = hashParams.get('access_token');
-      const refresh = hashParams.get('refresh_token');
+      // Debug: mostrar toda a URL
+      console.log('🔍 URL completa:', window.location.href);
+      console.log('🔍 Hash:', window.location.hash);
+      console.log('🔍 Search:', window.location.search);
+      
+      // Tentar extrair tokens do hash primeiro
+      let access = null;
+      let refresh = null;
+      
+      if (window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        access = hashParams.get('access_token');
+        refresh = hashParams.get('refresh_token');
+        console.log('🔍 Tokens do hash:', { access: !!access, refresh: !!refresh });
+      }
+      
+      // Se não encontrar no hash, tentar nos query params
+      if (!access || !refresh) {
+        const searchParams = new URLSearchParams(window.location.search);
+        access = searchParams.get('access_token');
+        refresh = searchParams.get('refresh_token');
+        console.log('🔍 Tokens dos query params:', { access: !!access, refresh: !!refresh });
+      }
 
       setAccessToken(access);
       setRefreshToken(refresh);
 
       if (!access || !refresh) {
-        setError('Link de redefinição inválido ou expirado.');
+        console.error('❌ Tokens não encontrados na URL');
+        setError('Link de redefinição inválido ou expirado. Por favor, solicite um novo link.');
         return;
       }
 
       try {
         console.log('🔑 Estabelecendo sessão com tokens...');
-        // Set the session with the tokens from URL
-        const { error } = await supabase.auth.setSession({
+        const { data, error } = await supabase.auth.setSession({
           access_token: access,
           refresh_token: refresh
         });
 
         if (error) {
           console.error('❌ Erro ao estabelecer sessão:', error);
-          setError('Erro ao validar link de redefinição. Por favor, solicite um novo link.');
+          setError(`Erro ao validar link: ${error.message}. Por favor, solicite um novo link.`);
         } else {
-          console.log('✅ Sessão estabelecida com sucesso');
+          console.log('✅ Sessão estabelecida com sucesso:', data);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('❌ Erro inesperado:', err);
-        setError('Erro ao validar link de redefinição. Por favor, solicite um novo link.');
+        setError(`Erro inesperado: ${err.message}. Por favor, solicite um novo link.`);
       }
     };
 
