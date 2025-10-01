@@ -15,6 +15,7 @@ export function AppHome() {
     totalProducts: 0
   });
   const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     loadStats();
@@ -32,12 +33,16 @@ export function AppHome() {
       if (productsError) {
         console.error('Products error:', productsError);
         setStats({ totalSales: 0, totalRevenue: 0, totalProducts: 0 });
+        setProducts([]);
         setLoading(false);
         return;
       }
 
       const productIds = products?.map(p => p.id) || [];
       const activeProducts = products?.filter(p => p.status === 'Ativo') || [];
+      
+      // Store products for display
+      setProducts(products || []);
 
       if (productIds.length === 0) {
         setStats({ totalSales: 0, totalRevenue: 0, totalProducts: 0 });
@@ -81,18 +86,77 @@ export function AppHome() {
       case 'products':
         return (
           <div className="p-4 space-y-4">
-            <h2 className="text-xl font-bold px-2 text-foreground">Meus Produtos</h2>
-            <Card className="overflow-hidden border-none shadow-sm">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
-                  <Package className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="font-semibold text-base mb-2 text-foreground">Gerencie no Desktop</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Para criar e editar produtos, acesse a versão completa no computador
-                </p>
-              </CardContent>
-            </Card>
+            <div className="flex items-center justify-between px-2 mb-2">
+              <h2 className="text-xl font-bold text-foreground">Meus Produtos</h2>
+              <span className="text-sm text-muted-foreground">{products.length}</span>
+            </div>
+
+            {loading ? (
+              <Card className="overflow-hidden border-none shadow-sm">
+                <CardContent className="p-8 text-center">
+                  <p className="text-muted-foreground">Carregando...</p>
+                </CardContent>
+              </Card>
+            ) : products.length === 0 ? (
+              <Card className="overflow-hidden border-none shadow-sm">
+                <CardContent className="p-8 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
+                    <Package className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-base mb-2 text-foreground">Nenhum produto</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Você ainda não criou produtos. Use a versão desktop para começar.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {products.map((product) => (
+                  <Card key={product.id} className="overflow-hidden border-none shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        {product.product_image ? (
+                          <img 
+                            src={product.product_image} 
+                            alt={product.name}
+                            className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0">
+                            <Package className="h-6 w-6 text-primary" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base text-foreground truncate mb-1">
+                            {product.name}
+                          </h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                              product.status === 'Ativo' 
+                                ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400' 
+                                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                            }`}>
+                              {product.status}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {formatPriceForSeller(parseFloat(product.price || '0'), product.currency || 'KZ')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                <Card className="overflow-hidden border-none shadow-sm bg-primary/5">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-xs text-muted-foreground">
+                      💡 Para editar produtos, acesse a versão desktop
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         );
       
