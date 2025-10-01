@@ -4,12 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
+import { useToast } from '@/hooks/use-toast';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('home');
   const [stats, setStats] = useState({
     totalSales: 0,
@@ -22,35 +25,74 @@ export function AppHome() {
   const [profileAvatar, setProfileAvatar] = useState<string>('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [pushEnabled, setPushEnabled] = useState(false);
   
   // Meta mensal - mesma lógica da versão web
   const monthlyGoal = 1000000; // 1M KZ
   const goalProgress = Math.min((stats.totalRevenue / monthlyGoal) * 100, 100);
 
-  const requestNotificationPermission = async () => {
+  const handlePushToggle = async (enabled: boolean) => {
     if (!('Notification' in window)) {
-      alert('Este navegador não suporta notificações push');
+      toast({
+        title: "Não suportado",
+        description: "Este navegador não suporta notificações push",
+        variant: "destructive"
+      });
       return;
     }
 
-    if (Notification.permission === 'granted') {
-      setShowNotifications(true);
-      return;
-    }
-
-    if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        new Notification('Notificações Ativadas!', {
-          body: 'Você receberá notificações sobre suas vendas e produtos.',
-          icon: '/kambafy-symbol.svg'
+    if (enabled) {
+      // Ativar notificações
+      if (Notification.permission === 'granted') {
+        setPushEnabled(true);
+        toast({
+          title: "Notificações Ativadas",
+          description: "Você receberá notificações sobre vendas e produtos"
         });
-        setShowNotifications(true);
+      } else if (Notification.permission !== 'denied') {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          setPushEnabled(true);
+          new Notification('Notificações Ativadas!', {
+            body: 'Você receberá notificações sobre suas vendas e produtos.',
+            icon: '/kambafy-symbol.svg'
+          });
+          toast({
+            title: "Notificações Ativadas",
+            description: "Você receberá notificações sobre vendas e produtos"
+          });
+        } else {
+          setPushEnabled(false);
+          toast({
+            title: "Permissão Negada",
+            description: "Habilite nas configurações do navegador",
+            variant: "destructive"
+          });
+        }
+      } else {
+        setPushEnabled(false);
+        toast({
+          title: "Permissão Negada",
+          description: "Habilite nas configurações do navegador",
+          variant: "destructive"
+        });
       }
     } else {
-      alert('Permissão de notificações negada. Habilite nas configurações do navegador.');
+      // Desativar notificações
+      setPushEnabled(false);
+      toast({
+        title: "Notificações Desativadas",
+        description: "Você não receberá mais notificações push"
+      });
     }
   };
+
+  useEffect(() => {
+    // Verificar se as notificações já estão permitidas ao carregar
+    if ('Notification' in window && Notification.permission === 'granted') {
+      setPushEnabled(true);
+    }
+  }, []);
 
   useEffect(() => {
     loadStats();
@@ -531,10 +573,7 @@ export function AppHome() {
 
                 <div className="h-px bg-border my-1" />
 
-                <button
-                  onClick={requestNotificationPermission}
-                  className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
-                >
+                <div className="w-full flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                       <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -542,12 +581,15 @@ export function AppHome() {
                     <div className="text-left">
                       <p className="font-medium text-foreground">Notificações Push</p>
                       <p className="text-xs text-muted-foreground">
-                        {Notification.permission === 'granted' ? 'Ativadas' : 'Ativar notificações'}
+                        {pushEnabled ? 'Ativadas' : 'Desativadas'}
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
+                  <Switch 
+                    checked={pushEnabled} 
+                    onCheckedChange={handlePushToggle}
+                  />
+                </div>
               </CardContent>
             </Card>
 
