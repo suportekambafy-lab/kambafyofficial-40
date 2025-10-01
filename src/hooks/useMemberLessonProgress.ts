@@ -50,38 +50,50 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        console.log('❌ No authenticated user');
-        return;
+      if (user) {
+        console.log('✅ User authenticated, loading from Supabase');
+        
+        // Load progress from Supabase
+        const { data: progressData, error } = await supabase
+          .from('lesson_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('member_area_id', memberAreaId);
+
+        if (error) {
+          console.error('Error loading progress from Supabase:', error);
+        } else {
+          // Transform array to object keyed by lesson_id
+          const progressMap: Record<string, LessonProgress> = {};
+          progressData?.forEach(progress => {
+            progressMap[progress.lesson_id] = progress;
+          });
+
+          setLessonProgress(progressMap);
+          
+          // Also save to localStorage as cache
+          localStorage.setItem(getCourseStorageKey(), JSON.stringify(progressMap));
+          
+          console.log('✅ Progresso carregado do Supabase:', {
+            count: Object.keys(progressMap).length,
+            data: progressMap
+          });
+          return;
+        }
       }
-
-      // Load progress from Supabase
-      const { data: progressData, error } = await supabase
-        .from('lesson_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('member_area_id', memberAreaId);
-
-      if (error) {
-        console.error('Error loading progress from Supabase:', error);
-        return;
+      
+      // Fallback to localStorage for verified access without auth
+      console.log('📦 No auth user, loading from localStorage');
+      const cached = localStorage.getItem(getCourseStorageKey());
+      if (cached) {
+        try {
+          const progressMap = JSON.parse(cached);
+          setLessonProgress(progressMap);
+          console.log('✅ Progresso carregado do localStorage:', Object.keys(progressMap).length);
+        } catch (e) {
+          console.error('Error parsing cached progress:', e);
+        }
       }
-
-      // Transform array to object keyed by lesson_id
-      const progressMap: Record<string, LessonProgress> = {};
-      progressData?.forEach(progress => {
-        progressMap[progress.lesson_id] = progress;
-      });
-
-      setLessonProgress(progressMap);
-      
-      // Also save to localStorage as cache
-      localStorage.setItem(getCourseStorageKey(), JSON.stringify(progressMap));
-      
-      console.log('✅ Progresso carregado do Supabase:', {
-        count: Object.keys(progressMap).length,
-        data: progressMap
-      });
     } catch (error) {
       console.error('Error loading lesson progress:', error);
     } finally {
@@ -97,14 +109,9 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        console.log('❌ No authenticated user');
-        return;
-      }
-
       const progressRecord = {
         lesson_id: lessonId,
-        user_id: user.id,
+        user_id: user?.id || 'anonymous',
         member_area_id: memberAreaId,
         progress_percentage: progressData.progress_percentage || lessonProgress[lessonId]?.progress_percentage || 0,
         completed: progressData.completed !== undefined ? progressData.completed : lessonProgress[lessonId]?.completed || false,
@@ -120,30 +127,27 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
       };
       setLessonProgress(updatedProgress);
       
-      // Save to localStorage as cache
+      // Always save to localStorage
       localStorage.setItem(getCourseStorageKey(), JSON.stringify(updatedProgress));
 
-      // Save to Supabase with upsert
-      const { error } = await supabase
-        .from('lesson_progress')
-        .upsert(progressRecord, {
-          onConflict: 'user_id,lesson_id,member_area_id'
-        });
+      // Try to save to Supabase if user is authenticated
+      if (user) {
+        const { error } = await supabase
+          .from('lesson_progress')
+          .upsert(progressRecord, {
+            onConflict: 'user_id,lesson_id,member_area_id'
+          });
 
-      if (error) {
-        console.error('Error saving progress to Supabase:', error);
-        toast.error('Erro ao salvar progresso');
-        return;
+        if (error) {
+          console.error('Error saving progress to Supabase:', error);
+        } else {
+          console.log('✅ Progresso salvo no Supabase:', lessonId);
+        }
+      } else {
+        console.log('📦 Progresso salvo apenas no localStorage (sem auth)');
       }
-
-      console.log('✅ Progresso salvo no Supabase:', lessonId, {
-        progress: progressData.progress_percentage,
-        completed: progressData.completed,
-        currentTime: progressData.video_current_time
-      });
     } catch (error) {
       console.error('Error updating lesson progress:', error);
-      toast.error('Não foi possível salvar o progresso');
     }
   };
 
