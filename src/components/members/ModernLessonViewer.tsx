@@ -34,11 +34,12 @@ export function ModernLessonViewer({
   const [videoEnded, setVideoEnded] = useState(false);
   const [autoplayCountdown, setAutoplayCountdown] = useState(10);
   const [videoKey, setVideoKey] = useState(0);
+  const [shouldRestart, setShouldRestart] = useState(false);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Obter progresso da aula atual
   const currentProgress = lessonProgress[lesson.id];
-  const startTime = currentProgress?.video_current_time || 0;
+  const startTime = shouldRestart ? 0 : (currentProgress?.video_current_time || 0);
   const currentIndex = lessons.findIndex(l => l.id === lesson.id);
   const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
   const prevLesson = currentIndex > 0 ? lessons[currentIndex - 1] : null;
@@ -106,6 +107,7 @@ export function ModernLessonViewer({
   useEffect(() => {
     setVideoEnded(false);
     setAutoplayCountdown(10);
+    setShouldRestart(false);
     if (countdownTimerRef.current) {
       clearTimeout(countdownTimerRef.current);
     }
@@ -119,7 +121,10 @@ export function ModernLessonViewer({
   const handleReplay = () => {
     setVideoEnded(false);
     setAutoplayCountdown(10);
+    setShouldRestart(true);
     setVideoKey(prev => prev + 1); // Reinicia o vídeo mudando a key
+    // Reset do flag após um pequeno delay
+    setTimeout(() => setShouldRestart(false), 100);
   };
 
   const handleNextLesson = () => {
