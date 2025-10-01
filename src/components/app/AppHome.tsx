@@ -575,7 +575,7 @@ export function AppHome() {
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <Wallet className="h-5 w-5 text-primary" />
                         </div>
-                        <p className="text-sm font-medium text-muted-foreground">Saldo Disponível</p>
+                        <p className="text-sm font-medium text-muted-foreground">Disponível para Saque</p>
                       </div>
                       <div className="flex items-center gap-1 text-sm font-semibold text-primary">
                         <TrendingUp className="h-3 w-3" />
