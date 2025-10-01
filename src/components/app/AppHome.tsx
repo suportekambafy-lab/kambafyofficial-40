@@ -556,7 +556,7 @@ export function AppHome() {
             <Card className="overflow-hidden border-none shadow-sm">
               <CardContent className="p-2">
                 <button
-                  onClick={() => window.location.href = '/user-settings'}
+                  onClick={() => window.location.href = '/vendedor/configuracoes'}
                   className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
