@@ -12,6 +12,7 @@ import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut, Chevron
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
+import { useKambaLevels } from '@/hooks/useKambaLevels';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -37,9 +38,10 @@ export function AppHome() {
   });
   const [savingProfile, setSavingProfile] = useState(false);
   
-  // Meta mensal - mesma lógica da versão web
-  const monthlyGoal = 1000000; // 1M KZ
-  const goalProgress = Math.min((stats.totalRevenue / monthlyGoal) * 100, 100);
+  // Sistema de conquistas Kamba - metas dinâmicas
+  const { currentLevel, nextLevel, progress: kambaProgress } = useKambaLevels(stats.totalRevenue);
+  const monthlyGoal = nextLevel?.threshold || 1000000; // Meta dinâmica baseada no próximo nível
+  const goalProgress = kambaProgress;
 
   const handlePushToggle = async (enabled: boolean) => {
     if (!('Notification' in window)) {
@@ -250,11 +252,13 @@ export function AppHome() {
         return;
       }
 
+      // Buscar vendas EXCLUINDO member_access (mesma regra da versão web)
       const { data: orders } = await supabase
         .from('orders')
-        .select('amount, currency, created_at')
+        .select('amount, seller_commission, currency, created_at, payment_method')
         .in('product_id', productIds)
         .eq('status', 'completed')
+        .neq('payment_method', 'member_access')
         .order('created_at', { ascending: true });
 
       let totalRevenue = 0;
@@ -280,22 +284,26 @@ export function AppHome() {
       }
       
       orders?.forEach(order => {
-        const amount = parseFloat(order.amount || '0');
-        let convertedAmount = amount;
+        // Usar seller_commission se disponível, senão usar amount (mesma lógica da versão web)
+        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
         
-        if (order.currency === 'EUR') {
-          convertedAmount = amount * 833;
-        } else if (order.currency === 'MZN') {
-          convertedAmount = amount * 13;
+        // Converter para KZ se necessário (taxas de câmbio da versão web)
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053,  // 1 EUR = ~1053 KZ
+            'MZN': 14.3   // 1 MZN = ~14.3 KZ
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          amount = Math.round(amount * rate);
         }
         
-        totalRevenue += convertedAmount;
+        totalRevenue += amount;
         
         // Agrupar por dia
         const orderDate = new Date(order.created_at).toISOString().split('T')[0];
         if (dailySales[orderDate]) {
           dailySales[orderDate].sales += 1;
-          dailySales[orderDate].revenue += convertedAmount;
+          dailySales[orderDate].revenue += amount;
         }
       });
 
@@ -760,23 +768,40 @@ export function AppHome() {
               <p className="text-muted-foreground">Bem-vindo à sua central de vendas</p>
             </div>
 
-            {/* Goal Progress - Simple Style */}
+            {/* Goal Progress - Metas Dinâmicas Kamba */}
             <Card className="overflow-hidden border-none shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground mb-2">Meta: 1M KZ</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm text-muted-foreground">
+                        {nextLevel ? `Meta: ${nextLevel.name}` : 'Nível Máximo Alcançado! 🎉'}
+                      </p>
+                      {nextLevel && (
+                        <span className="text-xs text-muted-foreground">
+                          {formatPriceForSeller(monthlyGoal, 'KZ')}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-3">
                       <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-yellow-400 rounded-full transition-all duration-500"
-                          style={{ width: `${goalProgress}%` }}
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ 
+                            width: `${goalProgress}%`,
+                            backgroundColor: nextLevel?.color || '#FFD700'
+                          }}
                         />
                       </div>
-                      <span className="text-yellow-500 font-semibold text-sm min-w-[45px]">
+                      <span className="font-semibold text-sm min-w-[45px]" style={{ color: nextLevel?.color || '#FFD700' }}>
                         {goalProgress.toFixed(0)}%
                       </span>
                     </div>
+                    {currentLevel && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Nível atual: {currentLevel.name} {currentLevel.emoji}
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
