@@ -81,6 +81,7 @@ export default function ModernMembersArea() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   // Estado para dados da área quando acesso é verificado
   const [verifiedMemberArea, setVerifiedMemberArea] = useState<any>(null);
   const isMobile = useIsMobile();
@@ -270,7 +271,21 @@ export default function ModernMembersArea() {
       return;
     }
     setSelectedLesson(lesson);
+    // Expandir o módulo da aula automaticamente
+    if (lesson.module_id) {
+      setExpandedModules(prev => new Set(prev).add(lesson.module_id));
+    }
   };
+  const handleModuleToggle = (moduleId: string) => {
+    const newExpanded = new Set(expandedModules);
+    if (newExpanded.has(moduleId)) {
+      newExpanded.delete(moduleId);
+    } else {
+      newExpanded.add(moduleId);
+    }
+    setExpandedModules(newExpanded);
+  };
+  
   const handleModuleClick = (module: Module) => {
     if (!isModuleAccessible(module)) {
       toast.error("Módulo em breve", {
@@ -279,8 +294,6 @@ export default function ModernMembersArea() {
       return;
     }
     console.log('📚 Módulo selecionado:', module.title);
-    // Limpar aula selecionada ao clicar em módulo
-    setSelectedLesson(null);
     setSelectedModule(module);
   };
   const handleBackToModules = () => {
@@ -496,9 +509,9 @@ export default function ModernMembersArea() {
 
                   {modules.map(module => {
                 const moduleLessons = lessons.filter(l => l.module_id === module.id);
-                const isExpanded = moduleLessons.some(l => l.id === selectedLesson.id);
+                const isExpanded = expandedModules.has(module.id);
                 return <div key={`${module.id}-${selectedLesson?.id || 'none'}`} className="space-y-3">
-                        <div className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${isExpanded ? 'bg-emerald-500/20 border border-emerald-500/30 shadow-emerald-500/20 shadow-lg' : 'bg-gray-800 hover:bg-gray-700 hover:border-emerald-500/30 border border-transparent'}`} onClick={() => handleModuleClick(module)}>
+                        <div className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${isExpanded ? 'bg-emerald-500/20 border border-emerald-500/30 shadow-emerald-500/20 shadow-lg' : 'bg-gray-800 hover:bg-gray-700 hover:border-emerald-500/30 border border-transparent'}`} onClick={() => handleModuleToggle(module.id)}>
                           {module.cover_image_url ? <img src={module.cover_image_url} alt={module.title} className="w-12 h-12 object-cover rounded" /> : <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded flex items-center justify-center">
                               <BookOpen className="h-6 w-6 text-emerald-400" />
                             </div>}
