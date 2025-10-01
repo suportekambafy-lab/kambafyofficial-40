@@ -33,18 +33,17 @@ export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchin
   }, [memberAreaId, studentEmail]);
 
   const loadLastWatchedLesson = async () => {
-    console.log('🔍 Carregando última aula assistida...');
+    console.log('🔍 Carregando última aula assistida para:', { memberAreaId, studentEmail });
     try {
       setIsLoading(true);
       
-      // Primeiro buscar user_id do email se existir
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id;
+      // Normalizar email
+      const normalizedEmail = studentEmail.toLowerCase().trim();
       
-      console.log('👤 User data:', { userId, studentEmail });
+      console.log('📧 Buscando progresso para email:', normalizedEmail);
 
-      // Buscar o progresso mais recente - tentar primeiro com user_id, depois com join de sessions
-      let progressQuery = supabase
+      // Buscar o progresso mais recente baseado no email do estudante
+      const { data: progressData, error: progressError } = await supabase
         .from('lesson_progress')
         .select(`
           lesson_id,
@@ -59,18 +58,13 @@ export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchin
             member_area_id
           )
         `)
-        .eq('lessons.member_area_id', memberAreaId)
+        .eq('member_area_id', memberAreaId)
+        .eq('user_email', normalizedEmail)
         .gt('progress_percentage', 0)
         .lt('progress_percentage', 100)
         .order('last_watched_at', { ascending: false })
-        .limit(1);
-
-      // Se temos userId, buscar por ele
-      if (userId) {
-        progressQuery = progressQuery.eq('user_id', userId);
-      }
-
-      const { data: progressData, error: progressError } = await progressQuery.maybeSingle();
+        .limit(1)
+        .maybeSingle();
 
       console.log('📊 Progress query result:', { progressData, progressError });
 
