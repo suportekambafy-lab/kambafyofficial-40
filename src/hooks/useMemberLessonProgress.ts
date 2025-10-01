@@ -200,7 +200,8 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
     const lastUpdateStr = sessionStorage.getItem(storageKey);
     const lastUpdate = lastUpdateStr ? parseInt(lastUpdateStr, 10) : 0;
     
-    if (now - lastUpdate > 10000) { // Save every 10 seconds
+    // Salvar a cada 5 segundos ou se completou
+    if (now - lastUpdate > 5000 || isCompleted) {
       sessionStorage.setItem(storageKey, now.toString());
       await updateLessonProgress(lessonId, {
         progress_percentage: progressPercentage,
