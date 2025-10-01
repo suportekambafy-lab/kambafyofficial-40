@@ -16,9 +16,20 @@ const Index = () => {
 
   // Removido console.log desnecessário
 
-  // Se for mobile subdomain, mostrar interface mobile específica
+  // Se for mobile subdomain, redirecionar para /app
+  useEffect(() => {
+    if (currentSubdomain === 'mobile') {
+      navigate('/app', { replace: true });
+    }
+  }, [currentSubdomain, navigate]);
+
+  // Mostrar loading enquanto redireciona
   if (currentSubdomain === 'mobile') {
-    return <Mobile />;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   // Para o domínio principal (kambafy.com), sempre mostrar a landing page
