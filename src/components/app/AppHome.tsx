@@ -3,9 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut, TrendingDown } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
+import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -65,7 +65,26 @@ export function AppHome() {
         .order('created_at', { ascending: true });
 
       let totalRevenue = 0;
-      const salesByMonth: { [key: string]: number } = {};
+      const dailySales: Record<string, { date: string; sales: number; revenue: number }> = {};
+      
+      // Inicializar últimos 7 dias
+      const today = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+        const dateKey = date.toISOString().split('T')[0];
+        const displayDate = date.toLocaleDateString('pt-AO', { 
+          day: '2-digit', 
+          month: '2-digit' 
+        });
+        
+        dailySales[dateKey] = {
+          date: displayDate,
+          sales: 0,
+          revenue: 0
+        };
+      }
       
       orders?.forEach(order => {
         const amount = parseFloat(order.amount || '0');
@@ -79,19 +98,16 @@ export function AppHome() {
         
         totalRevenue += convertedAmount;
         
-        // Agrupar por mês
-        const date = new Date(order.created_at);
-        const monthKey = `${date.getMonth() + 1}/${date.getFullYear()}`;
-        salesByMonth[monthKey] = (salesByMonth[monthKey] || 0) + convertedAmount;
+        // Agrupar por dia
+        const orderDate = new Date(order.created_at).toISOString().split('T')[0];
+        if (dailySales[orderDate]) {
+          dailySales[orderDate].sales += 1;
+          dailySales[orderDate].revenue += convertedAmount;
+        }
       });
 
-      // Preparar dados do gráfico (últimos 6 meses)
-      const chartData = Object.entries(salesByMonth)
-        .slice(-6)
-        .map(([month, value]) => ({
-          month: month.split('/')[0],
-          value: Math.round(value)
-        }));
+      // Preparar dados do gráfico
+      const chartData = Object.values(dailySales);
 
       setStats({
         totalSales: orders?.length || 0,
@@ -214,45 +230,53 @@ export function AppHome() {
           <div className="p-4 space-y-4">
             <h2 className="text-xl font-bold px-2 text-foreground">Estatísticas</h2>
             
-            {/* Sales Chart */}
-            {salesData.length > 0 && (
-              <Card className="overflow-hidden border-none shadow-sm">
-                <CardContent className="p-6">
-                  <div className="mb-4">
-                    <h3 className="font-semibold text-base text-foreground mb-1">Vendas por Mês</h3>
-                    <p className="text-sm text-muted-foreground">Últimos 6 meses</p>
-                  </div>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={salesData}>
-                        <XAxis 
-                          dataKey="month" 
-                          stroke="hsl(var(--muted-foreground))"
-                          fontSize={12}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis 
-                          stroke="hsl(var(--muted-foreground))"
-                          fontSize={12}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                        />
-                        <Bar 
-                          dataKey="value" 
-                          radius={[8, 8, 0, 0]}
-                        >
-                          {salesData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill="hsl(var(--primary))" />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* Daily Sales Chart */}
+            <Card className="overflow-hidden border-none shadow-sm">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <h3 className="font-semibold text-base text-foreground mb-1">Vendas Diárias</h3>
+                  <p className="text-sm text-muted-foreground">Últimos 7 dias</p>
+                </div>
+                <div className="h-56">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart 
+                      data={salesData}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 10 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis 
+                        dataKey="date" 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11 }}
+                        height={30}
+                      />
+                      <YAxis 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11 }}
+                        width={30}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
+                        labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      />
+                      <Bar
+                        dataKey="sales"
+                        fill="hsl(var(--primary))"
+                        radius={[4, 4, 0, 0]}
+                        name="Vendas"
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Stats Cards */}
             <div className="space-y-3">
