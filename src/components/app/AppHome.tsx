@@ -659,7 +659,6 @@ export function AppHome() {
                     </div>
                     <Button 
                       onClick={() => setShowWithdrawalModal(true)}
-                      disabled={financialData.availableBalance === 0}
                       className="w-full mt-2"
                       size="sm"
                     >
