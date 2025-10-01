@@ -108,6 +108,7 @@ const VideoPlayer = ({
     if (!hlsUrl || !videoRef.current) return;
 
     const video = videoRef.current;
+    let mounted = true;
     
     // Cleanup função anterior
     const cleanup = () => {
@@ -121,13 +122,19 @@ const VideoPlayer = ({
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       console.log('🎬 Usando HLS nativo (Safari/iOS):', hlsUrl);
       video.src = hlsUrl;
-      setHlsError(false);
       
-      if (startTime && startTime > 0) {
-        video.addEventListener('loadedmetadata', () => {
+      const handleMetadata = () => {
+        if (mounted && startTime && startTime > 0) {
           video.currentTime = startTime;
-        }, { once: true });
-      }
+        }
+      };
+      
+      video.addEventListener('loadedmetadata', handleMetadata, { once: true });
+      
+      return () => {
+        mounted = false;
+        video.removeEventListener('loadedmetadata', handleMetadata);
+      };
     } 
     // Outros navegadores usam hls.js
     else if (Hls.isSupported()) {
@@ -137,6 +144,7 @@ const VideoPlayer = ({
         enableWorker: true,
         lowLatencyMode: true,
         backBufferLength: 90,
+        maxBufferLength: 30,
       });
       
       hlsRef.current = hls;
@@ -144,48 +152,50 @@ const VideoPlayer = ({
       hls.attachMedia(video);
       
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        console.log('✅ HLS manifest carregado com sucesso');
-        setHlsError(false);
-        if (startTime && startTime > 0) {
-          video.currentTime = startTime;
+        if (mounted) {
+          console.log('✅ HLS manifest carregado');
+          if (startTime && startTime > 0) {
+            video.currentTime = startTime;
+          }
         }
       });
       
-      hls.on(Hls.Events.ERROR, (event, data) => {
-        console.error('❌ Erro HLS:', data);
-        if (data.fatal) {
-          console.error('❌ Erro fatal HLS, caindo para iframe fallback');
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal && mounted) {
+          console.error('❌ Erro fatal HLS, usando iframe fallback');
           setHlsError(true);
           cleanup();
         }
       });
+      
+      return () => {
+        mounted = false;
+        cleanup();
+      };
     } else {
-      console.warn('⚠️ HLS não suportado neste navegador, usando iframe fallback');
+      console.warn('⚠️ HLS não suportado, usando iframe fallback');
       setHlsError(true);
     }
-
-    return cleanup;
-  }, [hlsUrl, startTime]);
+  }, [hlsUrl]);
 
   // Auto-play quando o vídeo carregar metadados
   useEffect(() => {
     const video = videoRef.current;
-    if (video && hlsUrl && !hlsError) {
-      const attemptAutoplay = async () => {
-        try {
-          await video.play();
-          setIsPlaying(true);
-          onPlay?.();
-          console.log('✅ Autoplay iniciado com sucesso');
-        } catch (error) {
-          console.log('⚠️ Autoplay bloqueado pelo navegador:', error);
-          // Navegador bloqueou autoplay, usuário precisa clicar
-        }
-      };
-      
-      video.addEventListener('loadedmetadata', attemptAutoplay);
-      return () => video.removeEventListener('loadedmetadata', attemptAutoplay);
-    }
+    if (!video || !hlsUrl || hlsError) return;
+    
+    const attemptAutoplay = async () => {
+      try {
+        await video.play();
+        setIsPlaying(true);
+        onPlay?.();
+        console.log('✅ Autoplay iniciado');
+      } catch (error) {
+        console.log('⚠️ Autoplay bloqueado pelo navegador');
+      }
+    };
+    
+    video.addEventListener('loadedmetadata', attemptAutoplay, { once: true });
+    return () => video.removeEventListener('loadedmetadata', attemptAutoplay);
   }, [hlsUrl, hlsError]);
 
   // Log detalhado para debugging
