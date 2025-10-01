@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import VideoPlayer from '@/components/ui/video-player';
-import { Play, Pause, SkipForward, SkipBack, Clock, CheckCircle2, Star, MessageCircle, BookOpen, ArrowLeft, Users, Target } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { Lesson } from '@/types/memberArea';
 import { LessonContentTabs } from './LessonContentTabs';
 import { LessonReleaseTimer } from '@/components/ui/lesson-release-timer';
@@ -81,24 +80,16 @@ export function ModernLessonViewer({
               releaseDate={new Date(lesson.scheduled_at!)} 
               lessonTitle={lesson.title}
             />
-          ) : lesson.video_url || lesson.bunny_embed_url ? <VideoPlayer 
-              embedUrl={lesson.bunny_embed_url || lesson.video_url}
-              startTime={startTime} 
-              onProgress={setProgress} 
-              onTimeUpdate={(currentTime, duration) => {
-          setCurrentTime(currentTime);
-
-          // Salvar progresso automaticamente
-          if (onUpdateProgress && duration > 0) {
-            onUpdateProgress(lesson.id, currentTime, duration);
-          }
-
-          // Marcar como completo quando assistir 90% ou mais
-          const progressPercent = currentTime / duration * 100;
-          if (progressPercent >= 90 && !isCompleted) {
-            setIsCompleted(true);
-          }
-        }} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} /> : <div className="aspect-video bg-black relative">
+          ) : lesson.video_url || lesson.bunny_embed_url ? (
+            <iframe
+              src={lesson.bunny_embed_url || lesson.video_url}
+              className="w-full aspect-video border-0"
+              frameBorder="0"
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              title={lesson.title}
+            />
+          ) : <div className="aspect-video bg-black relative">
               {/* Video placeholder para aulas sem vídeo */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">

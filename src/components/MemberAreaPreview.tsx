@@ -8,7 +8,6 @@ import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLessonProgress } from "@/hooks/useLessonProgress";
 import { useAuth } from "@/contexts/AuthContext";
-import VideoPlayer from "@/components/ui/video-player";
 import { MemberAreaSlideMenu } from "@/components/MemberAreaSlideMenu";
 import type { Lesson, Module, MemberArea } from "@/types/memberArea";
 
@@ -327,12 +326,13 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
                 <>
                   <div className="flex-1 bg-black relative">
                     {!videoError ? (
-                      <VideoPlayer
-                        embedUrl={selectedLesson.bunny_embed_url || selectedLesson.video_url}
-                        onError={handleVideoError}
-                        onLoadedMetadata={handleVideoLoadedMetadata}
-                        onTimeUpdate={handleVideoTimeUpdate}
-                        crossOrigin="anonymous"
+                      <iframe
+                        src={selectedLesson.bunny_embed_url || selectedLesson.video_url}
+                        className="w-full h-full border-0"
+                        frameBorder="0"
+                        allowFullScreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                        title={selectedLesson.title}
                       />
                     ) : (
                       <div className="h-full flex items-center justify-center text-white">
