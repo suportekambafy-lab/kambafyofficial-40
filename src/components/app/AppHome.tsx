@@ -408,7 +408,7 @@ export function AppHome() {
   const renderContent = () => {
     if (showNotifications) {
       return (
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 pt-24">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-xl font-bold text-foreground">Notificações</h2>
             <Button
@@ -481,7 +481,7 @@ export function AppHome() {
 
     if (showEditProfile) {
       return (
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 pt-24">
           <div className="flex items-center justify-between px-2 mb-4">
             <h2 className="text-xl font-bold text-foreground">Dados Pessoais</h2>
             <Button
@@ -543,7 +543,7 @@ export function AppHome() {
     switch (activeTab) {
       case 'products':
         return (
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-4 pt-24">
             <div className="flex items-center justify-between px-2 mb-2">
               <h2 className="text-xl font-bold text-foreground">Meus Produtos</h2>
               <span className="text-sm text-muted-foreground">{products.length}</span>
@@ -643,7 +643,7 @@ export function AppHome() {
       
       case 'stats':
         return (
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-4 pt-24">
             <h2 className="text-xl font-bold px-2 text-foreground">Financeiro</h2>
             
             {/* Financial Cards */}
@@ -764,7 +764,7 @@ export function AppHome() {
       
       case 'profile':
         return (
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-4 pt-24">
             <h2 className="text-xl font-bold px-2 text-foreground">Meu Perfil</h2>
             
             {/* User Info Card */}
@@ -885,16 +885,7 @@ export function AppHome() {
       
       default:
         return (
-          <div className="p-4 space-y-6">
-            {/* Logo Kambafy */}
-            <div className="flex justify-center pt-2 pb-4 bg-green-900 rounded-lg">
-              <img 
-                src="/kambafy-app-logo.svg" 
-                alt="Kambafy" 
-                className="h-12 w-auto"
-              />
-            </div>
-
+          <div className="p-4 space-y-6 pt-24">
             {/* Welcome */}
             <div className="px-2">
               <h1 className="text-2xl font-bold mb-1">Olá! 👋</h1>
@@ -1017,6 +1008,17 @@ export function AppHome() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-20 bg-green-900 shadow-md">
+        <div className="flex justify-center py-4">
+          <img 
+            src="/kambafy-app-logo.svg" 
+            alt="Kambafy" 
+            className="h-12 w-auto"
+          />
+        </div>
+      </header>
+
       {/* Content */}
       {renderContent()}
 
