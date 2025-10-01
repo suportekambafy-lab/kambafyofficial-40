@@ -105,6 +105,7 @@ const VideoPlayer = ({
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [showDnsHelp, setShowDnsHelp] = useState(false);
 
   // Determine initial source priority
   useEffect(() => {
@@ -448,29 +449,88 @@ const VideoPlayer = ({
     }
   };
 
-  // Error display
+  // Error display with ISP/DNS help
   if (errorMessage && failedSources.size >= 2) {
     return (
       <div className="relative w-full max-w-4xl mx-auto bg-black rounded-lg overflow-hidden">
         <div className="w-full aspect-video flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
-          <div className="text-center text-white p-8 max-w-md">
+          <div className="text-center text-white p-8 max-w-lg">
             <Play className="h-16 w-16 mx-auto mb-4 text-red-400" />
             <h3 className="text-xl font-semibold mb-2">Problema ao carregar vídeo</h3>
             <p className="text-gray-400 mb-4">{errorMessage}</p>
-            <p className="text-sm text-gray-500">
-              Tentamos múltiplas fontes mas não foi possível carregar. 
-              Isto pode ser devido a bloqueios de rede ou DNS.
-            </p>
-            {embedUrl && (
-              <a 
-                href={embedUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+            
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-4 text-left">
+              <p className="text-sm text-yellow-200 mb-2">
+                ⚠️ <strong>Bloqueio de operadora detectado</strong>
+              </p>
+              <p className="text-xs text-gray-300">
+                Algumas operadoras (como Africel) podem bloquear o acesso aos vídeos. 
+                Usuários com Unitel normalmente não têm este problema.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setShowDnsHelp(!showDnsHelp)}
+                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium"
               >
-                Abrir vídeo em nova aba
-              </a>
-            )}
+                {showDnsHelp ? '🔼 Esconder' : '🔧'} Como resolver (Mudar DNS)
+              </button>
+
+              {showDnsHelp && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="bg-white/5 rounded-lg p-4 text-left space-y-3"
+                >
+                  <p className="text-sm font-semibold text-blue-300">📱 No seu celular:</p>
+                  <ol className="text-xs text-gray-300 space-y-2 list-decimal list-inside">
+                    <li>Abra <strong>Configurações</strong> → <strong>Wi-Fi</strong></li>
+                    <li>Toque no ⓘ ao lado da sua rede conectada</li>
+                    <li>Em <strong>Configurar DNS</strong>, escolha <strong>Manual</strong></li>
+                    <li>Adicione: <code className="bg-black/50 px-2 py-1 rounded">8.8.8.8</code> ou <code className="bg-black/50 px-2 py-1 rounded">1.1.1.1</code></li>
+                    <li>Salve e reconecte ao Wi-Fi</li>
+                    <li>Volte aqui e atualize a página</li>
+                  </ol>
+
+                  <p className="text-sm font-semibold text-blue-300 pt-2">💻 No computador:</p>
+                  <ol className="text-xs text-gray-300 space-y-2 list-decimal list-inside">
+                    <li>Painel de Controle → Rede e Internet → Central de Rede</li>
+                    <li>Clique na sua conexão → Propriedades</li>
+                    <li>Selecione <strong>Protocolo TCP/IPv4</strong> → Propriedades</li>
+                    <li>Marque "Usar os seguintes endereços de servidor DNS"</li>
+                    <li>DNS preferencial: <code className="bg-black/50 px-2 py-1 rounded">8.8.8.8</code></li>
+                    <li>DNS alternativo: <code className="bg-black/50 px-2 py-1 rounded">1.1.1.1</code></li>
+                    <li>Clique OK e atualize a página</li>
+                  </ol>
+                </motion.div>
+              )}
+
+              {embedUrl && (
+                <a 
+                  href={embedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  🔗 Abrir em nova aba
+                </a>
+              )}
+
+              {(hlsUrl || src) && (
+                <a 
+                  href={hlsUrl || src}
+                  download
+                  className="block w-full px-4 py-3 bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                >
+                  ⬇️ Baixar vídeo
+                </a>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-500 mt-4">
+              Se o problema persistir, entre em contacto com o suporte.
+            </p>
           </div>
         </div>
       </div>
