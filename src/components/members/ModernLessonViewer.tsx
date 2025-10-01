@@ -192,12 +192,12 @@ export function ModernLessonViewer({
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="flex flex-col sm:flex-row gap-3 justify-center"
+                        className="flex flex-row gap-2 sm:gap-3 justify-center"
                       >
                         <Button
                           onClick={handleReplay}
                           variant="outline"
-                          className="gap-2 w-full sm:w-auto h-11"
+                          className="gap-2 flex-1 h-11"
                         >
                           <RotateCcw className="h-4 w-4" />
                           Repetir
@@ -206,10 +206,10 @@ export function ModernLessonViewer({
                         {nextLesson && (
                           <Button
                             onClick={handleNextLesson}
-                            className="gap-2 w-full sm:w-auto h-11"
+                            className="gap-2 flex-1 h-11"
                           >
                             <SkipForward className="h-4 w-4" />
-                            Próxima Aula
+                            Próxima
                           </Button>
                         )}
                       </motion.div>
