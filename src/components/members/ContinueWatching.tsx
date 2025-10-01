@@ -79,7 +79,7 @@ export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchin
       
       console.log('📧 Buscando progresso para email:', normalizedEmail);
 
-      // Buscar o progresso mais recente baseado no email do estudante
+      // Buscar a última aula assistida (qualquer progresso, ordenado por última visualização)
       const { data: progressData, error: progressError } = await supabase
         .from('lesson_progress')
         .select(`
@@ -97,8 +97,6 @@ export function ContinueWatching({ memberAreaId, studentEmail }: ContinueWatchin
         `)
         .eq('member_area_id', memberAreaId)
         .eq('user_email', normalizedEmail)
-        .gt('progress_percentage', 0)
-        .lt('progress_percentage', 100)
         .order('last_watched_at', { ascending: false })
         .limit(1)
         .maybeSingle();
