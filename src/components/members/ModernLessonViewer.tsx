@@ -118,16 +118,16 @@ export function ModernLessonViewer({
   const handleVideoEnd = () => {
     setVideoEnded(true);
     setAutoplayCountdown(10);
+    setIsReplayMode(false);
+    setShouldRestart(false);
   };
 
   const handleReplay = () => {
     setVideoEnded(false);
     setAutoplayCountdown(10);
-    setShouldRestart(true);
     setIsReplayMode(true);
-    setVideoKey(prev => prev + 1); // Reinicia o vídeo mudando a key
-    // Reset do flag após um pequeno delay
-    setTimeout(() => setShouldRestart(false), 100);
+    setShouldRestart(true);
+    setVideoKey(prev => prev + 1);
   };
 
   const handleNextLesson = () => {
