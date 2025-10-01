@@ -105,6 +105,13 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
       };
 
       console.log('📤 Enviando para Supabase:', progressRecord);
+      console.log('📊 Estado atual antes do upsert:', {
+        hasEmail: !!normalizedEmail,
+        hasMemberAreaId: !!memberAreaId,
+        hasLessonId: !!lessonId,
+        emailLength: normalizedEmail?.length,
+        record: progressRecord
+      });
 
       // Save to Supabase FIRST - usar nome da constraint
       const { data, error } = await supabase
@@ -115,13 +122,26 @@ export const useMemberLessonProgress = (memberAreaId: string, userEmail?: string
         })
         .select();
 
+      console.log('📬 Resposta do Supabase:', {
+        hasData: !!data,
+        dataCount: data?.length,
+        hasError: !!error,
+        error: error ? {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        } : null
+      });
+
       if (error) {
         console.error('❌ Error saving progress to Supabase:', {
           error,
           code: error.code,
           message: error.message,
           details: error.details,
-          hint: error.hint
+          hint: error.hint,
+          progressRecord
         });
         toast.error(`Erro ao salvar progresso: ${error.message}`);
         return;
