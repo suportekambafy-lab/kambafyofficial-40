@@ -48,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Gerar link de reset usando Supabase Admin API
-    const redirectTo = `${req.headers.get('origin')}/reset-password`;
+    const redirectTo = 'https://app.kambafy.com/reset-password';
     
     const { data, error } = await supabase.auth.admin.generateLink({
       type: 'recovery',
