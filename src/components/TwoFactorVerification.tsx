@@ -112,9 +112,62 @@ const TwoFactorVerification = ({
 
     setLoading(true);
     try {
-      console.log('🔍 Verificando código do Supabase:', code);
+      console.log('🔍 Verificando código - contexto:', context);
+      console.log('🔍 Email:', email);
+      console.log('🔍 Código:', code);
       
-      // Usar verifyOtp nativo do Supabase para confirmar email
+      // Para admin_login e outros contextos customizados, usar edge function
+      if (context === 'login' || context === 'bank_details_change' || context === 'withdrawal' || context === 'password_change' || context === 'disable_2fa') {
+        console.log('🔍 Usando edge function verify-2fa-code para contexto:', context);
+        
+        // Mapear contexto para event_type
+        const eventTypeMap = {
+          'login': 'admin_login',
+          'bank_details_change': 'bank_details_change',
+          'withdrawal': 'withdrawal',
+          'password_change': 'password_change',
+          'disable_2fa': 'disable_2fa'
+        };
+        
+        const eventType = eventTypeMap[context];
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        const { data, error } = await supabase.functions.invoke('verify-2fa-code', {
+          body: {
+            email: email,
+            code: code,
+            event_type: eventType
+          },
+          headers: session?.access_token ? {
+            Authorization: `Bearer ${session.access_token}`
+          } : {}
+        });
+
+        if (error) {
+          console.error('❌ Erro ao chamar edge function:', error);
+          throw error;
+        }
+
+        console.log('✅ Resposta do edge function:', data);
+
+        if (!data.valid) {
+          throw new Error(data.message || 'Código incorreto ou expirado');
+        }
+
+        console.log('✅ Código verificado com sucesso via edge function');
+        toast({
+          title: "Verificado!",
+          description: "Código verificado com sucesso.",
+        });
+
+        console.log('✅ Chamando onVerificationSuccess');
+        onVerificationSuccess();
+        return;
+      }
+      
+      // Para signup, usar verifyOtp nativo do Supabase
+      console.log('🔍 Usando supabase.auth.verifyOtp para signup');
       const { data, error } = await supabase.auth.verifyOtp({
         email: email,
         token: code,
@@ -122,6 +175,7 @@ const TwoFactorVerification = ({
       });
 
       if (error) {
+        console.error('❌ Erro do Supabase:', error);
         throw error;
       }
 
