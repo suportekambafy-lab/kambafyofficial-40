@@ -20,36 +20,46 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
-
-  const accessToken = searchParams.get('access_token');
-  const refreshToken = searchParams.get('refresh_token');
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
 
   useEffect(() => {
     const setupSession = async () => {
-      if (!accessToken || !refreshToken) {
+      // Extrair tokens do hash da URL (Supabase envia tokens no hash, não em query params)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const access = hashParams.get('access_token');
+      const refresh = hashParams.get('refresh_token');
+
+      setAccessToken(access);
+      setRefreshToken(refresh);
+
+      if (!access || !refresh) {
         setError('Link de redefinição inválido ou expirado.');
         return;
       }
 
       try {
+        console.log('🔑 Estabelecendo sessão com tokens...');
         // Set the session with the tokens from URL
         const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken
+          access_token: access,
+          refresh_token: refresh
         });
 
         if (error) {
-          console.error('Erro ao estabelecer sessão:', error);
+          console.error('❌ Erro ao estabelecer sessão:', error);
           setError('Erro ao validar link de redefinição. Por favor, solicite um novo link.');
+        } else {
+          console.log('✅ Sessão estabelecida com sucesso');
         }
       } catch (err) {
-        console.error('Erro inesperado:', err);
+        console.error('❌ Erro inesperado:', err);
         setError('Erro ao validar link de redefinição. Por favor, solicite um novo link.');
       }
     };
 
     setupSession();
-  }, [accessToken, refreshToken]);
+  }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
