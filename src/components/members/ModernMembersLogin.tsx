@@ -8,6 +8,7 @@ import { LogIn, Mail, BookOpen } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { useDebounced } from '@/hooks/useDebounced';
+import { useTheme } from '@/hooks/useTheme';
 import kambafyLogo from '@/assets/kambafy-logo-gray.svg';
 
 export default function ModernMembersLogin() {
@@ -15,10 +16,17 @@ export default function ModernMembersLogin() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useCustomToast();
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [memberArea, setMemberArea] = useState<any>(null);
   const id = useId();
+  
+  useEffect(() => {
+    console.log('🎨 ModernMembersLogin - Current theme:', theme);
+    console.log('🎨 ModernMembersLogin - HTML classes:', document.documentElement.classList.toString());
+    console.log('🎨 ModernMembersLogin - localStorage theme:', localStorage.getItem('kambafy-ui-theme'));
+  }, [theme]);
   
   // Extrair email da URL se disponível
   useEffect(() => {

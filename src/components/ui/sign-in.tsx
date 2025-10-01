@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
 
 // --- TYPE DEFINITIONS ---
 
@@ -61,6 +62,12 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   selectedUserType,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    console.log('🎨 SignInPage - Current theme:', theme);
+    console.log('🎨 SignInPage - HTML classes:', document.documentElement.classList.toString());
+  }, [theme]);
 
   // Sempre mostrar as opções de seleção se não foi selecionado um tipo
   if (!selectedUserType) {

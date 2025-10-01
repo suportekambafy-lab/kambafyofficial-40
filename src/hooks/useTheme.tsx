@@ -42,15 +42,22 @@ export function ThemeProvider({
     
     if (forceLightMode) {
       root.classList.add('light');
+      console.log('🎨 ThemeProvider: Forçando modo claro');
     } else {
       root.classList.add(theme);
+      console.log('🎨 ThemeProvider: Aplicando tema', theme);
+      console.log('🎨 ThemeProvider: Classes HTML', root.classList.toString());
     }
   }, [theme, forceLightMode]);
 
   const value = {
     theme: forceLightMode ? 'light' : theme,
     setTheme: (newTheme: Theme) => {
-      if (forceLightMode) return;
+      if (forceLightMode) {
+        console.log('🎨 ThemeProvider: Tentativa de mudar tema bloqueada (forceLightMode ativo)');
+        return;
+      }
+      console.log('🎨 ThemeProvider: Mudando tema para', newTheme);
       localStorage.setItem(storageKey, newTheme);
       setTheme(newTheme);
     },
