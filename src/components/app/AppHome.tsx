@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
@@ -47,6 +47,7 @@ export function AppHome() {
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [showQuickMenu, setShowQuickMenu] = useState(false);
   
   // Sistema de conquistas Kamba - metas dinâmicas
   const { currentLevel, nextLevel, progress: kambaProgress } = useKambaLevels(stats.totalRevenue);
@@ -1019,17 +1020,96 @@ export function AppHome() {
             alt="Kambafy" 
             className="h-12 w-auto"
           />
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-5 w-5 text-white" />
-            ) : (
-              <Moon className="h-5 w-5 text-white" />
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5 text-white" />
+              ) : (
+                <Moon className="h-5 w-5 text-white" />
+              )}
+            </button>
+            <button
+              onClick={() => setShowQuickMenu(!showQuickMenu)}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+            >
+              {showQuickMenu ? (
+                <X className="h-5 w-5 text-white" />
+              ) : (
+                <Menu className="h-5 w-5 text-white" />
+              )}
+            </button>
+          </div>
         </div>
+
+        {/* Quick Menu Dropdown */}
+        {showQuickMenu && (
+          <div className="absolute top-full right-0 w-80 bg-background border-l border-b border-border shadow-lg">
+            <div className="p-4 space-y-4">
+              <h3 className="font-semibold text-sm text-foreground mb-3">Resumo Financeiro</h3>
+              
+              {/* Saldo Disponível */}
+              <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <span className="text-xs text-muted-foreground">Disponível</span>
+                </div>
+                <span className="font-bold text-sm text-foreground">
+                  {formatPriceForSeller(financialData.availableBalance, 'KZ')}
+                </span>
+              </div>
+
+              {/* Saldo Pendente */}
+              <div className="flex items-center justify-between p-3 bg-orange-500/10 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                  <span className="text-xs text-muted-foreground">Pendente</span>
+                </div>
+                <span className="font-bold text-sm text-foreground">
+                  {formatPriceForSeller(financialData.pendingBalance, 'KZ')}
+                </span>
+              </div>
+
+              {/* Total de Vendas */}
+              <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <span className="text-xs text-muted-foreground">Total Vendas</span>
+                </div>
+                <span className="font-bold text-sm text-foreground">
+                  {stats.totalSales}
+                </span>
+              </div>
+
+              {/* Faturamento Total */}
+              <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  <span className="text-xs text-muted-foreground">Faturamento</span>
+                </div>
+                <span className="font-bold text-sm text-foreground">
+                  {formatPriceForSeller(stats.totalRevenue, 'KZ')}
+                </span>
+              </div>
+
+              <div className="pt-2 border-t border-border">
+                <Button 
+                  onClick={() => {
+                    setShowQuickMenu(false);
+                    setActiveTab('stats');
+                  }}
+                  variant="outline"
+                  className="w-full"
+                  size="sm"
+                >
+                  Ver Detalhes Completos
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Content with padding for fixed header */}
