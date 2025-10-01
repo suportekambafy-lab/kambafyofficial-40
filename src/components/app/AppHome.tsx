@@ -536,18 +536,13 @@ export function AppHome() {
                   className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center relative">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                       <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      {notifications.length > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-white text-xs rounded-full flex items-center justify-center">
-                          {notifications.length}
-                        </span>
-                      )}
                     </div>
                     <div className="text-left">
-                      <p className="font-medium text-foreground">Notificações</p>
+                      <p className="font-medium text-foreground">Notificações Push</p>
                       <p className="text-xs text-muted-foreground">
-                        {notifications.length > 0 ? `${notifications.length} nova(s)` : 'Nenhuma notificação'}
+                        {Notification.permission === 'granted' ? 'Ativadas' : 'Ativar notificações'}
                       </p>
                     </div>
                   </div>
