@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Home, BarChart3, Package, User, TrendingUp, DollarSign, LogOut, ChevronLeft, ShoppingCart } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
@@ -18,6 +19,7 @@ export function AppHome() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
   const [salesData, setSalesData] = useState<any[]>([]);
+  const [profileAvatar, setProfileAvatar] = useState<string>('');
   
   // Meta mensal - mesma lógica da versão web
   const monthlyGoal = 1000000; // 1M KZ
@@ -25,7 +27,26 @@ export function AppHome() {
 
   useEffect(() => {
     loadStats();
+    loadProfile();
   }, [user]);
+
+  const loadProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile) {
+        setProfileAvatar(profile.avatar_url || '');
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
 
   const loadStats = async () => {
     if (!user) return;
@@ -496,11 +517,16 @@ export function AppHome() {
             {/* Profile Button */}
             <button
               onClick={() => setActiveTab('profile')}
-              className={`w-12 h-12 rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow flex-shrink-0 ${
-                activeTab === 'profile' ? 'bg-primary/10' : 'bg-muted'
+              className={`w-12 h-12 rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow flex-shrink-0 overflow-hidden ${
+                activeTab === 'profile' ? 'ring-2 ring-primary ring-offset-2' : ''
               }`}
             >
-              <User className={`h-5 w-5 ${activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'}`} />
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={profileAvatar} alt="Profile" />
+                <AvatarFallback className={`${activeTab === 'profile' ? 'bg-primary/10' : 'bg-muted'}`}>
+                  <User className={`h-5 w-5 ${activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'}`} />
+                </AvatarFallback>
+              </Avatar>
             </button>
           </div>
         </div>
