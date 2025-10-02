@@ -34,6 +34,10 @@ export function AppHome() {
     totalRevenue: 0,
     totalProducts: 0
   });
+  const [statsUnfiltered, setStatsUnfiltered] = useState({
+    totalSales: 0,
+    totalRevenue: 0
+  });
   const [financialData, setFinancialData] = useState({
     availableBalance: 0,
     pendingBalance: 0,
@@ -255,6 +259,12 @@ export function AppHome() {
       });
 
       setTotalRevenueUnfiltered(totalRevenueForMeta);
+      
+      // Salvar stats não filtrados para o resumo financeiro
+      setStatsUnfiltered({
+        totalSales: countTotalSales(allOrdersForMeta || []),
+        totalRevenue: totalRevenueForMeta
+      });
 
       // SEGUNDO: Buscar vendas COM FILTROS para o Dashboard
       let query = supabase
@@ -1246,7 +1256,7 @@ export function AppHome() {
                   <span className="text-xs text-muted-foreground">Total Vendas</span>
                 </div>
                 <span className="font-bold text-sm text-foreground">
-                  {stats.totalSales}
+                  {statsUnfiltered.totalSales}
                 </span>
               </div>
 
@@ -1257,7 +1267,7 @@ export function AppHome() {
                   <span className="text-xs text-muted-foreground">Faturamento</span>
                 </div>
                 <span className="font-bold text-sm text-foreground">
-                  {formatPriceForSeller(stats.totalRevenue, 'KZ')}
+                  {formatPriceForSeller(statsUnfiltered.totalRevenue, 'KZ')}
                 </span>
               </div>
 
