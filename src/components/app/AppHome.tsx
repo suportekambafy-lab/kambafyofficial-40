@@ -63,6 +63,8 @@ export function AppHome() {
   const [productFilter, setProductFilter] = useState<string>('all');
   const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [totalRevenueUnfiltered, setTotalRevenueUnfiltered] = useState(0); // Para a meta Kamba
+  const [orders, setOrders] = useState<any[]>([]);
+  const [salesStatusFilter, setSalesStatusFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>('all');
   
   // Sistema de conquistas Kamba - metas dinâmicas (baseado no total sem filtros)
   const { currentLevel, nextLevel, progress: kambaProgress } = useKambaLevels(totalRevenueUnfiltered);
@@ -452,6 +454,51 @@ export function AppHome() {
       console.error('Error loading financial data:', error);
     }
   };
+
+  const loadSalesHistory = async () => {
+    if (!user) return;
+
+    try {
+      const { data: products } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+
+      const productIds = products?.map(p => p.id) || [];
+
+      if (productIds.length === 0) {
+        setOrders([]);
+        return;
+      }
+
+      let query = supabase
+        .from('orders')
+        .select(`
+          *,
+          products(name, cover),
+          customers(name, email)
+        `)
+        .in('product_id', productIds)
+        .order('created_at', { ascending: false });
+
+      // Aplicar filtro de status
+      if (salesStatusFilter !== 'all') {
+        query = query.eq('status', salesStatusFilter);
+      }
+
+      const { data } = await query;
+      setOrders(data || []);
+    } catch (error) {
+      console.error('Error loading sales history:', error);
+      setOrders([]);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'sales-history') {
+      loadSalesHistory();
+    }
+  }, [activeTab, salesStatusFilter]);
 
   const renderContent = () => {
     if (showNotifications) {
@@ -948,6 +995,142 @@ export function AppHome() {
           </div>
         );
       
+      case 'sales-history':
+        return (
+          <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between px-2 mb-2">
+              <h2 className="text-xl font-bold text-foreground">Histórico de Vendas</h2>
+              <span className="text-sm text-muted-foreground">{orders.length}</span>
+            </div>
+
+            {/* Filtro de Status */}
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+              <CardContent className="p-4">
+                <Label className="text-xs text-muted-foreground mb-2 block">Status</Label>
+                <select
+                  value={salesStatusFilter}
+                  onChange={(e) => setSalesStatusFilter(e.target.value as typeof salesStatusFilter)}
+                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+                >
+                  <option value="all">Todas</option>
+                  <option value="completed">Pagas</option>
+                  <option value="pending">Pendentes</option>
+                  <option value="cancelled">Canceladas</option>
+                </select>
+              </CardContent>
+            </Card>
+
+            {loading ? (
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+                <CardContent className="p-8 text-center">
+                  <p className="text-muted-foreground">Carregando...</p>
+                </CardContent>
+              </Card>
+            ) : orders.length === 0 ? (
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+                <CardContent className="p-8 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
+                    <ShoppingCart className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-base mb-2 text-foreground">Nenhuma venda</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Não há vendas {salesStatusFilter !== 'all' && `${salesStatusFilter === 'completed' ? 'pagas' : salesStatusFilter === 'pending' ? 'pendentes' : 'canceladas'}`} no momento.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {orders.map((order) => {
+                  const statusConfig = {
+                    completed: {
+                      color: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400',
+                      label: 'Pago'
+                    },
+                    pending: {
+                      color: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400',
+                      label: 'Pendente'
+                    },
+                    cancelled: {
+                      color: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
+                      label: 'Cancelado'
+                    }
+                  };
+
+                  const status = statusConfig[order.status as keyof typeof statusConfig] || statusConfig.pending;
+
+                  return (
+                    <Card key={order.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="p-0">
+                        <div className="flex gap-4 p-4">
+                          {/* Product Image */}
+                          <div className="relative flex-shrink-0">
+                            {order.products?.cover ? (
+                              <img 
+                                src={order.products.cover} 
+                                alt={order.products.name}
+                                className="w-20 h-20 rounded-lg object-cover"
+                              />
+                            ) : (
+                              <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                                <Package className="h-8 w-8 text-primary" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Order Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-sm text-foreground line-clamp-1 mb-1">
+                                  {order.products?.name || 'Produto'}
+                                </h3>
+                                <p className="text-xs text-muted-foreground line-clamp-1">
+                                  {order.customers?.name || 'Cliente'}
+                                </p>
+                              </div>
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${status.color}`}>
+                                {status.label}
+                              </span>
+                            </div>
+
+                            {/* Amount and Date */}
+                            <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Valor</p>
+                                <p className="font-bold text-sm text-foreground">
+                                  {formatPriceForSeller(parseFloat(order.seller_commission?.toString() || order.amount || '0'), order.currency || 'KZ')}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs text-muted-foreground">Data</p>
+                                <p className="text-xs text-foreground">
+                                  {new Date(order.created_at).toLocaleDateString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+
+                <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-primary/5">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-xs text-muted-foreground">
+                      💡 Para ver mais detalhes, acesse a versão desktop
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        );
+
       default:
         return (
           <div className="p-4 space-y-6">
@@ -1271,7 +1454,19 @@ export function AppHome() {
                 </span>
               </div>
 
-              <div className="pt-2 border-t border-border">
+              <div className="pt-2 border-t border-border space-y-2">
+                <Button 
+                  onClick={() => {
+                    setShowQuickMenu(false);
+                    setActiveTab('sales-history');
+                  }}
+                  variant="outline"
+                  className="w-full"
+                  size="sm"
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Histórico de Vendas
+                </Button>
                 <Button 
                   onClick={() => {
                     setShowQuickMenu(false);
