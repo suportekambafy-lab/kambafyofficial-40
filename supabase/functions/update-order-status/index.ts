@@ -167,17 +167,42 @@ serve(async (req) => {
             console.log('🔓 Processing order bump access...');
             const orderBumpDataParsed = JSON.parse(orderData.order_bump_data);
             
-            if (orderBumpDataParsed && orderBumpDataParsed.bump_product_id) {
+            if (orderBumpDataParsed && (orderBumpDataParsed.bump_product_id || orderBumpDataParsed.bump_product_name)) {
               console.log(`🔓 Creating access for order bump: ${orderBumpDataParsed.bump_product_name}`);
               
-              // Buscar dados do produto order bump
-              const { data: bumpProduct, error: bumpProductError } = await supabase
-                .from('products')
-                .select('*')
-                .eq('id', orderBumpDataParsed.bump_product_id)
-                .single();
+              let bumpProduct = null;
               
-              if (!bumpProductError && bumpProduct) {
+              // Tentar buscar por ID primeiro
+              if (orderBumpDataParsed.bump_product_id) {
+                const { data, error } = await supabase
+                  .from('products')
+                  .select('*')
+                  .eq('id', orderBumpDataParsed.bump_product_id)
+                  .single();
+                
+                if (!error && data) {
+                  bumpProduct = data;
+                }
+              }
+              
+              // Se não encontrou por ID, buscar pelo nome
+              if (!bumpProduct && orderBumpDataParsed.bump_product_name) {
+                console.log(`🔍 Searching bump product by name: ${orderBumpDataParsed.bump_product_name}`);
+                const { data, error } = await supabase
+                  .from('products')
+                  .select('*')
+                  .ilike('name', orderBumpDataParsed.bump_product_name.trim())
+                  .eq('status', 'Ativo')
+                  .limit(1)
+                  .single();
+                
+                if (!error && data) {
+                  bumpProduct = data;
+                  console.log(`✅ Found bump product by name: ${data.id}`);
+                }
+              }
+              
+              if (bumpProduct) {
                 // Calcular expiração de acesso para order bump
                 const bumpAccessExpiresAt = bumpProduct.access_duration_type === 'lifetime' || !bumpProduct.access_duration_type
                   ? null
@@ -196,19 +221,23 @@ serve(async (req) => {
                     })();
                 
                 // Criar acesso para order bump
-                await supabase.from('customer_access').insert({
+                const { error: insertError } = await supabase.from('customer_access').insert({
                   customer_email: orderData.customer_email.toLowerCase().trim(),
                   customer_name: orderData.customer_name,
-                  product_id: orderBumpDataParsed.bump_product_id,
+                  product_id: bumpProduct.id,
                   order_id: `${orderId}-BUMP`,
                   access_granted_at: new Date().toISOString(),
                   access_expires_at: bumpAccessExpiresAt,
                   is_active: true
                 });
                 
-                console.log(`✅ Order bump access created for: ${orderBumpDataParsed.bump_product_name}`);
+                if (insertError) {
+                  console.error('❌ Error inserting bump access:', insertError);
+                } else {
+                  console.log(`✅ Order bump access created for: ${orderBumpDataParsed.bump_product_name}`);
+                }
               } else {
-                console.error('❌ Error fetching bump product:', bumpProductError);
+                console.error(`❌ Could not find bump product: ${orderBumpDataParsed.bump_product_name}`);
               }
             }
           } catch (bumpAccessError) {
