@@ -45,7 +45,7 @@ export function AppLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Modern Clean Header */}
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4">
