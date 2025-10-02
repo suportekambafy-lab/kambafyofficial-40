@@ -311,8 +311,10 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
   };
 
   const filteredStudents = students.filter(student =>
-    student.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.student_email.toLowerCase().includes(searchTerm.toLowerCase())
+    // Filtrar email de validação da Kambafy
+    student.student_email !== 'validar@kambafy.com' &&
+    (student.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.student_email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (loading) {
@@ -399,14 +401,19 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold">{students.length}</div>
+            <div className="text-2xl font-bold">
+              {students.filter(s => s.student_email !== 'validar@kambafy.com').length}
+            </div>
             <p className="text-sm text-gray-600">Total de Estudantes</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">
-              {students.filter(s => new Date(s.access_granted_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}
+              {students.filter(s => 
+                s.student_email !== 'validar@kambafy.com' && 
+                new Date(s.access_granted_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+              ).length}
             </div>
             <p className="text-sm text-gray-600">Novos (7 dias)</p>
           </CardContent>
@@ -414,7 +421,10 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-blue-600">
-              {students.filter(s => new Date(s.access_granted_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length}
+              {students.filter(s => 
+                s.student_email !== 'validar@kambafy.com' && 
+                new Date(s.access_granted_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+              ).length}
             </div>
             <p className="text-sm text-gray-600">Novos (30 dias)</p>
           </CardContent>
