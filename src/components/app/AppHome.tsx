@@ -1124,7 +1124,7 @@ export function AppHome() {
 
   return (
     <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 pb-24 pt-0 overflow-x-hidden">
+      <div className="min-h-screen bg-background pb-24 pt-0 overflow-x-hidden">
         {/* Fixed Header - Similar to Landing */}
         <header className="fixed top-0 left-0 right-0 z-20">
         <nav className="px-2 pt-2">
