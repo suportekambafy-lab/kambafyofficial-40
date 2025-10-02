@@ -48,21 +48,31 @@ export default function ModernMembersLogin() {
         // Normalizar email para lowercase
         const normalizedEmail = email.toLowerCase().trim();
         
-        // Verificar se o email tem acesso à área de membros
-        const { data: studentAccess, error } = await supabase
-          .from('member_area_students')
-          .select('*')
-          .eq('member_area_id', memberAreaId)
-          .ilike('student_email', normalizedEmail)
+        // Verificar se é um admin primeiro
+        const { data: adminCheck } = await supabase
+          .from('admin_users')
+          .select('email')
+          .eq('email', normalizedEmail)
+          .eq('is_active', true)
           .single();
+        
+        if (!adminCheck) {
+          // Se não for admin, verificar se o email tem acesso à área de membros
+          const { data: studentAccess, error } = await supabase
+            .from('member_area_students')
+            .select('*')
+            .eq('member_area_id', memberAreaId)
+            .ilike('student_email', normalizedEmail)
+            .single();
 
-        if (error || !studentAccess) {
-          toast({
-            title: "❌ Acesso negado",
-            message: "Este email não tem acesso a esta área de membros",
-            variant: "error",
-          });
-          return;
+          if (error || !studentAccess) {
+            toast({
+              title: "❌ Acesso negado",
+              message: "Este email não tem acesso a esta área de membros",
+              variant: "error",
+            });
+            return;
+          }
         }
 
         toast({

@@ -100,17 +100,27 @@ export function MembersAuthProvider({ children }: MembersAuthProviderProps) {
     try {
       setIsLoading(true);
 
-      // Verificar se o estudante tem acesso
-      const { data: student } = await supabase
-        .from('member_area_students')
-        .select('*')
-        .eq('member_area_id', memberAreaId)
-        .eq('student_email', email)
-        .maybeSingle();
+      // Verificar se é um admin primeiro
+      const { data: adminCheck } = await supabase
+        .from('admin_users')
+        .select('email')
+        .eq('email', email)
+        .eq('is_active', true)
+        .single();
+      
+      if (!adminCheck) {
+        // Se não for admin, verificar se o estudante tem acesso
+        const { data: student } = await supabase
+          .from('member_area_students')
+          .select('*')
+          .eq('member_area_id', memberAreaId)
+          .eq('student_email', email)
+          .maybeSingle();
 
-      if (!student) {
-        console.error('Acesso negado para este email');
-        return false;
+        if (!student) {
+          console.error('Acesso negado para este email');
+          return false;
+        }
       }
 
       // Criar sessão via função
