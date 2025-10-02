@@ -456,16 +456,18 @@ export default function AdminSales() {
                               size="sm"
                               onClick={() => loadOrderDetails(order.id)}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-4 w-4 mr-1" />
+                              Ver
                             </Button>
                             {order.status !== 'completed' && (
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => markAsPaid(order.id)}
-                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
                               >
-                                <CheckCircle className="h-4 w-4" />
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Marcar Pago
                               </Button>
                             )}
                           </div>
