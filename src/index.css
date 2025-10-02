@@ -74,6 +74,10 @@ All colors MUST be HSL.
     /* Animation-specific variables */
     --skeleton: 0 0% 94%;
     --btn-border: 0 0% 90%;
+    
+    /* Card border colors - mantêm-se vibrantes em qualquer modo */
+    --card-border-green: 142 76% 36%;
+    --card-border-yellow: 45 93% 58%;
   }
 
   .dark {
@@ -126,6 +130,10 @@ All colors MUST be HSL.
     /* Animation-specific variables for dark mode */
     --skeleton: 220 15% 16%;
     --btn-border: 220 15% 25%;
+    
+    /* Card border colors - mantêm-se vibrantes no modo escuro */
+    --card-border-green: 142 76% 45%;
+    --card-border-yellow: 45 93% 65%;
   }
 }
 

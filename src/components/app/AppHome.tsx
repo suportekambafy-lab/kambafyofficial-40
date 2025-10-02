@@ -703,7 +703,7 @@ export function AppHome() {
             
             {/* Financial Cards */}
             <div className="space-y-3">
-              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-green-500 shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-card-border-green shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -729,7 +729,7 @@ export function AppHome() {
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-yellow-500 shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-card-border-yellow shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -747,7 +747,7 @@ export function AppHome() {
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-green-500 shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-card-border-green shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -1039,7 +1039,7 @@ export function AppHome() {
 
             {/* Quick Stats */}
             <div className="space-y-3">
-              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-green-500 shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-card-border-green shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -1056,7 +1056,7 @@ export function AppHome() {
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-green-500 shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-card-border-green shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">

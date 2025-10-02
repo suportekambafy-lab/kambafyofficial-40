@@ -79,6 +79,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				skeleton: 'hsl(var(--skeleton))',
+				'card-border': {
+					green: 'hsl(var(--card-border-green))',
+					yellow: 'hsl(var(--card-border-yellow))'
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
