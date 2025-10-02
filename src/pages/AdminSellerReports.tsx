@@ -74,10 +74,16 @@ export default function AdminSellerReports() {
       for (const profile of profiles || []) {
         try {
           // Buscar produtos do vendedor
-          const { data: products } = await supabase
+          const { data: products, error: productsError } = await supabase
             .from('products')
             .select('id, status, admin_approved')
             .eq('user_id', profile.user_id);
+
+          if (productsError) {
+            console.error(`Erro ao buscar produtos do vendedor ${profile.user_id}:`, productsError);
+          }
+
+          console.log(`Vendedor ${profile.full_name}: ${products?.length || 0} produtos encontrados`);
 
           const productIds = products?.map(p => p.id) || [];
 
@@ -103,9 +109,11 @@ export default function AdminSellerReports() {
             sum + parseFloat(order.amount || '0'), 0);
           
           const activeProducts = products?.filter(p => 
-            p.status === 'Ativo' && p.admin_approved).length || 0;
+            p.status === 'Ativo' && p.admin_approved === true).length || 0;
           const bannedProducts = products?.filter(p => 
             p.status === 'Banido').length || 0;
+
+          console.log(`Vendedor ${profile.full_name}: ${activeProducts} produtos ativos, ${bannedProducts} banidos`);
           
           const totalWithdrawals = withdrawals?.filter(w => 
             w.status === 'aprovado').reduce((sum, w) => 
