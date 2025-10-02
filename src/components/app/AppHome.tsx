@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
+import { countTotalSales } from '@/utils/orderUtils';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
 import { useKambaLevels } from '@/hooks/useKambaLevels';
@@ -401,7 +402,7 @@ export function AppHome() {
       const chartData = Object.values(dailySales);
 
       setStats({
-        totalSales: orders?.length || 0,
+        totalSales: countTotalSales(orders || []),
         totalRevenue,
         totalProducts: activeProducts.length
       });

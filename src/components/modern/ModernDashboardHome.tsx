@@ -13,6 +13,7 @@ import { DollarSign, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
+import { countTotalSales } from '@/utils/orderUtils';
 
 interface Order {
   id: string;
@@ -260,7 +261,7 @@ export function ModernDashboardHome() {
 
     return {
       totalRevenue: previousOrders.reduce((sum, order) => sum + (order.earning_amount || parseFloat(order.amount) || 0), 0),
-      totalSales: previousOrders.length,
+      totalSales: countTotalSales(previousOrders),
     };
   }, [allOrders, selectedProduct, timeFilter]);
 
@@ -274,7 +275,7 @@ export function ModernDashboardHome() {
 
     return {
       totalRevenue,
-      totalSales: filteredOrders.length,
+      totalSales: countTotalSales(filteredOrders),
       previousRevenue: previousPeriodData.totalRevenue,
       previousSales: previousPeriodData.totalSales,
     };
