@@ -99,7 +99,7 @@ export function LessonComments({
       
       console.log('[LessonComments] Checking member area:', memberAreaId);
 
-      // Buscar configuração da área de membros (não requer autenticação)
+      // Buscar configuração da área de membros e o perfil do dono
       const { data: memberArea, error } = await supabase
         .from('member_areas')
         .select('user_id, comments_enabled')
@@ -114,16 +114,31 @@ export function LessonComments({
         console.log('[LessonComments] Comments enabled:', enabled);
         setCommentsEnabled(enabled);
 
-        // Verificar se é o dono (requer autenticação)
+        // Buscar o email do dono da área
+        const { data: ownerProfile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('user_id', memberArea.user_id)
+          .single();
+
+        console.log('[LessonComments] Owner profile:', ownerProfile);
+        console.log('[LessonComments] Student email:', studentEmail);
+
+        // Verificar se é o dono via autenticação OU via email de estudante
         const { data: { user } } = await supabase.auth.getUser();
-        if (user && memberArea.user_id === user.id) {
+        const isOwnerByAuth = user && memberArea.user_id === user.id;
+        const isOwnerByEmail = studentEmail && ownerProfile?.email && 
+          studentEmail.toLowerCase().trim() === ownerProfile.email.toLowerCase().trim();
+
+        if (isOwnerByAuth || isOwnerByEmail) {
+          console.log('[LessonComments] User is area owner!');
           setIsAreaOwner(true);
         }
       }
     };
 
     checkAreaOwner();
-  }, [memberAreaId]);
+  }, [memberAreaId, studentEmail]);
 
   const handleSubmitComment = async (parentCommentId?: string) => {
     const commentText = parentCommentId ? replyText : newComment;
