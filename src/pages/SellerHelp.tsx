@@ -130,7 +130,7 @@ export default function SellerHelp() {
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold">Central de Ajuda</h1>
+        <h1 className="text-3xl font-bold text-foreground">Central de Ajuda</h1>
         <p className="text-lg text-muted-foreground">
           Encontre respostas rápidas ou entre em contato conosco
         </p>
