@@ -1084,11 +1084,11 @@ const Checkout = () => {
             variant: "error"
           });
           console.log('✅ Error toast triggered');
+          setProcessing(false);
           return;
         }
-        console.log('✅ AppyPay credentials validated, showing countdown...');
-        setProcessing(true); // Only set processing to true if credentials are valid
-        return;
+        console.log('✅ AppyPay credentials validated, proceeding with payment...');
+        // Continue to process payment below
       } catch (credError) {
         console.error('❌ Credentials test error:', credError);
         console.log('🚨 Showing error toast from catch block...');
@@ -1098,6 +1098,7 @@ const Checkout = () => {
           variant: "error"
         });
         console.log('✅ Error toast from catch block triggered');
+        setProcessing(false);
         return;
       }
     }
@@ -1212,6 +1213,17 @@ const Checkout = () => {
       if (selectedPayment === 'express' || selectedPayment === 'reference') {
         // Use AppyPay for both express and reference payments in Angola
         console.log('🚀 Using AppyPay for payment method:', selectedPayment);
+        
+        // Use expressPhone for Multicaixa Express, formData.phone for reference
+        const phoneToUse = selectedPayment === 'express' ? expressPhone : formData.phone;
+        
+        console.log('📱 Phone number for payment:', {
+          selectedPayment,
+          expressPhone,
+          formDataPhone: formData.phone,
+          phoneToUse
+        });
+        
         const appyPayResponse = await supabase.functions.invoke('create-appypay-charge', {
           body: {
             amount: totalAmountInKZ,
@@ -1219,12 +1231,12 @@ const Checkout = () => {
             customerData: {
               name: formData.fullName,
               email: formData.email,
-              phone: formData.phone
+              phone: phoneToUse
             },
             originalAmount: totalAmountInKZ,
             originalCurrency: 'KZ',
             paymentMethod: selectedPayment,
-            phoneNumber: formData.phone,
+            phoneNumber: phoneToUse,
             orderData: orderData // Pass order data for saving
           }
         });
