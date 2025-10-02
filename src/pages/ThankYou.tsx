@@ -462,12 +462,23 @@ const ThankYou = () => {
       </Badge>;
   };
   const getSuccessMessage = () => {
+    // Se o pagamento já foi confirmado (completed)
+    if (orderStatus === 'completed') {
+      return {
+        title: "Obrigado pela sua compra!",
+        subtitle: "Sua compra foi confirmada com sucesso! Você receberá todos os detalhes por e-mail."
+      };
+    }
+    
+    // Se está pendente
     if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
       return {
         title: "Obrigado pelo seu pedido!",
         subtitle: "Por favor, complete o seu pagamento para desbloquear o acesso."
       };
     }
+    
+    // Fallback
     return {
       title: "Obrigado pelo seu pedido!",
       subtitle: "Por favor, complete o seu pagamento para desbloquear o acesso."
