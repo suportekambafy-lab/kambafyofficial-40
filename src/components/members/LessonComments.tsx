@@ -307,9 +307,19 @@ export function LessonComments({
     </div>
   );
 
-  // Se comentários estão desabilitados, não mostrar nada
+  // Se comentários estão desabilitados, mostrar mensagem
   if (!commentsEnabled) {
-    return null;
+    return (
+      <Card className="mt-6 bg-zinc-950 border-0 mx-0 sm:mx-0">
+        <CardContent className="py-8">
+          <div className="text-center">
+            <MessageCircle className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400 text-base font-medium">Comentários desativados</p>
+            <p className="text-gray-500 text-sm mt-2">O instrutor desativou os comentários para esta área de membros</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
