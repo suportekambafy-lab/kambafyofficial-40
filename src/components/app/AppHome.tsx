@@ -849,45 +849,6 @@ export function AppHome() {
           <div className="p-4 space-y-4">
             <h2 className="text-xl font-bold px-2 text-foreground">Meu Perfil</h2>
             
-            {/* Kamba Level Progress Card */}
-            <Card className="overflow-hidden border-none shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm text-muted-foreground">
-                        {nextLevel ? `Meta: ${nextLevel.name}` : 'Nível Máximo Alcançado! 🎉'}
-                      </p>
-                      {nextLevel && (
-                        <span className="text-xs text-muted-foreground">
-                          {formatPriceForSeller(monthlyGoal, 'KZ')}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{ 
-                            width: `${goalProgress}%`,
-                            backgroundColor: nextLevel?.color || '#FFD700'
-                          }}
-                        />
-                      </div>
-                      <span className="font-semibold text-sm min-w-[45px]" style={{ color: nextLevel?.color || '#FFD700' }}>
-                        {goalProgress.toFixed(0)}%
-                      </span>
-                    </div>
-                    {currentLevel && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Nível atual: {currentLevel.name} {currentLevel.emoji}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
             {/* User Info Card */}
             <Card className="overflow-hidden border-none shadow-sm">
               <CardContent className="p-4">
