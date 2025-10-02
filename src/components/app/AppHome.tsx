@@ -20,6 +20,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -1146,39 +1147,65 @@ export function AppHome() {
     }
   };
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background pb-24 scrollbar-hide">
-      {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-20 bg-green-900 shadow-md">
-        <div className="flex items-center justify-between px-4 py-4">
-          <img 
-            src="/kambafy-app-logo.svg" 
-            alt="Kambafy" 
-            className="h-12 w-auto"
-          />
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-5 w-5 text-white" />
-              ) : (
-                <Moon className="h-5 w-5 text-white" />
-              )}
-            </button>
-            <button
-              onClick={() => setShowQuickMenu(!showQuickMenu)}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-            >
-              {showQuickMenu ? (
-                <X className="h-5 w-5 text-white" />
-              ) : (
-                <Menu className="h-5 w-5 text-white" />
-              )}
-            </button>
+      {/* Fixed Header - Similar to Landing */}
+      <header className="fixed top-0 left-0 right-0 z-20">
+        <nav className="px-2 pt-2">
+          <div className={cn(
+            'mx-auto transition-all duration-300 px-4 py-3 flex items-center justify-between',
+            isScrolled && 'bg-background/80 backdrop-blur-lg rounded-2xl border shadow-lg max-w-4xl'
+          )}>
+            <img 
+              src="/kambafy-logo-new.svg" 
+              alt="Kambafy" 
+              className="h-14 w-auto"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative w-10 h-10 rounded-full bg-card hover:bg-accent flex items-center justify-center transition-colors border border-border"
+              >
+                <Bell className="h-5 w-5 text-foreground" />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="w-10 h-10 rounded-full bg-card hover:bg-accent flex items-center justify-center transition-colors border border-border"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-5 w-5 text-foreground" />
+                ) : (
+                  <Moon className="h-5 w-5 text-foreground" />
+                )}
+              </button>
+              <button
+                onClick={() => setShowQuickMenu(!showQuickMenu)}
+                className="w-10 h-10 rounded-full bg-card hover:bg-accent flex items-center justify-center transition-colors border border-border"
+              >
+                {showQuickMenu ? (
+                  <X className="h-5 w-5 text-foreground" />
+                ) : (
+                  <Menu className="h-5 w-5 text-foreground" />
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        </nav>
 
         {/* Quick Menu Dropdown */}
         {showQuickMenu && (
