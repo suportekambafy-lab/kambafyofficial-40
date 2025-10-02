@@ -138,7 +138,7 @@ const Checkout = () => {
   useEffect(() => {
     if (selectedPayment === 'express' && processing) {
       // Iniciar countdown
-      setExpressCountdownTime(60);
+      setExpressCountdownTime(90);
       const interval = setInterval(() => {
         setExpressCountdownTime(prevTime => {
           if (prevTime <= 1) {
@@ -1105,7 +1105,7 @@ const Checkout = () => {
     // Para pagamento express, iniciar countdown
     if (selectedPayment === 'express') {
       // Iniciar countdown de 60 segundos
-      let timeLeft = 60;
+      let timeLeft = 90;
       const timer = setInterval(() => {
         timeLeft--;
         const timerElement = document.getElementById('countdown-timer');
