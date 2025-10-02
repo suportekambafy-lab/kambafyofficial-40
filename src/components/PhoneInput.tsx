@@ -34,6 +34,7 @@ interface PhoneInputProps {
   className?: string;
   disabled?: boolean;
   allowedCountries?: string[];
+  formatForMulticaixa?: boolean; // Nova prop para formatar automaticamente para Multicaixa Express
 }
 
 export function PhoneInput({ 
@@ -44,7 +45,8 @@ export function PhoneInput({
   onCountryChange,
   className = "",
   disabled = false,
-  allowedCountries
+  allowedCountries,
+  formatForMulticaixa = false
 }: PhoneInputProps) {
   const availableCountries = allowedCountries ? 
     countries.filter(c => allowedCountries.includes(c.code)) : 
@@ -60,6 +62,24 @@ export function PhoneInput({
     
     if (onCountryChange) {
       onCountryChange(countryCode);
+    }
+  };
+
+  const handlePhoneChange = (newValue: string) => {
+    if (formatForMulticaixa) {
+      // Formatar automaticamente para Multicaixa Express (apenas 9 dígitos)
+      // Remove +244, espaços, e mantém apenas números
+      let formatted = newValue
+        .replace(/^\+244\s*/, '') // Remove +244 do início
+        .replace(/\s+/g, '') // Remove todos os espaços
+        .replace(/\D/g, ''); // Remove tudo que não é número
+      
+      // Limitar a 9 dígitos
+      formatted = formatted.slice(0, 9);
+      
+      onChange(formatted);
+    } else {
+      onChange(newValue);
     }
   };
 
@@ -87,10 +107,11 @@ export function PhoneInput({
       </Select>
       <Input
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => handlePhoneChange(e.target.value)}
         placeholder={placeholder}
         className="rounded-l-none"
         disabled={disabled}
+        maxLength={formatForMulticaixa ? 9 : undefined}
       />
     </div>
   );

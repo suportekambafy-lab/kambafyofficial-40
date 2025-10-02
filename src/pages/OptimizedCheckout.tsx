@@ -779,9 +779,10 @@ const OptimizedCheckout = () => {
                             <PhoneInput
                               value={formData.phone}
                               onChange={(value) => handleInputChange('phone', value)}
-                              placeholder="Digite seu telefone"
+                              placeholder="939988635"
                               selectedCountry="AO"
                               className="w-full"
+                              formatForMulticaixa={true}
                             />
                             <p className="text-sm text-red-600">Telefone é obrigatório</p>
                           </div>
