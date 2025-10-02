@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSellerTheme } from '@/hooks/useSellerTheme';
 
 export function AppLogin() {
+  const { isDark } = useSellerTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -45,9 +47,9 @@ export function AppLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-card flex flex-col">
+    <div className={`min-h-screen bg-background flex flex-col ${isDark ? 'dark' : ''}`}>
       {/* Modern Clean Header */}
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-10 bg-card/95 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4">
           <div className="flex items-center justify-center">
             <img 
@@ -62,8 +64,8 @@ export function AppLogin() {
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
-          <Card className="overflow-hidden border-none shadow-sm bg-background">
-            <div className="p-8 space-y-6 bg-muted/30 rounded-lg">
+          <Card className="overflow-hidden border-none shadow-sm bg-card">
+            <div className="p-8 space-y-6">
               {/* Title */}
               <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
