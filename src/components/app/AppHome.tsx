@@ -459,7 +459,7 @@ export function AppHome() {
           </div>
 
           {notifications.length === 0 ? (
-            <Card className="overflow-hidden border-none shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
                   <Bell className="h-8 w-8 text-primary" />
@@ -548,7 +548,7 @@ export function AppHome() {
             </Button>
           </div>
 
-          <Card className="overflow-hidden border-none shadow-sm bg-card">
+          <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="full_name">Nome Completo</Label>
@@ -605,13 +605,13 @@ export function AppHome() {
             </div>
 
             {loading ? (
-              <Card className="overflow-hidden border-none shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
                 <CardContent className="p-8 text-center">
                   <p className="text-muted-foreground">Carregando...</p>
                 </CardContent>
               </Card>
             ) : products.length === 0 ? (
-              <Card className="overflow-hidden border-none shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
                 <CardContent className="p-8 text-center">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
                     <Package className="h-8 w-8 text-primary" />
@@ -684,7 +684,7 @@ export function AppHome() {
                   </Card>
                 ))}
 
-                <Card className="overflow-hidden border-none shadow-sm bg-primary/5">
+                <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-primary/5">
                   <CardContent className="p-4 text-center">
                     <p className="text-xs text-muted-foreground">
                       💡 Para editar produtos, acesse a versão desktop
@@ -703,7 +703,7 @@ export function AppHome() {
             
             {/* Financial Cards */}
             <div className="space-y-3">
-              <Card className="overflow-hidden border-l-[6px] border-l-green-500 shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-green-500 shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -729,7 +729,7 @@ export function AppHome() {
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden border-l-[6px] border-l-yellow-500 shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-yellow-500 shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -747,7 +747,7 @@ export function AppHome() {
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden border-l-[6px] border-l-green-500 shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-green-500 shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -767,7 +767,7 @@ export function AppHome() {
             </div>
 
             {/* Withdrawal History */}
-            <Card className="overflow-hidden border-none shadow-sm bg-card">
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-6">
                 <div className="mb-4">
                   <h3 className="font-semibold text-base text-foreground mb-1">Histórico de Saques</h3>
@@ -823,7 +823,7 @@ export function AppHome() {
             <h2 className="text-xl font-bold px-2 text-foreground">Meu Perfil</h2>
             
             {/* User Info Card */}
-            <Card className="overflow-hidden border-none shadow-sm bg-card">
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-16 h-16 rounded-2xl flex-shrink-0">
@@ -841,7 +841,7 @@ export function AppHome() {
             </Card>
 
             {/* Settings Options */}
-            <Card className="overflow-hidden border-none shadow-sm bg-card">
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-2">
                 <button
                   onClick={() => setShowEditProfile(true)}
@@ -882,7 +882,7 @@ export function AppHome() {
             </Card>
 
             {/* Danger Zone */}
-            <Card className="overflow-hidden border-none shadow-sm bg-card">
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-2">
                 <button
                   onClick={() => {
@@ -908,7 +908,7 @@ export function AppHome() {
             </Card>
 
             {/* Logout Button */}
-            <Card className="overflow-hidden border-none shadow-sm bg-card">
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-4">
                 <Button 
                   variant="outline" 
@@ -948,7 +948,7 @@ export function AppHome() {
             </div>
 
             {/* Filtros */}
-            <Card className="overflow-hidden border-none shadow-sm bg-card">
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-4 space-y-3">
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">Período</Label>
@@ -1039,7 +1039,7 @@ export function AppHome() {
 
             {/* Quick Stats */}
             <div className="space-y-3">
-              <Card className="overflow-hidden border-l-[6px] border-l-green-500 shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-green-500 shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -1056,7 +1056,7 @@ export function AppHome() {
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden border-l-[6px] border-l-green-500 shadow-sm bg-card">
+              <Card className="overflow-hidden rounded-xl border-l-[6px] border-l-green-500 shadow-sm bg-card">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -1075,7 +1075,7 @@ export function AppHome() {
             </div>
 
             {/* Quick Actions */}
-            <Card className="overflow-hidden border-none shadow-sm bg-card">
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-6">
                 <h3 className="font-semibold text-base mb-4 text-foreground">Acesso Rápido</h3>
                 <div className="space-y-2">
@@ -1100,7 +1100,7 @@ export function AppHome() {
             </Card>
 
             {/* Info Card */}
-            <Card className="overflow-hidden border-none shadow-sm bg-primary/5">
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-primary/5">
               <CardContent className="p-5">
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   <strong className="text-foreground font-semibold">💡 Dica:</strong> Para criar produtos e acessar todos os recursos, use a versão desktop.
