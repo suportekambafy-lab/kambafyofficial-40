@@ -2024,7 +2024,7 @@ const Checkout = () => {
                           <label className="block text-sm font-medium text-gray-600">
                             Por favor, insira o número de telefone ativo do Multicaixa Express.
                           </label>
-                          <PhoneInput value={expressPhone} onChange={value => setExpressPhone(value)} placeholder="939988635" selectedCountry="AO" allowedCountries={["AO"]} className="w-full" formatForMulticaixa={true} />
+                          <PhoneInput value={expressPhone} onChange={value => setExpressPhone(value)} placeholder="9xxxxxxxx" selectedCountry="AO" allowedCountries={["AO"]} className="w-full" formatForMulticaixa={true} />
                         </div>
                       </div>}
 
