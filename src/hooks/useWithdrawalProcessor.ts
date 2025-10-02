@@ -12,32 +12,27 @@ export function useWithdrawalProcessor(onSuccess: () => void) {
     setProcessingId(requestId);
     
     try {
-      console.log('⚙️ Processando saque:', { requestId, status, notes: notes[requestId], adminId });
+      console.log('⚙️ Processando saque via RPC admin:', { requestId, status, notes: notes[requestId], adminId });
       
       // Validar se adminId é um UUID válido
       const validAdminId = adminId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(adminId) ? adminId : null;
       
       console.log('⚙️ Admin ID validado:', { original: adminId, valid: validAdminId });
 
-      const updateData = {
-        status,
-        admin_notes: notes[requestId] || null,
-        updated_at: new Date().toISOString()
-      };
-
-      console.log('💾 Atualizando saque no banco:', updateData);
-
-      const { error } = await supabase
-        .from('withdrawal_requests')
-        .update(updateData)
-        .eq('id', requestId);
+      // Usar função RPC específica para admin que bypassa RLS
+      const { error } = await supabase.rpc('admin_process_withdrawal_request', {
+        request_id: requestId,
+        new_status: status,
+        admin_id: validAdminId,
+        notes_text: notes[requestId] || null
+      });
 
       if (error) {
-        console.error('❌ Erro ao atualizar saque:', error);
+        console.error('❌ Erro ao processar saque via RPC:', error);
         throw error;
       }
 
-      console.log('✅ Saque atualizado no banco com sucesso');
+      console.log('✅ Saque processado via RPC com sucesso');
 
       // Registrar log administrativo (não bloqueante)
       if (validAdminId) {

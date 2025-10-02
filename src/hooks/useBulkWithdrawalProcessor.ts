@@ -34,28 +34,25 @@ export function useBulkWithdrawalProcessor(onSuccess: () => void) {
     setProcessing(true);
     
     try {
-      console.log('⚙️ Processando saques em lote:', { requestIds, status, adminId, notes });
+      console.log('⚙️ Processando saques em lote via RPC:', { requestIds, status, adminId, notes });
       
       // Validar se adminId é um UUID válido
       const validAdminId = adminId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(adminId) ? adminId : null;
       
-      const updateData = {
-        status,
-        admin_notes: notes || null,
-        updated_at: new Date().toISOString()
-      };
+      // Processar cada saque usando RPC (para garantir que bypassa RLS)
+      const processPromises = requestIds.map(requestId =>
+        supabase.rpc('admin_process_withdrawal_request', {
+          request_id: requestId,
+          new_status: status,
+          admin_id: validAdminId,
+          notes_text: notes || null
+        })
+      );
 
-      console.log('💾 Atualizando saques em lote:', updateData);
-
-      const { error } = await supabase
-        .from('withdrawal_requests')
-        .update(updateData)
-        .in('id', requestIds);
-
-      if (error) {
-        console.error('❌ Erro ao atualizar saques:', error);
-        throw error;
-      }
+      const results = await Promise.allSettled(processPromises);
+      const successCount = results.filter(r => r.status === 'fulfilled' && !r.value.error).length;
+      
+      console.log(`✅ Saques processados: ${successCount}/${requestIds.length}`);
 
       // Se aprovado, enviar emails para todos os vendedores
       if (status === 'aprovado') {
