@@ -56,7 +56,7 @@ export function AppLogin() {
               <img 
                 src={isDark ? "/kambafy-logo-dark.png" : "/kambafy-logo-new.svg"} 
                 alt="Kambafy" 
-                className="h-12 w-auto object-contain"
+                className={isDark ? "h-12 w-auto object-contain scale-100" : "h-12 w-auto"}
               />
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
