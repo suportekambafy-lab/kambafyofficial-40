@@ -163,12 +163,12 @@ const Checkout = () => {
         clearInterval(countdownIntervalRef.current);
         countdownIntervalRef.current = null;
       }
-      setExpressCountdownTime(60);
+      setExpressCountdownTime(90);
 
       // Resetar elemento do DOM
       const timerElement = document.getElementById('countdown-timer');
       if (timerElement) {
-        timerElement.textContent = '60';
+        timerElement.textContent = '90';
       }
     }
 
@@ -1967,9 +1967,20 @@ const Checkout = () => {
                               {/* Círculo de fundo */}
                               <circle cx="100" cy="100" r="90" stroke="#e5e7eb" strokeWidth="12" fill="transparent" />
                               {/* Círculo de progresso */}
-                              <circle cx="100" cy="100" r="90" stroke="#2563eb" strokeWidth="12" fill="transparent" strokeLinecap="round" strokeDasharray={565.48} strokeDashoffset={565.48 * (expressCountdownTime / 60)} style={{
-                            transition: 'stroke-dashoffset 1s linear'
-                          }} />
+                              <circle 
+                                cx="100" 
+                                cy="100" 
+                                r="90" 
+                                stroke={expressCountdownTime > 60 ? '#22c55e' : expressCountdownTime > 30 ? '#f59e0b' : expressCountdownTime > 10 ? '#f97316' : '#ef4444'} 
+                                strokeWidth="12" 
+                                fill="transparent" 
+                                strokeLinecap="round" 
+                                strokeDasharray={565.48} 
+                                strokeDashoffset={565.48 - (565.48 * (90 - expressCountdownTime) / 90)} 
+                                style={{
+                                  transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease'
+                                }} 
+                              />
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                               <span className="text-sm text-gray-500 mb-2">Tempo Restante</span>
