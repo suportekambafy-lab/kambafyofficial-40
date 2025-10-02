@@ -90,7 +90,7 @@ const App = () => {
   return (
     <EnhancedErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="kambafy-ui-theme" forceLightMode={true}>
+        <ThemeProvider defaultTheme="light" storageKey="kambafy-ui-theme">
           <AuthProvider>
             <AdminAuthProvider>
               <NotificationProvider>
