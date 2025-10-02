@@ -1479,7 +1479,7 @@ export function AppHome() {
                   className="w-full"
                   size="sm"
                 >
-                  Ver Detalhes Completos
+                  Financeiro
                 </Button>
               </div>
             </div>
