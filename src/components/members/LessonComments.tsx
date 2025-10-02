@@ -95,13 +95,8 @@ export function LessonComments({
       }
       
       console.log('[LessonComments] Checking member area:', memberAreaId);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('[LessonComments] No authenticated user');
-        return;
-      }
 
+      // Buscar configuração da área de membros (não requer autenticação)
       const { data: memberArea, error } = await supabase
         .from('member_areas')
         .select('user_id, comments_enabled')
@@ -112,12 +107,15 @@ export function LessonComments({
       console.log('[LessonComments] Error:', error);
 
       if (memberArea) {
-        if (memberArea.user_id === user.id) {
-          setIsAreaOwner(true);
-        }
         const enabled = memberArea.comments_enabled ?? true;
         console.log('[LessonComments] Comments enabled:', enabled);
         setCommentsEnabled(enabled);
+
+        // Verificar se é o dono (requer autenticação)
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && memberArea.user_id === user.id) {
+          setIsAreaOwner(true);
+        }
       }
     };
 
