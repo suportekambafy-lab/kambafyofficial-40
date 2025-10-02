@@ -45,7 +45,7 @@ export function AppLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-card flex flex-col">
       {/* Modern Clean Header */}
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4">
@@ -62,7 +62,7 @@ export function AppLogin() {
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
-          <Card className="overflow-hidden border-none shadow-sm">
+          <Card className="overflow-hidden border-none shadow-sm bg-background">
             <div className="p-8 space-y-6">
               {/* Title */}
               <div className="text-center space-y-2">
