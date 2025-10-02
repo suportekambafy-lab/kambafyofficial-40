@@ -62,9 +62,9 @@ serve(async (req) => {
 
     console.log(`✅ Order ${orderId} status updated to: ${status}`);
 
-    // Se o status foi alterado para 'completed', disparar webhooks
+    // Se o status foi alterado para 'completed', processar pagamento completo
     if (status === 'completed' && orderData.status !== 'completed') {
-      console.log('🔔 Order completed, triggering webhooks...');
+      console.log('💰 Order completed, processing payment...');
 
       // Buscar dados do produto
       const { data: product, error: productError } = await supabase
@@ -76,6 +76,92 @@ serve(async (req) => {
       if (productError) {
         console.error('Error fetching product:', productError);
       } else {
+        // 1. PROCESSAR COMISSÕES E SALDO
+        console.log('💵 Processing commissions and balance...');
+        const orderAmount = parseFloat(orderData.amount);
+        const hasAffiliate = orderData.affiliate_code ? true : false;
+        
+        if (hasAffiliate && orderData.affiliate_code) {
+          // Buscar dados do afiliado
+          const { data: affiliate } = await supabase
+            .from('affiliates')
+            .select('*')
+            .eq('affiliate_code', orderData.affiliate_code)
+            .eq('status', 'ativo')
+            .single();
+            
+          if (affiliate) {
+            // Calcular comissão do afiliado
+            const commissionRate = parseFloat(affiliate.commission_rate.replace('%', '')) / 100;
+            const affiliateCommission = orderAmount * commissionRate;
+            const sellerCommission = orderAmount - affiliateCommission;
+            
+            console.log(`💰 Affiliate commission: ${affiliateCommission}, Seller commission: ${sellerCommission}`);
+            
+            // Criar transação para o afiliado
+            await supabase.from('balance_transactions').insert({
+              user_id: affiliate.affiliate_user_id,
+              type: 'affiliate_commission',
+              amount: affiliateCommission,
+              currency: orderData.currency || 'KZ',
+              description: `Comissão de afiliado - Pedido ${orderId}`,
+              order_id: orderId
+            });
+            
+            // Criar transação para o vendedor (valor líquido)
+            await supabase.from('balance_transactions').insert({
+              user_id: product.user_id,
+              type: 'sale_revenue',
+              amount: sellerCommission,
+              currency: orderData.currency || 'KZ',
+              description: `Receita de venda - Pedido ${orderId}`,
+              order_id: orderId
+            });
+          }
+        } else {
+          // Sem afiliado - vendedor recebe tudo
+          console.log(`💰 No affiliate - seller gets full amount: ${orderAmount}`);
+          await supabase.from('balance_transactions').insert({
+            user_id: product.user_id,
+            type: 'sale_revenue',
+            amount: orderAmount,
+            currency: orderData.currency || 'KZ',
+            description: `Receita de venda - Pedido ${orderId}`,
+            order_id: orderId
+          });
+        }
+        
+        // 2. CRIAR ACESSO PARA O CLIENTE
+        console.log('🔓 Creating customer access...');
+        const accessExpiresAt = product.access_duration_type === 'lifetime' || !product.access_duration_type
+          ? null
+          : (() => {
+              const now = new Date();
+              switch (product.access_duration_type) {
+                case 'days':
+                  return new Date(now.setDate(now.getDate() + product.access_duration_value));
+                case 'months':
+                  return new Date(now.setMonth(now.getMonth() + product.access_duration_value));
+                case 'years':
+                  return new Date(now.setFullYear(now.getFullYear() + product.access_duration_value));
+                default:
+                  return null;
+              }
+            })();
+        
+        await supabase.from('customer_access').insert({
+          customer_email: orderData.customer_email.toLowerCase().trim(),
+          customer_name: orderData.customer_name,
+          product_id: orderData.product_id,
+          order_id: orderId,
+          access_granted_at: new Date().toISOString(),
+          access_expires_at: accessExpiresAt,
+          is_active: true
+        });
+        
+        console.log('✅ Customer access created');
+        
+        // 3. DISPARAR WEBHOOKS
         // Webhook para o produto principal
         const mainProductPayload = {
           event: 'payment.success',
