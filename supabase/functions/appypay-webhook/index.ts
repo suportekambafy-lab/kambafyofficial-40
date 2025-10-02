@@ -49,19 +49,21 @@ const handler = async (req: Request): Promise<Response> => {
     const payload: AppyPayWebhookPayload = await req.json();
     console.log('[APPYPAY-WEBHOOK] Received payload:', JSON.stringify(payload, null, 2));
 
-    // Step 1: Extract referenceNumber from reference object
-    const referenceNumber = payload.reference?.referenceNumber;
-    if (!referenceNumber) {
-      console.error('[APPYPAY-WEBHOOK] Missing referenceNumber in payload');
+    // Step 1: Extract order ID - either from merchantTransactionId (Express) or reference.referenceNumber (Reference)
+    const orderIdFromPayload = payload.merchantTransactionId || payload.reference?.referenceNumber;
+    
+    if (!orderIdFromPayload) {
+      console.error('[APPYPAY-WEBHOOK] Missing order ID in payload');
       return new Response(JSON.stringify({ 
-        error: 'Missing referenceNumber in payload' 
+        error: 'Missing merchantTransactionId or referenceNumber in payload' 
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
 
-    console.log(`[APPYPAY-WEBHOOK] Processing payment for reference: ${referenceNumber}`);
+    const paymentType = payload.merchantTransactionId ? 'express' : 'reference';
+    console.log(`[APPYPAY-WEBHOOK] Processing ${paymentType} payment for order ID: ${orderIdFromPayload}`);
 
     // Create Supabase client
     const supabase = createClient(
@@ -69,12 +71,12 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Step 2: Search for order matching the reference number
+    // Step 2: Search for order matching the order ID (works for both express and reference)
     const { data: orders, error: orderError } = await supabase
       .from('orders')
       .select('*')
-      .eq('order_id', referenceNumber)
-      .eq('payment_method', 'reference')
+      .eq('order_id', orderIdFromPayload)
+      .in('payment_method', ['express', 'reference'])
       .limit(1);
 
     if (orderError) {
@@ -83,10 +85,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!orders || orders.length === 0) {
-      console.log(`[APPYPAY-WEBHOOK] No order found for reference: ${referenceNumber}`);
+      console.log(`[APPYPAY-WEBHOOK] No order found for order ID: ${orderIdFromPayload}`);
       return new Response(JSON.stringify({ 
         message: 'Order not found',
-        referenceNumber: referenceNumber
+        orderId: orderIdFromPayload,
+        paymentType: paymentType
       }), {
         status: 404,
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
@@ -285,7 +288,7 @@ const handler = async (req: Request): Promise<Response> => {
       success: true,
       message: 'Webhook processed successfully',
       order_id: order.order_id,
-      referenceNumber: referenceNumber,
+      paymentType: paymentType,
       oldStatus: order.status,
       newStatus: newOrderStatus,
       updated: order.status !== newOrderStatus
