@@ -71,10 +71,10 @@ export default function EbookUploader({ onFileUploaded, open, onOpenChange }: Eb
       }, 200);
 
       const { data, error } = await supabase.storage
-        .from('avatars')
+        .from('product-covers')
         .upload(fileName, selectedFile, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true
         });
 
       clearInterval(progressInterval);
@@ -89,7 +89,7 @@ export default function EbookUploader({ onFileUploaded, open, onOpenChange }: Eb
 
       // Gerar URL pública
       const { data: publicUrlData } = supabase.storage
-        .from('avatars')
+        .from('product-covers')
         .getPublicUrl(data.path);
       
       const publicUrl = publicUrlData.publicUrl;

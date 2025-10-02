@@ -178,10 +178,15 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
   };
 
   const handleEbookUploaded = (fileUrl: string) => {
-    setFormData(prev => ({
-      ...prev,
-      shareLink: fileUrl
-    }));
+    console.log('📄 Ebook uploaded, URL:', fileUrl);
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        shareLink: fileUrl
+      };
+      console.log('📄 Updated formData:', updated);
+      return updated;
+    });
     toast({
       title: "Sucesso",
       description: "Arquivo do e-book enviado com sucesso"
@@ -340,9 +345,14 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
               </Button>
             </div>
             {formData.shareLink && (
-              <p className="text-sm text-muted-foreground">
-                Arquivo: {formData.shareLink.split('/').pop()}
-              </p>
+              <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-md text-green-700">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm truncate">
+                  {formData.shareLink.split('/').pop()}
+                </p>
+              </div>
             )}
           </div>
         </div>
