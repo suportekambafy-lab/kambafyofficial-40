@@ -954,12 +954,12 @@ export function AppHome() {
               <span>Versão 1.0.0</span>
             </div>
 
-            {/* Logo Kambafy */}
+            {/* Logo */}
             <div className="flex justify-center pt-4 pb-2">
               <img 
-                src="/kambafy-logo-new.svg" 
-                alt="Kambafy" 
-                className="h-10 w-auto"
+                src="/positivo-logo.svg" 
+                alt="Positivo" 
+                className="h-16 w-auto"
               />
             </div>
           </div>
