@@ -90,6 +90,28 @@ export function PhoneInput({
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    if (formatForMulticaixa) {
+      e.preventDefault();
+      const pastedText = e.clipboardData.getData('text');
+      console.log('📋 Valor colado:', pastedText);
+      
+      // Processar o texto colado
+      let formatted = pastedText.replace(/\D/g, '');
+      console.log('📋 Após remover não-números:', formatted);
+      
+      if (formatted.startsWith('244')) {
+        formatted = formatted.substring(3);
+        console.log('📋 Após remover 244:', formatted);
+      }
+      
+      formatted = formatted.slice(0, 9);
+      console.log('📋 Final formatado:', formatted);
+      
+      onChange(formatted);
+    }
+  };
+
   return (
     <div className={`flex ${className}`}>
       <Select value={selectedCountry} onValueChange={handleCountryChange} disabled={disabled}>
@@ -115,6 +137,7 @@ export function PhoneInput({
       <Input
         value={value}
         onChange={(e) => handlePhoneChange(e.target.value)}
+        onPaste={handlePaste}
         placeholder={placeholder}
         className="rounded-l-none"
         disabled={disabled}
