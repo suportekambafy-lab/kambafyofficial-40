@@ -366,10 +366,23 @@ const handler = async (req: Request): Promise<Response> => {
         
         console.log('=== CREATING ACCESS INFO ===');
         console.log('Product type:', productType);
+        console.log('Share link:', shareLink);
         
-        // Para produtos do tipo "Link de Pagamento", não incluir informações de acesso
-        if (productType === 'Link de Pagamento') {
-          console.log('Product is Payment Link - skipping access info');
+        // Para produtos do tipo "Link de Pagamento", verificar se tem link de acesso
+        if (productType === 'Link de Pagamento' && shareLink) {
+          console.log('Product is Payment Link WITH share link - adding access');
+          accessInfo = `
+            <div style="background-color: #16a34a; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: white; margin: 0 0 10px 0;">🔗 Link de Acesso</h3>
+              <p style="margin: 0; color: white;">Acesse seu produto através do link:</p>
+              <a href="${shareLink}" 
+                 style="display: inline-block; background-color: white; color: #16a34a; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; font-weight: bold;">
+                Acessar Produto
+              </a>
+            </div>
+          `;
+        } else if (productType === 'Link de Pagamento') {
+          console.log('Product is Payment Link without share link - skipping access info');
           accessInfo = '';
         } else if (memberAreaId && memberAreaUrl) {
           console.log('Product has member area - adding course access');
@@ -383,8 +396,8 @@ const handler = async (req: Request): Promise<Response> => {
               </a>
             </div>
           `;
-        } else if (shareLink && productType !== 'Link de Pagamento') {
-          console.log('Product has share link (not payment link) - adding product access');
+        } else if (shareLink) {
+          console.log('Product has share link - adding product access');
           accessInfo = `
             <div style="background-color: #16a34a; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: white; margin: 0 0 10px 0;">📱 Acesso ao Produto</h3>
