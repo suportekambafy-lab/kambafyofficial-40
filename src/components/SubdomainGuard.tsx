@@ -53,9 +53,19 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       return;
     }
     
-    // QUARTA VERIFICAÇÃO: MOBILE É COMPLETAMENTE ISOLADO - sem redirecionamentos
+    // QUARTA VERIFICAÇÃO: MOBILE É COMPLETAMENTE ISOLADO - APENAS /app e /mobile
     if (currentSubdomain === 'mobile') {
-      console.log('📱 SubdomainGuard: Subdomínio MOBILE - sem redirecionamentos');
+      // Mobile subdomain APENAS pode acessar /app e /mobile
+      if (!(currentPath.startsWith('/app') || currentPath.startsWith('/mobile') || currentPath === '/' || currentPath === '')) {
+        console.log('🚫 SubdomainGuard: MOBILE - Bloqueando acesso a rota não permitida', {
+          currentPath,
+          message: 'Mobile subdomain só pode acessar /app e /mobile'
+        });
+        // Redirecionar para /app
+        window.location.href = window.location.protocol + '//' + window.location.host + '/app';
+        return;
+      }
+      console.log('✅ SubdomainGuard: Subdomínio MOBILE - rota permitida', currentPath);
       return;
     }
     
