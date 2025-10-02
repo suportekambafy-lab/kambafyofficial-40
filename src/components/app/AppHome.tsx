@@ -55,9 +55,10 @@ export function AppHome() {
   const [timeFilter, setTimeFilter] = useState<'today' | 'yesterday' | '7d' | '30d' | '90d' | 'all' | 'custom'>('7d');
   const [productFilter, setProductFilter] = useState<string>('all');
   const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [totalRevenueUnfiltered, setTotalRevenueUnfiltered] = useState(0); // Para a meta Kamba
   
-  // Sistema de conquistas Kamba - metas dinâmicas
-  const { currentLevel, nextLevel, progress: kambaProgress } = useKambaLevels(stats.totalRevenue);
+  // Sistema de conquistas Kamba - metas dinâmicas (baseado no total sem filtros)
+  const { currentLevel, nextLevel, progress: kambaProgress } = useKambaLevels(totalRevenueUnfiltered);
   const monthlyGoal = nextLevel?.threshold || 1000000; // Meta dinâmica baseada no próximo nível
   const goalProgress = kambaProgress;
 
@@ -72,21 +73,24 @@ export function AppHome() {
     }
 
     if (enabled) {
-      // Ativar notificações
-      if (Notification.permission === 'granted') {
-        setPushEnabled(true);
-        toast({
-          title: "Notificações Ativadas",
-          description: "Você receberá notificações sobre vendas e produtos"
-        });
-      } else if (Notification.permission !== 'denied') {
+      try {
         const permission = await Notification.requestPermission();
+        
         if (permission === 'granted') {
           setPushEnabled(true);
-          new Notification('Notificações Ativadas!', {
+          
+          // Enviar notificação de teste
+          new Notification('Notificações Ativadas! 🎉', {
             body: 'Você receberá notificações sobre suas vendas e produtos.',
-            icon: '/kambafy-symbol.svg'
+            icon: '/kambafy-symbol.svg',
+            badge: '/kambafy-symbol.svg',
+            tag: 'kambafy-enabled',
+            requireInteraction: false
           });
+          
+          // Salvar preferência no localStorage
+          localStorage.setItem('push_notifications_enabled', 'true');
+          
           toast({
             title: "Notificações Ativadas",
             description: "Você receberá notificações sobre vendas e produtos"
@@ -99,17 +103,18 @@ export function AppHome() {
             variant: "destructive"
           });
         }
-      } else {
+      } catch (error) {
+        console.error('Error enabling notifications:', error);
         setPushEnabled(false);
         toast({
-          title: "Permissão Negada",
-          description: "Habilite nas configurações do navegador",
+          title: "Erro",
+          description: "Não foi possível ativar as notificações",
           variant: "destructive"
         });
       }
     } else {
-      // Desativar notificações
       setPushEnabled(false);
+      localStorage.setItem('push_notifications_enabled', 'false');
       toast({
         title: "Notificações Desativadas",
         description: "Você não receberá mais notificações push"
@@ -119,8 +124,11 @@ export function AppHome() {
 
   useEffect(() => {
     // Verificar se as notificações já estão permitidas ao carregar
-    if ('Notification' in window && Notification.permission === 'granted') {
-      setPushEnabled(true);
+    if ('Notification' in window) {
+      const savedPreference = localStorage.getItem('push_notifications_enabled');
+      if (Notification.permission === 'granted' && savedPreference === 'true') {
+        setPushEnabled(true);
+      }
     }
   }, []);
 
@@ -266,12 +274,39 @@ export function AppHome() {
 
       if (productIds.length === 0) {
         setStats({ totalSales: 0, totalRevenue: 0, totalProducts: 0 });
+        setTotalRevenueUnfiltered(0);
         setLoading(false);
         return;
       }
 
-      // Buscar vendas EXCLUINDO member_access (mesma regra da versão web)
-      // Aplicar filtros
+      // PRIMEIRO: Buscar TODAS as vendas (sem filtros) para a Meta Kamba
+      const { data: allOrdersForMeta } = await supabase
+        .from('orders')
+        .select('amount, seller_commission, currency, created_at, payment_method')
+        .in('product_id', productIds)
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access')
+        .order('created_at', { ascending: true });
+
+      let totalRevenueForMeta = 0;
+      allOrdersForMeta?.forEach(order => {
+        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053,
+            'MZN': 14.3
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          amount = Math.round(amount * rate);
+        }
+        
+        totalRevenueForMeta += amount;
+      });
+
+      setTotalRevenueUnfiltered(totalRevenueForMeta);
+
+      // SEGUNDO: Buscar vendas COM FILTROS para o Dashboard
       let query = supabase
         .from('orders')
         .select('amount, seller_commission, currency, created_at, payment_method, product_id')
@@ -1182,6 +1217,39 @@ export function AppHome() {
           <div className="absolute top-full right-0 w-80 bg-background border-l border-b border-border shadow-lg">
             <div className="p-4 space-y-4">
               <h3 className="font-semibold text-sm text-foreground mb-3">Resumo Financeiro</h3>
+              
+              {/* Meta Kamba */}
+              <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+                <div className="mb-2">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {nextLevel ? `Meta: ${nextLevel.name}` : 'Nível Máximo! 🎉'}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${goalProgress}%`,
+                          backgroundColor: nextLevel?.color || '#FFD700'
+                        }}
+                      />
+                    </div>
+                    <span className="font-semibold text-xs" style={{ color: nextLevel?.color || '#FFD700' }}>
+                      {goalProgress.toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+                {currentLevel && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Nível: {currentLevel.name} {currentLevel.emoji}
+                  </p>
+                )}
+                {nextLevel && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Falta: {formatPriceForSeller(monthlyGoal - totalRevenueUnfiltered, 'KZ')}
+                  </p>
+                )}
+              </div>
               
               {/* Saldo Disponível */}
               <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
