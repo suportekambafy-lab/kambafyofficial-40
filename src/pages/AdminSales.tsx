@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Download, Filter, ShoppingCart, DollarSign, TrendingUp, Eye } from 'lucide-react';
+import { Search, Download, Filter, ShoppingCart, DollarSign, TrendingUp, Eye, CheckCircle } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
 import {
@@ -164,6 +165,30 @@ export default function AdminSales() {
       setDetailsDialogOpen(true);
     } catch (error) {
       console.error('Erro ao carregar detalhes da venda:', error);
+    }
+  };
+
+  const markAsPaid = async (orderId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('update-order-status', {
+        body: { orderId, status: 'completed' }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Pedido marcado como pago.',
+      });
+
+      loadOrders();
+    } catch (error) {
+      console.error('Erro ao marcar como pago:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível marcar o pedido como pago.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -425,13 +450,25 @@ export default function AdminSales() {
                           {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => loadOrderDetails(order.id)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => loadOrderDetails(order.id)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {order.status !== 'completed' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => markAsPaid(order.id)}
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
