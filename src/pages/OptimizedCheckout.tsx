@@ -905,17 +905,61 @@ const OptimizedCheckout = () => {
                                 }
                                 
                                 if (result.success) {
-                                  console.log('✅ AppyPay payment successful:', result);
-                                  toast({
-                                    title: "Pagamento processado!",
-                                    description: result.payment_status === 'completed' ? 
-                                      "Seu pagamento foi confirmado com sucesso!" : 
-                                      "Seu pagamento está sendo processado.",
-                                    variant: "default",
-                                  });
-
-                                  // Redirecionar para página de sucesso
-                                  navigate(`/checkout-success/${product?.id}?orderId=${result.order_id}&method=appypay`);
+                                  console.log('✅ AppyPay payment initiated:', result);
+                                  
+                                  // Start polling for payment status
+                                  let pollAttempts = 0;
+                                  const maxPollAttempts = 60; // Poll for up to 5 minutes
+                                  
+                                  const pollInterval = setInterval(async () => {
+                                    pollAttempts++;
+                                    console.log(`🔍 Polling attempt ${pollAttempts}/${maxPollAttempts} for order ${result.order_id}`);
+                                    
+                                    try {
+                                      const { data: orderStatus, error: pollError } = await supabase
+                                        .from('orders')
+                                        .select('status')
+                                        .eq('order_id', result.order_id)
+                                        .single();
+                                      
+                                      if (pollError) {
+                                        console.error('❌ Error polling order status:', pollError);
+                                        return;
+                                      }
+                                      
+                                      console.log('📊 Current order status:', orderStatus?.status);
+                                      
+                                      if (orderStatus?.status === 'completed') {
+                                        clearInterval(pollInterval);
+                                        console.log('✅ Pagamento Express confirmado!');
+                                        
+                                        toast({
+                                          title: "Pagamento Aprovado!",
+                                          description: "Seu pagamento foi confirmado com sucesso.",
+                                          variant: "default",
+                                        });
+                                        
+                                        setTimeout(() => {
+                                          navigate(`/checkout-success/${product?.id}?orderId=${result.order_id}&method=appypay`);
+                                        }, 1500);
+                                      } else if (pollAttempts >= maxPollAttempts) {
+                                        clearInterval(pollInterval);
+                                        console.log('⏱️ Polling timeout - redirecting anyway');
+                                        toast({
+                                          title: "Processando pagamento",
+                                          description: "Seu pagamento está sendo processado. Verifique seu email.",
+                                          variant: "default",
+                                        });
+                                        setTimeout(() => {
+                                          navigate(`/checkout-success/${product?.id}?orderId=${result.order_id}&method=appypay`);
+                                        }, 2000);
+                                      }
+                                    } catch (pollError) {
+                                      console.error('💥 Polling error:', pollError);
+                                    }
+                                  }, 5000); // Poll every 5 seconds
+                                  
+                                  setProcessing(false);
                                 } else {
                                   console.error('❌ AppyPay payment failed:', result);
                                   setProcessing(false);

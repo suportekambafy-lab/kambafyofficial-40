@@ -1449,17 +1449,70 @@ const Checkout = () => {
         upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
         window.location.href = upsellUrl.toString();
       } else if (selectedPayment === 'express') {
-        console.log('✅ Pagamento Express aprovado - Redirecionando para página de agradecimento');
-        // Disparar evento para Facebook Pixel
-        window.dispatchEvent(new CustomEvent('purchase-completed', {
-          detail: {
-            productId,
-            orderId,
-            amount: totalAmount,
-            currency: userCountry.currency
+        console.log('⏳ Aguardando confirmação do pagamento Express...');
+        
+        // Start polling for payment status
+        let pollAttempts = 0;
+        const maxPollAttempts = 60; // Poll for up to 5 minutes (60 * 5 seconds)
+        
+        const pollInterval = setInterval(async () => {
+          pollAttempts++;
+          console.log(`🔍 Polling attempt ${pollAttempts}/${maxPollAttempts} for order ${orderId}`);
+          
+          try {
+            const { data: orderStatus, error: pollError } = await supabase
+              .from('orders')
+              .select('status')
+              .eq('order_id', orderId)
+              .single();
+            
+            if (pollError) {
+              console.error('❌ Error polling order status:', pollError);
+              return;
+            }
+            
+            console.log('📊 Current order status:', orderStatus?.status);
+            
+            if (orderStatus?.status === 'completed') {
+              clearInterval(pollInterval);
+              console.log('✅ Pagamento Express confirmado!');
+              
+              toast({
+                title: "Pagamento Aprovado!",
+                message: "Seu pagamento foi confirmado com sucesso.",
+                variant: "default"
+              });
+              
+              // Disparar evento para Facebook Pixel
+              window.dispatchEvent(new CustomEvent('purchase-completed', {
+                detail: {
+                  productId,
+                  orderId,
+                  amount: totalAmount,
+                  currency: userCountry.currency
+                }
+              }));
+              
+              setTimeout(() => {
+                navigate(`/obrigado?${params.toString()}`);
+              }, 1500);
+            } else if (pollAttempts >= maxPollAttempts) {
+              clearInterval(pollInterval);
+              console.log('⏱️ Polling timeout - redirecting anyway');
+              toast({
+                title: "Processando pagamento",
+                message: "Seu pagamento está sendo processado. Verifique seu email.",
+                variant: "default"
+              });
+              setTimeout(() => {
+                navigate(`/obrigado?${params.toString()}`);
+              }, 2000);
+            }
+          } catch (pollError) {
+            console.error('💥 Polling error:', pollError);
           }
-        }));
-        navigate(`/obrigado?${params.toString()}`);
+        }, 5000); // Poll every 5 seconds
+        
         setProcessing(false);
       } else if (selectedPayment === 'reference' && insertedOrder?.payment_status === 'pending' && insertedOrder?.reference_number) {
         console.log('📋 Mostrando dados da referência AppyPay');
