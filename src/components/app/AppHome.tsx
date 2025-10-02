@@ -473,11 +473,7 @@ export function AppHome() {
 
       let query = supabase
         .from('orders')
-        .select(`
-          *,
-          products(name, cover),
-          customers(name, email)
-        `)
+        .select('*, products(name, cover)')
         .in('product_id', productIds)
         .order('created_at', { ascending: false });
 
@@ -486,7 +482,14 @@ export function AppHome() {
         query = query.eq('status', salesStatusFilter);
       }
 
-      const { data } = await query;
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error loading sales history:', error);
+        setOrders([]);
+        return;
+      }
+
       setOrders(data || []);
     } catch (error) {
       console.error('Error loading sales history:', error);
@@ -498,7 +501,7 @@ export function AppHome() {
     if (activeTab === 'sales-history') {
       loadSalesHistory();
     }
-  }, [activeTab, salesStatusFilter]);
+  }, [activeTab, salesStatusFilter, user]);
 
   const renderContent = () => {
     if (showNotifications) {
@@ -1085,7 +1088,7 @@ export function AppHome() {
                                   {order.products?.name || 'Produto'}
                                 </h3>
                                 <p className="text-xs text-muted-foreground line-clamp-1">
-                                  {order.customers?.name || 'Cliente'}
+                                  {order.customer_name || 'Cliente'}
                                 </p>
                               </div>
                               <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${status.color}`}>
