@@ -352,6 +352,71 @@ serve(async (req) => {
                 console.error('❌ Error in email sending process:', emailError);
               }
 
+              // Enviar email de acesso à área de membros para o produto principal
+              try {
+                console.log('🔍 Checking if main product has member area...');
+                
+                const { data: mainProduct, error: mainProductError } = await supabase
+                  .from('products')
+                  .select('name, member_area_id, user_id')
+                  .eq('id', order.product_id)
+                  .single();
+                
+                if (!mainProductError && mainProduct && mainProduct.member_area_id) {
+                  console.log(`✅ Main product has member area: ${mainProduct.member_area_id}`);
+                  
+                  // Get member area details
+                  const { data: memberArea, error: memberAreaError } = await supabase
+                    .from('member_areas')
+                    .select('name, url')
+                    .eq('id', mainProduct.member_area_id)
+                    .single();
+                  
+                  if (!memberAreaError && memberArea) {
+                    const mainMemberAreaUrl = `https://kambafy.com/members/login/${mainProduct.member_area_id}`;
+                    
+                    // Generate temporary password for main product access
+                    function generateTemporaryPassword(): string {
+                      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+                      let password = '';
+                      for (let i = 0; i < 10; i++) {
+                        password += chars.charAt(Math.floor(Math.random() * chars.length));
+                      }
+                      return password;
+                    }
+                    
+                    const mainTemporaryPassword = generateTemporaryPassword();
+                    
+                    // Send member access email for main product
+                    const mainMemberAccessPayload = {
+                      studentName: order.customer_name,
+                      studentEmail: order.customer_email.toLowerCase().trim(),
+                      memberAreaName: memberArea.name,
+                      memberAreaUrl: mainMemberAreaUrl,
+                      sellerName: 'Kambafy',
+                      isNewAccount: true,
+                      temporaryPassword: mainTemporaryPassword
+                    };
+                    
+                    console.log('📧 Sending main product member access email:', mainMemberAccessPayload);
+                    
+                    const { error: mainAccessEmailError } = await supabase.functions.invoke('send-member-access-email', {
+                      body: mainMemberAccessPayload
+                    });
+                    
+                    if (mainAccessEmailError) {
+                      console.error(`❌ Error sending main product access email:`, mainAccessEmailError);
+                    } else {
+                      console.log(`✅ Main product access email sent successfully`);
+                    }
+                  }
+                } else {
+                  console.log(`ℹ️ Main product does not have member area, skipping access email`);
+                }
+              } catch (mainProductEmailError) {
+                console.error('❌ Error processing main product member access email:', mainProductEmailError);
+              }
+
               // Process order bumps and send separate access emails if applicable
               if (paymentIntent.metadata.order_bump_data) {
                 try {
