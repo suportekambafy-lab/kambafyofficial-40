@@ -73,18 +73,24 @@ export default function AdminSellerReports() {
 
       for (const profile of profiles || []) {
         try {
-          // Buscar vendas do vendedor
-          const { data: orders } = await supabase
-            .from('orders')
-            .select('amount')
-            .eq('user_id', profile.user_id)
-            .eq('status', 'completed');
-
           // Buscar produtos do vendedor
           const { data: products } = await supabase
             .from('products')
-            .select('status, admin_approved')
+            .select('id, status, admin_approved')
             .eq('user_id', profile.user_id);
+
+          const productIds = products?.map(p => p.id) || [];
+
+          // Buscar vendas através dos produtos do vendedor
+          let orders: { amount: string }[] = [];
+          if (productIds.length > 0) {
+            const { data } = await supabase
+              .from('orders')
+              .select('amount')
+              .in('product_id', productIds)
+              .eq('status', 'completed');
+            orders = data || [];
+          }
 
           // Buscar saques do vendedor
           const { data: withdrawals } = await supabase
@@ -92,9 +98,9 @@ export default function AdminSellerReports() {
             .select('amount, status')
             .eq('user_id', profile.user_id);
 
-          const totalSales = orders?.length || 0;
-          const totalRevenue = orders?.reduce((sum, order) => 
-            sum + parseFloat(order.amount), 0) || 0;
+          const totalSales = orders.length;
+          const totalRevenue = orders.reduce((sum, order) => 
+            sum + parseFloat(order.amount || '0'), 0);
           
           const activeProducts = products?.filter(p => 
             p.status === 'Ativo' && p.admin_approved).length || 0;
