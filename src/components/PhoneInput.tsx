@@ -67,17 +67,22 @@ export function PhoneInput({
 
   const handlePhoneChange = (newValue: string) => {
     if (formatForMulticaixa) {
+      console.log('📱 Multicaixa format - Input recebido:', newValue);
+      
       // Formatar automaticamente para Multicaixa Express (apenas 9 dígitos)
       // 1. Remove tudo que não é número
       let formatted = newValue.replace(/\D/g, '');
+      console.log('📱 Após remover não-números:', formatted);
       
       // 2. Se começar com 244 (código de Angola), remove
       if (formatted.startsWith('244')) {
         formatted = formatted.substring(3);
+        console.log('📱 Após remover 244:', formatted);
       }
       
       // 3. Limitar a 9 dígitos
       formatted = formatted.slice(0, 9);
+      console.log('📱 Final formatado:', formatted);
       
       onChange(formatted);
     } else {
