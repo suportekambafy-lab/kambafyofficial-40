@@ -1417,7 +1417,7 @@ export function AppHome() {
               <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Wallet className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  <span className="text-xs text-muted-foreground">Disponível</span>
+                  <span className="text-xs text-muted-foreground">Saldo disponível</span>
                 </div>
                 <span className="font-bold text-sm text-foreground">
                   {formatPriceForSeller(financialData.availableBalance, 'KZ')}
