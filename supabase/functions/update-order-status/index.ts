@@ -161,6 +161,61 @@ serve(async (req) => {
         
         console.log('✅ Customer access created');
         
+        // CRIAR ACESSO PARA ORDER BUMPS
+        if (orderData.order_bump_data) {
+          try {
+            console.log('🔓 Processing order bump access...');
+            const orderBumpDataParsed = JSON.parse(orderData.order_bump_data);
+            
+            if (orderBumpDataParsed && orderBumpDataParsed.bump_product_id) {
+              console.log(`🔓 Creating access for order bump: ${orderBumpDataParsed.bump_product_name}`);
+              
+              // Buscar dados do produto order bump
+              const { data: bumpProduct, error: bumpProductError } = await supabase
+                .from('products')
+                .select('*')
+                .eq('id', orderBumpDataParsed.bump_product_id)
+                .single();
+              
+              if (!bumpProductError && bumpProduct) {
+                // Calcular expiração de acesso para order bump
+                const bumpAccessExpiresAt = bumpProduct.access_duration_type === 'lifetime' || !bumpProduct.access_duration_type
+                  ? null
+                  : (() => {
+                      const now = new Date();
+                      switch (bumpProduct.access_duration_type) {
+                        case 'days':
+                          return new Date(now.setDate(now.getDate() + bumpProduct.access_duration_value));
+                        case 'months':
+                          return new Date(now.setMonth(now.getMonth() + bumpProduct.access_duration_value));
+                        case 'years':
+                          return new Date(now.setFullYear(now.getFullYear() + bumpProduct.access_duration_value));
+                        default:
+                          return null;
+                      }
+                    })();
+                
+                // Criar acesso para order bump
+                await supabase.from('customer_access').insert({
+                  customer_email: orderData.customer_email.toLowerCase().trim(),
+                  customer_name: orderData.customer_name,
+                  product_id: orderBumpDataParsed.bump_product_id,
+                  order_id: `${orderId}-BUMP`,
+                  access_granted_at: new Date().toISOString(),
+                  access_expires_at: bumpAccessExpiresAt,
+                  is_active: true
+                });
+                
+                console.log(`✅ Order bump access created for: ${orderBumpDataParsed.bump_product_name}`);
+              } else {
+                console.error('❌ Error fetching bump product:', bumpProductError);
+              }
+            }
+          } catch (bumpAccessError) {
+            console.error('❌ Error creating order bump access:', bumpAccessError);
+          }
+        }
+        
         // 3. DISPARAR WEBHOOKS
         // Webhook para o produto principal
         const mainProductPayload = {
