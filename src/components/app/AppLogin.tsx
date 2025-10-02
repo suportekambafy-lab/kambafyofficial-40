@@ -4,18 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Mail, Lock, Eye, EyeOff, User, Moon, Sun } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
+import { supabase } from '@/integrations/supabase/client';
 
 export function AppLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const { signIn } = useAuth();
   const { toast } = useToast();
   const { isDark, theme, setTheme } = useSellerTheme();
 
@@ -24,17 +24,36 @@ export function AppLogin() {
     setIsLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await signUp(email, password, name || 'Usuário');
-        if (error) throw error;
-        toast({
-          title: "Conta criada!",
-          description: "Verifique seu email para confirmar."
-        });
-      } else {
-        const { error } = await signIn(email, password);
-        if (error) throw error;
-      }
+      const { error } = await signIn(email, password);
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const redirectUrl = `${window.location.origin}/app`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Email enviado!",
+        description: "Verifique sua caixa de entrada para redefinir sua senha."
+      });
+      setIsForgotPassword(false);
     } catch (error: any) {
       toast({
         title: "Erro",
@@ -77,38 +96,31 @@ export function AppLogin() {
           <div className="w-full max-w-md">
             <Card className="overflow-hidden border-none shadow-sm bg-card">
               <div className="p-8 space-y-6">
+              {/* Back button for forgot password */}
+              {isForgotPassword && (
+                <button
+                  onClick={() => setIsForgotPassword(false)}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Voltar ao login
+                </button>
+              )}
+
               {/* Title */}
               <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                  {isSignUp ? 'Criar Conta' : 'Bem-vindo'}
+                  {isForgotPassword ? 'Recuperar Senha' : 'Bem-vindo'}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {isSignUp ? 'Comece a vender online hoje' : 'Entre na sua conta Kambafy'}
+                  {isForgotPassword 
+                    ? 'Digite seu email para receber as instruções' 
+                    : 'Entre na sua conta Kambafy'}
                 </p>
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Name (only for signup) */}
-                {isSignUp && (
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm font-medium">
-                      Nome completo
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="Seu nome"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="pl-10 h-11"
-                      />
-                    </div>
-                  </div>
-                )}
-
+              <form onSubmit={isForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-4">
                 {/* Email */}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium">
@@ -128,31 +140,33 @@ export function AppLogin() {
                   </div>
                 </div>
 
-                {/* Password */}
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Senha
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10 h-11"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                {/* Password (only for login) */}
+                {!isForgotPassword && (
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-medium">
+                      Senha
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10 pr-10 h-11"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Submit */}
                 <Button
@@ -160,19 +174,21 @@ export function AppLogin() {
                   disabled={isLoading}
                   className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
                 >
-                  {isLoading ? 'Aguarde...' : isSignUp ? 'Criar Conta' : 'Entrar'}
+                  {isLoading ? 'Aguarde...' : isForgotPassword ? 'Enviar Email' : 'Entrar'}
                 </Button>
               </form>
 
-              {/* Toggle */}
-              <div className="text-center pt-2">
-                <button
-                  onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium"
-                >
-                  {isSignUp ? 'Já tem conta? Entre aqui' : 'Não tem conta? Crie uma'}
-                </button>
-              </div>
+              {/* Forgot Password Link */}
+              {!isForgotPassword && (
+                <div className="text-center pt-2">
+                  <button
+                    onClick={() => setIsForgotPassword(true)}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium"
+                  >
+                    Esqueci minha senha
+                  </button>
+                </div>
+              )}
               </div>
             </Card>
           </div>
