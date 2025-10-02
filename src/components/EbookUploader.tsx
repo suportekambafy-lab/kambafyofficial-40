@@ -54,8 +54,13 @@ export default function EbookUploader({ onFileUploaded, open, onOpenChange }: Eb
     setUploadProgress(0);
 
     try {
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${user.id}/ebooks/${Date.now()}.${fileExt}`;
+      // Preservar nome original do arquivo (sanitizado)
+      const originalName = selectedFile.name;
+      const sanitizedName = originalName
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+        .replace(/[^a-zA-Z0-9._-]/g, '_'); // Substitui caracteres especiais
+      const fileName = `${user.id}/ebooks/${Date.now()}_${sanitizedName}`;
 
       console.log('Uploading ebook to bucket:', fileName);
 
