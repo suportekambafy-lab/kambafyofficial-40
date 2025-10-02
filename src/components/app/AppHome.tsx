@@ -48,6 +48,8 @@ export function AppHome() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | '90d' | 'all'>('7d');
+  const [productFilter, setProductFilter] = useState<string>('all');
   
   // Sistema de conquistas Kamba - metas dinâmicas
   const { currentLevel, nextLevel, progress: kambaProgress } = useKambaLevels(stats.totalRevenue);
@@ -121,7 +123,7 @@ export function AppHome() {
     loadStats();
     loadProfile();
     loadNotifications();
-  }, [user]);
+  }, [user, timeFilter, productFilter]);
 
   const loadNotifications = async () => {
     if (!user) return;
@@ -264,13 +266,29 @@ export function AppHome() {
       }
 
       // Buscar vendas EXCLUINDO member_access (mesma regra da versão web)
-      const { data: orders } = await supabase
+      // Aplicar filtros
+      let query = supabase
         .from('orders')
-        .select('amount, seller_commission, currency, created_at, payment_method')
+        .select('amount, seller_commission, currency, created_at, payment_method, product_id')
         .in('product_id', productIds)
         .eq('status', 'completed')
-        .neq('payment_method', 'member_access')
-        .order('created_at', { ascending: true });
+        .neq('payment_method', 'member_access');
+
+      // Filtro de tempo
+      if (timeFilter !== 'all') {
+        const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
+        const days = daysMap[timeFilter];
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+        query = query.gte('created_at', startDate.toISOString());
+      }
+
+      // Filtro de produto
+      if (productFilter !== 'all') {
+        query = query.eq('product_id', productFilter);
+      }
+
+      const { data: orders } = await query.order('created_at', { ascending: true });
 
       let totalRevenue = 0;
       const dailySales: Record<string, { date: string; sales: number; revenue: number }> = {};
@@ -894,6 +912,65 @@ export function AppHome() {
               <h1 className="text-xl font-bold mb-1">Dashboard</h1>
               <p className="text-sm text-muted-foreground">Acompanhe o desempenho do seu negócio</p>
             </div>
+
+            {/* Filtros */}
+            <Card className="overflow-hidden border-none shadow-sm">
+              <CardContent className="p-4 space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Período</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    <Button
+                      variant={timeFilter === '7d' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeFilter('7d')}
+                      className="text-xs"
+                    >
+                      7 dias
+                    </Button>
+                    <Button
+                      variant={timeFilter === '30d' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeFilter('30d')}
+                      className="text-xs"
+                    >
+                      30 dias
+                    </Button>
+                    <Button
+                      variant={timeFilter === '90d' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeFilter('90d')}
+                      className="text-xs"
+                    >
+                      90 dias
+                    </Button>
+                    <Button
+                      variant={timeFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeFilter('all')}
+                      className="text-xs"
+                    >
+                      Tudo
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Produto</Label>
+                  <select
+                    value={productFilter}
+                    onChange={(e) => setProductFilter(e.target.value)}
+                    className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+                  >
+                    <option value="all">Todos os produtos</option>
+                    {products.filter(p => p.status === 'Ativo').map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Goal Progress - Metas Dinâmicas Kamba */}
             <Card className="overflow-hidden border-none shadow-sm">
