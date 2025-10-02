@@ -89,22 +89,35 @@ export function LessonComments({
   // Verificar se o usuário atual é o dono da área de membros e se comentários estão habilitados
   useEffect(() => {
     const checkAreaOwner = async () => {
-      if (!memberAreaId) return;
+      if (!memberAreaId) {
+        console.log('[LessonComments] No memberAreaId provided');
+        return;
+      }
+      
+      console.log('[LessonComments] Checking member area:', memberAreaId);
       
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('[LessonComments] No authenticated user');
+        return;
+      }
 
-      const { data: memberArea } = await supabase
+      const { data: memberArea, error } = await supabase
         .from('member_areas')
         .select('user_id, comments_enabled')
         .eq('id', memberAreaId)
         .single();
 
+      console.log('[LessonComments] Member area data:', memberArea);
+      console.log('[LessonComments] Error:', error);
+
       if (memberArea) {
         if (memberArea.user_id === user.id) {
           setIsAreaOwner(true);
         }
-        setCommentsEnabled(memberArea.comments_enabled ?? true);
+        const enabled = memberArea.comments_enabled ?? true;
+        console.log('[LessonComments] Comments enabled:', enabled);
+        setCommentsEnabled(enabled);
       }
     };
 
