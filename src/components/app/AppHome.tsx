@@ -1143,7 +1143,7 @@ export function AppHome() {
   return (
     <div className="min-h-screen bg-background pb-24 scrollbar-hide">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-20 bg-white border-b border-black">
+      <header className="fixed top-0 left-0 right-0 z-20 bg-green-900 shadow-md">
         <div className="flex items-center justify-between px-4 py-4">
           <img 
             src="/kambafy-app-logo.svg" 
