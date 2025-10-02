@@ -160,15 +160,26 @@ export function WithdrawalModal({
           
           <div className="space-y-2">
             <Label htmlFor="withdrawal-amount">Valor do Saque</Label>
-            <Input
-              id="withdrawal-amount"
-              type="number"
-              placeholder="0"
-              value={withdrawalAmount}
-              onChange={(e) => handleAmountChange(e.target.value)}
-              className={error ? "border-red-500" : ""}
-              disabled={loading}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="withdrawal-amount"
+                type="number"
+                placeholder="0"
+                value={withdrawalAmount}
+                onChange={(e) => handleAmountChange(e.target.value)}
+                className={error ? "border-red-500" : ""}
+                disabled={loading}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleAmountChange(availableBalance.toString())}
+                disabled={loading || availableBalance === 0}
+                className="whitespace-nowrap"
+              >
+                Saldo Total
+              </Button>
+            </div>
             {error && (
               <div className="flex items-center gap-2 text-sm text-red-600">
                 <AlertCircle className="h-4 w-4" />
