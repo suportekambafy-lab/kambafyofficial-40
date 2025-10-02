@@ -8,6 +8,7 @@ import { PiggyBank, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCustomToast } from "@/hooks/useCustomToast";
+import { useCustomerBalance } from "@/hooks/useCustomerBalance";
 
 interface WithdrawalModalProps {
   open: boolean;
@@ -24,6 +25,7 @@ export function WithdrawalModal({
 }: WithdrawalModalProps) {
   const { user } = useAuth();
   const { toast } = useCustomToast();
+  const { useBalance } = useCustomerBalance();
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -98,10 +100,20 @@ export function WithdrawalModal({
         availableBalance: availableBalance
       });
 
-      // ✅ NOVA LÓGICA: 
-      // - amount = valor original que será removido do saldo (1000)
-      // - receiveValue = valor que o cliente receberá (920)
-      // - No banco salvamos o receiveValue, mas removemos amount do saldo
+      // ✅ Primeiro deduzir o saldo TOTAL (antes do desconto)
+      const balanceDeducted = await useBalance(
+        amount, 
+        `Saque solicitado - Valor líquido: ${receiveValue.toLocaleString()} KZ`
+      );
+
+      if (!balanceDeducted) {
+        setError("Erro ao processar dedução do saldo");
+        return;
+      }
+
+      console.log('✅ Saldo deduzido com sucesso:', amount);
+
+      // ✅ Criar solicitação de saque com o valor líquido (após desconto de 8%)
       const { data: insertData, error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({
