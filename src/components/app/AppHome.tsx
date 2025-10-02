@@ -8,13 +8,17 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
 import { useKambaLevels } from '@/hooks/useKambaLevels';
 import { WithdrawalModal } from '@/components/WithdrawalModal';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -48,8 +52,9 @@ export function AppHome() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
-  const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | '90d' | 'all'>('7d');
+  const [timeFilter, setTimeFilter] = useState<'today' | 'yesterday' | '7d' | '30d' | '90d' | 'all' | 'custom'>('7d');
   const [productFilter, setProductFilter] = useState<string>('all');
+  const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
   
   // Sistema de conquistas Kamba - metas dinâmicas
   const { currentLevel, nextLevel, progress: kambaProgress } = useKambaLevels(stats.totalRevenue);
@@ -123,7 +128,7 @@ export function AppHome() {
     loadStats();
     loadProfile();
     loadNotifications();
-  }, [user, timeFilter, productFilter]);
+  }, [user, timeFilter, productFilter, customDateRange]);
 
   const loadNotifications = async () => {
     if (!user) return;
@@ -275,9 +280,30 @@ export function AppHome() {
         .neq('payment_method', 'member_access');
 
       // Filtro de tempo
-      if (timeFilter !== 'all') {
+      if (timeFilter === 'today') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        query = query.gte('created_at', today.toISOString());
+      } else if (timeFilter === 'yesterday') {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        query = query.gte('created_at', yesterday.toISOString()).lt('created_at', today.toISOString());
+      } else if (timeFilter === 'custom' && customDateRange.from) {
+        const fromDate = new Date(customDateRange.from);
+        fromDate.setHours(0, 0, 0, 0);
+        query = query.gte('created_at', fromDate.toISOString());
+        
+        if (customDateRange.to) {
+          const toDate = new Date(customDateRange.to);
+          toDate.setHours(23, 59, 59, 999);
+          query = query.lte('created_at', toDate.toISOString());
+        }
+      } else if (timeFilter !== 'all') {
         const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
-        const days = daysMap[timeFilter];
+        const days = daysMap[timeFilter as '7d' | '30d' | '90d'];
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
         query = query.gte('created_at', startDate.toISOString());
@@ -918,41 +944,72 @@ export function AppHome() {
               <CardContent className="p-4 space-y-3">
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">Período</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    <Button
-                      variant={timeFilter === '7d' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setTimeFilter('7d')}
-                      className="text-xs"
-                    >
-                      7 dias
-                    </Button>
-                    <Button
-                      variant={timeFilter === '30d' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setTimeFilter('30d')}
-                      className="text-xs"
-                    >
-                      30 dias
-                    </Button>
-                    <Button
-                      variant={timeFilter === '90d' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setTimeFilter('90d')}
-                      className="text-xs"
-                    >
-                      90 dias
-                    </Button>
-                    <Button
-                      variant={timeFilter === 'all' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setTimeFilter('all')}
-                      className="text-xs"
-                    >
-                      Tudo
-                    </Button>
-                  </div>
+                  <select
+                    value={timeFilter}
+                    onChange={(e) => {
+                      const value = e.target.value as typeof timeFilter;
+                      setTimeFilter(value);
+                      if (value !== 'custom') {
+                        setCustomDateRange({});
+                      }
+                    }}
+                    className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+                  >
+                    <option value="today">Hoje</option>
+                    <option value="yesterday">Ontem</option>
+                    <option value="7d">Últimos 7 dias</option>
+                    <option value="30d">Últimos 30 dias</option>
+                    <option value="90d">Últimos 90 dias</option>
+                    <option value="all">Todo período</option>
+                    <option value="custom">Personalizado</option>
+                  </select>
                 </div>
+
+                {timeFilter === 'custom' && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Selecionar Data</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal h-9"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {customDateRange.from ? (
+                            customDateRange.to ? (
+                              <>
+                                {format(customDateRange.from, "dd/MM/yyyy", { locale: pt })} -{" "}
+                                {format(customDateRange.to, "dd/MM/yyyy", { locale: pt })}
+                              </>
+                            ) : (
+                              format(customDateRange.from, "dd/MM/yyyy", { locale: pt })
+                            )
+                          ) : (
+                            <span className="text-muted-foreground">Escolher data</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-popover z-[120]" align="start">
+                        <Calendar
+                          mode="range"
+                          selected={{
+                            from: customDateRange.from,
+                            to: customDateRange.to
+                          }}
+                          onSelect={(range) => {
+                            setCustomDateRange({
+                              from: range?.from,
+                              to: range?.to
+                            });
+                          }}
+                          initialFocus
+                          className="pointer-events-auto"
+                          locale={pt}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">Produto</Label>
