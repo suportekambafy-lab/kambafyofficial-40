@@ -1140,7 +1140,7 @@ export function AppHome() {
         <nav className="px-2 pt-2">
           <div className={cn(
             'mx-auto transition-all duration-300 px-4 py-3 flex items-center justify-between',
-            isScrolled && 'bg-background/80 backdrop-blur-lg rounded-2xl border shadow-lg max-w-4xl'
+            isScrolled && 'bg-background/80 backdrop-blur-lg rounded-2xl shadow-lg max-w-4xl'
           )}>
             <img 
               src={isDark ? "/kambafy-logo-light-green.png" : "/kambafy-logo-new.svg"} 
