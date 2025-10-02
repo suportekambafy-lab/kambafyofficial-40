@@ -1135,7 +1135,7 @@ export function AppHome() {
             <img 
               src={isDark ? "/kambafy-logo-dark.png" : "/kambafy-logo-new.svg"} 
               alt="Kambafy" 
-              className="h-14 w-auto"
+              className="h-14 w-auto object-contain"
             />
             <div className="flex items-center gap-2">
               <button
