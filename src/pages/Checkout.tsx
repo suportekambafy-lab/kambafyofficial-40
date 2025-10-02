@@ -1475,8 +1475,8 @@ const Checkout = () => {
             
             if (orderStatus?.status === 'completed') {
               clearInterval(pollInterval);
-              setProcessing(false);
-              console.log('✅ Pagamento Express confirmado!');
+              console.log('✅ Pagamento Express confirmado! Redirecionando...');
+              console.log('📍 Redirect URL:', `/obrigado?${params.toString()}`);
               
               toast({
                 title: "Pagamento Aprovado!",
@@ -1496,6 +1496,7 @@ const Checkout = () => {
               
               // Redirecionar imediatamente com parâmetro indicando confirmação Express
               params.append('express_confirmed', 'true');
+              console.log('🚀 Final redirect URL with express_confirmed:', `/obrigado?${params.toString()}`);
               navigate(`/obrigado?${params.toString()}`);
             } else if (pollAttempts >= maxPollAttempts) {
               clearInterval(pollInterval);

@@ -16,39 +16,55 @@ const CheckoutSuccess = () => {
   const [orderData, setOrderData] = useState<any>(null);
   const [upsellConfig, setUpsellConfig] = useState<any>(null);
 
+  console.log('🔍 CheckoutSuccess - URL Params:', {
+    orderId,
+    sessionId,
+    expressConfirmed,
+    allParams: Object.fromEntries(searchParams.entries())
+  });
+
   useEffect(() => {
     const checkOrderStatus = async () => {
       if (!orderId && !sessionId) {
+        console.log('❌ No orderId or sessionId found');
         setOrderStatus('error');
         return;
       }
 
       // Se veio de Express confirmado, já marcar como completed
       if (expressConfirmed) {
-        console.log('🎉 Express payment confirmed - setting status to completed immediately');
+        console.log('🎉 EXPRESS CONFIRMED PARAMETER DETECTED - Setting status to completed immediately');
         setOrderStatus('completed');
         
         // Buscar dados do pedido para upsell
         try {
-          const { data: order } = await supabase
+          console.log('📦 Fetching order data for order_id:', orderId);
+          const { data: order, error: orderError } = await supabase
             .from('orders')
             .select('*, products(*)')
             .eq('order_id', orderId)
             .single();
           
+          if (orderError) {
+            console.error('❌ Error fetching order:', orderError);
+          }
+          
           if (order) {
-            console.log('📦 Order data loaded:', order);
+            console.log('✅ Order data loaded:', order);
             setOrderData(order);
             if (order.product_id) {
               await checkUpsellConfig(order.product_id);
             }
+          } else {
+            console.log('⚠️ No order found for order_id:', orderId);
           }
         } catch (error) {
-          console.error('Error loading order data:', error);
+          console.error('💥 Exception loading order data:', error);
         }
         return;
       }
 
+      console.log('⏳ Checking order status via edge function...');
       try {
         // Usar a edge function para verificar o status do pedido
         const { data, error } = await supabase.functions.invoke('check-order-status', {
@@ -56,20 +72,21 @@ const CheckoutSuccess = () => {
         });
 
         if (error) {
-          console.error('Erro ao verificar status do pedido:', error);
+          console.error('❌ Edge function error:', error);
           setOrderStatus('error');
           return;
         }
 
         if (!data.success || !data.order) {
-          console.error('Pedido não encontrado:', data);
+          console.error('❌ Order not found in response:', data);
           setOrderStatus('error');
           return;
         }
 
-        console.log('Pedido encontrado:', data.order);
+        console.log('✅ Order found:', data.order);
         setOrderData(data.order);
         const newStatus = data.order.status === 'completed' ? 'completed' : 'pending';
+        console.log('📊 Setting order status to:', newStatus);
         setOrderStatus(newStatus);
         
         // Se o pedido estiver completo, verificar configurações de upsell

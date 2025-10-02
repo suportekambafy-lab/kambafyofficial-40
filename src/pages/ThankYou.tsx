@@ -34,27 +34,43 @@ const ThankYou = () => {
   useEffect(() => {
     setTheme('light');
   }, [setTheme]);
-  const orderDetails = useMemo(() => ({
-    orderId: searchParams.get('order_id') || Math.random().toString(36).substr(2, 9).toUpperCase(),
-    customerName: searchParams.get('customer_name') || 'Cliente',
-    customerEmail: searchParams.get('customer_email') || '',
-    productName: searchParams.get('product_name') || 'Produto Digital',
-    amount: searchParams.get('amount') || '0',
-    currency: searchParams.get('currency') || 'KZ',
-    convertedAmount: searchParams.get('converted_amount') || '',
-    convertedCurrency: searchParams.get('converted_currency') || '',
-    productId: searchParams.get('product_id') || '',
-    sellerId: searchParams.get('seller_id') || '',
-    paymentMethod: searchParams.get('payment_method') || '',
-    paymentIntentId: searchParams.get('payment_intent_id') || '',
-    status: searchParams.get('status') || 'pending',
-    baseProductPrice: searchParams.get('base_product_price') || searchParams.get('amount') || '0',
-    // Order Bump data
-    orderBumpName: searchParams.get('order_bump_name') || '',
-    orderBumpPrice: searchParams.get('order_bump_price') || '',
-    orderBumpDiscount: searchParams.get('order_bump_discount') || '',
-    orderBumpDiscountedPrice: searchParams.get('order_bump_discounted_price') || ''
-  }), [searchParams]);
+  const orderDetails = useMemo(() => {
+    const expressConfirmed = searchParams.get('express_confirmed') === 'true';
+    const urlStatus = searchParams.get('status') || 'pending';
+    
+    // Se veio de Express confirmado, forçar status completed
+    const finalStatus = expressConfirmed ? 'completed' : urlStatus;
+    
+    console.log('🔍 ThankYou URL Params:', {
+      expressConfirmed,
+      urlStatus,
+      finalStatus,
+      allParams: Object.fromEntries(searchParams.entries())
+    });
+    
+    return {
+      orderId: searchParams.get('order_id') || Math.random().toString(36).substr(2, 9).toUpperCase(),
+      customerName: searchParams.get('customer_name') || 'Cliente',
+      customerEmail: searchParams.get('customer_email') || '',
+      productName: searchParams.get('product_name') || 'Produto Digital',
+      amount: searchParams.get('amount') || '0',
+      currency: searchParams.get('currency') || 'KZ',
+      convertedAmount: searchParams.get('converted_amount') || '',
+      convertedCurrency: searchParams.get('converted_currency') || '',
+      productId: searchParams.get('product_id') || '',
+      sellerId: searchParams.get('seller_id') || '',
+      paymentMethod: searchParams.get('payment_method') || '',
+      paymentIntentId: searchParams.get('payment_intent_id') || '',
+      status: finalStatus,
+      expressConfirmed,
+      baseProductPrice: searchParams.get('base_product_price') || searchParams.get('amount') || '0',
+      // Order Bump data
+      orderBumpName: searchParams.get('order_bump_name') || '',
+      orderBumpPrice: searchParams.get('order_bump_price') || '',
+      orderBumpDiscount: searchParams.get('order_bump_discount') || '',
+      orderBumpDiscountedPrice: searchParams.get('order_bump_discounted_price') || ''
+    };
+  }, [searchParams]);
 
   // Estado para pedidos relacionados (upsells)
   const [relatedOrders, setRelatedOrders] = useState<any[]>([]);
@@ -71,6 +87,12 @@ const ThankYou = () => {
 
   // Função para verificar o status do pedido no banco de dados
   const checkOrderStatus = useCallback(async () => {
+    // Se for Express confirmado, não fazer polling - já sabemos que está completed
+    if (orderDetails.expressConfirmed) {
+      console.log('⏭️ Skipping order status check - Express payment already confirmed');
+      return;
+    }
+    
     const orderId = orderDetails.orderId;
     if (!orderId) return;
     
@@ -98,7 +120,7 @@ const ThankYou = () => {
     } catch (error) {
       console.error('❌ Erro na verificação do status:', error);
     }
-  }, [orderDetails.orderId, orderStatus]);
+  }, [orderDetails.orderId, orderDetails.expressConfirmed, orderStatus]);
 
   // Verificar se chegamos de uma página de upsell
   useEffect(() => {
@@ -115,9 +137,16 @@ const ThankYou = () => {
     const loadProduct = async () => {
       console.log('🔍 ThankYou: ==> CARREGANDO PRODUTO <==');
       console.log('📋 Detalhes do pedido:', orderDetails);
+      console.log('🎯 Express Confirmed:', orderDetails.expressConfirmed);
+      console.log('📊 Final Status:', orderDetails.status);
 
-      // Definir status inicial
-      setOrderStatus(orderDetails.status);
+      // Definir status inicial - se for Express confirmado, já é completed
+      if (orderDetails.expressConfirmed) {
+        console.log('✅ EXPRESS PAYMENT CONFIRMED - Status is COMPLETED');
+        setOrderStatus('completed');
+      } else {
+        setOrderStatus(orderDetails.status);
+      }
 
       // Se não temos customer_name nos parâmetros, buscar do banco usando order_id
       if (orderDetails.customerName === 'Cliente' && orderDetails.orderId) {
