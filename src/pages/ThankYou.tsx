@@ -619,8 +619,15 @@ const ThankYou = () => {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Valor Total Pago</label>
                   <p className="text-2xl font-bold text-checkout-green">
-                    {/* Para Multibanco, usar valor correto */}
-                    {orderDetails.paymentMethod === 'multibanco' && multibancoData?.amount ? `€${multibancoData.amount}` : `${orderDetails.amount} ${orderDetails.currency}`}
+                    {/* Mostrar sempre em euro quando o pagamento é em euro */}
+                    {orderDetails.paymentMethod === 'multibanco' && multibancoData?.amount 
+                      ? `€${multibancoData.amount}` 
+                      : orderDetails.convertedCurrency === 'EUR' && orderDetails.convertedAmount
+                        ? `€${orderDetails.convertedAmount}`
+                        : orderDetails.currency === 'EUR'
+                          ? `€${orderDetails.amount}`
+                          : `${orderDetails.amount} ${orderDetails.currency}`
+                    }
                   </p>
                 </div>
                 <div>
