@@ -11,6 +11,7 @@ const CheckoutSuccess = () => {
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('order_id');
   const sessionId = searchParams.get('session_id');
+  const expressConfirmed = searchParams.get('express_confirmed') === 'true';
   const [orderStatus, setOrderStatus] = useState<'loading' | 'pending' | 'completed' | 'error'>('loading');
   const [orderData, setOrderData] = useState<any>(null);
   const [upsellConfig, setUpsellConfig] = useState<any>(null);
@@ -19,6 +20,32 @@ const CheckoutSuccess = () => {
     const checkOrderStatus = async () => {
       if (!orderId && !sessionId) {
         setOrderStatus('error');
+        return;
+      }
+
+      // Se veio de Express confirmado, já marcar como completed
+      if (expressConfirmed) {
+        console.log('🎉 Express payment confirmed - setting status to completed immediately');
+        setOrderStatus('completed');
+        
+        // Buscar dados do pedido para upsell
+        try {
+          const { data: order } = await supabase
+            .from('orders')
+            .select('*, products(*)')
+            .eq('order_id', orderId)
+            .single();
+          
+          if (order) {
+            console.log('📦 Order data loaded:', order);
+            setOrderData(order);
+            if (order.product_id) {
+              await checkUpsellConfig(order.product_id);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading order data:', error);
+        }
         return;
       }
 
@@ -83,15 +110,17 @@ const CheckoutSuccess = () => {
     // Verificar status inicial
     checkOrderStatus();
 
-    // Poll apenas se ainda não temos dados ou se o status for pending
-    const interval = setInterval(() => {
-      if (orderStatus === 'pending' || orderStatus === 'loading') {
-        checkOrderStatus();
-      }
-    }, 15000);
+    // Poll apenas se ainda não temos dados ou se o status for pending (e não for Express confirmado)
+    if (!expressConfirmed) {
+      const interval = setInterval(() => {
+        if (orderStatus === 'pending' || orderStatus === 'loading') {
+          checkOrderStatus();
+        }
+      }, 15000);
 
-    return () => clearInterval(interval);
-  }, [orderId, sessionId]);
+      return () => clearInterval(interval);
+    }
+  }, [orderId, sessionId, expressConfirmed]);
 
   if (orderStatus === 'loading') {
     return (

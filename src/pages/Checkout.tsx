@@ -1494,7 +1494,8 @@ const Checkout = () => {
                 }
               }));
               
-              // Redirecionar imediatamente
+              // Redirecionar imediatamente com parâmetro indicando confirmação Express
+              params.append('express_confirmed', 'true');
               navigate(`/obrigado?${params.toString()}`);
             } else if (pollAttempts >= maxPollAttempts) {
               clearInterval(pollInterval);

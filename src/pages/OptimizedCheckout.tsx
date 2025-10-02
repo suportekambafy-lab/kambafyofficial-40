@@ -940,8 +940,8 @@ const OptimizedCheckout = () => {
                                           variant: "default",
                                         });
                                         
-                                        // Redirecionar imediatamente
-                                        navigate(`/checkout-success/${product?.id}?orderId=${result.order_id}&method=appypay`);
+                                        // Redirecionar imediatamente com parâmetro indicando confirmação Express
+                                        navigate(`/checkout-success/${product?.id}?orderId=${result.order_id}&method=appypay&express_confirmed=true`);
                                       } else if (pollAttempts >= maxPollAttempts) {
                                         clearInterval(pollInterval);
                                         setProcessing(false);
