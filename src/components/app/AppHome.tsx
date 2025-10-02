@@ -1133,9 +1133,10 @@ export function AppHome() {
             isScrolled && 'bg-background/80 backdrop-blur-lg rounded-2xl border shadow-lg max-w-4xl'
           )}>
             <img 
-              src={isDark ? "/kambafy-logo-dark.png" : "/kambafy-logo-new.svg"} 
+              src={isDark ? "/kambafy-logo-light-green.png" : "/kambafy-logo-new.svg"} 
               alt="Kambafy" 
-              className={isDark ? "h-[3.5rem] w-auto object-contain" : "h-14 w-auto"}
+              className="h-14 w-auto"
+              style={isDark ? { height: '56px' } : {}}
             />
             <div className="flex items-center gap-2">
               <button

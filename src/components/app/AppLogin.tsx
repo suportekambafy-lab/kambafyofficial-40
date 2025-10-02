@@ -54,9 +54,10 @@ export function AppLogin() {
           <div className="px-4 py-4">
             <div className="flex items-center justify-between">
               <img 
-                src={isDark ? "/kambafy-logo-dark.png" : "/kambafy-logo-new.svg"} 
+                src={isDark ? "/kambafy-logo-light-green.png" : "/kambafy-logo-new.svg"} 
                 alt="Kambafy" 
-                className={isDark ? "h-12 w-auto object-contain scale-100" : "h-12 w-auto"}
+                className="h-12 w-auto"
+                style={isDark ? { height: '48px' } : {}}
               />
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
