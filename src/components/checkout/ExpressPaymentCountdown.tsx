@@ -15,7 +15,7 @@ const ExpressPaymentCountdown: React.FC<ExpressPaymentCountdownProps> = ({
   onTimeExpired,
   onRestart,
   isActive,
-  totalSeconds = 60
+  totalSeconds = 90
 }) => {
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
   const [isExpired, setIsExpired] = useState(false);
