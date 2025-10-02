@@ -971,8 +971,8 @@ export function AppHome() {
             <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-4">
                 <Button 
-                  variant="outline" 
-                  className="w-full h-11 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20 transition-colors"
+                  variant="ghost" 
+                  className="w-full h-11 hover:bg-destructive/5 hover:text-destructive transition-colors"
                   onClick={() => signOut()}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
@@ -1175,7 +1175,7 @@ export function AppHome() {
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           className="w-full justify-start text-left font-normal h-9"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -1276,7 +1276,7 @@ export function AppHome() {
                 <h3 className="font-semibold text-base mb-4 text-foreground">Acesso Rápido</h3>
                 <div className="space-y-2">
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     className="w-full justify-start h-12 hover:bg-primary/5 hover:text-primary transition-colors"
                     onClick={() => setActiveTab('stats')}
                   >
@@ -1284,7 +1284,7 @@ export function AppHome() {
                     <span className="font-medium">Ver financeiro</span>
                   </Button>
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     className="w-full justify-start h-12 hover:bg-primary/5 hover:text-primary transition-colors"
                     onClick={() => setActiveTab('products')}
                   >
@@ -1341,7 +1341,7 @@ export function AppHome() {
                     markAllAsRead();
                   }
                 }}
-                className="relative w-10 h-10 rounded-full bg-card hover:bg-accent flex items-center justify-center transition-colors border border-border"
+                className="relative w-10 h-10 rounded-full bg-card hover:bg-accent flex items-center justify-center transition-colors"
               >
                 <Bell className="h-5 w-5 text-foreground" />
                 {unreadCount > 0 && (
@@ -1352,7 +1352,7 @@ export function AppHome() {
               </button>
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="w-10 h-10 rounded-full bg-card hover:bg-accent flex items-center justify-center transition-colors border border-border"
+                className="w-10 h-10 rounded-full bg-card hover:bg-accent flex items-center justify-center transition-colors"
               >
                 {theme === 'dark' ? (
                   <Sun className="h-5 w-5 text-foreground" />
@@ -1362,7 +1362,7 @@ export function AppHome() {
               </button>
               <button
                 onClick={() => setShowQuickMenu(!showQuickMenu)}
-                className="w-10 h-10 rounded-full bg-card hover:bg-accent flex items-center justify-center transition-colors border border-border"
+                className="w-10 h-10 rounded-full bg-card hover:bg-accent flex items-center justify-center transition-colors"
               >
                 {showQuickMenu ? (
                   <X className="h-5 w-5 text-foreground" />
@@ -1463,8 +1463,8 @@ export function AppHome() {
                     setShowQuickMenu(false);
                     setActiveTab('sales-history');
                   }}
-                  variant="outline"
-                  className="w-full dark:text-white dark:border-white/20"
+                  variant="ghost"
+                  className="w-full dark:text-white"
                   size="sm"
                 >
                   Histórico de Vendas
@@ -1474,8 +1474,8 @@ export function AppHome() {
                     setShowQuickMenu(false);
                     setActiveTab('stats');
                   }}
-                  variant="outline"
-                  className="w-full dark:text-white dark:border-white/20"
+                  variant="ghost"
+                  className="w-full dark:text-white"
                   size="sm"
                 >
                   Financeiro
