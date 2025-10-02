@@ -200,16 +200,9 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
       // Normalizar email para lowercase
       const normalizedEmail = user.email.toLowerCase().trim();
       
-      // Verificar se é um admin primeiro
-      const { data: adminCheck } = await supabase
-        .from('admin_users')
-        .select('email')
-        .eq('email', normalizedEmail)
-        .eq('is_active', true)
-        .single();
-      
-      if (adminCheck) {
-        return true; // Admins têm acesso a todas as áreas
+      // Verificar se é o email de validação especial
+      if (normalizedEmail === 'validar@kambafy.com') {
+        return true; // Email de validação tem acesso a todas as áreas
       }
       
       const { data: student } = await supabase

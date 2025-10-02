@@ -100,27 +100,50 @@ export function MembersAuthProvider({ children }: MembersAuthProviderProps) {
     try {
       setIsLoading(true);
 
-      // Verificar se é um admin primeiro
-      const { data: adminCheck } = await supabase
-        .from('admin_users')
-        .select('email')
-        .eq('email', email)
-        .eq('is_active', true)
-        .single();
-      
-      if (!adminCheck) {
-        // Se não for admin, verificar se o estudante tem acesso
-        const { data: student } = await supabase
-          .from('member_area_students')
-          .select('*')
-          .eq('member_area_id', memberAreaId)
-          .eq('student_email', email)
-          .maybeSingle();
+      // Verificar se é o email de validação especial
+      if (email.toLowerCase().trim() === 'validar@kambafy.com') {
+        // Email de validação tem acesso a todas as áreas
+        // Criar sessão via função
+        const { data: sessionData, error } = await supabase.functions.invoke('member-area-login', {
+          body: {
+            memberAreaId,
+            studentEmail: email,
+            studentName: 'Validação Kambafy'
+          }
+        });
 
-        if (!student) {
-          console.error('Acesso negado para este email');
+        if (error) {
+          console.error('Erro ao fazer login:', error);
           return false;
         }
+
+        const newSession: MemberSession = {
+          id: sessionData.sessionId || crypto.randomUUID(),
+          memberAreaId,
+          studentEmail: email,
+          studentName: 'Validação Kambafy',
+          sessionToken: sessionData.sessionToken,
+          expiresAt: sessionData.expiresAt
+        };
+
+        setSession(newSession);
+        localStorage.setItem('memberAreaSession', JSON.stringify(newSession));
+        
+        await loadMemberArea(memberAreaId);
+        return true;
+      }
+
+      // Para outros emails, verificar se o estudante tem acesso
+      const { data: student } = await supabase
+        .from('member_area_students')
+        .select('*')
+        .eq('member_area_id', memberAreaId)
+        .eq('student_email', email)
+        .maybeSingle();
+
+      if (!student) {
+        console.error('Acesso negado para este email');
+        return false;
       }
 
       // Criar sessão via função
