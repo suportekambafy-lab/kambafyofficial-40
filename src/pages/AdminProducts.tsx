@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BanProductModal from '@/components/BanProductModal';
 import { SEO } from '@/components/SEO';
+import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 
 interface ProductWithProfile {
   id: string;
@@ -384,10 +385,9 @@ export default function AdminProducts() {
       }
 
       // Se for um curso/área de membros, abrir a URL da área
-      if (product.member_areas && product.member_areas.url) {
-        const url = product.member_areas.url.startsWith('http') 
-          ? product.member_areas.url 
-          : `https://${product.member_areas.url}`;
+      if (product.member_areas && product.member_areas.id) {
+        const memberAreaLinks = createMemberAreaLinks();
+        const url = memberAreaLinks.getMemberAreaUrl(product.member_areas.id);
         console.log('🌐 Abrindo URL da área de membros:', url);
         
         const newWindow = window.open(url, '_blank');
