@@ -1467,7 +1467,6 @@ export function AppHome() {
                   className="w-full"
                   size="sm"
                 >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
                   Histórico de Vendas
                 </Button>
                 <Button 
