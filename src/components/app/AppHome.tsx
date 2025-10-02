@@ -943,7 +943,7 @@ export function AppHome() {
           <div className="p-4 space-y-6">
             {/* Welcome */}
             <div className="px-2">
-              <h1 className="text-xl font-bold mb-1">Dashboard</h1>
+              <h1 className="text-xl font-bold mb-1 text-foreground">Dashboard</h1>
               <p className="text-sm text-muted-foreground">Acompanhe o desempenho do seu negócio</p>
             </div>
 
