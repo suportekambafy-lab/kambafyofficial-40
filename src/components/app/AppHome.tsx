@@ -1464,7 +1464,7 @@ export function AppHome() {
                     setActiveTab('sales-history');
                   }}
                   variant="outline"
-                  className="w-full"
+                  className="w-full dark:bg-white dark:text-black dark:border-white dark:hover:bg-white/90"
                   size="sm"
                 >
                   Histórico de Vendas
@@ -1475,7 +1475,7 @@ export function AppHome() {
                     setActiveTab('stats');
                   }}
                   variant="outline"
-                  className="w-full"
+                  className="w-full dark:bg-white dark:text-black dark:border-white dark:hover:bg-white/90"
                   size="sm"
                 >
                   Financeiro
