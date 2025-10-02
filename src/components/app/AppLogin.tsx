@@ -54,7 +54,7 @@ export function AppLogin() {
           <div className="px-4 py-4">
             <div className="flex items-center justify-between">
               <img 
-                src="/kambafy-logo-new.svg" 
+                src={isDark ? "/kambafy-logo-dark.png" : "/kambafy-logo-new.svg"} 
                 alt="Kambafy" 
                 className="h-12 w-auto"
               />

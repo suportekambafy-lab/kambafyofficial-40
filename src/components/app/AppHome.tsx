@@ -1133,7 +1133,7 @@ export function AppHome() {
             isScrolled && 'bg-background/80 backdrop-blur-lg rounded-2xl border shadow-lg max-w-4xl'
           )}>
             <img 
-              src="/kambafy-logo-new.svg" 
+              src={isDark ? "/kambafy-logo-dark.png" : "/kambafy-logo-new.svg"} 
               alt="Kambafy" 
               className="h-14 w-auto"
             />
