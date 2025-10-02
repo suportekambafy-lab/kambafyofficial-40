@@ -68,6 +68,8 @@ export function BankTransferForm({
 }: BankTransferFormProps) {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [accountHolder, setAccountHolder] = useState('');
+  const [accountIban, setAccountIban] = useState('');
   const { toast: showToast } = useCustomToast();
 
   // Always use BCI bank (first available bank)
@@ -117,6 +119,24 @@ export function BankTransferForm({
   };
 
   const handleConfirmPayment = () => {
+    if (!accountHolder.trim()) {
+      showToast({
+        title: 'Campos obrigatórios',
+        message: 'Introduza o titular da conta',
+        variant: 'error'
+      });
+      return;
+    }
+
+    if (!accountIban.trim()) {
+      showToast({
+        title: 'Campos obrigatórios',
+        message: 'Introduza o IBAN',
+        variant: 'error'
+      });
+      return;
+    }
+
     if (!proofFile) {
       showToast({
         title: 'Campos obrigatórios',
@@ -208,6 +228,36 @@ export function BankTransferForm({
         </Card>
 
         <div className="space-y-3">
+          <Label htmlFor="account-holder" className="text-sm font-medium text-gray-700">
+            Titular da Conta (Quem Transfere)
+          </Label>
+          <input
+            id="account-holder"
+            type="text"
+            value={accountHolder}
+            onChange={(e) => setAccountHolder(e.target.value)}
+            placeholder="Nome completo do titular"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={disabled}
+          />
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="account-iban" className="text-sm font-medium text-gray-700">
+            IBAN do Titular
+          </Label>
+          <input
+            id="account-iban"
+            type="text"
+            value={accountIban}
+            onChange={(e) => setAccountIban(e.target.value)}
+            placeholder="0000 0000 00000000000 00"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={disabled}
+          />
+        </div>
+
+        <div className="space-y-3">
           <Label className="text-sm font-medium text-gray-700">
             Comprovativo
           </Label>
@@ -272,10 +322,12 @@ export function BankTransferForm({
 
         <Button
           onClick={handleConfirmPayment}
-          disabled={disabled || !proofFile}
+          disabled={disabled || !proofFile || !accountHolder.trim() || !accountIban.trim()}
           className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-semibold"
         >
-          {!proofFile ? (
+          {!accountHolder.trim() || !accountIban.trim() ? (
+            'Preencha todos os campos'
+          ) : !proofFile ? (
             'Carregue o comprovativo'
           ) : (
             `COMPRAR AGORA - ${formattedAmount}`
