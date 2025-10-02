@@ -586,7 +586,7 @@ const KambafyLogo = ({
 }) => {
   return <div className={cn('flex items-center', className)}>
       <img 
-        src="/kambafy-logo-new.svg" 
+        src="/kambafy-logo-white.svg" 
         alt="Kambafy" 
         className="h-20 w-auto"
       />
