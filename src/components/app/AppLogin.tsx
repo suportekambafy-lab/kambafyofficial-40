@@ -63,7 +63,7 @@ export function AppLogin() {
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
           <Card className="overflow-hidden border-none shadow-sm bg-background">
-            <div className="p-8 space-y-6 bg-muted/10 rounded-lg">
+            <div className="p-8 space-y-6 bg-muted/30 rounded-lg">
               {/* Title */}
               <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
