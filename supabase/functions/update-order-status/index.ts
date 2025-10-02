@@ -34,11 +34,11 @@ serve(async (req) => {
 
     console.log(`🔄 Updating order ${orderId} status to: ${status}`);
 
-    // Buscar o order atual para obter dados
+    // Buscar o order atual para obter dados - usando UUID
     const { data: orderData, error: fetchError } = await supabase
       .from('orders')
       .select('*')
-      .eq('order_id', orderId)
+      .eq('id', orderId)
       .single();
 
     if (fetchError || !orderData) {
@@ -46,14 +46,14 @@ serve(async (req) => {
       throw new Error('Order not found');
     }
 
-    // Atualizar status do order
+    // Atualizar status do order - usando UUID
     const { error: updateError } = await supabase
       .from('orders')
       .update({ 
         status: status,
         updated_at: new Date().toISOString()
       })
-      .eq('order_id', orderId);
+      .eq('id', orderId);
 
     if (updateError) {
       console.error('Error updating order status:', updateError);
