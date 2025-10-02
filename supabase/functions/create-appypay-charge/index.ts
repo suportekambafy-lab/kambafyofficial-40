@@ -218,17 +218,24 @@ serve(async (req) => {
     // Determinar método de pagamento baseado no tipo
     let appyPayMethod = 'REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f'; // Default: Referência
     if (paymentMethod === 'express') {
-      appyPayMethod = 'GPO_53c70da3-1c88-4391-8b60-ab4757fbb044'; // Multicaixa Express
+      appyPayMethod = 'GPO_b1cfa3d3-f34a-4cfa-bcff-d52829991567'; // Multicaixa Express
     }
 
     // Preparar dados para AppyPay v2.0
-    const appyPayPayload = {
+    const appyPayPayload: any = {
       amount: parseFloat(amount),
       currency: "AOA",
-      description: `Compra: ${product.name}`,
+      description: "KAMBAFY_PAYMENTS",
       merchantTransactionId: merchantTransactionId,
       paymentMethod: appyPayMethod
     };
+
+    // Adicionar paymentInfo com phoneNumber para Multicaixa Express (GPO)
+    if (paymentMethod === 'express' && phoneNumber) {
+      appyPayPayload.paymentInfo = {
+        phoneNumber: phoneNumber
+      };
+    }
 
     logStep("Creating AppyPay charge", {
       payload: appyPayPayload,
