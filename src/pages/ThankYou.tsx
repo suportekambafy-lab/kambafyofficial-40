@@ -616,29 +616,6 @@ const ThankYou = () => {
                   <p className="text-checkout-text font-medium">{orderDetails.productName}</p>
                 </div>
                 
-                {/* Order Bump Information */}
-                {orderDetails.orderBumpName && <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                    <label className="text-sm font-medium text-orange-700">Produto Extra Adicionado</label>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-checkout-text font-medium">{orderDetails.orderBumpName}</p>
-                        {orderDetails.orderBumpDiscount && parseInt(orderDetails.orderBumpDiscount) > 0 && <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-500 line-through">{orderDetails.orderBumpPrice}</span>
-                            <span className="bg-red-500 text-white px-2 py-1 rounded text-xs">
-                              -{orderDetails.orderBumpDiscount}% OFF
-                            </span>
-                          </div>}
-                      </div>
-                       <span className="text-green-600 font-medium">
-                         {/* Mostrar valor correto do order bump */}
-                         +{orderDetails.orderBumpDiscountedPrice || orderDetails.orderBumpPrice} {orderDetails.currency}
-                       </span>
-                    </div>
-                  </div>}
-
-                {/* Related Orders - Remover seção incorreta */}
-                {/* Esta seção foi removida pois estava incorreta - order bumps são mostrados acima */}
-                
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Valor Total Pago</label>
                   <p className="text-2xl font-bold text-checkout-green">
