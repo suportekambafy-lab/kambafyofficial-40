@@ -423,6 +423,13 @@ export function AppHome() {
     if (!user) return;
 
     try {
+      // ✅ BUSCAR SALDO REAL DA TABELA customer_balances
+      const { data: balanceData } = await supabase
+        .from('customer_balances')
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       // Buscar payment_releases
       const { data: releases } = await supabase
         .from('payment_releases')
@@ -437,9 +444,9 @@ export function AppHome() {
         .order('created_at', { ascending: false });
 
       const now = new Date();
-      let availableBalance = 0;
       let pendingBalance = 0;
 
+      // Calcular apenas saldo pendente (vendas ainda não liberadas)
       orders.forEach(order => {
         let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
         
@@ -459,20 +466,19 @@ export function AppHome() {
         // Verificar se foi liberado manualmente via payment_releases
         const wasReleased = releases?.some(r => r.order_id === order.order_id) || false;
 
-        if (wasReleased || now >= releaseDate) {
-          availableBalance += amount;
-        } else {
+        // Se ainda não foi liberado, adicionar ao saldo pendente
+        if (!wasReleased && now < releaseDate) {
           pendingBalance += amount;
         }
       });
 
-      // Calcular total de saques
+      // Calcular total de saques aprovados (apenas para exibição)
       const totalWithdrawnAmount = withdrawals
         ?.filter(w => w.status === 'aprovado')
         .reduce((sum, w) => sum + (parseFloat(w.amount?.toString() || '0')), 0) || 0;
 
-      // Subtrair saques do saldo disponível
-      const finalAvailableBalance = Math.max(0, availableBalance - totalWithdrawnAmount);
+      // ✅ USAR O SALDO REAL DO BANCO (já considera todas as transações e saques)
+      const finalAvailableBalance = parseFloat(balanceData?.balance?.toString() || '0');
 
       setFinancialData({
         availableBalance: finalAvailableBalance,
