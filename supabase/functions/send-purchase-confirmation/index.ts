@@ -502,6 +502,11 @@ const handler = async (req: Request): Promise<Response> => {
                   </div>
                 </div>
 
+                ${accessInfo ? `<!-- Access Link -->
+                <div style="padding: 0 30px 30px;">
+                  ${accessInfo}
+                </div>` : ''}
+
                 <!-- Thank You -->
                 <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
                   <div style="background-color: #f0fdf4; border: 1px solid #16a34a; border-radius: 8px; padding: 20px; text-align: center;">
