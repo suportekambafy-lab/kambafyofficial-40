@@ -28,21 +28,14 @@ export function useWithdrawalRequests() {
   const loadWithdrawalRequests = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Carregando solicitações de saque...');
-      console.log('🔐 Current user email:', await supabase.auth.getUser());
+      console.log('🔍 Carregando solicitações de saque via RPC admin...');
 
-      // Primeiro tentar obter o usuário atual
-      const { data: authUser } = await supabase.auth.getUser();
-      console.log('👤 Usuário autenticado:', authUser?.user?.email);
-
-      // Usar query direta para garantir dados atualizados
+      // Usar função RPC específica para admin que bypassa RLS
       const { data: withdrawals, error: withdrawalError } = await supabase
-        .from('withdrawal_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .rpc('get_all_withdrawal_requests_for_admin');
       
-      console.log('📋 Query direta - Saques encontrados:', withdrawals);
-      console.log('❌ Query direta - Erro:', withdrawalError);
+      console.log('📋 RPC admin - Saques encontrados:', withdrawals?.length || 0);
+      console.log('❌ RPC admin - Erro:', withdrawalError);
 
       if (withdrawalError) {
         console.error('💥 Erro ao carregar saques:', withdrawalError);
