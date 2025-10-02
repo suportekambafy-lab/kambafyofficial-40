@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Video, FileText, Users, MoreHorizontal, Edit, Trash2, Eye, Clock, BookOpen, Upload, Minimize2, Search, ChevronDown, ArrowLeft, ExternalLink, EyeOff, GripVertical, Mail, Save, Image, Type, Settings, CalendarIcon, AlertTriangle, Timer } from "lucide-react";
+import { Plus, Video, FileText, Users, MoreHorizontal, Edit, Trash2, Eye, Clock, BookOpen, Upload, Minimize2, Search, ChevronDown, ArrowLeft, ExternalLink, EyeOff, GripVertical, Mail, Save, Image, Type, Settings, CalendarIcon, AlertTriangle, Timer, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -1257,11 +1257,8 @@ export default function Members() {
                 <p className="text-sm text-gray-600">Configure todos os aspectos visuais e funcionais da sua área de membros</p>
               </div>
 
-              {/* Configurações de Comentários */}
-              <MemberAreaSettings memberAreaId={selectedArea.id} />
-
               <Tabs value={customizationTab} onValueChange={setCustomizationTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
                   <TabsTrigger value="basics" className="flex items-center gap-2">
                     <Type className="w-4 h-4" />
                     <span className="hidden sm:inline">Básico</span>
@@ -1269,6 +1266,10 @@ export default function Members() {
                   <TabsTrigger value="branding" className="flex items-center gap-2">
                     <Image className="w-4 h-4" />
                     <span className="hidden sm:inline">Marca</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="comments" className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4" />
+                    <span className="hidden sm:inline">Comentários</span>
                   </TabsTrigger>
                   <TabsTrigger value="modules" className="flex items-center gap-2">
                     <Settings className="w-4 h-4" />
@@ -1430,6 +1431,10 @@ export default function Members() {
                       </div>
                     </CardContent>
                   </Card>
+                </TabsContent>
+
+                <TabsContent value="comments" className="space-y-6">
+                  <MemberAreaSettings memberAreaId={selectedArea.id} />
                 </TabsContent>
 
                 <TabsContent value="modules" className="space-y-6">
