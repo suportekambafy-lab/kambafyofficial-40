@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Moon, Sun } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 
@@ -17,7 +17,7 @@ export function AppLogin() {
   const [isSignUp, setIsSignUp] = useState(false);
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
-  const { isDark } = useSellerTheme();
+  const { isDark, theme, setTheme } = useSellerTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,16 +51,26 @@ export function AppLogin() {
       <div className="min-h-screen bg-background flex flex-col">
         {/* Modern Clean Header */}
         <header className="sticky top-0 z-10 bg-card/95 backdrop-blur-md border-b border-border">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-center">
-            <img 
-              src="/kambafy-logo-new.svg" 
-              alt="Kambafy" 
-              className="h-12 w-auto"
-            />
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between">
+              <img 
+                src="/kambafy-logo-new.svg" 
+                alt="Kambafy" 
+                className="h-12 w-auto"
+              />
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="w-10 h-10 rounded-full bg-background hover:bg-accent flex items-center justify-center transition-colors border border-border"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-5 w-5 text-foreground" />
+                ) : (
+                  <Moon className="h-5 w-5 text-foreground" />
+                )}
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
         {/* Main Content */}
         <div className="flex-1 flex items-center justify-center px-4 py-8">

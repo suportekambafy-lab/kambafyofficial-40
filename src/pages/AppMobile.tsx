@@ -20,13 +20,9 @@ export default function AppMobile() {
     );
   }
 
-  if (!user) {
-    return <AppLogin />;
-  }
-
   return (
     <SellerThemeProvider>
-      <AppHome />
+      {!user ? <AppLogin /> : <AppHome />}
     </SellerThemeProvider>
   );
 }
