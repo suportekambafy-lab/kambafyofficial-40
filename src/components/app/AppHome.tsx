@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/contexts/NotificationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +27,7 @@ export function AppHome() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [activeTab, setActiveTab] = useState('home');
   const [stats, setStats] = useState({
     totalSales: 0,
@@ -43,7 +45,6 @@ export function AppHome() {
   const [salesData, setSalesData] = useState<any[]>([]);
   const [profileAvatar, setProfileAvatar] = useState<string>('');
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [editingProfile, setEditingProfile] = useState({
@@ -137,61 +138,8 @@ export function AppHome() {
   useEffect(() => {
     loadStats();
     loadProfile();
-    loadNotifications();
   }, [user, timeFilter, productFilter, customDateRange]);
 
-  const loadNotifications = async () => {
-    if (!user) return;
-
-    try {
-      const notificationsList: any[] = [];
-
-      // Verificar produtos pendentes de aprovação
-      const { data: pendingProducts } = await supabase
-        .from('products')
-        .select('id, name')
-        .eq('user_id', user.id)
-        .eq('status', 'Pendente')
-        .limit(5);
-
-      if (pendingProducts && pendingProducts.length > 0) {
-        notificationsList.push({
-          id: 'pending-products',
-          type: 'info',
-          title: 'Produtos Pendentes',
-          message: `Você tem ${pendingProducts.length} produto(s) aguardando aprovação`,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Verificar vendas recentes (últimas 24h)
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      const { data: recentOrders } = await supabase
-        .from('orders')
-        .select('id, amount, currency, created_at, product_id')
-        .in('product_id', products.map(p => p.id))
-        .eq('status', 'completed')
-        .gte('created_at', yesterday.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      recentOrders?.forEach(order => {
-        notificationsList.push({
-          id: `order-${order.id}`,
-          type: 'success',
-          title: 'Nova Venda!',
-          message: `Venda de ${order.amount} ${order.currency} realizada`,
-          timestamp: order.created_at,
-        });
-      });
-
-      setNotifications(notificationsList.slice(0, 10)); // Máximo 10 notificações
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-    }
-  };
 
   const loadProfile = async () => {
     if (!user) return;
@@ -517,31 +465,47 @@ export function AppHome() {
                   <Bell className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="font-semibold text-base mb-2 text-foreground">Sem notificações</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-3">
                   Você está em dia com todas as suas atividades
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  🔔 Dica: As notificações são sincronizadas em tempo real com a versão web
                 </p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-3">
-              {notifications.map((notification) => (
+              {notifications.map((notification) => {
+                // Mapear tipos do contexto para estilos
+                const getNotificationStyle = (type: string) => {
+                  switch(type) {
+                    case 'sale':
+                    case 'affiliate':
+                      return {
+                        bgColor: 'bg-green-500/10',
+                        iconColor: 'text-green-600 dark:text-green-400'
+                      };
+                    case 'withdrawal':
+                      return {
+                        bgColor: 'bg-blue-500/10',
+                        iconColor: 'text-blue-600 dark:text-blue-400'
+                      };
+                    default:
+                      return {
+                        bgColor: 'bg-yellow-500/10',
+                        iconColor: 'text-yellow-600 dark:text-yellow-400'
+                      };
+                  }
+                };
+                
+                const style = getNotificationStyle(notification.type);
+                
+                return (
                 <Card key={notification.id} className="overflow-hidden border-none shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        notification.type === 'success' 
-                          ? 'bg-green-500/10' 
-                          : notification.type === 'info'
-                          ? 'bg-blue-500/10'
-                          : 'bg-yellow-500/10'
-                      }`}>
-                        <Bell className={`h-5 w-5 ${
-                          notification.type === 'success'
-                            ? 'text-green-600 dark:text-green-400'
-                            : notification.type === 'info'
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-yellow-600 dark:text-yellow-400'
-                        }`} />
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${style.bgColor}`}>
+                        <Bell className={`h-5 w-5 ${style.iconColor}`} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-sm text-foreground mb-1">
@@ -562,7 +526,8 @@ export function AppHome() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1173,13 +1138,18 @@ export function AppHome() {
             />
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  if (!showNotifications) {
+                    markAllAsRead();
+                  }
+                }}
                 className="relative w-10 h-10 rounded-full bg-card hover:bg-accent flex items-center justify-center transition-colors border border-border"
               >
                 <Bell className="h-5 w-5 text-foreground" />
-                {notifications.length > 0 && (
+                {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {notifications.length}
+                    {unreadCount}
                   </span>
                 )}
               </button>
