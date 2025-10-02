@@ -540,6 +540,13 @@ const Checkout = () => {
   const availablePaymentMethods = useMemo(() => {
     if (!userCountry) return [];
 
+    // Definir ordem dos métodos por país
+    const paymentOrder: Record<string, string[]> = {
+      'AO': ['express', 'reference', 'transfer'],
+      'MZ': ['emola', 'epesa'],
+      'PT': ['card', 'klarna', 'multibanco', 'apple_pay']
+    };
+
     // Primeiro, verificar se o produto tem métodos de pagamento configurados
     if (product?.payment_methods && Array.isArray(product.payment_methods)) {
       const enabledMethods = product.payment_methods.filter((method: any) => method.enabled);
@@ -553,7 +560,14 @@ const Checkout = () => {
         }
         return false;
       });
-      return countryMethods;
+      
+      // Ordenar de acordo com a ordem definida para o país
+      const order = paymentOrder[userCountry.code] || [];
+      return countryMethods.sort((a: any, b: any) => {
+        const indexA = order.indexOf(a.id);
+        const indexB = order.indexOf(b.id);
+        return indexA - indexB;
+      });
     }
 
     // Fallback: usar métodos baseados no país selecionado

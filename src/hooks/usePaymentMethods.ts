@@ -9,12 +9,6 @@ const CARD_PAYMENT_METHODS: never[] = [];
 // Métodos de pagamento padrão (Angola, Portugal, Moçambique)
 const DEFAULT_PAYMENT_METHODS = [
   {
-    id: 'apple_pay',
-    name: 'Apple Pay',
-    image: '/payment-logos/apple-pay-logo.png',
-    enabled: true
-  },
-  {
     id: 'express',
     name: 'Multicaixa Express',
     image: '/lovable-uploads/e9a7b374-3f3c-4e2b-ad03-9cdefa7be8a8.png',
@@ -30,6 +24,12 @@ const DEFAULT_PAYMENT_METHODS = [
     id: 'transfer',
     name: 'Transferência Bancária',
     image: '/lovable-uploads/809ca111-22ef-4df7-92fc-ebe47ba15021.png',
+    enabled: true
+  },
+  {
+    id: 'apple_pay',
+    name: 'Apple Pay',
+    image: '/payment-logos/apple-pay-logo.png',
     enabled: true
   }
 ];
@@ -52,8 +52,29 @@ export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: 
       return CARD_PAYMENT_METHODS;
     }
     
+    // Definir ordem dos métodos por país
+    const paymentOrder: Record<string, string[]> = {
+      'AO': ['express', 'reference', 'transfer'],
+      'MZ': ['emola', 'epesa'],
+      'PT': ['card', 'klarna', 'multibanco', 'apple_pay']
+    };
+    
     // Países padrão (Angola, Portugal, Moçambique, etc.)
-    const result = productPaymentMethods?.length ? productPaymentMethods : DEFAULT_PAYMENT_METHODS;
+    let result = productPaymentMethods?.length ? productPaymentMethods : DEFAULT_PAYMENT_METHODS;
+    
+    // Ordenar métodos de acordo com a ordem definida para o país
+    if (countryCode && paymentOrder[countryCode]) {
+      const order = paymentOrder[countryCode];
+      result = [...result].sort((a: any, b: any) => {
+        const indexA = order.indexOf(a.id);
+        const indexB = order.indexOf(b.id);
+        // Se não está na lista de ordem, coloca no final
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+    }
+    
     console.log('🔄🔄🔄 MÉTODOS PADRÃO PARA:', countryCode, result);
     return result;
   }, [countryCode, productPaymentMethods]);
