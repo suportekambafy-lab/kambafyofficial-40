@@ -2,6 +2,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AppLogin } from '@/components/app/AppLogin';
 import { AppHome } from '@/components/app/AppHome';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { SellerThemeProvider } from '@/hooks/useSellerTheme';
 
 export default function AppMobile() {
   const { user, loading } = useAuth();
@@ -23,5 +24,9 @@ export default function AppMobile() {
     return <AppLogin />;
   }
 
-  return <AppHome />;
+  return (
+    <SellerThemeProvider>
+      <AppHome />
+    </SellerThemeProvider>
+  );
 }

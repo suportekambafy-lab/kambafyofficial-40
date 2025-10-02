@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon } from 'lucide-react';
-import { useTheme } from '@/hooks/useTheme';
+import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { countTotalSales } from '@/utils/orderUtils';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils';
 export function AppHome() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, isDark } = useSellerTheme();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [activeTab, setActiveTab] = useState('home');
   const [stats, setStats] = useState({
@@ -1123,9 +1123,10 @@ export function AppHome() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background pb-24 scrollbar-hide">
-      {/* Fixed Header - Similar to Landing */}
-      <header className="fixed top-0 left-0 right-0 z-20">
+    <div className={isDark ? 'dark' : ''}>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 pb-24 pt-0 overflow-x-hidden">
+        {/* Fixed Header - Similar to Landing */}
+        <header className="fixed top-0 left-0 right-0 z-20">
         <nav className="px-2 pt-2">
           <div className={cn(
             'mx-auto transition-all duration-300 px-4 py-3 flex items-center justify-between',
@@ -1356,6 +1357,7 @@ export function AppHome() {
           });
         }}
       />
+      </div>
     </div>
   );
 }
