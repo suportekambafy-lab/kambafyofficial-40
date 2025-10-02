@@ -1449,9 +1449,17 @@ const Checkout = () => {
         upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
         window.location.href = upsellUrl.toString();
       } else if (selectedPayment === 'express') {
-        console.log('🏠 Pagamento Express - NÃO criar pedido aqui, aguardar webhook');
-        // Para pagamento express, NÃO processar o pedido aqui
-        // O pedido só será criado quando o webhook confirmar o pagamento
+        console.log('✅ Pagamento Express aprovado - Redirecionando para página de agradecimento');
+        // Disparar evento para Facebook Pixel
+        window.dispatchEvent(new CustomEvent('purchase-completed', {
+          detail: {
+            productId,
+            orderId,
+            amount: totalAmount,
+            currency: userCountry.currency
+          }
+        }));
+        navigate(`/obrigado?${params.toString()}`);
         setProcessing(false);
       } else if (selectedPayment === 'reference' && insertedOrder?.payment_status === 'pending' && insertedOrder?.reference_number) {
         console.log('📋 Mostrando dados da referência AppyPay');
