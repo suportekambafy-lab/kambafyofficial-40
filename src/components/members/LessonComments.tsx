@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageCircle, Send, Clock, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { MessageCircle, Send, Clock, Trash2, CheckSquare, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -39,6 +40,8 @@ export function LessonComments({
   const [isAreaOwner, setIsAreaOwner] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [commentsEnabled, setCommentsEnabled] = useState(true);
+  const [selectedComments, setSelectedComments] = useState<Set<string>>(new Set());
+  const [isDeletingMultiple, setIsDeletingMultiple] = useState(false);
 
   const loadComments = async () => {
     try {
@@ -191,6 +194,13 @@ export function LessonComments({
         return;
       }
 
+      // Remover da seleção se estava selecionado
+      if (selectedComments.has(commentId)) {
+        const newSelected = new Set(selectedComments);
+        newSelected.delete(commentId);
+        setSelectedComments(newSelected);
+      }
+
       // Recarregar comentários
       await loadComments();
       toast.success('Comentário apagado com sucesso!');
@@ -200,6 +210,69 @@ export function LessonComments({
     } finally {
       setDeletingCommentId(null);
     }
+  };
+
+  const handleDeleteMultiple = async () => {
+    if (selectedComments.size === 0) return;
+
+    if (!confirm(`Tem certeza que deseja apagar ${selectedComments.size} comentário(s)?`)) {
+      return;
+    }
+
+    setIsDeletingMultiple(true);
+    try {
+      const { error } = await supabase
+        .from('lesson_comments')
+        .delete()
+        .in('id', Array.from(selectedComments));
+
+      if (error) {
+        console.error('Erro ao apagar comentários:', error);
+        toast.error('Erro ao apagar comentários');
+        return;
+      }
+
+      setSelectedComments(new Set());
+      await loadComments();
+      toast.success(`${selectedComments.size} comentário(s) apagado(s) com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao apagar comentários:', error);
+      toast.error('Erro ao apagar comentários');
+    } finally {
+      setIsDeletingMultiple(false);
+    }
+  };
+
+  const toggleCommentSelection = (commentId: string) => {
+    const newSelected = new Set(selectedComments);
+    if (newSelected.has(commentId)) {
+      newSelected.delete(commentId);
+    } else {
+      newSelected.add(commentId);
+    }
+    setSelectedComments(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedComments.size === getAllCommentIds().length) {
+      setSelectedComments(new Set());
+    } else {
+      setSelectedComments(new Set(getAllCommentIds()));
+    }
+  };
+
+  const getAllCommentIds = (): string[] => {
+    const ids: string[] = [];
+    const collectIds = (commentList: Comment[]) => {
+      commentList.forEach(comment => {
+        ids.push(comment.id);
+        if (comment.replies && comment.replies.length > 0) {
+          collectIds(comment.replies);
+        }
+      });
+    };
+    collectIds(comments);
+    return ids;
   };
 
   const formatDate = (dateString: string) => {
@@ -220,8 +293,17 @@ export function LessonComments({
   };
 
   const renderComment = (comment: Comment, isReply = false) => (
-    <div key={comment.id} className={`p-3 sm:p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 ${isReply ? 'ml-4 sm:ml-8 mt-2' : ''}`}>
+    <div key={comment.id} className={`p-3 sm:p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 ${isReply ? 'ml-4 sm:ml-8 mt-2' : ''} ${selectedComments.has(comment.id) ? 'ring-2 ring-emerald-500' : ''}`}>
       <div className="flex gap-2 sm:gap-3">
+        {isAreaOwner && (
+          <div className="flex-shrink-0 pt-1">
+            <Checkbox
+              checked={selectedComments.has(comment.id)}
+              onCheckedChange={() => toggleCommentSelection(comment.id)}
+              className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+            />
+          </div>
+        )}
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-gray-700 flex-shrink-0">
           <AvatarFallback className="bg-emerald-600 text-white text-xs sm:text-sm">
             {getInitials(comment.user_name)}
@@ -336,10 +418,57 @@ export function LessonComments({
   return (
     <Card className="mt-6 bg-zinc-950 border-0 mx-0 sm:mx-0">
       <CardHeader className="px-3 sm:px-6">
-        <CardTitle className="flex items-center gap-2 text-white text-base sm:text-lg">
-          <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-          <span className="truncate">Comentários ({comments.reduce((count, comment) => count + 1 + (comment.replies?.length || 0), 0)})</span>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-white text-base sm:text-lg">
+            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+            <span className="truncate">Comentários ({comments.reduce((count, comment) => count + 1 + (comment.replies?.length || 0), 0)})</span>
+          </CardTitle>
+          
+          {isAreaOwner && comments.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSelectAll}
+                className="text-xs text-gray-400 hover:text-white"
+              >
+                {selectedComments.size === getAllCommentIds().length ? (
+                  <>
+                    <CheckSquare className="h-4 w-4 mr-1" />
+                    Desselecionar Todos
+                  </>
+                ) : (
+                  <>
+                    <Square className="h-4 w-4 mr-1" />
+                    Selecionar Todos
+                  </>
+                )}
+              </Button>
+              
+              {selectedComments.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteMultiple}
+                  disabled={isDeletingMultiple}
+                  className="text-xs"
+                >
+                  {isDeletingMultiple ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
+                      Apagando...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Apagar ({selectedComments.size})
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6 px-3 sm:px-6">
         <div className="space-y-3">
