@@ -87,6 +87,7 @@ const Checkout = () => {
   const [productTotalSales, setProductTotalSales] = useState<number>(0);
   const [cohortId, setCohortId] = useState<string | null>(null);
   const [cohort, setCohort] = useState<any>(null);
+  const [cohortLoading, setCohortLoading] = useState(false);
 
   // Calculate total order bump price from all selected bumps
   const totalOrderBumpPrice = useMemo(() => {
@@ -547,6 +548,7 @@ const Checkout = () => {
     if (!cohortId || !product?.member_area_id) return;
     
     const loadCohort = async () => {
+      setCohortLoading(true);
       try {
         const { data, error } = await supabase
           .from('member_area_cohorts')
@@ -580,11 +582,13 @@ const Checkout = () => {
         }
       } catch (error) {
         console.error('❌ Erro ao carregar turma:', error);
+      } finally {
+        setCohortLoading(false);
       }
     };
     
     loadCohort();
-  }, [cohortId, product?.member_area_id]);
+  }, [cohortId, product?.member_area_id, toast]);
   
   // Buscar vendas do produto específico
   useEffect(() => {
@@ -1693,10 +1697,10 @@ const Checkout = () => {
       setProcessing(false);
     }
   };
-  if (loading) {
+  if (loading || cohortLoading) {
     return <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <LoadingSpinner text="Carregando informações do produto..." size="lg" />
+          <LoadingSpinner text={cohortLoading ? "Carregando informações da turma..." : "Carregando informações do produto..."} size="lg" />
         </div>
       </ThemeProvider>;
   }
@@ -2045,7 +2049,7 @@ const Checkout = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700">{product?.name || 'Produto'}</span>
                       <span className="font-medium text-gray-900">
-                        {getDisplayPrice(originalPrice)}
+                        {getDisplayPrice(finalProductPrice)}
                       </span>
                     </div>
                     
