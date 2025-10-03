@@ -99,6 +99,12 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
     
     if (!user || !memberAreaId) return;
 
+    // Validar que uma turma foi selecionada se houver turmas disponíveis
+    if (cohorts.length > 0 && !formData.cohortId) {
+      toast.error("Por favor, selecione uma turma");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // 1. Primeiro, verificar se o usuário já existe consultando a tabela profiles
@@ -143,7 +149,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
           member_area_id: memberAreaId,
           student_name: formData.name,
           student_email: formData.email,
-          cohort_id: formData.cohortId || null
+          cohort_id: formData.cohortId
         });
 
       if (error) {
@@ -428,10 +434,11 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
               {cohorts.length > 0 && (
                 <div className="space-y-2">
-                  <Label htmlFor="student-cohort">Turma (Opcional)</Label>
+                  <Label htmlFor="student-cohort">Turma *</Label>
                   <Select
                     value={formData.cohortId}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, cohortId: value }))}
+                    required
                   >
                     <SelectTrigger id="student-cohort">
                       <SelectValue placeholder="Selecione uma turma" />
@@ -454,7 +461,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Escolha uma turma para organizar seus alunos
+                    Escolha uma turma para adicionar o aluno
                   </p>
                 </div>
               )}
