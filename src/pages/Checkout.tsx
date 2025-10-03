@@ -1499,10 +1499,13 @@ const Checkout = () => {
               console.log('✅ Pagamento Express confirmado! Redirecionando...');
               console.log('📍 Redirect URL:', `/obrigado?${params.toString()}`);
               
+              // CRÍTICO: Mostrar toast no topo ANTES de redirecionar
               toast({
                 title: "Pagamento Aprovado!",
-                message: "Seu pagamento foi confirmado com sucesso.",
-                variant: "success"
+                message: "Seu pagamento foi confirmado com sucesso. Redirecionando...",
+                variant: "success",
+                position: "top-center",
+                duration: 2000
               });
               
               // Disparar evento para Facebook Pixel
@@ -1515,10 +1518,12 @@ const Checkout = () => {
                 }
               }));
               
-              // Redirecionar imediatamente com parâmetro indicando confirmação Express
-              params.append('express_confirmed', 'true');
-              console.log('🚀 Final redirect URL with express_confirmed:', `/obrigado?${params.toString()}`);
-              navigate(`/obrigado?${params.toString()}`);
+              // CRÍTICO: Aguardar 1.5s antes de redirecionar (para usuário ver o toast)
+              setTimeout(() => {
+                params.append('express_confirmed', 'true');
+                console.log('🚀 Final redirect URL with express_confirmed:', `/obrigado?${params.toString()}`);
+                navigate(`/obrigado?${params.toString()}`);
+              }, 1500);
             } else if (pollAttempts >= maxPollAttempts) {
               clearInterval(pollInterval);
               setProcessing(false);
