@@ -13,6 +13,7 @@ import CustomBanner from './CustomBanner';
 import CountdownTimer from './CountdownTimer';
 import FakeReviews from './FakeReviews';
 import SocialProof from './SocialProof';
+import SpotsCounter from './SpotsCounter';
 import { useCheckoutCustomization } from '@/hooks/useCheckoutCustomization';
 
 interface CheckoutCustomizerProps {
@@ -64,6 +65,13 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
     setSettings(prev => ({
       ...prev,
       socialProof: { ...prev.socialProof, [key]: value }
+    }));
+  };
+
+  const updateSpotsCounterSetting = (key: string, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      spotsCounter: { ...prev.spotsCounter, [key]: value }
     }));
   };
 
@@ -135,11 +143,12 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
         {/* Configurações */}
         <div className="space-y-6">
           <Tabs defaultValue="countdown" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="countdown">Timer</TabsTrigger>
               <TabsTrigger value="banner">Banner</TabsTrigger>
               <TabsTrigger value="reviews">Avaliações</TabsTrigger>
               <TabsTrigger value="social">Social</TabsTrigger>
+              <TabsTrigger value="spots">Vagas</TabsTrigger>
             </TabsList>
 
             <TabsContent value="countdown" className="space-y-4">
@@ -418,6 +427,98 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
               </Card>
             </TabsContent>
 
+            <TabsContent value="spots" className="space-y-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">Contador de Vagas</CardTitle>
+                    <Switch
+                      checked={settings.spotsCounter.enabled}
+                      onCheckedChange={(checked) => updateSpotsCounterSetting('enabled', checked)}
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Modo de Contagem</Label>
+                    <Select 
+                      value={settings.spotsCounter.mode} 
+                      onValueChange={(value) => updateSpotsCounterSetting('mode', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="automatic">Automático (diminui a cada venda)</SelectItem>
+                        <SelectItem value="manual">Manual (atualização manual)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {settings.spotsCounter.mode === 'automatic' && (
+                    <div>
+                      <Label>Número Inicial de Vagas</Label>
+                      <Input
+                        type="number"
+                        value={settings.spotsCounter.initialCount}
+                        onChange={(e) => {
+                          const newValue = parseInt(e.target.value);
+                          updateSpotsCounterSetting('initialCount', newValue);
+                          updateSpotsCounterSetting('currentCount', newValue);
+                        }}
+                        min="1"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        O contador começará neste número e diminuirá automaticamente a cada venda
+                      </p>
+                    </div>
+                  )}
+                  
+                  {settings.spotsCounter.mode === 'manual' && (
+                    <div>
+                      <Label>Número Atual de Vagas</Label>
+                      <Input
+                        type="number"
+                        value={settings.spotsCounter.currentCount}
+                        onChange={(e) => updateSpotsCounterSetting('currentCount', parseInt(e.target.value))}
+                        min="0"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Você precisará atualizar este número manualmente sempre que desejar
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <Label>Texto do Contador</Label>
+                    <Input
+                      value={settings.spotsCounter.title}
+                      onChange={(e) => updateSpotsCounterSetting('title', e.target.value)}
+                      placeholder="VAGAS RESTANTES"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Cor de Fundo</Label>
+                    <Input
+                      type="color"
+                      value={settings.spotsCounter.backgroundColor}
+                      onChange={(e) => updateSpotsCounterSetting('backgroundColor', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Cor do Texto</Label>
+                    <Input
+                      type="color"
+                      value={settings.spotsCounter.textColor}
+                      onChange={(e) => updateSpotsCounterSetting('textColor', e.target.value)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
           </Tabs>
 
           <Button 
@@ -450,7 +551,17 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
             />
           )}
 
-          {/* 3. Compra Segura (será adicionado no checkout) */}
+          {/* 3. Contador de Vagas */}
+          {settings.spotsCounter.enabled && (
+            <SpotsCounter
+              count={settings.spotsCounter.currentCount}
+              title={settings.spotsCounter.title}
+              backgroundColor={settings.spotsCounter.backgroundColor}
+              textColor={settings.spotsCounter.textColor}
+            />
+          )}
+
+          {/* 4. Compra Segura (será adicionado no checkout) */}
           <div className="text-white py-3 px-4 text-center" style={{ backgroundColor: '#1b2f1a' }}>
             <span className="font-semibold flex items-center justify-center gap-2">
               <div className="relative inline-flex items-center justify-center">
@@ -461,7 +572,7 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
             </span>
           </div>
 
-          {/* 4. Prova Social */}
+          {/* 5. Prova Social */}
           {settings.socialProof.enabled && (
             <SocialProof
               totalSales={settings.socialProof.totalSales}
@@ -470,7 +581,7 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
             />
           )}
 
-          {/* 5. Avaliações por último */}
+          {/* 6. Avaliações por último */}
           {settings.reviews.enabled && (
             <FakeReviews
               reviews={settings.reviews.reviews}

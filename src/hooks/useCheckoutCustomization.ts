@@ -36,6 +36,15 @@ export interface CheckoutCustomizationSettings {
     recentPurchases: string[];
     position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   };
+  spotsCounter: {
+    enabled: boolean;
+    mode: 'automatic' | 'manual';
+    initialCount: number;
+    currentCount: number;
+    title: string;
+    backgroundColor: string;
+    textColor: string;
+  };
 }
 
 const defaultSettings: CheckoutCustomizationSettings = {
@@ -84,6 +93,15 @@ const defaultSettings: CheckoutCustomizationSettings = {
       'Beatriz Ferreira acabou de comprar há 12 min'
     ],
     position: 'bottom-right'
+  },
+  spotsCounter: {
+    enabled: false,
+    mode: 'automatic',
+    initialCount: 100,
+    currentCount: 100,
+    title: 'VAGAS RESTANTES',
+    backgroundColor: '#6366f1',
+    textColor: 'white'
   }
 };
 
@@ -110,6 +128,10 @@ const mergeSettings = (loadedData: any): CheckoutCustomizationSettings => {
   
   if (loadedData.socialProof && typeof loadedData.socialProof === 'object') {
     result.socialProof = { ...defaultSettings.socialProof, ...loadedData.socialProof };
+  }
+  
+  if (loadedData.spotsCounter && typeof loadedData.spotsCounter === 'object') {
+    result.spotsCounter = { ...defaultSettings.spotsCounter, ...loadedData.spotsCounter };
   }
   
   return result;
