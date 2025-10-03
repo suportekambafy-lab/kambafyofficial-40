@@ -972,6 +972,7 @@ export type Database = {
           member_area_id: string
           student_email: string
           student_name: string
+          updated_at: string | null
         }
         Insert: {
           access_granted_at?: string
@@ -981,6 +982,7 @@ export type Database = {
           member_area_id: string
           student_email: string
           student_name: string
+          updated_at?: string | null
         }
         Update: {
           access_granted_at?: string
@@ -990,6 +992,7 @@ export type Database = {
           member_area_id?: string
           student_email?: string
           student_name?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
