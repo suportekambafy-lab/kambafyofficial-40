@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Users, Calendar, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Calendar, DollarSign, Link as LinkIcon, Copy, Check } from "lucide-react";
 import { Cohort, CohortInsert, CohortStatus } from "@/types/cohort";
 import { format } from "date-fns";
 
@@ -27,6 +27,7 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCohort, setEditingCohort] = useState<Cohort | null>(null);
   const [loading, setLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -200,6 +201,55 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
     };
     const config = variants[status] || variants.active;
     return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const copyCheckoutLink = async (cohort: Cohort) => {
+    if (!cohort.product_id) {
+      toast({
+        title: "Esta turma não está vinculada a um produto",
+        description: "Vincule a turma a um produto para gerar o link de pagamento",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const product = products.find(p => p.id === cohort.product_id);
+    if (!product) {
+      toast({
+        title: "Produto não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    let checkoutUrl = '';
+
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || 
+        hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
+      checkoutUrl = `${protocol}//${hostname}/checkout/${product.id}?cohort=${cohort.id}`;
+    } else if (hostname.includes('kambafy.com')) {
+      checkoutUrl = `${protocol}//kambafy.com/checkout/${product.id}?cohort=${cohort.id}`;
+    } else {
+      checkoutUrl = `${protocol}//${hostname}/checkout/${product.id}?cohort=${cohort.id}`;
+    }
+
+    try {
+      await navigator.clipboard.writeText(checkoutUrl);
+      setCopiedId(cohort.id);
+      toast({
+        title: "Link copiado!",
+        description: "Link de pagamento da turma copiado para a área de transferência",
+      });
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (error) {
+      toast({
+        title: "Erro ao copiar link",
+        description: "Não foi possível copiar o link",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -392,6 +442,18 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
                   {cohort.product_id && (
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">Vinculada a Produto</Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyCheckoutLink(cohort)}
+                        className="h-6 px-2"
+                      >
+                        {copiedId === cohort.id ? (
+                          <Check className="w-3 h-3 text-green-500" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                      </Button>
                     </div>
                   )}
                   <div className="flex items-center gap-2">

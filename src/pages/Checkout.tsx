@@ -85,6 +85,8 @@ const Checkout = () => {
     price: number;
   }>>(new Map());
   const [productTotalSales, setProductTotalSales] = useState<number>(0);
+  const [cohortId, setCohortId] = useState<string | null>(null);
+  const [cohort, setCohort] = useState<any>(null);
 
   // Calculate total order bump price from all selected bumps
   const totalOrderBumpPrice = useMemo(() => {
@@ -130,9 +132,16 @@ const Checkout = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const upsellFrom = urlParams.get('upsell_from');
+    const cohortParam = urlParams.get('cohort');
+    
     if (upsellFrom) {
       setUpsellFromOrder(upsellFrom);
       console.log('🎯 Detectado upsell do pedido:', upsellFrom);
+    }
+    
+    if (cohortParam) {
+      setCohortId(cohortParam);
+      console.log('🎓 Detectado cohort_id:', cohortParam);
     }
   }, []);
 
@@ -494,6 +503,41 @@ const Checkout = () => {
     loadProduct();
     loadCheckoutSettings();
   }, [productId, navigate, toast]); // Carregar imediatamente, sem esperar geo
+  
+  // Carregar informações da turma se cohort_id estiver presente
+  useEffect(() => {
+    if (!cohortId) return;
+    
+    const loadCohort = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('member_area_cohorts')
+          .select('*')
+          .eq('id', cohortId)
+          .eq('status', 'active')
+          .maybeSingle();
+        
+        if (error) {
+          console.error('❌ Erro ao carregar turma:', error);
+          return;
+        }
+        
+        if (data) {
+          setCohort(data);
+          console.log('🎓 Turma carregada:', data);
+          
+          // Se a turma tem preço personalizado, sobrescrever o preço do produto
+          if (data.price && data.product_id === productId) {
+            console.log('💰 Aplicando preço personalizado da turma:', data.price);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar turma:', error);
+      }
+    };
+    
+    loadCohort();
+  }, [cohortId, productId]);
   
   // Buscar vendas do produto específico
   useEffect(() => {
@@ -1238,6 +1282,7 @@ const Checkout = () => {
         affiliate_code: affiliate_commission ? affiliateCode : null,
         affiliate_commission: affiliate_commission_kz,
         seller_commission: seller_commission_kz,
+        cohort_id: cohortId, // Adicionar cohort_id
         order_bump_data: orderBump ? JSON.stringify({
           bump_product_name: orderBump.bump_product_name,
           bump_product_price: orderBump.bump_product_price,
