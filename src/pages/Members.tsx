@@ -1033,11 +1033,74 @@ export default function Members() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {modules.length > 0 ? <div className="space-y-4">
-                    {modules.sort((a, b) => a.order_number - b.order_number).map(module => <div key={module.id} className="border rounded-lg p-3 md:p-4 space-y-3">
+                    {modules.sort((a, b) => a.order_number - b.order_number).map(module => <div 
+                      key={module.id} 
+                      className="border rounded-lg p-3 md:p-4 space-y-3"
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('moduleId', module.id);
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                      }}
+                      onDrop={async (e) => {
+                        e.preventDefault();
+                        const draggedId = e.dataTransfer.getData('moduleId');
+                        if (draggedId === module.id) return;
+
+                        const draggedModule = modules.find(m => m.id === draggedId);
+                        const targetModule = module;
+
+                        if (!draggedModule) return;
+
+                        // Reordenar módulos
+                        const reorderedModules = [...modules];
+                        const draggedIndex = reorderedModules.findIndex(m => m.id === draggedId);
+                        const targetIndex = reorderedModules.findIndex(m => m.id === targetModule.id);
+
+                        reorderedModules.splice(draggedIndex, 1);
+                        reorderedModules.splice(targetIndex, 0, draggedModule);
+
+                        // Atualizar ordem no estado
+                        const updatedModules = reorderedModules.map((m, index) => ({
+                          ...m,
+                          order_number: index + 1
+                        }));
+
+                        setModules(updatedModules);
+
+                        // Atualizar no banco de dados
+                        try {
+                          for (const mod of updatedModules) {
+                            const { error } = await supabase
+                              .from('modules')
+                              .update({ order_number: mod.order_number })
+                              .eq('id', mod.id);
+
+                            if (error) throw error;
+                          }
+
+                          toast({
+                            title: "Ordem atualizada",
+                            description: "A ordem dos módulos foi atualizada com sucesso."
+                          });
+                        } catch (error) {
+                          console.error('Erro ao reordenar módulos:', error);
+                          toast({
+                            title: "Erro ao reordenar",
+                            description: "Não foi possível atualizar a ordem dos módulos.",
+                            variant: "destructive"
+                          });
+                          loadModules(); // Recarregar em caso de erro
+                        }
+                      }}
+                    >
                         {/* Cabeçalho do Módulo */}
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                           <div className="flex items-center gap-2 md:gap-3">
-                            <GripVertical className="w-3 h-3 md:w-4 md:h-4 text-gray-400 cursor-move hidden md:block" />
+                            <GripVertical className="w-3 h-3 md:w-4 md:h-4 text-gray-400 cursor-move hidden md:block" onMouseDown={(e) => e.stopPropagation()} />
                             <div className="w-3 h-3 md:w-4 md:h-4 bg-blue-200 rounded"></div>
                             <div className="flex-1">
                               <div className="font-medium flex items-center gap-2 text-sm md:text-base">
