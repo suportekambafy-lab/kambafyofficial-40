@@ -76,6 +76,7 @@ export default function ModernMembersArea() {
   } = useModernMembersAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
+  const [studentCohortId, setStudentCohortId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
@@ -178,6 +179,21 @@ export default function ModernMembersArea() {
       try {
         // NÃO usar setIsLoading - nunca mostrar loading
 
+        // Buscar turma do aluno se estiver autenticado
+        if (session?.user?.email) {
+          const { data: studentData } = await supabase
+            .from('member_area_students')
+            .select('cohort_id')
+            .eq('member_area_id', memberAreaId)
+            .eq('student_email', session.user.email.toLowerCase().trim())
+            .maybeSingle();
+          
+          if (studentData?.cohort_id) {
+            console.log('👥 Aluno pertence à turma:', studentData.cohort_id);
+            setStudentCohortId(studentData.cohort_id);
+          }
+        }
+
         // Carregar lessons
         const { data: lessonsData, error: lessonsError } = await supabase
           .from('lessons')
@@ -245,7 +261,7 @@ export default function ModernMembersArea() {
       // NÃO fazer setIsLoading(false) - nunca usar loading
     };
     loadContent();
-  }, [memberAreaId]); // Apenas memberAreaId como dependência
+  }, [memberAreaId, session]); // Adicionar session como dependência
 
   // Esconder sidebar automaticamente no mobile quando aula for selecionada
   useEffect(() => {
@@ -515,7 +531,20 @@ export default function ModernMembersArea() {
                     </h3>
                   </div>
 
-                  {modules.map(module => {
+                  {modules
+                    .filter(module => {
+                      // Se o módulo não tem cohort_ids ou é null, mostrar para todos
+                      if (module.cohort_ids === null || module.cohort_ids === undefined) {
+                        return true;
+                      }
+                      // Se o aluno não está em nenhuma turma, não mostrar módulos específicos
+                      if (!studentCohortId) {
+                        return false;
+                      }
+                      // Se o módulo tem cohort_ids específicos, verificar se o aluno está neles
+                      return module.cohort_ids.includes(studentCohortId);
+                    })
+                    .map(module => {
                 const moduleLessons = lessons.filter(l => l.module_id === module.id);
                 const isExpanded = expandedModules.has(module.id);
                 return <div key={`${module.id}-${selectedLesson?.id || 'none'}`} className="space-y-3">
@@ -698,7 +727,20 @@ export default function ModernMembersArea() {
                       </div>) : (/* Netflix Style Horizontal Scroll */
               <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide scroll-smooth">
                         <div className="flex gap-6 min-w-max">
-                          {modules.map((module, index) => <motion.div key={module.id} initial={{
+                          {modules
+                            .filter(module => {
+                              // Se o módulo não tem cohort_ids ou é null, mostrar para todos
+                              if (module.cohort_ids === null || module.cohort_ids === undefined) {
+                                return true;
+                              }
+                              // Se o aluno não está em nenhuma turma, não mostrar módulos específicos
+                              if (!studentCohortId) {
+                                return false;
+                              }
+                              // Se o módulo tem cohort_ids específicos, verificar se o aluno está neles
+                              return module.cohort_ids.includes(studentCohortId);
+                            })
+                            .map((module, index) => <motion.div key={module.id} initial={{
                     opacity: 0,
                     scale: 0.95
                   }} animate={{
