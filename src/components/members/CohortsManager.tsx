@@ -104,7 +104,7 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
         user_id: user.id,
         name: formData.name,
         description: formData.description || null,
-        price: formData.price || null,
+        price: (editingCohort?.name === 'Turma A' || formData.name === 'Turma A') ? null : (formData.price || null),
         currency: formData.currency || 'KZ',
         product_id: formData.product_id,
         max_students: formData.max_students ? parseInt(formData.max_students) : null,
@@ -172,7 +172,7 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
       name: cohort.name,
       description: cohort.description || '',
       product_id: cohort.product_id || '',
-      price: cohort.price || '',
+      price: cohort.name === 'Turma A' ? '' : (cohort.price || ''), // Turma A não tem preço personalizado
       currency: cohort.currency || 'KZ',
       max_students: cohort.max_students?.toString() || '',
       start_date: cohort.start_date ? format(new Date(cohort.start_date), 'yyyy-MM-dd') : '',
@@ -311,34 +311,45 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="price">Preço Personalizado (Opcional)</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="price"
-                    type="text"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    placeholder="Ex: 5000 ou deixe vazio para usar preço do produto"
-                  />
-                  <Select value={formData.currency} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="KZ">KZ</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                      <SelectItem value="MZN">MZN</SelectItem>
-                    </SelectContent>
-                  </Select>
+              {/* Preço Personalizado - Não disponível para Turma A */}
+              {editingCohort?.name !== 'Turma A' && (
+                <div className="space-y-2">
+                  <Label htmlFor="price">Preço Personalizado (Opcional)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="price"
+                      type="text"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      placeholder="Ex: 5000 ou deixe vazio para usar preço do produto"
+                    />
+                    <Select value={formData.currency} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="KZ">KZ</SelectItem>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="MZN">MZN</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {formData.price 
+                      ? `💰 Esta turma será vendida por ${formData.price} ${formData.currency}` 
+                      : '📦 Será usado o preço do produto selecionado'}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {formData.price 
-                    ? `💰 Esta turma será vendida por ${formData.price} ${formData.currency}` 
-                    : '📦 Será usado o preço do produto selecionado'}
-                </p>
-              </div>
+              )}
+              
+              {editingCohort?.name === 'Turma A' && (
+                <div className="p-3 bg-muted/50 rounded-lg border border-muted">
+                  <p className="text-sm text-muted-foreground">
+                    ℹ️ A <strong>Turma A</strong> é a turma padrão e sempre usa o preço do produto.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="max_students">Número Máximo de Alunos</Label>
@@ -440,9 +451,14 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
                             : 'Usando preço do produto'}
                         </span>
                       </div>
-                      {cohort.price && (
+                      {cohort.price && cohort.name !== 'Turma A' && (
                         <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
                           Preço Personalizado
+                        </Badge>
+                      )}
+                      {cohort.name === 'Turma A' && (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          Turma Padrão
                         </Badge>
                       )}
                     </div>

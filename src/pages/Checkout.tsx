@@ -216,16 +216,39 @@ const Checkout = () => {
     if (!product) return 0;
     
     // Se houver turma com preço personalizado, usar esse preço
-    if (cohort && cohort.price && cohort.product_id === product.id) {
-      const cohortPriceKZ = parseFloat(cohort.price.replace(/[^\d.]/g, ''));
-      console.log('💰 Usando preço da turma:', cohortPriceKZ, 'KZ');
+    if (cohort && cohort.price && cohort.price.trim() !== '' && cohort.product_id === product.id) {
+      // Remover caracteres não numéricos (exceto ponto e vírgula)
+      const cleanPrice = cohort.price.replace(/[^\d.,]/g, '').replace(',', '.');
+      const cohortPrice = parseFloat(cleanPrice);
       
-      // Se o preço da turma for em KZ, converter para a moeda do país
-      if (cohort.currency === 'KZ') {
-        return getConvertedPrice(cohortPriceKZ);
+      if (!isNaN(cohortPrice) && cohortPrice > 0) {
+        console.log('💰 Usando preço personalizado da turma:', cohortPrice, cohort.currency);
+        console.log('🔍 Debug turma:', { 
+          cohortName: cohort.name, 
+          cohortPrice: cohort.price, 
+          currency: cohort.currency,
+          cleanPrice,
+          parsed: cohortPrice
+        });
+        
+        // Se a moeda da turma for diferente da moeda do país, usar o preço direto da turma
+        if (userCountry && cohort.currency !== userCountry.currency) {
+          console.log('⚠️ Moeda da turma diferente do país. Turma:', cohort.currency, 'País:', userCountry.currency);
+          // Se turma está em KZ e país não, converter
+          if (cohort.currency === 'KZ') {
+            const converted = getConvertedPrice(cohortPrice);
+            console.log('🔄 Convertendo de KZ para', userCountry.currency, ':', converted);
+            return converted;
+          }
+          // Se turma está em outra moeda, usar direto
+          console.log('✅ Usando preço da turma sem conversão:', cohortPrice);
+          return cohortPrice;
+        }
+        
+        // Mesma moeda, usar direto
+        console.log('✅ Mesma moeda, usando preço da turma:', cohortPrice);
+        return cohortPrice;
       }
-      // Se for em outra moeda, retornar direto (já está na moeda correta)
-      return cohortPriceKZ;
     }
     
     const productPriceKZ = originalPriceKZ;
@@ -564,6 +587,13 @@ const Checkout = () => {
         
         if (cohortData) {
           setCohort(cohortData);
+          console.log('✅ Turma carregada com sucesso:', {
+            id: cohortData.id,
+            name: cohortData.name,
+            price: cohortData.price,
+            currency: cohortData.currency,
+            product_id: cohortData.product_id
+          });
           
           // Verificar se a turma está cheia
           if (cohortData.max_students && cohortData.current_students >= cohortData.max_students) {
@@ -573,6 +603,8 @@ const Checkout = () => {
               variant: "error"
             });
           }
+        } else {
+          console.log('⚠️ Nenhuma turma encontrada para este produto');
         }
       } catch (error) {
         console.error('❌ Erro ao carregar turma:', error);
