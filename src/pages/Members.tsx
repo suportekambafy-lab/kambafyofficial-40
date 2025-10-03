@@ -126,8 +126,11 @@ export default function Members() {
     status: 'draft' as 'draft' | 'published' | 'archived',
     cover_image_url: '',
     cover_orientation: 'horizontal' as 'horizontal' | 'vertical',
-    coming_soon: false
+    coming_soon: false,
+    cohort_access: 'all' as 'all' | 'specific',
+    cohort_ids: [] as string[]
   });
+  const [cohorts, setCohorts] = useState<any[]>([]);
   useEffect(() => {
     if (!loading && user) {
       // Cache check para member areas
@@ -156,8 +159,26 @@ export default function Members() {
       loadLessons();
       loadModules();
       loadProducts();
+      loadCohorts();
     }
   }, [selectedArea, user]);
+  
+  const loadCohorts = async () => {
+    if (!selectedArea) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('member_area_cohorts')
+        .select('*')
+        .eq('member_area_id', selectedArea.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setCohorts(data || []);
+    } catch (error) {
+      console.error('Error loading cohorts:', error);
+    }
+  };
 
   // Inicializar dados de personalização quando selectedArea mudar
   useEffect(() => {
@@ -497,6 +518,7 @@ export default function Members() {
         cover_image_url: moduleFormData.cover_image_url || null,
         cover_orientation: moduleFormData.cover_orientation,
         coming_soon: moduleFormData.coming_soon,
+        cohort_ids: moduleFormData.cohort_access === 'all' ? null : moduleFormData.cohort_ids,
         user_id: user.id,
         member_area_id: selectedArea?.id,
         order_number: editingModule ? editingModule.order_number : modules.length + 1
@@ -697,7 +719,9 @@ export default function Members() {
       status: module.status as 'draft' | 'published' | 'archived',
       cover_image_url: module.cover_image_url || '',
       cover_orientation: (module as any).cover_orientation || 'horizontal',
-      coming_soon: module.coming_soon || false
+      coming_soon: module.coming_soon || false,
+      cohort_access: (module as any).cohort_ids === null ? 'all' : 'specific',
+      cohort_ids: (module as any).cohort_ids || []
     });
     setModuleDialogOpen(true);
   };
@@ -815,15 +839,17 @@ export default function Members() {
     console.log('Form reset complete');
   };
   const resetModuleForm = () => {
-    setModuleFormData({
-      title: '',
-      description: '',
-      status: 'draft',
-      cover_image_url: '',
-      cover_orientation: 'horizontal',
-      coming_soon: false
-    });
-    setEditingModule(null);
+      setModuleFormData({
+        title: '',
+        description: '',
+        status: 'draft',
+        cover_image_url: '',
+        cover_orientation: 'horizontal',
+        coming_soon: false,
+        cohort_access: 'all',
+        cohort_ids: []
+      });
+      setEditingModule(null);
   };
   const handleVideoUploaded = (videoUrl: string, videoData?: any) => {
     console.log('Video uploaded callback received:', videoUrl, videoData);
@@ -1687,6 +1713,69 @@ export default function Members() {
                   </p>
                 </div>
                 <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+
+              {/* Seleção de Turmas */}
+              <div className="space-y-3 p-4 border rounded-lg">
+                <Label>Disponibilidade por Turma</Label>
+                <Select value={moduleFormData.cohort_access} onValueChange={(value: 'all' | 'specific') => setModuleFormData(prev => ({
+                  ...prev,
+                  cohort_access: value,
+                  cohort_ids: value === 'all' ? [] : prev.cohort_ids
+                }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[102]">
+                    <SelectItem value="all">Todas as turmas</SelectItem>
+                    <SelectItem value="specific">Turmas específicas</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {moduleFormData.cohort_access === 'specific' && (
+                  <div className="space-y-2 mt-3">
+                    <Label className="text-sm text-muted-foreground">
+                      Selecione as turmas que terão acesso a este módulo:
+                    </Label>
+                    {cohorts.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        Nenhuma turma criada ainda. Crie turmas na aba "Turmas".
+                      </p>
+                    ) : (
+                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                        {cohorts.map((cohort) => (
+                          <div key={cohort.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`cohort-${cohort.id}`}
+                              checked={moduleFormData.cohort_ids.includes(cohort.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setModuleFormData(prev => ({
+                                    ...prev,
+                                    cohort_ids: [...prev.cohort_ids, cohort.id]
+                                  }));
+                                } else {
+                                  setModuleFormData(prev => ({
+                                    ...prev,
+                                    cohort_ids: prev.cohort_ids.filter(id => id !== cohort.id)
+                                  }));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`cohort-${cohort.id}`} className="font-normal cursor-pointer">
+                              {cohort.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {moduleFormData.cohort_ids.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {moduleFormData.cohort_ids.length} turma(s) selecionada(s)
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               
               <DialogFooter>
