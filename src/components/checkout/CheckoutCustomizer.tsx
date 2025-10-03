@@ -70,10 +70,15 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
   };
 
   const updateSpotsCounterSetting = (key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      spotsCounter: { ...prev.spotsCounter, [key]: value }
-    }));
+    console.log('🎯 Atualizando SpotsCounter:', key, '=', value);
+    setSettings(prev => {
+      const updated = {
+        ...prev,
+        spotsCounter: { ...prev.spotsCounter, [key]: value }
+      };
+      console.log('✅ Settings após update:', updated);
+      return updated;
+    });
   };
 
 
