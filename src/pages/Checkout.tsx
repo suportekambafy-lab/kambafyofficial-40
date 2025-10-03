@@ -1762,7 +1762,7 @@ const Checkout = () => {
           <OptimizedSocialProof settings={{
           totalSales: productTotalSales,
           position: checkoutSettings?.socialProof?.position || 'bottom-right',
-          enabled: checkoutSettings?.socialProof?.enabled !== false // Mostrar por padrão
+          enabled: checkoutSettings?.socialProof?.enabled === true // Mostrar APENAS quando explicitamente habilitado
         }} />
           
           {/* Debug info */}
