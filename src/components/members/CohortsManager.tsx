@@ -222,18 +222,8 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
       return;
     }
 
-    const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-    let checkoutUrl = '';
-
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || 
-        hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
-      checkoutUrl = `${protocol}//${hostname}/checkout/${product.id}?cohort=${cohort.id}`;
-    } else if (hostname.includes('kambafy.com')) {
-      checkoutUrl = `${protocol}//kambafy.com/checkout/${product.id}?cohort=${cohort.id}`;
-    } else {
-      checkoutUrl = `${protocol}//${hostname}/checkout/${product.id}?cohort=${cohort.id}`;
-    }
+    // Sempre usar o domínio kambafy.com em produção
+    const checkoutUrl = `https://kambafy.com/checkout/${product.id}?cohort=${cohort.id}`;
 
     try {
       await navigator.clipboard.writeText(checkoutUrl);
