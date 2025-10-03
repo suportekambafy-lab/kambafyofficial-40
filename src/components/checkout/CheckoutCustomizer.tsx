@@ -36,6 +36,7 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
   const handleSave = async () => {
     console.log('🔄 Iniciando salvamento das configurações...');
     console.log('⚙️ Settings atuais:', settings);
+    console.log('📊 SpotsCounter config:', settings.spotsCounter);
     await saveSettings(settings);
     onSaveSuccess();
   };

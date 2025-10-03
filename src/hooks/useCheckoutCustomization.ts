@@ -179,6 +179,8 @@ export function useCheckoutCustomization(productId: string) {
     console.log('💾 Tentando salvar configurações...');
     console.log('👤 User existe?', !!user);
     console.log('📦 Product ID existe?', !!productId);
+    console.log('📊 Settings recebidos:', newSettings);
+    console.log('🎯 SpotsCounter:', newSettings.spotsCounter);
     
     if (!user || !productId) {
       console.error('❌ Erro: Usuário ou Product ID não encontrado');
