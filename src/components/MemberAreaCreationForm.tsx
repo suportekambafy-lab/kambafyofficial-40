@@ -125,6 +125,24 @@ export function MemberAreaCreationForm({ open, onOpenChange, onSuccess }: Member
         }
       }
 
+      // Criar turma padrão "Turma A" automaticamente
+      if (data) {
+        const { error: cohortError } = await supabase
+          .from('member_area_cohorts')
+          .insert({
+            member_area_id: data.id,
+            user_id: user.id,
+            name: 'Turma A',
+            description: 'Turma padrão para todos os alunos',
+            status: 'active',
+            currency: 'KZ'
+          });
+
+        if (cohortError) {
+          console.error('Erro ao criar turma padrão:', cohortError);
+        }
+      }
+
       toast({
         title: "Sucesso",
         description: "Área de membros criada com sucesso!"

@@ -518,31 +518,60 @@ const Checkout = () => {
     loadCheckoutSettings();
   }, [productId, navigate, toast]); // Carregar imediatamente, sem esperar geo
   
-  // Carregar informações da turma se cohort_id estiver presente
+  // Carregar informações da turma (do parâmetro ou padrão do produto)
   useEffect(() => {
-    if (!cohortId) return;
+    if (!product?.member_area_id) return;
     
     const loadCohort = async () => {
       try {
-        const { data, error } = await supabase
-          .from('member_area_cohorts')
-          .select('*')
-          .eq('id', cohortId)
-          .eq('status', 'active')
-          .maybeSingle();
+        let cohortData = null;
         
-        if (error) {
-          console.error('❌ Erro ao carregar turma:', error);
-          return;
+        // Se há cohort_id específico, usar ele
+        if (cohortId) {
+          const { data, error } = await supabase
+            .from('member_area_cohorts')
+            .select('*')
+            .eq('id', cohortId)
+            .eq('status', 'active')
+            .maybeSingle();
+          
+          if (error) {
+            console.error('❌ Erro ao carregar turma:', error);
+          } else {
+            cohortData = data;
+          }
         }
         
-        if (data) {
-          setCohort(data);
-          console.log('🎓 Turma carregada:', data);
+        // Se não há cohort_id ou não encontrou, buscar turma padrão da área de membros
+        if (!cohortData && product.member_area_id) {
+          const { data, error } = await supabase
+            .from('member_area_cohorts')
+            .select('*')
+            .eq('member_area_id', product.member_area_id)
+            .eq('status', 'active')
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .maybeSingle();
           
-          // Se a turma tem preço personalizado, sobrescrever o preço do produto
-          if (data.price && data.product_id === productId) {
-            console.log('💰 Aplicando preço personalizado da turma:', data.price);
+          if (error) {
+            console.error('❌ Erro ao carregar turma padrão:', error);
+          } else if (data) {
+            cohortData = data;
+            setCohortId(data.id); // Setar o cohort_id padrão
+            console.log('✅ Usando turma padrão:', data.name);
+          }
+        }
+        
+        if (cohortData) {
+          setCohort(cohortData);
+          
+          // Verificar se a turma está cheia
+          if (cohortData.max_students && cohortData.current_students >= cohortData.max_students) {
+            toast({
+              title: "Turma lotada",
+              message: "Esta turma já atingiu o número máximo de alunos.",
+              variant: "error"
+            });
           }
         }
       } catch (error) {
@@ -551,7 +580,7 @@ const Checkout = () => {
     };
     
     loadCohort();
-  }, [cohortId, productId]);
+  }, [cohortId, product?.member_area_id]);
   
   // Buscar vendas do produto específico
   useEffect(() => {
