@@ -1270,6 +1270,7 @@ export type Database = {
           affiliate_code: string | null
           affiliate_commission: number | null
           amount: string
+          cohort_id: string | null
           created_at: string
           currency: string | null
           customer_email: string
@@ -1292,6 +1293,7 @@ export type Database = {
           affiliate_code?: string | null
           affiliate_commission?: number | null
           amount: string
+          cohort_id?: string | null
           created_at?: string
           currency?: string | null
           customer_email: string
@@ -1314,6 +1316,7 @@ export type Database = {
           affiliate_code?: string | null
           affiliate_commission?: number | null
           amount?: string
+          cohort_id?: string | null
           created_at?: string
           currency?: string | null
           customer_email?: string
@@ -1333,6 +1336,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "member_area_cohorts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_product_id_fkey"
             columns: ["product_id"]

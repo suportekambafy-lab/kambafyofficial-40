@@ -211,15 +211,29 @@ const Checkout = () => {
     }
   }, [convertPrice, userCountry]);
 
-  // Calcular o valor total usando preços finais (considerando personalizados)
+  // Calcular o valor total usando preços finais (considerando personalizados e turmas)
   const getProductFinalPrice = useCallback(() => {
     if (!product) return 0;
+    
+    // Se houver turma com preço personalizado, usar esse preço
+    if (cohort && cohort.price && cohort.product_id === product.id) {
+      const cohortPriceKZ = parseFloat(cohort.price.replace(/[^\d.]/g, ''));
+      console.log('💰 Usando preço da turma:', cohortPriceKZ, 'KZ');
+      
+      // Se o preço da turma for em KZ, converter para a moeda do país
+      if (cohort.currency === 'KZ') {
+        return getConvertedPrice(cohortPriceKZ);
+      }
+      // Se for em outra moeda, retornar direto (já está na moeda correta)
+      return cohortPriceKZ;
+    }
+    
     const productPriceKZ = originalPriceKZ;
     if (product.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
       return parseFloat(product.custom_prices[userCountry.code]);
     }
     return getConvertedPrice(productPriceKZ);
-  }, [product, originalPriceKZ, userCountry, getConvertedPrice]);
+  }, [product, originalPriceKZ, userCountry, getConvertedPrice, cohort]);
   const totalAmountForDetection = useMemo(() => product ? getProductFinalPrice() + totalOrderBumpPrice : 0, [product, getProductFinalPrice, totalOrderBumpPrice]);
 
   // Remover efeito que aguarda geo - não precisamos mais
