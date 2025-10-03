@@ -33,6 +33,8 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
     name: '',
     description: '',
     product_id: '',
+    price: '',
+    currency: 'KZ',
     max_students: '',
     start_date: '',
     end_date: '',
@@ -102,8 +104,8 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
         user_id: user.id,
         name: formData.name,
         description: formData.description || null,
-        price: null,
-        currency: 'KZ',
+        price: formData.price || null,
+        currency: formData.currency || 'KZ',
         product_id: formData.product_id,
         max_students: formData.max_students ? parseInt(formData.max_students) : null,
         start_date: formData.start_date || null,
@@ -170,6 +172,8 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
       name: cohort.name,
       description: cohort.description || '',
       product_id: cohort.product_id || '',
+      price: cohort.price || '',
+      currency: cohort.currency || 'KZ',
       max_students: cohort.max_students?.toString() || '',
       start_date: cohort.start_date ? format(new Date(cohort.start_date), 'yyyy-MM-dd') : '',
       end_date: cohort.end_date ? format(new Date(cohort.end_date), 'yyyy-MM-dd') : '',
@@ -184,6 +188,8 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
       name: '',
       description: '',
       product_id: '',
+      price: '',
+      currency: 'KZ',
       max_students: '',
       start_date: '',
       end_date: '',
@@ -301,7 +307,36 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  A turma usará o preço configurado no produto selecionado.
+                  Este produto será vinculado à turma para criar o link de checkout.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="price">Preço Personalizado (Opcional)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="price"
+                    type="text"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="Ex: 5000 ou deixe vazio para usar preço do produto"
+                  />
+                  <Select value={formData.currency} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="KZ">KZ</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="MZN">MZN</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {formData.price 
+                    ? `💰 Esta turma será vendida por ${formData.price} ${formData.currency}` 
+                    : '📦 Será usado o preço do produto selecionado'}
                 </p>
               </div>
 
@@ -393,34 +428,55 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2 text-sm">
-                  {cohort.price && (
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-muted-foreground" />
-                      <span>{cohort.price} {cohort.currency}</span>
+                <div className="space-y-3 text-sm">
+                  {/* Preço */}
+                  <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-primary" />
+                        <span className="font-semibold">
+                          {cohort.price 
+                            ? `${cohort.price} ${cohort.currency}` 
+                            : 'Usando preço do produto'}
+                        </span>
+                      </div>
+                      {cohort.price && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                          Preço Personalizado
+                        </Badge>
+                      )}
                     </div>
-                  )}
+                  </div>
+
+                  {/* Link de Checkout */}
                   {cohort.product_id && (
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">Vinculada a Produto</Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyCheckoutLink(cohort)}
-                        className="h-6 px-2"
-                      >
-                        {copiedId === cohort.id ? (
-                          <Check className="w-3 h-3 text-green-500" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                      </Button>
-                    </div>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => copyCheckoutLink(cohort)}
+                      className="w-full gap-2"
+                    >
+                      {copiedId === cohort.id ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Link Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <LinkIcon className="w-4 h-4" />
+                          Copiar Link de Venda
+                        </>
+                      )}
+                    </Button>
                   )}
+
+                  {/* Alunos */}
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-muted-foreground" />
                     <span>{cohort.current_students}{cohort.max_students ? ` / ${cohort.max_students}` : ''} alunos</span>
                   </div>
+
+                  {/* Data de Início */}
                   {cohort.start_date && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
