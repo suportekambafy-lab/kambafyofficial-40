@@ -168,10 +168,14 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
 
   const handleEdit = (cohort: Cohort) => {
     setEditingCohort(cohort);
+    
+    // Para Turma A, pré-selecionar o primeiro produto ativo se não houver produto vinculado
+    const productId = cohort.product_id || (cohort.name === 'Turma A' && products.length > 0 ? products[0].id : '');
+    
     setFormData({
       name: cohort.name,
       description: cohort.description || '',
-      product_id: cohort.product_id || '',
+      product_id: productId,
       price: cohort.name === 'Turma A' ? '' : (cohort.price || ''), // Turma A não tem preço personalizado
       currency: cohort.currency || 'KZ',
       max_students: cohort.max_students?.toString() || '',
@@ -440,30 +444,6 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3 text-sm">
-                  {/* Preço */}
-                  <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-primary" />
-                        <span className="font-semibold">
-                          {cohort.price 
-                            ? `${cohort.price} ${cohort.currency}` 
-                            : 'Usando preço do produto'}
-                        </span>
-                      </div>
-                      {cohort.price && cohort.name !== 'Turma A' && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
-                          Preço Personalizado
-                        </Badge>
-                      )}
-                      {cohort.name === 'Turma A' && (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                          Turma Padrão
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
                   {/* Link de Checkout */}
                   {cohort.product_id && (
                     <Button
@@ -484,6 +464,13 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
                         </>
                       )}
                     </Button>
+                  )}
+
+                  {/* Badge de Turma Padrão */}
+                  {cohort.name === 'Turma A' && (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      Turma Padrão
+                    </Badge>
                   )}
 
                   {/* Alunos */}
