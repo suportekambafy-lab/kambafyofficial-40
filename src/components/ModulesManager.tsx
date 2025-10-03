@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, MoreHorizontal, Edit, Trash2, Eye, EyeOff, GripVertical, BookOpen } from "lucide-react";
+import { Plus, MoreHorizontal, Edit, Trash2, Eye, EyeOff, GripVertical, BookOpen, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +23,13 @@ interface Module {
   created_at: string;
   lessons_count?: number;
   cover_image_url?: string | null;
+  cohort_ids?: string[] | null;
+}
+
+interface Cohort {
+  id: string;
+  name: string;
+  status: string;
 }
 
 interface ModulesManagerProps {
@@ -33,6 +40,7 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [modules, setModules] = useState<Module[]>([]);
+  const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,14 +49,35 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
     title: '',
     description: '',
     status: 'draft' as 'draft' | 'published' | 'archived',
-    cover_image_url: ''
+    cover_image_url: '',
+    cohort_access: 'all' as 'all' | 'specific',
+    cohort_ids: [] as string[]
   });
 
   useEffect(() => {
     if (user && memberAreaId) {
       loadModules();
+      loadCohorts();
     }
   }, [user, memberAreaId]);
+
+  const loadCohorts = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('member_area_cohorts')
+        .select('id, name, status')
+        .eq('member_area_id', memberAreaId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setCohorts(data || []);
+    } catch (error) {
+      console.error('Error loading cohorts:', error);
+    }
+  };
 
   const loadModules = async () => {
     if (!user) return;
@@ -102,6 +131,7 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
           description: formData.description,
           status: formData.status,
           cover_image_url: formData.cover_image_url,
+          cohort_ids: formData.cohort_access === 'all' ? null : formData.cohort_ids,
           user_id: user.id,
           member_area_id: memberAreaId,
           order_number: editingModule ? editingModule.order_number : modules.length + 1
@@ -151,7 +181,9 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
       title: module.title,
       description: module.description || '',
       status: module.status as 'draft' | 'published' | 'archived',
-      cover_image_url: module.cover_image_url || ''
+      cover_image_url: module.cover_image_url || '',
+      cohort_access: module.cohort_ids === null ? 'all' : 'specific',
+      cohort_ids: module.cohort_ids || []
     });
     setDialogOpen(true);
   };
@@ -254,7 +286,9 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
       title: '',
       description: '',
       status: 'draft',
-      cover_image_url: ''
+      cover_image_url: '',
+      cohort_access: 'all',
+      cohort_ids: []
     });
     setEditingModule(null);
   };
@@ -361,6 +395,79 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
                     </Select>
                   </div>
                   
+                  <div className="space-y-2">
+                    <Label>Acesso por Turma</Label>
+                    <Select 
+                      value={formData.cohort_access} 
+                      onValueChange={(value: 'all' | 'specific') => {
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          cohort_access: value,
+                          cohort_ids: value === 'all' ? [] : prev.cohort_ids
+                        }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas as Turmas</SelectItem>
+                        <SelectItem value="specific">Turmas Específicas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Defina quais turmas terão acesso a este módulo
+                    </p>
+                  </div>
+
+                  {formData.cohort_access === 'specific' && (
+                    <div className="space-y-2">
+                      <Label>Selecione as Turmas</Label>
+                      <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
+                        {cohorts.length > 0 ? (
+                          cohorts.map((cohort) => (
+                            <div key={cohort.id} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`cohort-${cohort.id}`}
+                                checked={formData.cohort_ids.includes(cohort.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      cohort_ids: [...prev.cohort_ids, cohort.id]
+                                    }));
+                                  } else {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      cohort_ids: prev.cohort_ids.filter(id => id !== cohort.id)
+                                    }));
+                                  }
+                                }}
+                                className="rounded border-gray-300"
+                              />
+                              <label 
+                                htmlFor={`cohort-${cohort.id}`}
+                                className="text-sm cursor-pointer"
+                              >
+                                {cohort.name}
+                              </label>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-2">
+                            Nenhuma turma disponível. Crie turmas primeiro.
+                          </p>
+                        )}
+                      </div>
+                      {formData.cohort_ids.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {formData.cohort_ids.length} turma(s) selecionada(s)
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                       Cancelar
@@ -413,8 +520,17 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
                       {module.description && module.description.substring(0, 100)}
                       {module.description && module.description.length > 100 && '...'}
                     </div>
-                    <div className="text-sm text-gray-400 mt-1">
-                      {module.lessons_count || 0} aulas
+                    <div className="text-sm text-gray-400 mt-1 flex items-center gap-2">
+                      <span>{module.lessons_count || 0} aulas</span>
+                      {module.cohort_ids === null ? (
+                        <Badge variant="outline" className="text-xs">Todas as turmas</Badge>
+                      ) : module.cohort_ids.length > 0 ? (
+                        <Badge variant="outline" className="text-xs">
+                          {module.cohort_ids.length} turma(s)
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs text-orange-600">Nenhuma turma</Badge>
+                      )}
                     </div>
                   </div>
                 </div>

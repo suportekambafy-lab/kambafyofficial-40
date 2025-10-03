@@ -46,6 +46,7 @@ export interface Module {
   user_id: string;
   created_at: string;
   updated_at: string;
+  cohort_ids?: string[] | null; // null = todas turmas, [] = nenhuma, [ids] = turmas específicas
   lessons_count?: number;
   cover_image_url?: string | null;
   coming_soon?: boolean;

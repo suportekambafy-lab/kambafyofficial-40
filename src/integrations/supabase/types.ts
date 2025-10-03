@@ -1076,6 +1076,7 @@ export type Database = {
       }
       modules: {
         Row: {
+          cohort_ids: string[] | null
           coming_soon: boolean | null
           cover_image_url: string | null
           cover_orientation: string | null
@@ -1090,6 +1091,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cohort_ids?: string[] | null
           coming_soon?: boolean | null
           cover_image_url?: string | null
           cover_orientation?: string | null
@@ -1104,6 +1106,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cohort_ids?: string[] | null
           coming_soon?: boolean | null
           cover_image_url?: string | null
           cover_orientation?: string | null
