@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, FileText, Eye, Download, Filter } from 'lucide-react';
+import { ArrowLeft, FileText, Eye, Download, Filter, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -419,6 +419,18 @@ export default function AdminProducts() {
     }
   };
 
+  const copyCheckoutLink = async (productId: string, productName: string) => {
+    const checkoutLink = `https://pay.kambafy.com/checkout/${productId}`;
+    
+    try {
+      await navigator.clipboard.writeText(checkoutLink);
+      toast.success(`Link do checkout copiado!`);
+    } catch (err) {
+      console.error('Erro ao copiar link:', err);
+      toast.error('Erro ao copiar link do checkout');
+    }
+  };
+
   const getStatusBadge = (product: ProductWithProfile) => {
     if (product.status === 'Banido') {
       return (
@@ -575,6 +587,17 @@ export default function AdminProducts() {
                 )}
 
                 <div className="space-y-2">
+                  {/* Botão para copiar link do checkout */}
+                  <Button
+                    onClick={() => copyCheckoutLink(product.id, product.name)}
+                    size="sm"
+                    variant="outline"
+                    className="w-full border-primary text-primary hover:bg-primary/10 text-xs"
+                  >
+                    <Copy className="h-3 w-3 mr-1" />
+                    Copiar Link Checkout
+                  </Button>
+                  
                   {/* Botão para acessar conteúdo do produto */}
                   <Button
                     onClick={() => viewProductContent(product.id, product.type, product.name)}
