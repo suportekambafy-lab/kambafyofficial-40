@@ -545,19 +545,31 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Turma</TableHead>
                   <TableHead>Acesso Liberado</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredStudents.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.student_name}</TableCell>
-                    <TableCell>{student.student_email}</TableCell>
-                    <TableCell>
-                      {new Date(student.access_granted_at).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
+                {filteredStudents.map((student) => {
+                  const cohort = cohorts.find(c => c.id === student.cohort_id);
+                  return (
+                    <TableRow key={student.id}>
+                      <TableCell className="font-medium">{student.student_name}</TableCell>
+                      <TableCell>{student.student_email}</TableCell>
+                      <TableCell>
+                        {cohort ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {cohort.name}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">Sem turma</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(student.access_granted_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
@@ -581,7 +593,8 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
