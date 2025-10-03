@@ -24,6 +24,7 @@ import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 import { TermsModal } from "@/components/checkout/TermsModal";
 import { PrivacyModal } from "@/components/checkout/PrivacyModal";
+import { countTotalSales } from "@/utils/orderUtils";
 
 // Importar componentes otimizados
 import { OptimizedCustomBanner, OptimizedCountdownTimer, OptimizedFakeReviews, OptimizedSocialProof, OptimizedOrderBump, OptimizedStripeCardPayment } from '@/components/checkout/OptimizedCheckoutComponents';
@@ -83,6 +84,7 @@ const Checkout = () => {
     data: any;
     price: number;
   }>>(new Map());
+  const [productTotalSales, setProductTotalSales] = useState<number>(0);
 
   // Calculate total order bump price from all selected bumps
   const totalOrderBumpPrice = useMemo(() => {
@@ -492,6 +494,32 @@ const Checkout = () => {
     loadProduct();
     loadCheckoutSettings();
   }, [productId, navigate, toast]); // Carregar imediatamente, sem esperar geo
+  
+  // Buscar vendas do produto específico
+  useEffect(() => {
+    if (!product?.id) return;
+    
+    const fetchProductSales = async () => {
+      try {
+        // @ts-ignore - evitar inferência profunda do TypeScript
+        const response = await supabase
+          .from('orders')
+          .select('order_bump_data')
+          .eq('product_id', product.id)
+          .eq('payment_status', 'completed');
+        
+        if (!response.error && response.data) {
+          const totalSales = countTotalSales(response.data);
+          console.log('📊 Total de vendas do produto:', totalSales);
+          setProductTotalSales(totalSales);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar vendas:', err);
+      }
+    };
+    
+    fetchProductSales();
+  }, [product?.id]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -1730,9 +1758,9 @@ const Checkout = () => {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 py-8">
-          {/* Debug: Always show social proof for now */}
+          {/* Prova social com vendas reais do produto */}
           <OptimizedSocialProof settings={{
-          totalSales: checkoutSettings?.socialProof?.totalSales || 1247,
+          totalSales: productTotalSales,
           position: checkoutSettings?.socialProof?.position || 'bottom-right',
           enabled: checkoutSettings?.socialProof?.enabled !== false // Mostrar por padrão
         }} />
