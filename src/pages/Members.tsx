@@ -1033,27 +1033,45 @@ export default function Members() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {modules.length > 0 ? <div className="space-y-4">
-                    {modules.sort((a, b) => a.order_number - b.order_number).map(module => <div 
+                    {modules.sort((a, b) => a.order_number - b.order_number).map((module, index) => <div 
                       key={module.id} 
-                      className="border rounded-lg p-3 md:p-4 space-y-3"
+                      className="border rounded-lg p-3 md:p-4 space-y-3 transition-all hover:shadow-md"
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.effectAllowed = 'move';
                         e.dataTransfer.setData('moduleId', module.id);
+                        e.currentTarget.style.opacity = '0.5';
+                        console.log('🎯 Drag started for module:', module.title);
+                      }}
+                      onDragEnd={(e) => {
+                        e.currentTarget.style.opacity = '1';
                       }}
                       onDragOver={(e) => {
                         e.preventDefault();
                         e.dataTransfer.dropEffect = 'move';
+                        e.currentTarget.style.borderColor = '#3b82f6';
+                        e.currentTarget.style.borderWidth = '2px';
+                      }}
+                      onDragLeave={(e) => {
+                        e.currentTarget.style.borderColor = '';
+                        e.currentTarget.style.borderWidth = '';
                       }}
                       onDrop={async (e) => {
                         e.preventDefault();
+                        e.currentTarget.style.borderColor = '';
+                        e.currentTarget.style.borderWidth = '';
+                        
                         const draggedId = e.dataTransfer.getData('moduleId');
+                        console.log('🎯 Drop event - draggedId:', draggedId, 'targetId:', module.id);
+                        
                         if (draggedId === module.id) return;
 
                         const draggedModule = modules.find(m => m.id === draggedId);
                         const targetModule = module;
 
                         if (!draggedModule) return;
+
+                        console.log('🔄 Reordering:', draggedModule.title, '->', targetModule.title);
 
                         // Reordenar módulos
                         const reorderedModules = [...modules];
@@ -1064,9 +1082,9 @@ export default function Members() {
                         reorderedModules.splice(targetIndex, 0, draggedModule);
 
                         // Atualizar ordem no estado
-                        const updatedModules = reorderedModules.map((m, index) => ({
+                        const updatedModules = reorderedModules.map((m, idx) => ({
                           ...m,
-                          order_number: index + 1
+                          order_number: idx + 1
                         }));
 
                         setModules(updatedModules);
@@ -1100,7 +1118,9 @@ export default function Members() {
                         {/* Cabeçalho do Módulo */}
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                           <div className="flex items-center gap-2 md:gap-3">
-                            <GripVertical className="w-3 h-3 md:w-4 md:h-4 text-gray-400 cursor-move hidden md:block" onMouseDown={(e) => e.stopPropagation()} />
+                            <div className="cursor-grab active:cursor-grabbing hidden md:block">
+                              <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                            </div>
                             <div className="w-3 h-3 md:w-4 md:h-4 bg-blue-200 rounded"></div>
                             <div className="flex-1">
                               <div className="font-medium flex items-center gap-2 text-sm md:text-base">
