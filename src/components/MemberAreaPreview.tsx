@@ -62,14 +62,14 @@ export default function MemberAreaPreview({ open, onOpenChange, memberArea, less
       return acc;
     }, {} as Record<string, boolean>);
     setExpandedModules(initialExpanded);
-  }, [publishedModules]);
+  }, []); // Executar apenas uma vez ao montar
 
   // Selecionar primeira aula quando abrir o modal
   useEffect(() => {
     if (open && publishedLessons.length > 0 && !selectedLesson) {
       setSelectedLesson(publishedLessons[0]);
     }
-  }, [open, publishedLessons, selectedLesson]);
+  }, [open]); // Apenas quando o modal abrir
 
   // Limpar estado quando fechar o modal
   useEffect(() => {
