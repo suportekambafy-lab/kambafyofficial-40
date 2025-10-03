@@ -437,7 +437,6 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
                       <SelectValue placeholder="Selecione uma turma" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Sem turma específica</SelectItem>
                       {cohorts.map((cohort) => (
                         <SelectItem 
                           key={cohort.id} 
