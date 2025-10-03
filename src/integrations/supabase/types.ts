@@ -781,6 +781,75 @@ export type Database = {
           },
         ]
       }
+      member_area_cohorts: {
+        Row: {
+          created_at: string
+          currency: string | null
+          current_students: number | null
+          description: string | null
+          end_date: string | null
+          id: string
+          max_students: number | null
+          member_area_id: string
+          name: string
+          price: string | null
+          product_id: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          current_students?: number | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          max_students?: number | null
+          member_area_id: string
+          name: string
+          price?: string | null
+          product_id?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          current_students?: number | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          max_students?: number | null
+          member_area_id?: string
+          name?: string
+          price?: string | null
+          product_id?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_area_cohorts_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_area_cohorts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_area_offers: {
         Row: {
           created_at: string
@@ -897,6 +966,7 @@ export type Database = {
       member_area_students: {
         Row: {
           access_granted_at: string
+          cohort_id: string | null
           created_at: string
           id: string
           member_area_id: string
@@ -905,6 +975,7 @@ export type Database = {
         }
         Insert: {
           access_granted_at?: string
+          cohort_id?: string | null
           created_at?: string
           id?: string
           member_area_id: string
@@ -913,6 +984,7 @@ export type Database = {
         }
         Update: {
           access_granted_at?: string
+          cohort_id?: string | null
           created_at?: string
           id?: string
           member_area_id?: string
@@ -920,6 +992,13 @@ export type Database = {
           student_name?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "member_area_students_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "member_area_cohorts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "member_area_students_member_area_id_fkey"
             columns: ["member_area_id"]

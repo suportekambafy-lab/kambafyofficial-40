@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import VideoUploader from "@/components/VideoUploader";
 import StudentsManager from "@/components/StudentsManager";
+import CohortsManager from "@/components/members/CohortsManager";
 import { MemberAreaSettings } from '@/components/MemberAreaSettings';
 import MemberAreaPreview from "@/components/MemberAreaPreview";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -1008,9 +1009,10 @@ export default function Members() {
         </div>
 
         <Tabs defaultValue="conteudo" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-auto">
+          <TabsList className="grid w-full grid-cols-6 h-auto">
             <TabsTrigger value="conteudo" className="text-xs md:text-sm py-2">Conteúdo</TabsTrigger>
             <TabsTrigger value="ofertas" className="text-xs md:text-sm py-2">Ofertas</TabsTrigger>
+            <TabsTrigger value="turmas" className="text-xs md:text-sm py-2">Turmas</TabsTrigger>
             <TabsTrigger value="cursos" className="text-xs md:text-sm py-2">Cursos</TabsTrigger>
             <TabsTrigger value="alunos" className="text-xs md:text-sm py-2">Alunos</TabsTrigger>
             <TabsTrigger value="configuracoes" className="text-xs md:text-sm py-2">Config</TabsTrigger>
@@ -1264,6 +1266,10 @@ export default function Members() {
                 <MemberAreaOffersManager memberAreaId={selectedArea.id} userId={user.id} />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="turmas" className="space-y-6">
+            <CohortsManager memberAreaId={selectedArea.id} memberAreaName={selectedArea.name} />
           </TabsContent>
 
           <TabsContent value="cursos" className="space-y-6">
