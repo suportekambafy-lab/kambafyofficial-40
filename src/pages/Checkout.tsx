@@ -1489,6 +1489,13 @@ const Checkout = () => {
             
             if (orderStatus?.status === 'completed') {
               clearInterval(pollInterval);
+              
+              // CRÍTICO: Limpar countdown timer para evitar toast de timeout
+              if (countdownIntervalRef.current) {
+                clearInterval(countdownIntervalRef.current);
+                countdownIntervalRef.current = null;
+              }
+              
               console.log('✅ Pagamento Express confirmado! Redirecionando...');
               console.log('📍 Redirect URL:', `/obrigado?${params.toString()}`);
               

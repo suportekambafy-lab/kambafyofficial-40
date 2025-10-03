@@ -175,14 +175,19 @@ const ThankYou = () => {
 
         // Check if productId is a UUID or a slug
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderDetails.productId);
-        const {
-          data: productData,
-          error: productError
-        } = await supabase.from('products').select(`
+        
+        // OTIMIZAÇÃO: Carregar produto e pedidos relacionados em paralelo
+        const [productResult, relatedOrdersResult] = await Promise.all([
+          supabase.from('products').select(`
             *, 
             member_areas(id, name, url),
             profiles!products_user_id_fkey(full_name, email)
-          `).eq(isUUID ? 'id' : 'slug', orderDetails.productId).single();
+          `).eq(isUUID ? 'id' : 'slug', orderDetails.productId).single(),
+          supabase.from('orders').select('*').eq('order_id', orderDetails.orderId)
+        ]);
+        
+        const { data: productData, error: productError } = productResult;
+        const { data: relatedOrdersData, error: relatedError } = relatedOrdersResult;
         
         if (productError) {
           console.error('❌ ThankYou: Erro ao carregar produto:', productError);
@@ -191,32 +196,32 @@ const ThankYou = () => {
         if (productData) {
           setProduct(productData);
           console.log('✅ ThankYou: Produto carregado:', productData);
+          
+          // CRÍTICO: Finalizar loading assim que produto está carregado
+          setLoading(false);
 
-          // Se o produto tem um seller, buscar dados do perfil
+          // Se o produto tem um seller, buscar dados do perfil (em background)
           if (productData.user_id && !productData.profiles) {
             console.log('🔍 ThankYou: Buscando perfil do vendedor...');
-            const {
-              data: profileData,
-              error: profileError
-            } = await supabase.from('profiles').select('full_name, email').eq('user_id', productData.user_id).single();
-            if (profileData && !profileError) {
-              setSellerProfile(profileData);
-              console.log('✅ ThankYou: Perfil do vendedor carregado:', profileData);
-            }
+            supabase.from('profiles')
+              .select('full_name, email')
+              .eq('user_id', productData.user_id)
+              .single()
+              .then(({ data: profileData, error: profileError }) => {
+                if (profileData && !profileError) {
+                  setSellerProfile(profileData);
+                  console.log('✅ ThankYou: Perfil do vendedor carregado:', profileData);
+                }
+              });
           } else if (productData.profiles) {
             setSellerProfile(productData.profiles);
           }
         } else {
           console.log('❌ ThankYou: Produto não encontrado');
+          setLoading(false);
         }
 
-        // Buscar pedidos relacionados (upsells vinculados a este pedido)
-        console.log('🔗 ThankYou: Buscando pedidos relacionados...');
-        const {
-          data: relatedOrdersData,
-          error: relatedError
-        } = await supabase.from('orders').select('*').eq('order_id', orderDetails.orderId);
-        
+        // Processar pedidos relacionados
         if (relatedError) {
           console.error('❌ Erro ao buscar pedidos relacionados:', relatedError);
         } else if (relatedOrdersData?.length > 0) {
