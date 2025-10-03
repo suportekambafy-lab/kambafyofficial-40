@@ -780,17 +780,17 @@ export default function ModernMembersArea() {
 
                                     {/* Progress Overlay */}
                                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                                      <h3 className={`font-bold text-lg mb-1 leading-tight transition-colors ${module.coming_soon ? 'group-hover:text-amber-300' : 'group-hover:text-emerald-300'}`}>
-                                        {module.title}
-                                      </h3>
-                                       <div className="flex items-center gap-2 mb-3">
-                                         <span className="text-sm text-gray-300">
-                                           {lessons.filter(l => l.module_id === module.id).length} aulas
-                                         </span>
-                                         {module.coming_soon && <span className="text-xs font-medium text-amber-400">
-                                             Em Breve
-                                           </span>}
-                                       </div>
+                                       <h3 className={`font-bold text-lg mb-1 leading-tight transition-colors ${module.coming_soon ? 'group-hover:text-amber-300' : 'group-hover:text-emerald-300'}`}>
+                                         {module.title}
+                                       </h3>
+                                        <div className="flex items-center gap-2 mb-3">
+                                          <span className="text-sm text-gray-300">
+                                            {lessons.filter(l => l.module_id === module.id).length} aulas
+                                          </span>
+                                          {module.coming_soon && <span className="text-xs font-medium text-amber-400">
+                                              Em Breve{module.cohort_ids && module.cohort_ids.length > 0 ? ` em ${module.cohort_ids.length} turma${module.cohort_ids.length !== 1 ? 's' : ''}` : ''}
+                                            </span>}
+                                        </div>
                                     </div>
                                   </div>
                                 </div>
