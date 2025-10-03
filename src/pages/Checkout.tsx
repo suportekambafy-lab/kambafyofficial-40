@@ -1902,7 +1902,7 @@ const Checkout = () => {
                     <CheckCircle className="w-4 h-4 text-green-500" />
                   </div>
                   <div className="text-2xl font-bold text-green-600 mt-2">
-                    {getDisplayPrice(originalPrice)}
+                    {getDisplayPrice(finalProductPrice, true)}
                   </div>
                 </div>
               </div>
