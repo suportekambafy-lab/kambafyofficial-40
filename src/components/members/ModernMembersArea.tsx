@@ -533,8 +533,8 @@ export default function ModernMembersArea() {
 
                   {modules
                     .filter(module => {
-                      // Se o módulo não tem cohort_ids ou é null, mostrar para todos
-                      if (module.cohort_ids === null || module.cohort_ids === undefined) {
+                      // Se o módulo não tem cohort_ids, é null ou é array vazio, mostrar para todos
+                      if (!module.cohort_ids || module.cohort_ids === null || module.cohort_ids.length === 0) {
                         return true;
                       }
                       // Se o aluno não está em nenhuma turma, não mostrar módulos específicos
@@ -729,8 +729,8 @@ export default function ModernMembersArea() {
                         <div className="flex gap-6 min-w-max">
                           {modules
                             .filter(module => {
-                              // Se o módulo não tem cohort_ids ou é null, mostrar para todos
-                              if (module.cohort_ids === null || module.cohort_ids === undefined) {
+                              // Se o módulo não tem cohort_ids, é null ou é array vazio, mostrar para todos
+                              if (!module.cohort_ids || module.cohort_ids === null || module.cohort_ids.length === 0) {
                                 return true;
                               }
                               // Se o aluno não está em nenhuma turma, não mostrar módulos específicos
