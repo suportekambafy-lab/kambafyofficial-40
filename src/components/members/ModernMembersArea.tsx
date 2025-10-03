@@ -180,28 +180,39 @@ export default function ModernMembersArea() {
         // NÃO usar setIsLoading - nunca mostrar loading
 
         // Buscar turma do aluno se estiver autenticado
+        console.log('🔍 INÍCIO - Buscando turma do aluno:', {
+          hasSession: !!session,
+          hasEmail: !!session?.user?.email,
+          email: session?.user?.email,
+          memberAreaId
+        });
+        
         if (session?.user?.email) {
-          const { data: studentData } = await supabase
+          const normalizedEmail = session.user.email.toLowerCase().trim();
+          console.log('📧 Email normalizado:', normalizedEmail);
+          
+          const { data: studentData, error } = await supabase
             .from('member_area_students')
             .select('cohort_id')
             .eq('member_area_id', memberAreaId)
-            .eq('student_email', session.user.email.toLowerCase().trim())
+            .eq('student_email', normalizedEmail)
             .maybeSingle();
           
-          console.log('👥 DEBUG - Dados do aluno:', {
-            email: session.user.email.toLowerCase().trim(),
-            memberAreaId,
+          console.log('👥 RESULTADO - Dados do aluno:', {
             studentData,
+            error,
             cohortId: studentData?.cohort_id
           });
           
           if (studentData?.cohort_id) {
-            console.log('✅ Aluno pertence à turma:', studentData.cohort_id);
+            console.log('✅ TURMA ENCONTRADA:', studentData.cohort_id);
             setStudentCohortId(studentData.cohort_id);
           } else {
-            console.log('⚠️ Aluno não está em nenhuma turma específica');
+            console.log('⚠️ ALUNO SEM TURMA ESPECÍFICA');
             setStudentCohortId(null);
           }
+        } else {
+          console.log('❌ SEM SESSION/EMAIL - não buscar turma');
         }
 
         // Carregar lessons
@@ -541,35 +552,30 @@ export default function ModernMembersArea() {
                     </h3>
                   </div>
 
-                  {modules
-                    .filter(module => {
-                      console.log('🔍 Filtrando módulo:', {
-                        moduleName: module.title,
+                  {(() => {
+                    console.log('🎯 FILTRO SIDEBAR - Estado atual:', {
+                      totalModules: modules.length,
+                      studentCohortId,
+                      modulesWithCohorts: modules.filter(m => m.cohort_ids && m.cohort_ids.length > 0).length
+                    });
+                    
+                    return modules.filter(module => {
+                      const isForAll = !module.cohort_ids || module.cohort_ids.length === 0;
+                      const hasStudentCohort = !!studentCohortId;
+                      const moduleIncludesStudent = hasStudentCohort && module.cohort_ids?.includes(studentCohortId);
+                      
+                      console.log(`📦 ${module.title}:`, {
                         cohort_ids: module.cohort_ids,
+                        isForAll,
+                        hasStudentCohort,
                         studentCohortId,
-                        hasNoCohorts: !module.cohort_ids || module.cohort_ids === null || module.cohort_ids.length === 0,
-                        willShow: !module.cohort_ids || module.cohort_ids === null || module.cohort_ids.length === 0 || 
-                                  (studentCohortId && module.cohort_ids?.includes(studentCohortId))
+                        moduleIncludesStudent,
+                        WILL_SHOW: isForAll || moduleIncludesStudent
                       });
                       
-                      // Se o módulo não tem cohort_ids, é null ou é array vazio = "Todas as turmas"
-                      if (!module.cohort_ids || module.cohort_ids === null || module.cohort_ids.length === 0) {
-                        console.log('✅ Módulo visível para TODOS:', module.title);
-                        return true;
-                      }
-                      
-                      // Se o aluno não está em nenhuma turma, não mostrar módulos específicos
-                      if (!studentCohortId) {
-                        console.log('❌ Aluno sem turma, ocultando módulo específico:', module.title);
-                        return false;
-                      }
-                      
-                      // Se o módulo tem cohort_ids específicos, verificar se o aluno está neles
-                      const hasAccess = module.cohort_ids.includes(studentCohortId);
-                      console.log(hasAccess ? '✅' : '❌', 'Módulo', module.title, 'para turma', studentCohortId);
-                      return hasAccess;
-                    })
-                    .map(module => {
+                      return isForAll || moduleIncludesStudent;
+                    });
+                  })().map(module => {
                 const moduleLessons = lessons.filter(l => l.module_id === module.id);
                 const isExpanded = expandedModules.has(module.id);
                 return <div key={`${module.id}-${selectedLesson?.id || 'none'}`} className="space-y-3">
@@ -752,22 +758,30 @@ export default function ModernMembersArea() {
                       </div>) : (/* Netflix Style Horizontal Scroll */
               <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide scroll-smooth">
                         <div className="flex gap-6 min-w-max">
-                          {modules
-                            .filter(module => {
-                              // Se o módulo não tem cohort_ids, é null ou é array vazio = "Todas as turmas"
-                              if (!module.cohort_ids || module.cohort_ids === null || module.cohort_ids.length === 0) {
-                                return true;
-                              }
+                          {(() => {
+                            console.log('🎯 FILTRO NETFLIX - Estado atual:', {
+                              totalModules: modules.length,
+                              studentCohortId,
+                              modulesWithCohorts: modules.filter(m => m.cohort_ids && m.cohort_ids.length > 0).length
+                            });
+                            
+                            return modules.filter(module => {
+                              const isForAll = !module.cohort_ids || module.cohort_ids.length === 0;
+                              const hasStudentCohort = !!studentCohortId;
+                              const moduleIncludesStudent = hasStudentCohort && module.cohort_ids?.includes(studentCohortId);
                               
-                              // Se o aluno não está em nenhuma turma, não mostrar módulos específicos
-                              if (!studentCohortId) {
-                                return false;
-                              }
+                              console.log(`📦 NETFLIX ${module.title}:`, {
+                                cohort_ids: module.cohort_ids,
+                                isForAll,
+                                hasStudentCohort,
+                                studentCohortId,
+                                moduleIncludesStudent,
+                                WILL_SHOW: isForAll || moduleIncludesStudent
+                              });
                               
-                              // Se o módulo tem cohort_ids específicos, verificar se o aluno está neles
-                              return module.cohort_ids.includes(studentCohortId);
-                            })
-                            .map((module, index) => <motion.div key={module.id} initial={{
+                              return isForAll || moduleIncludesStudent;
+                            });
+                          })().map((module, index) => <motion.div key={module.id} initial={{
                     opacity: 0,
                     scale: 0.95
                   }} animate={{
