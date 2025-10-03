@@ -1810,24 +1810,22 @@ const Checkout = () => {
 
   // CALCULAR PRECOS CORRETOS USANDO PREÇOS PERSONALIZADOS
 
-  // 🔥 CALCULAR PREÇO FINAL DO PRODUTO PRINCIPAL (considerando preços personalizados)
-  let finalProductPrice = originalPriceKZ;
-  if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
-    finalProductPrice = parseFloat(product.custom_prices[userCountry.code]);
-    console.log(`🚨 PRODUTO PRINCIPAL - USANDO PREÇO PERSONALIZADO: ${finalProductPrice} ${userCountry.currency}`);
-  } else {
-    finalProductPrice = getConvertedPrice(originalPriceKZ);
-    console.log(`🚨 PRODUTO PRINCIPAL - USANDO CONVERSÃO: ${finalProductPrice} ${userCountry?.currency}`);
-  }
+  // 🔥 CALCULAR PREÇO FINAL DO PRODUTO PRINCIPAL (considerando preços personalizados e turmas)
+  const finalProductPrice = getProductFinalPrice();
+  
+  console.log(`🚨 CÁLCULO DO PREÇO FINAL:`);
+  console.log(`- Produto: ${product?.name}`);
+  console.log(`- Preço original KZ: ${originalPriceKZ} KZ`);
+  console.log(`- Turma: ${cohort?.name || 'Nenhuma'}`);
+  console.log(`- Preço da turma: ${cohort?.price || 'N/A'}`);
+  console.log(`- Moeda da turma: ${cohort?.currency || 'N/A'}`);
+  console.log(`- País do usuário: ${userCountry?.code} (${userCountry?.currency})`);
+  console.log(`- Preço final calculado: ${finalProductPrice} ${userCountry?.currency}`);
+  console.log(`- Preço order bump: ${totalOrderBumpPrice} ${userCountry?.currency}`);
 
   // 🔥 CALCULAR TOTAL CORRETO (ambos na mesma moeda final)
   const totalPrice = finalProductPrice + totalOrderBumpPrice;
-  console.log(`🚨 PREÇOS FINAIS PARA CHECKOUT:`);
-  console.log(`Product: ${product?.name}`);
-  console.log(`Original price KZ: ${originalPriceKZ} KZ`);
-  console.log(`Final product price: ${finalProductPrice} ${userCountry?.currency}`);
-  console.log(`Order bump price: ${totalOrderBumpPrice} ${userCountry?.currency}`);
-  console.log(`TOTAL FINAL: ${totalPrice} ${userCountry?.currency}`);
+  console.log(`🚨 TOTAL FINAL: ${totalPrice} ${userCountry?.currency}`);
   console.log(`Display price: ${getDisplayPrice(originalPriceKZ)}`);
 
   // Para compatibilidade com variáveis existentes
