@@ -188,9 +188,19 @@ export default function ModernMembersArea() {
             .eq('student_email', session.user.email.toLowerCase().trim())
             .maybeSingle();
           
+          console.log('👥 DEBUG - Dados do aluno:', {
+            email: session.user.email.toLowerCase().trim(),
+            memberAreaId,
+            studentData,
+            cohortId: studentData?.cohort_id
+          });
+          
           if (studentData?.cohort_id) {
-            console.log('👥 Aluno pertence à turma:', studentData.cohort_id);
+            console.log('✅ Aluno pertence à turma:', studentData.cohort_id);
             setStudentCohortId(studentData.cohort_id);
+          } else {
+            console.log('⚠️ Aluno não está em nenhuma turma específica');
+            setStudentCohortId(null);
           }
         }
 
@@ -533,16 +543,31 @@ export default function ModernMembersArea() {
 
                   {modules
                     .filter(module => {
-                      // Se o módulo não tem cohort_ids, é null ou é array vazio, mostrar para todos
+                      console.log('🔍 Filtrando módulo:', {
+                        moduleName: module.title,
+                        cohort_ids: module.cohort_ids,
+                        studentCohortId,
+                        hasNoCohorts: !module.cohort_ids || module.cohort_ids === null || module.cohort_ids.length === 0,
+                        willShow: !module.cohort_ids || module.cohort_ids === null || module.cohort_ids.length === 0 || 
+                                  (studentCohortId && module.cohort_ids?.includes(studentCohortId))
+                      });
+                      
+                      // Se o módulo não tem cohort_ids, é null ou é array vazio = "Todas as turmas"
                       if (!module.cohort_ids || module.cohort_ids === null || module.cohort_ids.length === 0) {
+                        console.log('✅ Módulo visível para TODOS:', module.title);
                         return true;
                       }
+                      
                       // Se o aluno não está em nenhuma turma, não mostrar módulos específicos
                       if (!studentCohortId) {
+                        console.log('❌ Aluno sem turma, ocultando módulo específico:', module.title);
                         return false;
                       }
+                      
                       // Se o módulo tem cohort_ids específicos, verificar se o aluno está neles
-                      return module.cohort_ids.includes(studentCohortId);
+                      const hasAccess = module.cohort_ids.includes(studentCohortId);
+                      console.log(hasAccess ? '✅' : '❌', 'Módulo', module.title, 'para turma', studentCohortId);
+                      return hasAccess;
                     })
                     .map(module => {
                 const moduleLessons = lessons.filter(l => l.module_id === module.id);
@@ -729,14 +754,16 @@ export default function ModernMembersArea() {
                         <div className="flex gap-6 min-w-max">
                           {modules
                             .filter(module => {
-                              // Se o módulo não tem cohort_ids, é null ou é array vazio, mostrar para todos
+                              // Se o módulo não tem cohort_ids, é null ou é array vazio = "Todas as turmas"
                               if (!module.cohort_ids || module.cohort_ids === null || module.cohort_ids.length === 0) {
                                 return true;
                               }
+                              
                               // Se o aluno não está em nenhuma turma, não mostrar módulos específicos
                               if (!studentCohortId) {
                                 return false;
                               }
+                              
                               // Se o módulo tem cohort_ids específicos, verificar se o aluno está neles
                               return module.cohort_ids.includes(studentCohortId);
                             })
