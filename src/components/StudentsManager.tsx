@@ -559,7 +559,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
                       <TableCell>{student.student_email}</TableCell>
                       <TableCell>
                         {cohort ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <span className="text-sm font-medium">
                             {cohort.name}
                           </span>
                         ) : (
