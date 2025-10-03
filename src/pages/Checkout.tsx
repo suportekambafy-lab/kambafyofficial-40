@@ -1787,8 +1787,7 @@ const Checkout = () => {
   // CALCULAR PRECOS CORRETOS USANDO PREÇOS PERSONALIZADOS
 
   // 🔥 CALCULAR PREÇO FINAL DO PRODUTO PRINCIPAL (considerando preços personalizados e turmas)
-  // Usar useMemo para evitar recálculos desnecessários que causam "piscada" de preço
-  const finalProductPrice = useMemo(() => getProductFinalPrice(), [getProductFinalPrice]);
+  const finalProductPrice = getProductFinalPrice();
   
   console.log(`🚨 CÁLCULO DO PREÇO FINAL:`);
   console.log(`- Produto: ${product?.name}`);
@@ -1801,8 +1800,7 @@ const Checkout = () => {
   console.log(`- Preço order bump: ${totalOrderBumpPrice} ${userCountry?.currency}`);
 
   // 🔥 CALCULAR TOTAL CORRETO (ambos na mesma moeda final)
-  // Usar useMemo para evitar recálculos desnecessários
-  const totalPrice = useMemo(() => finalProductPrice + totalOrderBumpPrice, [finalProductPrice, totalOrderBumpPrice]);
+  const totalPrice = finalProductPrice + totalOrderBumpPrice;
   console.log(`🚨 TOTAL FINAL: ${totalPrice} ${userCountry?.currency}`);
   console.log(`Display price: ${getDisplayPrice(originalPriceKZ)}`);
 
