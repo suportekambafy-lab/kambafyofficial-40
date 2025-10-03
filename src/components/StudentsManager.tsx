@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, UserPlus, Mail, Calendar, MoreHorizontal, ExternalLink } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -19,6 +20,15 @@ interface Student {
   student_email: string;
   access_granted_at: string;
   created_at: string;
+  cohort_id?: string;
+}
+
+interface Cohort {
+  id: string;
+  name: string;
+  status: string;
+  current_students: number;
+  max_students: number | null;
 }
 
 interface StudentsManagerProps {
@@ -29,43 +39,60 @@ interface StudentsManagerProps {
 export default function StudentsManager({ memberAreaId, memberAreaName }: StudentsManagerProps) {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
+  const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    email: ''
+    email: '',
+    cohortId: ''
   });
 
-  // Carregar estudantes da área de membros
+  // Carregar estudantes e turmas da área de membros
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchData = async () => {
       if (!user || !memberAreaId) return;
       
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        // Buscar estudantes
+        const { data: studentsData, error: studentsError } = await supabase
           .from('member_area_students')
           .select('*')
           .eq('member_area_id', memberAreaId)
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching students:', error);
+        if (studentsError) {
+          console.error('Error fetching students:', studentsError);
           toast.error("Erro ao carregar estudantes");
         } else {
-          setStudents(data || []);
+          setStudents(studentsData || []);
+        }
+
+        // Buscar turmas ativas
+        const { data: cohortsData, error: cohortsError } = await supabase
+          .from('member_area_cohorts')
+          .select('id, name, status, current_students, max_students')
+          .eq('member_area_id', memberAreaId)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
+
+        if (cohortsError) {
+          console.error('Error fetching cohorts:', cohortsError);
+        } else {
+          setCohorts(cohortsData || []);
         }
       } catch (error) {
-        console.error('Exception fetching students:', error);
+        console.error('Exception fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStudents();
-  }, [user, memberAreaId, toast]);
+    fetchData();
+  }, [user, memberAreaId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,7 +142,8 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
         .insert({
           member_area_id: memberAreaId,
           student_name: formData.name,
-          student_email: formData.email
+          student_email: formData.email,
+          cohort_id: formData.cohortId || null
         });
 
       if (error) {
@@ -169,13 +197,38 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
         }
       }
 
+      // Incrementar contador da turma se selecionada
+      if (formData.cohortId) {
+        // Buscar contador atual
+        const { data: cohortData } = await supabase
+          .from('member_area_cohorts')
+          .select('current_students')
+          .eq('id', formData.cohortId)
+          .single();
+
+        if (cohortData) {
+          // Incrementar contador
+          await supabase
+            .from('member_area_cohorts')
+            .update({ current_students: cohortData.current_students + 1 })
+            .eq('id', formData.cohortId);
+
+          // Atualizar lista de turmas localmente
+          setCohorts(prev => prev.map(c => 
+            c.id === formData.cohortId 
+              ? { ...c, current_students: c.current_students + 1 }
+              : c
+          ));
+        }
+      }
+
       toast.success(
         isNewAccount 
           ? "✅ Conta criada com sucesso! Email de acesso enviado com credenciais."
           : "✅ Estudante adicionado! Email de acesso enviado."
       );
       
-      setFormData({ name: '', email: '' });
+      setFormData({ name: '', email: '', cohortId: '' });
       setDialogOpen(false);
       
       // Recarregar lista de estudantes
@@ -372,6 +425,40 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
                   required
                 />
               </div>
+
+              {cohorts.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="student-cohort">Turma (Opcional)</Label>
+                  <Select
+                    value={formData.cohortId}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, cohortId: value }))}
+                  >
+                    <SelectTrigger id="student-cohort">
+                      <SelectValue placeholder="Selecione uma turma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sem turma específica</SelectItem>
+                      {cohorts.map((cohort) => (
+                        <SelectItem 
+                          key={cohort.id} 
+                          value={cohort.id}
+                          disabled={cohort.max_students !== null && cohort.current_students >= cohort.max_students}
+                        >
+                          {cohort.name}
+                          {cohort.max_students !== null && (
+                            <span className="text-xs text-muted-foreground ml-2">
+                              ({cohort.current_students}/{cohort.max_students})
+                            </span>
+                          )}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Escolha uma turma para organizar seus alunos
+                  </p>
+                </div>
+              )}
               
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={isSubmitting}>
