@@ -32,9 +32,7 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: '',
-    currency: 'KZ',
-    product_id: 'none',
+    product_id: '',
     max_students: '',
     start_date: '',
     end_date: '',
@@ -94,14 +92,19 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
         return;
       }
 
+      if (!formData.product_id) {
+        toast({ title: "Selecione um produto", variant: "destructive" });
+        return;
+      }
+
       const cohortData: CohortInsert = {
         member_area_id: memberAreaId,
         user_id: user.id,
         name: formData.name,
         description: formData.description || null,
-        price: formData.product_id === 'none' ? formData.price : null,
-        currency: formData.currency,
-        product_id: formData.product_id !== 'none' ? formData.product_id : null,
+        price: null,
+        currency: 'KZ',
+        product_id: formData.product_id,
         max_students: formData.max_students ? parseInt(formData.max_students) : null,
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
@@ -166,9 +169,7 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
     setFormData({
       name: cohort.name,
       description: cohort.description || '',
-      price: cohort.price || '',
-      currency: cohort.currency,
-      product_id: cohort.product_id || 'none',
+      product_id: cohort.product_id || '',
       max_students: cohort.max_students?.toString() || '',
       start_date: cohort.start_date ? format(new Date(cohort.start_date), 'yyyy-MM-dd') : '',
       end_date: cohort.end_date ? format(new Date(cohort.end_date), 'yyyy-MM-dd') : '',
@@ -182,9 +183,7 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
     setFormData({
       name: '',
       description: '',
-      price: '',
-      currency: 'KZ',
-      product_id: 'none',
+      product_id: '',
       max_students: '',
       start_date: '',
       end_date: '',
@@ -290,49 +289,21 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="product">Vincular a Produto</Label>
-                <Select value={formData.product_id} onValueChange={(value) => setFormData({ ...formData, product_id: value })}>
+                <Label htmlFor="product">Produto *</Label>
+                <Select value={formData.product_id} onValueChange={(value) => setFormData({ ...formData, product_id: value })} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um produto" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Nenhum (Preço Personalizado)</SelectItem>
                     {products.map(product => (
                       <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Se vincular a um produto, o preço será do produto. Caso contrário, defina um preço abaixo.
+                  A turma usará o preço configurado no produto selecionado.
                 </p>
               </div>
-
-              {formData.product_id === 'none' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Preço</Label>
-                    <Input
-                      id="price"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      placeholder="10000"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="currency">Moeda</Label>
-                    <Select value={formData.currency} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="KZ">KZ - Kwanza</SelectItem>
-                        <SelectItem value="USD">USD - Dólar</SelectItem>
-                        <SelectItem value="EUR">EUR - Euro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="max_students">Número Máximo de Alunos</Label>
