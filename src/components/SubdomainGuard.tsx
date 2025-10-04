@@ -24,6 +24,17 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       isMemberAreaRoute: currentPath.startsWith('/area/') || currentPath.startsWith('/login/')
     });
     
+    // ⚠️ CRÍTICO: ROTA /app NUNCA PODE SER REDIRECIONADA
+    // A rota /app é completamente isolada e independente
+    if (currentPath.startsWith('/app')) {
+      console.log('✅ SubdomainGuard: Rota /app - NENHUM redirecionamento permitido', {
+        currentPath,
+        hostname,
+        message: '/app permanece sempre em /app ou mobile.kambafy.com'
+      });
+      return; // Sair imediatamente sem fazer nada
+    }
+    
     // PRIMEIRA VERIFICAÇÃO: Pular guard para rotas de teste
     if (currentPath.includes('/teste')) {
       console.log('🧪 TESTE: SubdomainGuard pulando verificação para rota de teste:', currentPath);
