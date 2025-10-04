@@ -55,8 +55,6 @@ export function MemberAreaOffers({
 
   const loadOffersWithAccess = async (email: string) => {
     try {
-      console.log('🔍 Verificando acesso para email:', email);
-      
       const { data, error } = await supabase
         .from('member_area_offers')
         .select(`
@@ -81,35 +79,22 @@ export function MemberAreaOffers({
         custom_prices: (offer.products?.custom_prices as Record<string, string>) || {}
       }));
       
-      console.log('📦 Ofertas carregadas:', offersWithCustomPrices.length);
-      
       // Verificar acesso do usuário para cada oferta
       const productIds = offersWithCustomPrices.map(o => o.product_id);
-      console.log('🎯 Product IDs para verificar:', productIds);
       
-      const { data: accessData, error: accessError } = await supabase
+      const { data: accessData } = await supabase
         .from('customer_access')
         .select('product_id, customer_email, is_active')
         .ilike('customer_email', email)
         .in('product_id', productIds)
         .eq('is_active', true);
       
-      console.log('✅ Dados de acesso encontrados:', accessData);
-      if (accessError) console.error('❌ Erro ao buscar acesso:', accessError);
-      
       const accessedProductIds = new Set(accessData?.map(a => a.product_id) || []);
-      console.log('🔑 Product IDs com acesso:', Array.from(accessedProductIds));
       
       const offersWithAccess = offersWithCustomPrices.map(offer => ({
         ...offer,
         hasAccess: accessedProductIds.has(offer.product_id)
       }));
-      
-      console.log('📊 Ofertas com status de acesso:', offersWithAccess.map(o => ({
-        title: o.title,
-        product_id: o.product_id,
-        hasAccess: o.hasAccess
-      })));
       
       setOffers(offersWithAccess);
       setIsLoading(false);

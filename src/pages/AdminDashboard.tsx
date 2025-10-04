@@ -16,6 +16,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { FixMissingAccessButton } from '@/components/admin/FixMissingAccessButton';
 interface ModernAdminMetricCardProps {
   title: string;
   value: string;
@@ -366,7 +367,8 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <NotificationCenter />
-              <Button 
+              <FixMissingAccessButton />
+              <Button
                 onClick={handleSecureLogout}
                 variant="outline"
                 size="sm"

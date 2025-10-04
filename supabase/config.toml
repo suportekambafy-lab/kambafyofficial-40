@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.send-bulk-password-reset]
 verify_jwt = true
+
+[functions.fix-missing-access]
+verify_jwt = false
