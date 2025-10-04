@@ -35,21 +35,23 @@ export function MemberAreaOffers({
   const { userCountry, isReady } = useGeoLocation();
 
   useEffect(() => {
-    getUserEmail();
-    loadOffers();
+    loadOffersWithUserAccess();
   }, [memberAreaId]);
 
-  const getUserEmail = async () => {
+  const loadOffersWithUserAccess = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        const email = session.user.email.toLowerCase().trim();
+      const email = session?.user?.email?.toLowerCase().trim();
+      
+      if (email) {
         setUserEmail(email);
-        // Recarregar ofertas com verificação de acesso
         await loadOffersWithAccess(email);
+      } else {
+        await loadOffers();
       }
     } catch (error) {
-      console.error('Erro ao buscar email do usuário:', error);
+      console.error('Erro ao carregar ofertas:', error);
+      await loadOffers();
     }
   };
 
