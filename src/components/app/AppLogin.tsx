@@ -42,36 +42,7 @@ export function AppLogin() {
       const { error } = await signIn(email, password);
       if (error) throw error;
 
-      console.log('✅ Login bem-sucedido! Verificando dispositivo...');
-      
-      // Após login bem-sucedido, verificar e salvar dispositivo
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      console.log('👤 Usuário obtido:', user?.id);
-      console.log('📱 Device Context:', deviceContext);
-      
-      if (user && deviceContext) {
-        const isKnownDevice = await checkAndSaveDevice(user.id, deviceContext);
-        
-        console.log('🎯 Dispositivo conhecido?', isKnownDevice);
-        
-        if (isKnownDevice) {
-          console.log('👋 Mostrando mensagem de boas-vindas!');
-          setWelcomeBackMessage('Bem-vindo de volta! 👋');
-          toast({
-            title: "Bem-vindo de volta! 👋",
-            description: "Reconhecemos seu dispositivo.",
-          });
-        } else {
-          console.log('🆕 Primeiro login neste dispositivo');
-          toast({
-            title: "Bem-vindo!",
-            description: "Login realizado com sucesso.",
-          });
-        }
-      } else {
-        console.log('⚠️ User ou deviceContext não disponível');
-      }
+      console.log('✅ Login bem-sucedido!');
     } catch (error: any) {
       console.error('❌ Erro no login:', error);
       toast({
