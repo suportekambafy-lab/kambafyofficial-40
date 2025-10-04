@@ -881,13 +881,13 @@ export default function Members() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        return 'bg-green-100 text-green-800';
       case 'draft':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        return 'bg-yellow-100 text-yellow-800';
       case 'archived':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+        return 'bg-gray-100 text-gray-800';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+        return 'bg-gray-100 text-gray-800';
     }
   };
   const getStatusText = (status: string) => {
@@ -905,13 +905,13 @@ export default function Members() {
   const getProductStatusColor = (status: string) => {
     switch (status) {
       case 'Ativo':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        return 'bg-green-100 text-green-800';
       case 'Inativo':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        return 'bg-red-100 text-red-800';
       case 'Rascunho':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        return 'bg-yellow-100 text-yellow-800';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+        return 'bg-gray-100 text-gray-800';
     }
   };
   const getModuleTitle = (moduleId: string) => {
@@ -1147,18 +1147,18 @@ export default function Members() {
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                           <div className="flex items-center gap-2 md:gap-3">
                             <div className="cursor-grab active:cursor-grabbing hidden md:block">
-                              <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" />
+                              <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600" />
                             </div>
                             <div className="w-3 h-3 md:w-4 md:h-4 bg-blue-200 rounded"></div>
                             <div className="flex-1">
                               <div className="font-medium flex items-center gap-2 text-sm md:text-base">
                                 {module.title}
-                                {module.status !== 'published' && <EyeOff className="w-3 h-3 md:w-4 md:h-4 text-gray-400 dark:text-gray-500" />}
+                                {module.status !== 'published' && <EyeOff className="w-3 h-3 md:w-4 md:h-4 text-gray-400" />}
                               </div>
-                              {module.description && <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              {module.description && <div className="text-xs md:text-sm text-gray-500 mt-1">
                                   {module.description}
                                 </div>}
-                              <div className="text-xs md:text-sm text-gray-400 dark:text-gray-500 mt-1">
+                              <div className="text-xs md:text-sm text-gray-400 mt-1">
                                 {module.lessons_count || 0} aulas
                               </div>
                             </div>
@@ -1213,14 +1213,14 @@ export default function Members() {
                         <div className="pl-4 md:pl-8 space-y-2">
                           {getLessonsByModule(module.id).map(lesson => <div key={lesson.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
                               <div className="flex items-center gap-2 md:gap-3 flex-1">
-                                <GripVertical className="w-3 h-3 md:w-4 md:h-4 text-gray-400 dark:text-gray-500 cursor-move hidden md:block" />
+                                <GripVertical className="w-3 h-3 md:w-4 md:h-4 text-gray-400 cursor-move hidden md:block" />
                                 <div className="w-2 h-2 md:w-3 md:h-3 bg-gray-200 rounded flex-shrink-0"></div>
                                 <div className="flex-1 min-w-0">
                                   <div className="font-medium flex items-center gap-2 text-xs md:text-sm">
                                     <span className="truncate">{lesson.title}</span>
-                                    {lesson.status !== 'published' && <EyeOff className="w-3 h-3 text-gray-400 dark:text-gray-500 flex-shrink-0" />}
+                                    {lesson.status !== 'published' && <EyeOff className="w-3 h-3 text-gray-400 flex-shrink-0" />}
                                   </div>
-                                  {lesson.description && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                                  {lesson.description && <div className="text-xs text-gray-500 mt-1 line-clamp-2">
                                       {lesson.description.substring(0, 60)}
                                       {lesson.description.length > 60 && '...'}
                                     </div>}
@@ -1263,13 +1263,13 @@ export default function Members() {
                               </div>
                             </div>)}
                           
-                          {getLessonsByModule(module.id).length === 0 && <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-xs md:text-sm">
+                          {getLessonsByModule(module.id).length === 0 && <div className="text-center py-4 text-gray-500 text-xs md:text-sm">
                               <Video className="h-4 w-4 md:h-6 md:w-6 mx-auto mb-2" />
                               <p>Nenhuma aula neste módulo ainda</p>
                             </div>}
                         </div>
                       </div>)}
-                  </div> : <div className="text-center py-6 md:py-8 text-gray-500 dark:text-gray-400">
+                  </div> : <div className="text-center py-6 md:py-8 text-gray-500">
                     <BookOpen className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2" />
                     <p className="text-sm md:text-base">Nenhum módulo criado ainda</p>
                     <Button onClick={() => setModuleDialogOpen(true)} className="mt-4" size="sm">
@@ -1317,11 +1317,11 @@ export default function Members() {
                           <div className="w-3 h-3 md:w-4 md:h-4 bg-blue-200 rounded flex-shrink-0"></div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-sm md:text-base truncate">{product.name}</div>
-                            <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                            <div className="text-xs md:text-sm text-gray-500 line-clamp-2">
                               {product.description && product.description.substring(0, 80)}
                               {product.description && product.description.length > 80 && '...'}
                             </div>
-                            <div className="text-xs md:text-sm text-gray-400 dark:text-gray-500">
+                            <div className="text-xs md:text-sm text-gray-400">
                               Preço: KZ {product.price}
                             </div>
                           </div>
@@ -1349,7 +1349,7 @@ export default function Members() {
                           </DropdownMenu>
                         </div>
                       </div>)}
-                  </div> : <div className="text-center py-6 md:py-8 text-gray-500 dark:text-gray-400">
+                  </div> : <div className="text-center py-6 md:py-8 text-gray-500">
                     <BookOpen className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2" />
                     <p className="text-sm md:text-base">Nenhum curso conectado a esta área ainda</p>
                     <Button onClick={() => navigate('/vendedor/produtos')} className="mt-4" size="sm">
@@ -1369,7 +1369,7 @@ export default function Members() {
             <div className="space-y-6">
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
                 <h3 className="font-semibold text-lg mb-2">💎 Personalização Avançada da Área</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Configure todos os aspectos visuais e funcionais da sua área de membros</p>
+                <p className="text-sm text-gray-600">Configure todos os aspectos visuais e funcionais da sua área de membros</p>
               </div>
 
               <Tabs value={customizationTab} onValueChange={setCustomizationTab} className="w-full">
@@ -1607,7 +1607,7 @@ export default function Members() {
 
               <div className="border-t pt-4">
                 <div className="flex justify-between">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-gray-500">
                     URL de Acesso: {createMemberAreaLinks().getMemberAreaLoginUrl(selectedArea.id)}
                   </div>
                   <Button onClick={handleUpdateArea} disabled={isUpdatingArea} className="flex items-center gap-2">
@@ -1871,7 +1871,7 @@ export default function Members() {
                       <Video className="h-4 w-4" />
                     </Button>}
                 </div>
-                {formData.video_url && <p className="text-sm text-gray-500 dark:text-gray-400">Vídeo anexado ✓</p>}
+                {formData.video_url && <p className="text-sm text-gray-500">Vídeo anexado ✓</p>}
               </div>
               
               <div className="space-y-2">
@@ -2044,7 +2044,7 @@ export default function Members() {
           <TabsContent value="areas" className="space-y-4 md:space-y-6">
             <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
               <div className="relative w-full md:max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-3 w-3 md:h-4 md:w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 md:h-4 md:w-4" />
                 <Input placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 md:pl-10 text-sm" />
               </div>
               <Dialog open={areaDialogOpen} onOpenChange={setAreaDialogOpen}>
@@ -2070,13 +2070,13 @@ export default function Members() {
                                 /login/{area.url}
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">Alunos:</span>
+                                <span className="text-xs text-gray-500">Alunos:</span>
                                 <Badge variant="secondary" className="text-xs">{area.students_count}</Badge>
                               </div>
                             </div>
                         </div>)}
                     </div> : <div className="text-center py-8">
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhuma área de membros criada ainda</p>
+                      <p className="text-gray-500 text-sm">Nenhuma área de membros criada ainda</p>
                     </div>}
                 </div>
 
@@ -2100,7 +2100,7 @@ export default function Members() {
                   </Table>
                   
                   {memberAreas.length === 0 && <div className="text-center py-8">
-                      <p className="text-gray-500 dark:text-gray-400">Nenhuma área de membros criada ainda</p>
+                      <p className="text-gray-500">Nenhuma área de membros criada ainda</p>
                     </div>}
                 </div>
               </CardContent>
@@ -2137,7 +2137,7 @@ export default function Members() {
                           {products.map(product => <div key={product.id} className="p-4 space-y-3">
                               <div>
                                 <div className="font-medium text-sm">{product.name}</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <div className="text-xs text-gray-500 mt-1">
                                   {product.description && product.description.substring(0, 50)}
                                   {product.description && product.description.length > 50 && '...'}
                                 </div>
@@ -2156,8 +2156,8 @@ export default function Members() {
                               </div>
                             </div>)}
                         </div> : <div className="text-center py-8">
-                          <BookOpen className="h-6 w-6 mx-auto text-gray-400 dark:text-gray-500 mb-2" />
-                          <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhum curso criado ainda</p>
+                          <BookOpen className="h-6 w-6 mx-auto text-gray-400 mb-2" />
+                          <p className="text-gray-500 text-sm">Nenhum curso criado ainda</p>
                           <Button onClick={() => navigate('/vendedor/produtos')} className="mt-4" size="sm">
                             <Plus className="h-3 w-3 mr-2" />
                             Criar primeiro curso
@@ -2181,7 +2181,7 @@ export default function Members() {
                                 <TableCell>
                                   <div>
                                     <div className="font-medium">{product.name}</div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    <div className="text-sm text-gray-500">
                                       {product.description && product.description.substring(0, 50)}
                                       {product.description && product.description.length > 50 && '...'}
                                     </div>
@@ -2201,8 +2201,8 @@ export default function Members() {
                                 </TableCell>
                               </TableRow>) : <TableRow>
                               <TableCell colSpan={4} className="text-center py-8">
-                                <BookOpen className="h-8 w-8 mx-auto text-gray-400 dark:text-gray-500 mb-2" />
-                                <p className="text-gray-500 dark:text-gray-400">Nenhum curso criado ainda</p>
+                                <BookOpen className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                                <p className="text-gray-500">Nenhum curso criado ainda</p>
                                 <Button onClick={() => navigate('/vendedor/produtos')} className="mt-4">
                                   <Plus className="h-4 w-4 mr-2" />
                                   Criar primeiro curso
