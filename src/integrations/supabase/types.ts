@@ -2193,6 +2193,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_devices: {
+        Row: {
+          device_fingerprint: string
+          device_info: Json
+          first_seen_at: string
+          id: string
+          is_trusted: boolean | null
+          last_seen_at: string
+          user_id: string
+        }
+        Insert: {
+          device_fingerprint: string
+          device_info: Json
+          first_seen_at?: string
+          id?: string
+          is_trusted?: boolean | null
+          last_seen_at?: string
+          user_id: string
+        }
+        Update: {
+          device_fingerprint?: string
+          device_info?: Json
+          first_seen_at?: string
+          id?: string
+          is_trusted?: boolean | null
+          last_seen_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       webhook_logs: {
         Row: {
           created_at: string | null

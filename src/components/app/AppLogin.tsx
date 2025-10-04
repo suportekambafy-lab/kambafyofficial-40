@@ -7,6 +7,9 @@ import { Card } from '@/components/ui/card';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
+import { useDeviceContext } from '@/hooks/useDeviceContext';
+import { checkAndSaveDevice } from '@/utils/deviceTracking';
+import { supabase } from '@/integrations/supabase/client';
 
 export function AppLogin() {
   const [email, setEmail] = useState('');
@@ -16,17 +19,42 @@ export function AppLogin() {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState('');
+  const [welcomeBackMessage, setWelcomeBackMessage] = useState('');
   const { signIn, resetPassword } = useAuth();
   const { toast } = useToast();
   const { isDark, theme, setTheme } = useSellerTheme();
+  const { context: deviceContext, loading: deviceLoading } = useDeviceContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setWelcomeBackMessage('');
+    
+    if (!deviceContext || deviceLoading) {
+      setError('Aguarde enquanto verificamos seu dispositivo...');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const { error } = await signIn(email, password);
       if (error) throw error;
+
+      // Após login bem-sucedido, verificar e salvar dispositivo
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user && deviceContext) {
+        const isKnownDevice = await checkAndSaveDevice(user.id, deviceContext);
+        
+        if (isKnownDevice) {
+          setWelcomeBackMessage('Bem-vindo de volta! 👋');
+          toast({
+            title: "Bem-vindo de volta! 👋",
+            description: "Reconhecemos seu dispositivo.",
+          });
+        }
+      }
     } catch (error: any) {
       toast({
         title: "Erro",
@@ -196,9 +224,12 @@ export function AppLogin() {
                       </div>
                     )}
 
-                    {/* Error Message */}
+                    {/* Messages */}
                     {error && (
                       <p className="text-sm text-destructive text-center">{error}</p>
+                    )}
+                    {welcomeBackMessage && (
+                      <p className="text-sm text-primary text-center font-medium">{welcomeBackMessage}</p>
                     )}
 
                     {/* Submit */}
