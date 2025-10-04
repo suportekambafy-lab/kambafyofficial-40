@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,25 @@ export function AppLogin() {
   const { isDark, theme, setTheme } = useSellerTheme();
   const { context: deviceContext, loading: deviceLoading } = useDeviceContext();
 
+  // Verificar dispositivo quando o componente carrega
+  useEffect(() => {
+    const checkKnownDevice = async () => {
+      if (!deviceContext || deviceLoading) return;
+      
+      const { data: existingDevices } = await supabase
+        .from('user_devices')
+        .select('device_fingerprint')
+        .eq('device_fingerprint', deviceContext.fingerprint)
+        .limit(1);
+      
+      if (existingDevices && existingDevices.length > 0) {
+        setWelcomeBackMessage('Bem-vindo de volta! 👋 Reconhecemos seu dispositivo.');
+      }
+    };
+    
+    checkKnownDevice();
+  }, [deviceContext, deviceLoading]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -40,22 +59,6 @@ export function AppLogin() {
     try {
       console.log('🔐 Iniciando login...');
       
-      // Verificar dispositivo ANTES do login para mostrar mensagem
-      // Buscar se já existe registro deste dispositivo com este email
-      const { data: existingDevices } = await supabase
-        .from('user_devices')
-        .select('device_fingerprint')
-        .eq('device_fingerprint', deviceContext.fingerprint);
-      
-      const isKnownDevice = existingDevices && existingDevices.length > 0;
-      
-      // Mostrar mensagem antes de fazer login
-      if (isKnownDevice) {
-        setWelcomeBackMessage('Bem-vindo de volta! 👋 Reconhecemos seu dispositivo.');
-        // Aguardar um pouco para o usuário ver a mensagem
-        await new Promise(resolve => setTimeout(resolve, 1500));
-      }
-      
       const { error } = await signIn(email, password);
       if (error) throw error;
 
@@ -68,7 +71,6 @@ export function AppLogin() {
       }
     } catch (error: any) {
       console.error('❌ Erro no login:', error);
-      setWelcomeBackMessage('');
       toast({
         title: "Erro",
         description: error.message,
