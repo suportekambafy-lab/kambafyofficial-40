@@ -46,37 +46,25 @@ export function MobileProfile() {
   const uploadAvatar = async (file: File) => {
     try {
       setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user?.id}.${fileExt}`;
+      const filePath = `${user?.id}/${fileName}`;
 
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const base64String = reader.result as string;
-          const base64Data = base64String.split(',')[1];
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
 
-      const fileData = await base64Promise;
-
-      // Upload to Bunny Storage via edge function
-      const { data, error } = await supabase.functions.invoke('bunny-storage-upload', {
-        body: {
-          fileName: file.name,
-          fileType: file.type,
-          fileData
-        }
-      });
-
-      if (error || !data?.url) {
-        throw new Error(error?.message || 'Erro no upload');
+      if (uploadError) {
+        throw uploadError;
       }
+
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: data.url })
+        .update({ avatar_url: data.publicUrl })
         .eq('user_id', user?.id);
 
       if (updateError) {

@@ -78,41 +78,37 @@ export function LessonMaterialsManager({ materials, onChange }: LessonMaterialsM
     setIsUploading(true);
 
     try {
-      console.log('📁 Uploading to Bunny Storage:', file.name);
+      // Limpar nome do arquivo removendo caracteres especiais
+      const cleanFileName = file.name
+        .normalize('NFD') // Normalizar acentos
+        .replace(/[\u0300-\u036f]/g, '') // Remover acentos
+        .replace(/[^a-zA-Z0-9.-]/g, '_') // Substituir caracteres especiais por underscore
+        .replace(/_{2,}/g, '_') // Substituir múltiplos underscores por um
+        .toLowerCase();
+
+      // Gerar nome único para o arquivo
+      const fileName = `${Date.now()}-${cleanFileName}`;
       
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const base64String = reader.result as string;
-          const base64Data = base64String.split(',')[1];
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      const fileData = await base64Promise;
-
-      // Upload to Bunny Storage via edge function
-      const { data, error } = await supabase.functions.invoke('bunny-storage-upload', {
-        body: {
-          fileName: file.name,
-          fileType: file.type,
-          fileData
-        }
-      });
+      console.log('📁 Original filename:', file.name);
+      console.log('📁 Clean filename:', fileName);
+      
+      // Upload para o Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('member-area-assets')
+        .upload(`lesson-materials/${fileName}`, file);
 
       if (error) throw error;
-      if (!data?.url) throw new Error('URL não retornada pelo upload');
 
-      console.log('📁 Upload successful:', data.url);
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from('member-area-assets')
+        .getPublicUrl(data.path);
 
       // Criar material
       const material: LessonMaterial = {
         id: Date.now().toString(),
         name: file.name,
-        url: data.url,
+        url: urlData.publicUrl,
         type: getFileType(file.name),
         size: file.size
       };

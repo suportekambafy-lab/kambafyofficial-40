@@ -985,33 +985,18 @@ const Checkout = () => {
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
       const totalAmount = finalProductPrice + totalOrderBumpPrice;
 
-      // Upload do comprovativo para o Bunny Storage
-      console.log('📤 Uploading payment proof to Bunny Storage...');
-      
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const base64String = reader.result as string;
-          const base64Data = base64String.split(',')[1];
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(proofFile);
+      // Upload do comprovativo para o storage
+      console.log('📤 Uploading payment proof to storage...');
+      const fileExtension = proofFile.name.split('.').pop();
+      const fileName = `${orderId}-${Date.now()}.${fileExtension}`;
+      const {
+        data: uploadData,
+        error: uploadError
+      } = await supabase.storage.from('payment-proofs').upload(fileName, proofFile, {
+        cacheControl: '3600',
+        upsert: false
       });
-
-      const fileData = await base64Promise;
-
-      // Upload to Bunny Storage via edge function
-      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('bunny-storage-upload', {
-        body: {
-          fileName: proofFile.name,
-          fileType: proofFile.type,
-          fileData
-        }
-      });
-
-      if (uploadError || !uploadData?.url) {
+      if (uploadError) {
         console.error('❌ Error uploading payment proof:', uploadError);
         toast({
           title: "Erro no upload",
@@ -1086,7 +1071,7 @@ const Checkout = () => {
         payment_proof_data: JSON.stringify({
           bank: selectedBank,
           proof_file_name: proofFile.name,
-          proof_file_path: uploadData.url,
+          proof_file_path: uploadData.path,
           upload_timestamp: new Date().toISOString()
         })
       };

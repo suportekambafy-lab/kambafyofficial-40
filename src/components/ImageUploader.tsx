@@ -36,33 +36,29 @@ export function ImageUploader({
     try {
       setUploading(true);
 
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const base64String = reader.result as string;
-          const base64Data = base64String.split(',')[1];
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      const filePath = `${folder}/${fileName}`;
 
-      const fileData = await base64Promise;
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      // Upload to Bunny Storage via edge function
-      const { data, error } = await supabase.functions.invoke('bunny-storage-upload', {
-        body: {
-          fileName: file.name,
-          fileType: file.type,
-          fileData
-        }
-      });
+      if (uploadError) {
+        throw uploadError;
+      }
 
-      if (error) throw error;
-      if (!data?.url) throw new Error('URL não retornada pelo upload');
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(filePath);
 
-      onChange(data.url);
+      onChange(publicUrl);
       toast({
         title: "Sucesso!",
         description: "Imagem enviada com sucesso.",
