@@ -76,14 +76,9 @@ const Auth = () => {
       const userType = localStorage.getItem('userType') || 'business';
       const redirectPath = userType === 'customer' ? '/minhas-compras' : '/vendedor';
       
-      toast({
-        title: "Bem-vindo!",
-        description: "Login realizado com sucesso.",
-      });
-      
       navigate(redirectPath, { replace: true });
     }
-  }, [user, navigate, toast]);
+  }, [user, navigate]);
 
   const handleUserTypeSelect = (type: 'customer' | 'seller' | null) => {
     setSelectedUserType(type);
