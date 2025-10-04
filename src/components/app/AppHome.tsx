@@ -900,7 +900,7 @@ export function AppHome() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <p className="font-semibold text-base text-foreground truncate">
                         {editingProfile.full_name || user?.email}
                       </p>
