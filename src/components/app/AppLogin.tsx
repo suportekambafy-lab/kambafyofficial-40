@@ -19,24 +19,14 @@ export function AppLogin() {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState('');
-  const [welcomeBackMessage, setWelcomeBackMessage] = useState('');
   const { signIn, resetPassword } = useAuth();
   const { toast } = useToast();
   const { isDark, theme, setTheme } = useSellerTheme();
   const { context: deviceContext, loading: deviceLoading } = useDeviceContext();
 
-  // Verificar se este dispositivo já foi usado antes (localStorage)
-  useEffect(() => {
-    const hasLoggedInBefore = localStorage.getItem('kambafy_device_known') === 'true';
-    if (hasLoggedInBefore) {
-      setWelcomeBackMessage('Bem-vindo de volta! 👋 Reconhecemos seu dispositivo.');
-    }
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setWelcomeBackMessage('');
     
     if (!deviceContext || deviceLoading) {
       setError('Aguarde enquanto verificamos seu dispositivo...');
@@ -161,7 +151,7 @@ export function AppLogin() {
                 <p className="text-sm text-muted-foreground">
                   {isForgotPassword 
                     ? 'Digite seu email para receber instruções de recuperação de senha.' 
-                    : welcomeBackMessage || 'Entre na sua conta Kambafy'}
+                    : 'Por favor, insira seu e-mail e senha para continuar.'}
                 </p>
               </div>
 
@@ -234,9 +224,6 @@ export function AppLogin() {
                     {/* Messages */}
                     {error && (
                       <p className="text-sm text-destructive text-center">{error}</p>
-                    )}
-                    {welcomeBackMessage && (
-                      <p className="text-sm text-primary text-center font-medium">{welcomeBackMessage}</p>
                     )}
 
                     {/* Submit */}
