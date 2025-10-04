@@ -902,7 +902,7 @@ export function AppHome() {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-base text-foreground truncate">{user?.email}</p>
                     <p className="text-sm text-muted-foreground">
-                      {currentLevel ? currentLevel.name : 'Vendedor Kambafy'}
+                      {currentLevel ? `${currentLevel.name}` : 'Vendedor Kambafy'}
                     </p>
                   </div>
                 </div>
