@@ -29,6 +29,8 @@ interface MemberAreaOffersProps {
 export function MemberAreaOffers({
   memberAreaId
 }: MemberAreaOffersProps) {
+  console.log('🎁 MemberAreaOffers: Componente montado com memberAreaId:', memberAreaId);
+  
   const [offers, setOffers] = useState<MemberAreaOffer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -39,23 +41,28 @@ export function MemberAreaOffers({
   }, [memberAreaId]);
 
   const loadOffersWithUserAccess = async () => {
+    console.log('🎁 MemberAreaOffers: Iniciando carregamento...');
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const email = session?.user?.email?.toLowerCase().trim();
+      
+      console.log('🎁 MemberAreaOffers: Email da sessão:', email);
       
       if (email) {
         setUserEmail(email);
         await loadOffersWithAccess(email);
       } else {
+        console.log('🎁 MemberAreaOffers: Sem email, carregando ofertas sem verificação');
         await loadOffers();
       }
     } catch (error) {
-      console.error('Erro ao carregar ofertas:', error);
+      console.error('❌ Erro ao carregar ofertas:', error);
       await loadOffers();
     }
   };
 
   const loadOffersWithAccess = async (email: string) => {
+    console.log('🔍 MemberAreaOffers: Buscando ofertas com acesso para:', email);
     try {
       const { data, error } = await supabase
         .from('member_area_offers')
@@ -66,6 +73,8 @@ export function MemberAreaOffers({
         .eq('member_area_id', memberAreaId)
         .eq('enabled', true)
         .order('order_number');
+      
+      console.log('📦 MemberAreaOffers: Ofertas encontradas:', data?.length || 0);
       
       if (error) throw error;
       
@@ -84,12 +93,17 @@ export function MemberAreaOffers({
       // Verificar acesso do usuário para cada oferta
       const productIds = offersWithCustomPrices.map(o => o.product_id);
       
-      const { data: accessData } = await supabase
+      console.log('🔍 MemberAreaOffers: Verificando acesso para produtos:', productIds);
+      
+      const { data: accessData, error: accessError } = await supabase
         .from('customer_access')
         .select('product_id, customer_email, is_active')
         .ilike('customer_email', email)
         .in('product_id', productIds)
         .eq('is_active', true);
+      
+      console.log('✅ MemberAreaOffers: Acessos encontrados:', accessData);
+      if (accessError) console.error('❌ Erro ao verificar acessos:', accessError);
       
       const accessedProductIds = new Set(accessData?.map(a => a.product_id) || []);
       
@@ -98,10 +112,12 @@ export function MemberAreaOffers({
         hasAccess: accessedProductIds.has(offer.product_id)
       }));
       
+      console.log('🎁 MemberAreaOffers: Ofertas com status de acesso:', offersWithAccess);
+      
       setOffers(offersWithAccess);
       setIsLoading(false);
     } catch (error) {
-      console.error('Erro ao carregar ofertas com acesso:', error);
+      console.error('❌ Erro ao carregar ofertas com acesso:', error);
       setIsLoading(false);
     }
   };
