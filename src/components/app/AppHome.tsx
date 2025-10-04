@@ -147,58 +147,25 @@ export function AppHome() {
 
   // Verificar dispositivo e mostrar mensagem de boas-vindas
   useEffect(() => {
-    console.log('🔍 AppHome useEffect disparado:', {
-      hasUser: !!user,
-      hasDeviceContext: !!deviceContext,
-      deviceLoading,
-      deviceChecked,
-      userId: user?.id
-    });
-
     const checkDevice = async () => {
-      if (!user) {
-        console.log('⏸️ Aguardando user...');
-        return;
-      }
-      
-      if (!deviceContext) {
-        console.log('⏸️ Aguardando deviceContext...');
-        return;
-      }
-      
-      if (deviceLoading) {
-        console.log('⏸️ deviceContext ainda está carregando...');
-        return;
-      }
-      
-      if (deviceChecked) {
-        console.log('⏸️ Dispositivo já foi verificado nesta sessão');
+      if (!user || !deviceContext || deviceLoading || deviceChecked) {
         return;
       }
 
-      console.log('👋 Verificando dispositivo ao entrar na home...', {
-        userId: user.id,
-        deviceFingerprint: deviceContext.fingerprint
-      });
+      console.log('👋 Verificando dispositivo ao entrar na home...');
       
       try {
         const isKnownDevice = await checkAndSaveDevice(user.id, deviceContext);
         
-        console.log('✅ Resultado da verificação:', { isKnownDevice });
-        
-        if (isKnownDevice) {
-          console.log('✅ Dispositivo conhecido! Mostrando bem-vindo de volta');
-          toast({
-            title: "Bem-vindo de volta! 👋",
-            description: "Reconhecemos seu dispositivo.",
-          });
-        } else {
-          console.log('🆕 Novo dispositivo, primeira vez aqui');
-          toast({
-            title: "Bem-vindo!",
-            description: "Login realizado com sucesso.",
-          });
-        }
+        // Usar setTimeout para garantir que o toast apareça após o render
+        setTimeout(() => {
+          if (isKnownDevice) {
+            toast({
+              title: "Bem-vindo de volta! 👋",
+              description: "Reconhecemos seu dispositivo.",
+            });
+          }
+        }, 500);
         
         setDeviceChecked(true);
       } catch (error) {
