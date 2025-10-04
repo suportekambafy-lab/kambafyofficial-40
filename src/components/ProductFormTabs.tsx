@@ -44,6 +44,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     name: "",
     type: selectedType || "E-book",
     price: "",
+    compareAtPrice: "",
     description: "",
     shareLink: "",
     cover: "",
@@ -107,6 +108,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         name: editingProduct.name || "",
         type: editingProduct.type || selectedType || "E-book",
         price: editingProduct.price?.toString() || "",
+        compareAtPrice: editingProduct.compare_at_price || "",
         description: editingProduct.description || "",
         shareLink: editingProduct.share_link || "",
         cover: editingProduct.cover || "",
@@ -129,6 +131,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         name: "",
         type: selectedType || "E-book",
         price: "",
+        compareAtPrice: "",
         description: "",
         shareLink: "",
         cover: "",
@@ -361,6 +364,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         name: formData.name,
         type: formData.type,
         price: isDraft ? (formData.price || "0") : formData.price, // Para rascunho, usar 0 se vazio
+        compare_at_price: formData.compareAtPrice || null,
         description: formData.description,
         share_link: formData.type === "Curso" ? null : formData.shareLink,
         cover: formData.cover,
@@ -441,6 +445,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
             name: "",
             type: selectedType || "E-book",
             price: "",
+            compareAtPrice: "",
             description: "",
             shareLink: "",
             cover: "",
@@ -593,15 +598,34 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="price">Preço (KZ) *</Label>
-        <Input
-          id="price"
-          type="number"
-          value={formData.price}
-          onChange={(e) => handleInputChange("price", e.target.value)}
-          placeholder="Ex: 5000"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="price">Preço (KZ) *</Label>
+          <Input
+            id="price"
+            type="number"
+            value={formData.price}
+            onChange={(e) => handleInputChange("price", e.target.value)}
+            placeholder="Ex: 5000"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="compareAtPrice">
+            Preço Comparativo (Antes)
+            <span className="text-xs text-muted-foreground ml-1">(Opcional)</span>
+          </Label>
+          <Input
+            id="compareAtPrice"
+            type="number"
+            value={formData.compareAtPrice}
+            onChange={(e) => handleInputChange("compareAtPrice", e.target.value)}
+            placeholder="Ex: 10000"
+          />
+          <p className="text-xs text-muted-foreground">
+            Preço original para mostrar desconto
+          </p>
+        </div>
       </div>
 
       {/* Configuração de preços por país */}

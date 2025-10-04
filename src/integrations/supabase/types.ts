@@ -1515,6 +1515,7 @@ export type Database = {
           ban_reason: string | null
           category: string | null
           commission: string | null
+          compare_at_price: string | null
           cover: string | null
           created_at: string
           custom_prices: Json | null
@@ -1554,6 +1555,7 @@ export type Database = {
           ban_reason?: string | null
           category?: string | null
           commission?: string | null
+          compare_at_price?: string | null
           cover?: string | null
           created_at?: string
           custom_prices?: Json | null
@@ -1593,6 +1595,7 @@ export type Database = {
           ban_reason?: string | null
           category?: string | null
           commission?: string | null
+          compare_at_price?: string | null
           cover?: string | null
           created_at?: string
           custom_prices?: Json | null
