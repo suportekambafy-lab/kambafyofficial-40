@@ -1884,22 +1884,49 @@ const Checkout = () => {
                 </div>
                 <div className="flex-1">
                   <h2 className="text-lg sm:text-xl font-bold text-gray-900">{product.name.toUpperCase()}</h2>
+                  
+                  {/* Exibir informações da turma quando houver */}
+                  {cohort && (
+                    <div className="flex items-center gap-2 mt-1 mb-1">
+                      <span className="text-xs sm:text-sm font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                        Turma: {cohort.name}
+                      </span>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center gap-1 mt-1">
                     <span className="text-xs sm:text-sm text-gray-600">Entrega instantânea</span>
                     <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                   </div>
+                  
                   <div className="flex items-center gap-2 sm:gap-3 mt-2 flex-wrap">
-                    <div className={`font-bold text-green-600 whitespace-nowrap ${
-                      product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price)
-                        ? 'text-xl sm:text-2xl'
-                        : 'text-2xl'
-                    }`}>
-                      {getDisplayPrice(finalProductPrice, true)}
-                    </div>
-                    {product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price) && (
-                      <div className="text-base sm:text-lg text-gray-500 line-through whitespace-nowrap">
-                        {formatPrice(parseFloat(product.compare_at_price), userCountry, product?.custom_prices)}
-                      </div>
+                    {/* Se houver turma com preço, mostrar o preço da turma com o preço original como comparativo */}
+                    {cohort && cohort.price && cohort.price.trim() !== '' ? (
+                      <>
+                        <div className="text-xl sm:text-2xl font-bold text-green-600 whitespace-nowrap">
+                          {getDisplayPrice(finalProductPrice, true)}
+                        </div>
+                        {/* Mostrar preço original do produto como comparativo */}
+                        <div className="text-base sm:text-lg text-gray-500 line-through whitespace-nowrap">
+                          {formatPrice(originalPriceKZ, userCountry, product?.custom_prices)}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Exibição normal quando não há turma */}
+                        <div className={`font-bold text-green-600 whitespace-nowrap ${
+                          product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price)
+                            ? 'text-xl sm:text-2xl'
+                            : 'text-2xl'
+                        }`}>
+                          {getDisplayPrice(finalProductPrice, true)}
+                        </div>
+                        {product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price) && (
+                          <div className="text-base sm:text-lg text-gray-500 line-through whitespace-nowrap">
+                            {formatPrice(parseFloat(product.compare_at_price), userCountry, product?.custom_prices)}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
