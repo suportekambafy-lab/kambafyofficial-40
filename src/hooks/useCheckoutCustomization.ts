@@ -57,7 +57,7 @@ const defaultSettings: CheckoutCustomizationSettings = {
     minutes: 30,
     title: 'Oferta por tempo limitado',
     backgroundColor: '#ef4444',
-    textColor: 'white'
+    textColor: '#ffffff'
   },
   reviews: {
     enabled: false,
@@ -101,7 +101,7 @@ const defaultSettings: CheckoutCustomizationSettings = {
     currentCount: 100,
     title: 'VAGAS RESTANTES',
     backgroundColor: '#6366f1',
-    textColor: 'white'
+    textColor: '#ffffff'
   }
 };
 
