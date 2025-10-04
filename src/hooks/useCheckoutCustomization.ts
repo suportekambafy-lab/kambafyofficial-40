@@ -155,6 +155,10 @@ export function useCheckoutCustomization(productId: string) {
   const loadSettings = async () => {
     try {
       setLoading(true);
+      console.log('🔄 LOAD: Iniciando carregamento de configurações');
+      console.log('🔄 LOAD: User ID:', user?.id);
+      console.log('🔄 LOAD: Product ID:', productId);
+      
       const { data, error } = await supabase
         .from('checkout_customizations')
         .select('settings')
@@ -162,14 +166,25 @@ export function useCheckoutCustomization(productId: string) {
         .eq('product_id', productId)
         .maybeSingle();
 
+      console.log('🔄 LOAD: Resposta do banco:', { data, error });
+
       if (error) {
-        console.error('Error loading checkout customization:', error);
+        console.error('❌ LOAD: Erro ao carregar:', error);
       } else if (data?.settings) {
+        console.log('📦 LOAD: Settings carregados do banco:', data.settings);
+        const settingsData = data.settings as any;
+        console.log('📊 LOAD: SpotsCounter no banco:', settingsData.spotsCounter);
+        
         const mergedSettings = mergeSettings(data.settings);
+        console.log('✅ LOAD: Settings após merge:', mergedSettings);
+        console.log('✅ LOAD: SpotsCounter após merge:', mergedSettings.spotsCounter);
+        
         setSettings(mergedSettings);
+      } else {
+        console.log('⚠️ LOAD: Nenhum dado encontrado, usando defaults');
       }
     } catch (error) {
-      console.error('Error loading checkout customization:', error);
+      console.error('❌ LOAD: Erro no catch:', error);
     } finally {
       setLoading(false);
     }
@@ -188,8 +203,16 @@ export function useCheckoutCustomization(productId: string) {
     try {
       setSaving(true);
       
+      console.log('💾 SAVE: Iniciando salvamento');
+      console.log('💾 SAVE: User ID:', user.id);
+      console.log('💾 SAVE: Product ID:', productId);
+      console.log('💾 SAVE: Settings a salvar:', newSettings);
+      console.log('💾 SAVE: SpotsCounter:', newSettings.spotsCounter);
+      
       // Convert settings to JSON-compatible format
       const settingsJson = JSON.parse(JSON.stringify(newSettings));
+      console.log('💾 SAVE: Settings JSON:', settingsJson);
+      console.log('💾 SAVE: SpotsCounter JSON:', settingsJson.spotsCounter);
 
       // Primeiro tentar atualizar o registro existente
       const { data: updateData, error: updateError } = await supabase
@@ -199,33 +222,45 @@ export function useCheckoutCustomization(productId: string) {
         .eq('product_id', productId)
         .select();
 
+      console.log('💾 SAVE: Resposta do update:', { updateData, updateError });
+
       // Se não houve erro no update, significa que atualizou com sucesso
       if (!updateError && updateData && updateData.length > 0) {
-        console.log('✅ Configurações atualizadas com sucesso!');
+        console.log('✅ SAVE: Configurações atualizadas com sucesso!');
+        const savedData = updateData[0].settings as any;
+        console.log('✅ SAVE: Dados salvos:', savedData);
+        console.log('✅ SAVE: SpotsCounter salvo:', savedData.spotsCounter);
       } else {
         // Se não encontrou registro para atualizar, criar um novo
-        const { error: insertError } = await supabase
+        console.log('💾 SAVE: Nenhum registro encontrado, criando novo...');
+        const { data: insertData, error: insertError } = await supabase
           .from('checkout_customizations')
           .insert({
             user_id: user.id,
             product_id: productId,
             settings: settingsJson
-          });
+          })
+          .select();
+
+        console.log('💾 SAVE: Resposta do insert:', { insertData, insertError });
 
         if (insertError) {
-          console.error('❌ Erro ao inserir:', insertError);
+          console.error('❌ SAVE: Erro ao inserir:', insertError);
           throw insertError;
         }
-        console.log('✅ Configurações criadas com sucesso!');
+        console.log('✅ SAVE: Configurações criadas com sucesso!');
+        console.log('✅ SAVE: Dados criados:', insertData?.[0]?.settings);
       }
+      
       setSettings(newSettings);
+      console.log('✅ SAVE: Estado local atualizado');
 
       toast({
         title: "Configurações salvas!",
         description: "Suas personalizações do checkout foram aplicadas com sucesso.",
       });
     } catch (error) {
-      console.error('❌ Error saving checkout customization:', error);
+      console.error('❌ SAVE: Error saving checkout customization:', error);
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível salvar as configurações. Tente novamente.",
