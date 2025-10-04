@@ -1888,15 +1888,15 @@ const Checkout = () => {
                     <span className="text-sm text-gray-600">Entrega instantânea</span>
                     <CheckCircle className="w-4 h-4 text-green-500" />
                   </div>
-                  <div className="mt-2">
-                    {product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price) && (
-                      <div className="text-sm text-gray-500 line-through mb-1">
-                        De: {formatPrice(parseFloat(product.compare_at_price), userCountry, product?.custom_prices)}
-                      </div>
-                    )}
+                  <div className="flex items-center gap-3 mt-2">
                     <div className="text-2xl font-bold text-green-600">
                       {getDisplayPrice(finalProductPrice, true)}
                     </div>
+                    {product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price) && (
+                      <div className="text-lg text-gray-500 line-through">
+                        {formatPrice(parseFloat(product.compare_at_price), userCountry, product?.custom_prices)}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
