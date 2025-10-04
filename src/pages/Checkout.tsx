@@ -1883,17 +1883,17 @@ const Checkout = () => {
                   <img src={getProductImage(product.cover)} alt={product.image_alt || product.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold text-gray-900">{product.name.toUpperCase()}</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">{product.name.toUpperCase()}</h2>
                   <div className="flex items-center gap-1 mt-1">
-                    <span className="text-sm text-gray-600">Entrega instantânea</span>
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span className="text-xs sm:text-sm text-gray-600">Entrega instantânea</span>
+                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                   </div>
-                  <div className="flex items-center gap-3 mt-2">
-                    <div className="text-2xl font-bold text-green-600">
+                  <div className="flex items-center gap-2 sm:gap-3 mt-2 flex-wrap">
+                    <div className="text-xl sm:text-2xl font-bold text-green-600 whitespace-nowrap">
                       {getDisplayPrice(finalProductPrice, true)}
                     </div>
                     {product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price) && (
-                      <div className="text-lg text-gray-500 line-through">
+                      <div className="text-base sm:text-lg text-gray-500 line-through whitespace-nowrap">
                         {formatPrice(parseFloat(product.compare_at_price), userCountry, product?.custom_prices)}
                       </div>
                     )}
