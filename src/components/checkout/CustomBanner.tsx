@@ -17,11 +17,7 @@ const CustomBanner: React.FC<CustomBannerProps> = ({
       <img 
         src={bannerImage} 
         alt="Banner promocional" 
-        className="w-full h-auto object-cover"
-        style={{ 
-          aspectRatio: '1000/300',
-          maxHeight: '300px'
-        }}
+        className="w-full h-auto object-contain"
       />
     </div>
   );
