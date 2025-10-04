@@ -10,11 +10,8 @@ import { SEO, pageSEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const { loading } = useAuth();
   const navigate = useNavigate();
   const { currentSubdomain } = useSubdomain();
-
-  // Removido console.log desnecessário
 
   // Se for mobile subdomain, redirecionar para /app
   useEffect(() => {
@@ -32,22 +29,7 @@ const Index = () => {
     );
   }
 
-  // Para o domínio principal (kambafy.com), sempre mostrar a landing page
-  // Não verificar autenticação aqui pois é uma página pública
-  if (currentSubdomain === 'main') {
-    return (
-      <>
-        <SEO {...pageSEO.home} />
-        <div className="relative overflow-hidden">
-          <KambafyLanding />
-        </div>
-      </>
-    );
-  }
-
-  // Para outros subdomínios, não mostrar loading - mostrar conteúdo diretamente
-  // O AuthProvider já gerencia o estado interno
-
+  // Sempre mostrar a landing page (pública)
   return (
     <>
       <SEO {...pageSEO.home} />

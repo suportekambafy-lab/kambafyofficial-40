@@ -6,16 +6,16 @@ export const useAggressiveOptimization = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Otimizações agressivas de performance
-    
-    // 1. Limpar cache antigo agressivamente
+    if (!user) return;
+
+    // Limpar cache antigo apenas uma vez na montagem
     const clearOldCache = () => {
       const keys = Object.keys(sessionStorage);
       const now = Date.now();
       const maxAge = 10 * 60 * 1000; // 10 minutos
 
       keys.forEach(key => {
-        if (key.startsWith('cache_') || key.startsWith('preload_')) {
+        if (key.startsWith('cache_') || key.startsWith('preload_') || key.startsWith('aggressive_')) {
           try {
             const data = JSON.parse(sessionStorage.getItem(key) || '{}');
             if (data.timestamp && now - data.timestamp > maxAge) {
@@ -28,80 +28,54 @@ export const useAggressiveOptimization = () => {
       });
     };
 
-    // 2. Otimizar re-renders com throttling
-    let rafId: number;
-    const optimizeRenders = () => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        // Batch DOM updates
-        document.documentElement.style.willChange = 'transform';
-        setTimeout(() => {
-          document.documentElement.style.willChange = 'auto';
-        }, 100);
-      });
-    };
-
-    // 3. Preload crítico imediato
-    if (user) {
-      optimizeRenders();
-      clearOldCache();
-      logger.debug('Optimizations applied for user', { component: 'useAggressiveOptimization' });
-    }
-
-    // 4. Observer para lazy loading agressivo
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.setAttribute('data-loaded', 'true');
-          }
-        });
-      },
-      { rootMargin: '50px' }
-    );
-
-    // 5. Cleanup na saída
-    return () => {
-      cancelAnimationFrame(rafId);
-      observer.disconnect();
-    };
+    clearOldCache();
+    logger.debug('Cache cleanup completed', { component: 'useAggressiveOptimization' });
   }, [user]);
 
-  // Cache agressivo com compressão
-  const aggressiveCache = useMemo(() => ({
-    set: (key: string, data: any) => {
-      try {
-        const compressed = JSON.stringify({
-          data,
-          timestamp: Date.now(),
-          compressed: true
-        });
-        sessionStorage.setItem(`aggressive_${key}`, compressed);
-      } catch {
-        // Se falhar, limpar cache para fazer espaço
-        sessionStorage.clear();
-        sessionStorage.setItem(`aggressive_${key}`, JSON.stringify({
-          data,
-          timestamp: Date.now()
-        }));
-      }
-    },
-    get: (key: string, maxAge = 30000) => { // 30 segundos default
-      try {
-        const cached = sessionStorage.getItem(`aggressive_${key}`);
-        if (!cached) return null;
+  // Cache otimizado com throttling de writes
+  const aggressiveCache = useMemo(() => {
+    const writeQueue = new Map<string, NodeJS.Timeout>();
 
-        const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.timestamp > maxAge) {
-          sessionStorage.removeItem(`aggressive_${key}`);
+    return {
+      set: (key: string, data: any) => {
+        // Throttle writes para evitar sobrecarga
+        if (writeQueue.has(key)) {
+          clearTimeout(writeQueue.get(key)!);
+        }
+
+        writeQueue.set(key, setTimeout(() => {
+          try {
+            sessionStorage.setItem(`aggressive_${key}`, JSON.stringify({
+              data,
+              timestamp: Date.now()
+            }));
+            writeQueue.delete(key);
+          } catch {
+            // Apenas limpar o item mais antigo ao invés de tudo
+            const keys = Object.keys(sessionStorage);
+            if (keys.length > 0) {
+              sessionStorage.removeItem(keys[0]);
+            }
+          }
+        }, 100));
+      },
+      get: (key: string, maxAge = 60000) => { // 60 segundos default (aumentado)
+        try {
+          const cached = sessionStorage.getItem(`aggressive_${key}`);
+          if (!cached) return null;
+
+          const parsed = JSON.parse(cached);
+          if (Date.now() - parsed.timestamp > maxAge) {
+            sessionStorage.removeItem(`aggressive_${key}`);
+            return null;
+          }
+          return parsed.data;
+        } catch {
           return null;
         }
-        return parsed.data;
-      } catch {
-        return null;
       }
-    }
-  }), []);
+    };
+  }, []);
 
   return { aggressiveCache };
 };
