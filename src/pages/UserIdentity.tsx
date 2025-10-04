@@ -85,20 +85,33 @@ export default function UserIdentity() {
 
     try {
       setUploading(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${formData.document_type}_${type}_${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('identity-documents')
-        .upload(fileName, file);
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64String = reader.result as string;
+          const base64Data = base64String.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      if (uploadError) throw uploadError;
+      const fileData = await base64Promise;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('identity-documents')
-        .getPublicUrl(fileName);
+      // Upload to Bunny Storage via edge function
+      const { data, error } = await supabase.functions.invoke('bunny-storage-upload', {
+        body: {
+          fileName: file.name,
+          fileType: file.type,
+          fileData
+        }
+      });
 
-      return publicUrl;
+      if (error || !data?.url) throw new Error(error?.message || 'Erro no upload');
+
+      return data.url;
     } catch (error) {
       console.error('Erro no upload:', error);
       toast.error('Erro ao fazer upload do documento');

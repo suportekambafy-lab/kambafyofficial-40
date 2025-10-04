@@ -214,14 +214,30 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     setUploadingCover(true);
     
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-      
-      const { data, error } = await supabase.storage
-        .from('product-covers')
-        .upload(fileName, file);
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64String = reader.result as string;
+          const base64Data = base64String.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      if (error) {
+      const fileData = await base64Promise;
+
+      // Upload to Bunny Storage via edge function
+      const { data, error } = await supabase.functions.invoke('bunny-storage-upload', {
+        body: {
+          fileName: file.name,
+          fileType: file.type,
+          fileData
+        }
+      });
+
+      if (error || !data?.url) {
         console.error('Error uploading cover:', error);
         toast({
           title: "Erro",
@@ -231,13 +247,9 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         return;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-covers')
-        .getPublicUrl(data.path);
-
       setFormData(prev => ({
         ...prev,
-        cover: publicUrl
+        cover: data.url
       }));
 
       toast({

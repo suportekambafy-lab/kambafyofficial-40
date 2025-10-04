@@ -155,39 +155,36 @@ export default function UserSettings() {
         return;
       }
 
-      const fileExt = file.name.split('.').pop();
-      const timestamp = Date.now();
-      const fileName = `${user.id}/avatar_${timestamp}.${fileExt}`;
+      console.log('Uploading avatar to Bunny Storage');
 
-      console.log('Uploading file:', fileName);
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64String = reader.result as string;
+          const base64Data = base64String.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      if (profile.avatar_url) {
-        try {
-          const oldUrlParts = profile.avatar_url.split('/');
-          const oldFileName = oldUrlParts[oldUrlParts.length - 1];
-          if (oldFileName && oldFileName.includes('avatar_')) {
-            await supabase.storage
-              .from('avatars')
-              .remove([`${user.id}/${oldFileName}`]);
-            console.log('Old avatar removed');
-          }
-        } catch (error) {
-          console.log('Could not delete old avatar:', error);
+      const fileData = await base64Promise;
+
+      // Upload to Bunny Storage via edge function
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('bunny-storage-upload', {
+        body: {
+          fileName: file.name,
+          fileType: file.type,
+          fileData
         }
-      }
+      });
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
+      if (uploadError || !uploadData?.url) {
         console.error('Upload error:', uploadError);
         toast({
           title: "Erro no Upload",
-          description: uploadError.message,
+          description: uploadError?.message || 'Erro ao fazer upload',
           variant: "destructive"
         });
         return;
@@ -195,11 +192,7 @@ export default function UserSettings() {
 
       console.log('Upload successful:', uploadData);
 
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      const publicUrl = urlData.publicUrl;
+      const publicUrl = uploadData.url;
       console.log('Public URL:', publicUrl);
 
       const updatedProfile = {
