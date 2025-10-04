@@ -95,13 +95,13 @@ export default function SpotsCounter({
       style={{ backgroundColor }}
     >
       <div 
-        className="text-3xl font-bold mb-1"
+        className="text-3xl font-montserrat font-black mb-1"
         style={{ color: textColor }}
       >
         {currentCount}
       </div>
       <div 
-        className="text-sm font-semibold tracking-wider"
+        className="text-sm font-montserrat font-bold tracking-wider"
         style={{ color: textColor }}
       >
         {title}
