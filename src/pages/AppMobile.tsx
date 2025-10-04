@@ -1,13 +1,30 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLogin } from '@/components/app/AppLogin';
 import { AppHome } from '@/components/app/AppHome';
+import { AppOnboarding } from '@/components/app/AppOnboarding';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SellerThemeProvider } from '@/hooks/useSellerTheme';
 
+const ONBOARDING_KEY = 'kambafy_onboarding_completed';
+
 export default function AppMobile() {
   const { user, loading } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
-  if (loading) {
+  useEffect(() => {
+    const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_KEY);
+    setShowOnboarding(!hasCompletedOnboarding);
+    setCheckingOnboarding(false);
+  }, []);
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem(ONBOARDING_KEY, 'true');
+    setShowOnboarding(false);
+  };
+
+  if (loading || checkingOnboarding) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -18,6 +35,10 @@ export default function AppMobile() {
         </div>
       </div>
     );
+  }
+
+  if (showOnboarding && !user) {
+    return <AppOnboarding onComplete={handleOnboardingComplete} />;
   }
 
   return (
