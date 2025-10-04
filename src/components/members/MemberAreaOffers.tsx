@@ -36,26 +36,24 @@ export function MemberAreaOffers({
 
   useEffect(() => {
     getUserEmail();
-  }, []);
-
-  useEffect(() => {
-    if (userEmail) {
-      loadOffers();
-    }
-  }, [memberAreaId, userEmail]);
+    loadOffers();
+  }, [memberAreaId]);
 
   const getUserEmail = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.email) {
-        setUserEmail(session.user.email.toLowerCase().trim());
+        const email = session.user.email.toLowerCase().trim();
+        setUserEmail(email);
+        // Recarregar ofertas com verificação de acesso
+        await loadOffersWithAccess(email);
       }
     } catch (error) {
       console.error('Erro ao buscar email do usuário:', error);
     }
   };
 
-  const loadOffers = async () => {
+  const loadOffersWithAccess = async (email: string) => {
     try {
       const { data, error } = await supabase
         .from('member_area_offers')
@@ -82,26 +80,57 @@ export function MemberAreaOffers({
       }));
       
       // Verificar acesso do usuário para cada oferta
-      if (userEmail) {
-        const productIds = offersWithCustomPrices.map(o => o.product_id);
-        const { data: accessData } = await supabase
-          .from('customer_access')
-          .select('product_id')
-          .ilike('customer_email', userEmail)
-          .in('product_id', productIds)
-          .eq('is_active', true);
-        
-        const accessedProductIds = new Set(accessData?.map(a => a.product_id) || []);
-        
-        const offersWithAccess = offersWithCustomPrices.map(offer => ({
-          ...offer,
-          hasAccess: accessedProductIds.has(offer.product_id)
-        }));
-        
-        setOffers(offersWithAccess);
-      } else {
-        setOffers(offersWithCustomPrices);
-      }
+      const productIds = offersWithCustomPrices.map(o => o.product_id);
+      const { data: accessData } = await supabase
+        .from('customer_access')
+        .select('product_id')
+        .ilike('customer_email', email)
+        .in('product_id', productIds)
+        .eq('is_active', true);
+      
+      const accessedProductIds = new Set(accessData?.map(a => a.product_id) || []);
+      
+      const offersWithAccess = offersWithCustomPrices.map(offer => ({
+        ...offer,
+        hasAccess: accessedProductIds.has(offer.product_id)
+      }));
+      
+      setOffers(offersWithAccess);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Erro ao carregar ofertas com acesso:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const loadOffers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('member_area_offers')
+        .select(`
+          *,
+          products!inner(custom_prices)
+        `)
+        .eq('member_area_id', memberAreaId)
+        .eq('enabled', true)
+        .order('order_number');
+      
+      if (error) throw error;
+      
+      const offersWithCustomPrices = (data || []).map(offer => ({
+        id: offer.id,
+        product_id: offer.product_id,
+        title: offer.title,
+        description: offer.description,
+        image_url: offer.image_url,
+        price: offer.price,
+        discount_percentage: offer.discount_percentage,
+        enabled: offer.enabled,
+        custom_prices: (offer.products?.custom_prices as Record<string, string>) || {},
+        hasAccess: false // Default sem acesso
+      }));
+      
+      setOffers(offersWithCustomPrices);
     } catch (error) {
       console.error('Erro ao carregar ofertas:', error);
     } finally {
