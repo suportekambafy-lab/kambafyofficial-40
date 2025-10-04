@@ -14,6 +14,9 @@ export const checkAndSaveDevice = async (
   deviceInfo: DeviceInfo
 ): Promise<boolean> => {
   try {
+    console.log('🔍 Verificando dispositivo para usuário:', userId);
+    console.log('📱 Device Info:', deviceInfo);
+    
     // Verificar se o dispositivo já existe
     const { data: existingDevice, error: checkError } = await supabase
       .from('user_devices')
@@ -23,11 +26,14 @@ export const checkAndSaveDevice = async (
       .maybeSingle();
 
     if (checkError) {
-      console.error('Erro ao verificar dispositivo:', checkError);
+      console.error('❌ Erro ao verificar dispositivo:', checkError);
       return false;
     }
 
+    console.log('📊 Dispositivo existente?', !!existingDevice);
+
     if (existingDevice) {
+      console.log('✅ Dispositivo conhecido! Atualizando last_seen_at...');
       // Dispositivo conhecido - atualizar last_seen_at
       const { error: updateError } = await supabase
         .from('user_devices')
@@ -38,11 +44,14 @@ export const checkAndSaveDevice = async (
         .eq('id', existingDevice.id);
 
       if (updateError) {
-        console.error('Erro ao atualizar dispositivo:', updateError);
+        console.error('❌ Erro ao atualizar dispositivo:', updateError);
+      } else {
+        console.log('✅ Dispositivo atualizado com sucesso!');
       }
 
       return true; // Dispositivo conhecido
     } else {
+      console.log('🆕 Novo dispositivo! Salvando...');
       // Novo dispositivo - criar registro
       const { error: insertError } = await supabase
         .from('user_devices')
@@ -53,13 +62,15 @@ export const checkAndSaveDevice = async (
         }]);
 
       if (insertError) {
-        console.error('Erro ao salvar novo dispositivo:', insertError);
+        console.error('❌ Erro ao salvar novo dispositivo:', insertError);
+      } else {
+        console.log('✅ Novo dispositivo salvo com sucesso!');
       }
 
       return false; // Dispositivo novo
     }
   } catch (error) {
-    console.error('Erro ao processar dispositivo:', error);
+    console.error('❌ Erro ao processar dispositivo:', error);
     return false;
   }
 };
