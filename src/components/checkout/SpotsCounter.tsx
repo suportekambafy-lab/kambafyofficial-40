@@ -10,17 +10,17 @@ interface SpotsCounterProps {
 export default function SpotsCounter({ count, title, backgroundColor, textColor }: SpotsCounterProps) {
   return (
     <div 
-      className="py-8 px-4 text-center rounded-lg"
+      className="py-3 px-4 text-center"
       style={{ backgroundColor }}
     >
       <div 
-        className="text-6xl font-bold mb-2"
+        className="text-3xl font-bold mb-1"
         style={{ color: textColor }}
       >
         {count}
       </div>
       <div 
-        className="text-lg font-semibold tracking-wider"
+        className="text-sm font-semibold tracking-wider"
         style={{ color: textColor }}
       >
         {title}
