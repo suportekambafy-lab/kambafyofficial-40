@@ -213,11 +213,7 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
   };
 
   const copyCheckoutLink = async (cohort: Cohort) => {
-    // Mudar estado imediatamente ANTES de qualquer operação
-    setCopiedId(cohort.id);
-    
     if (!cohort.product_id) {
-      setCopiedId(null);
       toast({
         title: "Esta turma não está vinculada a um produto",
         description: "Vincule a turma a um produto para gerar o link de pagamento",
@@ -228,7 +224,6 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
 
     const product = products.find(p => p.id === cohort.product_id);
     if (!product) {
-      setCopiedId(null);
       toast({
         title: "Produto não encontrado",
         variant: "destructive",
@@ -241,13 +236,13 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
 
     try {
       await navigator.clipboard.writeText(checkoutUrl);
+      setCopiedId(cohort.id);
       toast({
         title: "Link copiado!",
         description: "Link de pagamento da turma copiado para a área de transferência",
       });
       setTimeout(() => setCopiedId(null), 2000);
     } catch (error) {
-      setCopiedId(null);
       toast({
         title: "Erro ao copiar link",
         description: "Não foi possível copiar o link",
