@@ -23,6 +23,15 @@ serve(async (req) => {
     const BUNNY_HOSTNAME = Deno.env.get('BUNNY_STORAGE_HOSTNAME');
     const BUNNY_CDN_URL = Deno.env.get('BUNNY_CDN_URL');
 
+    console.log('Config check:', {
+      hasPassword: !!BUNNY_PASSWORD,
+      hasZone: !!BUNNY_STORAGE_ZONE,
+      hasHostname: !!BUNNY_HOSTNAME,
+      hasCDN: !!BUNNY_CDN_URL,
+      zone: BUNNY_STORAGE_ZONE,
+      hostname: BUNNY_HOSTNAME
+    });
+
     if (!BUNNY_PASSWORD || !BUNNY_STORAGE_ZONE || !BUNNY_HOSTNAME || !BUNNY_CDN_URL) {
       console.error('Missing Bunny Storage credentials');
       return new Response(
@@ -54,6 +63,9 @@ serve(async (req) => {
 
     // Upload to Bunny Storage
     const uploadUrl = `https://${BUNNY_HOSTNAME}/${BUNNY_STORAGE_ZONE}/${storagePath}`;
+    
+    console.log('Upload URL:', uploadUrl);
+    console.log('Password length:', BUNNY_PASSWORD?.length);
     
     const uploadResponse = await fetch(uploadUrl, {
       method: 'PUT',
