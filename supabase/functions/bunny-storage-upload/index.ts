@@ -18,15 +18,15 @@ serve(async (req) => {
   }
 
   try {
-    const BUNNY_API_KEY = Deno.env.get('BUNNY_STORAGE_API_KEY');
+    const BUNNY_PASSWORD = Deno.env.get('BUNNY_STORAGE_PASSWORD');
     const BUNNY_STORAGE_ZONE = Deno.env.get('BUNNY_STORAGE_ZONE');
     const BUNNY_HOSTNAME = Deno.env.get('BUNNY_STORAGE_HOSTNAME');
     const BUNNY_CDN_URL = Deno.env.get('BUNNY_CDN_URL');
 
-    if (!BUNNY_API_KEY || !BUNNY_STORAGE_ZONE || !BUNNY_HOSTNAME) {
+    if (!BUNNY_PASSWORD || !BUNNY_STORAGE_ZONE || !BUNNY_HOSTNAME || !BUNNY_CDN_URL) {
       console.error('Missing Bunny Storage credentials');
       return new Response(
-        JSON.stringify({ error: 'Bunny Storage não configurado' }),
+        JSON.stringify({ error: 'Bunny Storage não configurado. Verifique as credenciais.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -58,7 +58,7 @@ serve(async (req) => {
     const uploadResponse = await fetch(uploadUrl, {
       method: 'PUT',
       headers: {
-        'AccessKey': BUNNY_API_KEY,
+        'AccessKey': BUNNY_PASSWORD,
         'Content-Type': 'application/octet-stream',
       },
       body: binaryData,
