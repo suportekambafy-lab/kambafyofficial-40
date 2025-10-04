@@ -4,10 +4,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { ShoppingCart, Sparkles, Tag, ArrowRight, Package } from 'lucide-react';
+import { ShoppingCart, Sparkles, Tag, ArrowRight, Package, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useGeoLocation } from '@/hooks/useGeoLocation';
 import { formatPrice } from '@/utils/priceFormatting';
+
 interface MemberAreaOffer {
   id: string;
   product_id: string;
@@ -18,19 +19,42 @@ interface MemberAreaOffer {
   discount_percentage: number;
   enabled: boolean;
   custom_prices?: Record<string, string>;
+  hasAccess?: boolean;
 }
+
 interface MemberAreaOffersProps {
   memberAreaId: string;
 }
+
 export function MemberAreaOffers({
   memberAreaId
 }: MemberAreaOffersProps) {
   const [offers, setOffers] = useState<MemberAreaOffer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const { userCountry, isReady } = useGeoLocation();
+
   useEffect(() => {
-    loadOffers();
-  }, [memberAreaId]);
+    getUserEmail();
+  }, []);
+
+  useEffect(() => {
+    if (userEmail) {
+      loadOffers();
+    }
+  }, [memberAreaId, userEmail]);
+
+  const getUserEmail = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email) {
+        setUserEmail(session.user.email.toLowerCase().trim());
+      }
+    } catch (error) {
+      console.error('Erro ao buscar email do usuário:', error);
+    }
+  };
+
   const loadOffers = async () => {
     try {
       const { data, error } = await supabase
@@ -57,7 +81,27 @@ export function MemberAreaOffers({
         custom_prices: (offer.products?.custom_prices as Record<string, string>) || {}
       }));
       
-      setOffers(offersWithCustomPrices);
+      // Verificar acesso do usuário para cada oferta
+      if (userEmail) {
+        const productIds = offersWithCustomPrices.map(o => o.product_id);
+        const { data: accessData } = await supabase
+          .from('customer_access')
+          .select('product_id')
+          .ilike('customer_email', userEmail)
+          .in('product_id', productIds)
+          .eq('is_active', true);
+        
+        const accessedProductIds = new Set(accessData?.map(a => a.product_id) || []);
+        
+        const offersWithAccess = offersWithCustomPrices.map(offer => ({
+          ...offer,
+          hasAccess: accessedProductIds.has(offer.product_id)
+        }));
+        
+        setOffers(offersWithAccess);
+      } else {
+        setOffers(offersWithCustomPrices);
+      }
     } catch (error) {
       console.error('Erro ao carregar ofertas:', error);
     } finally {
@@ -170,15 +214,26 @@ export function MemberAreaOffers({
                       </div>
 
                       {/* Botão de Ação */}
-                      <Button 
-                        onClick={() => handleOfferClick(offer)} 
-                        size="sm"
-                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
-                      >
-                        <ShoppingCart className="w-3 h-3 mr-1" />
-                        Ver Oferta
-                        <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
-                      </Button>
+                      {offer.hasAccess ? (
+                        <Button 
+                          size="sm"
+                          disabled
+                          className="w-full bg-gray-700 text-gray-300 cursor-not-allowed"
+                        >
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          Você já tem acesso
+                        </Button>
+                      ) : (
+                        <Button 
+                          onClick={() => handleOfferClick(offer)} 
+                          size="sm"
+                          className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+                        >
+                          <ShoppingCart className="w-3 h-3 mr-1" />
+                          Ver Oferta
+                          <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
