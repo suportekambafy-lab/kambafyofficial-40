@@ -39,21 +39,36 @@ export function AppLogin() {
 
     try {
       console.log('🔐 Iniciando login...');
+      
+      // Verificar dispositivo ANTES do login para mostrar mensagem
+      // Buscar se já existe registro deste dispositivo com este email
+      const { data: existingDevices } = await supabase
+        .from('user_devices')
+        .select('device_fingerprint')
+        .eq('device_fingerprint', deviceContext.fingerprint);
+      
+      const isKnownDevice = existingDevices && existingDevices.length > 0;
+      
+      // Mostrar mensagem antes de fazer login
+      if (isKnownDevice) {
+        setWelcomeBackMessage('Bem-vindo de volta! 👋 Reconhecemos seu dispositivo.');
+        // Aguardar um pouco para o usuário ver a mensagem
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+      
       const { error } = await signIn(email, password);
       if (error) throw error;
 
       console.log('✅ Login bem-sucedido!');
       
-      // Verificar dispositivo após login bem-sucedido
+      // Salvar/atualizar dispositivo após login
       const { data: { user } } = await supabase.auth.getUser();
       if (user && deviceContext) {
-        const isKnownDevice = await checkAndSaveDevice(user.id, deviceContext);
-        if (isKnownDevice) {
-          setWelcomeBackMessage('Bem-vindo de volta! 👋 Reconhecemos seu dispositivo.');
-        }
+        await checkAndSaveDevice(user.id, deviceContext);
       }
     } catch (error: any) {
       console.error('❌ Erro no login:', error);
+      setWelcomeBackMessage('');
       toast({
         title: "Erro",
         description: error.message,
