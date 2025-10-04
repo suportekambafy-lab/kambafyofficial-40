@@ -14,8 +14,16 @@ export default function AppMobile() {
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
   useEffect(() => {
-    const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_KEY);
-    setShowOnboarding(!hasCompletedOnboarding);
+    // Verificar se há um query parameter para forçar onboarding (útil para desenvolvimento)
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceOnboarding = urlParams.get('onboarding') === 'true';
+    
+    if (forceOnboarding) {
+      setShowOnboarding(true);
+    } else {
+      const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_KEY);
+      setShowOnboarding(!hasCompletedOnboarding);
+    }
     setCheckingOnboarding(false);
   }, []);
 
