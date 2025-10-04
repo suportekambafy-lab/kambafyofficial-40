@@ -25,24 +25,13 @@ export function AppLogin() {
   const { isDark, theme, setTheme } = useSellerTheme();
   const { context: deviceContext, loading: deviceLoading } = useDeviceContext();
 
-  // Verificar dispositivo quando o componente carrega
+  // Verificar se este dispositivo já foi usado antes (localStorage)
   useEffect(() => {
-    const checkKnownDevice = async () => {
-      if (!deviceContext || deviceLoading) return;
-      
-      const { data: existingDevices } = await supabase
-        .from('user_devices')
-        .select('device_fingerprint')
-        .eq('device_fingerprint', deviceContext.fingerprint)
-        .limit(1);
-      
-      if (existingDevices && existingDevices.length > 0) {
-        setWelcomeBackMessage('Bem-vindo de volta! 👋 Reconhecemos seu dispositivo.');
-      }
-    };
-    
-    checkKnownDevice();
-  }, [deviceContext, deviceLoading]);
+    const hasLoggedInBefore = localStorage.getItem('kambafy_device_known') === 'true';
+    if (hasLoggedInBefore) {
+      setWelcomeBackMessage('Bem-vindo de volta! 👋 Reconhecemos seu dispositivo.');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +52,9 @@ export function AppLogin() {
       if (error) throw error;
 
       console.log('✅ Login bem-sucedido!');
+      
+      // Marcar dispositivo como conhecido no localStorage
+      localStorage.setItem('kambafy_device_known', 'true');
       
       // Salvar/atualizar dispositivo após login
       const { data: { user } } = await supabase.auth.getUser();
