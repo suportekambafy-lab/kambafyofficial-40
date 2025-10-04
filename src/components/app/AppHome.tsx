@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon } from 'lucide-react';
+import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { countTotalSales } from '@/utils/orderUtils';
@@ -1538,14 +1539,18 @@ export function AppHome() {
             {/* Profile Button */}
             <button
               onClick={() => setActiveTab('profile')}
-              className={`w-12 h-12 rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow flex-shrink-0 overflow-hidden ${
+              className={`relative w-12 h-12 rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow flex-shrink-0 overflow-hidden ${
                 activeTab === 'profile' ? 'ring-2 ring-primary ring-offset-2' : ''
               }`}
             >
               <Avatar className="h-12 w-12">
                 <AvatarImage src={profileAvatar} alt="Profile" />
                 <AvatarFallback className={`${activeTab === 'profile' ? 'bg-primary/10' : 'bg-muted'}`}>
-                  <User className={`h-5 w-5 ${activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'}`} />
+                  {isDark ? (
+                    <img src={kambafyIconGreen} alt="Kambafy" className="h-6 w-6" />
+                  ) : (
+                    <User className={`h-5 w-5 ${activeTab === 'profile' ? 'text-primary' : 'text-muted-foreground'}`} />
+                  )}
                 </AvatarFallback>
               </Avatar>
             </button>
