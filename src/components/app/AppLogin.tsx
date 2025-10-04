@@ -36,7 +36,6 @@ export function AppLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setWelcomeBackMessage('');
     
     if (!deviceContext || deviceLoading) {
       setError('Aguarde enquanto verificamos seu dispositivo...');
