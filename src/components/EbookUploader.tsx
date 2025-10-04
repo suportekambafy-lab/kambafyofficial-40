@@ -54,53 +54,45 @@ export default function EbookUploader({ onFileUploaded, open, onOpenChange }: Eb
     setUploadProgress(0);
 
     try {
-      console.log('Uploading ebook to Bunny Storage:', selectedFile.name);
+      console.log('Uploading ebook to Supabase Storage:', selectedFile.name);
       setUploadProgress(10);
 
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const base64 = reader.result as string;
-          const base64Data = base64.split(',')[1]; // Remove data:...;base64, prefix
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(selectedFile);
-      });
+      // Generate unique filename
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      const filePath = `ebooks/${fileName}`;
 
-      const fileData = await base64Promise;
       setUploadProgress(30);
 
-      // Upload to Bunny Storage
-      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('bunny-storage-upload', {
-        body: {
-          fileName: selectedFile.name,
-          fileType: selectedFile.type,
-          fileData,
-        }
-      });
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('member-area-assets')
+        .upload(filePath, selectedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
         throw uploadError;
       }
 
-      if (!uploadData?.url) {
-        throw new Error('URL não retornada do upload');
-      }
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('member-area-assets')
+        .getPublicUrl(filePath);
 
       setUploadProgress(100);
-      console.log('Upload successful to Bunny Storage:', uploadData.url);
+      console.log('Upload successful to Supabase Storage:', publicUrl);
       
-      onFileUploaded(uploadData.url);
+      onFileUploaded(publicUrl);
       setSelectedFile(null);
       setUploadProgress(0);
       onOpenChange(false);
 
       toast({
         title: "Sucesso",
-        description: "Arquivo enviado com sucesso para Bunny CDN"
+        description: "Arquivo enviado com sucesso"
       });
     } catch (error) {
       console.error('Erro ao fazer upload:', error);

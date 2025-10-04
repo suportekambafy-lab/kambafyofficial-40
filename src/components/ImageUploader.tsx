@@ -36,41 +36,32 @@ export function ImageUploader({
     try {
       setUploading(true);
 
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const base64 = reader.result as string;
-          const base64Data = base64.split(',')[1]; // Remove data:image/...;base64, prefix
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      const filePath = `${folder}/${fileName}`;
 
-      const fileData = await base64Promise;
-
-      // Upload to Bunny Storage
-      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('bunny-storage-upload', {
-        body: {
-          fileName: file.name,
-          fileType: file.type,
-          fileData,
-        }
-      });
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
         throw uploadError;
       }
 
-      if (!uploadData?.url) {
-        throw new Error('URL não retornada do upload');
-      }
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(filePath);
 
-      onChange(uploadData.url);
+      onChange(publicUrl);
       toast({
         title: "Sucesso!",
-        description: "Imagem enviada com sucesso para Bunny CDN.",
+        description: "Imagem enviada com sucesso.",
       });
     } catch (error: any) {
       console.error('Error uploading image:', error);
@@ -87,7 +78,7 @@ export function ImageUploader({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 50 * 1024 * 1024) { // 50MB limit for Bunny CDN
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit
         toast({
           title: "Erro",
           description: "A imagem deve ter menos de 50MB",
