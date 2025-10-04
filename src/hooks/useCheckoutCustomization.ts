@@ -176,16 +176,7 @@ export function useCheckoutCustomization(productId: string) {
   };
 
   const saveSettings = async (newSettings: CheckoutCustomizationSettings) => {
-    console.log('💾 Tentando salvar configurações...');
-    console.log('👤 User existe?', !!user);
-    console.log('📦 Product ID existe?', !!productId);
-    console.log('📊 Settings recebidos:', newSettings);
-    console.log('🎯 SpotsCounter:', newSettings.spotsCounter);
-    
     if (!user || !productId) {
-      console.error('❌ Erro: Usuário ou Product ID não encontrado');
-      console.log('👤 User:', user);
-      console.log('📦 Product ID:', productId);
       toast({
         title: "Erro de autenticação",
         description: "Você precisa estar logado para salvar as configurações.",
@@ -197,14 +188,8 @@ export function useCheckoutCustomization(productId: string) {
     try {
       setSaving(true);
       
-      console.log('🔄 Salvando configurações:', newSettings);
-      console.log('👤 User ID:', user.id);
-      console.log('📦 Product ID:', productId);
-      console.log('🎯 SpotsCounter no save:', JSON.stringify(newSettings.spotsCounter, null, 2));
-
       // Convert settings to JSON-compatible format
       const settingsJson = JSON.parse(JSON.stringify(newSettings));
-      console.log('📄 Settings JSON:', settingsJson);
 
       // Primeiro tentar atualizar o registro existente
       const { data: updateData, error: updateError } = await supabase
@@ -213,8 +198,6 @@ export function useCheckoutCustomization(productId: string) {
         .eq('user_id', user.id)
         .eq('product_id', productId)
         .select();
-
-      console.log('🔍 Update result:', { updateData, updateError });
 
       // Se não houve erro no update, significa que atualizou com sucesso
       if (!updateError && updateData && updateData.length > 0) {

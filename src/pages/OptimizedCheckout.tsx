@@ -35,6 +35,9 @@ const OptimizedFakeReviews = lazy(() =>
 const OptimizedSocialProof = lazy(() => 
   import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedSocialProof }))
 );
+const OptimizedSpotsCounter = lazy(() => 
+  import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedSpotsCounter }))
+);
 const OptimizedOrderBump = lazy(() => 
   import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedOrderBump }))
 );
@@ -413,6 +416,18 @@ const OptimizedCheckout = () => {
                 title={checkoutSettings.countdown.message}
                 backgroundColor={checkoutSettings.countdown.backgroundColor}
                 textColor={checkoutSettings.countdown.textColor}
+              />
+            </Suspense>
+          )}
+
+          {/* Contador de Vagas - lazy load */}
+          {checkoutSettings?.spotsCounter?.enabled && (
+            <Suspense fallback={<div />}>
+              <OptimizedSpotsCounter 
+                count={checkoutSettings.spotsCounter.currentCount}
+                title={checkoutSettings.spotsCounter.title}
+                backgroundColor={checkoutSettings.spotsCounter.backgroundColor}
+                textColor={checkoutSettings.spotsCounter.textColor}
               />
             </Suspense>
           )}

@@ -34,9 +34,6 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
   }
 
   const handleSave = async () => {
-    console.log('🔄 Iniciando salvamento das configurações...');
-    console.log('⚙️ Settings atuais:', settings);
-    console.log('📊 SpotsCounter config:', settings.spotsCounter);
     await saveSettings(settings);
     onSaveSuccess();
   };
@@ -70,15 +67,10 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
   };
 
   const updateSpotsCounterSetting = (key: string, value: any) => {
-    console.log('🎯 Atualizando SpotsCounter:', key, '=', value);
-    setSettings(prev => {
-      const updated = {
-        ...prev,
-        spotsCounter: { ...prev.spotsCounter, [key]: value }
-      };
-      console.log('✅ Settings após update:', updated);
-      return updated;
-    });
+    setSettings(prev => ({
+      ...prev,
+      spotsCounter: { ...prev.spotsCounter, [key]: value }
+    }));
   };
 
 

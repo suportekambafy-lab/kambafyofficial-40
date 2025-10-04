@@ -13,6 +13,7 @@ const CustomBanner = lazy(() => import('./CustomBanner'));
 const CountdownTimer = lazy(() => import('./CountdownTimer'));
 const FakeReviews = lazy(() => import('./FakeReviews'));
 const SocialProof = lazy(() => import('./SocialProof'));
+const SpotsCounter = lazy(() => import('./SpotsCounter'));
 const OrderBump = lazy(() => import('./OrderBump').then(module => ({ default: module.OrderBump })));
 const StripeCardPayment = lazy(() => import('./StripeCardPayment'));
 
@@ -73,7 +74,28 @@ export const OptimizedSocialProof = memo(({ settings }: { settings: any }) => (
   </OptimizedSuspenseWrapper>
 ));
 
-export const OptimizedOrderBump = memo(({ 
+export const OptimizedSpotsCounter = memo(({ 
+  count, 
+  title, 
+  backgroundColor, 
+  textColor 
+}: { 
+  count: number; 
+  title?: string;
+  backgroundColor?: string;
+  textColor?: string;
+}) => (
+  <OptimizedSuspenseWrapper fallback={<div />}>
+    <SpotsCounter
+      count={count}
+      title={title || 'VAGAS RESTANTES'}
+      backgroundColor={backgroundColor || '#6366f1'}
+      textColor={textColor || '#ffffff'}
+    />
+  </OptimizedSuspenseWrapper>
+));
+
+export const OptimizedOrderBump = memo(({
   productId, 
   position, 
   onToggle, 
@@ -379,6 +401,7 @@ OptimizedCustomBanner.displayName = 'OptimizedCustomBanner';
 OptimizedCountdownTimer.displayName = 'OptimizedCountdownTimer';
 OptimizedFakeReviews.displayName = 'OptimizedFakeReviews';
 OptimizedSocialProof.displayName = 'OptimizedSocialProof';
+OptimizedSpotsCounter.displayName = 'OptimizedSpotsCounter';
 OptimizedOrderBump.displayName = 'OptimizedOrderBump';
 OptimizedStripeCardPayment.displayName = 'OptimizedStripeCardPayment';
 OptimizedProductHeader.displayName = 'OptimizedProductHeader';

@@ -27,7 +27,7 @@ import { PrivacyModal } from "@/components/checkout/PrivacyModal";
 import { countTotalSales } from "@/utils/orderUtils";
 
 // Importar componentes otimizados
-import { OptimizedCustomBanner, OptimizedCountdownTimer, OptimizedFakeReviews, OptimizedSocialProof, OptimizedOrderBump, OptimizedStripeCardPayment } from '@/components/checkout/OptimizedCheckoutComponents';
+import { OptimizedCustomBanner, OptimizedCountdownTimer, OptimizedFakeReviews, OptimizedSocialProof, OptimizedSpotsCounter, OptimizedOrderBump, OptimizedStripeCardPayment } from '@/components/checkout/OptimizedCheckoutComponents';
 
 const Checkout = () => {
   console.log('🛒 Checkout component initialized');
@@ -1837,6 +1837,15 @@ const Checkout = () => {
         {checkoutSettings?.countdown?.enabled && <OptimizedCountdownTimer minutes={checkoutSettings.countdown.minutes} title={checkoutSettings.countdown.title} backgroundColor={checkoutSettings.countdown.backgroundColor} textColor={checkoutSettings.countdown.textColor} />}
 
         {checkoutSettings?.banner?.enabled && checkoutSettings.banner.bannerImage && <OptimizedCustomBanner bannerImage={checkoutSettings.banner.bannerImage} />}
+
+        {checkoutSettings?.spotsCounter?.enabled && (
+          <OptimizedSpotsCounter 
+            count={checkoutSettings.spotsCounter.currentCount} 
+            title={checkoutSettings.spotsCounter.title} 
+            backgroundColor={checkoutSettings.spotsCounter.backgroundColor} 
+            textColor={checkoutSettings.spotsCounter.textColor} 
+          />
+        )}
 
         <div className="bg-checkout-secure text-white py-3">
           <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
