@@ -105,6 +105,26 @@ const defaultSettings: CheckoutCustomizationSettings = {
   }
 };
 
+// Helper function to convert color names to hex
+const normalizeColor = (color: string): string => {
+  const colorMap: { [key: string]: string } = {
+    'white': '#ffffff',
+    'black': '#000000',
+    'red': '#ff0000',
+    'blue': '#0000ff',
+    'green': '#00ff00',
+    'yellow': '#ffff00',
+    'purple': '#800080',
+    'orange': '#ffa500',
+    'pink': '#ffc0cb',
+    'gray': '#808080',
+    'grey': '#808080'
+  };
+  
+  const lowerColor = color.toLowerCase().trim();
+  return colorMap[lowerColor] || (color.startsWith('#') ? color : '#ffffff');
+};
+
 // Helper function to safely merge settings
 const mergeSettings = (loadedData: any): CheckoutCustomizationSettings => {
   if (!loadedData || typeof loadedData !== 'object' || Array.isArray(loadedData)) {
@@ -119,7 +139,12 @@ const mergeSettings = (loadedData: any): CheckoutCustomizationSettings => {
   }
   
   if (loadedData.countdown && typeof loadedData.countdown === 'object') {
-    result.countdown = { ...defaultSettings.countdown, ...loadedData.countdown };
+    result.countdown = {
+      ...defaultSettings.countdown,
+      ...loadedData.countdown,
+      backgroundColor: normalizeColor(loadedData.countdown.backgroundColor || defaultSettings.countdown.backgroundColor),
+      textColor: normalizeColor(loadedData.countdown.textColor || defaultSettings.countdown.textColor)
+    };
   }
   
   if (loadedData.reviews && typeof loadedData.reviews === 'object') {
@@ -131,7 +156,12 @@ const mergeSettings = (loadedData: any): CheckoutCustomizationSettings => {
   }
   
   if (loadedData.spotsCounter && typeof loadedData.spotsCounter === 'object') {
-    result.spotsCounter = { ...defaultSettings.spotsCounter, ...loadedData.spotsCounter };
+    result.spotsCounter = {
+      ...defaultSettings.spotsCounter,
+      ...loadedData.spotsCounter,
+      backgroundColor: normalizeColor(loadedData.spotsCounter.backgroundColor || defaultSettings.spotsCounter.backgroundColor),
+      textColor: normalizeColor(loadedData.spotsCounter.textColor || defaultSettings.spotsCounter.textColor)
+    };
   }
   
   return result;
@@ -209,8 +239,26 @@ export function useCheckoutCustomization(productId: string) {
       console.log('💾 SAVE: Settings a salvar:', newSettings);
       console.log('💾 SAVE: SpotsCounter:', newSettings.spotsCounter);
       
+      // Normalize colors before saving
+      const normalizedSettings = {
+        ...newSettings,
+        countdown: {
+          ...newSettings.countdown,
+          backgroundColor: normalizeColor(newSettings.countdown.backgroundColor),
+          textColor: normalizeColor(newSettings.countdown.textColor)
+        },
+        spotsCounter: {
+          ...newSettings.spotsCounter,
+          backgroundColor: normalizeColor(newSettings.spotsCounter.backgroundColor),
+          textColor: normalizeColor(newSettings.spotsCounter.textColor)
+        }
+      };
+      
+      console.log('💾 SAVE: Settings normalizadas:', normalizedSettings);
+      console.log('💾 SAVE: SpotsCounter normalizado:', normalizedSettings.spotsCounter);
+      
       // Convert settings to JSON-compatible format
-      const settingsJson = JSON.parse(JSON.stringify(newSettings));
+      const settingsJson = JSON.parse(JSON.stringify(normalizedSettings));
       console.log('💾 SAVE: Settings JSON:', settingsJson);
       console.log('💾 SAVE: SpotsCounter JSON:', settingsJson.spotsCounter);
 
@@ -252,8 +300,8 @@ export function useCheckoutCustomization(productId: string) {
         console.log('✅ SAVE: Dados criados:', insertData?.[0]?.settings);
       }
       
-      setSettings(newSettings);
-      console.log('✅ SAVE: Estado local atualizado');
+      setSettings(normalizedSettings);
+      console.log('✅ SAVE: Estado local atualizado com cores normalizadas');
 
       toast({
         title: "Configurações salvas!",
