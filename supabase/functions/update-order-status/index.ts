@@ -133,33 +133,61 @@ serve(async (req) => {
         
         // 2. CRIAR ACESSO PARA O CLIENTE
         console.log('🔓 Creating customer access...');
-        const accessExpiresAt = product.access_duration_type === 'lifetime' || !product.access_duration_type
-          ? null
-          : (() => {
-              const now = new Date();
-              switch (product.access_duration_type) {
-                case 'days':
-                  return new Date(now.setDate(now.getDate() + product.access_duration_value));
-                case 'months':
-                  return new Date(now.setMonth(now.getMonth() + product.access_duration_value));
-                case 'years':
-                  return new Date(now.setFullYear(now.getFullYear() + product.access_duration_value));
-                default:
-                  return null;
-              }
-            })();
         
-        await supabase.from('customer_access').insert({
-          customer_email: orderData.customer_email.toLowerCase().trim(),
-          customer_name: orderData.customer_name,
-          product_id: orderData.product_id,
-          order_id: orderId,
-          access_granted_at: new Date().toISOString(),
-          access_expires_at: accessExpiresAt,
-          is_active: true
-        });
+        // Verificar se já existe acesso para este cliente e produto
+        const { data: existingAccess } = await supabase
+          .from('customer_access')
+          .select('id, is_active')
+          .eq('customer_email', orderData.customer_email.toLowerCase().trim())
+          .eq('product_id', orderData.product_id)
+          .single();
         
-        console.log('✅ Customer access created');
+        if (existingAccess) {
+          console.log('⚠️ Access already exists, updating...');
+          // Se já existe, apenas garantir que está ativo
+          await supabase
+            .from('customer_access')
+            .update({ 
+              is_active: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingAccess.id);
+          console.log('✅ Customer access updated');
+        } else {
+          // Calcular expiração de acesso
+          const accessExpiresAt = product.access_duration_type === 'lifetime' || !product.access_duration_type
+            ? null
+            : (() => {
+                const now = new Date();
+                switch (product.access_duration_type) {
+                  case 'days':
+                    return new Date(now.setDate(now.getDate() + product.access_duration_value));
+                  case 'months':
+                    return new Date(now.setMonth(now.getMonth() + product.access_duration_value));
+                  case 'years':
+                    return new Date(now.setFullYear(now.getFullYear() + product.access_duration_value));
+                  default:
+                    return null;
+                }
+              })();
+          
+          const { error: accessError } = await supabase.from('customer_access').insert({
+            customer_email: orderData.customer_email.toLowerCase().trim(),
+            customer_name: orderData.customer_name,
+            product_id: orderData.product_id,
+            order_id: orderId,
+            access_granted_at: new Date().toISOString(),
+            access_expires_at: accessExpiresAt,
+            is_active: true
+          });
+          
+          if (accessError) {
+            console.error('❌ Error creating customer access:', accessError);
+            throw new Error(`Failed to create customer access: ${accessError.message}`);
+          }
+          
+          console.log('✅ Customer access created successfully');
+        }
         
         // CRIAR ACESSO PARA ORDER BUMPS
         if (orderData.order_bump_data) {
@@ -203,38 +231,58 @@ serve(async (req) => {
               }
               
               if (bumpProduct) {
-                // Calcular expiração de acesso para order bump
-                const bumpAccessExpiresAt = bumpProduct.access_duration_type === 'lifetime' || !bumpProduct.access_duration_type
-                  ? null
-                  : (() => {
-                      const now = new Date();
-                      switch (bumpProduct.access_duration_type) {
-                        case 'days':
-                          return new Date(now.setDate(now.getDate() + bumpProduct.access_duration_value));
-                        case 'months':
-                          return new Date(now.setMonth(now.getMonth() + bumpProduct.access_duration_value));
-                        case 'years':
-                          return new Date(now.setFullYear(now.getFullYear() + bumpProduct.access_duration_value));
-                        default:
-                          return null;
-                      }
-                    })();
+                // Verificar se já existe acesso para este cliente e bump product
+                const { data: existingBumpAccess } = await supabase
+                  .from('customer_access')
+                  .select('id, is_active')
+                  .eq('customer_email', orderData.customer_email.toLowerCase().trim())
+                  .eq('product_id', bumpProduct.id)
+                  .single();
                 
-                // Criar acesso para order bump
-                const { error: insertError } = await supabase.from('customer_access').insert({
-                  customer_email: orderData.customer_email.toLowerCase().trim(),
-                  customer_name: orderData.customer_name,
-                  product_id: bumpProduct.id,
-                  order_id: `${orderId}-BUMP`,
-                  access_granted_at: new Date().toISOString(),
-                  access_expires_at: bumpAccessExpiresAt,
-                  is_active: true
-                });
-                
-                if (insertError) {
-                  console.error('❌ Error inserting bump access:', insertError);
+                if (existingBumpAccess) {
+                  console.log('⚠️ Bump access already exists, updating...');
+                  await supabase
+                    .from('customer_access')
+                    .update({ 
+                      is_active: true,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', existingBumpAccess.id);
+                  console.log(`✅ Order bump access updated for: ${orderBumpDataParsed.bump_product_name}`);
                 } else {
-                  console.log(`✅ Order bump access created for: ${orderBumpDataParsed.bump_product_name}`);
+                  // Calcular expiração de acesso para order bump
+                  const bumpAccessExpiresAt = bumpProduct.access_duration_type === 'lifetime' || !bumpProduct.access_duration_type
+                    ? null
+                    : (() => {
+                        const now = new Date();
+                        switch (bumpProduct.access_duration_type) {
+                          case 'days':
+                            return new Date(now.setDate(now.getDate() + bumpProduct.access_duration_value));
+                          case 'months':
+                            return new Date(now.setMonth(now.getMonth() + bumpProduct.access_duration_value));
+                          case 'years':
+                            return new Date(now.setFullYear(now.getFullYear() + bumpProduct.access_duration_value));
+                          default:
+                            return null;
+                        }
+                      })();
+                  
+                  // Criar acesso para order bump
+                  const { error: insertError } = await supabase.from('customer_access').insert({
+                    customer_email: orderData.customer_email.toLowerCase().trim(),
+                    customer_name: orderData.customer_name,
+                    product_id: bumpProduct.id,
+                    order_id: `${orderId}-BUMP`,
+                    access_granted_at: new Date().toISOString(),
+                    access_expires_at: bumpAccessExpiresAt,
+                    is_active: true
+                  });
+                  
+                  if (insertError) {
+                    console.error('❌ Error inserting bump access:', insertError);
+                  } else {
+                    console.log(`✅ Order bump access created for: ${orderBumpDataParsed.bump_product_name}`);
+                  }
                 }
               } else {
                 console.error(`❌ Could not find bump product: ${orderBumpDataParsed.bump_product_name}`);
