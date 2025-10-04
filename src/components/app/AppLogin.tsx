@@ -43,6 +43,15 @@ export function AppLogin() {
       if (error) throw error;
 
       console.log('✅ Login bem-sucedido!');
+      
+      // Verificar dispositivo após login bem-sucedido
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && deviceContext) {
+        const isKnownDevice = await checkAndSaveDevice(user.id, deviceContext);
+        if (isKnownDevice) {
+          setWelcomeBackMessage('Bem-vindo de volta! 👋 Reconhecemos seu dispositivo.');
+        }
+      }
     } catch (error: any) {
       console.error('❌ Erro no login:', error);
       toast({
@@ -143,7 +152,7 @@ export function AppLogin() {
                 <p className="text-sm text-muted-foreground">
                   {isForgotPassword 
                     ? 'Digite seu email para receber instruções de recuperação de senha.' 
-                    : 'Entre na sua conta Kambafy'}
+                    : welcomeBackMessage || 'Entre na sua conta Kambafy'}
                 </p>
               </div>
 

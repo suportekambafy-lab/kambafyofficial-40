@@ -22,17 +22,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useDeviceContext } from '@/hooks/useDeviceContext';
-import { checkAndSaveDevice } from '@/utils/deviceTracking';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const { theme, setTheme, isDark } = useSellerTheme();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
-  const { context: deviceContext, loading: deviceLoading } = useDeviceContext();
   const [activeTab, setActiveTab] = useState('home');
-  const [deviceChecked, setDeviceChecked] = useState(false);
   const [stats, setStats] = useState({
     totalSales: 0,
     totalRevenue: 0,
@@ -145,37 +141,7 @@ export function AppHome() {
     }
   }, []);
 
-  // Verificar dispositivo e mostrar mensagem de boas-vindas
-  useEffect(() => {
-    const checkDevice = async () => {
-      if (!user || !deviceContext || deviceLoading || deviceChecked) {
-        return;
-      }
-
-      console.log('👋 Verificando dispositivo ao entrar na home...');
-      
-      try {
-        const isKnownDevice = await checkAndSaveDevice(user.id, deviceContext);
-        
-        // Usar setTimeout para garantir que o toast apareça após o render
-        setTimeout(() => {
-          if (isKnownDevice) {
-            toast({
-              title: "Bem-vindo de volta! 👋",
-              description: "Reconhecemos seu dispositivo.",
-            });
-          }
-        }, 500);
-        
-        setDeviceChecked(true);
-      } catch (error) {
-        console.error('❌ Erro ao verificar dispositivo:', error);
-        setDeviceChecked(true);
-      }
-    };
-
-    checkDevice();
-  }, [user, deviceContext, deviceLoading, deviceChecked, toast]);
+  // Device tracking já é feito no login, não precisa duplicar aqui
 
   useEffect(() => {
     loadStats();
