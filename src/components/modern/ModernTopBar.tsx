@@ -508,7 +508,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 dark:bg-gray-900 dark:border-gray-800">
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={() => navigate('/vendedor/configuracoes')}>
                   <Settings className="mr-2 h-4 w-4" />
                   Configurações
