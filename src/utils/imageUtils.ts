@@ -1,6 +1,6 @@
 /**
  * Utility function to get the correct product image URL
- * Handles Supabase Storage URLs, data URLs, and Unsplash IDs
+ * Handles Bunny CDN, Supabase Storage URLs, data URLs, and Unsplash IDs
  */
 export const getProductImageUrl = (cover: string, fallback?: string): string => {
   if (!cover) return fallback || "/placeholder.svg";
@@ -10,8 +10,8 @@ export const getProductImageUrl = (cover: string, fallback?: string): string => 
     return cover;
   }
   
-  // Supabase Storage URLs or any complete HTTP URLs
-  if (cover.includes('supabase') || cover.startsWith('http')) {
+  // Bunny CDN URLs, Supabase Storage URLs or any complete HTTP URLs
+  if (cover.includes('supabase') || cover.includes('bunnycdn') || cover.startsWith('http')) {
     return cover;
   }
   

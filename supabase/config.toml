@@ -1,5 +1,8 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.bunny-storage-upload]
+verify_jwt = false
+
 [functions.bunny-video-upload]
 verify_jwt = false
 

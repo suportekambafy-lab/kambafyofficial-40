@@ -36,26 +36,41 @@ export function ImageUploader({
     try {
       setUploading(true);
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${folder}/${fileName}`;
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64 = reader.result as string;
+          const base64Data = base64.split(',')[1]; // Remove data:image/...;base64, prefix
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      const { error: uploadError, data } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file);
+      const fileData = await base64Promise;
+
+      // Upload to Bunny Storage
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('bunny-storage-upload', {
+        body: {
+          fileName: file.name,
+          fileType: file.type,
+          fileData,
+        }
+      });
 
       if (uploadError) {
         throw uploadError;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
+      if (!uploadData?.url) {
+        throw new Error('URL não retornada do upload');
+      }
 
-      onChange(publicUrl);
+      onChange(uploadData.url);
       toast({
         title: "Sucesso!",
-        description: "Imagem enviada com sucesso.",
+        description: "Imagem enviada com sucesso para Bunny CDN.",
       });
     } catch (error: any) {
       console.error('Error uploading image:', error);
@@ -72,10 +87,10 @@ export function ImageUploader({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit for Bunny CDN
         toast({
           title: "Erro",
-          description: "A imagem deve ter menos de 5MB",
+          description: "A imagem deve ter menos de 50MB",
           variant: "destructive",
         });
         return;
@@ -143,7 +158,7 @@ export function ImageUploader({
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-foreground">Clique para enviar uma imagem</p>
-                  <p className="text-xs text-muted-foreground">PNG, JPG, WEBP até 5MB</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG, WEBP até 50MB</p>
                 </div>
                 <Upload className="w-4 h-4 text-muted-foreground" />
               </div>

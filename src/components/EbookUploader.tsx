@@ -54,59 +54,53 @@ export default function EbookUploader({ onFileUploaded, open, onOpenChange }: Eb
     setUploadProgress(0);
 
     try {
-      // Preservar nome original do arquivo (sanitizado)
-      const originalName = selectedFile.name;
-      const sanitizedName = originalName
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-        .replace(/[^a-zA-Z0-9._-]/g, '_'); // Substitui caracteres especiais
-      const fileName = `${user.id}/ebooks/${Date.now()}_${sanitizedName}`;
+      console.log('Uploading ebook to Bunny Storage:', selectedFile.name);
+      setUploadProgress(10);
 
-      console.log('Uploading ebook to bucket:', fileName);
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64 = reader.result as string;
+          const base64Data = base64.split(',')[1]; // Remove data:...;base64, prefix
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedFile);
+      });
 
-      // Simular progresso
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + 10;
-        });
-      }, 200);
+      const fileData = await base64Promise;
+      setUploadProgress(30);
 
-      const { data, error } = await supabase.storage
-        .from('product-covers')
-        .upload(fileName, selectedFile, {
-          cacheControl: '3600',
-          upsert: true
-        });
+      // Upload to Bunny Storage
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('bunny-storage-upload', {
+        body: {
+          fileName: selectedFile.name,
+          fileType: selectedFile.type,
+          fileData,
+        }
+      });
 
-      clearInterval(progressInterval);
-
-      if (error) {
-        console.error('Upload error:', error);
-        throw error;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
       }
 
-      console.log('Upload successful:', data);
+      if (!uploadData?.url) {
+        throw new Error('URL não retornada do upload');
+      }
+
       setUploadProgress(100);
-
-      // Gerar URL pública
-      const { data: publicUrlData } = supabase.storage
-        .from('product-covers')
-        .getPublicUrl(data.path);
+      console.log('Upload successful to Bunny Storage:', uploadData.url);
       
-      const publicUrl = publicUrlData.publicUrl;
-      console.log('Public URL:', publicUrl);
-
-      onFileUploaded(publicUrl);
+      onFileUploaded(uploadData.url);
       setSelectedFile(null);
+      setUploadProgress(0);
       onOpenChange(false);
 
       toast({
         title: "Sucesso",
-        description: "Arquivo enviado com sucesso"
+        description: "Arquivo enviado com sucesso para Bunny CDN"
       });
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
@@ -117,7 +111,6 @@ export default function EbookUploader({ onFileUploaded, open, onOpenChange }: Eb
       });
     } finally {
       setUploading(false);
-      setUploadProgress(0);
     }
   };
 
