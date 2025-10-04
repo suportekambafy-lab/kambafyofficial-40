@@ -900,9 +900,18 @@ export function AppHome() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-base text-foreground truncate">
-                      {editingProfile.full_name || user?.email}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-base text-foreground truncate">
+                        {editingProfile.full_name || user?.email}
+                      </p>
+                      {currentLevel && (
+                        <img 
+                          src={currentLevel.seal} 
+                          alt={currentLevel.name} 
+                          className="w-6 h-6 object-contain flex-shrink-0"
+                        />
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       {currentLevel ? `${currentLevel.name}` : 'Vendedor Kambafy'}
                     </p>

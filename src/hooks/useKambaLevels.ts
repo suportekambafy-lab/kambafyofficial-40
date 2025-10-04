@@ -1,5 +1,10 @@
 
 import { useMemo } from 'react';
+import bronzeSeal from '@/assets/seals/bronze.png';
+import zingaSeal from '@/assets/seals/zinga.png';
+import dikanzaSeal from '@/assets/seals/dikanza.png';
+import wakandaSeal from '@/assets/seals/wakanda.png';
+import diamanteSeal from '@/assets/seals/diamante.png';
 
 export interface KambaLevel {
   id: string;
@@ -9,6 +14,7 @@ export interface KambaLevel {
   color: string;
   rewards: string[];
   badge: string;
+  seal: string;
 }
 
 export const KAMBA_LEVELS: KambaLevel[] = [
@@ -19,6 +25,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     threshold: 1000000,
     color: '#8B5E3C',
     badge: '/lovable-uploads/9a3eb8d5-f7fb-4d71-9fa3-24b656365590.png',
+    seal: bronzeSeal,
     rewards: ['🎖 Selo no perfil', '📦 Placa física']
   },
   {
@@ -28,6 +35,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     threshold: 5000000,
     color: '#F58634',
     badge: '/lovable-uploads/ea32f463-fe2f-42a1-b0e2-3652f83cf956.png',
+    seal: zingaSeal,
     rewards: ['🎖 Selo no perfil', '📦 Placa física']
   },
   {
@@ -37,6 +45,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     threshold: 15000000,
     color: '#FFCB05',
     badge: '/lovable-uploads/da32c56d-6a01-423e-a683-7d131bf39e52.png',
+    seal: dikanzaSeal,
     rewards: ['🎖 Selo + Placa', '🎓 Acesso a mentorias', '🌐 Destaque no site']
   },
   {
@@ -46,6 +55,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     threshold: 50000000,
     color: '#000000',
     badge: '/lovable-uploads/4cbb6857-ffc5-435f-8067-c6d7686af2a9.png',
+    seal: wakandaSeal,
     rewards: ['🎖 Selo + Placa', '🎁 Kit do Criador', '📩 Convite para eventos']
   },
   {
@@ -55,6 +65,7 @@ export const KAMBA_LEVELS: KambaLevel[] = [
     threshold: 100000000,
     color: '#00CFFF',
     badge: '/lovable-uploads/0a88b024-7c04-4e5f-9caa-240ca5244cae.png',
+    seal: diamanteSeal,
     rewards: [
       '🎖 Selo + Placa',
       '✈️ Viagem para Dubai (voo + hotel)',
