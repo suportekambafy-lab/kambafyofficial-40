@@ -8,6 +8,7 @@ import { ShoppingCart, Sparkles, Tag, ArrowRight, Package, CheckCircle2 } from '
 import { toast } from 'sonner';
 import { useGeoLocation } from '@/hooks/useGeoLocation';
 import { formatPrice } from '@/utils/priceFormatting';
+import { useModernMembersAuth } from './ModernMembersAuth';
 
 interface MemberAreaOffer {
   id: string;
@@ -31,25 +32,25 @@ export function MemberAreaOffers({
 }: MemberAreaOffersProps) {
   console.log('🎁 MemberAreaOffers: Componente montado com memberAreaId:', memberAreaId);
   
+  const { user } = useModernMembersAuth();
   const [offers, setOffers] = useState<MemberAreaOffer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const { userCountry, isReady } = useGeoLocation();
 
   useEffect(() => {
     loadOffersWithUserAccess();
-  }, [memberAreaId]);
+  }, [memberAreaId, user]);
 
   const loadOffersWithUserAccess = async () => {
     console.log('🎁 MemberAreaOffers: Iniciando carregamento...');
+    console.log('🎁 MemberAreaOffers: User do contexto:', user);
+    
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase().trim();
+      const email = user?.email?.toLowerCase().trim();
       
-      console.log('🎁 MemberAreaOffers: Email da sessão:', email);
+      console.log('🎁 MemberAreaOffers: Email do contexto:', email);
       
       if (email) {
-        setUserEmail(email);
         await loadOffersWithAccess(email);
       } else {
         console.log('🎁 MemberAreaOffers: Sem email, carregando ofertas sem verificação');
