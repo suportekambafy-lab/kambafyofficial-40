@@ -1889,7 +1889,11 @@ const Checkout = () => {
                     <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3 mt-2 flex-wrap">
-                    <div className="text-xl sm:text-2xl font-bold text-green-600 whitespace-nowrap">
+                    <div className={`font-bold text-green-600 whitespace-nowrap ${
+                      product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price)
+                        ? 'text-xl sm:text-2xl'
+                        : 'text-2xl'
+                    }`}>
                       {getDisplayPrice(finalProductPrice, true)}
                     </div>
                     {product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price) && (
