@@ -993,8 +993,8 @@ export function AppHome() {
             {/* Logo */}
             <div className="flex justify-center pt-4 pb-2">
               <img 
-                src="/positivo-logo.svg" 
-                alt="Positivo" 
+                src={isDark ? kambafyIconGreen : "/positivo-logo.svg"} 
+                alt={isDark ? "Kambafy" : "Positivo"} 
                 className="h-16 w-auto"
               />
             </div>
