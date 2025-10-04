@@ -235,9 +235,6 @@ export function AppLogin() {
                     {error && (
                       <p className="text-sm text-destructive text-center">{error}</p>
                     )}
-                    {welcomeBackMessage && (
-                      <p className="text-sm text-primary text-center font-medium">{welcomeBackMessage}</p>
-                    )}
 
                     {/* Submit */}
                     <Button
