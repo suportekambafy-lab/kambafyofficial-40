@@ -155,13 +155,13 @@ export function AppLogin() {
                 <div className="flex items-center gap-2 justify-center">
                   {isForgotPassword && <Mail className="w-5 h-5 text-primary" />}
                   <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                    {isForgotPassword ? 'Recuperar Senha' : 'Bem-vindo'}
+                    {isForgotPassword ? 'Recuperar Senha' : (welcomeBackMessage ? 'Bem-vindo de volta!' : 'Bem-vindo')}
                   </h1>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {isForgotPassword 
                     ? 'Digite seu email para receber instruções de recuperação de senha.' 
-                    : welcomeBackMessage || 'Entre na sua conta Kambafy'}
+                    : 'Por favor, insira seu e-mail e senha para continuar.'}
                 </p>
               </div>
 
