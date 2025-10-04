@@ -66,7 +66,7 @@ const Checkout = () => {
     clearAffiliateCode
   } = useAffiliateTracking();
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true); // Iniciar com loading para evitar flash do preço errado
+  const [loading, setLoading] = useState(false); // Não iniciar com loading
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -474,48 +474,6 @@ const Checkout = () => {
 
           // Aplicar SEO imediatamente quando o produto carrega
           setProductSEO(productData);
-          
-          // Se houver cohortId, carregar turma imediatamente em paralelo
-          if (cohortId && productData.member_area_id) {
-            console.log('🎓 Carregando turma junto com produto:', cohortId);
-            setCohortLoading(true);
-            try {
-              const { data: cohortData, error: cohortError } = await supabase
-                .from('member_area_cohorts')
-                .select('*')
-                .eq('id', cohortId)
-                .eq('status', 'active')
-                .maybeSingle();
-              
-              if (cohortError) {
-                console.error('❌ Erro ao carregar turma:', cohortError);
-              } else if (cohortData) {
-                setCohort(cohortData);
-                console.log('✅ Turma carregada com sucesso:', {
-                  id: cohortData.id,
-                  name: cohortData.name,
-                  price: cohortData.price,
-                  currency: cohortData.currency,
-                  product_id: cohortData.product_id
-                });
-                
-                // Verificar se a turma está cheia
-                if (cohortData.max_students && cohortData.current_students >= cohortData.max_students) {
-                  toast({
-                    title: "Turma lotada",
-                    message: "Esta turma já atingiu o número máximo de alunos.",
-                    variant: "error"
-                  });
-                }
-              } else {
-                console.log('⚠️ Turma não encontrada para ID:', cohortId);
-              }
-            } catch (cohortError) {
-              console.error('❌ Erro ao carregar turma:', cohortError);
-            } finally {
-              setCohortLoading(false);
-            }
-          }
         }
       } catch (error) {
         console.error('Unexpected error loading product:', error);
@@ -582,9 +540,55 @@ const Checkout = () => {
     console.log('🚀 Loading product and settings immediately...');
     loadProduct();
     loadCheckoutSettings();
-  }, [productId, cohortId, navigate, toast]); // Incluir cohortId para carregar turma junto
+  }, [productId, navigate, toast]); // Carregar imediatamente, sem esperar geo
   
-  // Remover useEffect de carregamento de turma separado - agora carrega junto com produto
+  // Carregar informações da turma (APENAS se houver cohortId na URL)
+  useEffect(() => {
+    // IMPORTANTE: Só carregar turma se houver cohortId explícito na URL
+    if (!cohortId || !product?.member_area_id) return;
+    
+    const loadCohort = async () => {
+      setCohortLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('member_area_cohorts')
+          .select('*')
+          .eq('id', cohortId)
+          .eq('status', 'active')
+          .maybeSingle();
+        
+        if (error) {
+          console.error('❌ Erro ao carregar turma:', error);
+        } else if (data) {
+          setCohort(data);
+          console.log('✅ Turma carregada com sucesso:', {
+            id: data.id,
+            name: data.name,
+            price: data.price,
+            currency: data.currency,
+            product_id: data.product_id
+          });
+          
+          // Verificar se a turma está cheia
+          if (data.max_students && data.current_students >= data.max_students) {
+            toast({
+              title: "Turma lotada",
+              message: "Esta turma já atingiu o número máximo de alunos.",
+              variant: "error"
+            });
+          }
+        } else {
+          console.log('⚠️ Turma não encontrada para ID:', cohortId);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar turma:', error);
+      } finally {
+        setCohortLoading(false);
+      }
+    };
+    
+    loadCohort();
+  }, [cohortId, product?.member_area_id, toast]);
   
   // Buscar vendas do produto específico
   useEffect(() => {
