@@ -78,12 +78,16 @@ export const OptimizedSpotsCounter = memo(({
   count, 
   title, 
   backgroundColor, 
-  textColor 
+  textColor,
+  mode,
+  decrementInterval
 }: { 
   count: number; 
   title?: string;
   backgroundColor?: string;
   textColor?: string;
+  mode?: 'automatic' | 'manual' | 'time-based';
+  decrementInterval?: number;
 }) => (
   <OptimizedSuspenseWrapper fallback={<div />}>
     <SpotsCounter
@@ -91,6 +95,8 @@ export const OptimizedSpotsCounter = memo(({
       title={title || 'VAGAS RESTANTES'}
       backgroundColor={backgroundColor || '#6366f1'}
       textColor={textColor || '#ffffff'}
+      mode={mode}
+      decrementInterval={decrementInterval}
     />
   </OptimizedSuspenseWrapper>
 ));

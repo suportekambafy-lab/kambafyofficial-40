@@ -38,12 +38,13 @@ export interface CheckoutCustomizationSettings {
   };
   spotsCounter: {
     enabled: boolean;
-    mode: 'automatic' | 'manual';
+    mode: 'automatic' | 'manual' | 'time-based';
     initialCount: number;
     currentCount: number;
     title: string;
     backgroundColor: string;
     textColor: string;
+    decrementInterval?: number; // em segundos para o modo time-based
   };
 }
 
@@ -101,7 +102,8 @@ const defaultSettings: CheckoutCustomizationSettings = {
     currentCount: 100,
     title: 'VAGAS RESTANTES',
     backgroundColor: '#6366f1',
-    textColor: '#ffffff'
+    textColor: '#ffffff',
+    decrementInterval: 60 // 1 minuto padrão
   }
 };
 

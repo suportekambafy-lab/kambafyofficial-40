@@ -428,6 +428,8 @@ const OptimizedCheckout = () => {
                 title={checkoutSettings.spotsCounter.title}
                 backgroundColor={checkoutSettings.spotsCounter.backgroundColor}
                 textColor={checkoutSettings.spotsCounter.textColor}
+                mode={checkoutSettings.spotsCounter.mode}
+                decrementInterval={checkoutSettings.spotsCounter.decrementInterval}
               />
             </Suspense>
           )}

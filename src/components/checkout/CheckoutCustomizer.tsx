@@ -447,7 +447,8 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="automatic">Automático (diminui a cada venda)</SelectItem>
+                        <SelectItem value="automatic">Automático por Venda (diminui a cada venda)</SelectItem>
+                        <SelectItem value="time-based">Automático por Tempo (diminui a cada X segundos)</SelectItem>
                         <SelectItem value="manual">Manual (atualização manual)</SelectItem>
                       </SelectContent>
                     </Select>
@@ -470,6 +471,37 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
                         O contador começará neste número e diminuirá automaticamente a cada venda
                       </p>
                     </div>
+                  )}
+                  
+                  {settings.spotsCounter.mode === 'time-based' && (
+                    <>
+                      <div>
+                        <Label>Número Inicial de Vagas</Label>
+                        <Input
+                          type="number"
+                          value={settings.spotsCounter.initialCount}
+                          onChange={(e) => {
+                            const newValue = parseInt(e.target.value);
+                            updateSpotsCounterSetting('initialCount', newValue);
+                            updateSpotsCounterSetting('currentCount', newValue);
+                          }}
+                          min="1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Intervalo de Decremento (segundos)</Label>
+                        <Input
+                          type="number"
+                          value={settings.spotsCounter.decrementInterval || 60}
+                          onChange={(e) => updateSpotsCounterSetting('decrementInterval', parseInt(e.target.value))}
+                          min="1"
+                          max="3600"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          O contador diminuirá 1 vaga a cada {settings.spotsCounter.decrementInterval || 60} segundos
+                        </p>
+                      </div>
+                    </>
                   )}
                   
                   {settings.spotsCounter.mode === 'manual' && (
@@ -556,6 +588,8 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
               title={settings.spotsCounter.title}
               backgroundColor={settings.spotsCounter.backgroundColor}
               textColor={settings.spotsCounter.textColor}
+              mode={settings.spotsCounter.mode}
+              decrementInterval={settings.spotsCounter.decrementInterval}
             />
           )}
 
