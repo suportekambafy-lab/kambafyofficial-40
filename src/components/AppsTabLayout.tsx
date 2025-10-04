@@ -189,7 +189,8 @@ export function AppsTabLayout() {
           
           // Checkout Customization Integration
           const isCheckoutActive = settings?.banner?.enabled || settings?.countdown?.enabled || 
-                                   settings?.reviews?.enabled || settings?.socialProof?.enabled;
+                                   settings?.reviews?.enabled || settings?.socialProof?.enabled ||
+                                   settings?.spotsCounter?.enabled;
           
           if (isCheckoutActive) {
             allIntegrations.push({
