@@ -51,8 +51,8 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">
       {/* Header */}
       <div className="p-6 flex justify-between items-center">
-        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-md p-2">
-          <img src="/kambafy-symbol.svg" alt="Kambafy" className="w-full h-full" />
+        <div className="h-12 flex items-center justify-center">
+          <img src="/lovable-uploads/kambafy-logo.svg" alt="Kambafy" className="h-full w-auto" />
         </div>
         {!isLastSlide && (
           <Button
