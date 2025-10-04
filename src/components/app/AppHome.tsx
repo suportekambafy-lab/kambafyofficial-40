@@ -892,12 +892,18 @@ export function AppHome() {
                   <Avatar className="w-16 h-16 rounded-2xl flex-shrink-0">
                     <AvatarImage src={profileAvatar} alt="Profile" />
                     <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
-                      <User className="h-8 w-8 text-primary" />
+                      {currentLevel ? (
+                        <span className="text-3xl">{currentLevel.emoji}</span>
+                      ) : (
+                        <User className="h-8 w-8 text-primary" />
+                      )}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-base text-foreground truncate">{user?.email}</p>
-                    <p className="text-sm text-muted-foreground">Vendedor Kambafy</p>
+                    <p className="text-sm text-muted-foreground">
+                      {currentLevel ? `${currentLevel.name} ${currentLevel.emoji}` : 'Vendedor Kambafy'}
+                    </p>
                   </div>
                 </div>
               </CardContent>
