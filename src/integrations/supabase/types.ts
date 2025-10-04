@@ -2417,6 +2417,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_customer_access_manual: {
+        Args: {
+          p_access_expires_at?: string
+          p_customer_email: string
+          p_customer_name: string
+          p_order_id: string
+          p_product_id: string
+        }
+        Returns: string
+      }
       detect_abandoned_purchase: {
         Args: {
           _amount: number
