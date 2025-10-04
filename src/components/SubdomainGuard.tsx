@@ -24,15 +24,38 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       isMemberAreaRoute: currentPath.startsWith('/area/') || currentPath.startsWith('/login/')
     });
     
-    // ⚠️ CRÍTICO: ROTA /app NUNCA PODE SER REDIRECIONADA
+    // ⚠️ CRÍTICO: ROTA /app NUNCA PODE SER REDIRECIONADA PARA kambafy.com
     // A rota /app é completamente isolada e independente
     if (currentPath.startsWith('/app')) {
-      console.log('✅ SubdomainGuard: Rota /app - NENHUM redirecionamento permitido', {
+      console.log('🚀 SubdomainGuard: Rota /app detectada', {
         currentPath,
         hostname,
-        message: '/app permanece sempre em /app ou mobile.kambafy.com'
+        currentSubdomain,
+        isProduction: hostname.includes('kambafy.com'),
+        isDev: hostname.includes('localhost') || hostname.includes('lovable.app')
       });
-      return; // Sair imediatamente sem fazer nada
+      
+      // Se estamos em PRODUÇÃO kambafy.com E não estamos em mobile.kambafy.com
+      if (hostname.includes('kambafy.com') && !hostname.includes('localhost') && !hostname.includes('lovable.app')) {
+        if (currentSubdomain !== 'mobile') {
+          // FORÇAR redirecionamento para mobile.kambafy.com
+          const mobileUrl = `${window.location.protocol}//mobile.kambafy.com${currentPath}`;
+          console.log('🔄 SubdomainGuard: FORÇANDO /app para mobile.kambafy.com', {
+            from: window.location.href,
+            to: mobileUrl,
+            reason: 'Rota /app DEVE estar em mobile.kambafy.com em produção'
+          });
+          window.location.href = mobileUrl;
+          return;
+        } else {
+          console.log('✅ SubdomainGuard: /app já está em mobile.kambafy.com');
+          return;
+        }
+      }
+      
+      // Em desenvolvimento, permitir sem redirecionamento
+      console.log('✅ SubdomainGuard: /app permitida em desenvolvimento');
+      return;
     }
     
     // PRIMEIRA VERIFICAÇÃO: Pular guard para rotas de teste
