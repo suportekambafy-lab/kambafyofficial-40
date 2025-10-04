@@ -195,7 +195,7 @@ export default function ModernMembersArea() {
             .from('member_area_students')
             .select('cohort_id')
             .eq('member_area_id', memberAreaId)
-            .eq('student_email', normalizedEmail)
+            .ilike('student_email', normalizedEmail)
             .maybeSingle();
           
           console.log('👥 RESULTADO - Dados do aluno:', {
