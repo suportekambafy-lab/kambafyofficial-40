@@ -96,6 +96,9 @@ const AdminPartners = createLazyWithRetry(() => import('@/pages/AdminPartners'),
 // Developer Routes
 const DevRoutes = createLazyWithRetry(() => import('@/pages/DevRoutes'), "DevRoutes");
 
+// Test Routes
+const BunnyStorageTest = createLazyWithRetry(() => import('@/pages/BunnyStorageTest'), "BunnyStorageTest");
+
 // Fallback component otimizado
 const PageFallback = ({ variant = 'dashboard' }: { variant?: 'dashboard' | 'settings' | 'financial' | 'sales' }) => (
   <div className="min-h-screen bg-background">
@@ -178,6 +181,8 @@ export const OptimizedRoutes = {
   // Developer routes
   DevRoutes: withLazyLoading(DevRoutes, 'dashboard'),
   
+  // Test routes
+  BunnyStorageTest: withLazyLoading(BunnyStorageTest, 'settings'),
   
   // Nova estrutura moderna de área de membros
   MembersLogin: withLazyLoading(MembersLogin, 'member-area'),

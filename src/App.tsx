@@ -167,6 +167,7 @@ const App = () => {
                           {/* Test Routes - Cleaned up */}
                        <Route path="/area/teste" element={<TestAreaComponent />} />
                        <Route path="/login/teste" element={<TestLoginComponent />} />
+                       <Route path="/bunny-storage-test" element={<OptimizedRoutes.BunnyStorageTest />} />
                        
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<OptimizedRoutes.NotFound />} />
