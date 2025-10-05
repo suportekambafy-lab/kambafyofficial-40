@@ -661,18 +661,7 @@ const Checkout = () => {
 
   // Memoizar métodos de pagamento para evitar recálculos
   const availablePaymentMethods = useMemo(() => {
-    console.log('💳 CALCULATING AVAILABLE PAYMENT METHODS:', {
-      hasUserCountry: !!userCountry,
-      userCountryCode: userCountry?.code,
-      userCountryName: userCountry?.name,
-      hasProduct: !!product,
-      productPaymentMethods: product?.payment_methods
-    });
-
-    if (!userCountry) {
-      console.log('⚠️ No userCountry yet, returning empty array');
-      return [];
-    }
+    if (!userCountry) return [];
 
     // Definir ordem dos métodos por país
     const paymentOrder: Record<string, string[]> = {
@@ -684,12 +673,6 @@ const Checkout = () => {
     // Primeiro, verificar se o produto tem métodos de pagamento configurados
     if (product?.payment_methods && Array.isArray(product.payment_methods)) {
       const enabledMethods = product.payment_methods.filter((method: any) => method.enabled);
-      console.log('✅ Product has payment methods:', {
-        total: product.payment_methods.length,
-        enabled: enabledMethods.length,
-        enabledIds: enabledMethods.map((m: any) => m.id)
-      });
-
       const countryMethods = enabledMethods.filter((method: any) => {
         if (userCountry.code === 'AO') {
           return ['express', 'transfer', 'reference'].includes(method.id);
@@ -701,26 +684,16 @@ const Checkout = () => {
         return false;
       });
       
-      console.log('🌍 Filtered methods for country:', {
-        country: userCountry.code,
-        filtered: countryMethods.length,
-        methods: countryMethods.map((m: any) => m.id)
-      });
-
       // Ordenar de acordo com a ordem definida para o país
       const order = paymentOrder[userCountry.code] || [];
-      const sorted = countryMethods.sort((a: any, b: any) => {
+      return countryMethods.sort((a: any, b: any) => {
         const indexA = order.indexOf(a.id);
         const indexB = order.indexOf(b.id);
         return indexA - indexB;
       });
-      
-      console.log('📋 Final sorted methods:', sorted.map((m: any) => m.id));
-      return sorted;
     }
 
     // Fallback: usar métodos baseados no país selecionado
-    console.log('⚠️ Using fallback payment methods');
     return getPaymentMethodsByCountry(userCountry.code);
   }, [userCountry, product]);
   const getPaymentMethods = () => availablePaymentMethods;
@@ -1975,16 +1948,10 @@ const Checkout = () => {
                 <PhoneInput value={formData.phone} onChange={value => handleInputChange("phone", value)} selectedCountry={formData.phoneCountry} onCountryChange={handlePhoneCountryChange} placeholder="Digite seu telefone" className="h-12" />
               </div>
 
+
               <OptimizedOrderBump productId={productId || ''} position="before_payment_method" onToggle={handleOrderBumpToggle} userCountry={userCountry} formatPrice={formatPrice} resetSelection={resetOrderBumps} />
 
-              {geoLoading ? (
-                <div className="text-center py-8 bg-gray-100 rounded-lg">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                  <p className="text-gray-600 font-medium">
-                    Detectando sua localização...
-                  </p>
-                </div>
-              ) : availablePaymentMethods.length > 0 ? <div className="space-y-4">
+              {availablePaymentMethods.length > 0 ? <div className="space-y-4">
                   <div className="space-y-2">
                     <span className="text-green-600 font-medium">
                       Pagar com: {selectedPayment && <span className="text-gray-700">{getSelectedPaymentName()}</span>}
