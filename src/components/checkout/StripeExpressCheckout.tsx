@@ -147,7 +147,12 @@ const StripeExpressCheckoutForm: React.FC<StripeExpressCheckoutFormProps> = ({
 
   const handleReady = (event: any) => {
     console.log('✅ Express Checkout ready:', event);
-    setIsReady(true);
+    if (event.availablePaymentMethods) {
+      console.log('📱 Available payment methods:', event.availablePaymentMethods);
+      setIsReady(true);
+    } else {
+      console.log('⚠️ No payment methods available in Express Checkout');
+    }
   };
 
   const handleClick = (event: any) => {
@@ -155,6 +160,7 @@ const StripeExpressCheckoutForm: React.FC<StripeExpressCheckoutFormProps> = ({
   };
 
   if (!stripe || !elements) {
+    console.log('⏳ Stripe/Elements not ready yet');
     return null;
   }
 
@@ -174,7 +180,7 @@ const StripeExpressCheckoutForm: React.FC<StripeExpressCheckoutFormProps> = ({
             </div>
           </div>
 
-          <div className="min-h-[48px]">
+          <div className="min-h-[48px] w-full">
             <ExpressCheckoutElement
               onConfirm={handleConfirm}
               onReady={handleReady}
@@ -189,11 +195,11 @@ const StripeExpressCheckoutForm: React.FC<StripeExpressCheckoutFormProps> = ({
                   googlePay: 'black',
                 },
                 buttonHeight: 48,
-              paymentMethods: {
-                applePay: 'auto',
-                googlePay: 'auto',
-                link: 'auto',
-              },
+                paymentMethods: {
+                  applePay: 'auto',
+                  googlePay: 'auto',
+                  link: 'auto',
+                },
               }}
             />
           </div>
@@ -201,7 +207,7 @@ const StripeExpressCheckoutForm: React.FC<StripeExpressCheckoutFormProps> = ({
           {!isReady && (
             <div className="text-center py-2">
               <div className="animate-pulse text-sm text-muted-foreground">
-                Carregando opções de pagamento expresso...
+                Verificando métodos de pagamento disponíveis...
               </div>
             </div>
           )}
