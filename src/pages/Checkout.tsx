@@ -28,7 +28,6 @@ import { countTotalSales } from "@/utils/orderUtils";
 
 // Importar componentes otimizados
 import { OptimizedCustomBanner, OptimizedCountdownTimer, OptimizedFakeReviews, OptimizedSocialProof, OptimizedSpotsCounter, OptimizedOrderBump, OptimizedStripeCardPayment } from '@/components/checkout/OptimizedCheckoutComponents';
-import { StripeExpressCheckout } from '@/components/checkout/StripeExpressCheckout';
 
 const Checkout = () => {
   console.log('🛒 Checkout component initialized');
@@ -1948,44 +1947,6 @@ const Checkout = () => {
                 </Label>
                 <PhoneInput value={formData.phone} onChange={value => handleInputChange("phone", value)} selectedCountry={formData.phoneCountry} onCountryChange={handlePhoneCountryChange} placeholder="Digite seu telefone" className="h-12" />
               </div>
-
-              {/* Express Checkout - Link, Apple Pay, Google Pay */}
-              {formData.fullName && formData.email && formData.phone && (
-                <>
-                  <div className="pt-4">
-                    <StripeExpressCheckout
-                      amount={convertedTotalPrice}
-                      currency={userCountry.currency === 'KZ' ? 'USD' : userCountry.currency}
-                      productId={productId || ''}
-                      productName={product?.name || 'Produto Digital'}
-                      customerData={{
-                        name: formData.fullName,
-                        email: formData.email,
-                        phone: formData.phone
-                      }}
-                      onSuccess={(result) => {
-                        console.log('✅ Express Checkout success:', result);
-                        handleCardPaymentSuccess(result);
-                      }}
-                      onError={(error) => {
-                        console.error('❌ Express Checkout error:', error);
-                        handleCardPaymentError(error);
-                      }}
-                      cohortId={cohortId}
-                      orderBumps={Array.from(selectedOrderBumps.values()).map(({ data }) => data)}
-                    />
-                  </div>
-
-                  <div className="relative py-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-white text-gray-500 font-medium">OU</span>
-                    </div>
-                  </div>
-                </>
-              )}
 
               <OptimizedOrderBump productId={productId || ''} position="before_payment_method" onToggle={handleOrderBumpToggle} userCountry={userCountry} formatPrice={formatPrice} resetSelection={resetOrderBumps} />
 
