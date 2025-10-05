@@ -326,7 +326,13 @@ export default function AdminProducts() {
     }
   };
 
-  const viewProductContent = async (productId: string, productType: string, productName: string) => {
+  const viewProductContent = async (productId: string, productType: string, productName: string, event?: React.MouseEvent) => {
+    // Prevenir qualquer comportamento padrão
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
     try {
       console.log('👁️ Visualizando conteúdo do produto:', { productId, productType, productName });
       
@@ -370,11 +376,10 @@ export default function AdminProducts() {
           const fileUrl = getFileUrl(product.share_link);
           console.log('🌐 Abrindo arquivo via share_link:', fileUrl);
           
-          const newWindow = window.open(fileUrl, '_blank');
-          if (!newWindow) {
-            toast.error('Popup bloqueado! Permita popups para este site.');
-            return;
-          }
+          // Abrir em nova aba com timeout para garantir que funcione
+          setTimeout(() => {
+            window.open(fileUrl, '_blank', 'noopener,noreferrer');
+          }, 0);
           
           toast.success(`📄 Abrindo ebook: ${productName}`);
           return;
@@ -601,7 +606,7 @@ export default function AdminProducts() {
                   
                   {/* Botão para acessar conteúdo do produto */}
                   <Button
-                    onClick={() => viewProductContent(product.id, product.type, product.name)}
+                    onClick={(e) => viewProductContent(product.id, product.type, product.name, e)}
                     size="sm"
                     variant="outline"
                     className="w-full border-blue-500 text-blue-600 hover:bg-blue-50 text-xs"
