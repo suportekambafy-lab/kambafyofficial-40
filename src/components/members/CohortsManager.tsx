@@ -231,8 +231,8 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
       return;
     }
 
-    // Sempre usar o domínio kambafy.com em produção
-    const checkoutUrl = `https://kambafy.com/checkout/${product.id}?cohort=${cohort.id}`;
+    // Sempre usar o subdomínio pay.kambafy.com em produção
+    const checkoutUrl = `https://pay.kambafy.com/checkout/${product.id}?cohort=${cohort.id}`;
 
     try {
       await navigator.clipboard.writeText(checkoutUrl);
