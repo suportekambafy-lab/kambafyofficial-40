@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import FakeReviews from './FakeReviews';
 import SocialProof from './SocialProof';
 import SpotsCounter from './SpotsCounter';
 import { useCheckoutCustomization } from '@/hooks/useCheckoutCustomization';
+import { useDebounced } from '@/hooks/useDebounced';
 
 interface CheckoutCustomizerProps {
   productId: string;
@@ -38,40 +39,40 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
     onSaveSuccess();
   };
 
-  const updateBannerSetting = (key: string, value: any) => {
+  const updateBannerSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       banner: { ...prev.banner, [key]: value }
     }));
-  };
+  }, []);
 
-  const updateCountdownSetting = (key: string, value: any) => {
+  const updateCountdownSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       countdown: { ...prev.countdown, [key]: value }
     }));
-  };
+  }, []);
 
-  const updateReviewsSetting = (key: string, value: any) => {
+  const updateReviewsSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       reviews: { ...prev.reviews, [key]: value }
     }));
-  };
+  }, []);
 
-  const updateSocialProofSetting = (key: string, value: any) => {
+  const updateSocialProofSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       socialProof: { ...prev.socialProof, [key]: value }
     }));
-  };
+  }, []);
 
-  const updateSpotsCounterSetting = (key: string, value: any) => {
+  const updateSpotsCounterSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       spotsCounter: { ...prev.spotsCounter, [key]: value }
     }));
-  };
+  }, []);
 
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useDebounced } from '@/hooks/useDebounced';
 
 export interface CheckoutCustomizationSettings {
   banner: {
@@ -107,6 +108,12 @@ const defaultSettings: CheckoutCustomizationSettings = {
   }
 };
 
+// Development-only logging
+const isDev = import.meta.env.DEV;
+const debugLog = (message: string, ...args: any[]) => {
+  if (isDev) console.log(message, ...args);
+};
+
 // Helper function to convert color names to hex
 const normalizeColor = (color: string): string => {
   const colorMap: { [key: string]: string } = {
@@ -127,46 +134,33 @@ const normalizeColor = (color: string): string => {
   return colorMap[lowerColor] || (color.startsWith('#') ? color : '#ffffff');
 };
 
-// Helper function to safely merge settings
+// Cache key for localStorage
+const getCacheKey = (userId: string, productId: string) => 
+  `checkout_custom_${userId}_${productId}`;
+
+// Optimized merge settings with spread operators
 const mergeSettings = (loadedData: any): CheckoutCustomizationSettings => {
   if (!loadedData || typeof loadedData !== 'object' || Array.isArray(loadedData)) {
     return defaultSettings;
   }
   
-  // Deep merge with validation
-  const result = { ...defaultSettings };
-  
-  if (loadedData.banner && typeof loadedData.banner === 'object') {
-    result.banner = { ...defaultSettings.banner, ...loadedData.banner };
-  }
-  
-  if (loadedData.countdown && typeof loadedData.countdown === 'object') {
-    result.countdown = {
+  return {
+    banner: { ...defaultSettings.banner, ...(loadedData.banner || {}) },
+    countdown: {
       ...defaultSettings.countdown,
-      ...loadedData.countdown,
-      backgroundColor: normalizeColor(loadedData.countdown.backgroundColor || defaultSettings.countdown.backgroundColor),
-      textColor: normalizeColor(loadedData.countdown.textColor || defaultSettings.countdown.textColor)
-    };
-  }
-  
-  if (loadedData.reviews && typeof loadedData.reviews === 'object') {
-    result.reviews = { ...defaultSettings.reviews, ...loadedData.reviews };
-  }
-  
-  if (loadedData.socialProof && typeof loadedData.socialProof === 'object') {
-    result.socialProof = { ...defaultSettings.socialProof, ...loadedData.socialProof };
-  }
-  
-  if (loadedData.spotsCounter && typeof loadedData.spotsCounter === 'object') {
-    result.spotsCounter = {
+      ...(loadedData.countdown || {}),
+      backgroundColor: normalizeColor(loadedData.countdown?.backgroundColor || defaultSettings.countdown.backgroundColor),
+      textColor: normalizeColor(loadedData.countdown?.textColor || defaultSettings.countdown.textColor)
+    },
+    reviews: { ...defaultSettings.reviews, ...(loadedData.reviews || {}) },
+    socialProof: { ...defaultSettings.socialProof, ...(loadedData.socialProof || {}) },
+    spotsCounter: {
       ...defaultSettings.spotsCounter,
-      ...loadedData.spotsCounter,
-      backgroundColor: normalizeColor(loadedData.spotsCounter.backgroundColor || defaultSettings.spotsCounter.backgroundColor),
-      textColor: normalizeColor(loadedData.spotsCounter.textColor || defaultSettings.spotsCounter.textColor)
-    };
-  }
-  
-  return result;
+      ...(loadedData.spotsCounter || {}),
+      backgroundColor: normalizeColor(loadedData.spotsCounter?.backgroundColor || defaultSettings.spotsCounter.backgroundColor),
+      textColor: normalizeColor(loadedData.spotsCounter?.textColor || defaultSettings.spotsCounter.textColor)
+    }
+  };
 };
 
 export function useCheckoutCustomization(productId: string) {
@@ -177,52 +171,62 @@ export function useCheckoutCustomization(productId: string) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    console.log('🎯 useCheckoutCustomization - Estado do usuário:', user ? '✅ Logado' : '❌ Não logado');
-    console.log('📦 Product ID:', productId);
+    debugLog('🎯 useCheckoutCustomization - User:', user ? 'Logged' : 'Not logged');
     if (user && productId) {
       loadSettings();
     }
   }, [user, productId]);
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
+    if (!user?.id) return;
+    
     try {
       setLoading(true);
-      console.log('🔄 LOAD: Iniciando carregamento de configurações');
-      console.log('🔄 LOAD: User ID:', user?.id);
-      console.log('🔄 LOAD: Product ID:', productId);
+      
+      // Check cache first
+      const cacheKey = getCacheKey(user.id, productId);
+      const cachedData = localStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        try {
+          const parsed = JSON.parse(cachedData);
+          const mergedSettings = mergeSettings(parsed);
+          setSettings(mergedSettings);
+          debugLog('✅ Loaded from cache');
+          setLoading(false);
+          return;
+        } catch (e) {
+          debugLog('⚠️ Invalid cache, loading from DB');
+        }
+      }
       
       const { data, error } = await supabase
         .from('checkout_customizations')
         .select('settings')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .eq('product_id', productId)
         .maybeSingle();
 
-      console.log('🔄 LOAD: Resposta do banco:', { data, error });
-
       if (error) {
-        console.error('❌ LOAD: Erro ao carregar:', error);
+        debugLog('❌ Error loading settings:', error);
       } else if (data?.settings) {
-        console.log('📦 LOAD: Settings carregados do banco:', data.settings);
-        const settingsData = data.settings as any;
-        console.log('📊 LOAD: SpotsCounter no banco:', settingsData.spotsCounter);
-        
         const mergedSettings = mergeSettings(data.settings);
-        console.log('✅ LOAD: Settings após merge:', mergedSettings);
-        console.log('✅ LOAD: SpotsCounter após merge:', mergedSettings.spotsCounter);
-        
         setSettings(mergedSettings);
+        
+        // Update cache
+        localStorage.setItem(cacheKey, JSON.stringify(data.settings));
+        debugLog('✅ Settings loaded and cached');
       } else {
-        console.log('⚠️ LOAD: Nenhum dado encontrado, usando defaults');
+        debugLog('⚠️ No settings found, using defaults');
       }
     } catch (error) {
-      console.error('❌ LOAD: Erro no catch:', error);
+      debugLog('❌ Error:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, productId]);
 
-  const saveSettings = async (newSettings: CheckoutCustomizationSettings) => {
+  const saveSettingsInternal = useCallback(async (newSettings: CheckoutCustomizationSettings) => {
     if (!user || !productId) {
       toast({
         title: "Erro de autenticação",
@@ -235,13 +239,7 @@ export function useCheckoutCustomization(productId: string) {
     try {
       setSaving(true);
       
-      console.log('💾 SAVE: Iniciando salvamento');
-      console.log('💾 SAVE: User ID:', user.id);
-      console.log('💾 SAVE: Product ID:', productId);
-      console.log('💾 SAVE: Settings a salvar:', newSettings);
-      console.log('💾 SAVE: SpotsCounter:', newSettings.spotsCounter);
-      
-      // Normalize colors before saving
+      // Normalize colors
       const normalizedSettings = {
         ...newSettings,
         countdown: {
@@ -256,61 +254,36 @@ export function useCheckoutCustomization(productId: string) {
         }
       };
       
-      console.log('💾 SAVE: Settings normalizadas:', normalizedSettings);
-      console.log('💾 SAVE: SpotsCounter normalizado:', normalizedSettings.spotsCounter);
-      
-      // Convert settings to JSON-compatible format
-      const settingsJson = JSON.parse(JSON.stringify(normalizedSettings));
-      console.log('💾 SAVE: Settings JSON:', settingsJson);
-      console.log('💾 SAVE: SpotsCounter JSON:', settingsJson.spotsCounter);
-
-      // Primeiro tentar atualizar o registro existente
-      const { data: updateData, error: updateError } = await supabase
+      // Use UPSERT for single operation (faster)
+      const { error } = await supabase
         .from('checkout_customizations')
-        .update({ settings: settingsJson })
-        .eq('user_id', user.id)
-        .eq('product_id', productId)
-        .select();
+        .upsert({
+          user_id: user.id,
+          product_id: productId,
+          settings: normalizedSettings
+        }, {
+          onConflict: 'user_id,product_id'
+        });
 
-      console.log('💾 SAVE: Resposta do update:', { updateData, updateError });
-
-      // Se não houve erro no update, significa que atualizou com sucesso
-      if (!updateError && updateData && updateData.length > 0) {
-        console.log('✅ SAVE: Configurações atualizadas com sucesso!');
-        const savedData = updateData[0].settings as any;
-        console.log('✅ SAVE: Dados salvos:', savedData);
-        console.log('✅ SAVE: SpotsCounter salvo:', savedData.spotsCounter);
-      } else {
-        // Se não encontrou registro para atualizar, criar um novo
-        console.log('💾 SAVE: Nenhum registro encontrado, criando novo...');
-        const { data: insertData, error: insertError } = await supabase
-          .from('checkout_customizations')
-          .insert({
-            user_id: user.id,
-            product_id: productId,
-            settings: settingsJson
-          })
-          .select();
-
-        console.log('💾 SAVE: Resposta do insert:', { insertData, insertError });
-
-        if (insertError) {
-          console.error('❌ SAVE: Erro ao inserir:', insertError);
-          throw insertError;
-        }
-        console.log('✅ SAVE: Configurações criadas com sucesso!');
-        console.log('✅ SAVE: Dados criados:', insertData?.[0]?.settings);
+      if (error) {
+        debugLog('❌ Error saving:', error);
+        throw error;
       }
       
       setSettings(normalizedSettings);
-      console.log('✅ SAVE: Estado local atualizado com cores normalizadas');
+      
+      // Update cache
+      const cacheKey = getCacheKey(user.id, productId);
+      localStorage.setItem(cacheKey, JSON.stringify(normalizedSettings));
+      
+      debugLog('✅ Settings saved successfully');
 
       toast({
         title: "Configurações salvas!",
         description: "Suas personalizações do checkout foram aplicadas com sucesso.",
       });
     } catch (error) {
-      console.error('❌ SAVE: Error saving checkout customization:', error);
+      debugLog('❌ Error saving:', error);
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível salvar as configurações. Tente novamente.",
@@ -319,7 +292,10 @@ export function useCheckoutCustomization(productId: string) {
     } finally {
       setSaving(false);
     }
-  };
+  }, [user, productId, toast]);
+
+  // Debounced save function (300ms delay)
+  const { debouncedFunc: saveSettings } = useDebounced(saveSettingsInternal, 300);
 
   return {
     settings,
