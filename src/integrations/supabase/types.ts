@@ -2483,6 +2483,10 @@ export type Database = {
         }
         Returns: string
       }
+      fix_bunny_cdn_urls: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_api_key: {
         Args: Record<PropertyKey, never>
         Returns: string
