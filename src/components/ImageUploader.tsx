@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useBunnyUpload } from '@/hooks/useBunnyUpload';
 
 interface ImageUploaderProps {
   label: string;
@@ -29,49 +28,17 @@ export function ImageUploader({
   aspectRatio = "16/9",
   disabled = false
 }: ImageUploaderProps) {
-  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const { uploadFile, uploading } = useBunnyUpload();
 
   const uploadImage = async (file: File) => {
-    try {
-      setUploading(true);
-
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-      const filePath = `${folder}/${fileName}`;
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
-
-      onChange(publicUrl);
+    const url = await uploadFile(file);
+    if (url) {
+      onChange(url);
       toast({
         title: "Sucesso!",
         description: "Imagem enviada com sucesso.",
       });
-    } catch (error: any) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao enviar imagem",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
     }
   };
 

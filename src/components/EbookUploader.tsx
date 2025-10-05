@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { FileUp, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBunnyUpload } from "@/hooks/useBunnyUpload";
 
 interface EbookUploaderProps {
   onFileUploaded: (fileUrl: string) => void;
@@ -19,7 +19,7 @@ interface EbookUploaderProps {
 export default function EbookUploader({ onFileUploaded, open, onOpenChange }: EbookUploaderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [uploading, setUploading] = useState(false);
+  const { uploadFile: bunnyUpload, uploading } = useBunnyUpload();
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -50,42 +50,14 @@ export default function EbookUploader({ onFileUploaded, open, onOpenChange }: Eb
   const uploadFile = async () => {
     if (!selectedFile || !user) return;
 
-    setUploading(true);
     setUploadProgress(0);
 
-    try {
-      console.log('Uploading ebook to Supabase Storage:', selectedFile.name);
-      setUploadProgress(10);
+    const url = await bunnyUpload(selectedFile, {
+      onProgress: setUploadProgress
+    });
 
-      // Generate unique filename
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-      const filePath = `ebooks/${fileName}`;
-
-      setUploadProgress(30);
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('member-area-assets')
-        .upload(filePath, selectedFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('member-area-assets')
-        .getPublicUrl(filePath);
-
-      setUploadProgress(100);
-      console.log('Upload successful to Supabase Storage:', publicUrl);
-      
-      onFileUploaded(publicUrl);
+    if (url) {
+      onFileUploaded(url);
       setSelectedFile(null);
       setUploadProgress(0);
       onOpenChange(false);
@@ -94,15 +66,6 @@ export default function EbookUploader({ onFileUploaded, open, onOpenChange }: Eb
         title: "Sucesso",
         description: "Arquivo enviado com sucesso"
       });
-    } catch (error) {
-      console.error('Erro ao fazer upload:', error);
-      toast({
-        title: "Erro",
-        description: `Não foi possível enviar o arquivo: ${error.message}`,
-        variant: "destructive"
-      });
-    } finally {
-      setUploading(false);
     }
   };
 

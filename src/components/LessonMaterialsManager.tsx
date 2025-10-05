@@ -1,12 +1,11 @@
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, Upload, File, FileText, Image, Download } from 'lucide-react';
 import { LessonMaterial } from '@/types/memberArea';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useBunnyUpload } from '@/hooks/useBunnyUpload';
 
 interface LessonMaterialsManagerProps {
   materials: LessonMaterial[];
@@ -14,7 +13,7 @@ interface LessonMaterialsManagerProps {
 }
 
 export function LessonMaterialsManager({ materials, onChange }: LessonMaterialsManagerProps) {
-  const [isUploading, setIsUploading] = useState(false);
+  const { uploadFile, uploading: isUploading } = useBunnyUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getFileIcon = (type: string) => {
@@ -75,40 +74,14 @@ export function LessonMaterialsManager({ materials, onChange }: LessonMaterialsM
       return;
     }
 
-    setIsUploading(true);
-
-    try {
-      // Limpar nome do arquivo removendo caracteres especiais
-      const cleanFileName = file.name
-        .normalize('NFD') // Normalizar acentos
-        .replace(/[\u0300-\u036f]/g, '') // Remover acentos
-        .replace(/[^a-zA-Z0-9.-]/g, '_') // Substituir caracteres especiais por underscore
-        .replace(/_{2,}/g, '_') // Substituir múltiplos underscores por um
-        .toLowerCase();
-
-      // Gerar nome único para o arquivo
-      const fileName = `${Date.now()}-${cleanFileName}`;
-      
-      console.log('📁 Original filename:', file.name);
-      console.log('📁 Clean filename:', fileName);
-      
-      // Upload para o Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('member-area-assets')
-        .upload(`lesson-materials/${fileName}`, file);
-
-      if (error) throw error;
-
-      // Obter URL pública
-      const { data: urlData } = supabase.storage
-        .from('member-area-assets')
-        .getPublicUrl(data.path);
-
+    const url = await uploadFile(file);
+    
+    if (url) {
       // Criar material
       const material: LessonMaterial = {
         id: Date.now().toString(),
         name: file.name,
-        url: urlData.publicUrl,
+        url: url,
         type: getFileType(file.name),
         size: file.size
       };
@@ -122,19 +95,10 @@ export function LessonMaterialsManager({ materials, onChange }: LessonMaterialsM
         title: "Sucesso",
         description: "Material enviado com sucesso!"
       });
+    }
 
-    } catch (error) {
-      console.error('Erro ao enviar arquivo:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao enviar o arquivo. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
