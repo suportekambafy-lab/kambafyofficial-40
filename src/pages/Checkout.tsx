@@ -1885,15 +1885,6 @@ const Checkout = () => {
                 <div className="flex-1">
                   <h2 className="text-lg sm:text-xl font-bold text-gray-900">{product.name.toUpperCase()}</h2>
                   
-                  {/* Exibir informações da turma quando houver */}
-                  {cohort && (
-                    <div className="flex items-center gap-2 mt-1 mb-1">
-                      <span className="text-xs sm:text-sm font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded">
-                        Turma: {cohort.name}
-                      </span>
-                    </div>
-                  )}
-                  
                   <div className="flex items-center gap-1 mt-1">
                     <span className="text-xs sm:text-sm text-gray-600">Entrega instantânea</span>
                     <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
