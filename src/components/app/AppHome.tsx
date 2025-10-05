@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, Share2, WifiOff } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -23,12 +23,32 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useNativePush } from '@/hooks/useNativePush';
+import { useHaptics } from '@/hooks/useHaptics';
+import { useNativeCamera } from '@/hooks/useNativeCamera';
+import { useNativeShare } from '@/hooks/useNativeShare';
+import { useAppState } from '@/hooks/useAppState';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { configureStatusBar } from '@/utils/nativeService';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const { theme, setTheme, isDark } = useSellerTheme();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  
+  // Native hooks
+  const nativePush = useNativePush({
+    onNotificationReceived: (notification) => {
+      console.log('Native notification received:', notification);
+    }
+  });
+  const { triggerHaptic } = useHaptics();
+  const { pickPhoto } = useNativeCamera();
+  const { shareProduct } = useNativeShare();
+  const { isActive } = useAppState();
+  const { isOnline } = useNetworkStatus();
+  
   const [activeTab, setActiveTab] = useState('home');
   const [stats, setStats] = useState({
     totalSales: 0,
@@ -73,54 +93,36 @@ export function AppHome() {
   const goalProgress = kambaProgress;
 
   const handlePushToggle = async (enabled: boolean) => {
-    if (!('Notification' in window)) {
-      toast({
-        title: "Não suportado",
-        description: "Este navegador não suporta notificações push",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    triggerHaptic('light');
+    
     if (enabled) {
-      try {
-        const permission = await Notification.requestPermission();
+      const success = await nativePush.requestPermission();
+      
+      if (success) {
+        setPushEnabled(true);
         
-        if (permission === 'granted') {
-          setPushEnabled(true);
-          
-          // Enviar notificação de teste
-          new Notification('Notificações Ativadas! 🎉', {
-            body: 'Você receberá notificações sobre suas vendas e produtos.',
-            icon: '/kambafy-symbol.svg',
-            badge: '/kambafy-symbol.svg',
-            tag: 'kambafy-enabled',
-            requireInteraction: false
-          });
-          
-          // Salvar preferência no localStorage
-          localStorage.setItem('push_notifications_enabled', 'true');
-          
-          toast({
-            title: "Notificações Ativadas",
-            description: "Você receberá notificações sobre vendas e produtos"
-          });
-        } else {
-          setPushEnabled(false);
-          toast({
-            title: "Permissão Negada",
-            description: "Habilite nas configurações do navegador",
-            variant: "destructive"
-          });
-        }
-      } catch (error) {
-        console.error('Error enabling notifications:', error);
+        // Enviar notificação de teste
+        await nativePush.sendLocalNotification(
+          'Notificações Ativadas! 🎉',
+          'Você receberá notificações sobre suas vendas e produtos.'
+        );
+        
+        localStorage.setItem('push_notifications_enabled', 'true');
+        
+        toast({
+          title: "Notificações Ativadas",
+          description: "Você receberá notificações sobre vendas e produtos"
+        });
+        
+        triggerHaptic('success');
+      } else {
         setPushEnabled(false);
         toast({
-          title: "Erro",
-          description: "Não foi possível ativar as notificações",
+          title: "Permissão Negada",
+          description: "Habilite nas configurações do dispositivo",
           variant: "destructive"
         });
+        triggerHaptic('error');
       }
     } else {
       setPushEnabled(false);
@@ -134,13 +136,24 @@ export function AppHome() {
 
   useEffect(() => {
     // Verificar se as notificações já estão permitidas ao carregar
-    if ('Notification' in window) {
-      const savedPreference = localStorage.getItem('push_notifications_enabled');
-      if (Notification.permission === 'granted' && savedPreference === 'true') {
-        setPushEnabled(true);
-      }
+    const savedPreference = localStorage.getItem('push_notifications_enabled');
+    if (nativePush.permissionStatus === 'granted' && savedPreference === 'true') {
+      setPushEnabled(true);
     }
-  }, []);
+  }, [nativePush.permissionStatus]);
+
+  // Auto-refresh quando app volta ao foreground
+  useEffect(() => {
+    if (isActive && user) {
+      console.log('App active - refreshing data...');
+      loadStats();
+    }
+  }, [isActive]);
+
+  // Atualizar Status Bar quando tema mudar
+  useEffect(() => {
+    configureStatusBar(isDark);
+  }, [isDark]);
 
   // Device tracking já é feito no login, não precisa duplicar aqui
 
@@ -780,14 +793,17 @@ export function AppHome() {
                     <div className="text-3xl font-bold tracking-tight text-foreground">
                       {formatPriceForSeller(financialData.availableBalance, 'KZ')}
                     </div>
-                    <Button 
-                      onClick={() => setShowWithdrawalModal(true)}
-                      className="w-full mt-2"
-                      size="sm"
-                    >
-                      <ArrowDownToLine className="h-4 w-4 mr-2" />
-                      Solicitar Saque
-                    </Button>
+                <Button 
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    setShowWithdrawalModal(true);
+                  }}
+                  className="w-full mt-2"
+                  size="sm"
+                >
+                  <ArrowDownToLine className="h-4 w-4 mr-2" />
+                  Solicitar Saque
+                </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -917,6 +933,69 @@ export function AppHome() {
                     </p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions - Camera & Share */}
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+              <CardContent className="p-2">
+                <button
+                  onClick={async () => {
+                    triggerHaptic('light');
+                    const photo = await pickPhoto();
+                    if (photo && user) {
+                      // TODO: Upload foto para Supabase Storage e atualizar profile
+                      toast({
+                        title: "Foto Selecionada",
+                        description: "Funcionalidade de upload em desenvolvimento"
+                      });
+                      triggerHaptic('success');
+                    }
+                  }}
+                  className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                      <Camera className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium text-foreground">Mudar Avatar</p>
+                      <p className="text-xs text-muted-foreground">Tire ou escolha uma foto</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+
+                <div className="h-px bg-border my-1" />
+
+                <button
+                  onClick={async () => {
+                    triggerHaptic('light');
+                    const success = await shareProduct(
+                      'Meu Perfil Kambafy',
+                      window.location.href
+                    );
+                    if (success) {
+                      toast({
+                        title: "Compartilhado",
+                        description: "Perfil compartilhado com sucesso"
+                      });
+                      triggerHaptic('success');
+                    }
+                  }}
+                  className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <Share2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium text-foreground">Compartilhar Perfil</p>
+                      <p className="text-xs text-muted-foreground">Enviar para amigos</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
               </CardContent>
             </Card>
 
@@ -1508,6 +1587,16 @@ export function AppHome() {
 
       {/* Content with padding for fixed header */}
       <div className="pt-20">
+        {/* Offline Banner */}
+        {!isOnline && (
+          <div className="sticky top-20 z-10 mx-4 mb-4 bg-destructive/90 backdrop-blur-md text-destructive-foreground px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
+            <WifiOff className="h-5 w-5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">Sem conexão com a internet</p>
+              <p className="text-xs opacity-90">Algumas funcionalidades podem estar limitadas</p>
+            </div>
+          </div>
+        )}
         {renderContent()}
       </div>
 

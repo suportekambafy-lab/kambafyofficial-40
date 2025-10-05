@@ -4,7 +4,8 @@ import { AppLogin } from '@/components/app/AppLogin';
 import { AppHome } from '@/components/app/AppHome';
 import { AppOnboarding } from '@/components/app/AppOnboarding';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { SellerThemeProvider } from '@/hooks/useSellerTheme';
+import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
+import { initializeNativeFeatures } from '@/utils/nativeService';
 
 const ONBOARDING_KEY = 'kambafy_onboarding_completed';
 
@@ -25,6 +26,10 @@ export default function AppMobile() {
       setShowOnboarding(!hasCompletedOnboarding);
     }
     setCheckingOnboarding(false);
+
+    // Inicializar recursos nativos
+    const theme = localStorage.getItem('seller-theme') || 'light';
+    initializeNativeFeatures(theme === 'dark');
   }, []);
 
   const handleOnboardingComplete = () => {

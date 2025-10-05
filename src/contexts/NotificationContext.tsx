@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/utils/productionLogger';
+import { Capacitor } from '@capacitor/core';
 
 interface Notification {
   id: string;
@@ -43,7 +44,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   // Adicionar notificação
-  const addNotification = (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+  const addNotification = async (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {
       ...notification,
       id: generateId(),
@@ -59,6 +60,30 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         title: notification.title,
         description: notification.message,
       });
+    }
+
+    // Enviar notificação nativa se estiver em plataforma nativa
+    const isNative = Capacitor.isNativePlatform();
+    if (isNative && (notification.type === 'sale' || notification.type === 'withdrawal' || notification.type === 'affiliate')) {
+      try {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: notification.title,
+              body: notification.message,
+              id: Date.now(),
+              schedule: { at: new Date(Date.now() + 100) },
+              sound: 'default',
+              smallIcon: 'res://drawable/ic_notification',
+              extra: notification.data
+            }
+          ]
+        });
+      } catch (error) {
+        console.error('Error sending native notification:', error);
+      }
     }
 
     logger.info('New notification added', { 
