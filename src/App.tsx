@@ -14,6 +14,7 @@ import { OptimizedRoutes } from "./components/OptimizedRoutes";
 import { EnhancedErrorBoundary } from "./components/ui/enhanced-error-boundary";
 import { Suspense } from "react";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import { useVersionCheck } from "./hooks/useVersionCheck";
 
 // Test Components for debugging member area navigation
 const TestAreaComponent = () => {
@@ -77,6 +78,9 @@ const queryClient = new QueryClient({
 const App = () => {
   const toasterRef = useRef<any>(null);
   const [toasterInitialized, setToasterInitialized] = useState(false);
+
+  // Sistema de detecção automática de novas versões
+  useVersionCheck();
 
   useEffect(() => {
     // Garantir que o toaster seja inicializado apenas uma vez
