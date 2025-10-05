@@ -1823,7 +1823,7 @@ const Checkout = () => {
       },
       "offers": {
         "@type": "Offer",
-        "url": `https://kambafy.com/checkout/${product.id}`,
+        "url": `https://pay.kambafy.com/checkout/${product.id}`,
         "priceCurrency": "AOA",
         "price": product.price,
         "availability": "https://schema.org/InStock",

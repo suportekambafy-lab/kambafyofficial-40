@@ -158,8 +158,8 @@ export function MemberAreaOffers({
     }
   };
   const handleOfferClick = (offer: MemberAreaOffer) => {
-    // Construir URL do checkout
-    const checkoutUrl = `/checkout/${offer.product_id}`;
+    // Construir URL do checkout usando o subdomínio pay
+    const checkoutUrl = `https://pay.kambafy.com/checkout/${offer.product_id}`;
     window.open(checkoutUrl, '_blank');
   };
   const getFormattedPrice = (offer: MemberAreaOffer) => {

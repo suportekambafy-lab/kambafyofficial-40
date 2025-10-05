@@ -153,7 +153,7 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                   variant="default"
                   size="sm"
                   onClick={() => {
-                    const affiliateLink = `${window.location.origin}/checkout/${product.id}?ref=${product.affiliate_code}`;
+                    const affiliateLink = `https://pay.kambafy.com/checkout/${product.id}?ref=${product.affiliate_code}`;
                     navigator.clipboard.writeText(affiliateLink).then(() => {
                       toast({
                         title: "Link copiado!",

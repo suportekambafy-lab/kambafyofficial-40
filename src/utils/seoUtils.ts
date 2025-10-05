@@ -71,7 +71,7 @@ export const setProductSEO = (product: any) => {
     
   const description = product.seo_description || (product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`);
   const image = product.cover ? getProductImageUrl(product.cover, 'https://kambafy.com/kambafy-social-preview.png') : 'https://kambafy.com/kambafy-social-preview.png';
-  const url = `https://kambafy.com/checkout/${product.id}`;
+  const url = `https://pay.kambafy.com/checkout/${product.id}`;
   const keywords = (product.seo_keywords && product.seo_keywords.length > 0)
     ? product.seo_keywords.join(', ')
     : `${product.name}, comprar ${product.name}, checkout, pagamento seguro${product.tags?.length ? ', ' + product.tags.join(', ') : ''}`;

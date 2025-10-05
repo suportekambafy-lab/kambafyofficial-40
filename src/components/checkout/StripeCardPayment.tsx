@@ -329,7 +329,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
                 }
               }
             },
-            return_url: `${window.location.origin}/checkout/${productId}?payment_return=klarna&order_id=${paymentIntentData.order_id}&payment_intent_id=${paymentIntentData.payment_intent_id}`
+            return_url: `https://pay.kambafy.com/checkout/${productId}?payment_return=klarna&order_id=${paymentIntentData.order_id}&payment_intent_id=${paymentIntentData.payment_intent_id}`
           }
         );
       } else if (paymentMethod === 'multibanco') {
