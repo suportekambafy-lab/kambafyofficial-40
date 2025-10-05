@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
+import { getFileUrl } from '@/utils/fileUtils';
 
 const ThankYou = () => {
   const [searchParams] = useSearchParams();
@@ -449,7 +450,8 @@ const ThankYou = () => {
         setIsAccessingProduct(false);
       }
     } else if (product?.share_link) {
-      window.open(product.share_link, '_blank');
+      const fileUrl = getFileUrl(product.share_link);
+      window.open(fileUrl, '_blank');
     } else {
       alert('Instruções de acesso enviadas para seu e-mail!');
     }

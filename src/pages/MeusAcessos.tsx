@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HighlightedCard, HighlightedCardHeader, HighlightedCardTitle, HighlightedCardContent } from "@/components/ui/highlighted-card";
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
+import { getFileUrl } from '@/utils/fileUtils';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ShoppingBag, Calendar, Eye, User, LogOut, Settings, ExternalLink, BookOpen, TrendingUp, Wallet } from "lucide-react";
@@ -182,8 +183,9 @@ export default function MeusAcessos() {
         setAccessingProduct(null);
       }
     } else if (product.share_link) {
-      console.log('🔗 MinhasCompras - Abrindo share_link:', product.share_link);
-      window.open(product.share_link, '_blank');
+      const fileUrl = getFileUrl(product.share_link);
+      console.log('🔗 MinhasCompras - Abrindo share_link:', fileUrl);
+      window.open(fileUrl, '_blank');
     } else {
       console.log('❌ MinhasCompras - Nenhum link de acesso disponível');
       alert('Link de acesso não disponível para este produto.');
