@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, Share2, WifiOff } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -26,7 +26,6 @@ import { cn } from '@/lib/utils';
 import { useNativePush } from '@/hooks/useNativePush';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useNativeCamera } from '@/hooks/useNativeCamera';
-import { useNativeShare } from '@/hooks/useNativeShare';
 import { useAppState } from '@/hooks/useAppState';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
@@ -45,7 +44,6 @@ export function AppHome() {
   });
   const { triggerHaptic } = useHaptics();
   const { pickPhoto } = useNativeCamera();
-  const { shareProduct } = useNativeShare();
   const { isActive } = useAppState();
   const { isOnline } = useNetworkStatus();
   
@@ -961,37 +959,6 @@ export function AppHome() {
                     <div className="text-left">
                       <p className="font-medium text-foreground">Mudar Avatar</p>
                       <p className="text-xs text-muted-foreground">Tire ou escolha uma foto</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
-
-                <div className="h-px bg-border my-1" />
-
-                <button
-                  onClick={async () => {
-                    triggerHaptic('light');
-                    const success = await shareProduct(
-                      'Meu Perfil Kambafy',
-                      window.location.href
-                    );
-                    if (success) {
-                      toast({
-                        title: "Compartilhado",
-                        description: "Perfil compartilhado com sucesso"
-                      });
-                      triggerHaptic('success');
-                    }
-                  }}
-                  className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                      <Share2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-medium text-foreground">Compartilhar Perfil</p>
-                      <p className="text-xs text-muted-foreground">Enviar para amigos</p>
                     </div>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
