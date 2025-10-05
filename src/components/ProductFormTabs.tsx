@@ -17,6 +17,7 @@ import CountryPriceConfig from "./CountryPriceConfig";
 import { PaymentMethod } from "@/utils/paymentMethods";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
 import { AccessDurationSelector } from "./AccessDurationSelector";
+import { useBunnyUpload } from "@/hooks/useBunnyUpload";
 
 interface ProductFormProps {
   editingProduct?: any;
@@ -34,6 +35,7 @@ interface MemberArea {
 export default function ProductFormTabs({ editingProduct, selectedType = "", onSave, onCancel }: ProductFormProps) {
   const { toast } = useCustomToast();
   const { user } = useAuth();
+  const { uploadFile: bunnyUpload } = useBunnyUpload();
   const [saving, setSaving] = useState(false);
   const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]);
   const [loadingMemberAreas, setLoadingMemberAreas] = useState(false);
@@ -214,36 +216,19 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     setUploadingCover(true);
     
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+      const url = await bunnyUpload(file);
       
-      const { data, error } = await supabase.storage
-        .from('product-covers')
-        .upload(fileName, file);
+      if (url) {
+        setFormData(prev => ({
+          ...prev,
+          cover: url
+        }));
 
-      if (error) {
-        console.error('Error uploading cover:', error);
         toast({
-          title: "Erro",
-          message: "Erro ao fazer upload da capa",
-          variant: "error"
+          title: "Sucesso",
+          message: "Capa enviada com sucesso"
         });
-        return;
       }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-covers')
-        .getPublicUrl(data.path);
-
-      setFormData(prev => ({
-        ...prev,
-        cover: publicUrl
-      }));
-
-      toast({
-        title: "Sucesso",
-        message: "Capa enviada com sucesso"
-      });
     } catch (error) {
       console.error('Exception uploading cover:', error);
       toast({
