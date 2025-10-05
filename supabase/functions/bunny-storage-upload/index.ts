@@ -82,8 +82,13 @@ serve(async (req) => {
       throw new Error('Falha no upload para Bunny Storage');
     }
 
-    // Generate CDN URL
-    const cdnUrl = `${BUNNY_CDN_URL}/${storagePath}`;
+    // Generate CDN URL with proper protocol
+    let cdnUrl = `${BUNNY_CDN_URL}/${storagePath}`;
+    
+    // Ensure the URL has a protocol
+    if (!cdnUrl.startsWith('http://') && !cdnUrl.startsWith('https://')) {
+      cdnUrl = `https://${cdnUrl}`;
+    }
 
     console.log('File uploaded successfully to Bunny Storage:', cdnUrl);
 
