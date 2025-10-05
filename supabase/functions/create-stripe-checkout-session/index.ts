@@ -41,13 +41,13 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "https://kambafy.com";
     
     // Configurar payment method types baseado na seleção
-    let paymentMethodTypes = ['card'];
+    let paymentMethodTypes = ['card', 'link'];
     if (paymentMethod === 'apple_pay') {
-      paymentMethodTypes = ['card']; // Apple Pay é automaticamente habilitado quando disponível
+      paymentMethodTypes = ['card', 'link']; // Apple Pay é automaticamente habilitado quando disponível
     } else if (paymentMethod === 'klarna') {
-      paymentMethodTypes = ['klarna'];
+      paymentMethodTypes = ['klarna', 'link'];
     } else if (paymentMethod === 'multibanco') {
-      paymentMethodTypes = ['multibanco'];
+      paymentMethodTypes = ['multibanco', 'link'];
     }
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
