@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, Share2, WifiOff } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, Share2, WifiOff } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -69,6 +71,13 @@ export function AppHome() {
   const [profileAvatar, setProfileAvatar] = useState<string>('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [editingProfile, setEditingProfile] = useState({
+    full_name: '',
+    email: '',
+    bio: ''
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
   const [timeFilter, setTimeFilter] = useState<'today' | 'yesterday' | '7d' | '30d' | '90d' | 'all' | 'custom'>('7d');
@@ -160,15 +169,54 @@ export function AppHome() {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('avatar_url')
+        .select('avatar_url, full_name, bio')
         .eq('user_id', user.id)
         .single();
 
       if (profile) {
         setProfileAvatar(profile.avatar_url || '');
+        setEditingProfile({
+          full_name: profile.full_name || '',
+          email: user.email || '',
+          bio: profile.bio || ''
+        });
       }
     } catch (error) {
       console.error('Error loading profile:', error);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    setSavingProfile(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editingProfile.full_name,
+          bio: editingProfile.bio
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Perfil Atualizado",
+        description: "Suas informações foram salvas com sucesso"
+      });
+
+      setShowEditProfile(false);
+      loadProfile();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar as alterações",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -562,6 +610,67 @@ export function AppHome() {
       );
     }
 
+    if (showEditProfile) {
+      return (
+        <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between px-2 mb-4">
+            <h2 className="text-xl font-bold text-foreground">Dados Pessoais</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowEditProfile(false)}
+            >
+              Fechar
+            </Button>
+          </div>
+
+          <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+            <CardContent className="p-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="full_name">Nome Completo</Label>
+                <Input
+                  id="full_name"
+                  value={editingProfile.full_name}
+                  onChange={(e) => setEditingProfile({ ...editingProfile, full_name: e.target.value })}
+                  placeholder="Digite seu nome completo"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  value={editingProfile.email}
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">O email não pode ser alterado</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={editingProfile.bio}
+                  onChange={(e) => setEditingProfile({ ...editingProfile, bio: e.target.value })}
+                  placeholder="Conte um pouco sobre você..."
+                  rows={4}
+                />
+              </div>
+
+              <Button
+                onClick={handleSaveProfile}
+                disabled={savingProfile}
+                className="w-full"
+              >
+                {savingProfile ? 'Salvando...' : 'Salvar Alterações'}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case 'products':
         return (
@@ -809,7 +918,7 @@ export function AppHome() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <p className="font-semibold text-base text-foreground truncate">
-                        {user?.email}
+                        {editingProfile.full_name || user?.email}
                       </p>
                       {currentLevel && (
                         <img 
@@ -893,6 +1002,24 @@ export function AppHome() {
             {/* Settings Options */}
             <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-2">
+                <button
+                  onClick={() => setShowEditProfile(true)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Settings className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium text-foreground">Dados Pessoais</p>
+                      <p className="text-xs text-muted-foreground">Ver e editar informações</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+
+                <div className="h-px bg-border my-1" />
+
                 <div className="w-full flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
