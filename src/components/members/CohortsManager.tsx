@@ -30,7 +30,6 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
-    name: '',
     description: '',
     product_id: '',
     price: '',
@@ -99,12 +98,18 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
         return;
       }
 
+      // Gerar nome automaticamente baseado no produto e data
+      const product = products.find(p => p.id === formData.product_id);
+      const cohortName = editingCohort 
+        ? editingCohort.name 
+        : `${product?.name || 'Turma'} - ${format(new Date(), 'dd/MM/yyyy')}`;
+
       const cohortData: CohortInsert = {
         member_area_id: memberAreaId,
         user_id: user.id,
-        name: formData.name,
+        name: cohortName,
         description: formData.description || null,
-        price: (editingCohort?.name === 'Turma A' || formData.name === 'Turma A') ? null : (formData.price || null),
+        price: (editingCohort?.name === 'Turma A') ? null : (formData.price || null),
         currency: formData.currency || 'KZ',
         product_id: formData.product_id,
         max_students: formData.max_students ? parseInt(formData.max_students) : null,
@@ -173,7 +178,6 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
     const productId = cohort.product_id || (cohort.name === 'Turma A' && products.length > 0 ? products[0].id : '');
     
     setFormData({
-      name: cohort.name,
       description: cohort.description || '',
       product_id: productId,
       price: cohort.name === 'Turma A' ? '' : (cohort.price || ''), // Turma A não tem preço personalizado
@@ -189,7 +193,6 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
   const resetForm = () => {
     setEditingCohort(null);
     setFormData({
-      name: '',
       description: '',
       product_id: '',
       price: '',
@@ -276,17 +279,6 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome da Turma *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ex: Turma Janeiro 2025"
-                  required
-                />
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
                 <Textarea
