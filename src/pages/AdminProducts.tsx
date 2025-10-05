@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import BanProductModal from '@/components/BanProductModal';
 import { SEO } from '@/components/SEO';
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
+import { getProductImageUrl } from '@/utils/imageUtils';
 
 interface ProductWithProfile {
   id: string;
@@ -533,9 +534,7 @@ export default function AdminProducts() {
                 {product.cover && (
                   <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2">
                     <img 
-                      src={product.cover.startsWith('data:') ? product.cover : 
-                            (product.cover.includes('supabase') || product.cover.startsWith('http')) ? product.cover : 
-                            `https://images.unsplash.com/${product.cover}`} 
+                      src={getProductImageUrl(product.cover, '/placeholder.svg')} 
                       alt={product.name}
                       className="w-full h-full object-cover"
                       loading="lazy"
