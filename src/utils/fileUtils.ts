@@ -20,6 +20,16 @@ export const getFileUrl = (url: string | null | undefined, fallback?: string): s
     return url;
   }
   
+  // Check if it's a Bunny CDN URL without protocol and add https://
+  if (url.includes('bunnycdn.net') || url.includes('b-cdn.net') || url.includes('bunny.net')) {
+    return `https://${url}`;
+  }
+  
+  // Check if it's a Supabase URL without protocol and add https://
+  if (url.includes('supabase.co')) {
+    return `https://${url}`;
+  }
+  
   // Legacy relative paths or partial URLs - return as is
   return url;
 };
