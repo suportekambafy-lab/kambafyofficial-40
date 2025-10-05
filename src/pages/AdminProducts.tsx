@@ -13,6 +13,7 @@ import BanProductModal from '@/components/BanProductModal';
 import { SEO } from '@/components/SEO';
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 import { getProductImageUrl } from '@/utils/imageUtils';
+import { getFileUrl } from '@/utils/fileUtils';
 
 interface ProductWithProfile {
   id: string;
@@ -366,9 +367,10 @@ export default function AdminProducts() {
         console.log('📄 Processando ebook/PDF:', productName);
         
         if (product.share_link) {
-          console.log('🌐 Abrindo arquivo via share_link:', product.share_link);
+          const fileUrl = getFileUrl(product.share_link);
+          console.log('🌐 Abrindo arquivo via share_link:', fileUrl);
           
-          const newWindow = window.open(product.share_link, '_blank');
+          const newWindow = window.open(fileUrl, '_blank');
           if (!newWindow) {
             toast.error('Popup bloqueado! Permita popups para este site.');
             return;
