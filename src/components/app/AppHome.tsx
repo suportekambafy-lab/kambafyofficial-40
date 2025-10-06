@@ -398,14 +398,25 @@ export function AppHome() {
     if (!user) return;
 
     try {
-      // Buscar todas as vendas completadas (sem filtros de tempo) para calcular saldo disponível
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('order_id, amount, currency, created_at, status, seller_commission')
-        .in('product_id', productIds)
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(200);
+      // ✅ BUSCAR SALDO REAL DA TABELA customer_balances
+      console.log('🔍 [AppHome] Buscando saldo para user_id:', user.id);
+      const { data: balanceData, error: balanceError } = await supabase
+        .from('customer_balances')
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      console.log('💰 [AppHome] Saldo encontrado:', {
+        balanceData,
+        balanceError,
+        userId: user.id
+      });
+
+      // Buscar payment_releases
+      const { data: releases } = await supabase
+        .from('payment_releases')
+        .select('order_id, amount, processed_at')
+        .eq('user_id', user.id);
 
       // Buscar withdrawal_requests
       const { data: withdrawals } = await supabase
@@ -414,20 +425,11 @@ export function AppHome() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      // ✅ Buscar saldo real do banco (já inclui todas as transações via trigger)
-      const { data: balanceData } = await supabase
-        .from('customer_balances')
-        .select('balance')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      const availableBalance = balanceData?.balance || 0;
-
-      // Calcular saldo pendente (vendas dentro de 3 dias)
       const now = new Date();
       let pendingBalance = 0;
 
-      (allOrders || []).forEach(order => {
+      // Calcular apenas saldo pendente (vendas ainda não liberadas)
+      orders.forEach(order => {
         let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
         
         // Converter para KZ se necessário
@@ -441,21 +443,30 @@ export function AppHome() {
         }
 
         const orderDate = new Date(order.created_at);
-        const releaseDate = new Date(orderDate);
-        releaseDate.setDate(orderDate.getDate() + 3);
+        const releaseDate = new Date(orderDate.getTime() + 3 * 24 * 60 * 60 * 1000); // +3 dias
 
-        // Apenas contar vendas ainda não liberadas
-        if (now < releaseDate) {
+        // Verificar se foi liberado manualmente via payment_releases
+        const wasReleased = releases?.some(r => r.order_id === order.order_id) || false;
+
+        // Se ainda não foi liberado, adicionar ao saldo pendente
+        if (!wasReleased && now < releaseDate) {
           pendingBalance += amount;
         }
       });
 
       // Calcular total de saques aprovados (apenas para exibição)
-      const totalWithdrawnAmount = (withdrawals || [])
-        .filter(w => w.status === 'aprovado')
-        .reduce((sum, w) => sum + parseFloat(w.amount?.toString() || '0'), 0);
+      const totalWithdrawnAmount = withdrawals
+        ?.filter(w => w.status === 'aprovado')
+        .reduce((sum, w) => sum + (parseFloat(w.amount?.toString() || '0')), 0) || 0;
 
-      const finalAvailableBalance = Math.max(0, availableBalance);
+      // ✅ USAR O SALDO REAL DO BANCO (já considera todas as transações e saques)
+      const finalAvailableBalance = parseFloat(balanceData?.balance?.toString() || '0');
+      
+      console.log('💵 [AppHome] Definindo financialData:', {
+        finalAvailableBalance,
+        pendingBalance,
+        totalWithdrawnAmount
+      });
 
       setFinancialData({
         availableBalance: finalAvailableBalance,
@@ -465,12 +476,6 @@ export function AppHome() {
 
       // Buscar histórico de saques
       setWithdrawalHistory(withdrawals || []);
-
-      console.log(`✅ [APP] Dados financeiros atualizados:`, {
-        saldoDisponivel: finalAvailableBalance,
-        saldoPendente: pendingBalance,
-        totalSacado: totalWithdrawnAmount
-      });
 
     } catch (error) {
       console.error('Error loading financial data:', error);
@@ -847,7 +852,13 @@ export function AppHome() {
                       </div>
                     </div>
                     <div className="text-3xl font-bold tracking-tight text-foreground">
-                      {formatPriceForSeller(financialData.availableBalance, 'KZ')}
+                      {(() => {
+                        console.log('💰 [AppHome - UI] Exibindo saldo:', {
+                          availableBalance: financialData.availableBalance,
+                          formatted: formatPriceForSeller(financialData.availableBalance, 'KZ')
+                        });
+                        return formatPriceForSeller(financialData.availableBalance, 'KZ');
+                      })()}
                     </div>
                 <Button 
                   onClick={() => {

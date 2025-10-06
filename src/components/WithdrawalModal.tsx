@@ -8,6 +8,7 @@ import { PiggyBank, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCustomToast } from "@/hooks/useCustomToast";
+import { useCustomerBalance } from "@/hooks/useCustomerBalance";
 
 interface WithdrawalModalProps {
   open: boolean;
@@ -24,6 +25,7 @@ export function WithdrawalModal({
 }: WithdrawalModalProps) {
   const { user } = useAuth();
   const { toast } = useCustomToast();
+  const { useBalance } = useCustomerBalance();
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -98,24 +100,18 @@ export function WithdrawalModal({
         availableBalance: availableBalance
       });
 
-      // ✅ Criar transação de débito imediatamente para bloquear o saldo
-      const { error: transactionError } = await supabase
-        .from('balance_transactions')
-        .insert({
-          user_id: user.id,
-          type: 'debit',
-          amount: -amount, // Valor negativo para deduzir
-          currency: 'KZ',
-          description: `Saque solicitado - Valor líquido: ${receiveValue.toLocaleString()} KZ`
-        });
+      // ✅ Primeiro deduzir o saldo TOTAL (antes do desconto)
+      const balanceDeducted = await useBalance(
+        amount, 
+        `Saque solicitado - Valor líquido: ${receiveValue.toLocaleString()} KZ`
+      );
 
-      if (transactionError) {
-        console.error('❌ Erro ao criar transação:', transactionError);
-        setError("Erro ao processar dedução do saldo: " + transactionError.message);
+      if (!balanceDeducted) {
+        setError("Erro ao processar dedução do saldo");
         return;
       }
 
-      console.log('✅ Transação de saque criada com sucesso');
+      console.log('✅ Saldo deduzido com sucesso:', amount);
 
       // ✅ Criar solicitação de saque com o valor líquido (após desconto de 8%)
       const { data: insertData, error: insertError } = await supabase
