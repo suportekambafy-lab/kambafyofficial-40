@@ -67,22 +67,30 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
     );
   };
 
-  const getStatusBadge = (status: string, paymentMethod: string) => {
-    const methodText = getPaymentMethodName(paymentMethod);
-    
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Pago via {methodText}</Badge>;
+        return <Badge className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Aprovado</Badge>;
       case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200"><Clock className="w-3 h-3 mr-1" />Pendente via {methodText}</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200"><Clock className="w-3 h-3 mr-1" />Pendente</Badge>;
       case 'cancelled':
       case 'failed':
-        return <Badge className="bg-red-100 text-red-800 border-red-200"><XCircle className="w-3 h-3 mr-1" />Cancelado via {methodText}</Badge>;
+        return <Badge className="bg-red-100 text-red-800 border-red-200"><XCircle className="w-3 h-3 mr-1" />Cancelado</Badge>;
       case 'recovered':
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200"><CheckCircle className="w-3 h-3 mr-1" />Recuperado via {methodText}</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200"><CheckCircle className="w-3 h-3 mr-1" />Recuperado</Badge>;
       default:
-        return <Badge variant="outline" className="capitalize">{status} via {methodText}</Badge>;
+        return <Badge variant="outline" className="capitalize">{status}</Badge>;
     }
+  };
+
+  const getPaymentMethodBadge = (paymentMethod: string) => {
+    const methodText = getPaymentMethodName(paymentMethod);
+    return (
+      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+        <CreditCard className="w-3 h-3" />
+        <span>{methodText}</span>
+      </div>
+    );
   };
 
   const getPaymentMethodText = (method: string) => {
@@ -112,7 +120,10 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
               <p className="text-xs text-gray-500 truncate">#{sale.order_id}</p>
             </div>
           </div>
-          {getStatusBadge(sale.status, sale.payment_method)}
+          <div className="flex flex-col items-end">
+            {getStatusBadge(sale.status)}
+            {getPaymentMethodBadge(sale.payment_method)}
+          </div>
         </div>
       </CardHeader>
       

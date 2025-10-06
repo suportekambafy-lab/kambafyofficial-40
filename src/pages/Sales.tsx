@@ -243,33 +243,41 @@ export default function Sales() {
     );
   };
 
-  const getStatusBadge = (status: string, paymentMethod: string) => {
-    const methodText = getPaymentMethodName(paymentMethod);
-    
+  const getStatusBadge = (status: string) => {
     if (status === 'completed') {
       return (
         <Badge variant="default" className="text-xs bg-green-100 text-green-800 border-green-200">
-          Pago via {methodText}
+          Aprovado
         </Badge>
       );
     } else if (status === 'pending') {
       return (
         <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
-          Pendente via {methodText}
+          Pendente
         </Badge>
       );
     } else if (status === 'failed') {
       return (
         <Badge variant="destructive" className="text-xs">
-          Cancelada via {methodText}
+          Cancelado
         </Badge>
       );
     }
     
     return (
       <Badge variant="secondary" className="text-xs">
-        {status} via {methodText}
+        {status}
       </Badge>
+    );
+  };
+
+  const getPaymentMethodBadge = (paymentMethod: string) => {
+    const methodText = getPaymentMethodName(paymentMethod);
+    return (
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <CreditCard className="h-3 w-3" />
+        <span>{methodText}</span>
+      </div>
     );
   };
 
@@ -619,7 +627,10 @@ export default function Sales() {
                                  </div>
                               )}
                             </div>
-                            {getStatusBadge(sale.status, sale.payment_method)}
+                            <div className="flex flex-col items-end gap-1">
+                              {getStatusBadge(sale.status)}
+                              {getPaymentMethodBadge(sale.payment_method)}
+                            </div>
                           </div>
                           
                           <div className="flex flex-wrap items-center gap-1">
