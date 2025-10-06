@@ -242,25 +242,62 @@ export function AppHome() {
       // Store products for display
       setProducts(products || []);
 
-      if (productIds.length === 0) {
+      // ✅ Buscar códigos de afiliado do usuário (igual à Web)
+      const { data: userAffiliateCodes } = await supabase
+        .from('affiliates')
+        .select('affiliate_code')
+        .eq('affiliate_user_id', user.id)
+        .eq('status', 'aprovado');
+
+      const affiliateCodes = userAffiliateCodes?.map(a => a.affiliate_code).filter(Boolean) || [];
+
+      if (productIds.length === 0 && affiliateCodes.length === 0) {
         setStats({ totalSales: 0, totalRevenue: 0, totalProducts: 0 });
         setTotalRevenueUnfiltered(0);
         setLoading(false);
         return;
       }
 
-      // PRIMEIRO: Buscar TODAS as vendas (sem filtros) para a Meta Kamba
-      const { data: allOrdersForMeta } = await supabase
-        .from('orders')
-        .select('amount, seller_commission, currency, created_at, payment_method')
-        .in('product_id', productIds)
-        .eq('status', 'completed')
-        .neq('payment_method', 'member_access')
-        .order('created_at', { ascending: true });
+      // ✅ PRIMEIRO: Buscar TODAS as vendas (produtos próprios + afiliados) para Meta Kamba
+      const ownOrdersMetaPromise = productIds.length > 0 
+        ? supabase
+            .from('orders')
+            .select('amount, seller_commission, currency, created_at, payment_method, order_id')
+            .in('product_id', productIds)
+            .eq('status', 'completed')
+            .neq('payment_method', 'member_access')
+            .order('created_at', { ascending: true })
+        : Promise.resolve({ data: [] });
+
+      const affiliateOrdersMetaPromise = affiliateCodes.length > 0
+        ? supabase
+            .from('orders')
+            .select('amount, affiliate_commission, currency, created_at, payment_method, order_id')
+            .in('affiliate_code', affiliateCodes)
+            .eq('status', 'completed')
+            .neq('payment_method', 'member_access')
+            .order('created_at', { ascending: true })
+        : Promise.resolve({ data: [] });
+
+      const [ownOrdersMeta, affiliateOrdersMeta] = await Promise.all([
+        ownOrdersMetaPromise,
+        affiliateOrdersMetaPromise
+      ]);
+
+      // ✅ Combinar vendas próprias + comissões de afiliado
+      const allOrdersForMeta = [
+        ...(ownOrdersMeta.data || []),
+        ...(affiliateOrdersMeta.data || [])
+      ];
 
       let totalRevenueForMeta = 0;
-      allOrdersForMeta?.forEach(order => {
-        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+      allOrdersForMeta.forEach(order => {
+        let amount = parseFloat(
+          order.seller_commission?.toString() || 
+          order.affiliate_commission?.toString() || 
+          order.amount || 
+          '0'
+        );
         
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
@@ -278,54 +315,74 @@ export function AppHome() {
       
       // Salvar stats não filtrados para o resumo financeiro
       setStatsUnfiltered({
-        totalSales: countTotalSales(allOrdersForMeta || []),
+        totalSales: countTotalSales(allOrdersForMeta),
         totalRevenue: totalRevenueForMeta
       });
 
-      // SEGUNDO: Buscar vendas COM FILTROS para o Dashboard
-      let query = supabase
+      // ✅ SEGUNDO: Buscar vendas COM FILTROS (produtos próprios + afiliados)
+      let ownOrdersQuery = supabase
         .from('orders')
-        .select('amount, seller_commission, currency, created_at, payment_method, product_id')
+        .select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id')
         .in('product_id', productIds)
         .eq('status', 'completed')
         .neq('payment_method', 'member_access');
 
-      // Filtro de tempo
+      let affiliateOrdersQuery = supabase
+        .from('orders')
+        .select('amount, affiliate_commission, currency, created_at, payment_method, order_id')
+        .in('affiliate_code', affiliateCodes)
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
+
+      // Aplicar filtros de tempo em ambas as queries
       if (timeFilter === 'today') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        query = query.gte('created_at', today.toISOString());
+        ownOrdersQuery = ownOrdersQuery.gte('created_at', today.toISOString());
+        affiliateOrdersQuery = affiliateOrdersQuery.gte('created_at', today.toISOString());
       } else if (timeFilter === 'yesterday') {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         yesterday.setHours(0, 0, 0, 0);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        query = query.gte('created_at', yesterday.toISOString()).lt('created_at', today.toISOString());
+        ownOrdersQuery = ownOrdersQuery.gte('created_at', yesterday.toISOString()).lt('created_at', today.toISOString());
+        affiliateOrdersQuery = affiliateOrdersQuery.gte('created_at', yesterday.toISOString()).lt('created_at', today.toISOString());
       } else if (timeFilter === 'custom' && customDateRange.from) {
         const fromDate = new Date(customDateRange.from);
         fromDate.setHours(0, 0, 0, 0);
-        query = query.gte('created_at', fromDate.toISOString());
+        ownOrdersQuery = ownOrdersQuery.gte('created_at', fromDate.toISOString());
+        affiliateOrdersQuery = affiliateOrdersQuery.gte('created_at', fromDate.toISOString());
         
         if (customDateRange.to) {
           const toDate = new Date(customDateRange.to);
           toDate.setHours(23, 59, 59, 999);
-          query = query.lte('created_at', toDate.toISOString());
+          ownOrdersQuery = ownOrdersQuery.lte('created_at', toDate.toISOString());
+          affiliateOrdersQuery = affiliateOrdersQuery.lte('created_at', toDate.toISOString());
         }
       } else if (timeFilter !== 'all') {
         const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
         const days = daysMap[timeFilter as '7d' | '30d' | '90d'];
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
-        query = query.gte('created_at', startDate.toISOString());
+        ownOrdersQuery = ownOrdersQuery.gte('created_at', startDate.toISOString());
+        affiliateOrdersQuery = affiliateOrdersQuery.gte('created_at', startDate.toISOString());
       }
 
-      // Filtro de produto
+      // Filtro de produto (só para vendas próprias)
       if (productFilter !== 'all') {
-        query = query.eq('product_id', productFilter);
+        ownOrdersQuery = ownOrdersQuery.eq('product_id', productFilter);
       }
 
-      const { data: orders } = await query.order('created_at', { ascending: true });
+      const [ownOrdersResult, affiliateOrdersResult] = await Promise.all([
+        productIds.length > 0 ? ownOrdersQuery.order('created_at', { ascending: true }) : Promise.resolve({ data: [] }),
+        affiliateCodes.length > 0 ? affiliateOrdersQuery.order('created_at', { ascending: true }) : Promise.resolve({ data: [] })
+      ]);
+
+      const orders = [
+        ...(ownOrdersResult.data || []),
+        ...(affiliateOrdersResult.data || [])
+      ];
 
       let totalRevenue = 0;
       const dailySales: Record<string, { date: string; sales: number; revenue: number }> = {};
@@ -349,15 +406,20 @@ export function AppHome() {
         };
       }
       
-      orders?.forEach(order => {
-        // Usar seller_commission se disponível, senão usar amount (mesma lógica da versão web)
-        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+      orders.forEach(order => {
+        // ✅ Usar comissão correta (seller ou affiliate)
+        let amount = parseFloat(
+          order.seller_commission?.toString() || 
+          order.affiliate_commission?.toString() || 
+          order.amount || 
+          '0'
+        );
         
-        // Converter para KZ se necessário (taxas de câmbio da versão web)
+        // Converter para KZ se necessário
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
-            'EUR': 1053,  // 1 EUR = ~1053 KZ
-            'MZN': 14.3   // 1 MZN = ~14.3 KZ
+            'EUR': 1053,
+            'MZN': 14.3
           };
           const rate = exchangeRates[order.currency.toUpperCase()] || 1;
           amount = Math.round(amount * rate);
@@ -377,14 +439,14 @@ export function AppHome() {
       const chartData = Object.values(dailySales);
 
       setStats({
-        totalSales: countTotalSales(orders || []),
+        totalSales: countTotalSales(orders),
         totalRevenue,
         totalProducts: activeProducts.length
       });
       setSalesData(chartData);
       
-      // Calcular dados financeiros (mesma lógica da versão web)
-      await loadFinancialData(orders || [], productIds);
+      // ✅ Passar TODAS as vendas (próprias + afiliados) para cálculo financeiro
+      await loadFinancialData(allOrdersForMeta, productIds);
       
     } catch (error) {
       console.error('Error loading stats:', error);
