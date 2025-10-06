@@ -1,5 +1,8 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.verify-appypay-order]
+verify_jwt = false
+
 [functions.bunny-storage-upload]
 verify_jwt = false
 
