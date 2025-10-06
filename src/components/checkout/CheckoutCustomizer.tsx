@@ -44,35 +44,35 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
       ...prev,
       banner: { ...prev.banner, [key]: value }
     }));
-  }, []);
+  }, [setSettings]);
 
   const updateCountdownSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       countdown: { ...prev.countdown, [key]: value }
     }));
-  }, []);
+  }, [setSettings]);
 
   const updateReviewsSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       reviews: { ...prev.reviews, [key]: value }
     }));
-  }, []);
+  }, [setSettings]);
 
   const updateSocialProofSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       socialProof: { ...prev.socialProof, [key]: value }
     }));
-  }, []);
+  }, [setSettings]);
 
   const updateSpotsCounterSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       spotsCounter: { ...prev.spotsCounter, [key]: value }
     }));
-  }, []);
+  }, [setSettings]);
 
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
