@@ -439,7 +439,12 @@ export default function ModernMembersArea() {
   // ✅ Carregar módulos com acesso individual do aluno
   const loadModulesWithAccess = async () => {
     const studentEmail = (session as any)?.student_email || user?.email;
-    if (!studentEmail) return;
+    console.log('🔍 [loadModulesWithAccess] Carregando acessos para:', studentEmail);
+    
+    if (!studentEmail) {
+      console.log('⚠️ [loadModulesWithAccess] Sem email de aluno');
+      return;
+    }
 
     const { data, error } = await supabase
       .from('module_student_access')
@@ -447,12 +452,16 @@ export default function ModernMembersArea() {
       .ilike('student_email', studentEmail.toLowerCase().trim());
     
     if (error) {
-      console.error('❌ Erro ao carregar acessos de módulos:', error);
+      console.error('❌ [loadModulesWithAccess] Erro ao carregar acessos:', error);
       return;
     }
 
     const moduleIds = new Set(data?.map(d => d.module_id) || []);
-    console.log('✅ Módulos com acesso individual carregados:', moduleIds);
+    console.log('✅ [loadModulesWithAccess] Módulos com acesso individual:', {
+      studentEmail,
+      totalAcessos: moduleIds.size,
+      moduleIds: Array.from(moduleIds)
+    });
     setModulesWithAccess(moduleIds);
   };
 
@@ -597,12 +606,15 @@ export default function ModernMembersArea() {
 
   // Verifica se o módulo é pago para a turma do aluno
   const isModulePaidForStudent = (module: Module): boolean => {
+    const hasAccess = modulesWithAccess.has(module.id);
     console.log('💰 [isModulePaidForStudent]', {
       moduleId: module.id,
       moduleTitle: module.title,
       is_paid: (module as any).is_paid,
       paid_cohort_ids: (module as any).paid_cohort_ids,
-      studentCohortId
+      studentCohortId,
+      hasIndividualAccess: hasAccess,
+      modulesWithAccessSize: modulesWithAccess.size
     });
     
     const isPaid = (module as any).is_paid;
