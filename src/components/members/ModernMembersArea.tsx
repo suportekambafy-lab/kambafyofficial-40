@@ -628,24 +628,25 @@ export default function ModernMembersArea() {
     
     const paidCohortIds = (module as any).paid_cohort_ids;
     
-    // Se paid_cohort_ids é null ou vazio, é pago para TODOS
+    // ✅ CORREÇÃO: Se paid_cohort_ids é null ou vazio, módulo é GRATUITO para todos
     if (!paidCohortIds || paidCohortIds.length === 0) {
-      console.log('✅ [isModulePaidForStudent] Pago para TODOS (paid_cohort_ids vazio)');
-      return true;
+      console.log('✅ [isModulePaidForStudent] GRATUITO para TODOS (paid_cohort_ids vazio)');
+      return false; // Não é pago para ninguém
     }
     
-    // Se o aluno não tem turma, não é pago
+    // Se o aluno não tem turma, módulo é gratuito para ele
     if (!studentCohortId) {
-      console.log('⚠️ [isModulePaidForStudent] Aluno sem turma - módulo NÃO é pago');
-      return false;
+      console.log('⚠️ [isModulePaidForStudent] Aluno sem turma - módulo GRATUITO');
+      return false; // Não é pago para este aluno
     }
     
-    // É pago apenas se a turma do aluno está na lista
+    // É pago APENAS se a turma do aluno está na lista de turmas pagas
     const isPaidForCohort = paidCohortIds.includes(studentCohortId);
     console.log('🎯 [isModulePaidForStudent] Verificação por turma:', {
       isPaidForCohort,
       studentCohortId,
-      paid_cohort_ids: paidCohortIds
+      paid_cohort_ids: paidCohortIds,
+      resultado: isPaidForCohort ? '💰 PAGO para esta turma' : '✅ GRATUITO para esta turma'
     });
     return isPaidForCohort;
   };
