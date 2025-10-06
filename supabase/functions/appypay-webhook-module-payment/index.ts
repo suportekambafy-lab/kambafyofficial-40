@@ -72,21 +72,22 @@ serve(async (req) => {
         .ilike('student_email', modulePayment.student_email)
         .single();
 
-      // Se aluno tem turma e módulo tem coming_soon para essa turma, remover
-      if (studentData?.cohort_id) {
-        const currentComingSoonCohorts = modulePayment.modules.coming_soon_cohort_ids || [];
-        const updatedComingSoonCohorts = currentComingSoonCohorts.filter(
-          (id: string) => id !== studentData.cohort_id
-        );
+      // ✅ Conceder acesso individual ao módulo na nova tabela
+      const { error: accessError } = await supabase
+        .from('module_student_access')
+        .insert({
+          module_id: modulePayment.module_id,
+          member_area_id: modulePayment.member_area_id,
+          student_email: modulePayment.student_email.toLowerCase().trim(),
+          cohort_id: studentData?.cohort_id || null,
+          payment_id: modulePayment.id,
+          granted_at: new Date().toISOString()
+        });
 
-        await supabase
-          .from('modules')
-          .update({
-            coming_soon_cohort_ids: updatedComingSoonCohorts.length > 0 ? updatedComingSoonCohorts : null
-          })
-          .eq('id', modulePayment.module_id);
-
-        console.log('✅ [APPYPAY-WEBHOOK-MODULE] Module access granted to student');
+      if (accessError) {
+        console.error('❌ [APPYPAY-WEBHOOK-MODULE] Error granting module access:', accessError);
+      } else {
+        console.log('✅ [APPYPAY-WEBHOOK-MODULE] Individual module access granted to:', modulePayment.student_email);
       }
     }
 

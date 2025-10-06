@@ -50,6 +50,11 @@ export interface Module {
   lessons_count?: number;
   cover_image_url?: string | null;
   coming_soon?: boolean;
+  coming_soon_cohort_ids?: string[] | null;
+  is_paid?: boolean;
+  paid_price?: string | null;
+  paid_product_id?: string | null;
+  has_individual_access?: boolean; // Flag calculada no frontend
 }
 
 export interface MemberArea {

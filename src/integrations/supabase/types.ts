@@ -1165,6 +1165,68 @@ export type Database = {
           },
         ]
       }
+      module_student_access: {
+        Row: {
+          cohort_id: string | null
+          created_at: string
+          granted_at: string
+          id: string
+          member_area_id: string
+          module_id: string
+          payment_id: string | null
+          student_email: string
+        }
+        Insert: {
+          cohort_id?: string | null
+          created_at?: string
+          granted_at?: string
+          id?: string
+          member_area_id: string
+          module_id: string
+          payment_id?: string | null
+          student_email: string
+        }
+        Update: {
+          cohort_id?: string | null
+          created_at?: string
+          granted_at?: string
+          id?: string
+          member_area_id?: string
+          module_id?: string
+          payment_id?: string | null
+          student_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_student_access_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "member_area_cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_student_access_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_student_access_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_student_access_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "module_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modules: {
         Row: {
           cohort_ids: string[] | null

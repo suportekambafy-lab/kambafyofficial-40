@@ -329,7 +329,7 @@ export default function ModernMembersArea() {
     }
   };
   
-  const handleModuleClick = (module: Module) => {
+  const handleModuleClick = async (module: Module) => {
     console.log('👆 [handleModuleClick] CLIQUE DETECTADO!', {
       moduleId: module.id,
       moduleTitle: module.title,
@@ -337,19 +337,21 @@ export default function ModernMembersArea() {
       is_paid: (module as any).is_paid
     });
     
-    const isComingSoon = isModuleComingSoonForStudent(module);
+    // Verificação completa com acesso individual
+    const { isComingSoon, hasAccess } = await checkModuleAccessibility(module);
     const isPaid = isModulePaidForStudent(module);
-    const isAccessible = isModuleAccessible(module);
+    const isAccessible = module.status === 'published' && hasAccess;
     
     console.log('🎯 [handleModuleClick] Verificações:', {
       isComingSoon,
       isPaid,
       isAccessible,
-      shouldOpenPayment: isPaid
+      hasAccess,
+      shouldOpenPayment: isPaid && !hasAccess
     });
     
-    // Se é pago, abrir modal de pagamento (independente de estar em breve)
-    if (isPaid) {
+    // Se é pago e não tem acesso, abrir modal de pagamento
+    if (isPaid && !hasAccess) {
       console.log('💰 [handleModuleClick] ABRINDO MODAL DE PAGAMENTO', {
         module: module.title,
         paid_price: (module as any).paid_price
@@ -360,8 +362,8 @@ export default function ModernMembersArea() {
       return;
     }
 
-    // Verificar se está em breve (mas não é pago)
-    if (isComingSoon) {
+    // Verificar se está em breve (mas não é pago ou já tem acesso)
+    if (isComingSoon && !hasAccess) {
       console.log('🚫 [handleModuleClick] Bloqueado: Em breve');
       toast.info("Módulo em breve", {
         description: "Este módulo estará disponível em breve"
@@ -416,43 +418,109 @@ export default function ModernMembersArea() {
     return module.status === 'published' && !isModuleComingSoonForStudent(module);
   };
 
-  // Verifica se o módulo está "em breve" para a turma do aluno
+  // ✅ Verificar se aluno tem acesso individual ao módulo (async)
+  const hasIndividualModuleAccess = async (moduleId: string, studentEmail: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('module_student_access')
+      .select('id')
+      .eq('module_id', moduleId)
+      .ilike('student_email', studentEmail.toLowerCase().trim())
+      .maybeSingle();
+    
+    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+      console.error('❌ Erro ao verificar acesso individual:', error);
+      return false;
+    }
+    
+    return !!data;
+  };
+
+  // Verifica se o módulo está "em breve" para a turma do aluno (versão síncrona para render)
   const isModuleComingSoonForStudent = (module: Module): boolean => {
     console.log('🔍 [isModuleComingSoonForStudent]', {
       moduleId: module.id,
       moduleTitle: module.title,
       coming_soon: module.coming_soon,
       coming_soon_cohort_ids: (module as any).coming_soon_cohort_ids,
+      is_paid: (module as any).is_paid,
       studentCohortId
     });
     
-    if (!module.coming_soon) {
-      console.log('✅ [isModuleComingSoonForStudent] Módulo não está marcado como em breve');
-      return false;
+    // Se módulo não é pago, aplicar lógica normal de coming_soon
+    if (!(module as any).is_paid) {
+      if (!module.coming_soon) {
+        console.log('✅ [isModuleComingSoonForStudent] Módulo não está marcado como em breve');
+        return false;
+      }
+      
+      const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
+      
+      // Se coming_soon_cohort_ids é null ou vazio, está em breve para TODOS
+      if (!comingSoonCohortIds || comingSoonCohortIds.length === 0) {
+        console.log('✅ [isModuleComingSoonForStudent] Em breve para TODOS (coming_soon_cohort_ids vazio)');
+        return true;
+      }
+      
+      // Se o aluno não tem turma, não está em breve
+      if (!studentCohortId) {
+        console.log('⚠️ [isModuleComingSoonForStudent] Aluno sem turma - módulo NÃO está em breve');
+        return false;
+      }
+      
+      // Está em breve apenas se a turma do aluno está na lista
+      const isComingSoon = comingSoonCohortIds.includes(studentCohortId);
+      console.log('🎯 [isModuleComingSoonForStudent] Verificação por turma:', {
+        isComingSoon,
+        studentCohortId,
+        coming_soon_cohort_ids: comingSoonCohortIds
+      });
+      return isComingSoon;
     }
     
-    const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
+    // Para módulos pagos, marcar como "em breve" por padrão no render
+    // A verificação real de acesso individual acontece no click
+    console.log('🔒 [isModuleComingSoonForStudent] Módulo pago - verificar no click');
+    return true;
+  };
+
+  // Verificação completa com acesso individual (async, usada no click)
+  const checkModuleAccessibility = async (module: Module): Promise<{ isComingSoon: boolean; hasAccess: boolean }> => {
+    const studentEmail = (session as any)?.student_email || user?.email;
     
-    // Se coming_soon_cohort_ids é null ou vazio, está em breve para TODOS
-    if (!comingSoonCohortIds || comingSoonCohortIds.length === 0) {
-      console.log('✅ [isModuleComingSoonForStudent] Em breve para TODOS (coming_soon_cohort_ids vazio)');
-      return true;
+    if (!studentEmail) {
+      return { isComingSoon: module.coming_soon || false, hasAccess: false };
     }
     
-    // Se o aluno não tem turma, não está em breve
-    if (!studentCohortId) {
-      console.log('⚠️ [isModuleComingSoonForStudent] Aluno sem turma - módulo NÃO está em breve');
-      return false;
+    // ✅ Verificar acesso individual PRIMEIRO
+    const hasIndividualAccess = await hasIndividualModuleAccess(module.id, studentEmail);
+    if (hasIndividualAccess) {
+      console.log('✅ [checkModuleAccessibility] Acesso individual encontrado!');
+      return { isComingSoon: false, hasAccess: true };
     }
     
-    // Está em breve apenas se a turma do aluno está na lista
-    const isComingSoon = comingSoonCohortIds.includes(studentCohortId);
-    console.log('🎯 [isModuleComingSoonForStudent] Verificação por turma:', {
-      isComingSoon,
-      studentCohortId,
-      coming_soon_cohort_ids: comingSoonCohortIds
-    });
-    return isComingSoon;
+    // ✅ Se módulo não é pago, aplicar lógica normal
+    if (!(module as any).is_paid) {
+      if (!module.coming_soon) {
+        return { isComingSoon: false, hasAccess: true };
+      }
+      
+      const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
+      
+      if (!comingSoonCohortIds || comingSoonCohortIds.length === 0) {
+        return { isComingSoon: true, hasAccess: false };
+      }
+      
+      if (!studentCohortId) {
+        return { isComingSoon: false, hasAccess: true };
+      }
+      
+      const isComingSoon = comingSoonCohortIds.includes(studentCohortId);
+      return { isComingSoon, hasAccess: !isComingSoon };
+    }
+    
+    // ✅ Módulo pago sem acesso individual está bloqueado
+    console.log('🔒 [checkModuleAccessibility] Módulo pago sem acesso individual');
+    return { isComingSoon: true, hasAccess: false };
   };
 
   // Verifica se o módulo é pago para a turma do aluno
