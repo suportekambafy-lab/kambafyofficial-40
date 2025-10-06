@@ -192,7 +192,7 @@ export function WithdrawalModal({
               className="flex-1"
               disabled={loading || availableBalance === 0}
             >
-              {loading ? "Processando..." : "Sacar Todo Saldo"}
+              {loading ? "Processando..." : "Solicitar Saque"}
             </Button>
           </div>
         </div>
