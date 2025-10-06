@@ -263,26 +263,33 @@ export default function Financial() {
           return sum + order.earning_amount;
         }, 0);
 
-        // ✅ NOVA LÓGICA: Calcular saldo disponível e pendente com base nas datas das vendas
+        // ✅ BUSCAR SALDO REAL DA TABELA customer_balances (sincronizado pelo trigger)
+        console.log('🔍 [Financial] Buscando saldo para user_id:', user.id);
+        const { data: balanceData, error: balanceError } = await supabase
+          .from('customer_balances')
+          .select('balance')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        console.log('💰 [Financial] Saldo encontrado:', { balanceData, balanceError });
+
+        // Saldo disponível vem direto do customer_balances (já deduzidos os saques)
+        const availableBalance = balanceData?.balance || 0;
+
+        // ✅ Calcular saldo pendente com base nas datas das vendas
         const now = new Date();
-        let availableBalance = 0;  // Vendas já liberadas (mais de 3 dias)
-        let pendingBalance = 0;    // Vendas aguardando liberação (dentro de 3 dias)
+        let pendingBalance = 0;
         const pendingOrdersData: Array<{date: Date, amount: number}> = [];
 
         allOrders.forEach(order => {
           const orderDate = new Date(order.created_at);
           const releaseDate = new Date(orderDate);
-          // Calcular 3 dias corridos (sempre 3 dias após a venda)
           releaseDate.setDate(orderDate.getDate() + 3);
           
           const amount = order.earning_amount;
           
-          // Verificar se já passou dos 3 dias
-          if (now >= releaseDate) {
-            // Venda já liberada - adicionar ao saldo disponível
-            availableBalance += amount;
-          } else {
-            // Venda ainda pendente - adicionar ao saldo pendente
+          // Se ainda não passou dos 3 dias, é saldo pendente
+          if (now < releaseDate) {
             pendingBalance += amount;
             pendingOrdersData.push({
               date: releaseDate,
@@ -326,11 +333,8 @@ export default function Financial() {
           return sum;
         }, 0) || 0;
 
-        // ✅ DEDUZIR saques aprovados do saldo disponível
-        const finalAvailableBalance = Math.max(0, availableBalance - totalWithdrawnAmount);
-
         const newFinancialData = {
-          availableBalance: finalAvailableBalance,  // ✅ Saldo disponível para saque (do banco)
+          availableBalance: availableBalance,  // ✅ Saldo disponível (já sincronizado via customer_balances)
           monthlyRevenue,
           commissionsPaid: 0,
           pendingWithdrawal: pendingBalance,        // ✅ Vendas aguardando liberação (3 dias)
@@ -347,7 +351,7 @@ export default function Financial() {
         setLastDataUpdate(Date.now()); // ✅ Atualizar timestamp
 
         console.log(`✅ Dados financeiros atualizados para usuário ${user.id}:`, {
-          saldoDisponivel: finalAvailableBalance,
+          saldoDisponivel: availableBalance,
           saldoPendente: pendingBalance,
           totalSacado: totalWithdrawnAmount
         });
