@@ -1077,6 +1077,94 @@ export type Database = {
         }
         Relationships: []
       }
+      module_payments: {
+        Row: {
+          amount: number
+          cohort_id: string | null
+          completed_at: string | null
+          created_at: string
+          currency: string
+          due_date: string | null
+          entity: string | null
+          id: string
+          member_area_id: string
+          module_id: string
+          order_id: string
+          payment_data: Json | null
+          payment_method: string
+          payment_proof_url: string | null
+          reference_number: string | null
+          status: string
+          student_email: string
+          student_name: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          cohort_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          entity?: string | null
+          id?: string
+          member_area_id: string
+          module_id: string
+          order_id: string
+          payment_data?: Json | null
+          payment_method: string
+          payment_proof_url?: string | null
+          reference_number?: string | null
+          status?: string
+          student_email: string
+          student_name: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          cohort_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          entity?: string | null
+          id?: string
+          member_area_id?: string
+          module_id?: string
+          order_id?: string
+          payment_data?: Json | null
+          payment_method?: string
+          payment_proof_url?: string | null
+          reference_number?: string | null
+          status?: string
+          student_email?: string
+          student_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_payments_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "member_area_cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_payments_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_payments_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modules: {
         Row: {
           cohort_ids: string[] | null

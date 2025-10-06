@@ -108,6 +108,38 @@ serve(async (req) => {
 
       console.log('✅ [PROCESS-MODULE-PAYMENT] Payment successful:', paymentData);
 
+      // Registrar pagamento na tabela module_payments
+      const paymentStatus = paymentMethod === 'express' && paymentData.payment_status === 'completed' 
+        ? 'completed' 
+        : 'pending';
+
+      const { error: modulePaymentError } = await supabase
+        .from('module_payments')
+        .insert({
+          module_id: moduleId,
+          member_area_id: memberAreaId,
+          student_email: studentEmail,
+          student_name: customerName || studentEmail.split('@')[0],
+          cohort_id: null, // Será atualizado quando o aluno for associado
+          order_id: orderId,
+          amount: parseFloat(amount.toString()),
+          currency: 'AOA',
+          payment_method: paymentMethod,
+          status: paymentStatus,
+          payment_data: paymentData,
+          reference_number: paymentData.reference_number,
+          entity: paymentData.entity,
+          due_date: paymentData.due_date,
+          completed_at: paymentStatus === 'completed' ? new Date().toISOString() : null
+        });
+
+      if (modulePaymentError) {
+        console.error('❌ [PROCESS-MODULE-PAYMENT] Error saving module payment:', modulePaymentError);
+        // Não lançar erro para não bloquear o fluxo
+      } else {
+        console.log('✅ [PROCESS-MODULE-PAYMENT] Module payment recorded');
+      }
+
       // Se for Express e pagamento confirmado, liberar acesso imediatamente
       if (paymentMethod === 'express' && paymentData.payment_status === 'completed') {
         const { data: studentData } = await supabase
@@ -153,13 +185,42 @@ serve(async (req) => {
       // Pagamento por transferência - criar registro pendente
       console.log('🏦 [PROCESS-MODULE-PAYMENT] Processing transfer payment');
       
-      // Criar registro de pagamento pendente
-      // (Aqui você pode criar uma tabela module_payments para registrar)
+      const transferOrderId = `MOD_TRANSFER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Criar registro de pagamento pendente para transferência
+      const { error: modulePaymentError } = await supabase
+        .from('module_payments')
+        .insert({
+          module_id: moduleId,
+          member_area_id: memberAreaId,
+          student_email: studentEmail,
+          student_name: customerName || studentEmail.split('@')[0],
+          order_id: transferOrderId,
+          amount: parseFloat(amount.toString()),
+          currency: 'AOA',
+          payment_method: paymentMethod,
+          status: 'pending',
+          payment_proof_url: transferProofUrl,
+          payment_data: {
+            country,
+            phoneNumber,
+            accountHolder,
+            accountIban
+          }
+        });
+
+      if (modulePaymentError) {
+        console.error('❌ [PROCESS-MODULE-PAYMENT] Error saving transfer payment:', modulePaymentError);
+        throw new Error('Erro ao registrar pagamento por transferência');
+      }
+
+      console.log('✅ [PROCESS-MODULE-PAYMENT] Transfer payment recorded');
       
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Comprovante recebido, aguardando análise'
+          message: 'Comprovante recebido, aguardando análise',
+          order_id: transferOrderId
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
