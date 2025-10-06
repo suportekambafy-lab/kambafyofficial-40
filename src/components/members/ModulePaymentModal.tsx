@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Shield, Copy, Check } from 'lucide-react';
+import { Loader2, Shield, Copy, Check, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Module } from '@/types/memberArea';
@@ -35,9 +37,20 @@ export function ModulePaymentModal({
   const [customerName, setCustomerName] = useState('');
   const [referenceData, setReferenceData] = useState<any>(null);
   const [copiedReference, setCopiedReference] = useState(false);
+  const [accountHolder, setAccountHolder] = useState('');
+  const [accountIban, setAccountIban] = useState('');
 
   const paidPrice = (module as any)?.paid_price || '0';
   const moduleTitle = module?.title || '';
+
+  // Dados bancários da Kambafy
+  const BANK_DATA = {
+    name: 'BCI - Banco Comercial e de Investimentos',
+    iban: '0005 0000 09802546101 15',
+    accountNumber: '10980254610001',
+    accountHolder: 'KAMBAFY COMERCIO E SERVICOS LDA',
+    logo: '/lovable-uploads/451d9e0e-6608-409a-910a-ec955cb5223c.png'
+  };
 
   // Buscar métodos de pagamento baseados no país
   const availablePaymentMethods = getPaymentMethodsByCountry(country);
@@ -57,6 +70,11 @@ export function ModulePaymentModal({
       toast.success('Referência copiada!');
       setTimeout(() => setCopiedReference(false), 2000);
     }
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copiado!`);
   };
 
   const handlePayment = async () => {
@@ -135,6 +153,20 @@ export function ModulePaymentModal({
           return;
         }
 
+        // Para transferência, validar dados do titular
+        if (selectedPaymentMethod === 'transfer') {
+          if (!accountHolder.trim()) {
+            toast.error('Nome do titular é obrigatório');
+            setIsProcessing(false);
+            return;
+          }
+          if (!accountIban.trim()) {
+            toast.error('IBAN do titular é obrigatório');
+            setIsProcessing(false);
+            return;
+          }
+        }
+
         // Upload do comprovante
         const fileExt = transferProof.name.split('.').pop();
         const fileName = `${memberAreaId}/${module.id}/${Date.now()}.${fileExt}`;
@@ -159,6 +191,8 @@ export function ModulePaymentModal({
             paymentMethod: selectedPaymentMethod,
             amount: parseFloat(paidPrice),
             transferProofUrl: publicUrl,
+            accountHolder: selectedPaymentMethod === 'transfer' ? accountHolder : undefined,
+            accountIban: selectedPaymentMethod === 'transfer' ? accountIban : undefined,
             country
           }
         });
@@ -344,8 +378,114 @@ export function ModulePaymentModal({
             </div>
           </div>
 
-          {/* Comprovante apenas para Transfer e outros que não são Express/Reference */}
-          {selectedPaymentMethod && selectedPaymentMethod !== 'express' && selectedPaymentMethod !== 'reference' && (
+          {/* Dados Bancários para Transferência */}
+          {selectedPaymentMethod === 'transfer' && (
+            <div className="space-y-4">
+              <Alert className="border-primary/20 bg-primary/10">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Realize a transferência para a conta bancária abaixo.
+                </AlertDescription>
+              </Alert>
+
+              <Card className="border-2">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    {BANK_DATA.logo && (
+                      <img 
+                        src={BANK_DATA.logo} 
+                        alt={BANK_DATA.name}
+                        className="w-8 h-8 rounded"
+                      />
+                    )}
+                    <h4 className="font-semibold text-sm">DADOS BANCÁRIOS PARA PAGAMENTO</h4>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div className="flex-1">
+                        <span className="text-xs font-medium text-muted-foreground">IBAN:</span>
+                        <div className="text-sm font-mono font-semibold">{BANK_DATA.iban}</div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(BANK_DATA.iban, 'IBAN')}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div className="flex-1">
+                        <span className="text-xs font-medium text-muted-foreground">NÚMERO DA CONTA:</span>
+                        <div className="text-sm font-mono font-semibold">{BANK_DATA.accountNumber}</div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(BANK_DATA.accountNumber, 'Número da conta')}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div className="flex-1">
+                        <span className="text-xs font-medium text-muted-foreground">TITULAR DA CONTA:</span>
+                        <div className="text-sm font-semibold">{BANK_DATA.accountHolder}</div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(BANK_DATA.accountHolder, 'Titular')}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-2">
+                <Label htmlFor="account-holder">Titular da Conta (Quem Transfere)</Label>
+                <Input
+                  id="account-holder"
+                  type="text"
+                  placeholder="Nome completo do titular"
+                  value={accountHolder}
+                  onChange={(e) => setAccountHolder(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="account-iban">IBAN do Titular</Label>
+                <Input
+                  id="account-iban"
+                  type="text"
+                  placeholder="0000 0000 00000000000 00"
+                  value={accountIban}
+                  onChange={(e) => setAccountIban(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="proof">Comprovante de Pagamento</Label>
+                <Input
+                  id="proof"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => setTransferProof(e.target.files?.[0] || null)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Após realizar o pagamento, envie o comprovante
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Comprovante para outros métodos que não são Express/Reference/Transfer */}
+          {selectedPaymentMethod && selectedPaymentMethod !== 'express' && selectedPaymentMethod !== 'reference' && selectedPaymentMethod !== 'transfer' && (
             <div className="space-y-2">
               <Label htmlFor="proof">Comprovante de Pagamento</Label>
               <Input
