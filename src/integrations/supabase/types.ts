@@ -1386,6 +1386,7 @@ export type Database = {
           affiliate_code: string | null
           affiliate_commission: number | null
           amount: string
+          appypay_transaction_id: string | null
           cohort_id: string | null
           created_at: string
           currency: string | null
@@ -1409,6 +1410,7 @@ export type Database = {
           affiliate_code?: string | null
           affiliate_commission?: number | null
           amount: string
+          appypay_transaction_id?: string | null
           cohort_id?: string | null
           created_at?: string
           currency?: string | null
@@ -1432,6 +1434,7 @@ export type Database = {
           affiliate_code?: string | null
           affiliate_commission?: number | null
           amount?: string
+          appypay_transaction_id?: string | null
           cohort_id?: string | null
           created_at?: string
           currency?: string | null

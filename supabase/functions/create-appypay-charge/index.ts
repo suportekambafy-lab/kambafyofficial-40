@@ -338,12 +338,14 @@ serve(async (req) => {
       const orderDataToSave = checkoutOrderData ? {
         ...checkoutOrderData,
         order_id: orderId, // Always use reference number as order_id
-        stripe_session_id: merchantTransactionId, // Save merchantTransactionId for webhook lookup
+        appypay_transaction_id: merchantTransactionId, // Save AppyPay transaction ID for webhook lookup
+        stripe_session_id: null, // AppyPay doesn't use Stripe
         status: orderStatus
       } : {
         product_id: productId,
         order_id: orderId,
-        stripe_session_id: merchantTransactionId, // Save merchantTransactionId for webhook lookup
+        appypay_transaction_id: merchantTransactionId, // Save AppyPay transaction ID for webhook lookup
+        stripe_session_id: null, // AppyPay doesn't use Stripe
         customer_name: customerData.name,
         customer_email: customerData.email,
         customer_phone: phoneNumber || customerData.phone,

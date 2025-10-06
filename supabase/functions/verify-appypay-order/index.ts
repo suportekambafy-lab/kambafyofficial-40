@@ -131,8 +131,8 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('[VERIFY-APPYPAY-ORDER] Token obtained successfully');
 
-    // Consultar transação no AppyPay usando o merchantTransactionId (stripe_session_id)
-    const transactionId = order.stripe_session_id;
+    // Consultar transação no AppyPay usando o merchantTransactionId (appypay_transaction_id)
+    const transactionId = order.appypay_transaction_id;
     
     if (!transactionId) {
       console.log('[VERIFY-APPYPAY-ORDER] No merchantTransactionId found for this order');

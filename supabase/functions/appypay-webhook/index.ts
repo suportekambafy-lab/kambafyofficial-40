@@ -188,16 +188,16 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Step 2: Search for order - try by merchantTransactionId first (stripe_session_id), then by order_id (referenceNumber)
+    // Step 2: Search for order - try by merchantTransactionId first (appypay_transaction_id), then by order_id (referenceNumber)
     let orders: any[] | null = null;
     let orderError: any = null;
     
-    // Try finding by merchantTransactionId (stored in stripe_session_id)
+    // Try finding by merchantTransactionId (stored in appypay_transaction_id)
     if (payload.merchantTransactionId) {
       const result = await supabase
         .from('orders')
         .select('*')
-        .eq('stripe_session_id', payload.merchantTransactionId)
+        .eq('appypay_transaction_id', payload.merchantTransactionId)
         .in('payment_method', ['express', 'reference'])
         .limit(1);
       
