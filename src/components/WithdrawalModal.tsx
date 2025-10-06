@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -135,16 +135,16 @@ export function WithdrawalModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="sm:max-w-md mx-auto">
+        <DrawerHeader>
+          <DrawerTitle className="flex items-center gap-2">
             <PiggyBank className="h-5 w-5" />
             Solicitar Saque
-          </DialogTitle>
-        </DialogHeader>
+          </DrawerTitle>
+        </DrawerHeader>
         
-        <div className="space-y-4">
+        <div className="space-y-4 p-4">
           <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
             <p className="text-sm text-muted-foreground mb-1">Saldo Disponível para Saque</p>
             <p className="text-3xl font-bold text-primary mb-3">
@@ -178,7 +178,7 @@ export function WithdrawalModal({
             </p>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 pb-4">
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)} 
@@ -196,7 +196,7 @@ export function WithdrawalModal({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   );
 }
