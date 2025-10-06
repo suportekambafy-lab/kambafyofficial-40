@@ -27,6 +27,123 @@ interface AppyPayWebhookPayload {
   };
 }
 
+async function grantModuleAccess(supabase: any, modulePayment: any) {
+  console.log('[APPYPAY-WEBHOOK] Granting module access...');
+  
+  // Buscar dados do aluno
+  const { data: studentData } = await supabase
+    .from('member_area_students')
+    .select('cohort_id')
+    .eq('member_area_id', modulePayment.member_area_id)
+    .ilike('student_email', modulePayment.student_email)
+    .single();
+  
+  // Se aluno tem turma e módulo tem coming_soon para essa turma, remover
+  if (studentData?.cohort_id && modulePayment.modules) {
+    const currentComingSoonCohorts = modulePayment.modules.coming_soon_cohort_ids || [];
+    
+    if (currentComingSoonCohorts.includes(studentData.cohort_id)) {
+      const updatedComingSoonCohorts = currentComingSoonCohorts.filter(
+        (id: string) => id !== studentData.cohort_id
+      );
+      
+      const { error: moduleUpdateError } = await supabase
+        .from('modules')
+        .update({
+          coming_soon_cohort_ids: updatedComingSoonCohorts.length > 0 
+            ? updatedComingSoonCohorts 
+            : null
+        })
+        .eq('id', modulePayment.module_id);
+      
+      if (moduleUpdateError) {
+        console.error('[APPYPAY-WEBHOOK] Error updating module access:', moduleUpdateError);
+      } else {
+        console.log('[APPYPAY-WEBHOOK] Module access granted to student');
+      }
+    }
+  }
+}
+
+async function processModulePayment(
+  supabase: any, 
+  payload: AppyPayWebhookPayload, 
+  modulePaymentId: string
+) {
+  console.log('[APPYPAY-WEBHOOK] Processing module payment...');
+  
+  // Buscar dados completos do pagamento
+  const { data: modulePayment, error: fetchError } = await supabase
+    .from('module_payments')
+    .select('*, modules!inner(*)')
+    .eq('id', modulePaymentId)
+    .single();
+  
+  if (fetchError || !modulePayment) {
+    throw new Error('Module payment not found');
+  }
+  
+  // Mapear status do AppyPay
+  const paymentStatus = payload.responseStatus?.status;
+  const isSuccessful = payload.responseStatus?.successful;
+  
+  let newStatus = 'pending';
+  if (isSuccessful && paymentStatus === 'Success') {
+    newStatus = 'completed';
+  } else if (!isSuccessful || paymentStatus === 'Failed') {
+    newStatus = 'failed';
+  }
+  
+  console.log('[APPYPAY-WEBHOOK] Module payment status:', {
+    current: modulePayment.status,
+    new: newStatus
+  });
+  
+  // Só atualizar se mudou
+  if (modulePayment.status !== newStatus) {
+    const updateData: any = {
+      status: newStatus,
+      updated_at: new Date().toISOString(),
+      payment_data: {
+        ...modulePayment.payment_data,
+        webhook_status: paymentStatus,
+        webhook_received_at: new Date().toISOString(),
+        appypay_response: payload.responseStatus
+      }
+    };
+    
+    if (newStatus === 'completed') {
+      updateData.completed_at = new Date().toISOString();
+    }
+    
+    const { error: updateError } = await supabase
+      .from('module_payments')
+      .update(updateData)
+      .eq('id', modulePaymentId);
+    
+    if (updateError) {
+      throw new Error(`Failed to update module payment: ${updateError.message}`);
+    }
+    
+    console.log('[APPYPAY-WEBHOOK] Module payment updated successfully');
+    
+    // Se foi completado, liberar acesso ao módulo
+    if (newStatus === 'completed') {
+      await grantModuleAccess(supabase, modulePayment);
+    }
+  }
+  
+  return new Response(JSON.stringify({
+    success: true,
+    message: 'Module payment processed successfully',
+    payment_id: modulePaymentId,
+    status: newStatus
+  }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+  });
+}
+
 const handler = async (req: Request): Promise<Response> => {
   console.log('[APPYPAY-WEBHOOK] Webhook received');
 
@@ -116,9 +233,48 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!orders || orders.length === 0) {
-      console.log(`[APPYPAY-WEBHOOK] No order found for order ID: ${orderIdFromPayload}`);
+      console.log('[APPYPAY-WEBHOOK] Order not found in orders table, checking module_payments...');
+      
+      // Buscar em module_payments
+      let modulePaymentId = null;
+      
+      // Tentar por merchantTransactionId (mapeado para order_id)
+      if (payload.merchantTransactionId) {
+        const { data: modulePayment } = await supabase
+          .from('module_payments')
+          .select('id')
+          .eq('order_id', payload.merchantTransactionId)
+          .single();
+        
+        if (modulePayment) {
+          modulePaymentId = modulePayment.id;
+          console.log(`[APPYPAY-WEBHOOK] Module payment found by merchantTransactionId`);
+        }
+      }
+      
+      // Tentar por referenceNumber
+      if (!modulePaymentId && payload.reference?.referenceNumber) {
+        const { data: modulePayment } = await supabase
+          .from('module_payments')
+          .select('id')
+          .eq('reference_number', payload.reference.referenceNumber)
+          .single();
+        
+        if (modulePayment) {
+          modulePaymentId = modulePayment.id;
+          console.log(`[APPYPAY-WEBHOOK] Module payment found by referenceNumber`);
+        }
+      }
+      
+      // Se encontrou um module_payment, processar
+      if (modulePaymentId) {
+        return await processModulePayment(supabase, payload, modulePaymentId);
+      }
+      
+      // Se não encontrou nem em orders nem em module_payments
+      console.log(`[APPYPAY-WEBHOOK] Payment not found in any table`);
       return new Response(JSON.stringify({ 
-        message: 'Order not found',
+        message: 'Payment not found',
         orderId: orderIdFromPayload,
         paymentType: paymentType
       }), {
