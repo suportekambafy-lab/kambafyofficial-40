@@ -414,11 +414,19 @@ export function AppHome() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      const now = new Date();
-      let availableBalance = 0;  // Vendas já liberadas (mais de 3 dias)
-      let pendingBalance = 0;    // Vendas aguardando liberação (dentro de 3 dias)
+      // ✅ Buscar saldo real do banco (já inclui todas as transações via trigger)
+      const { data: balanceData } = await supabase
+        .from('customer_balances')
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      // Calcular saldo disponível e pendente (mesma lógica do Financial.tsx)
+      const availableBalance = balanceData?.balance || 0;
+
+      // Calcular saldo pendente (vendas dentro de 3 dias)
+      const now = new Date();
+      let pendingBalance = 0;
+
       (allOrders || []).forEach(order => {
         let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
         
@@ -434,25 +442,20 @@ export function AppHome() {
 
         const orderDate = new Date(order.created_at);
         const releaseDate = new Date(orderDate);
-        releaseDate.setDate(orderDate.getDate() + 3); // +3 dias
+        releaseDate.setDate(orderDate.getDate() + 3);
 
-        // Verificar se já passou dos 3 dias
-        if (now >= releaseDate) {
-          // Venda já liberada - adicionar ao saldo disponível
-          availableBalance += amount;
-        } else {
-          // Venda ainda pendente - adicionar ao saldo pendente
+        // Apenas contar vendas ainda não liberadas
+        if (now < releaseDate) {
           pendingBalance += amount;
         }
       });
 
-      // Calcular total de saques aprovados
+      // Calcular total de saques aprovados (apenas para exibição)
       const totalWithdrawnAmount = (withdrawals || [])
         .filter(w => w.status === 'aprovado')
         .reduce((sum, w) => sum + parseFloat(w.amount?.toString() || '0'), 0);
 
-      // ✅ DEDUZIR saques aprovados do saldo disponível
-      const finalAvailableBalance = Math.max(0, availableBalance - totalWithdrawnAmount);
+      const finalAvailableBalance = Math.max(0, availableBalance);
 
       setFinancialData({
         availableBalance: finalAvailableBalance,

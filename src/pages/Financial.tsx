@@ -264,25 +264,29 @@ export default function Financial() {
         }, 0);
 
         // ✅ NOVA LÓGICA: Calcular saldo disponível e pendente com base nas datas das vendas
+        // ✅ Buscar saldo real do banco (já inclui todas as transações via trigger)
+        const { data: balanceData } = await supabase
+          .from('customer_balances')
+          .select('balance')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        const availableBalance = balanceData?.balance || 0;
+
+        // Calcular saldo pendente (vendas dentro de 3 dias)
         const now = new Date();
-        let availableBalance = 0;  // Vendas já liberadas (mais de 3 dias)
-        let pendingBalance = 0;    // Vendas aguardando liberação (dentro de 3 dias)
+        let pendingBalance = 0;
         const pendingOrdersData: Array<{date: Date, amount: number}> = [];
 
         allOrders.forEach(order => {
           const orderDate = new Date(order.created_at);
           const releaseDate = new Date(orderDate);
-          // Calcular 3 dias corridos (sempre 3 dias após a venda)
           releaseDate.setDate(orderDate.getDate() + 3);
           
           const amount = order.earning_amount;
           
-          // Verificar se já passou dos 3 dias
-          if (now >= releaseDate) {
-            // Venda já liberada - adicionar ao saldo disponível
-            availableBalance += amount;
-          } else {
-            // Venda ainda pendente - adicionar ao saldo pendente
+          // Apenas contar vendas ainda não liberadas
+          if (now < releaseDate) {
             pendingBalance += amount;
             pendingOrdersData.push({
               date: releaseDate,
@@ -316,9 +320,8 @@ export default function Financial() {
 
         // Usar dados já carregados dos saques (já extraídos acima)
 
-        // ✅ Calcular total sacado = APENAS saques APROVADOS (valor após dedução de 8%)
+        // Calcular total de saques aprovados (apenas para exibição)
         const totalWithdrawnAmount = withdrawalRequestsData?.reduce((sum, withdrawal) => {
-          // Incluir APENAS os saques APROVADOS - usar valor que realmente saiu
           if (withdrawal.status === 'aprovado') {
             const finalAmount = parseFloat(withdrawal.amount?.toString() || '0');
             return sum + finalAmount;
@@ -326,8 +329,8 @@ export default function Financial() {
           return sum;
         }, 0) || 0;
 
-        // ✅ DEDUZIR saques aprovados do saldo disponível
-        const finalAvailableBalance = Math.max(0, availableBalance - totalWithdrawnAmount);
+        // O saldo já está correto do banco
+        const finalAvailableBalance = Math.max(0, availableBalance);
 
         const newFinancialData = {
           availableBalance: finalAvailableBalance,  // ✅ Saldo disponível para saque (do banco)
