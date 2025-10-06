@@ -1,4 +1,5 @@
 import { ModulePaymentsDashboard } from "@/components/members/ModulePaymentsDashboard";
+import { MigrateModulePayments } from "@/components/admin/MigrateModulePayments";
 import { DollarSign } from "lucide-react";
 
 const SellerMemberModulePayments = () => {
@@ -14,6 +15,7 @@ const SellerMemberModulePayments = () => {
         </div>
       </div>
 
+      <MigrateModulePayments />
       <ModulePaymentsDashboard />
     </div>
   );
