@@ -1673,19 +1673,37 @@ const Checkout = () => {
         }, 5000); // Poll every 5 seconds
         
         setProcessing(false);
-      } else if (selectedPayment === 'reference' && insertedOrder?.payment_status === 'pending' && insertedOrder?.reference_number) {
-        console.log('📋 Mostrando dados da referência AppyPay');
-        // Para pagamento por referência com status pending, mostrar modal com dados da referência
-        setReferenceData({
-          referenceNumber: insertedOrder.reference_number,
-          entity: insertedOrder.entity,
-          dueDate: insertedOrder.due_date,
-          amount: totalAmountInKZ,
-          currency: 'KZ',
-          productName: product.name,
-          orderId: orderId
-        });
-        setProcessing(false);
+      } else if (selectedPayment === 'reference') {
+        console.log('📋 Processando pagamento por referência AppyPay');
+        console.log('📦 insertedOrder:', insertedOrder);
+        
+        // Para pagamento por referência, sempre mostrar modal com dados da referência
+        const refNumber = insertedOrder?.reference_number || insertedOrder?.reference?.referenceNumber;
+        const refEntity = insertedOrder?.entity || insertedOrder?.reference?.entity;
+        const refDueDate = insertedOrder?.due_date || insertedOrder?.reference?.dueDate;
+        
+        if (refNumber && refEntity) {
+          console.log('✅ Dados da referência encontrados:', { refNumber, refEntity, refDueDate });
+          setReferenceData({
+            referenceNumber: refNumber,
+            entity: refEntity,
+            dueDate: refDueDate,
+            amount: totalAmountInKZ,
+            currency: 'KZ',
+            productName: product.name,
+            orderId: orderId
+          });
+          setProcessing(false);
+        } else {
+          console.error('❌ Dados da referência não encontrados:', { refNumber, refEntity, insertedOrder });
+          toast({
+            title: "Erro",
+            message: "Erro ao obter dados da referência. Verifique seu email para os detalhes do pagamento.",
+            variant: "error"
+          });
+          // Redirecionar para página de obrigado mesmo sem modal
+          navigate(`/obrigado?${params.toString()}`);
+        }
       } else {
         console.log('🏠 Redirecionando para página de agradecimento');
         // Disparar evento para Facebook Pixel
