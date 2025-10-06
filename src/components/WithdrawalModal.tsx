@@ -161,11 +161,11 @@ export function WithdrawalModal({
           {withdrawalValue > 0 && (
             <div className="space-y-2">
               <Label>Valor a Receber (após taxa de 8%)</Label>
-              <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-                <p className="text-2xl font-bold text-accent-foreground">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-2xl font-bold text-green-800">
                   {receiveValue.toLocaleString()} KZ
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-green-600 mt-1">
                   Valor líquido que será transferido para sua conta
                 </p>
               </div>
