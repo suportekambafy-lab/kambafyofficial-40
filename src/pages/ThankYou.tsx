@@ -656,15 +656,6 @@ const ThankYou = () => {
                         </span>
                       </div>
                     </div>
-                    
-                    {orderDetails.dueDate && <div className="col-span-full bg-yellow-50 rounded-lg p-3 border border-yellow-200">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-600">Validade:</span>
-                        <span className="font-medium text-yellow-700">
-                          {new Date(orderDetails.dueDate).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                        </span>
-                      </div>
-                    </div>}
                   </div>
                 </div>
                 
@@ -721,6 +712,8 @@ const ThankYou = () => {
             </CardContent>
           </Card>}
 
+        {/* Esconder detalhes até confirmação do pagamento por referência */}
+        {!(orderDetails.paymentMethod === 'reference' && orderStatus === 'pending') && <>
         {/* Order Details Card */}
         <Card className="mb-8">
           <CardContent className="p-6">
@@ -877,6 +870,7 @@ const ThankYou = () => {
             </Link>
           </Button>
         </div>
+        </>}
 
         {/* Footer */}
         <div className="mt-16 text-center space-y-4">
