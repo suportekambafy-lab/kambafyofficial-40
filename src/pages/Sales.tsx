@@ -244,8 +244,9 @@ export default function Sales() {
   };
 
   const getStatusBadge = (status: string, paymentMethod: string) => {
+    const methodText = getPaymentMethodName(paymentMethod);
+    
     if (status === 'completed') {
-      const methodText = getPaymentMethodName(paymentMethod);
       return (
         <Badge variant="default" className="text-xs bg-green-100 text-green-800 border-green-200">
           Pago via {methodText}
@@ -254,20 +255,20 @@ export default function Sales() {
     } else if (status === 'pending') {
       return (
         <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
-          Pendente
+          Pendente via {methodText}
         </Badge>
       );
     } else if (status === 'failed') {
       return (
         <Badge variant="destructive" className="text-xs">
-          Cancelada
+          Cancelada via {methodText}
         </Badge>
       );
     }
     
     return (
       <Badge variant="secondary" className="text-xs">
-        {status}
+        {status} via {methodText}
       </Badge>
     );
   };
