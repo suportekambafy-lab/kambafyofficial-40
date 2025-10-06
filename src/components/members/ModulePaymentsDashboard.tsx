@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { VerifyModulePaymentButton } from './VerifyModulePaymentButton';
+import { RemoveAccessButton } from '@/components/test/RemoveAccessButton';
 interface ModulePayment {
   id: string;
   module_id: string;
@@ -249,5 +250,8 @@ export const ModulePaymentsDashboard = () => {
             </div>}
         </DialogContent>
       </Dialog>
+      
+      {/* Botão temporário para remover acesso do Leo */}
+      <RemoveAccessButton />
     </div>;
 };
