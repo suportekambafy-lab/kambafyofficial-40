@@ -58,6 +58,17 @@ const Checkout = () => {
     geoReady,
     userCountry: userCountry?.code
   });
+
+  // 🌍 Aplicar país detectado via IP automaticamente
+  useEffect(() => {
+    if (geoReady && userCountry && !geoLoading) {
+      console.log('🌍 Auto-applying detected country from IP:', userCountry.code);
+      setFormData(prev => ({
+        ...prev,
+        phoneCountry: userCountry.code
+      }));
+    }
+  }, [geoReady, userCountry, geoLoading]);
   const {
     affiliateCode,
     hasAffiliate,
@@ -696,6 +707,14 @@ const Checkout = () => {
     // Fallback: usar métodos baseados no país selecionado
     return getPaymentMethodsByCountry(userCountry.code);
   }, [userCountry, product]);
+
+  // 💳 Auto-selecionar primeiro método de pagamento quando disponível
+  useEffect(() => {
+    if (availablePaymentMethods.length > 0 && !selectedPayment) {
+      console.log('💳 Auto-selecting first payment method:', availablePaymentMethods[0].id);
+      setSelectedPayment(availablePaymentMethods[0].id);
+    }
+  }, [availablePaymentMethods, selectedPayment]);
   const getPaymentMethods = () => availablePaymentMethods;
   const getSelectedPaymentName = () => {
     const selected = availablePaymentMethods.find(method => method.id === selectedPayment);
