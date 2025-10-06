@@ -47,8 +47,9 @@ export const VerifyModulePaymentButton = ({
         toast.info('Status já está atualizado');
       }
     } catch (error: any) {
-      console.error('Error verifying module payment:', error);
-      toast.error(error.message || 'Erro ao verificar pagamento');
+      console.error('[VERIFY-MODULE] Error:', error);
+      const errorMessage = error?.message || 'Erro ao verificar pagamento';
+      toast.error(errorMessage);
     } finally {
       setIsVerifying(false);
     }
