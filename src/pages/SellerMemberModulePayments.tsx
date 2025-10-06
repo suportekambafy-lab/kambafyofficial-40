@@ -1,12 +1,10 @@
 import { ModulePaymentsDashboard } from "@/components/members/ModulePaymentsDashboard";
 import { MigrateModulePayments } from "@/components/admin/MigrateModulePayments";
 import { DollarSign } from "lucide-react";
-
 const SellerMemberModulePayments = () => {
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <DollarSign className="w-8 h-8 text-primary" />
+        
         <div>
           <h1 className="text-3xl font-bold">Pagamentos de Módulos</h1>
           <p className="text-muted-foreground">
@@ -17,8 +15,6 @@ const SellerMemberModulePayments = () => {
 
       <MigrateModulePayments />
       <ModulePaymentsDashboard />
-    </div>
-  );
+    </div>;
 };
-
 export default SellerMemberModulePayments;
