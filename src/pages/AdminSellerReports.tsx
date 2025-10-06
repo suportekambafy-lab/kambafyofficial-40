@@ -95,6 +95,13 @@ export default function AdminSellerReports() {
             .eq('user_id', profile.user_id)
             .eq('status', 'aprovado');
 
+          // Buscar saldo disponível real da tabela customer_balances
+          const { data: balanceData } = await supabase
+            .from('customer_balances')
+            .select('balance')
+            .eq('user_id', profile.user_id)
+            .single();
+
           const activeProducts = products?.filter(p => p.status === 'Ativo').length || 0;
           const bannedProducts = products?.filter(p => p.status === 'Banido').length || 0;
 
@@ -104,7 +111,7 @@ export default function AdminSellerReports() {
           
           // Taxa: 5% sobre a receita
           const totalFees = totalRevenue * 0.05;
-          const availableBalance = totalRevenue - totalFees - totalWithdrawals;
+          const availableBalance = balanceData?.balance || 0;
 
           return {
             user_id: profile.user_id,
