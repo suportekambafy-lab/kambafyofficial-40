@@ -150,7 +150,7 @@ export const ModulePaymentsDashboard = () => {
   };
   const completedPayments = payments.filter(p => p.status === 'completed');
   const stats = {
-    total: payments.reduce((sum, p) => sum + Number(p.amount), 0),
+    total: completedPayments.reduce((sum, p) => sum + Number(p.amount), 0),
     pending: payments.filter(p => p.status === 'pending').length,
     completed: completedPayments.length,
     withAccess: completedPayments.filter(p => p.has_access).length,
