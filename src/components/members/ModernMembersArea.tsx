@@ -455,10 +455,15 @@ export default function ModernMembersArea() {
       
       const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
       
-      // Se coming_soon_cohort_ids é null ou vazio, está em breve para TODOS
-      if (!comingSoonCohortIds || comingSoonCohortIds.length === 0) {
-        console.log('✅ [isModuleComingSoonForStudent] Em breve para TODOS (coming_soon_cohort_ids vazio)');
+      // ✅ CORREÇÃO: null = todas turmas, array vazio = nenhuma turma
+      if (comingSoonCohortIds === null) {
+        console.log('✅ [isModuleComingSoonForStudent] Em breve para TODAS as turmas (null)');
         return true;
+      }
+      
+      if (comingSoonCohortIds.length === 0) {
+        console.log('✅ [isModuleComingSoonForStudent] NÃO está em breve para ninguém (array vazio)');
+        return false;
       }
       
       // Se o aluno não tem turma, não está em breve
@@ -506,8 +511,13 @@ export default function ModernMembersArea() {
       
       const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
       
-      if (!comingSoonCohortIds || comingSoonCohortIds.length === 0) {
+      // ✅ CORREÇÃO: null = todas turmas, array vazio = nenhuma turma
+      if (comingSoonCohortIds === null) {
         return { isComingSoon: true, hasAccess: false };
+      }
+      
+      if (comingSoonCohortIds.length === 0) {
+        return { isComingSoon: false, hasAccess: true };
       }
       
       if (!studentCohortId) {
