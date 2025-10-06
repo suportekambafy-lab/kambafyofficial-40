@@ -482,10 +482,39 @@ export default function ModernMembersArea() {
       return isComingSoon;
     }
     
-    // Para módulos pagos, marcar como "em breve" por padrão no render
-    // A verificação real de acesso individual acontece no click
-    console.log('🔒 [isModuleComingSoonForStudent] Módulo pago - verificar no click');
-    return true;
+    // ✅ Para módulos pagos, verificar se está marcado como coming_soon
+    if (!module.coming_soon) {
+      console.log('✅ [isModuleComingSoonForStudent] Módulo pago NÃO está em breve');
+      return false;
+    }
+    
+    const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
+    
+    // ✅ CORREÇÃO: null = todas turmas, array vazio = nenhuma turma
+    if (comingSoonCohortIds === null) {
+      console.log('✅ [isModuleComingSoonForStudent] Módulo pago em breve para TODAS as turmas (null)');
+      return true;
+    }
+    
+    if (comingSoonCohortIds.length === 0) {
+      console.log('✅ [isModuleComingSoonForStudent] Módulo pago NÃO está em breve para ninguém (array vazio)');
+      return false;
+    }
+    
+    // Se o aluno não tem turma, não está em breve
+    if (!studentCohortId) {
+      console.log('⚠️ [isModuleComingSoonForStudent] Módulo pago - Aluno sem turma - NÃO está em breve');
+      return false;
+    }
+    
+    // Está em breve apenas se a turma do aluno está na lista
+    const isComingSoon = comingSoonCohortIds.includes(studentCohortId);
+    console.log('🎯 [isModuleComingSoonForStudent] Módulo pago - Verificação por turma:', {
+      isComingSoon,
+      studentCohortId,
+      coming_soon_cohort_ids: comingSoonCohortIds
+    });
+    return isComingSoon;
   };
 
   // Verificação completa com acesso individual (async, usada no click)
