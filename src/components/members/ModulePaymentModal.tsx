@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Shield } from 'lucide-react';
+import { Loader2, Shield, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Module } from '@/types/memberArea';
@@ -33,7 +33,8 @@ export function ModulePaymentModal({
   const [transferProof, setTransferProof] = useState<File | null>(null);
   const [country, setCountry] = useState('AO');
   const [customerName, setCustomerName] = useState('');
-  const [reference, setReference] = useState('');
+  const [referenceData, setReferenceData] = useState<any>(null);
+  const [copiedReference, setCopiedReference] = useState(false);
 
   const paidPrice = (module as any)?.paid_price || '0';
   const moduleTitle = module?.title || '';
@@ -47,6 +48,15 @@ export function ModulePaymentModal({
     if (methodCount === 2) return "grid-cols-2";
     if (methodCount === 3) return "grid-cols-3";
     return "grid-cols-4";
+  };
+
+  const copyReferenceNumber = () => {
+    if (referenceData?.reference_number) {
+      navigator.clipboard.writeText(referenceData.reference_number);
+      setCopiedReference(true);
+      toast.success('Referência copiada!');
+      setTimeout(() => setCopiedReference(false), 2000);
+    }
   };
 
   const handlePayment = async () => {
@@ -74,23 +84,26 @@ export function ModulePaymentModal({
     setIsProcessing(true);
 
     try {
-      if (selectedPaymentMethod === 'express') {
-        if (!phoneNumber || phoneNumber.length < 9) {
+      // Express e Reference usam AppyPay (geram automaticamente)
+      if (selectedPaymentMethod === 'express' || selectedPaymentMethod === 'reference') {
+        // Validar telefone
+        const phone = selectedPaymentMethod === 'express' ? phoneNumber : phoneNumber;
+        if (!phone || phone.length < 9) {
           toast.error('Número de telefone inválido');
           setIsProcessing(false);
           return;
         }
 
-        // Pagamento AppyPay Express
+        // Chamar AppyPay via edge function
         const { data, error } = await supabase.functions.invoke('process-module-payment', {
           body: {
             moduleId: module.id,
             memberAreaId,
             studentEmail,
             customerName,
-            paymentMethod: 'express',
+            paymentMethod: selectedPaymentMethod,
             amount: parseFloat(paidPrice),
-            phoneNumber,
+            phoneNumber: phone,
             country
           }
         });
@@ -98,16 +111,24 @@ export function ModulePaymentModal({
         if (error) throw error;
 
         if (data?.success) {
-          toast.success('Pagamento processado!', {
-            description: 'Seu acesso ao módulo foi liberado'
-          });
-          onPaymentSuccess();
-          onOpenChange(false);
+          // Se for pagamento por referência, exibir a referência gerada
+          if (selectedPaymentMethod === 'reference' && data.reference_number) {
+            setReferenceData(data);
+            toast.success('Referência gerada com sucesso!', {
+              description: `Referência: ${data.reference_number}`
+            });
+          } else if (selectedPaymentMethod === 'express') {
+            toast.success('Pagamento processado!', {
+              description: 'Seu acesso ao módulo foi liberado'
+            });
+            onPaymentSuccess();
+            onOpenChange(false);
+          }
         } else {
           throw new Error(data?.error || 'Erro ao processar pagamento');
         }
       } else {
-        // Para outros métodos, exigir comprovante
+        // Outros métodos exigem comprovante
         if (!transferProof) {
           toast.error('Adicione o comprovante de pagamento');
           setIsProcessing(false);
@@ -138,7 +159,6 @@ export function ModulePaymentModal({
             paymentMethod: selectedPaymentMethod,
             amount: parseFloat(paidPrice),
             transferProofUrl: publicUrl,
-            reference: reference || undefined,
             country
           }
         });
@@ -159,6 +179,73 @@ export function ModulePaymentModal({
       setIsProcessing(false);
     }
   };
+
+  // Se temos dados de referência, mostrar a tela de pagamento por referência
+  if (referenceData) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pagamento por Referência</DialogTitle>
+            <DialogDescription>
+              Utilize a referência abaixo para efetuar o pagamento
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="bg-primary/10 p-4 rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">Referência Multicaixa</p>
+              <div className="flex items-center justify-between">
+                <p className="text-2xl font-bold">{referenceData.reference_number}</p>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={copyReferenceNumber}
+                >
+                  {copiedReference ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            {referenceData.entity && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Entidade</p>
+                <p className="font-medium">{referenceData.entity}</p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Valor a Pagar</p>
+              <p className="text-lg font-bold">{paidPrice} KZ</p>
+            </div>
+
+            {referenceData.due_date && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Validade</p>
+                <p className="font-medium">{new Date(referenceData.due_date).toLocaleDateString()}</p>
+              </div>
+            )}
+
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                Após efetuar o pagamento, seu acesso será liberado automaticamente.
+              </p>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => {
+              onPaymentSuccess();
+              onOpenChange(false);
+            }}
+            className="w-full"
+          >
+            Entendi
+          </Button>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -210,6 +297,24 @@ export function ModulePaymentModal({
             />
           </div>
 
+          {/* Telefone (para Express e Reference) */}
+          {(selectedPaymentMethod === 'express' || selectedPaymentMethod === 'reference' || !selectedPaymentMethod) && (
+            <div className="space-y-2">
+              <Label htmlFor="phone">Número de Telefone</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="923000000"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                maxLength={9}
+              />
+              <p className="text-xs text-muted-foreground">
+                Digite o número sem o código do país
+              </p>
+            </div>
+          )}
+
           {/* Métodos de Pagamento */}
           <div className="space-y-3">
             <Label>Método de Pagamento</Label>
@@ -239,51 +344,20 @@ export function ModulePaymentModal({
             </div>
           </div>
 
-          {/* Campos específicos por método */}
-          {selectedPaymentMethod === 'express' && (
+          {/* Comprovante apenas para Transfer e outros que não são Express/Reference */}
+          {selectedPaymentMethod && selectedPaymentMethod !== 'express' && selectedPaymentMethod !== 'reference' && (
             <div className="space-y-2">
-              <Label htmlFor="phone">Número de Telefone</Label>
+              <Label htmlFor="proof">Comprovante de Pagamento</Label>
               <Input
-                id="phone"
-                type="tel"
-                placeholder="923000000"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                maxLength={9}
+                id="proof"
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => setTransferProof(e.target.files?.[0] || null)}
               />
               <p className="text-xs text-muted-foreground">
-                Digite o número sem o código do país (+244)
+                Após realizar o pagamento, envie o comprovante
               </p>
             </div>
-          )}
-
-          {selectedPaymentMethod && selectedPaymentMethod !== 'express' && (
-            <>
-              {selectedPaymentMethod === 'reference' && (
-                <div className="space-y-2">
-                  <Label htmlFor="reference">Referência de Pagamento</Label>
-                  <Input
-                    id="reference"
-                    type="text"
-                    placeholder="Digite a referência"
-                    value={reference}
-                    onChange={(e) => setReference(e.target.value)}
-                  />
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="proof">Comprovante de Pagamento</Label>
-                <Input
-                  id="proof"
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(e) => setTransferProof(e.target.files?.[0] || null)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Após realizar o pagamento, envie o comprovante
-                </p>
-              </div>
-            </>
           )}
         </div>
 

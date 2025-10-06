@@ -24,11 +24,13 @@ serve(async (req) => {
     const { 
       moduleId, 
       memberAreaId, 
-      studentEmail, 
+      studentEmail,
+      customerName,
       paymentMethod, 
       amount,
       phoneNumber,
-      transferProofUrl 
+      transferProofUrl,
+      country
     } = await req.json();
     
     console.log('📋 [PROCESS-MODULE-PAYMENT] Request data:', {
@@ -62,12 +64,9 @@ serve(async (req) => {
       sellerId: moduleData.member_areas?.user_id
     });
 
-    if (paymentMethod === 'express') {
-      // Processar pagamento AppyPay
-      console.log('💳 [PROCESS-MODULE-PAYMENT] Processing AppyPay Express payment');
-      
-      // Buscar credenciais AppyPay do vendedor
-      const sellerId = moduleData.member_areas?.user_id;
+    if (paymentMethod === 'express' || paymentMethod === 'reference') {
+      // Processar pagamento AppyPay (Express ou Reference)
+      console.log(`💳 [PROCESS-MODULE-PAYMENT] Processing AppyPay ${paymentMethod} payment`);
       
       // Gerar order_id único
       const orderId = `MOD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -76,12 +75,12 @@ serve(async (req) => {
       // Chamar função de pagamento AppyPay
       const { data: paymentData, error: paymentError } = await supabase.functions.invoke('create-appypay-charge', {
         body: {
-          productId: moduleData.paid_product_id || moduleId, // Usar paid_product_id se existir
+          productId: moduleData.paid_product_id || moduleId,
           customerEmail: studentEmail,
-          customerName: studentEmail.split('@')[0],
+          customerName: customerName || studentEmail.split('@')[0],
           amount: amount,
           currency: 'AOA',
-          paymentMethod: 'express',
+          paymentMethod: paymentMethod,
           phoneNumber: phoneNumber,
           checkoutData: {
             orderId,
@@ -97,33 +96,30 @@ serve(async (req) => {
         throw new Error(paymentData?.error || 'Erro ao processar pagamento');
       }
 
-      console.log('✅ [PROCESS-MODULE-PAYMENT] Payment successful');
+      console.log('✅ [PROCESS-MODULE-PAYMENT] Payment successful:', paymentData);
 
-      // Liberar acesso ao módulo - remover turma dos coming_soon_cohort_ids
-      const { data: studentData } = await supabase
-        .from('member_area_students')
-        .select('cohort_id')
-        .eq('member_area_id', memberAreaId)
-        .ilike('student_email', studentEmail)
-        .single();
+      // Se for Express e pagamento confirmado, liberar acesso imediatamente
+      if (paymentMethod === 'express' && paymentData.payment_status === 'completed') {
+        const { data: studentData } = await supabase
+          .from('member_area_students')
+          .select('cohort_id')
+          .eq('member_area_id', memberAreaId)
+          .ilike('student_email', studentEmail)
+          .single();
 
-      if (studentData?.cohort_id) {
-        const currentComingSoonCohorts = moduleData.coming_soon_cohort_ids || [];
-        const updatedComingSoonCohorts = currentComingSoonCohorts.filter(
-          (id: string) => id !== studentData.cohort_id
-        );
+        if (studentData?.cohort_id) {
+          const currentComingSoonCohorts = moduleData.coming_soon_cohort_ids || [];
+          const updatedComingSoonCohorts = currentComingSoonCohorts.filter(
+            (id: string) => id !== studentData.cohort_id
+          );
 
-        // Atualizar módulo removendo a turma de coming_soon_cohort_ids
-        const { error: updateError } = await supabase
-          .from('modules')
-          .update({
-            coming_soon_cohort_ids: updatedComingSoonCohorts.length > 0 ? updatedComingSoonCohorts : null
-          })
-          .eq('id', moduleId);
+          await supabase
+            .from('modules')
+            .update({
+              coming_soon_cohort_ids: updatedComingSoonCohorts.length > 0 ? updatedComingSoonCohorts : null
+            })
+            .eq('id', moduleId);
 
-        if (updateError) {
-          console.error('❌ [PROCESS-MODULE-PAYMENT] Error updating module:', updateError);
-        } else {
           console.log('✅ [PROCESS-MODULE-PAYMENT] Module access granted to student');
         }
       }
@@ -131,7 +127,11 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Pagamento processado com sucesso'
+          message: paymentMethod === 'reference' ? 'Referência gerada com sucesso' : 'Pagamento processado com sucesso',
+          reference_number: paymentData.reference_number,
+          entity: paymentData.entity,
+          due_date: paymentData.due_date,
+          payment_status: paymentData.payment_status
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -139,7 +139,7 @@ serve(async (req) => {
         }
       );
 
-    } else if (paymentMethod === 'transfer') {
+    } else if (paymentMethod === 'transfer' || paymentMethod === 'emola' || paymentMethod === 'epesa') {
       // Pagamento por transferência - criar registro pendente
       console.log('🏦 [PROCESS-MODULE-PAYMENT] Processing transfer payment');
       
