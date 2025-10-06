@@ -577,34 +577,40 @@ export default function ModernMembersArea() {
       return { isComingSoon: false, hasAccess: true };
     }
     
-    // ✅ Se módulo não é pago, aplicar lógica normal
-    if (!(module as any).is_paid) {
-      if (!module.coming_soon) {
-        return { isComingSoon: false, hasAccess: true };
+    // ✅ Verificar se o módulo é pago PARA ESTA TURMA
+    const isPaidForThisStudent = isModulePaidForStudent(module);
+    
+    console.log('🔍 [checkModuleAccessibility] Verificação completa:', {
+      moduleId: module.id,
+      moduleTitle: module.title,
+      is_paid: (module as any).is_paid,
+      isPaidForThisStudent,
+      hasIndividualAccess
+    });
+    
+    // ✅ Se módulo NÃO é pago para esta turma, liberar acesso
+    if (!isPaidForThisStudent) {
+      console.log('✅ [checkModuleAccessibility] Módulo GRATUITO para esta turma - liberando acesso');
+      // Aplicar lógica de coming_soon se necessário
+      if (module.coming_soon) {
+        const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
+        
+        if (comingSoonCohortIds === null) {
+          return { isComingSoon: true, hasAccess: false };
+        }
+        
+        if (comingSoonCohortIds && comingSoonCohortIds.length > 0 && studentCohortId) {
+          const isComingSoon = comingSoonCohortIds.includes(studentCohortId);
+          return { isComingSoon, hasAccess: !isComingSoon };
+        }
       }
       
-      const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
-      
-      // ✅ CORREÇÃO: null = todas turmas, array vazio = nenhuma turma
-      if (comingSoonCohortIds === null) {
-        return { isComingSoon: true, hasAccess: false };
-      }
-      
-      if (comingSoonCohortIds.length === 0) {
-        return { isComingSoon: false, hasAccess: true };
-      }
-      
-      if (!studentCohortId) {
-        return { isComingSoon: false, hasAccess: true };
-      }
-      
-      const isComingSoon = comingSoonCohortIds.includes(studentCohortId);
-      return { isComingSoon, hasAccess: !isComingSoon };
+      return { isComingSoon: false, hasAccess: true };
     }
     
-    // ✅ Módulo pago sem acesso individual está bloqueado
-    console.log('🔒 [checkModuleAccessibility] Módulo pago sem acesso individual');
-    return { isComingSoon: true, hasAccess: false };
+    // ✅ Módulo É PAGO para esta turma e NÃO tem acesso individual - bloquear
+    console.log('🔒 [checkModuleAccessibility] Módulo PAGO para esta turma sem acesso individual - bloqueando');
+    return { isComingSoon: false, hasAccess: false }; // Não é "em breve", é "pago"
   };
 
   // Verifica se o módulo é pago para a turma do aluno
