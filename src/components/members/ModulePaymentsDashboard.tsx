@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, DollarSign, Clock, CheckCircle2, XCircle, Eye, Unlock } from 'lucide-react';
+import { Loader2, DollarSign, Clock, CheckCircle2, XCircle, Eye, Unlock, UserCheck, UserX } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -25,6 +25,7 @@ interface ModulePayment {
   payment_proof_url?: string;
   created_at: string;
   completed_at?: string;
+  has_access?: boolean;
   modules: {
     title: string;
   };
@@ -55,27 +56,45 @@ export const ModulePaymentsDashboard = () => {
       if (filter !== 'all') {
         query = query.eq('status', filter);
       }
-      const {
-        data,
-        error
-      } = await query;
+      const { data, error } = await query;
       if (error) throw error;
-      setPayments(data || []);
+      
+      // Verificar quais pagamentos já têm acesso liberado
+      const paymentsWithAccess = await Promise.all(
+        (data || []).map(async (payment) => {
+          const { data: accessData } = await supabase
+            .from('module_student_access')
+            .select('id')
+            .eq('module_id', payment.module_id)
+            .eq('student_email', payment.student_email.toLowerCase().trim())
+            .maybeSingle();
+          
+          return {
+            ...payment,
+            has_access: !!accessData
+          };
+        })
+      );
+      
+      setPayments(paymentsWithAccess);
     } catch (error) {
       console.error('Error loading module payments:', error);
     } finally {
       setIsLoading(false);
     }
   };
-  const handleGrantEltonAccess = async () => {
+  const handleGrantAccess = async (payment: ModulePayment) => {
     setIsGrantingAccess(true);
     try {
-      console.log('🔓 Liberando acesso do Elton...');
+      console.log('🔓 Liberando acesso...', { 
+        email: payment.student_email, 
+        moduleId: payment.module_id 
+      });
       
       const { data, error } = await supabase.functions.invoke('grant-module-access-manually', {
         body: {
-          studentEmail: 'sneeperhelton@gmail.com',
-          moduleId: '5bcee871-f9e9-42d1-995d-634c67b6a0a9'
+          studentEmail: payment.student_email,
+          moduleId: payment.module_id
         }
       });
 
@@ -87,10 +106,11 @@ export const ModulePaymentsDashboard = () => {
       console.log('✅ Sucesso:', data);
       toast({
         title: "✅ Acesso liberado!",
-        description: "O acesso do Elton ao módulo foi concedido com sucesso.",
+        description: `Acesso ao módulo liberado para ${payment.student_name}.`,
       });
       
       loadPayments();
+      setSelectedPayment(null);
     } catch (error: any) {
       console.error('❌ Erro ao liberar acesso:', error);
       toast({
@@ -128,10 +148,13 @@ export const ModulePaymentsDashboard = () => {
         {config.label}
       </Badge>;
   };
+  const completedPayments = payments.filter(p => p.status === 'completed');
   const stats = {
     total: payments.reduce((sum, p) => sum + Number(p.amount), 0),
     pending: payments.filter(p => p.status === 'pending').length,
-    completed: payments.filter(p => p.status === 'completed').length
+    completed: completedPayments.length,
+    withAccess: completedPayments.filter(p => p.has_access).length,
+    withoutAccess: completedPayments.filter(p => !p.has_access).length
   };
   if (isLoading) {
     return <div className="flex items-center justify-center p-12">
@@ -141,7 +164,7 @@ export const ModulePaymentsDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -155,7 +178,7 @@ export const ModulePaymentsDashboard = () => {
         <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm text-muted-foreground">Pagamentos Pendentes</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Pendentes</p>
               <p className="text-xl sm:text-2xl font-bold">{stats.pending}</p>
             </div>
             <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
@@ -165,41 +188,49 @@ export const ModulePaymentsDashboard = () => {
         <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm text-muted-foreground">Pagamentos Concluídos</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Concluídos</p>
               <p className="text-xl sm:text-2xl font-bold">{stats.completed}</p>
             </div>
             <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
           </div>
         </Card>
+
+        <Card className="p-4 sm:p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Acessos Liberados</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.withAccess}</p>
+            </div>
+            <UserCheck className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
+          </div>
+        </Card>
+
+        <Card className="p-4 sm:p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Sem Acesso</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.withoutAccess}</p>
+            </div>
+            <UserX className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />
+          </div>
+        </Card>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-2">
-          {(['all', 'pending', 'completed'] as const).map(f => (
-            <button 
-              key={f} 
-              onClick={() => setFilter(f)} 
-              className={`px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors ${
-                filter === f 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              }`}
-            >
-              {f === 'all' ? 'Todos' : f === 'pending' ? 'Pendentes' : 'Concluídos'}
-            </button>
-          ))}
-        </div>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleGrantEltonAccess}
-          disabled={isGrantingAccess}
-        >
-          <Unlock className={`h-4 w-4 mr-2 ${isGrantingAccess ? 'animate-pulse' : ''}`} />
-          {isGrantingAccess ? 'Liberando...' : 'Liberar Acesso Elton'}
-        </Button>
+      <div className="flex flex-wrap gap-2">
+        {(['all', 'pending', 'completed'] as const).map(f => (
+          <button 
+            key={f} 
+            onClick={() => setFilter(f)} 
+            className={`px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors ${
+              filter === f 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+            }`}
+          >
+            {f === 'all' ? 'Todos' : f === 'pending' ? 'Pendentes' : 'Concluídos'}
+          </button>
+        ))}
       </div>
 
       {/* Payments List */}
@@ -243,6 +274,19 @@ export const ModulePaymentsDashboard = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusBadge(payment.status)}
+                      {payment.status === 'completed' && (
+                        payment.has_access ? (
+                          <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                            <UserCheck className="w-3 h-3 mr-1" />
+                            Com Acesso
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20">
+                            <UserX className="w-3 h-3 mr-1" />
+                            Sem Acesso
+                          </Badge>
+                        )
+                      )}
                       <Eye className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     </div>
                   </div>
@@ -327,9 +371,9 @@ export const ModulePaymentsDashboard = () => {
                 </div>
               )}
 
-              {/* Botão Verificar Status */}
-              {selectedPayment.status === 'pending' && (
-                <div className="flex justify-end pt-4 border-t">
+              {/* Botões de Ação */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                {selectedPayment.status === 'pending' && (
                   <VerifyModulePaymentButton 
                     paymentId={selectedPayment.id} 
                     referenceNumber={selectedPayment.reference_number} 
@@ -339,8 +383,19 @@ export const ModulePaymentsDashboard = () => {
                       loadPayments();
                     }} 
                   />
-                </div>
-              )}
+                )}
+                
+                {selectedPayment.status === 'completed' && !selectedPayment.has_access && (
+                  <Button
+                    onClick={() => handleGrantAccess(selectedPayment)}
+                    disabled={isGrantingAccess}
+                    className="gap-2"
+                  >
+                    <Unlock className={`h-4 w-4 ${isGrantingAccess ? 'animate-pulse' : ''}`} />
+                    {isGrantingAccess ? 'Liberando...' : 'Liberar Acesso ao Módulo'}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
