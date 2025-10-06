@@ -182,6 +182,19 @@ export default function Financial() {
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
       const recoveredOrderIds = new Set();
 
+      // Buscar saldo real do customer_balances (fonte de verdade)
+      const { data: balanceData, error: balanceError } = await supabase
+        .from('customer_balances')
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (balanceError) {
+        console.error('Error loading balance:', balanceError);
+      }
+
+      const currentBalance = balanceData?.balance || 0;
+
       // Buscar solicitações de saque
       const { data: withdrawalRequestsData, error: withdrawalsError } = await supabase
         .from('withdrawal_requests')
@@ -263,60 +276,7 @@ export default function Financial() {
           return sum + order.earning_amount;
         }, 0);
 
-        // ✅ NOVA LÓGICA: Calcular saldo disponível e pendente com base nas datas das vendas
-        const now = new Date();
-        let availableBalance = 0;  // Vendas já liberadas (mais de 3 dias)
-        let pendingBalance = 0;    // Vendas aguardando liberação (dentro de 3 dias)
-        const pendingOrdersData: Array<{date: Date, amount: number}> = [];
-
-        allOrders.forEach(order => {
-          const orderDate = new Date(order.created_at);
-          const releaseDate = new Date(orderDate);
-          // Calcular 3 dias corridos (sempre 3 dias após a venda)
-          releaseDate.setDate(orderDate.getDate() + 3);
-          
-          const amount = order.earning_amount;
-          
-          // Verificar se já passou dos 3 dias
-          if (now >= releaseDate) {
-            // Venda já liberada - adicionar ao saldo disponível
-            availableBalance += amount;
-          } else {
-            // Venda ainda pendente - adicionar ao saldo pendente
-            pendingBalance += amount;
-            pendingOrdersData.push({
-              date: releaseDate,
-              amount: amount
-            });
-          }
-        });
-
-        // Encontrar a próxima data de liberação e valor
-        let nextReleaseDate = null;
-        let nextReleaseAmount = 0;
-        
-        if (pendingOrdersData.length > 0) {
-          // Ordenar por data e pegar a próxima liberação
-          pendingOrdersData.sort((a, b) => a.date.getTime() - b.date.getTime());
-          nextReleaseDate = pendingOrdersData[0].date;
-          
-          // Somar todas as vendas que serão liberadas na mesma data
-          nextReleaseAmount = pendingOrdersData
-            .filter(order => order.date.toDateString() === nextReleaseDate!.toDateString())
-            .reduce((sum, order) => sum + order.amount, 0);
-        }
-        
-        // ✅ SEMPRE definir uma data quando há saldo pendente
-        if (pendingBalance > 0 && !nextReleaseDate) {
-          const today = new Date();
-          nextReleaseDate = new Date(today);
-          nextReleaseDate.setDate(today.getDate() + 3);
-          nextReleaseAmount = pendingBalance;
-        }
-
-        // Usar dados já carregados dos saques (já extraídos acima)
-
-        // ✅ Calcular total sacado = APROVADOS + PENDENTES (descontar imediatamente)
+        // ✅ Calcular total sacado = APROVADOS + PENDENTES (descontar do saldo)
         const totalWithdrawnAmount = withdrawalRequestsData?.reduce((sum, withdrawal) => {
           // Incluir saques APROVADOS e PENDENTES
           if (withdrawal.status === 'aprovado' || withdrawal.status === 'pendente') {
@@ -326,8 +286,43 @@ export default function Financial() {
           return sum;
         }, 0) || 0;
 
-        // ✅ DEDUZIR saques aprovados do saldo disponível
-        const finalAvailableBalance = Math.max(0, availableBalance - totalWithdrawnAmount);
+        // ✅ USAR o saldo real do customer_balances como fonte de verdade
+        // Esse saldo já está sincronizado com as balance_transactions
+        const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
+
+        // Calcular saldo pendente baseado nas vendas dos últimos 3 dias
+        const now = new Date();
+        let pendingBalance = 0;
+        const pendingOrdersData: Array<{date: Date, amount: number}> = [];
+
+        allOrders.forEach(order => {
+          const orderDate = new Date(order.created_at);
+          const releaseDate = new Date(orderDate);
+          releaseDate.setDate(orderDate.getDate() + 3);
+          
+          const amount = order.earning_amount;
+          
+          // Se ainda não liberou (dentro de 3 dias)
+          if (now < releaseDate) {
+            pendingBalance += amount;
+            pendingOrdersData.push({
+              date: releaseDate,
+              amount: amount
+            });
+          }
+        });
+
+        // Encontrar próxima liberação
+        let nextReleaseDate = null;
+        let nextReleaseAmount = 0;
+        
+        if (pendingOrdersData.length > 0) {
+          pendingOrdersData.sort((a, b) => a.date.getTime() - b.date.getTime());
+          nextReleaseDate = pendingOrdersData[0].date;
+          nextReleaseAmount = pendingOrdersData
+            .filter(order => order.date.toDateString() === nextReleaseDate!.toDateString())
+            .reduce((sum, order) => sum + order.amount, 0);
+        }
 
         const newFinancialData = {
           availableBalance: finalAvailableBalance,  // ✅ Saldo disponível para saque (do banco)
