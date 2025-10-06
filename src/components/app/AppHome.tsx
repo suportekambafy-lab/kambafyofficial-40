@@ -398,19 +398,7 @@ export function AppHome() {
     if (!user) return;
 
     try {
-      // ✅ BUSCAR SALDO REAL DA TABELA customer_balances
-      console.log('🔍 [AppHome] Buscando saldo para user_id:', user.id);
-      const { data: balanceData, error: balanceError } = await supabase
-        .from('customer_balances')
-        .select('balance')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      console.log('💰 [AppHome] Saldo encontrado:', {
-        balanceData,
-        balanceError,
-        userId: user.id
-      });
+      console.log('💰 [AppHome] Calculando saldos baseados em VENDAS (igual à Web)');
 
       // Buscar payment_releases
       const { data: releases } = await supabase
@@ -426,9 +414,10 @@ export function AppHome() {
         .order('created_at', { ascending: false });
 
       const now = new Date();
-      let pendingBalance = 0;
+      let availableBalance = 0;  // Vendas liberadas (>3 dias)
+      let pendingBalance = 0;    // Vendas aguardando (<3 dias)
 
-      // Calcular apenas saldo pendente (vendas ainda não liberadas)
+      // ✅ CALCULAR SALDOS BASEADOS EM VENDAS (igual à Web)
       orders.forEach(order => {
         let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
         
@@ -448,24 +437,26 @@ export function AppHome() {
         // Verificar se foi liberado manualmente via payment_releases
         const wasReleased = releases?.some(r => r.order_id === order.order_id) || false;
 
-        // Se ainda não foi liberado, adicionar ao saldo pendente
-        if (!wasReleased && now < releaseDate) {
-          pendingBalance += amount;
+        if (wasReleased || now >= releaseDate) {
+          availableBalance += amount;  // ✅ Liberado
+        } else {
+          pendingBalance += amount;    // ⏳ Pendente
         }
       });
 
-      // Calcular total de saques aprovados (apenas para exibição)
+      // Calcular total de saques aprovados
       const totalWithdrawnAmount = withdrawals
         ?.filter(w => w.status === 'aprovado')
         .reduce((sum, w) => sum + (parseFloat(w.amount?.toString() || '0')), 0) || 0;
 
-      // ✅ USAR O SALDO REAL DO BANCO (já considera todas as transações e saques)
-      const finalAvailableBalance = parseFloat(balanceData?.balance?.toString() || '0');
+      // ✅ DEDUZIR SAQUES DO SALDO DISPONÍVEL (igual à Web)
+      const finalAvailableBalance = Math.max(0, availableBalance - totalWithdrawnAmount);
       
-      console.log('💵 [AppHome] Definindo financialData:', {
-        finalAvailableBalance,
-        pendingBalance,
-        totalWithdrawnAmount
+      console.log('💵 [AppHome] Saldos calculados (fonte: vendas):', {
+        disponivel: finalAvailableBalance,
+        pendente: pendingBalance,
+        totalSacado: totalWithdrawnAmount,
+        totalVendas: orders.length
       });
 
       setFinancialData({
