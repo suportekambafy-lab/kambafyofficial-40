@@ -1081,13 +1081,17 @@ export type Database = {
         Row: {
           cohort_ids: string[] | null
           coming_soon: boolean | null
+          coming_soon_cohort_ids: string[] | null
           cover_image_url: string | null
           cover_orientation: string | null
           created_at: string
           description: string | null
           id: string
+          is_paid: boolean | null
           member_area_id: string | null
           order_number: number
+          paid_price: string | null
+          paid_product_id: string | null
           status: string
           title: string
           updated_at: string
@@ -1096,13 +1100,17 @@ export type Database = {
         Insert: {
           cohort_ids?: string[] | null
           coming_soon?: boolean | null
+          coming_soon_cohort_ids?: string[] | null
           cover_image_url?: string | null
           cover_orientation?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_paid?: boolean | null
           member_area_id?: string | null
           order_number?: number
+          paid_price?: string | null
+          paid_product_id?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -1111,13 +1119,17 @@ export type Database = {
         Update: {
           cohort_ids?: string[] | null
           coming_soon?: boolean | null
+          coming_soon_cohort_ids?: string[] | null
           cover_image_url?: string | null
           cover_orientation?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_paid?: boolean | null
           member_area_id?: string | null
           order_number?: number
+          paid_price?: string | null
+          paid_product_id?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -1129,6 +1141,13 @@ export type Database = {
             columns: ["member_area_id"]
             isOneToOne: false
             referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "modules_paid_product_id_fkey"
+            columns: ["paid_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
