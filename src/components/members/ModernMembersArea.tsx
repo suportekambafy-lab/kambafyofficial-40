@@ -330,9 +330,11 @@ export default function ModernMembersArea() {
   };
   
   const handleModuleClick = (module: Module) => {
-    console.log('👆 [handleModuleClick]', {
+    console.log('👆 [handleModuleClick] CLIQUE DETECTADO!', {
       moduleId: module.id,
-      moduleTitle: module.title
+      moduleTitle: module.title,
+      coming_soon: module.coming_soon,
+      is_paid: (module as any).is_paid
     });
     
     const isComingSoon = isModuleComingSoonForStudent(module);
@@ -342,14 +344,19 @@ export default function ModernMembersArea() {
     console.log('🎯 [handleModuleClick] Verificações:', {
       isComingSoon,
       isPaid,
-      isAccessible
+      isAccessible,
+      shouldOpenPayment: isComingSoon && isPaid
     });
     
     // Se está em breve E é pago, abrir modal de pagamento
     if (isComingSoon && isPaid) {
-      console.log('💰 [handleModuleClick] Módulo pago - abrindo modal de pagamento');
+      console.log('💰 [handleModuleClick] ABRINDO MODAL DE PAGAMENTO', {
+        module: module.title,
+        paid_price: (module as any).paid_price
+      });
       setModuleForPayment(module);
       setPaymentModalOpen(true);
+      console.log('✅ Estados atualizados - Modal deve abrir agora');
       return;
     }
 
