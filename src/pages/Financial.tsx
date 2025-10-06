@@ -263,24 +263,10 @@ export default function Financial() {
           return sum + order.earning_amount;
         }, 0);
 
-        // Buscar liberações já processadas pelo sistema automático
-        const { data: releasedPayments } = await supabase
-          .from('payment_releases')
-          .select('order_id, amount')
-          .eq('user_id', user.id);
-
-        const releasedOrderIds = new Set(releasedPayments?.map(r => r.order_id) || []);
-
-        // ✅ BUSCAR SALDO REAL DA TABELA customer_balances
-        const { data: balanceData } = await supabase
-          .from('customer_balances')
-          .select('balance')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        // ✅ NOVA LÓGICA CORRIGIDA
+        // ✅ NOVA LÓGICA: Calcular saldo disponível e pendente com base nas datas das vendas
         const now = new Date();
-        let pendingBalance = 0;   // Vendas aprovadas aguardando liberação (dentro de 3 dias)
+        let availableBalance = 0;  // Vendas já liberadas (mais de 3 dias)
+        let pendingBalance = 0;    // Vendas aguardando liberação (dentro de 3 dias)
         const pendingOrdersData: Array<{date: Date, amount: number}> = [];
 
         allOrders.forEach(order => {
@@ -291,11 +277,12 @@ export default function Financial() {
           
           const amount = order.earning_amount;
           
-          // Verificar se esta venda já foi liberada pelo sistema automático
-          const wasReleased = releasedOrderIds.has(order.order_id);
-          
-          // Se ainda não foi liberada, adicionar ao saldo pendente
-          if (!wasReleased && now < releaseDate) {
+          // Verificar se já passou dos 3 dias
+          if (now >= releaseDate) {
+            // Venda já liberada - adicionar ao saldo disponível
+            availableBalance += amount;
+          } else {
+            // Venda ainda pendente - adicionar ao saldo pendente
             pendingBalance += amount;
             pendingOrdersData.push({
               date: releaseDate,
@@ -341,8 +328,8 @@ export default function Financial() {
           return sum;
         }, 0) || 0;
 
-        // ✅ USAR O SALDO REAL DO BANCO (já considera todas as transações e saques)
-        const finalAvailableBalance = parseFloat(balanceData?.balance?.toString() || '0');
+        // ✅ DEDUZIR saques aprovados do saldo disponível
+        const finalAvailableBalance = Math.max(0, availableBalance - totalWithdrawnAmount);
 
         const newFinancialData = {
           availableBalance: finalAvailableBalance,  // ✅ Saldo disponível para saque (do banco)
