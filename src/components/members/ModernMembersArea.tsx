@@ -268,6 +268,9 @@ export default function ModernMembersArea() {
           console.error('❌ ModernMembersArea: Erro ao carregar módulos:', modulesError);
         }
 
+        // ✅ Carregar acessos individuais de módulos
+        await loadModulesWithAccess();
+
         // Sempre carregar dados da área de membros
         const { data: memberAreaData, error: memberAreaError } = await supabase
           .from('member_areas')
