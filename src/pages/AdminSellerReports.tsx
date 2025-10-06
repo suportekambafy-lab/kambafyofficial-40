@@ -3,10 +3,17 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, TrendingUp, DollarSign, FileText } from 'lucide-react';
+import { ArrowLeft, Users, TrendingUp, DollarSign, FileText, CreditCard, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface SellerReport {
   user_id: string;
@@ -18,6 +25,8 @@ interface SellerReport {
   totalSales: number;
   totalRevenue: number;
   totalWithdrawals: number;
+  withdrawalFee: number;
+  availableBalance: number;
   activeProducts: number;
   bannedProducts: number;
 }
@@ -28,6 +37,8 @@ export default function AdminSellerReports() {
   const { toast } = useToast();
   const [sellers, setSellers] = useState<SellerReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSeller, setSelectedSeller] = useState<SellerReport | null>(null);
+  const [balanceDialogOpen, setBalanceDialogOpen] = useState(false);
 
   useEffect(() => {
     if (admin) {
@@ -104,6 +115,13 @@ export default function AdminSellerReports() {
             .select('amount, status')
             .eq('user_id', profile.user_id);
 
+          // Buscar saldo disponível
+          const { data: balanceData } = await supabase
+            .from('customer_balances')
+            .select('balance')
+            .eq('user_id', profile.user_id)
+            .maybeSingle();
+
           const totalSales = orders.length;
           const totalRevenue = orders.reduce((sum, order) => 
             sum + parseFloat(order.amount || '0'), 0);
@@ -119,12 +137,20 @@ export default function AdminSellerReports() {
             w.status === 'aprovado').reduce((sum, w) => 
             sum + parseFloat(w.amount.toString()), 0) || 0;
 
+          const withdrawalFee = totalWithdrawals > 0 
+            ? (totalWithdrawals / totalRevenue) * 100 
+            : 0;
+
+          const availableBalance = balanceData?.balance || 0;
+
           sellersData.push({
             user_id: profile.user_id,
             profile,
             totalSales,
             totalRevenue,
             totalWithdrawals,
+            withdrawalFee,
+            availableBalance,
             activeProducts,
             bannedProducts
           });
@@ -246,7 +272,14 @@ export default function AdminSellerReports() {
         {/* Lista de Vendedores */}
         <div className="space-y-6">
           {sellers.map((seller, index) => (
-            <Card key={seller.user_id} className="shadow-lg border bg-white hover:shadow-xl transition-shadow">
+            <Card 
+              key={seller.user_id} 
+              className="shadow-lg border bg-white hover:shadow-xl transition-shadow cursor-pointer"
+              onClick={() => {
+                setSelectedSeller(seller);
+                setBalanceDialogOpen(true);
+              }}
+            >
               <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-4">
@@ -278,7 +311,7 @@ export default function AdminSellerReports() {
               </CardHeader>
 
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <p className="text-2xl font-bold text-blue-600">{seller.totalSales}</p>
                     <p className="text-sm text-blue-800">Vendas Realizadas</p>
@@ -295,14 +328,21 @@ export default function AdminSellerReports() {
                     <p className="text-2xl font-bold text-yellow-600">
                       {seller.totalWithdrawals.toLocaleString('pt-AO')} KZ
                     </p>
-                    <p className="text-sm text-yellow-800">Total Sacado</p>
+                    <p className="text-sm text-yellow-800">Saques Feitos</p>
                   </div>
                   
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <p className="text-2xl font-bold text-purple-600">
-                      {((seller.totalWithdrawals / seller.totalRevenue) * 100 || 0).toFixed(1)}%
+                      {seller.withdrawalFee.toFixed(1)}%
                     </p>
                     <p className="text-sm text-purple-800">Taxa de Saque</p>
+                  </div>
+
+                  <div className="text-center p-4 bg-cyan-50 rounded-lg">
+                    <p className="text-2xl font-bold text-cyan-600">
+                      {seller.availableBalance.toLocaleString('pt-AO')} KZ
+                    </p>
+                    <p className="text-sm text-cyan-800">Saldo Disponível</p>
                   </div>
                 </div>
               </CardContent>
@@ -321,6 +361,64 @@ export default function AdminSellerReports() {
             </Card>
           )}
         </div>
+
+        {/* Dialog de Saldo Disponível */}
+        <Dialog open={balanceDialogOpen} onOpenChange={setBalanceDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Detalhes Financeiros</DialogTitle>
+              <DialogDescription>
+                {selectedSeller?.profile.full_name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center">
+                    <Wallet className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-green-800">Saldo Disponível</p>
+                    <p className="text-xs text-green-600">Para saque</p>
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-green-600">
+                  {selectedSeller?.availableBalance.toLocaleString('pt-AO')} KZ
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
+                    <DollarSign className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">Receita Total</p>
+                    <p className="text-xs text-blue-600">Vendas realizadas</p>
+                  </div>
+                </div>
+                <p className="text-xl font-bold text-blue-600">
+                  {selectedSeller?.totalRevenue.toLocaleString('pt-AO')} KZ
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-yellow-600 rounded-full flex items-center justify-center">
+                    <CreditCard className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-yellow-800">Saques Feitos</p>
+                    <p className="text-xs text-yellow-600">{selectedSeller?.withdrawalFee.toFixed(1)}% de taxa</p>
+                  </div>
+                </div>
+                <p className="text-xl font-bold text-yellow-600">
+                  {selectedSeller?.totalWithdrawals.toLocaleString('pt-AO')} KZ
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

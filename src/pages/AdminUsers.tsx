@@ -4,8 +4,9 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, UserX, UserCheck, User, Calendar, Mail, Shield } from 'lucide-react';
+import { ArrowLeft, UserX, UserCheck, User, Calendar, Mail, Shield, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { BanUserDialog } from '@/components/BanUserDialog';
@@ -35,6 +36,7 @@ export default function AdminUsers() {
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [sendingEmails, setSendingEmails] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (admin) {
@@ -230,6 +232,14 @@ export default function AdminUsers() {
     return <Badge className="bg-green-100 text-green-800 border-green-200">Ativo</Badge>;
   };
 
+  // Filtrar usuários baseado na busca
+  const filteredUsers = users.filter(user => {
+    const searchLower = searchTerm.toLowerCase();
+    const nameMatch = user.full_name?.toLowerCase().includes(searchLower);
+    const emailMatch = user.email?.toLowerCase().includes(searchLower);
+    return nameMatch || emailMatch;
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -256,8 +266,22 @@ export default function AdminUsers() {
             </Button>
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-foreground">Gerenciar Usuários</h1>
-              <p className="text-muted-foreground mt-1">Banir ou desbloquear contas de usuários da plataforma</p>
+              <p className="text-muted-foreground mt-1">
+                {filteredUsers.length} {filteredUsers.length === 1 ? 'usuário' : 'usuários'} cadastrados
+              </p>
             </div>
+          </div>
+
+          {/* Campo de Busca */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar por nome ou email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-12 text-base"
+            />
           </div>
 
           <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
@@ -285,7 +309,7 @@ export default function AdminUsers() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {users.map((user) => (
+          {filteredUsers.map((user) => (
             <Card key={user.id} className="shadow-lg border-0 bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow">
               <CardHeader className="pb-4">
                 <div className="flex justify-between items-start mb-4">
@@ -370,12 +394,18 @@ export default function AdminUsers() {
             </Card>
           ))}
           
-          {users.length === 0 && (
+          {filteredUsers.length === 0 && (
             <Card className="col-span-3 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardContent className="text-center py-16">
                 <User className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhum usuário encontrado</h3>
-                <p className="text-slate-600">Não há usuários cadastrados no sistema.</p>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">
+                  {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+                </h3>
+                <p className="text-slate-600">
+                  {searchTerm 
+                    ? 'Tente buscar com outros termos.' 
+                    : 'Não há usuários cadastrados no sistema.'}
+                </p>
               </CardContent>
             </Card>
           )}
