@@ -45,7 +45,15 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (orderError || !order) {
-      throw new Error('Order not found');
+      console.error('[VERIFY-APPYPAY-ORDER] Order not found error:', orderError);
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Pedido não encontrado na base de dados',
+        error: 'Order not found'
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
     console.log('[VERIFY-APPYPAY-ORDER] Order found:', {

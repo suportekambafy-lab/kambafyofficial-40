@@ -40,7 +40,15 @@ export const VerifyOrderButton = ({ orderId, paymentMethod, onVerified }: Verify
       }
     } catch (error: any) {
       console.error('Error verifying order:', error);
-      toast.error(error.message || 'Erro ao verificar encomenda');
+      
+      // Mensagens de erro mais específicas
+      if (error.message?.includes('Order not found')) {
+        toast.error('Pedido não encontrado. Este pedido pode ter sido removido.');
+      } else if (error.message?.includes('Transaction not found')) {
+        toast.error('Transação não encontrada no AppyPay. Aguarde alguns instantes e tente novamente.');
+      } else {
+        toast.error(error.message || 'Erro ao verificar encomenda');
+      }
     } finally {
       setIsVerifying(false);
     }
