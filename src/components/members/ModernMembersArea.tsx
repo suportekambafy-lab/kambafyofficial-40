@@ -327,12 +327,31 @@ export default function ModernMembersArea() {
   };
   
   const handleModuleClick = (module: Module) => {
-    if (!isModuleAccessible(module)) {
+    // Verificar se está em breve para o aluno
+    if (isModuleComingSoonForStudent(module)) {
       toast.error("Módulo em breve", {
         description: "Este módulo estará disponível em breve"
       });
       return;
     }
+
+    // Verificar se é pago e o aluno não pagou ainda
+    if (isModulePaidForStudent(module)) {
+      const paidPrice = (module as any).paid_price;
+      toast.error("Módulo Pago", {
+        description: `Este módulo requer pagamento adicional${paidPrice ? ` de ${paidPrice}` : ''} para acesso`
+      });
+      return;
+    }
+
+    // Módulo acessível
+    if (!isModuleAccessible(module)) {
+      toast.error("Módulo indisponível", {
+        description: "Este módulo não está disponível no momento"
+      });
+      return;
+    }
+
     console.log('📚 Módulo selecionado:', module.title);
     setSelectedModule(module);
   };
@@ -362,7 +381,44 @@ export default function ModernMembersArea() {
     return true;
   };
   const isModuleAccessible = (module: Module) => {
-    return module.status === 'published' && !module.coming_soon;
+    return module.status === 'published' && !isModuleComingSoonForStudent(module);
+  };
+
+  // Verifica se o módulo está "em breve" para a turma do aluno
+  const isModuleComingSoonForStudent = (module: Module): boolean => {
+    if (!module.coming_soon) return false;
+    
+    const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
+    
+    // Se coming_soon_cohort_ids é null ou vazio, está em breve para TODOS
+    if (!comingSoonCohortIds || comingSoonCohortIds.length === 0) {
+      return true;
+    }
+    
+    // Se o aluno não tem turma, não está em breve
+    if (!studentCohortId) return false;
+    
+    // Está em breve apenas se a turma do aluno está na lista
+    return comingSoonCohortIds.includes(studentCohortId);
+  };
+
+  // Verifica se o módulo é pago para a turma do aluno
+  const isModulePaidForStudent = (module: Module): boolean => {
+    const isPaid = (module as any).is_paid;
+    if (!isPaid) return false;
+    
+    const paidCohortIds = (module as any).paid_cohort_ids;
+    
+    // Se paid_cohort_ids é null ou vazio, é pago para TODOS
+    if (!paidCohortIds || paidCohortIds.length === 0) {
+      return true;
+    }
+    
+    // Se o aluno não tem turma, não é pago
+    if (!studentCohortId) return false;
+    
+    // É pago apenas se a turma do aluno está na lista
+    return paidCohortIds.includes(studentCohortId);
   };
   const filteredLessons = lessons.filter(lesson => {
     // Filtrar por módulo se um estiver selecionado
@@ -584,7 +640,20 @@ export default function ModernMembersArea() {
                               <BookOpen className="h-6 w-6 text-emerald-400" />
                             </div>}
                           <div className="flex-1">
-                            <h4 className="font-medium text-white text-sm">{module.title}</h4>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium text-white text-sm">{module.title}</h4>
+                              {isModuleComingSoonForStudent(module) && (
+                                <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500 text-[10px] px-1 py-0">
+                                  Em Breve
+                                </Badge>
+                              )}
+                              {isModulePaidForStudent(module) && !isModuleComingSoonForStudent(module) && (
+                                <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500 text-[10px] px-1 py-0">
+                                  <Lock className="h-2 w-2 mr-0.5" />
+                                  Pago
+                                </Badge>
+                              )}
+                            </div>
                             <p className="text-xs text-gray-400">{moduleLessons.length} aulas</p>
                           </div>
                         </div>
@@ -792,45 +861,55 @@ export default function ModernMembersArea() {
                   }} whileHover={{
                     scale: 1.05,
                     y: -8
-                  }} className={`group cursor-pointer flex-shrink-0 w-80 ${module.coming_soon ? 'opacity-75' : ''}`} onClick={() => handleModuleClick(module)}>
-                              <Card className={`overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 ${module.coming_soon ? 'hover:border-amber-500/50' : 'hover:border-emerald-500/50'} transform-gpu`}>
+                  }} className={`group cursor-pointer flex-shrink-0 w-80 ${isModuleComingSoonForStudent(module) ? 'opacity-75' : ''}`} onClick={() => handleModuleClick(module)}>
+                              <Card className={`overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 ${isModuleComingSoonForStudent(module) ? 'hover:border-amber-500/50' : 'hover:border-emerald-500/50'} transform-gpu`}>
                                 <div className="relative">
                                   {/* Module Cover - Netflix Style com orientação dinâmica */}
                                   <div className={`${(module as any).cover_orientation === 'vertical' ? 'aspect-[9/16]' : 'aspect-[16/9]'} bg-gradient-to-br from-gray-900 to-black relative overflow-hidden`}>
                                     {module.cover_image_url ? <>
-                                        <img src={module.cover_image_url} alt={module.title} className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${module.coming_soon ? 'grayscale' : ''}`} />
+                                        <img src={module.cover_image_url} alt={module.title} className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${isModuleComingSoonForStudent(module) ? 'grayscale' : ''}`} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                                       </> : <div className="w-full h-full flex items-center justify-center">
-                                        {module.coming_soon ? <AlertCircle className="h-20 w-20 text-amber-500 group-hover:text-amber-400 transition-colors duration-300" /> : <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-emerald-500 transition-colors duration-300" />}
+                                        {isModuleComingSoonForStudent(module) ? <AlertCircle className="h-20 w-20 text-amber-500 group-hover:text-amber-400 transition-colors duration-300" /> : <BookOpen className="h-20 w-20 text-gray-600 group-hover:text-emerald-500 transition-colors duration-300" />}
                                       </div>}
                                     
                                     {/* Module Number Badge */}
                                     <div className="absolute top-4 left-4">
-                                      <Badge className={`backdrop-blur-sm font-bold px-3 py-1 ${module.coming_soon ? 'bg-amber-500/90 hover:bg-amber-600 text-white' : 'bg-emerald-500/90 hover:bg-emerald-600 text-white'}`}>
+                                      <Badge className={`backdrop-blur-sm font-bold px-3 py-1 ${isModuleComingSoonForStudent(module) ? 'bg-amber-500/90 hover:bg-amber-600 text-white' : 'bg-emerald-500/90 hover:bg-emerald-600 text-white'}`}>
                                         {module.order_number}
                                       </Badge>
                                     </div>
 
                                     {/* Coming Soon Badge */}
-                                    {module.coming_soon && <div className="absolute top-4 right-4">
+                                    {isModuleComingSoonForStudent(module) && <div className="absolute top-4 right-4">
                                         <Badge variant="outline" className="bg-amber-500/90 text-white border-amber-400">
                                           <AlertCircle className="h-3 w-3 mr-1" />
                                           Em Breve
                                         </Badge>
                                       </div>}
 
+                                    {/* Paid Badge */}
+                                    {isModulePaidForStudent(module) && !isModuleComingSoonForStudent(module) && <div className="absolute top-4 right-4">
+                                        <Badge variant="outline" className="bg-green-500/90 text-white border-green-400">
+                                          <Lock className="h-3 w-3 mr-1" />
+                                          Pago
+                                        </Badge>
+                                      </div>}
+
                                     {/* Progress Overlay */}
                                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                                       <h3 className={`font-bold text-lg mb-1 leading-tight transition-colors ${module.coming_soon ? 'group-hover:text-amber-300' : 'group-hover:text-emerald-300'}`}>
+                                       <h3 className={`font-bold text-lg mb-1 leading-tight transition-colors ${isModuleComingSoonForStudent(module) ? 'group-hover:text-amber-300' : 'group-hover:text-emerald-300'}`}>
                                          {module.title}
                                        </h3>
                                         <div className="flex items-center gap-2 mb-3">
                                           <span className="text-sm text-gray-300">
                                             {lessons.filter(l => l.module_id === module.id).length} aulas
                                           </span>
-                                          {module.coming_soon && <span className="text-xs font-medium text-amber-400">
-                                              Em Breve{module.cohort_ids && module.cohort_ids.length > 0 ? ` em ${module.cohort_ids.length} turma${module.cohort_ids.length !== 1 ? 's' : ''}` : ''}
-                                            </span>}
+                                          {isModulePaidForStudent(module) && !isModuleComingSoonForStudent(module) && (
+                                            <span className="text-xs font-medium text-green-400">
+                                              {(module as any).paid_price || 'Pago'}
+                                            </span>
+                                          )}
                                         </div>
                                     </div>
                                   </div>
