@@ -114,13 +114,25 @@ export const useStreamingQuery = () => {
         affiliateSalesData = affiliateData || [];
       }
 
+      // Buscar saldo real do customer_balances (fonte de verdade)
+      const { data: balanceData, error: balanceError } = await supabase
+        .from('customer_balances')
+        .select('balance')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (balanceError) {
+        console.error('Error loading balance:', balanceError);
+      }
+
+      const realBalance = balanceData?.balance || 0;
+
       const statsData = [...ownSalesData, ...moduleSalesData, ...affiliateSalesData];
 
-      // Calcular stats - vendas próprias + comissões de afiliado
+      // Calcular stats - apenas contadores, não valores
       const stats = (statsData || []).reduce((acc, order) => {
         let amount = parseFloat(order.amount) || 0;
         const isAffiliateEarning = userAffiliateCodes.includes(order.affiliate_code);
-        const isRecovered = recoveredOrderIds.has(order.order_id);
         
         if (isAffiliateEarning) {
           // Para vendas como afiliado, mostra apenas a comissão
@@ -129,35 +141,16 @@ export const useStreamingQuery = () => {
           acc.paidTotal += affiliateCommission;
           acc.totalAffiliateCommissions += affiliateCommission;
         } else {
-          // Para vendedores - seller_commission já vem em KZ do backend após as correções
-          let sellerCommission = parseFloat(order.seller_commission?.toString() || '0');
-          if (sellerCommission === 0) {
-            // Para vendas antigas sem seller_commission, converter para KZ
-            if (order.currency === 'EUR') {
-              sellerCommission = amount * 1053; // Taxa EUR->KZ
-            } else if (order.currency === 'MZN') {
-              sellerCommission = amount * 14.3; // Taxa MZN->KZ
-            } else {
-              sellerCommission = amount; // Se já está em KZ
-            }
-          }
-          // REMOVIDO: Conversão dupla - seller_commission já está em KZ
-          
-          // Aplicar desconto de 20% se for venda recuperada
-          if (isRecovered) {
-            sellerCommission = sellerCommission * 0.8;
-          }
-          
+          // Para vendedores - usar valores brutos apenas para contadores
           if (order.status === 'completed') {
             acc.paid++;
-            acc.paidTotal += sellerCommission; // Usar valor convertido
-            acc.totalSellerEarnings += sellerCommission;
+            acc.paidTotal += amount;
           } else if (order.status === 'pending') {
             acc.pending++;
-            acc.pendingTotal += sellerCommission; // Usar valor convertido também para pending
+            acc.pendingTotal += amount;
           } else if (order.status === 'failed' || order.status === 'cancelled') {
             acc.cancelled++;
-            acc.cancelledTotal += sellerCommission;
+            acc.cancelledTotal += amount;
           }
         }
 
@@ -174,7 +167,7 @@ export const useStreamingQuery = () => {
         paid: 0, pending: 0, cancelled: 0,
         paidTotal: 0, pendingTotal: 0, cancelledTotal: 0,
         totalAffiliateCommissions: 0,
-        totalSellerEarnings: 0,
+        totalSellerEarnings: realBalance, // ✅ USAR saldo real do customer_balances
         // Inicializar contadores para todos os métodos de pagamento
         ...getAllPaymentMethods().reduce((methodsAcc, method) => {
           methodsAcc[method.id] = 0;

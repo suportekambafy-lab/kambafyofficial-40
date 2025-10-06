@@ -148,19 +148,18 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
         return;
       }
 
-      const totalRevenue = allOrders?.reduce((sum, order) => {
-        let amount = parseFloat(order.amount) || 0;
-        // Converter para KZ se necessário
-        if (order.currency && order.currency !== 'KZ') {
-          const exchangeRates: Record<string, number> = {
-            'EUR': 1053, // 1 EUR = ~1053 KZ
-            'MZN': 14.3  // 1 MZN = ~14.3 KZ
-          };
-          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-          amount = Math.round(amount * rate);
-        }
-        return sum + amount;
-      }, 0) || 0;
+      // Buscar saldo real do customer_balances (fonte de verdade)
+      const { data: balanceData, error: balanceError } = await supabase
+        .from('customer_balances')
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (balanceError) {
+        console.error('Error loading balance:', balanceError);
+      }
+
+      const totalRevenue = balanceData?.balance || 0;
 
       setDashboardData({ totalRevenue });
     } catch (error) {
