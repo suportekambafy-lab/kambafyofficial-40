@@ -399,18 +399,11 @@ export function AppHome() {
 
     try {
       // ✅ BUSCAR SALDO REAL DA TABELA customer_balances
-      console.log('🔍 [AppHome] Buscando saldo para user_id:', user.id);
-      const { data: balanceData, error: balanceError } = await supabase
+      const { data: balanceData } = await supabase
         .from('customer_balances')
         .select('balance')
         .eq('user_id', user.id)
         .maybeSingle();
-      
-      console.log('💰 [AppHome] Saldo encontrado:', {
-        balanceData,
-        balanceError,
-        userId: user.id
-      });
 
       // Buscar payment_releases
       const { data: releases } = await supabase
@@ -461,12 +454,6 @@ export function AppHome() {
 
       // ✅ USAR O SALDO REAL DO BANCO (já considera todas as transações e saques)
       const finalAvailableBalance = parseFloat(balanceData?.balance?.toString() || '0');
-      
-      console.log('💵 [AppHome] Definindo financialData:', {
-        finalAvailableBalance,
-        pendingBalance,
-        totalWithdrawnAmount
-      });
 
       setFinancialData({
         availableBalance: finalAvailableBalance,
@@ -852,13 +839,7 @@ export function AppHome() {
                       </div>
                     </div>
                     <div className="text-3xl font-bold tracking-tight text-foreground">
-                      {(() => {
-                        console.log('💰 [AppHome - UI] Exibindo saldo:', {
-                          availableBalance: financialData.availableBalance,
-                          formatted: formatPriceForSeller(financialData.availableBalance, 'KZ')
-                        });
-                        return formatPriceForSeller(financialData.availableBalance, 'KZ');
-                      })()}
+                      {formatPriceForSeller(financialData.availableBalance, 'KZ')}
                     </div>
                 <Button 
                   onClick={() => {
