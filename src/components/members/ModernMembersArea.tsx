@@ -85,6 +85,7 @@ export default function ModernMembersArea() {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [modulesWithAccess, setModulesWithAccess] = useState<Set<string>>(new Set());
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [moduleForPayment, setModuleForPayment] = useState<Module | null>(null);
   // Estado para dados da área quando acesso é verificado
@@ -433,6 +434,26 @@ export default function ModernMembersArea() {
     }
     
     return !!data;
+  };
+
+  // ✅ Carregar módulos com acesso individual do aluno
+  const loadModulesWithAccess = async () => {
+    const studentEmail = (session as any)?.student_email || user?.email;
+    if (!studentEmail) return;
+
+    const { data, error } = await supabase
+      .from('module_student_access')
+      .select('module_id')
+      .ilike('student_email', studentEmail.toLowerCase().trim());
+    
+    if (error) {
+      console.error('❌ Erro ao carregar acessos de módulos:', error);
+      return;
+    }
+
+    const moduleIds = new Set(data?.map(d => d.module_id) || []);
+    console.log('✅ Módulos com acesso individual carregados:', moduleIds);
+    setModulesWithAccess(moduleIds);
   };
 
   // Verifica se o módulo está "em breve" para a turma do aluno (versão síncrona para render)
@@ -840,7 +861,7 @@ export default function ModernMembersArea() {
                                   Em Breve
                                 </Badge>
                               )}
-                              {isModulePaidForStudent(module) && !isModuleComingSoonForStudent(module) && (
+                              {isModulePaidForStudent(module) && !isModuleComingSoonForStudent(module) && !modulesWithAccess.has(module.id) && (
                                 <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500 text-[10px] px-1 py-0">
                                   <Lock className="h-2 w-2 mr-0.5" />
                                   Pago
@@ -1082,7 +1103,7 @@ export default function ModernMembersArea() {
                                       </div>}
 
                                     {/* Paid Badge */}
-                                    {isModulePaidForStudent(module) && !isModuleComingSoonForStudent(module) && <div className="absolute top-4 right-4">
+                                    {isModulePaidForStudent(module) && !isModuleComingSoonForStudent(module) && !modulesWithAccess.has(module.id) && <div className="absolute top-4 right-4">
                                         <Badge variant="outline" className="bg-green-500/90 text-white border-green-400">
                                           <Lock className="h-3 w-3 mr-1" />
                                           Pago
@@ -1098,7 +1119,7 @@ export default function ModernMembersArea() {
                                           <span className="text-sm text-gray-300">
                                             {lessons.filter(l => l.module_id === module.id).length} aulas
                                           </span>
-                                          {isModulePaidForStudent(module) && !isModuleComingSoonForStudent(module) && (
+                                          {isModulePaidForStudent(module) && !isModuleComingSoonForStudent(module) && !modulesWithAccess.has(module.id) && (
                                             <span className="text-xs font-medium text-green-400">
                                               {(module as any).paid_price || 'Pago'}
                                             </span>
