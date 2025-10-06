@@ -323,10 +323,12 @@ serve(async (req) => {
     const orderDataToSave = checkoutOrderData ? {
       ...checkoutOrderData,
       order_id: orderId, // Always use reference number as order_id
+      stripe_session_id: merchantTransactionId, // Save merchantTransactionId for webhook lookup
       status: orderStatus
     } : {
       product_id: productId,
       order_id: orderId,
+      stripe_session_id: merchantTransactionId, // Save merchantTransactionId for webhook lookup
       customer_name: customerData.name,
       customer_email: customerData.email,
       customer_phone: phoneNumber || customerData.phone,
