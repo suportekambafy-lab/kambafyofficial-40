@@ -98,7 +98,7 @@ const defaultSettings: CheckoutCustomizationSettings = {
   },
   spotsCounter: {
     enabled: false,
-    mode: 'automatic',
+    mode: 'time-based',
     initialCount: 100,
     currentCount: 100,
     title: 'VAGAS RESTANTES',
