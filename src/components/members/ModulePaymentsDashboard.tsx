@@ -100,105 +100,131 @@ export const ModulePaymentsDashboard = () => {
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>;
   }
-  return <div className="space-y-6">
+  return (
+    <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Recebido</p>
-              <p className="text-2xl font-bold">{stats.total.toLocaleString('pt-AO')} AOA</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Recebido</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.total.toLocaleString('pt-AO')} AOA</p>
             </div>
-            
+            <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Pagamentos Pendentes</p>
-              <p className="text-2xl font-bold">{stats.pending}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Pagamentos Pendentes</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.pending}</p>
             </div>
-            <Clock className="w-8 h-8 text-yellow-500" />
+            <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Pagamentos Concluídos</p>
-              <p className="text-2xl font-bold">{stats.completed}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Pagamentos Concluídos</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.completed}</p>
             </div>
-            <CheckCircle2 className="w-8 h-8 text-green-500" />
+            <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
           </div>
         </Card>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2">
-        {(['all', 'pending', 'completed'] as const).map(f => <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-lg transition-colors ${filter === f ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>
+      <div className="flex flex-wrap gap-2">
+        {(['all', 'pending', 'completed'] as const).map(f => (
+          <button 
+            key={f} 
+            onClick={() => setFilter(f)} 
+            className={`px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors ${
+              filter === f 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+            }`}
+          >
             {f === 'all' ? 'Todos' : f === 'pending' ? 'Pendentes' : 'Concluídos'}
-          </button>)}
+          </button>
+        ))}
       </div>
 
       {/* Payments List */}
       <Card>
-        <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Pagamentos de Módulos</h3>
+        <div className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-4">Pagamentos de Módulos</h3>
           
-          {payments.length === 0 ? <p className="text-center text-muted-foreground py-8">
+          {payments.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
               Nenhum pagamento encontrado
-            </p> : <div className="space-y-3">
-              {payments.map(payment => <div key={payment.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent transition-colors cursor-pointer" onClick={() => setSelectedPayment(payment)}>
-                  <div className="flex-1">
-                    <p className="font-medium">{payment.modules.title}</p>
-                    <p className="text-sm text-muted-foreground">
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {payments.map(payment => (
+                <div 
+                  key={payment.id} 
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-lg border hover:bg-accent transition-colors cursor-pointer gap-3"
+                  onClick={() => setSelectedPayment(payment)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm sm:text-base truncate">{payment.modules.title}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">
                       {payment.student_name} ({payment.student_email})
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {format(new Date(payment.created_at), "dd 'de' MMMM 'às' HH:mm", {
-                  locale: ptBR
-                })}
+                        locale: ptBR
+                      })}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-semibold">{Number(payment.amount).toLocaleString('pt-AO')} {payment.currency}</p>
+                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                    <div className="text-left sm:text-right">
+                      <p className="font-semibold text-sm sm:text-base">{Number(payment.amount).toLocaleString('pt-AO')} {payment.currency}</p>
                       <p className="text-xs text-muted-foreground capitalize">
                         {payment.payment_method}
-                        {payment.payment_method === 'reference' && payment.reference_number && <span className="ml-1">| Ref: {payment.reference_number}</span>}
+                        {payment.payment_method === 'reference' && payment.reference_number && (
+                          <span className="ml-1 block sm:inline">Ref: {payment.reference_number}</span>
+                        )}
                       </p>
                     </div>
-                    {getStatusBadge(payment.status)}
-                    <Eye className="w-4 h-4 text-muted-foreground" />
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(payment.status)}
+                      <Eye className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </div>
                   </div>
-                </div>)}
-            </div>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Card>
 
       {/* Payment Details Dialog */}
       <Dialog open={!!selectedPayment} onOpenChange={() => setSelectedPayment(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalhes do Pagamento</DialogTitle>
           </DialogHeader>
 
-          {selectedPayment && <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+          {selectedPayment && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Módulo</p>
-                  <p className="font-medium">{selectedPayment.modules.title}</p>
+                  <p className="font-medium break-words">{selectedPayment.modules.title}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
                   {getStatusBadge(selectedPayment.status)}
                 </div>
-                <div>
+                <div className="sm:col-span-2">
                   <p className="text-sm text-muted-foreground">Aluno</p>
                   <p className="font-medium">{selectedPayment.student_name}</p>
-                  <p className="text-xs text-muted-foreground">{selectedPayment.student_email}</p>
+                  <p className="text-xs text-muted-foreground break-all">{selectedPayment.student_email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Valor</p>
@@ -208,46 +234,67 @@ export const ModulePaymentsDashboard = () => {
                   <p className="text-sm text-muted-foreground">Método de Pagamento</p>
                   <p className="font-medium capitalize">{selectedPayment.payment_method}</p>
                 </div>
-                {selectedPayment.reference_number && <div>
+                {selectedPayment.reference_number && (
+                  <div className="sm:col-span-2">
                     <p className="text-sm text-muted-foreground">Número de Referência</p>
                     <p className="text-xl font-bold text-primary">{selectedPayment.reference_number}</p>
-                  </div>}
-                {selectedPayment.entity && <div>
+                  </div>
+                )}
+                {selectedPayment.entity && (
+                  <div>
                     <p className="text-sm text-muted-foreground">Entidade</p>
                     <p className="text-lg font-semibold">{selectedPayment.entity}</p>
-                  </div>}
-                <div>
+                  </div>
+                )}
+                <div className="sm:col-span-2">
                   <p className="text-sm text-muted-foreground">Order ID (rastreamento interno)</p>
-                  <p className="font-mono text-xs text-muted-foreground">{selectedPayment.order_id}</p>
+                  <p className="font-mono text-xs text-muted-foreground break-all">{selectedPayment.order_id}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Data de Criação</p>
                   <p className="text-sm">{format(new Date(selectedPayment.created_at), "dd/MM/yyyy HH:mm", {
-                  locale: ptBR
-                })}</p>
+                    locale: ptBR
+                  })}</p>
                 </div>
-                {selectedPayment.completed_at && <div>
+                {selectedPayment.completed_at && (
+                  <div>
                     <p className="text-sm text-muted-foreground">Data de Conclusão</p>
                     <p className="text-sm">{format(new Date(selectedPayment.completed_at), "dd/MM/yyyy HH:mm", {
-                  locale: ptBR
-                })}</p>
-                  </div>}
+                      locale: ptBR
+                    })}</p>
+                  </div>
+                )}
               </div>
 
-              {selectedPayment.payment_proof_url && <div>
+              {selectedPayment.payment_proof_url && (
+                <div>
                   <p className="text-sm text-muted-foreground mb-2">Comprovante</p>
-                  <img src={selectedPayment.payment_proof_url} alt="Comprovante de pagamento" className="rounded-lg border max-h-64 object-contain" />
-                </div>}
+                  <img 
+                    src={selectedPayment.payment_proof_url} 
+                    alt="Comprovante de pagamento" 
+                    className="rounded-lg border max-h-64 w-full object-contain" 
+                  />
+                </div>
+              )}
 
               {/* Botão Verificar Status */}
-              {selectedPayment.status === 'pending' && <div className="flex justify-end pt-4 border-t">
-                  <VerifyModulePaymentButton paymentId={selectedPayment.id} referenceNumber={selectedPayment.reference_number} paymentMethod={selectedPayment.payment_method} onVerified={() => {
-              setSelectedPayment(null);
-              loadPayments();
-            }} />
-                </div>}
-            </div>}
+              {selectedPayment.status === 'pending' && (
+                <div className="flex justify-end pt-4 border-t">
+                  <VerifyModulePaymentButton 
+                    paymentId={selectedPayment.id} 
+                    referenceNumber={selectedPayment.reference_number} 
+                    paymentMethod={selectedPayment.payment_method} 
+                    onVerified={() => {
+                      setSelectedPayment(null);
+                      loadPayments();
+                    }} 
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 };

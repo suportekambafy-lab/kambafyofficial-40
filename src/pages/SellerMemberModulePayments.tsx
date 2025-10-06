@@ -1,20 +1,21 @@
 import { ModulePaymentsDashboard } from "@/components/members/ModulePaymentsDashboard";
-import { MigrateModulePayments } from "@/components/admin/MigrateModulePayments";
 import { DollarSign } from "lucide-react";
+
 const SellerMemberModulePayments = () => {
-  return <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        
+  return (
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Pagamentos de Módulos</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Pagamentos de Módulos</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gerencie e acompanhe os pagamentos dos módulos pagos
           </p>
         </div>
       </div>
 
-      <MigrateModulePayments />
       <ModulePaymentsDashboard />
-    </div>;
+    </div>
+  );
 };
+
 export default SellerMemberModulePayments;
