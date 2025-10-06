@@ -53,6 +53,7 @@ const MeusAfiliados = createLazyWithRetry(() => import("./MeusAfiliados"), "Meus
 const Apps = createLazyWithRetry(() => import("./Apps"), "Apps");
 const UserSettings = createLazyWithRetry(() => import("./UserSettings"), "UserSettings");
 const Members = createLazyWithRetry(() => import("./Members"), "Members");
+const SellerMemberModulePayments = createLazyWithRetry(() => import("./SellerMemberModulePayments"), "SellerMemberModulePayments");
 
 function SellerDashboardContent() {
   const location = useLocation();
@@ -139,6 +140,7 @@ function SellerDashboardContent() {
                 <Route path="/ajuda" element={<SellerHelp />} />
                 <Route path="/configuracoes" element={<UserSettings />} />
                 <Route path="/membros" element={<Members />} />
+                <Route path="/membros/pagamentos" element={<SellerMemberModulePayments />} />
                 <Route path="/marketplace" element={<KambaExtra />} />
                 <Route path="/afiliados" element={<MeusAfiliados />} />
                 <Route path="/assinaturas" element={<ComingSoon title="Assinaturas" description="O sistema de assinaturas estará disponível em breve para criar produtos recorrentes." />} />

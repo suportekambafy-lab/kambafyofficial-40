@@ -24,7 +24,8 @@ import {
   HelpCircle,
   LogOut,
   X,
-  RotateCcw
+  RotateCcw,
+  Coins
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -34,6 +35,7 @@ const menuItems = [
   { label: "Vendas", href: "/vendedor/vendas", icon: TrendingUp },
   { label: "Financeiro", href: "/vendedor/financeiro", icon: DollarSign },
   { label: "Membros", href: "/vendedor/membros", icon: Users },
+  { label: "Pagamentos Módulos", href: "/vendedor/membros/pagamentos", icon: Coins },
   { label: "Kamba Extra", href: "/vendedor/marketplace", icon: Store },
   { label: "Afiliados", href: "/vendedor/afiliados", icon: UserCheck },
   
