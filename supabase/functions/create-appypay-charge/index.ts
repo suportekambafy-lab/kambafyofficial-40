@@ -309,15 +309,20 @@ serve(async (req) => {
       fullResponse: chargeResult
     });
 
-    // Use reference number as order ID if available, otherwise use checkout order ID or generate new one
-    const orderId = chargeResult.responseStatus?.reference?.referenceNumber || 
-                   checkoutOrderData?.order_id || 
-                   generateOrderId();
+    // Usar merchantTransactionId do AppyPay como order_id do Kambafy
+    const orderId = merchantTransactionId;
+    
+    // Se for Reference payment, salvar dados da referência separadamente
+    const referenceData = chargeResult.responseStatus?.reference?.referenceNumber ? {
+      reference_number: chargeResult.responseStatus.reference.referenceNumber,
+      entity: chargeResult.responseStatus.reference.entity,
+      expires_at: chargeResult.responseStatus.reference.expiresAt
+    } : null;
 
     logStep("Using order ID", { 
       orderId, 
-      source: chargeResult.responseStatus?.reference?.referenceNumber ? 'reference_number' : 
-              checkoutOrderData?.order_id ? 'checkout_data' : 'generated'
+      merchantTransactionId,
+      referenceData
     });
 
     // Determinar status do pedido baseado na resposta v2.0
@@ -337,14 +342,16 @@ serve(async (req) => {
     if (!skipOrderSave) {
       const orderDataToSave = checkoutOrderData ? {
         ...checkoutOrderData,
-        order_id: orderId, // Always use reference number as order_id
-        appypay_transaction_id: merchantTransactionId, // Save AppyPay transaction ID for webhook lookup
+        order_id: orderId, // merchantTransactionId do AppyPay
+        appypay_transaction_id: merchantTransactionId, // igual ao order_id
+        appypay_reference_data: referenceData, // dados da referência bancária se existir
         stripe_session_id: null, // AppyPay doesn't use Stripe
         status: orderStatus
       } : {
         product_id: productId,
         order_id: orderId,
-        appypay_transaction_id: merchantTransactionId, // Save AppyPay transaction ID for webhook lookup
+        appypay_transaction_id: merchantTransactionId, // igual ao order_id
+        appypay_reference_data: referenceData, // dados da referência bancária se existir
         stripe_session_id: null, // AppyPay doesn't use Stripe
         customer_name: customerData.name,
         customer_email: customerData.email,

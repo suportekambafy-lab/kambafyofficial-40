@@ -45,7 +45,20 @@ serve(async (req) => {
       }
     }
 
-    // Buscar por stripe_session_id ou appypay_transaction_id se não encontrou por order_id
+    // Buscar por order_id primeiro (sessionId pode ser merchantTransactionId ou Stripe session)
+    if (!orderData && sessionId) {
+      const { data, error } = await supabaseAdmin
+        .from('orders')
+        .select('id, order_id, status, customer_email, payment_method, created_at, updated_at')
+        .eq('order_id', sessionId)
+        .maybeSingle();
+
+      if (data && !error) {
+        orderData = data;
+      }
+    }
+
+    // Fallback: buscar por stripe_session_id ou appypay_transaction_id (pedidos antigos)
     if (!orderData && sessionId) {
       const { data, error } = await supabaseAdmin
         .from('orders')
