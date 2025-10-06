@@ -67,12 +67,26 @@ export default function AdminSellerReports() {
       // Para cada perfil, buscar estatísticas
       const sellersData = await Promise.all(
         (profiles || []).map(async (profile) => {
-          // Buscar vendas completadas
-          const { data: orders } = await supabase
-            .from('orders')
-            .select('amount, currency')
-            .eq('user_id', profile.user_id)
-            .eq('status', 'completed');
+          // Buscar produtos do vendedor
+          const { data: products } = await supabase
+            .from('products')
+            .select('id, status')
+            .eq('user_id', profile.user_id);
+
+          const productIds = products?.map(p => p.id) || [];
+
+          // Buscar vendas completadas dos produtos do vendedor
+          let orders: any[] = [];
+          if (productIds.length > 0) {
+            const { data: ordersData } = await supabase
+              .from('orders')
+              .select('amount, currency')
+              .in('product_id', productIds)
+              .eq('status', 'completed')
+              .neq('payment_method', 'member_access');
+            
+            orders = ordersData || [];
+          }
 
           // Buscar saques
           const { data: withdrawals } = await supabase
@@ -80,12 +94,6 @@ export default function AdminSellerReports() {
             .select('amount')
             .eq('user_id', profile.user_id)
             .eq('status', 'aprovado');
-
-          // Buscar produtos ativos e banidos
-          const { data: products } = await supabase
-            .from('products')
-            .select('status')
-            .eq('user_id', profile.user_id);
 
           const activeProducts = products?.filter(p => p.status === 'Ativo').length || 0;
           const bannedProducts = products?.filter(p => p.status === 'Banido').length || 0;
