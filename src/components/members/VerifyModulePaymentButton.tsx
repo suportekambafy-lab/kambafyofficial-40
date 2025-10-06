@@ -19,8 +19,8 @@ export const VerifyModulePaymentButton = ({
 }: VerifyModulePaymentButtonProps) => {
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // Só mostrar para pagamentos Express (Reference não pode ser verificado automaticamente)
-  if (paymentMethod !== 'express') {
+  // Só mostrar para pagamentos AppyPay (express ou reference)
+  if (!['express', 'reference'].includes(paymentMethod)) {
     return null;
   }
 
