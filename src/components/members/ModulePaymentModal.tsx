@@ -41,10 +41,42 @@ export function ModulePaymentModal({
   const [copiedReference, setCopiedReference] = useState(false);
   const [accountHolder, setAccountHolder] = useState('');
   const [accountIban, setAccountIban] = useState('');
-  const { userCountry, formatPrice, convertPrice } = useGeoLocation();
+  const { userCountry, formatPrice, convertPrice, supportedCountries } = useGeoLocation();
 
   const paidPrice = (module as any)?.paid_price || '0';
   const moduleTitle = module?.title || '';
+  
+  // Calcular preço e moeda baseado no país
+  const getDisplayPriceAndCurrency = () => {
+    const basePrice = parseFloat(paidPrice?.replace(/[^0-9,]/g, '').replace(',', '.') || '0');
+    const targetCountry = supportedCountries[country as keyof typeof supportedCountries];
+    
+    if (country === 'PT') {
+      const eurPrice = convertPrice(basePrice, targetCountry);
+      return {
+        displayPrice: formatPrice(basePrice, targetCountry),
+        currency: 'EUR',
+        amount: eurPrice
+      };
+    }
+    
+    if (country === 'MZ') {
+      const mznPrice = convertPrice(basePrice, targetCountry);
+      return {
+        displayPrice: formatPrice(basePrice, targetCountry),
+        currency: 'MZN',
+        amount: mznPrice
+      };
+    }
+    
+    return {
+      displayPrice: `${paidPrice} KZ`,
+      currency: 'AOA',
+      amount: basePrice
+    };
+  };
+  
+  const { displayPrice, currency, amount } = getDisplayPriceAndCurrency();
 
   // Dados bancários da Kambafy
   const BANK_DATA = {
@@ -301,7 +333,7 @@ export function ModulePaymentModal({
 
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Valor a Pagar</p>
-              <p className="text-lg font-bold">{paidPrice} KZ</p>
+              <p className="text-lg font-bold">{displayPrice}</p>
             </div>
 
             {referenceData.due_date && (
@@ -347,7 +379,7 @@ export function ModulePaymentModal({
           <div className="rounded-lg bg-muted p-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Valor</span>
-              <span className="text-2xl font-bold">{paidPrice} KZ</span>
+              <span className="text-2xl font-bold">{displayPrice}</span>
             </div>
           </div>
 
@@ -555,8 +587,8 @@ export function ModulePaymentModal({
           {['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPaymentMethod) && (
             <div className="mt-4">
               <OptimizedStripeCardPayment
-                amount={parseFloat(paidPrice?.replace(/[^0-9,]/g, '').replace(',', '.') || '0')}
-                currency={country === 'PT' ? 'EUR' : 'AOA'}
+                amount={amount}
+                currency={currency}
                 productId={(module as any)?.paid_product_id || module?.id || ''}
                 customerData={{
                   name: customerName,
@@ -568,8 +600,8 @@ export function ModulePaymentModal({
                 onError={handleCardPaymentError}
                 processing={isProcessing}
                 setProcessing={setIsProcessing}
-                displayPrice={paidPrice || ''}
-                convertedAmount={parseFloat(paidPrice?.replace(/[^0-9,]/g, '').replace(',', '.') || '0')}
+                displayPrice={displayPrice}
+                convertedAmount={amount}
               />
             </div>
           )}
@@ -588,7 +620,7 @@ export function ModulePaymentModal({
                   Processando...
                 </>
               ) : (
-                `Pagar ${paidPrice} KZ`
+                `Pagar ${displayPrice}`
               )}
             </Button>
           )}
