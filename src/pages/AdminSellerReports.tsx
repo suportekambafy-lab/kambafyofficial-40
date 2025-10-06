@@ -1,34 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, TrendingUp, DollarSign, FileText, CreditCard, Wallet } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ArrowLeft, TrendingUp, Users, DollarSign, Package, Search, UserX, UserCheck, Wallet, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { BanUserDialog } from '@/components/BanUserDialog';
 
 interface SellerReport {
   user_id: string;
-  profile: {
-    full_name: string;
-    email: string;
-    created_at: string;
-  };
-  totalSales: number;
-  totalRevenue: number;
-  totalWithdrawals: number;
-  withdrawalFee: number;
-  availableBalance: number;
-  activeProducts: number;
-  bannedProducts: number;
+  full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  banned: boolean | null;
+  is_creator: boolean | null;
+  total_sales: number;
+  total_revenue: number;
+  total_withdrawals: number;
+  total_fees: number;
+  available_balance: number;
+  active_products: number;
+  banned_products: number;
 }
 
 export default function AdminSellerReports() {
@@ -39,6 +35,10 @@ export default function AdminSellerReports() {
   const [loading, setLoading] = useState(true);
   const [selectedSeller, setSelectedSeller] = useState<SellerReport | null>(null);
   const [balanceDialogOpen, setBalanceDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [banDialogOpen, setBanDialogOpen] = useState(false);
+  const [userToBan, setUserToBan] = useState<SellerReport | null>(null);
 
   useEffect(() => {
     if (admin) {
@@ -47,133 +47,196 @@ export default function AdminSellerReports() {
   }, [admin]);
 
   const loadSellersReport = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      // Buscar todos os usuários que têm produtos (vendedores)
-      const { data: sellerIds } = await supabase
-        .from('products')
-        .select('user_id')
-        .not('user_id', 'is', null);
-
-      const uniqueSellerIds = [...new Set(sellerIds?.map(p => p.user_id) || [])];
-
-      if (uniqueSellerIds.length === 0) {
-        setSellers([]);
-        setLoading(false);
-        return;
-      }
-
-      // Buscar perfis dos vendedores
-      const { data: profiles, error: profileError } = await supabase
+      console.log('Carregando relatório de usuários...');
+      
+      // Buscar TODOS os perfis (incluindo banned e is_creator)
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, full_name, email, created_at')
-        .in('user_id', uniqueSellerIds);
+        .select('user_id, full_name, email, avatar_url, banned, is_creator')
+        .order('created_at', { ascending: false });
 
-      if (profileError) {
-        console.error('Erro ao carregar perfis:', profileError);
-        toast({
-          title: 'Erro',
-          description: 'Erro ao carregar dados dos vendedores',
-          variant: 'destructive'
-        });
+      if (profilesError) {
+        console.error('Erro ao buscar perfis:', profilesError);
         return;
       }
 
-      const sellersData: SellerReport[] = [];
+      console.log('Perfis carregados:', profiles?.length);
 
-      for (const profile of profiles || []) {
-        try {
-          // Buscar produtos do vendedor
-          const { data: products, error: productsError } = await supabase
-            .from('products')
-            .select('id, status, admin_approved')
-            .eq('user_id', profile.user_id);
+      // Para cada perfil, buscar estatísticas
+      const sellersData = await Promise.all(
+        (profiles || []).map(async (profile) => {
+          // Buscar vendas completadas
+          const { data: orders } = await supabase
+            .from('orders')
+            .select('amount, currency')
+            .eq('user_id', profile.user_id)
+            .eq('status', 'completed');
 
-          if (productsError) {
-            console.error(`Erro ao buscar produtos do vendedor ${profile.user_id}:`, productsError);
-          }
-
-          console.log(`Vendedor ${profile.full_name}: ${products?.length || 0} produtos encontrados`);
-
-          const productIds = products?.map(p => p.id) || [];
-
-          // Buscar vendas através dos produtos do vendedor
-          let orders: { amount: string }[] = [];
-          if (productIds.length > 0) {
-            const { data } = await supabase
-              .from('orders')
-              .select('amount')
-              .in('product_id', productIds)
-              .eq('status', 'completed');
-            orders = data || [];
-          }
-
-          // Buscar saques do vendedor
+          // Buscar saques
           const { data: withdrawals } = await supabase
             .from('withdrawal_requests')
-            .select('amount, status')
+            .select('amount')
+            .eq('user_id', profile.user_id)
+            .eq('status', 'aprovado');
+
+          // Buscar produtos ativos e banidos
+          const { data: products } = await supabase
+            .from('products')
+            .select('status')
             .eq('user_id', profile.user_id);
 
-          // Buscar saldo disponível
-          const { data: balanceData } = await supabase
-            .from('customer_balances')
-            .select('balance')
-            .eq('user_id', profile.user_id)
-            .maybeSingle();
+          const activeProducts = products?.filter(p => p.status === 'Ativo').length || 0;
+          const bannedProducts = products?.filter(p => p.status === 'Banido').length || 0;
 
-          const totalSales = orders.length;
-          const totalRevenue = orders.reduce((sum, order) => 
-            sum + parseFloat(order.amount || '0'), 0);
+          const totalSales = orders?.length || 0;
+          const totalRevenue = orders?.reduce((sum, order) => sum + parseFloat(order.amount), 0) || 0;
+          const totalWithdrawals = withdrawals?.reduce((sum, w) => sum + w.amount, 0) || 0;
           
-          const activeProducts = products?.filter(p => 
-            p.status === 'Ativo' && p.admin_approved === true).length || 0;
-          const bannedProducts = products?.filter(p => 
-            p.status === 'Banido').length || 0;
+          // Taxa: 5% sobre a receita
+          const totalFees = totalRevenue * 0.05;
+          const availableBalance = totalRevenue - totalFees - totalWithdrawals;
 
-          console.log(`Vendedor ${profile.full_name}: ${activeProducts} produtos ativos, ${bannedProducts} banidos`);
-          
-          const totalWithdrawals = withdrawals?.filter(w => 
-            w.status === 'aprovado').reduce((sum, w) => 
-            sum + parseFloat(w.amount.toString()), 0) || 0;
-
-          const withdrawalFee = totalWithdrawals > 0 
-            ? (totalWithdrawals / totalRevenue) * 100 
-            : 0;
-
-          const availableBalance = balanceData?.balance || 0;
-
-          sellersData.push({
+          return {
             user_id: profile.user_id,
-            profile,
-            totalSales,
-            totalRevenue,
-            totalWithdrawals,
-            withdrawalFee,
-            availableBalance,
-            activeProducts,
-            bannedProducts
-          });
-        } catch (error) {
-          console.error(`Erro ao carregar dados do vendedor ${profile.user_id}:`, error);
-        }
-      }
+            full_name: profile.full_name,
+            email: profile.email,
+            avatar_url: profile.avatar_url,
+            banned: profile.banned,
+            is_creator: profile.is_creator,
+            total_sales: totalSales,
+            total_revenue: totalRevenue,
+            total_withdrawals: totalWithdrawals,
+            total_fees: totalFees,
+            available_balance: availableBalance,
+            active_products: activeProducts,
+            banned_products: bannedProducts,
+          };
+        })
+      );
 
-      // Ordenar por receita total (maior para menor)
-      sellersData.sort((a, b) => b.totalRevenue - a.totalRevenue);
-      setSellers(sellersData);
-
+      // Ordenar por receita total (decrescente)
+      const sortedSellers = sellersData.sort((a, b) => b.total_revenue - a.total_revenue);
+      
+      console.log('Relatório de usuários carregado:', sortedSellers.length);
+      setSellers(sortedSellers);
     } catch (error) {
-      console.error('Erro ao carregar relatórios:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro inesperado ao carregar dados',
-        variant: 'destructive'
-      });
+      console.error('Erro ao carregar relatório:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleBanUser = (seller: SellerReport) => {
+    setUserToBan(seller);
+    setBanDialogOpen(true);
+  };
+
+  const handleConfirmBan = async (banReason: string) => {
+    if (!userToBan) return;
+    
+    setProcessingId(userToBan.user_id);
+    
+    try {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          banned: true,
+          ban_reason: banReason,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userToBan.user_id);
+
+      if (updateError) throw updateError;
+
+      // Enviar email de notificação
+      try {
+        await supabase.functions.invoke('send-user-ban-notification', {
+          body: {
+            userEmail: userToBan.email,
+            userName: userToBan.full_name || 'Usuário',
+            banReason: banReason
+          }
+        });
+      } catch (emailError) {
+        console.error('Erro ao enviar email de banimento:', emailError);
+      }
+
+      toast({
+        title: 'Usuário Banido',
+        description: 'Usuário foi banido com sucesso.',
+        variant: 'destructive'
+      });
+
+      loadSellersReport();
+      setBanDialogOpen(false);
+      setUserToBan(null);
+    } catch (error) {
+      console.error('Error banning user:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao banir usuário',
+        variant: 'destructive'
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const updateUserStatus = async (userId: string, banned: boolean) => {
+    setProcessingId(userId);
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          banned,
+          ban_reason: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: `Usuário ${banned ? 'banido' : 'desbloqueado'} com sucesso`,
+        variant: banned ? 'destructive' : 'default'
+      });
+
+      loadSellersReport();
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar usuário',
+        variant: 'destructive'
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const getStatusBadge = (banned: boolean | null, isCreator: boolean | null) => {
+    if (banned) {
+      return <Badge className="bg-red-100 text-red-800 border-red-200">Banido</Badge>;
+    }
+    if (isCreator) {
+      return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Criador</Badge>;
+    }
+    return <Badge className="bg-green-100 text-green-800 border-green-200">Ativo</Badge>;
+  };
+
+  const totalActiveProducts = sellers.reduce((sum, s) => sum + s.active_products, 0);
+
+  // Filtrar usuários baseado na busca
+  const filteredSellers = sellers.filter(seller => {
+    const searchLower = searchTerm.toLowerCase();
+    const nameMatch = seller.full_name?.toLowerCase().includes(searchLower);
+    const emailMatch = seller.email?.toLowerCase().includes(searchLower);
+    return nameMatch || emailMatch;
+  });
 
   if (loading) {
     return (
@@ -189,7 +252,7 @@ export default function AdminSellerReports() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-6">
           <Button 
             variant="ghost" 
             onClick={() => navigate('/admin')}
@@ -198,10 +261,24 @@ export default function AdminSellerReports() {
             <ArrowLeft className="h-4 w-4" />
             Voltar ao Dashboard
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Relatórios de Vendedores</h1>
-            <p className="text-muted-foreground mt-1">Visão geral do desempenho dos vendedores</p>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-foreground">Relatórios de Usuários</h1>
+            <p className="text-muted-foreground mt-1">
+              {filteredSellers.length} {filteredSellers.length === 1 ? 'usuário' : 'usuários'} na plataforma
+            </p>
           </div>
+        </div>
+
+        {/* Campo de Busca */}
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar por nome ou email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 h-12 text-base"
+          />
         </div>
 
         {/* Resumo Geral */}
@@ -213,7 +290,7 @@ export default function AdminSellerReports() {
                   <Users className="h-4 w-4 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Total Vendedores</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Usuários</p>
                   <p className="text-2xl font-bold">{sellers.length}</p>
                 </div>
               </div>
@@ -229,7 +306,7 @@ export default function AdminSellerReports() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-muted-foreground">Total Vendas</p>
                   <p className="text-2xl font-bold">
-                    {sellers.reduce((sum, s) => sum + s.totalSales, 0)}
+                    {sellers.reduce((sum, s) => sum + s.total_sales, 0)}
                   </p>
                 </div>
               </div>
@@ -245,7 +322,7 @@ export default function AdminSellerReports() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-muted-foreground">Receita Total</p>
                   <p className="text-2xl font-bold">
-                    {sellers.reduce((sum, s) => sum + s.totalRevenue, 0).toLocaleString('pt-AO')} KZ
+                    {sellers.reduce((sum, s) => sum + s.total_revenue, 0).toLocaleString('pt-AO')} KZ
                   </p>
                 </div>
               </div>
@@ -256,12 +333,12 @@ export default function AdminSellerReports() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="h-8 w-8 bg-purple-600 rounded-full flex items-center justify-center">
-                  <FileText className="h-4 w-4 text-white" />
+                  <Package className="h-4 w-4 text-white" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-muted-foreground">Produtos Ativos</p>
                   <p className="text-2xl font-bold">
-                    {sellers.reduce((sum, s) => sum + s.activeProducts, 0)}
+                    {totalActiveProducts}
                   </p>
                 </div>
               </div>
@@ -269,9 +346,9 @@ export default function AdminSellerReports() {
           </Card>
         </div>
 
-        {/* Lista de Vendedores */}
-        <div className="space-y-6">
-          {sellers.map((seller, index) => (
+        {/* Cards de Usuários */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredSellers.map((seller) => (
             <Card 
               key={seller.user_id} 
               className="shadow-lg border bg-white hover:shadow-xl transition-shadow cursor-pointer"
@@ -280,83 +357,107 @@ export default function AdminSellerReports() {
                 setBalanceDialogOpen(true);
               }}
             >
-              <CardHeader className="pb-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">#{index + 1}</span>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                      {seller.full_name?.charAt(0) || 'U'}
                     </div>
-                    <div>
-                      <CardTitle className="text-xl text-slate-900">
-                        {seller.profile.full_name || 'Nome não informado'}
-                      </CardTitle>
-                      <p className="text-sm text-slate-600">{seller.profile.email}</p>
-                      <p className="text-xs text-slate-500">
-                        Membro desde: {new Date(seller.profile.created_at).toLocaleDateString('pt-AO')}
-                      </p>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{seller.full_name || 'Sem nome'}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{seller.email}</p>
                     </div>
                   </div>
-                  
-                  <div className="flex gap-2">
-                    {seller.bannedProducts > 0 && (
-                      <Badge className="bg-red-100 text-red-800 border-red-200">
-                        {seller.bannedProducts} Banido(s)
-                      </Badge>
-                    )}
-                    <Badge className="bg-green-100 text-green-800 border-green-200">
-                      {seller.activeProducts} Ativo(s)
-                    </Badge>
-                  </div>
+                  {getStatusBadge(seller.banned, seller.is_creator)}
                 </div>
               </CardHeader>
 
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <p className="text-2xl font-bold text-blue-600">{seller.totalSales}</p>
-                    <p className="text-sm text-blue-800">Vendas Realizadas</p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="text-sm text-muted-foreground">Vendas</span>
+                    <Badge variant="secondary">{seller.total_sales}</Badge>
                   </div>
                   
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <p className="text-2xl font-bold text-green-600">
-                      {seller.totalRevenue.toLocaleString('pt-AO')} KZ
-                    </p>
-                    <p className="text-sm text-green-800">Receita Total</p>
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="text-sm text-muted-foreground">Receita</span>
+                    <span className="font-semibold">{seller.total_revenue.toLocaleString('pt-AO')} KZ</span>
                   </div>
                   
-                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                    <p className="text-2xl font-bold text-yellow-600">
-                      {seller.totalWithdrawals.toLocaleString('pt-AO')} KZ
-                    </p>
-                    <p className="text-sm text-yellow-800">Saques Feitos</p>
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="text-sm text-muted-foreground">Saques Feitos</span>
+                    <span className="font-semibold">{seller.total_withdrawals.toLocaleString('pt-AO')} KZ</span>
                   </div>
                   
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <p className="text-2xl font-bold text-purple-600">
-                      {seller.withdrawalFee.toFixed(1)}%
-                    </p>
-                    <p className="text-sm text-purple-800">Taxa de Saque</p>
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="text-sm text-muted-foreground">Taxa de Saque</span>
+                    <span className="font-semibold">{seller.total_fees.toLocaleString('pt-AO')} KZ</span>
                   </div>
 
-                  <div className="text-center p-4 bg-cyan-50 rounded-lg">
-                    <p className="text-2xl font-bold text-cyan-600">
-                      {seller.availableBalance.toLocaleString('pt-AO')} KZ
-                    </p>
-                    <p className="text-sm text-cyan-800">Saldo Disponível</p>
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="text-sm text-muted-foreground">Saldo Disponível</span>
+                    <span className="font-semibold text-green-600">{seller.available_balance.toLocaleString('pt-AO')} KZ</span>
                   </div>
+                  
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="text-sm text-muted-foreground">Produtos Ativos</span>
+                    <Badge>{seller.active_products}</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2 border-t">
+                    <span className="text-sm text-muted-foreground">Produtos Banidos</span>
+                    <Badge variant="destructive">{seller.banned_products}</Badge>
+                  </div>
+                </div>
+
+                {/* Botões de Ação */}
+                <div className="flex gap-3 pt-4 border-t border-slate-200 mt-4">
+                  {seller.banned ? (
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateUserStatus(seller.user_id, false);
+                      }}
+                      disabled={processingId === seller.user_id}
+                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                      size="sm"
+                    >
+                      <UserCheck className="h-4 w-4 mr-2" />
+                      {processingId === seller.user_id ? 'Desbloqueando...' : 'Desbloquear'}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBanUser(seller);
+                      }}
+                      disabled={processingId === seller.user_id}
+                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+                      size="sm"
+                    >
+                      <UserX className="h-4 w-4 mr-2" />
+                      {processingId === seller.user_id ? 'Banindo...' : 'Banir'}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
           
-          {sellers.length === 0 && (
-            <Card className="shadow-lg border bg-white">
+          {filteredSellers.length === 0 && (
+            <Card className="col-span-3 shadow-lg border bg-white">
               <CardContent className="text-center py-16">
                 <div className="h-16 w-16 bg-slate-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
                   <span className="text-2xl text-slate-400">👥</span>
                 </div>
-                <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhum vendedor encontrado</h3>
-                <p className="text-slate-600">Não há vendedores cadastrados no sistema.</p>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">
+                  {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+                </h3>
+                <p className="text-slate-600">
+                  {searchTerm 
+                    ? 'Tente buscar com outros termos.' 
+                    : 'Não há usuários cadastrados no sistema.'}
+                </p>
               </CardContent>
             </Card>
           )}
@@ -368,7 +469,7 @@ export default function AdminSellerReports() {
             <DialogHeader>
               <DialogTitle>Detalhes Financeiros</DialogTitle>
               <DialogDescription>
-                {selectedSeller?.profile.full_name}
+                {selectedSeller?.full_name}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -383,7 +484,7 @@ export default function AdminSellerReports() {
                   </div>
                 </div>
                 <p className="text-2xl font-bold text-green-600">
-                  {selectedSeller?.availableBalance.toLocaleString('pt-AO')} KZ
+                  {selectedSeller?.available_balance.toLocaleString('pt-AO')} KZ
                 </p>
               </div>
 
@@ -398,7 +499,7 @@ export default function AdminSellerReports() {
                   </div>
                 </div>
                 <p className="text-xl font-bold text-blue-600">
-                  {selectedSeller?.totalRevenue.toLocaleString('pt-AO')} KZ
+                  {selectedSeller?.total_revenue.toLocaleString('pt-AO')} KZ
                 </p>
               </div>
 
@@ -409,16 +510,28 @@ export default function AdminSellerReports() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-yellow-800">Saques Feitos</p>
-                    <p className="text-xs text-yellow-600">{selectedSeller?.withdrawalFee.toFixed(1)}% de taxa</p>
+                    <p className="text-xs text-yellow-600">Taxa: {selectedSeller?.total_fees.toLocaleString('pt-AO')} KZ</p>
                   </div>
                 </div>
                 <p className="text-xl font-bold text-yellow-600">
-                  {selectedSeller?.totalWithdrawals.toLocaleString('pt-AO')} KZ
+                  {selectedSeller?.total_withdrawals.toLocaleString('pt-AO')} KZ
                 </p>
               </div>
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Dialog de Banimento */}
+        <BanUserDialog
+          isOpen={banDialogOpen}
+          onClose={() => {
+            setBanDialogOpen(false);
+            setUserToBan(null);
+          }}
+          onConfirm={handleConfirmBan}
+          userName={userToBan?.full_name || 'Usuário'}
+          isLoading={processingId === userToBan?.user_id}
+        />
       </div>
     </div>
   );
