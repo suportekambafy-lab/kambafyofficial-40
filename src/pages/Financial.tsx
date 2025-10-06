@@ -316,10 +316,10 @@ export default function Financial() {
 
         // Usar dados já carregados dos saques (já extraídos acima)
 
-        // ✅ Calcular total sacado = APENAS saques APROVADOS (valor após dedução de 8%)
+        // ✅ Calcular total sacado = APROVADOS + PENDENTES (descontar imediatamente)
         const totalWithdrawnAmount = withdrawalRequestsData?.reduce((sum, withdrawal) => {
-          // Incluir APENAS os saques APROVADOS - usar valor que realmente saiu
-          if (withdrawal.status === 'aprovado') {
+          // Incluir saques APROVADOS e PENDENTES
+          if (withdrawal.status === 'aprovado' || withdrawal.status === 'pendente') {
             const finalAmount = parseFloat(withdrawal.amount?.toString() || '0');
             return sum + finalAmount;
           }

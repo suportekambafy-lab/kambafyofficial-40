@@ -100,20 +100,8 @@ export function WithdrawalModal({
         availableBalance: availableBalance
       });
 
-      // ✅ Primeiro deduzir o saldo TOTAL (antes do desconto)
-      const balanceDeducted = await useBalance(
-        amount, 
-        `Saque solicitado - Valor líquido: ${receiveValue.toLocaleString()} KZ`
-      );
-
-      if (!balanceDeducted) {
-        setError("Erro ao processar dedução do saldo");
-        return;
-      }
-
-      console.log('✅ Saldo deduzido com sucesso:', amount);
-
       // ✅ Criar solicitação de saque com o valor líquido (após desconto de 8%)
+      // Nota: O saldo será calculado dinamicamente no app descontando os saques pendentes
       const { data: insertData, error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({
