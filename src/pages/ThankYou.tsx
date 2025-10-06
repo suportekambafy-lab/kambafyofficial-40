@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { CheckCircle, Mail, Phone, ExternalLink, Clock, CreditCard, AlertCircle, FileText } from "lucide-react";
+import { CheckCircle, Mail, Phone, ExternalLink, Clock, CreditCard, AlertCircle, FileText, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,8 @@ const ThankYou = () => {
   const [multibancoError, setMultibancoError] = useState<string>('');
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [orderStatus, setOrderStatus] = useState<string>('');
+  const [copiedEntity, setCopiedEntity] = useState(false);
+  const [copiedReference, setCopiedReference] = useState(false);
   const {
     user
   } = useAuth();
@@ -69,7 +71,11 @@ const ThankYou = () => {
       orderBumpName: searchParams.get('order_bump_name') || '',
       orderBumpPrice: searchParams.get('order_bump_price') || '',
       orderBumpDiscount: searchParams.get('order_bump_discount') || '',
-      orderBumpDiscountedPrice: searchParams.get('order_bump_discounted_price') || ''
+      orderBumpDiscountedPrice: searchParams.get('order_bump_discounted_price') || '',
+      // Reference payment data
+      referenceNumber: searchParams.get('reference_number') || '',
+      entity: searchParams.get('entity') || '',
+      dueDate: searchParams.get('due_date') || ''
     };
   }, [searchParams]);
 
@@ -478,7 +484,7 @@ const ThankYou = () => {
     }
     
     // Se está pendente
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'reference'].includes(orderDetails.paymentMethod)) {
       return {
         title: "Obrigado pelo seu pedido!",
         subtitle: "Por favor, complete o seu pagamento para desbloquear o acesso."
@@ -592,6 +598,88 @@ const ThankYou = () => {
                       </div>
                     </div>}
                 </div>}
+            </CardContent>
+          </Card>}
+
+        {/* AppyPay Reference Payment Details */}
+        {orderDetails.paymentMethod === 'reference' && orderStatus === 'pending' && orderDetails.referenceNumber && <Card className="mb-8 border-blue-200 bg-blue-50">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <CreditCard className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-semibold text-blue-800">Pagamento por Referência Multicaixa</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-blue-700">
+                  Para completar sua compra, efetue o pagamento usando a referência abaixo em qualquer banco ou ATM:
+                </p>
+                
+                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-blue-50 rounded-lg p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Entidade:</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-mono font-bold text-lg text-gray-900">{orderDetails.entity}</span>
+                          <Button variant="ghost" size="sm" onClick={() => {
+                            navigator.clipboard.writeText(orderDetails.entity);
+                            setCopiedEntity(true);
+                            setTimeout(() => setCopiedEntity(false), 2000);
+                          }} className="h-6 w-6 p-0">
+                            {copiedEntity ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-blue-50 rounded-lg p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Referência:</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-mono font-bold text-lg text-gray-900">{orderDetails.referenceNumber}</span>
+                          <Button variant="ghost" size="sm" onClick={() => {
+                            navigator.clipboard.writeText(orderDetails.referenceNumber);
+                            setCopiedReference(true);
+                            setTimeout(() => setCopiedReference(false), 2000);
+                          }} className="h-6 w-6 p-0">
+                            {copiedReference ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="col-span-full bg-green-50 rounded-lg p-3 border border-green-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Valor:</span>
+                        <span className="font-bold text-xl text-green-600">
+                          {orderDetails.amount} {orderDetails.currency}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {orderDetails.dueDate && <div className="col-span-full bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Validade:</span>
+                        <span className="font-medium text-yellow-700">
+                          {new Date(orderDetails.dueDate).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        </span>
+                      </div>
+                    </div>}
+                  </div>
+                </div>
+                
+                <div className="rounded-lg p-3 bg-sky-50 border border-sky-200">
+                  <p className="text-sm text-sky-800">
+                    <strong>Passos:</strong> Pagamentos &gt;&gt; Pagamentos de serviços &gt;&gt; Pagamentos por referência
+                  </p>
+                </div>
+                
+                <div className="text-sm text-blue-700 space-y-2">
+                  <p>• Use estes dados para efetuar o pagamento em qualquer banco ou ATM</p>
+                  <p>• O acesso ao produto será liberado automaticamente após a confirmação do pagamento</p>
+                  <p>• Você receberá um email de confirmação quando o pagamento for processado</p>
+                </div>
+              </div>
             </CardContent>
           </Card>}
 
