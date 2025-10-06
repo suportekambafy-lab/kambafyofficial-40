@@ -17,6 +17,7 @@ import { ContinueWatching } from './ContinueWatching';
 import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { LessonComments } from './LessonComments';
 import { MemberAreaOffers } from './MemberAreaOffers';
+import { ModulePaymentModal } from './ModulePaymentModal';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMemberLessonProgress } from '@/hooks/useMemberLessonProgress';
@@ -84,6 +85,8 @@ export default function ModernMembersArea() {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [moduleForPayment, setModuleForPayment] = useState<Module | null>(null);
   // Estado para dados da área quando acesso é verificado
   const [verifiedMemberArea, setVerifiedMemberArea] = useState<any>(null);
   const isMobile = useIsMobile();
@@ -342,21 +345,19 @@ export default function ModernMembersArea() {
       isAccessible
     });
     
-    // Verificar se está em breve para o aluno
-    if (isComingSoon) {
-      console.log('🚫 [handleModuleClick] Bloqueado: Em breve');
-      toast.error("Módulo em breve", {
-        description: "Este módulo estará disponível em breve"
-      });
+    // Se está em breve E é pago, abrir modal de pagamento
+    if (isComingSoon && isPaid) {
+      console.log('💰 [handleModuleClick] Módulo pago - abrindo modal de pagamento');
+      setModuleForPayment(module);
+      setPaymentModalOpen(true);
       return;
     }
 
-    // Verificar se é pago e o aluno não pagou ainda
-    if (isPaid) {
-      console.log('🚫 [handleModuleClick] Bloqueado: Pago');
-      const paidPrice = (module as any).paid_price;
-      toast.error("Módulo Pago", {
-        description: `Este módulo requer pagamento adicional${paidPrice ? ` de ${paidPrice}` : ''} para acesso`
+    // Verificar se está em breve (mas não é pago)
+    if (isComingSoon) {
+      console.log('🚫 [handleModuleClick] Bloqueado: Em breve');
+      toast.info("Módulo em breve", {
+        description: "Este módulo estará disponível em breve"
       });
       return;
     }
@@ -372,6 +373,12 @@ export default function ModernMembersArea() {
 
     console.log('✅ [handleModuleClick] Módulo acessível - selecionando:', module.title);
     setSelectedModule(module);
+  };
+
+  const handlePaymentSuccess = () => {
+    console.log('✅ [handlePaymentSuccess] Pagamento bem-sucedido - recarregando módulos');
+    // Recarregar módulos para atualizar o estado
+    window.location.reload();
   };
   const handleBackToModules = () => {
     setSelectedModule(null);
@@ -442,14 +449,22 @@ export default function ModernMembersArea() {
   };
 
   // Verifica se o módulo é pago para a turma do aluno
+  // IMPORTANTE: Módulo pago só é relevante se o módulo está "em breve"
   const isModulePaidForStudent = (module: Module): boolean => {
     console.log('💰 [isModulePaidForStudent]', {
       moduleId: module.id,
       moduleTitle: module.title,
+      coming_soon: module.coming_soon,
       is_paid: (module as any).is_paid,
       paid_cohort_ids: (module as any).paid_cohort_ids,
       studentCohortId
     });
+    
+    // Só verificar pagamento se o módulo estiver "em breve"
+    if (!module.coming_soon) {
+      console.log('✅ [isModulePaidForStudent] Módulo não está em breve - não requer pagamento');
+      return false;
+    }
     
     const isPaid = (module as any).is_paid;
     if (!isPaid) {
@@ -1003,5 +1018,15 @@ export default function ModernMembersArea() {
           <MemberAreaOffers memberAreaId={memberAreaId} />
         )}
       </div>
+
+      {/* Modal de Pagamento de Módulo */}
+      <ModulePaymentModal
+        open={paymentModalOpen}
+        onOpenChange={setPaymentModalOpen}
+        module={moduleForPayment}
+        memberAreaId={memberAreaId || ''}
+        studentEmail={user?.email || verifiedEmail || ''}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>;
 }
