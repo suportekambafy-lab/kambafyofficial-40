@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VerifyModulePaymentButton } from './VerifyModulePaymentButton';
 
 interface ModulePayment {
   id: string;
@@ -272,6 +273,21 @@ export const ModulePaymentsDashboard = () => {
                     src={selectedPayment.payment_proof_url} 
                     alt="Comprovante de pagamento" 
                     className="rounded-lg border max-h-64 object-contain"
+                  />
+                </div>
+              )}
+
+              {/* Botão Verificar Status */}
+              {selectedPayment.status === 'pending' && (
+                <div className="flex justify-end pt-4 border-t">
+                  <VerifyModulePaymentButton
+                    paymentId={selectedPayment.id}
+                    referenceNumber={selectedPayment.reference_number}
+                    paymentMethod={selectedPayment.payment_method}
+                    onVerified={() => {
+                      setSelectedPayment(null);
+                      loadPayments();
+                    }}
                   />
                 </div>
               )}

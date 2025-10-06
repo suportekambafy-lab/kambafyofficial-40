@@ -77,3 +77,6 @@ verify_jwt = true
 
 [functions.fix-missing-access]
 verify_jwt = false
+
+[functions.verify-module-payment]
+verify_jwt = false
