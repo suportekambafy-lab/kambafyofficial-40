@@ -133,7 +133,9 @@ export default function Members() {
     coming_soon_cohort_ids: [] as string[],
     is_paid: false,
     paid_price: '',
-    paid_product_id: null as string | null
+    paid_product_id: null as string | null,
+    paid_access: 'all' as 'all' | 'specific',
+    paid_cohort_ids: [] as string[]
   });
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [userProducts, setUserProducts] = useState<any[]>([]);
@@ -548,6 +550,7 @@ export default function Members() {
         is_paid: moduleFormData.is_paid,
         paid_price: moduleFormData.is_paid ? moduleFormData.paid_price : null,
         paid_product_id: moduleFormData.is_paid ? moduleFormData.paid_product_id : null,
+        paid_cohort_ids: moduleFormData.is_paid && moduleFormData.paid_access === 'specific' ? moduleFormData.paid_cohort_ids : null,
         user_id: user.id,
         member_area_id: selectedArea?.id,
         order_number: editingModule ? editingModule.order_number : modules.length + 1
@@ -755,7 +758,9 @@ export default function Members() {
       coming_soon_cohort_ids: (module as any).coming_soon_cohort_ids || [],
       is_paid: (module as any).is_paid || false,
       paid_price: (module as any).paid_price || '',
-      paid_product_id: (module as any).paid_product_id || null
+      paid_product_id: (module as any).paid_product_id || null,
+      paid_access: (module as any).paid_cohort_ids === null ? 'all' : 'specific',
+      paid_cohort_ids: (module as any).paid_cohort_ids || []
     });
     setModuleDialogOpen(true);
   };
@@ -886,7 +891,9 @@ export default function Members() {
         coming_soon_cohort_ids: [],
         is_paid: false,
         paid_price: '',
-        paid_product_id: null
+        paid_product_id: null,
+        paid_access: 'all',
+        paid_cohort_ids: []
       });
       setEditingModule(null);
   };
@@ -1881,6 +1888,71 @@ export default function Members() {
                       <p className="text-xs text-muted-foreground">
                         Vincule este módulo a um produto existente para processar pagamentos
                       </p>
+                    </div>
+
+                    <div className="space-y-3 p-3 border rounded-lg bg-green-100 dark:bg-green-950/20">
+                      <Label>Requer pagamento para:</Label>
+                      <Select 
+                        value={moduleFormData.paid_access} 
+                        onValueChange={(value: 'all' | 'specific') => setModuleFormData(prev => ({
+                          ...prev,
+                          paid_access: value,
+                          paid_cohort_ids: value === 'all' ? [] : prev.paid_cohort_ids
+                        }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="z-[102]">
+                          <SelectItem value="all">Todas as turmas</SelectItem>
+                          <SelectItem value="specific">Turmas específicas</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {moduleFormData.paid_access === 'specific' && (
+                        <div className="space-y-2 mt-3">
+                          <Label className="text-sm text-muted-foreground">
+                            Selecione as turmas que precisarão pagar:
+                          </Label>
+                          {cohorts.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                              Nenhuma turma criada ainda.
+                            </p>
+                          ) : (
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                              {cohorts.map((cohort) => (
+                                <div key={cohort.id} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`paid-cohort-${cohort.id}`}
+                                    checked={moduleFormData.paid_cohort_ids.includes(cohort.id)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setModuleFormData(prev => ({
+                                          ...prev,
+                                          paid_cohort_ids: [...prev.paid_cohort_ids, cohort.id]
+                                        }));
+                                      } else {
+                                        setModuleFormData(prev => ({
+                                          ...prev,
+                                          paid_cohort_ids: prev.paid_cohort_ids.filter(id => id !== cohort.id)
+                                        }));
+                                      }
+                                    }}
+                                  />
+                                  <Label htmlFor={`paid-cohort-${cohort.id}`} className="font-normal cursor-pointer">
+                                    {cohort.name}
+                                  </Label>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {moduleFormData.paid_cohort_ids.length > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              {moduleFormData.paid_cohort_ids.length} turma(s) selecionada(s)
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

@@ -1090,6 +1090,7 @@ export type Database = {
           is_paid: boolean | null
           member_area_id: string | null
           order_number: number
+          paid_cohort_ids: string[] | null
           paid_price: string | null
           paid_product_id: string | null
           status: string
@@ -1109,6 +1110,7 @@ export type Database = {
           is_paid?: boolean | null
           member_area_id?: string | null
           order_number?: number
+          paid_cohort_ids?: string[] | null
           paid_price?: string | null
           paid_product_id?: string | null
           status?: string
@@ -1128,6 +1130,7 @@ export type Database = {
           is_paid?: boolean | null
           member_area_id?: string | null
           order_number?: number
+          paid_cohort_ids?: string[] | null
           paid_price?: string | null
           paid_product_id?: string | null
           status?: string
