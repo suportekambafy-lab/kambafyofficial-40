@@ -134,7 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
       // O pagamento deve ser confirmado manualmente ou via webhook
       return new Response(JSON.stringify({
         success: false,
-        message: 'Pagamentos por Referência Multibanco não podem ser verificados automaticamente. Aguarde a confirmação automática via webhook ou confirme manualmente após receber o pagamento.',
+        message: 'Pagamentos por Referência não podem ser verificados automaticamente. Aguarde a confirmação automática via webhook ou confirme manualmente após receber o pagamento.',
         cannotVerify: true
       }), {
         status: 400,
