@@ -87,6 +87,8 @@ const handler = async (req: Request): Promise<Response> => {
       resource: resource || apiBaseUrl
     });
 
+    console.log('[VERIFY-APPYPAY-ORDER] Token request URL:', tokenUrl);
+
     const tokenResponse = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
@@ -95,14 +97,31 @@ const handler = async (req: Request): Promise<Response> => {
       body: tokenParams
     });
 
+    console.log('[VERIFY-APPYPAY-ORDER] Token response status:', tokenResponse.status);
+
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('[VERIFY-APPYPAY-ORDER] Token error:', errorText);
-      throw new Error('Failed to get AppyPay token');
+      console.error('[VERIFY-APPYPAY-ORDER] Token error response:', errorText);
+      
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Erro ao autenticar com AppyPay',
+        error: 'Failed to get authentication token',
+        details: errorText
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
+    
+    if (!accessToken) {
+      console.error('[VERIFY-APPYPAY-ORDER] No access token in response:', tokenData);
+      throw new Error('No access token received from AppyPay');
+    }
+    
     console.log('[VERIFY-APPYPAY-ORDER] Token obtained successfully');
 
     // Consultar transação no AppyPay usando o merchantTransactionId (stripe_session_id) ou order_id
