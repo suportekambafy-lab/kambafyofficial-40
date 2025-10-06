@@ -345,11 +345,11 @@ export default function ModernMembersArea() {
       isComingSoon,
       isPaid,
       isAccessible,
-      shouldOpenPayment: isComingSoon && isPaid
+      shouldOpenPayment: isPaid
     });
     
-    // Se está em breve E é pago, abrir modal de pagamento
-    if (isComingSoon && isPaid) {
+    // Se é pago, abrir modal de pagamento (independente de estar em breve)
+    if (isPaid) {
       console.log('💰 [handleModuleClick] ABRINDO MODAL DE PAGAMENTO', {
         module: module.title,
         paid_price: (module as any).paid_price
@@ -456,22 +456,14 @@ export default function ModernMembersArea() {
   };
 
   // Verifica se o módulo é pago para a turma do aluno
-  // IMPORTANTE: Módulo pago só é relevante se o módulo está "em breve"
   const isModulePaidForStudent = (module: Module): boolean => {
     console.log('💰 [isModulePaidForStudent]', {
       moduleId: module.id,
       moduleTitle: module.title,
-      coming_soon: module.coming_soon,
       is_paid: (module as any).is_paid,
       paid_cohort_ids: (module as any).paid_cohort_ids,
       studentCohortId
     });
-    
-    // Só verificar pagamento se o módulo estiver "em breve"
-    if (!module.coming_soon) {
-      console.log('✅ [isModulePaidForStudent] Módulo não está em breve - não requer pagamento');
-      return false;
-    }
     
     const isPaid = (module as any).is_paid;
     if (!isPaid) {
