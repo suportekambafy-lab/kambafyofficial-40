@@ -327,8 +327,24 @@ export default function ModernMembersArea() {
   };
   
   const handleModuleClick = (module: Module) => {
+    console.log('👆 [handleModuleClick]', {
+      moduleId: module.id,
+      moduleTitle: module.title
+    });
+    
+    const isComingSoon = isModuleComingSoonForStudent(module);
+    const isPaid = isModulePaidForStudent(module);
+    const isAccessible = isModuleAccessible(module);
+    
+    console.log('🎯 [handleModuleClick] Verificações:', {
+      isComingSoon,
+      isPaid,
+      isAccessible
+    });
+    
     // Verificar se está em breve para o aluno
-    if (isModuleComingSoonForStudent(module)) {
+    if (isComingSoon) {
+      console.log('🚫 [handleModuleClick] Bloqueado: Em breve');
       toast.error("Módulo em breve", {
         description: "Este módulo estará disponível em breve"
       });
@@ -336,7 +352,8 @@ export default function ModernMembersArea() {
     }
 
     // Verificar se é pago e o aluno não pagou ainda
-    if (isModulePaidForStudent(module)) {
+    if (isPaid) {
+      console.log('🚫 [handleModuleClick] Bloqueado: Pago');
       const paidPrice = (module as any).paid_price;
       toast.error("Módulo Pago", {
         description: `Este módulo requer pagamento adicional${paidPrice ? ` de ${paidPrice}` : ''} para acesso`
@@ -345,14 +362,15 @@ export default function ModernMembersArea() {
     }
 
     // Módulo acessível
-    if (!isModuleAccessible(module)) {
+    if (!isAccessible) {
+      console.log('🚫 [handleModuleClick] Módulo não acessível');
       toast.error("Módulo indisponível", {
         description: "Este módulo não está disponível no momento"
       });
       return;
     }
 
-    console.log('📚 Módulo selecionado:', module.title);
+    console.log('✅ [handleModuleClick] Módulo acessível - selecionando:', module.title);
     setSelectedModule(module);
   };
   const handleBackToModules = () => {
@@ -386,39 +404,81 @@ export default function ModernMembersArea() {
 
   // Verifica se o módulo está "em breve" para a turma do aluno
   const isModuleComingSoonForStudent = (module: Module): boolean => {
-    if (!module.coming_soon) return false;
+    console.log('🔍 [isModuleComingSoonForStudent]', {
+      moduleId: module.id,
+      moduleTitle: module.title,
+      coming_soon: module.coming_soon,
+      coming_soon_cohort_ids: (module as any).coming_soon_cohort_ids,
+      studentCohortId
+    });
+    
+    if (!module.coming_soon) {
+      console.log('✅ [isModuleComingSoonForStudent] Módulo não está marcado como em breve');
+      return false;
+    }
     
     const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
     
     // Se coming_soon_cohort_ids é null ou vazio, está em breve para TODOS
     if (!comingSoonCohortIds || comingSoonCohortIds.length === 0) {
+      console.log('✅ [isModuleComingSoonForStudent] Em breve para TODOS (coming_soon_cohort_ids vazio)');
       return true;
     }
     
     // Se o aluno não tem turma, não está em breve
-    if (!studentCohortId) return false;
+    if (!studentCohortId) {
+      console.log('⚠️ [isModuleComingSoonForStudent] Aluno sem turma - módulo NÃO está em breve');
+      return false;
+    }
     
     // Está em breve apenas se a turma do aluno está na lista
-    return comingSoonCohortIds.includes(studentCohortId);
+    const isComingSoon = comingSoonCohortIds.includes(studentCohortId);
+    console.log('🎯 [isModuleComingSoonForStudent] Verificação por turma:', {
+      isComingSoon,
+      studentCohortId,
+      coming_soon_cohort_ids: comingSoonCohortIds
+    });
+    return isComingSoon;
   };
 
   // Verifica se o módulo é pago para a turma do aluno
   const isModulePaidForStudent = (module: Module): boolean => {
+    console.log('💰 [isModulePaidForStudent]', {
+      moduleId: module.id,
+      moduleTitle: module.title,
+      is_paid: (module as any).is_paid,
+      paid_cohort_ids: (module as any).paid_cohort_ids,
+      studentCohortId
+    });
+    
     const isPaid = (module as any).is_paid;
-    if (!isPaid) return false;
+    if (!isPaid) {
+      console.log('✅ [isModulePaidForStudent] Módulo não é pago');
+      return false;
+    }
     
     const paidCohortIds = (module as any).paid_cohort_ids;
     
     // Se paid_cohort_ids é null ou vazio, é pago para TODOS
     if (!paidCohortIds || paidCohortIds.length === 0) {
+      console.log('✅ [isModulePaidForStudent] Pago para TODOS (paid_cohort_ids vazio)');
       return true;
     }
     
     // Se o aluno não tem turma, não é pago
-    if (!studentCohortId) return false;
+    if (!studentCohortId) {
+      console.log('⚠️ [isModulePaidForStudent] Aluno sem turma - módulo NÃO é pago');
+      return false;
+    }
     
     // É pago apenas se a turma do aluno está na lista
-    return paidCohortIds.includes(studentCohortId);
+    const isPaidForCohort = paidCohortIds.includes(studentCohortId);
+    console.log('🎯 [isModulePaidForStudent] Verificação por turma:', {
+      isPaidForCohort,
+      studentCohortId,
+      paid_cohort_ids: paidCohortIds
+    });
+    return isPaidForCohort;
   };
   const filteredLessons = lessons.filter(lesson => {
     // Filtrar por módulo se um estiver selecionado
