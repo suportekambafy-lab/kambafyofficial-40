@@ -573,7 +573,7 @@ const OptimizedCheckout = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor="phone">{isTranslationReady ? t('form.phone') : 'Telefone'}</Label>
+                        <Label htmlFor="phone">{isTranslationReady ? t('form.phone') : 'Telefone'} *</Label>
                         <PhoneInput
                           value={formData.phone}
                           onChange={(value) => handleInputChange('phone', value)}

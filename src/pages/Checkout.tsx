@@ -1955,7 +1955,7 @@ const Checkout = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-gray-700 font-medium">
-                  Telefone ou Whatsapp
+                  Telefone ou Whatsapp *
                 </Label>
                 <PhoneInput value={formData.phone} onChange={value => handleInputChange("phone", value)} selectedCountry={formData.phoneCountry} onCountryChange={handlePhoneCountryChange} placeholder="Digite seu telefone" className="h-12" />
               </div>
