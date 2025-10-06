@@ -20,7 +20,7 @@ import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, ge
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 import { useCorrectSalesDisplay } from "@/hooks/useCorrectSalesDisplay";
-import { VerifyOrderButton } from "@/components/sales/VerifyOrderButton";
+
 interface Sale {
   id: string;
   order_id: string;
@@ -496,12 +496,6 @@ export default function Sales() {
                             <div className="flex flex-col items-end gap-1">
                               {getStatusBadge(sale.status)}
                               {getPaymentMethodBadge(sale.payment_method)}
-                              {sale.status === 'pending' && ['express', 'reference'].includes(sale.payment_method) && <div className="mt-2">
-                                  <VerifyOrderButton orderId={sale.id} paymentMethod={sale.payment_method} onVerified={() => {
-                              // Recarregar dados
-                              window.location.reload();
-                            }} />
-                                </div>}
                             </div>
                           </div>
                           
