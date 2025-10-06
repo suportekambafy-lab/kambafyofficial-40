@@ -41,10 +41,11 @@ serve(async (req) => {
       originalCurrency = 'AOA',
       paymentMethod = 'express',
       phoneNumber,
-      orderData: checkoutOrderData // Order data passed from checkout
+      orderData: checkoutOrderData, // Order data passed from checkout
+      productName // Nome do produto (usado quando é módulo)
     } = requestBody;
 
-    if (!amount || !productId || !customerData) {
+    if (!amount || !customerData) {
       throw new Error('Dados obrigatórios não fornecidos');
     }
 
@@ -194,18 +195,30 @@ serve(async (req) => {
     }
 
     // Buscar produto (only for real charges, not tests)
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .single();
+    // Se productName foi fornecido (módulos), usar ele diretamente
+    let product = null;
+    let productNameToUse = productName;
+    
+    if (productId && !productName) {
+      const { data: productData, error: productError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .single();
 
-    if (productError || !product) {
-      logStep("Product not found", productError);
-      throw new Error('Produto não encontrado');
+      if (productError || !productData) {
+        logStep("Product not found in products table", productError);
+        // Se não encontrar e não tem productName, erro
+        if (!productName) {
+          throw new Error('Produto não encontrado');
+        }
+      } else {
+        product = productData;
+        productNameToUse = productData.name;
+      }
     }
 
-    logStep("Product found", { name: product.name });
+    logStep("Product resolved", { name: productNameToUse });
 
     // Gerar ID único para a transação (máximo 15 caracteres alfanuméricos)
     const now = new Date();
@@ -225,7 +238,7 @@ serve(async (req) => {
     const appyPayPayload: any = {
       amount: parseFloat(amount),
       currency: "AOA",
-      description: product.name,
+      description: productNameToUse,
       merchantTransactionId: merchantTransactionId,
       paymentMethod: appyPayMethod
     };

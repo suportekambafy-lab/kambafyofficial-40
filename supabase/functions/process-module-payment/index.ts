@@ -76,7 +76,8 @@ serve(async (req) => {
       const { data: paymentData, error: paymentError } = await supabase.functions.invoke('create-appypay-charge', {
         body: {
           amount: parseFloat(amount.toString()),
-          productId: moduleData.paid_product_id || moduleId,
+          productId: moduleData.paid_product_id || null,
+          productName: moduleData.title, // Passar nome do módulo diretamente
           customerData: {
             email: studentEmail,
             name: customerName || studentEmail.split('@')[0],
