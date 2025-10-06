@@ -27,6 +27,11 @@ export const VerifyOrderButton = ({ orderId, paymentMethod, onVerified }: Verify
 
       if (error) throw error;
 
+      if (data.cannotVerify) {
+        toast.info(data.message);
+        return;
+      }
+
       if (data.updated) {
         toast.success(`Status atualizado: ${data.oldStatus} → ${data.newStatus}`);
         onVerified?.();

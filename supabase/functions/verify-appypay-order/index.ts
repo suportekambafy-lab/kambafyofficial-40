@@ -123,8 +123,21 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('[VERIFY-APPYPAY-ORDER] Token obtained successfully');
 
-    // Consultar transação no AppyPay usando o merchantTransactionId (stripe_session_id) ou order_id
-    const transactionId = order.stripe_session_id || order.order_id;
+    // Consultar transação no AppyPay usando o merchantTransactionId (stripe_session_id)
+    const transactionId = order.stripe_session_id;
+    
+    if (!transactionId) {
+      console.log('[VERIFY-APPYPAY-ORDER] No merchantTransactionId found for this order');
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Esta encomenda não tem ID de transação AppyPay. Encomendas antigas não podem ser verificadas automaticamente.',
+        cannotVerify: true
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    
     console.log('[VERIFY-APPYPAY-ORDER] Checking transaction:', transactionId);
 
     const checkUrl = `https://gwy-api.appypay.co.ao/v2.0/charges/${transactionId}`;
