@@ -43,9 +43,19 @@ export const useStreamingQuery = () => {
       if (productsError) throw productsError;
 
       const userProductIds = userProducts?.map(p => p.id) || [];
+
+      // Buscar member_areas do usuário para incluir module_payments
+      const { data: memberAreas, error: memberAreasError } = await supabase
+        .from('member_areas')
+        .select('id')
+        .eq('user_id', userId);
+
+      if (memberAreasError) throw memberAreasError;
+
+      const memberAreaIds = memberAreas?.map(ma => ma.id) || [];
       
-      if (userProductIds.length === 0) {
-        console.log('⚠️ Usuário não tem produtos, retornando dados vazios');
+      if (userProductIds.length === 0 && memberAreaIds.length === 0) {
+        console.log('⚠️ Usuário não tem produtos nem member areas, retornando dados vazios');
         setTotalCount(0);
         onStatsUpdate({
           paid: 0, pending: 0, cancelled: 0,
@@ -61,13 +71,31 @@ export const useStreamingQuery = () => {
         return;
       }
 
-      const { data: ownSalesData, error: ownSalesError } = await supabase
-        .from('orders')
-        .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id')
-        .in('product_id', userProductIds)
-        .in('status', ['completed', 'pending', 'cancelled', 'failed']); // Incluir todas as vendas
+      // Buscar vendas de produtos normais
+      let ownSalesData: any[] = [];
+      if (userProductIds.length > 0) {
+        const { data, error: ownSalesError } = await supabase
+          .from('orders')
+          .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id')
+          .in('product_id', userProductIds)
+          .in('status', ['completed', 'pending', 'cancelled', 'failed']);
 
-      if (ownSalesError) throw ownSalesError;
+        if (ownSalesError) throw ownSalesError;
+        ownSalesData = data || [];
+      }
+
+      // Buscar vendas de módulos
+      let moduleSalesData: any[] = [];
+      if (memberAreaIds.length > 0) {
+        const { data, error: moduleSalesError } = await supabase
+          .from('module_payments')
+          .select('status, payment_method, amount, member_area_id, order_id')
+          .in('member_area_id', memberAreaIds)
+          .in('status', ['completed', 'pending', 'cancelled', 'failed']);
+
+        if (moduleSalesError) throw moduleSalesError;
+        moduleSalesData = data || [];
+      }
 
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
       const recoveredOrderIds = new Set();
@@ -86,7 +114,7 @@ export const useStreamingQuery = () => {
         affiliateSalesData = affiliateData || [];
       }
 
-      const statsData = [...(ownSalesData || []), ...affiliateSalesData];
+      const statsData = [...ownSalesData, ...moduleSalesData, ...affiliateSalesData];
 
       // Calcular stats - vendas próprias + comissões de afiliado
       const stats = (statsData || []).reduce((acc, order) => {
@@ -172,99 +200,179 @@ export const useStreamingQuery = () => {
 
       // Usar as vendas recuperadas já buscadas anteriormente
 
-      // Carregar vendas próprias
-      while (hasMore) {
-        console.log(`📦 Carregando chunk ${chunkNumber} de vendas próprias (offset: ${offset}, size: ${chunkSize})`);
+      // Carregar vendas de produtos normais
+      if (userProductIds.length > 0) {
+        while (hasMore) {
+          console.log(`📦 Carregando chunk ${chunkNumber} de vendas próprias (offset: ${offset}, size: ${chunkSize})`);
+          
+          const { data: ownOrders, error: ownOrdersError } = await supabase
+            .from('orders')
+            .select(`
+              id,
+              order_id,
+              customer_name,
+              customer_email,
+              customer_phone,
+              amount,
+              currency,
+              status,
+              payment_method,
+              created_at,
+              product_id,
+              affiliate_code,
+              affiliate_commission,
+              seller_commission
+            `)
+            .in('product_id', userProductIds)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + chunkSize - 1);
+
+          if (ownOrdersError) throw ownOrdersError;
+          
+          if (!ownOrders || ownOrders.length === 0) {
+            console.log('🔚 Não há mais vendas próprias para carregar');
+            break;
+          }
+
+          console.log(`✅ Chunk ${chunkNumber} vendas próprias: ${ownOrders.length} vendas carregadas`);
+
+          // Buscar produtos para este chunk
+          const productIds = [...new Set(ownOrders.map(o => o.product_id))];
+          const { data: products } = await supabase
+            .from('products')
+            .select('id, name, cover, type, price')
+            .in('id', productIds);
+
+          // Combinar dados e marcar tipo de venda
+          const productMap = new Map(products?.map(p => [p.id, p]) || []);
+          const ordersWithProducts = ownOrders.map(order => {
+            // Verificar se é venda recuperada
+            const isRecovered = recoveredOrderIds.has(order.order_id);
+            
+            // Debug detalhado da venda antes de processar
+            console.log(`🔍 VENDA RAW DO BANCO:`, {
+              orderId: order.order_id,
+              customer: order.customer_name,
+              amount: order.amount,
+              currency: order.currency,
+              tipo: 'própria'
+            });
+            
+            return {
+              ...order,
+              // Preservar moeda e valor originais para exibição
+              original_amount: order.amount,
+              original_currency: order.currency,
+              products: productMap.get(order.product_id) || null,
+              sale_type: isRecovered ? 'recovered' : 'own' // Marcar como recuperada ou própria
+            };
+          });
+
+          allOrders.push(...ordersWithProducts);
+
+          // Verifica se há mais dados de forma mais robusta
+          if (ownOrders.length === chunkSize) {
+            hasMore = true;
+          } else {
+            // Fazer uma verificação extra para ter certeza
+            console.log(`🔍 Verificando se há mais vendas próprias além do offset ${offset + chunkSize}...`);
+            const { data: nextChunk } = await supabase
+              .from('orders')
+              .select('id')
+              .in('product_id', userProductIds)
+              .order('created_at', { ascending: false })
+              .range(offset + chunkSize, offset + chunkSize);
+            
+            hasMore = nextChunk && nextChunk.length > 0;
+            console.log(`🔍 Verificação vendas próprias: ${hasMore ? 'Há mais dados' : 'Não há mais dados'}`);
+          }
+
+          offset += chunkSize;
+          chunkNumber++;
+
+          console.log(`📊 Total acumulado (próprias): ${allOrders.length} vendas | Continuar: ${hasMore}`);
+
+          // Pequeno delay para não travar UI
+          await new Promise(resolve => setTimeout(resolve, 5));
+        }
+      }
+
+      // Carregar pagamentos de módulos
+      if (memberAreaIds.length > 0) {
+        console.log('💳 Carregando pagamentos de módulos...');
         
-        const { data: ownOrders, error: ownOrdersError } = await supabase
-          .from('orders')
+        const { data: modulePayments, error: modulePaymentsError } = await supabase
+          .from('module_payments')
           .select(`
             id,
             order_id,
-            customer_name,
-            customer_email,
-            customer_phone,
+            student_name,
+            student_email,
             amount,
             currency,
             status,
             payment_method,
             created_at,
-            product_id,
-            affiliate_code,
-            affiliate_commission,
-            seller_commission
+            module_id,
+            reference_number,
+            entity,
+            due_date,
+            modules (
+              title,
+              cover_image_url
+            )
           `)
-          .in('product_id', userProductIds)
-          .order('created_at', { ascending: false })
-          .range(offset, offset + chunkSize - 1);
+          .in('member_area_id', memberAreaIds)
+          .order('created_at', { ascending: false });
 
-        if (ownOrdersError) throw ownOrdersError;
-        
-        if (!ownOrders || ownOrders.length === 0) {
-          console.log('🔚 Não há mais vendas próprias para carregar');
-          break;
-        }
+        if (modulePaymentsError) throw modulePaymentsError;
 
-        console.log(`✅ Chunk ${chunkNumber} vendas próprias: ${ownOrders.length} vendas carregadas`);
-
-        // Buscar produtos para este chunk
-        const productIds = [...new Set(ownOrders.map(o => o.product_id))];
-        const { data: products } = await supabase
-          .from('products')
-          .select('id, name, cover, type, price')
-          .in('id', productIds);
-
-        // Combinar dados e marcar tipo de venda
-        const productMap = new Map(products?.map(p => [p.id, p]) || []);
-        const ordersWithProducts = ownOrders.map(order => {
-          // Verificar se é venda recuperada
-          const isRecovered = recoveredOrderIds.has(order.order_id);
+        if (modulePayments && modulePayments.length > 0) {
+          console.log(`✅ Pagamentos de módulos: ${modulePayments.length} pagamentos carregados`);
           
-          // Debug detalhado da venda antes de processar
-          console.log(`🔍 VENDA RAW DO BANCO:`, {
-            orderId: order.order_id,
-            customer: order.customer_name,
-            amount: order.amount,
-            currency: order.currency,
-            tipo: 'própria'
+          // Converter module_payments para formato compatível com orders
+          const moduleOrdersWithType = modulePayments.map(payment => {
+            console.log(`🔍 MODULE PAYMENT RAW:`, {
+              orderId: payment.order_id,
+              customer: payment.student_name,
+              amount: payment.amount,
+              currency: payment.currency,
+              tipo: 'módulo'
+            });
+            
+            return {
+              id: payment.id,
+              order_id: payment.order_id,
+              customer_name: payment.student_name,
+              customer_email: payment.student_email,
+              customer_phone: null,
+              amount: payment.amount.toString(),
+              currency: payment.currency,
+              original_amount: payment.amount.toString(),
+              original_currency: payment.currency,
+              status: payment.status,
+              payment_method: payment.payment_method,
+              created_at: payment.created_at,
+              product_id: payment.module_id,
+              affiliate_code: null,
+              affiliate_commission: null,
+              seller_commission: payment.amount,
+              products: payment.modules ? {
+                id: payment.module_id,
+                name: payment.modules.title,
+                cover: payment.modules.cover_image_url,
+                type: 'module',
+                price: payment.amount.toString()
+              } : null,
+              sale_type: 'module', // Marcar como venda de módulo
+              reference_number: payment.reference_number,
+              entity: payment.entity,
+              due_date: payment.due_date
+            };
           });
-          
-          return {
-            ...order,
-            // Preservar moeda e valor originais para exibição
-            original_amount: order.amount,
-            original_currency: order.currency,
-            products: productMap.get(order.product_id) || null,
-            sale_type: isRecovered ? 'recovered' : 'own' // Marcar como recuperada ou própria
-          };
-        });
 
-        allOrders.push(...ordersWithProducts);
-
-        // Verifica se há mais dados de forma mais robusta
-        if (ownOrders.length === chunkSize) {
-          hasMore = true;
-        } else {
-          // Fazer uma verificação extra para ter certeza
-          console.log(`🔍 Verificando se há mais vendas próprias além do offset ${offset + chunkSize}...`);
-          const { data: nextChunk } = await supabase
-            .from('orders')
-            .select('id')
-            .in('product_id', userProductIds)
-            .order('created_at', { ascending: false })
-            .range(offset + chunkSize, offset + chunkSize);
-          
-          hasMore = nextChunk && nextChunk.length > 0;
-          console.log(`🔍 Verificação vendas próprias: ${hasMore ? 'Há mais dados' : 'Não há mais dados'}`);
+          allOrders.push(...moduleOrdersWithType);
         }
-
-        offset += chunkSize;
-        chunkNumber++;
-
-        console.log(`📊 Total acumulado (próprias): ${allOrders.length} vendas | Continuar: ${hasMore}`);
-
-        // Pequeno delay para não travar UI
-        await new Promise(resolve => setTimeout(resolve, 5));
       }
 
       // Carregar vendas como afiliado se existirem códigos (excluindo vendas próprias)
