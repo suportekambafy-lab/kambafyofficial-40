@@ -1198,6 +1198,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_module_student_access_payment"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "module_payments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "module_student_access_cohort_id_fkey"
             columns: ["cohort_id"]
             isOneToOne: false
