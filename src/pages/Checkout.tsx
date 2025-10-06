@@ -2206,17 +2206,30 @@ const Checkout = () => {
                           </div>
 
                           <Button onClick={() => {
+                        console.log('🚀 Finalizando pagamento por referência:', referenceData);
                         const params = new URLSearchParams({
-                          order_id: referenceData.referenceNumber,
-                          status: 'pending',
+                          order_id: referenceData.orderId,
+                          customer_name: formData.fullName.trim(),
+                          customer_email: formData.email.trim().toLowerCase(),
+                          product_name: referenceData.productName,
+                          amount: referenceData.amount.toString(),
+                          currency: referenceData.currency,
+                          product_id: productId || '',
+                          seller_id: product.user_id,
+                          base_product_price: product.price,
                           payment_method: 'reference',
+                          status: 'pending',
                           reference_number: referenceData.referenceNumber,
                           entity: referenceData.entity,
                           due_date: referenceData.dueDate,
-                          amount: referenceData.amount.toString(),
-                          currency: referenceData.currency,
-                          product_name: referenceData.productName
+                          ...(orderBump && {
+                            order_bump_name: orderBump.bump_product_name,
+                            order_bump_price: orderBump.bump_product_price,
+                            order_bump_discount: orderBump.discount.toString(),
+                            order_bump_discounted_price: totalOrderBumpPrice.toString()
+                          })
                         });
+                        console.log('✅ Redirecionando para:', `/obrigado?${params.toString()}`);
                         navigate(`/obrigado?${params.toString()}`);
                       }} className="w-full mt-4">
                             Finalizar e continuar
