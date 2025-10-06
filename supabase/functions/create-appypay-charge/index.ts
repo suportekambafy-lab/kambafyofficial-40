@@ -225,7 +225,7 @@ serve(async (req) => {
     const appyPayPayload: any = {
       amount: parseFloat(amount),
       currency: "AOA",
-      description: paymentMethod === 'express' ? product.name : "KAMBAFY_PAYMENTS",
+      description: product.name,
       merchantTransactionId: merchantTransactionId,
       paymentMethod: appyPayMethod
     };
