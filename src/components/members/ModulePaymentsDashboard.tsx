@@ -3,12 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, DollarSign, Clock, CheckCircle2, XCircle, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, DollarSign, Clock, CheckCircle2, XCircle, Eye, Unlock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { VerifyModulePaymentButton } from './VerifyModulePaymentButton';
-import { fixEltonAccess } from '@/utils/fixEltonAccess';
+import { useToast } from '@/hooks/use-toast';
 interface ModulePayment {
   id: string;
   module_id: string;
@@ -29,29 +30,18 @@ interface ModulePayment {
   };
 }
 export const ModulePaymentsDashboard = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [payments, setPayments] = useState<ModulePayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<ModulePayment | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
+  const [isGrantingAccess, setIsGrantingAccess] = useState(false);
   useEffect(() => {
     if (user) {
       loadPayments();
     }
   }, [user, filter]);
-
-  // 🔓 Executar correção do acesso do Elton uma única vez
-  useEffect(() => {
-    const hasFixed = sessionStorage.getItem('elton_access_fixed');
-    if (!hasFixed) {
-      fixEltonAccess().then(() => {
-        sessionStorage.setItem('elton_access_fixed', 'true');
-        console.log('✅ Acesso do Elton corrigido!');
-      });
-    }
-  }, []);
   const loadPayments = async () => {
     if (!user) return;
     setIsLoading(true);
@@ -77,6 +67,42 @@ export const ModulePaymentsDashboard = () => {
       setIsLoading(false);
     }
   };
+  const handleGrantEltonAccess = async () => {
+    setIsGrantingAccess(true);
+    try {
+      console.log('🔓 Liberando acesso do Elton...');
+      
+      const { data, error } = await supabase.functions.invoke('grant-module-access-manually', {
+        body: {
+          studentEmail: 'sneeperhelton@gmail.com',
+          moduleId: '5bcee871-f9e9-42d1-995d-634c67b6a0a9'
+        }
+      });
+
+      if (error) {
+        console.error('❌ Erro:', error);
+        throw error;
+      }
+
+      console.log('✅ Sucesso:', data);
+      toast({
+        title: "✅ Acesso liberado!",
+        description: "O acesso do Elton ao módulo foi concedido com sucesso.",
+      });
+      
+      loadPayments();
+    } catch (error: any) {
+      console.error('❌ Erro ao liberar acesso:', error);
+      toast({
+        title: "❌ Erro",
+        description: error.message || "Não foi possível liberar o acesso.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGrantingAccess(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants = {
       completed: {
@@ -148,20 +174,32 @@ export const ModulePaymentsDashboard = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        {(['all', 'pending', 'completed'] as const).map(f => (
-          <button 
-            key={f} 
-            onClick={() => setFilter(f)} 
-            className={`px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors ${
-              filter === f 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-            }`}
-          >
-            {f === 'all' ? 'Todos' : f === 'pending' ? 'Pendentes' : 'Concluídos'}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
+          {(['all', 'pending', 'completed'] as const).map(f => (
+            <button 
+              key={f} 
+              onClick={() => setFilter(f)} 
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors ${
+                filter === f 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+              }`}
+            >
+              {f === 'all' ? 'Todos' : f === 'pending' ? 'Pendentes' : 'Concluídos'}
+            </button>
+          ))}
+        </div>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleGrantEltonAccess}
+          disabled={isGrantingAccess}
+        >
+          <Unlock className={`h-4 w-4 mr-2 ${isGrantingAccess ? 'animate-pulse' : ''}`} />
+          {isGrantingAccess ? 'Liberando...' : 'Liberar Acesso Elton'}
+        </Button>
       </div>
 
       {/* Payments List */}
