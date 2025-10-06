@@ -100,7 +100,7 @@ export default function AdminSellerReports() {
             .from('customer_balances')
             .select('balance')
             .eq('user_id', profile.user_id)
-            .single();
+            .maybeSingle();
 
           const activeProducts = products?.filter(p => p.status === 'Ativo').length || 0;
           const bannedProducts = products?.filter(p => p.status === 'Banido').length || 0;
