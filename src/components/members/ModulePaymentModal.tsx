@@ -3,12 +3,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, CreditCard, Building2, Smartphone, Banknote, FileText } from 'lucide-react';
+import { Loader2, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Module } from '@/types/memberArea';
+import { getPaymentMethodsByCountry } from '@/utils/paymentMethods';
 
 interface ModulePaymentModalProps {
   open: boolean;
@@ -27,7 +27,7 @@ export function ModulePaymentModal({
   studentEmail,
   onPaymentSuccess
 }: ModulePaymentModalProps) {
-  const [paymentMethod, setPaymentMethod] = useState<'express' | 'transfer' | 'multicaixa' | 'iban'>('express');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [transferProof, setTransferProof] = useState<File | null>(null);
@@ -38,28 +38,43 @@ export function ModulePaymentModal({
   const paidPrice = (module as any)?.paid_price || '0';
   const moduleTitle = module?.title || '';
 
+  // Buscar métodos de pagamento baseados no país
+  const availablePaymentMethods = getPaymentMethodsByCountry(country);
+
+  const getPaymentGridClasses = () => {
+    const methodCount = availablePaymentMethods.length;
+    if (methodCount === 1) return "grid-cols-1";
+    if (methodCount === 2) return "grid-cols-2";
+    if (methodCount === 3) return "grid-cols-3";
+    return "grid-cols-4";
+  };
+
   const handlePayment = async () => {
     if (!module) return;
 
     console.log('💰 [ModulePaymentModal] Iniciando pagamento:', {
       moduleId: module.id,
-      paymentMethod,
+      paymentMethod: selectedPaymentMethod,
       paidPrice,
       studentEmail,
       country
     });
 
+    // Validações
+    if (!customerName.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+
+    if (!selectedPaymentMethod) {
+      toast.error('Selecione um método de pagamento');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      // Validações comuns
-      if (!customerName.trim()) {
-        toast.error('Nome é obrigatório');
-        setIsProcessing(false);
-        return;
-      }
-
-      if (paymentMethod === 'express') {
+      if (selectedPaymentMethod === 'express') {
         if (!phoneNumber || phoneNumber.length < 9) {
           toast.error('Número de telefone inválido');
           setIsProcessing(false);
@@ -91,15 +106,10 @@ export function ModulePaymentModal({
         } else {
           throw new Error(data?.error || 'Erro ao processar pagamento');
         }
-      } else if (paymentMethod === 'transfer' || paymentMethod === 'multicaixa' || paymentMethod === 'iban') {
+      } else {
+        // Para outros métodos, exigir comprovante
         if (!transferProof) {
           toast.error('Adicione o comprovante de pagamento');
-          setIsProcessing(false);
-          return;
-        }
-
-        if (paymentMethod === 'iban' && !reference.trim()) {
-          toast.error('Referência é obrigatória para IBAN');
           setIsProcessing(false);
           return;
         }
@@ -125,10 +135,10 @@ export function ModulePaymentModal({
             memberAreaId,
             studentEmail,
             customerName,
-            paymentMethod,
+            paymentMethod: selectedPaymentMethod,
             amount: parseFloat(paidPrice),
             transferProofUrl: publicUrl,
-            reference: paymentMethod === 'iban' ? reference : undefined,
+            reference: reference || undefined,
             country
           }
         });
@@ -172,15 +182,17 @@ export function ModulePaymentModal({
           {/* País */}
           <div className="space-y-2">
             <Label htmlFor="country">País</Label>
-            <Select value={country} onValueChange={setCountry}>
+            <Select value={country} onValueChange={(value) => {
+              setCountry(value);
+              setSelectedPaymentMethod(''); // Resetar método ao trocar país
+            }}>
               <SelectTrigger id="country">
                 <SelectValue placeholder="Selecione o país" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="AO">Angola</SelectItem>
-                <SelectItem value="MZ">Moçambique</SelectItem>
-                <SelectItem value="PT">Portugal</SelectItem>
-                <SelectItem value="BR">Brasil</SelectItem>
+                <SelectItem value="AO">🇦🇴 Angola</SelectItem>
+                <SelectItem value="MZ">🇲🇿 Moçambique</SelectItem>
+                <SelectItem value="PT">🇵🇹 Portugal</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -198,46 +210,37 @@ export function ModulePaymentModal({
             />
           </div>
 
-          {/* Método de Pagamento */}
+          {/* Métodos de Pagamento */}
           <div className="space-y-3">
             <Label>Método de Pagamento</Label>
-            <RadioGroup value={paymentMethod} onValueChange={(value: any) => setPaymentMethod(value)}>
-              <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer">
-                <RadioGroupItem value="express" id="express" />
-                <Label htmlFor="express" className="flex items-center gap-2 cursor-pointer flex-1">
-                  <Smartphone className="h-4 w-4" />
-                  <span>Pagamento Expresso (AppyPay)</span>
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer">
-                <RadioGroupItem value="multicaixa" id="multicaixa" />
-                <Label htmlFor="multicaixa" className="flex items-center gap-2 cursor-pointer flex-1">
-                  <Banknote className="h-4 w-4" />
-                  <span>Multicaixa Express</span>
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer">
-                <RadioGroupItem value="transfer" id="transfer" />
-                <Label htmlFor="transfer" className="flex items-center gap-2 cursor-pointer flex-1">
-                  <Building2 className="h-4 w-4" />
-                  <span>Transferência Bancária</span>
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer">
-                <RadioGroupItem value="iban" id="iban" />
-                <Label htmlFor="iban" className="flex items-center gap-2 cursor-pointer flex-1">
-                  <FileText className="h-4 w-4" />
-                  <span>IBAN</span>
-                </Label>
-              </div>
-            </RadioGroup>
+            <div className={`grid ${getPaymentGridClasses()} gap-3`}>
+              {availablePaymentMethods.map((method) => (
+                <div
+                  key={method.id}
+                  onClick={() => setSelectedPaymentMethod(method.id)}
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    selectedPaymentMethod === method.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <img
+                      src={method.image}
+                      alt={method.name}
+                      className="w-8 h-8 object-contain"
+                    />
+                    <span className="text-sm font-medium text-center">
+                      {method.name}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Campos específicos por método */}
-          {paymentMethod === 'express' && (
+          {selectedPaymentMethod === 'express' && (
             <div className="space-y-2">
               <Label htmlFor="phone">Número de Telefone</Label>
               <Input
@@ -254,9 +257,9 @@ export function ModulePaymentModal({
             </div>
           )}
 
-          {(paymentMethod === 'transfer' || paymentMethod === 'multicaixa' || paymentMethod === 'iban') && (
+          {selectedPaymentMethod && selectedPaymentMethod !== 'express' && (
             <>
-              {paymentMethod === 'iban' && (
+              {selectedPaymentMethod === 'reference' && (
                 <div className="space-y-2">
                   <Label htmlFor="reference">Referência de Pagamento</Label>
                   <Input
@@ -284,22 +287,33 @@ export function ModulePaymentModal({
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-3">
+          <Button
+            onClick={handlePayment}
+            className="w-full h-12 text-lg font-semibold"
+            disabled={isProcessing || !customerName || !selectedPaymentMethod}
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processando...
+              </>
+            ) : (
+              `Pagar ${paidPrice} KZ`
+            )}
+          </Button>
+
+          <div className="flex items-center justify-center gap-2">
+            <Shield className="w-4 h-4 text-green-600" />
+            <span className="text-sm text-green-600">Pagamento 100% seguro</span>
+          </div>
+
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="flex-1"
             disabled={isProcessing}
           >
             Cancelar
-          </Button>
-          <Button
-            onClick={handlePayment}
-            className="flex-1"
-            disabled={isProcessing}
-          >
-            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Confirmar Pagamento
           </Button>
         </div>
       </DialogContent>
