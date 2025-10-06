@@ -294,7 +294,7 @@ const ThankYou = () => {
     const orderId = orderDetails.orderId;
     const paymentMethod = orderDetails.paymentMethod;
     
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'bank_transfer', 'transferencia'].includes(paymentMethod) && orderId) {
+    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'bank_transfer', 'transferencia', 'reference'].includes(paymentMethod) && orderId) {
       console.log('🔄 Iniciando verificação periódica do status do pedido...');
 
       // Verificar imediatamente
