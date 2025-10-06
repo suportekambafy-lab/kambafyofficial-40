@@ -37,12 +37,11 @@ serve(async (req) => {
     let errors = 0;
 
     for (const payment of completedPayments || []) {
-      // Verificar se já existe acesso para este pagamento
+      // Verificar se já existe acesso para este pagamento específico
       const { data: existingAccess } = await supabase
         .from('module_student_access')
         .select('id')
-        .eq('module_id', payment.module_id)
-        .ilike('student_email', payment.student_email.toLowerCase().trim())
+        .eq('payment_id', payment.id)
         .maybeSingle();
 
       if (existingAccess) {
