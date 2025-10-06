@@ -72,22 +72,47 @@ serve(async (req) => {
         .ilike('student_email', modulePayment.student_email)
         .single();
 
-      // ✅ Conceder acesso individual ao módulo na nova tabela
-      const { error: accessError } = await supabase
+      // ✅ Verificar se acesso já existe
+      const { data: existingAccess, error: checkError } = await supabase
         .from('module_student_access')
-        .insert({
-          module_id: modulePayment.module_id,
-          member_area_id: modulePayment.member_area_id,
-          student_email: modulePayment.student_email.toLowerCase().trim(),
-          cohort_id: studentData?.cohort_id || null,
-          payment_id: modulePayment.id,
-          granted_at: new Date().toISOString()
-        });
+        .select('id')
+        .eq('module_id', modulePayment.module_id)
+        .eq('member_area_id', modulePayment.member_area_id)
+        .eq('student_email', modulePayment.student_email.toLowerCase().trim())
+        .maybeSingle();
 
-      if (accessError) {
-        console.error('❌ [APPYPAY-WEBHOOK-MODULE] Error granting module access:', accessError);
+      if (checkError) {
+        console.error('❌ [APPYPAY-WEBHOOK-MODULE] Error checking existing access:', checkError);
+      }
+
+      if (existingAccess) {
+        console.log('⚠️ [APPYPAY-WEBHOOK-MODULE] Access already exists, skipping:', existingAccess.id);
       } else {
-        console.log('✅ [APPYPAY-WEBHOOK-MODULE] Individual module access granted to:', modulePayment.student_email);
+        // ✅ Conceder acesso individual ao módulo na nova tabela
+        const { data: newAccess, error: accessError } = await supabase
+          .from('module_student_access')
+          .insert({
+            module_id: modulePayment.module_id,
+            member_area_id: modulePayment.member_area_id,
+            student_email: modulePayment.student_email.toLowerCase().trim(),
+            cohort_id: studentData?.cohort_id || null,
+            payment_id: modulePayment.id,
+            granted_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (accessError) {
+          console.error('❌ [APPYPAY-WEBHOOK-MODULE] Error granting module access:', accessError);
+          // NÃO lançar erro - webhook deve retornar 200 mesmo se falhar aqui
+          // O acesso pode ser liberado manualmente depois
+        } else {
+          console.log('✅ [APPYPAY-WEBHOOK-MODULE] Individual module access granted:', {
+            accessId: newAccess.id,
+            studentEmail: modulePayment.student_email,
+            moduleId: modulePayment.module_id
+          });
+        }
       }
     }
 

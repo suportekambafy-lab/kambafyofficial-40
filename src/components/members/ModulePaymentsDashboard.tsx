@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { VerifyModulePaymentButton } from './VerifyModulePaymentButton';
+import { fixEltonAccess } from '@/utils/fixEltonAccess';
 interface ModulePayment {
   id: string;
   module_id: string;
@@ -40,6 +41,17 @@ export const ModulePaymentsDashboard = () => {
       loadPayments();
     }
   }, [user, filter]);
+
+  // 🔓 Executar correção do acesso do Elton uma única vez
+  useEffect(() => {
+    const hasFixed = sessionStorage.getItem('elton_access_fixed');
+    if (!hasFixed) {
+      fixEltonAccess().then(() => {
+        sessionStorage.setItem('elton_access_fixed', 'true');
+        console.log('✅ Acesso do Elton corrigido!');
+      });
+    }
+  }, []);
   const loadPayments = async () => {
     if (!user) return;
     setIsLoading(true);
