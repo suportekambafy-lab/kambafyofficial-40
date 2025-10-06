@@ -76,8 +76,8 @@ serve(async (req) => {
       const { data: paymentData, error: paymentError } = await supabase.functions.invoke('create-appypay-charge', {
         body: {
           amount: parseFloat(amount.toString()),
-          productId: moduleData.paid_product_id || null,
-          productName: moduleData.title, // Passar nome do módulo diretamente
+          productId: null, // Módulos não usam productId
+          productName: moduleData.title, // Nome do módulo
           customerData: {
             email: studentEmail,
             name: customerName || studentEmail.split('@')[0],
@@ -87,18 +87,7 @@ serve(async (req) => {
           originalCurrency: 'AOA',
           paymentMethod: paymentMethod,
           phoneNumber: phoneNumber,
-          orderData: {
-            product_id: moduleData.paid_product_id || moduleId,
-            order_id: orderId,
-            customer_name: customerName || studentEmail.split('@')[0],
-            customer_email: studentEmail,
-            customer_phone: phoneNumber,
-            amount: amount.toString(),
-            currency: 'AOA',
-            payment_method: paymentMethod,
-            user_id: null,
-            seller_commission: parseFloat(amount.toString())
-          }
+          skipOrderSave: true // NÃO salvar na tabela orders
         }
       });
 

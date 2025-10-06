@@ -42,7 +42,8 @@ serve(async (req) => {
       paymentMethod = 'express',
       phoneNumber,
       orderData: checkoutOrderData, // Order data passed from checkout
-      productName // Nome do produto (usado quando é módulo)
+      productName, // Nome do produto (usado quando é módulo)
+      skipOrderSave = false // Se true, não salva na tabela orders
     } = requestBody;
 
     if (!amount || !customerData) {
@@ -332,65 +333,69 @@ serve(async (req) => {
       orderStatus = 'failed';
     }
 
-    // Salvar ordem no banco usando dados do checkout ou criar novos dados
-    const orderDataToSave = checkoutOrderData ? {
-      ...checkoutOrderData,
-      order_id: orderId, // Always use reference number as order_id
-      stripe_session_id: merchantTransactionId, // Save merchantTransactionId for webhook lookup
-      status: orderStatus
-    } : {
-      product_id: productId,
-      order_id: orderId,
-      stripe_session_id: merchantTransactionId, // Save merchantTransactionId for webhook lookup
-      customer_name: customerData.name,
-      customer_email: customerData.email,
-      customer_phone: phoneNumber || customerData.phone,
-      amount: originalAmount?.toString() || amount.toString(),
-      currency: originalCurrency,
-      payment_method: paymentMethod,
-      status: orderStatus,
-      user_id: null, // Anonymous checkout - user_id should be null for anonymous orders
-      seller_commission: parseFloat(originalAmount?.toString() || amount.toString())
-    };
+    // Salvar ordem no banco apenas se não for módulo (skipOrderSave = false)
+    if (!skipOrderSave) {
+      const orderDataToSave = checkoutOrderData ? {
+        ...checkoutOrderData,
+        order_id: orderId, // Always use reference number as order_id
+        stripe_session_id: merchantTransactionId, // Save merchantTransactionId for webhook lookup
+        status: orderStatus
+      } : {
+        product_id: productId,
+        order_id: orderId,
+        stripe_session_id: merchantTransactionId, // Save merchantTransactionId for webhook lookup
+        customer_name: customerData.name,
+        customer_email: customerData.email,
+        customer_phone: phoneNumber || customerData.phone,
+        amount: originalAmount?.toString() || amount.toString(),
+        currency: originalCurrency,
+        payment_method: paymentMethod,
+        status: orderStatus,
+        user_id: null, // Anonymous checkout - user_id should be null for anonymous orders
+        seller_commission: parseFloat(originalAmount?.toString() || amount.toString())
+      };
 
-    logStep("Saving order", orderDataToSave);
+      logStep("Saving order", orderDataToSave);
 
-    const { error: orderError } = await supabase
-      .from('orders')
-      .insert(orderDataToSave);
+      const { error: orderError } = await supabase
+        .from('orders')
+        .insert(orderDataToSave);
 
-    if (orderError) {
-      logStep("Error saving order", orderError);
-      throw new Error('Erro ao salvar pedido');
-    }
+      if (orderError) {
+        logStep("Error saving order", orderError);
+        throw new Error('Erro ao salvar pedido');
+      }
 
-    logStep("Order saved successfully");
+      logStep("Order saved successfully");
 
-    // Só enviar email de confirmação se o pagamento foi realmente completado (não para referências pendentes)
-    if (orderStatus === 'completed') {
-      try {
-        const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
-          body: {
-            customerEmail: customerData.email,
-            customerName: customerData.name,
-            customerPhone: phoneNumber || customerData.phone,
-            productName: product.name,
-            amount: orderDataToSave.amount,
-            currency: orderDataToSave.currency,
-            orderId: orderId
+      // Só enviar email de confirmação se o pagamento foi realmente completado (não para referências pendentes)
+      if (orderStatus === 'completed') {
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
+            body: {
+              customerEmail: customerData.email,
+              customerName: customerData.name,
+              customerPhone: phoneNumber || customerData.phone,
+              productName: product.name,
+              amount: orderDataToSave.amount,
+              currency: orderDataToSave.currency,
+              orderId: orderId
+            }
+          });
+
+          if (emailError) {
+            logStep("Email notification failed", emailError);
+          } else {
+            logStep("Confirmation email sent");
           }
-        });
-
-        if (emailError) {
-          logStep("Email notification failed", emailError);
-        } else {
-          logStep("Confirmation email sent");
+        } catch (emailError) {
+          logStep("Email error", emailError);
         }
-      } catch (emailError) {
-        logStep("Email error", emailError);
+      } else {
+        logStep("Payment pending - confirmation email will be sent after payment confirmation");
       }
     } else {
-      logStep("Payment pending - confirmation email will be sent after payment confirmation");
+      logStep("Skipping order save - module payment will be saved separately");
     }
 
     const response = {
