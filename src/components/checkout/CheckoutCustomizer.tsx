@@ -26,19 +26,7 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
   const { settings, setSettings, saveSettings, loading, saving } = useCheckoutCustomization(productId);
   const [editingReview, setEditingReview] = useState<string | null>(null);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner text="Carregando configurações..." />
-      </div>
-    );
-  }
-
-  const handleSave = async () => {
-    await saveSettings(settings);
-    onSaveSuccess();
-  };
-
+  // ✅ Todos os hooks DEVEM vir antes de qualquer return
   const updateBannerSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
@@ -73,6 +61,20 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
       spotsCounter: { ...prev.spotsCounter, [key]: value }
     }));
   }, [setSettings]);
+
+  const handleSave = async () => {
+    await saveSettings(settings);
+    onSaveSuccess();
+  };
+
+  // ✅ Agora o early return vem DEPOIS de todos os hooks
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner text="Carregando configurações..." />
+      </div>
+    );
+  }
 
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
