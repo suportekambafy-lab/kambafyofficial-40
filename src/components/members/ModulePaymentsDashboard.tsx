@@ -189,7 +189,12 @@ export const ModulePaymentsDashboard = () => {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="font-semibold">{Number(payment.amount).toLocaleString('pt-AO')} {payment.currency}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{payment.payment_method}</p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {payment.payment_method}
+                        {payment.payment_method === 'reference' && payment.reference_number && (
+                          <span className="ml-1">| Ref: {payment.reference_number}</span>
+                        )}
+                      </p>
                     </div>
                     {getStatusBadge(payment.status)}
                     <Eye className="w-4 h-4 text-muted-foreground" />
@@ -232,22 +237,22 @@ export const ModulePaymentsDashboard = () => {
                   <p className="text-sm text-muted-foreground">Método de Pagamento</p>
                   <p className="font-medium capitalize">{selectedPayment.payment_method}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Order ID</p>
-                  <p className="font-mono text-xs">{selectedPayment.order_id}</p>
-                </div>
                 {selectedPayment.reference_number && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Referência</p>
-                    <p className="font-medium">{selectedPayment.reference_number}</p>
+                    <p className="text-sm text-muted-foreground">Número de Referência</p>
+                    <p className="text-xl font-bold text-primary">{selectedPayment.reference_number}</p>
                   </div>
                 )}
                 {selectedPayment.entity && (
                   <div>
                     <p className="text-sm text-muted-foreground">Entidade</p>
-                    <p className="font-medium">{selectedPayment.entity}</p>
+                    <p className="text-lg font-semibold">{selectedPayment.entity}</p>
                   </div>
                 )}
+                <div>
+                  <p className="text-sm text-muted-foreground">Order ID (rastreamento interno)</p>
+                  <p className="font-mono text-xs text-muted-foreground">{selectedPayment.order_id}</p>
+                </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Data de Criação</p>
                   <p className="text-sm">{format(new Date(selectedPayment.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
