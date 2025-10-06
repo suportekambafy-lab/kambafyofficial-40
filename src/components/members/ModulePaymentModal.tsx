@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Module } from '@/types/memberArea';
 import { getPaymentMethodsByCountry } from '@/utils/paymentMethods';
+import { OptimizedStripeCardPayment } from '@/components/checkout/OptimizedCheckoutComponents';
+import { useGeoLocation } from '@/hooks/useGeoLocation';
 
 interface ModulePaymentModalProps {
   open: boolean;
@@ -39,6 +41,7 @@ export function ModulePaymentModal({
   const [copiedReference, setCopiedReference] = useState(false);
   const [accountHolder, setAccountHolder] = useState('');
   const [accountIban, setAccountIban] = useState('');
+  const { userCountry, formatPrice, convertPrice } = useGeoLocation();
 
   const paidPrice = (module as any)?.paid_price || '0';
   const moduleTitle = module?.title || '';
@@ -53,7 +56,28 @@ export function ModulePaymentModal({
   };
 
   // Buscar métodos de pagamento baseados no país
-  const availablePaymentMethods = getPaymentMethodsByCountry(country);
+  const availablePaymentMethods = useMemo(() => {
+    const methods = getPaymentMethodsByCountry(country);
+    
+    // Se for Portugal, adicionar métodos Stripe
+    if (country === 'PT') {
+      const stripeMethods = [
+        { id: 'card', name: 'Cartão de Crédito/Débito', enabled: true, isPortugal: true },
+        { id: 'klarna', name: 'Klarna', enabled: true, isPortugal: true },
+        { id: 'multibanco', name: 'Multibanco', enabled: true, isPortugal: true },
+        { id: 'apple_pay', name: 'Apple Pay', enabled: true, isPortugal: true }
+      ];
+      
+      // Adicionar métodos Stripe se ainda não existirem
+      stripeMethods.forEach(stripeMethod => {
+        if (!methods.find(m => m.id === stripeMethod.id)) {
+          methods.push(stripeMethod);
+        }
+      });
+    }
+    
+    return methods;
+  }, [country]);
 
   const getPaymentGridClasses = () => {
     const methodCount = availablePaymentMethods.length;
@@ -77,8 +101,35 @@ export function ModulePaymentModal({
     toast.success(`${label} copiado!`);
   };
 
+  const handleCardPaymentSuccess = async (orderId: string) => {
+    console.log('✅ Stripe payment successful for module:', orderId);
+    
+    toast.success('Pagamento realizado!', {
+      description: 'Seu pagamento foi confirmado. Você já tem acesso ao módulo.'
+    });
+    
+    if (onPaymentSuccess) {
+      onPaymentSuccess();
+    }
+    onOpenChange(false);
+  };
+
+  const handleCardPaymentError = (error: string) => {
+    console.error('❌ Stripe payment error:', error);
+    toast.error('Erro no pagamento', {
+      description: error || 'Ocorreu um erro ao processar seu pagamento'
+    });
+    setIsProcessing(false);
+  };
+
   const handlePayment = async () => {
     if (!module) return;
+
+    // Para métodos Stripe, não processar aqui - o componente StripeCardPayment cuidará disso
+    if (['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPaymentMethod)) {
+      console.log('⏳ Stripe payment will be handled by StripeCardPayment component');
+      return;
+    }
 
     console.log('💰 [ModulePaymentModal] Iniciando pagamento:', {
       moduleId: module.id,
@@ -485,7 +536,7 @@ export function ModulePaymentModal({
           )}
 
           {/* Comprovante para outros métodos que não são Express/Reference/Transfer */}
-          {selectedPaymentMethod && selectedPaymentMethod !== 'express' && selectedPaymentMethod !== 'reference' && selectedPaymentMethod !== 'transfer' && (
+          {selectedPaymentMethod && selectedPaymentMethod !== 'express' && selectedPaymentMethod !== 'reference' && selectedPaymentMethod !== 'transfer' && !['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPaymentMethod) && (
             <div className="space-y-2">
               <Label htmlFor="proof">Comprovante de Pagamento</Label>
               <Input
@@ -499,23 +550,48 @@ export function ModulePaymentModal({
               </p>
             </div>
           )}
+
+          {/* Stripe Payment Methods */}
+          {['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPaymentMethod) && (
+            <div className="mt-4">
+              <OptimizedStripeCardPayment
+                amount={parseFloat(paidPrice?.replace(/[^0-9,]/g, '').replace(',', '.') || '0')}
+                currency={country === 'PT' ? 'EUR' : 'AOA'}
+                productId={(module as any)?.paid_product_id || module?.id || ''}
+                customerData={{
+                  name: customerName,
+                  email: studentEmail,
+                  phone: phoneNumber
+                }}
+                paymentMethod={selectedPaymentMethod}
+                onSuccess={handleCardPaymentSuccess}
+                onError={handleCardPaymentError}
+                processing={isProcessing}
+                setProcessing={setIsProcessing}
+                displayPrice={paidPrice || ''}
+                convertedAmount={parseFloat(paidPrice?.replace(/[^0-9,]/g, '').replace(',', '.') || '0')}
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-3">
-          <Button
-            onClick={handlePayment}
-            className="w-full h-12 text-lg font-semibold"
-            disabled={isProcessing || !customerName || !selectedPaymentMethod}
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processando...
-              </>
-            ) : (
-              `Pagar ${paidPrice} KZ`
-            )}
-          </Button>
+          {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPaymentMethod) && (
+            <Button
+              onClick={handlePayment}
+              className="w-full h-12 text-lg font-semibold"
+              disabled={isProcessing || !customerName || !selectedPaymentMethod}
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                `Pagar ${paidPrice} KZ`
+              )}
+            </Button>
+          )}
 
           <div className="flex items-center justify-center gap-2">
             <Shield className="w-4 h-4 text-green-600" />
