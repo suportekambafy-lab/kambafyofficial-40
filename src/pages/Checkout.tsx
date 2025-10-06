@@ -708,13 +708,6 @@ const Checkout = () => {
     return getPaymentMethodsByCountry(userCountry.code);
   }, [userCountry, product]);
 
-  // 💳 Auto-selecionar primeiro método de pagamento quando disponível
-  useEffect(() => {
-    if (availablePaymentMethods.length > 0 && !selectedPayment) {
-      console.log('💳 Auto-selecting first payment method:', availablePaymentMethods[0].id);
-      setSelectedPayment(availablePaymentMethods[0].id);
-    }
-  }, [availablePaymentMethods, selectedPayment]);
   const getPaymentMethods = () => availablePaymentMethods;
   const getSelectedPaymentName = () => {
     const selected = availablePaymentMethods.find(method => method.id === selectedPayment);
