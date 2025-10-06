@@ -460,13 +460,7 @@ export function AppHome() {
     if (!user) return;
 
     try {
-      console.log('💰 [AppHome] Calculando saldos baseados em VENDAS (igual à Web)');
-
-      // Buscar payment_releases
-      const { data: releases } = await supabase
-        .from('payment_releases')
-        .select('order_id, amount, processed_at')
-        .eq('user_id', user.id);
+      console.log('💰 [AppHome] Calculando saldos IDÊNTICOS ao Financial.tsx');
 
       // ✅ FONTE ÚNICA DE VERDADE: Buscar saldo real do customer_balances
       const { data: balanceData, error: balanceError } = await supabase
@@ -488,6 +482,35 @@ export function AppHome() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
+      // Vendas recuperadas removidas - sistema de recuperação desabilitado
+      const recoveredOrderIds = new Set();
+
+      // ✅ Processar orders para calcular earning_amount (igual ao Financial.tsx)
+      const processedOrders = orders.map(order => {
+        const isRecovered = recoveredOrderIds.has(order.order_id);
+        let earning = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        
+        // Converter para KZ se necessário
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053, // 1 EUR = ~1053 KZ
+            'MZN': 14.3  // 1 MZN = ~14.3 KZ
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          earning = Math.round(earning * rate);
+        }
+        
+        // Aplicar desconto de 20% se for venda recuperada
+        if (isRecovered) {
+          earning = earning * 0.8;
+        }
+        
+        return {
+          ...order,
+          earning_amount: earning
+        };
+      });
+
       // Calcular total de saques aprovados e pendentes (deduzir imediatamente do saldo)
       const totalWithdrawnAmount = withdrawals
         ?.filter(w => w.status === 'aprovado' || w.status === 'pendente')
@@ -496,21 +519,16 @@ export function AppHome() {
       // ✅ USAR o saldo real do customer_balances como fonte de verdade
       const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
 
-      // Calcular saldo pendente baseado nas vendas dos últimos 3 dias
+      // Calcular saldo pendente baseado nas vendas dos últimos 3 dias (igual ao Financial.tsx)
       const now = new Date();
       let pendingBalance = 0;
 
-      orders.forEach(order => {
+      processedOrders.forEach(order => {
         const orderDate = new Date(order.created_at);
-        const releaseDate = new Date(orderDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+        const releaseDate = new Date(orderDate);
+        releaseDate.setDate(orderDate.getDate() + 3);
         
-        // Usar earning_amount se disponível, senão usar seller_commission/amount
-        let amount = parseFloat(
-          order.earning_amount?.toString() || 
-          order.seller_commission?.toString() || 
-          order.amount || 
-          '0'
-        );
+        const amount = order.earning_amount;
         
         // Se ainda não liberou (dentro de 3 dias)
         if (now < releaseDate) {
