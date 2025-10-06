@@ -77,9 +77,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('AppyPay credentials not configured');
     }
 
-    // Obter token OAuth
+    // Obter token OAuth (usar authBaseUrl diretamente, sem adicionar /oauth2/token)
     console.log('[VERIFY-APPYPAY-ORDER] Getting OAuth token...');
-    const tokenUrl = `${authBaseUrl}/oauth2/token`;
     const tokenParams = new URLSearchParams({
       grant_type: grantType || 'client_credentials',
       client_id: clientId,
@@ -87,9 +86,9 @@ const handler = async (req: Request): Promise<Response> => {
       resource: resource || apiBaseUrl
     });
 
-    console.log('[VERIFY-APPYPAY-ORDER] Token request URL:', tokenUrl);
+    console.log('[VERIFY-APPYPAY-ORDER] Token request URL:', authBaseUrl);
 
-    const tokenResponse = await fetch(tokenUrl, {
+    const tokenResponse = await fetch(authBaseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
