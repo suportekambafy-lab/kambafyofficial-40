@@ -75,22 +75,10 @@ const menuItems = [
     badge: 'withdrawals'
   },
   {
-    href: '/admin/sellers',
-    label: 'Vendedores',
-    icon: TrendingUp,
-    description: 'Relatórios de vendas'
-  },
-  {
     href: '/admin/identity',
     label: 'Verificação KYC',
     icon: UserCheck,
     description: 'Verificar identidades'
-  },
-  {
-    href: '/admin/logs',
-    label: 'Logs do Sistema',
-    icon: FileText,
-    description: 'Histórico de ações'
   },
   {
     href: '/admin/seller-reports',
@@ -104,12 +92,6 @@ const menuItems = [
     icon: CreditCard,
     description: 'Transferências pendentes',
     badge: 'pending_transfers'
-  },
-  {
-    href: '/admin/partners',
-    label: 'Parceiros KambaPay',
-    icon: Globe,
-    description: 'Gerenciar parceiros API'
   }
 ];
 
