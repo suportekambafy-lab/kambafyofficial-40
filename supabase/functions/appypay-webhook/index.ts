@@ -188,30 +188,12 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Step 2: Search for order - buscar por order_id (que agora é merchantTransactionId)
+    // Step 2: Search for order - try by merchantTransactionId first (appypay_transaction_id), then by order_id (referenceNumber)
     let orders: any[] | null = null;
     let orderError: any = null;
     
-    // Buscar por order_id (merchantTransactionId)
+    // Try finding by merchantTransactionId (stored in appypay_transaction_id)
     if (payload.merchantTransactionId) {
-      const result = await supabase
-        .from('orders')
-        .select('*')
-        .eq('order_id', payload.merchantTransactionId)
-        .in('payment_method', ['express', 'reference'])
-        .limit(1);
-      
-      orders = result.data;
-      orderError = result.error;
-      
-      if (orders && orders.length > 0) {
-        console.log(`[APPYPAY-WEBHOOK] Order found by order_id (merchantTransactionId): ${payload.merchantTransactionId}`);
-      }
-    }
-    
-    // Fallback: buscar por appypay_transaction_id (para pedidos antigos)
-    if ((!orders || orders.length === 0) && payload.merchantTransactionId) {
-      console.log(`[APPYPAY-WEBHOOK] Trying fallback by appypay_transaction_id: ${payload.merchantTransactionId}`);
       const result = await supabase
         .from('orders')
         .select('*')
@@ -223,13 +205,13 @@ const handler = async (req: Request): Promise<Response> => {
       orderError = result.error;
       
       if (orders && orders.length > 0) {
-        console.log(`[APPYPAY-WEBHOOK] Order found by appypay_transaction_id (old format)`);
+        console.log(`[APPYPAY-WEBHOOK] Order found by merchantTransactionId: ${payload.merchantTransactionId}`);
       }
     }
     
-    // Fallback: buscar por referenceNumber (para pedidos muito antigos)
+    // If not found and we have a reference number, try by order_id (referenceNumber)
     if ((!orders || orders.length === 0) && payload.reference?.referenceNumber) {
-      console.log(`[APPYPAY-WEBHOOK] Trying fallback by referenceNumber: ${payload.reference.referenceNumber}`);
+      console.log(`[APPYPAY-WEBHOOK] Trying to find order by referenceNumber: ${payload.reference.referenceNumber}`);
       const result = await supabase
         .from('orders')
         .select('*')
@@ -241,7 +223,7 @@ const handler = async (req: Request): Promise<Response> => {
       orderError = result.error;
       
       if (orders && orders.length > 0) {
-        console.log(`[APPYPAY-WEBHOOK] Order found by referenceNumber (very old format)`);
+        console.log(`[APPYPAY-WEBHOOK] Order found by referenceNumber: ${payload.reference.referenceNumber}`);
       }
     }
 
