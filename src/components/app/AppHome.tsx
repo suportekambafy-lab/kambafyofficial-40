@@ -480,31 +480,81 @@ export function AppHome() {
 
       const productIds = products?.map(p => p.id) || [];
 
-      if (productIds.length === 0) {
-        setOrders([]);
-        return;
-      }
+      // Buscar member_areas do usuário para pegar module_payments
+      const { data: memberAreas } = await supabase
+        .from('member_areas')
+        .select('id')
+        .eq('user_id', user.id);
 
-      let query = supabase
+      const memberAreaIds = memberAreas?.map(ma => ma.id) || [];
+
+      // Query para orders normais
+      let ordersQuery = supabase
         .from('orders')
         .select('*, products(name, cover)')
         .in('product_id', productIds)
         .order('created_at', { ascending: false });
 
-      // Aplicar filtro de status
+      // Query para module_payments
+      let modulePaymentsQuery = supabase
+        .from('module_payments')
+        .select('*, modules(title, cover_image_url)')
+        .in('member_area_id', memberAreaIds)
+        .order('created_at', { ascending: false });
+
+      // Aplicar filtro de status em ambas queries
       if (salesStatusFilter !== 'all') {
-        query = query.eq('status', salesStatusFilter);
+        ordersQuery = ordersQuery.eq('status', salesStatusFilter);
+        modulePaymentsQuery = modulePaymentsQuery.eq('status', salesStatusFilter);
       }
 
-      const { data, error } = await query;
+      const [ordersResult, modulePaymentsResult] = await Promise.all([
+        ordersQuery,
+        modulePaymentsQuery
+      ]);
       
-      if (error) {
-        console.error('Error loading sales history:', error);
-        setOrders([]);
-        return;
+      if (ordersResult.error) {
+        console.error('Error loading orders:', ordersResult.error);
       }
 
-      setOrders(data || []);
+      if (modulePaymentsResult.error) {
+        console.error('Error loading module payments:', modulePaymentsResult.error);
+      }
+
+      // Combinar orders e module_payments em formato unificado
+      const regularOrders = (ordersResult.data || []).map(order => ({
+        ...order,
+        source: 'product' // Marcar como venda de produto normal
+      }));
+
+      const moduleOrders = (modulePaymentsResult.data || []).map(payment => ({
+        id: payment.id,
+        order_id: payment.order_id,
+        customer_name: payment.student_name,
+        customer_email: payment.student_email,
+        customer_phone: null,
+        amount: payment.amount.toString(),
+        currency: payment.currency,
+        status: payment.status,
+        payment_method: payment.payment_method,
+        created_at: payment.created_at,
+        updated_at: payment.updated_at,
+        products: payment.modules ? {
+          name: payment.modules.title,
+          cover: payment.modules.cover_image_url
+        } : null,
+        source: 'module', // Marcar como venda de módulo
+        reference_number: payment.reference_number,
+        entity: payment.entity,
+        due_date: payment.due_date
+      }));
+
+      // Combinar e ordenar por data
+      const allOrders = [...regularOrders, ...moduleOrders].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setOrders(allOrders);
     } catch (error) {
       console.error('Error loading sales history:', error);
       setOrders([]);
