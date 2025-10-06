@@ -504,11 +504,10 @@ export default function Financial() {
         ['HISTÓRICO DE SAQUES'],
         ['Data Solicitação', 'Valor a Receber (KZ)', 'Valor Original (KZ)', 'Taxa (KZ)', 'Status', 'Data Atualização'].join(','),
         ...(withdrawals || []).map(withdrawal => {
-          // ✅ O valor no banco já é o valor final (após desconto de 8%)
-          const receivedAmount = parseFloat(withdrawal.amount?.toString() || '0');
-          // Para calcular o valor original, dividir por 0.92 (100% - 8%)
-          const originalAmount = receivedAmount / 0.92;
-          const feeAmount = originalAmount - receivedAmount;
+          // amount já é o valor BRUTO (antes da taxa de 8%)
+          const originalAmount = parseFloat(withdrawal.amount?.toString() || '0');
+          const feeAmount = originalAmount * 0.08; // 8% de taxa
+          const receivedAmount = originalAmount * 0.92; // valor líquido que o vendedor recebe
           return [
             new Date(withdrawal.created_at).toLocaleDateString('pt-BR'),
             receivedAmount.toFixed(0),           // Valor a receber (já com desconto)
@@ -840,12 +839,15 @@ export default function Financial() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Valor a Receber</p>
+                        <p className="text-xs text-muted-foreground">Valor Solicitado</p>
                         <p className="text-sm font-bold">
                           {parseFloat(request.amount.toString()).toLocaleString()} KZ
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Taxa: {((parseFloat(request.amount.toString()) / 0.92) - parseFloat(request.amount.toString())).toFixed(0)} KZ
+                          Taxa (8%): {(parseFloat(request.amount.toString()) * 0.08).toFixed(0)} KZ
+                        </p>
+                        <p className="text-xs text-success font-semibold">
+                          A Receber: {(parseFloat(request.amount.toString()) * 0.92).toFixed(0)} KZ
                         </p>
                       </div>
                     </div>
@@ -880,9 +882,10 @@ export default function Financial() {
                   </TableHeader>
                   <TableBody>
                     {withdrawalRequests.map((request) => {
-                      const receivedAmount = parseFloat(request.amount.toString());
-                      const originalAmount = receivedAmount / 0.92;
-                      const feeAmount = originalAmount - receivedAmount;
+                      // amount já é o valor BRUTO (antes da taxa de 8%)
+                      const originalAmount = parseFloat(request.amount.toString());
+                      const feeAmount = originalAmount * 0.08; // 8% de taxa
+                      const receivedAmount = originalAmount * 0.92; // valor líquido que o vendedor recebe
                       
                       return (
                         <TableRow key={request.id}>

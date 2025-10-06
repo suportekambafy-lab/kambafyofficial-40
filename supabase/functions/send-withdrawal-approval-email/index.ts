@@ -205,7 +205,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     const sellerEmail = profileData.email;
     const sellerName = profileData.full_name || 'Vendedor';
-    const amount = withdrawalData.amount;
+    const grossAmount = withdrawalData.amount; // Valor bruto (antes da taxa)
+    const feeAmount = grossAmount * 0.08; // 8% de taxa da plataforma
+    const netAmount = grossAmount * 0.92; // Valor líquido que o vendedor recebe
     const iban = profileData.iban;
     const accountHolder = profileData.account_holder;
 
@@ -264,12 +266,18 @@ const handler = async (req: Request): Promise<Response> => {
             
             <p>Temos uma excelente notícia! Sua solicitação de saque foi <strong>aprovada</strong> e será processada em breve.</p>
             
-            <div class="amount">
-              💰 ${Number(amount).toLocaleString('pt-AO')} KZ
+            <div class="highlight">
+              <h3>💰 Valores do Saque:</h3>
+              <div class="details">
+                <p><strong>Valor Solicitado:</strong> ${Number(grossAmount).toLocaleString('pt-AO')} KZ</p>
+                <p><strong>Taxa da Plataforma (8%):</strong> - ${Number(feeAmount).toLocaleString('pt-AO')} KZ</p>
+                <hr style="margin: 10px 0; border: 1px solid #ddd;">
+                <p style="font-size: 1.3em; color: #28a745;"><strong>💵 Valor a Receber:</strong> ${Number(netAmount).toLocaleString('pt-AO')} KZ</p>
+              </div>
             </div>
             
             <div class="highlight">
-              <h3>📋 Detalhes do Saque:</h3>
+              <h3>📋 Detalhes da Conta:</h3>
               <div class="details">
                 <p><strong>💳 Conta Destino:</strong> ${iban || 'Não informado'}</p>
                 <p><strong>👤 Titular:</strong> ${accountHolder || sellerName}</p>
