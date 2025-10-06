@@ -8,12 +8,14 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface SellerReport {
+interface UserReport {
   user_id: string;
   profile: {
     full_name: string;
     email: string;
     created_at: string;
+    banned: boolean;
+    is_creator: boolean;
   };
   totalSales: number;
   totalRevenue: number;
@@ -26,59 +28,52 @@ export default function AdminSellers() {
   const { admin } = useAdminAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [sellers, setSellers] = useState<SellerReport[]>([]);
+  const [users, setUsers] = useState<UserReport[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (admin) {
-      loadSellersReport();
+      loadAllUsers();
     }
   }, [admin]);
 
-  const loadSellersReport = async () => {
+  const loadAllUsers = async () => {
     try {
       setLoading(true);
 
-      // Buscar todos os perfis de usuários que têm produtos (vendedores ativos)
-      const { data: sellerIds } = await supabase
-        .from('products')
-        .select('user_id')
-        .not('user_id', 'is', null);
-
-      const uniqueSellerIds = [...new Set(sellerIds?.map(p => p.user_id) || [])];
-
+      // Buscar TODOS os perfis de usuários
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('user_id, full_name, email, created_at')
-        .in('user_id', uniqueSellerIds);
+        .select('user_id, full_name, email, created_at, banned, is_creator')
+        .order('created_at', { ascending: false });
 
       if (profileError) {
         console.error('Erro ao carregar perfis:', profileError);
         toast({
           title: 'Erro',
-          description: 'Erro ao carregar dados dos vendedores',
+          description: 'Erro ao carregar dados dos usuários',
           variant: 'destructive'
         });
         return;
       }
 
-      const sellersData: SellerReport[] = [];
+      const usersData: UserReport[] = [];
 
       for (const profile of profiles || []) {
-        // Buscar vendas do vendedor
+        // Buscar vendas do usuário
         const { data: orders } = await supabase
           .from('orders')
           .select('amount')
           .eq('user_id', profile.user_id)
           .eq('status', 'completed');
 
-        // Buscar produtos do vendedor
+        // Buscar produtos do usuário
         const { data: products } = await supabase
           .from('products')
           .select('status, admin_approved')
           .eq('user_id', profile.user_id);
 
-        // Buscar saques do vendedor
+        // Buscar saques do usuário
         const { data: withdrawals } = await supabase
           .from('withdrawal_requests')
           .select('amount, status')
@@ -97,9 +92,15 @@ export default function AdminSellers() {
           w.status === 'aprovado').reduce((sum, w) => 
           sum + parseFloat(w.amount.toString()), 0) || 0;
 
-        sellersData.push({
+        usersData.push({
           user_id: profile.user_id,
-          profile,
+          profile: {
+            full_name: profile.full_name,
+            email: profile.email,
+            created_at: profile.created_at,
+            banned: profile.banned || false,
+            is_creator: profile.is_creator || false
+          },
           totalSales,
           totalRevenue,
           totalWithdrawals,
@@ -109,11 +110,11 @@ export default function AdminSellers() {
       }
 
       // Ordenar por receita total (maior para menor)
-      sellersData.sort((a, b) => b.totalRevenue - a.totalRevenue);
-      setSellers(sellersData);
+      usersData.sort((a, b) => b.totalRevenue - a.totalRevenue);
+      setUsers(usersData);
 
     } catch (error) {
-      console.error('Erro ao carregar relatórios:', error);
+      console.error('Erro ao carregar usuários:', error);
       toast({
         title: 'Erro',
         description: 'Erro inesperado ao carregar dados',
@@ -129,7 +130,7 @@ export default function AdminSellers() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Carregando relatórios...</p>
+          <p className="text-muted-foreground">Carregando usuários...</p>
         </div>
       </div>
     );
@@ -150,8 +151,10 @@ export default function AdminSellers() {
             <span className="sm:hidden">Voltar</span>
           </Button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Relatórios de Vendedores</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">Desempenho dos vendedores</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Todos os Usuários</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              {users.length} {users.length === 1 ? 'usuário cadastrado' : 'usuários cadastrados'}
+            </p>
           </div>
         </div>
 
@@ -162,8 +165,8 @@ export default function AdminSellers() {
               <div className="flex items-center">
                 <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                 <div className="ml-3 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Vendedores</p>
-                  <p className="text-xl sm:text-2xl font-bold">{sellers.length}</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Usuários</p>
+                  <p className="text-xl sm:text-2xl font-bold">{users.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -176,7 +179,7 @@ export default function AdminSellers() {
                 <div className="ml-3 sm:ml-4">
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Vendas</p>
                   <p className="text-xl sm:text-2xl font-bold">
-                    {sellers.reduce((sum, s) => sum + s.totalSales, 0)}
+                    {users.reduce((sum, s) => sum + s.totalSales, 0)}
                   </p>
                 </div>
               </div>
@@ -190,7 +193,7 @@ export default function AdminSellers() {
                 <div className="ml-3 sm:ml-4">
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Receita Total</p>
                   <p className="text-lg sm:text-2xl font-bold">
-                    {sellers.reduce((sum, s) => sum + s.totalRevenue, 0).toLocaleString('pt-AO')} KZ
+                    {users.reduce((sum, s) => sum + s.totalRevenue, 0).toLocaleString('pt-AO')} KZ
                   </p>
                 </div>
               </div>
@@ -204,7 +207,7 @@ export default function AdminSellers() {
                 <div className="ml-3 sm:ml-4">
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Produtos Ativos</p>
                   <p className="text-xl sm:text-2xl font-bold">
-                    {sellers.reduce((sum, s) => sum + s.activeProducts, 0)}
+                    {users.reduce((sum, s) => sum + s.activeProducts, 0)}
                   </p>
                 </div>
               </div>
@@ -212,10 +215,10 @@ export default function AdminSellers() {
           </Card>
         </div>
 
-        {/* Lista de Vendedores - Responsivo */}
+        {/* Lista de Usuários - Responsivo */}
         <div className="space-y-4 sm:space-y-6">
-          {sellers.map((seller, index) => (
-            <Card key={seller.user_id} className="shadow-lg border bg-white hover:shadow-xl transition-shadow">
+          {users.map((user, index) => (
+            <Card key={user.user_id} className="shadow-lg border bg-white hover:shadow-xl transition-shadow">
               <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                   <div className="flex items-center gap-3 sm:gap-4">
@@ -224,24 +227,36 @@ export default function AdminSellers() {
                     </div>
                     <div className="min-w-0">
                       <CardTitle className="text-base sm:text-xl text-slate-900 truncate">
-                        {seller.profile.full_name || 'Nome não informado'}
+                        {user.profile.full_name || 'Nome não informado'}
                       </CardTitle>
-                      <p className="text-xs sm:text-sm text-slate-600 truncate">{seller.profile.email}</p>
+                      <p className="text-xs sm:text-sm text-slate-600 truncate">{user.profile.email}</p>
                       <p className="text-xs text-slate-500">
-                        Membro desde: {new Date(seller.profile.created_at).toLocaleDateString('pt-AO')}
+                        Membro desde: {new Date(user.profile.created_at).toLocaleDateString('pt-AO')}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="flex gap-2">
-                    {seller.bannedProducts > 0 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {user.profile.banned && (
                       <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">
-                        {seller.bannedProducts} Banido(s)
+                        Banido
                       </Badge>
                     )}
-                    <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
-                      {seller.activeProducts} Ativo(s)
-                    </Badge>
+                    {user.profile.is_creator && (
+                      <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
+                        Criador
+                      </Badge>
+                    )}
+                    {user.bannedProducts > 0 && (
+                      <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                        {user.bannedProducts} Produto(s) Banido(s)
+                      </Badge>
+                    )}
+                    {user.activeProducts > 0 && (
+                      <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
+                        {user.activeProducts} Produto(s) Ativo(s)
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -249,27 +264,27 @@ export default function AdminSellers() {
               <CardContent className="p-4 sm:p-6">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                   <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
-                    <p className="text-xl sm:text-2xl font-bold text-blue-600">{seller.totalSales}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-blue-600">{user.totalSales}</p>
                     <p className="text-xs sm:text-sm text-blue-800">Vendas</p>
                   </div>
                   
                   <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
                     <p className="text-base sm:text-2xl font-bold text-green-600">
-                      {seller.totalRevenue.toLocaleString('pt-AO')} KZ
+                      {user.totalRevenue.toLocaleString('pt-AO')} KZ
                     </p>
                     <p className="text-xs sm:text-sm text-green-800">Receita</p>
                   </div>
                   
                   <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-lg">
                     <p className="text-base sm:text-2xl font-bold text-yellow-600">
-                      {seller.totalWithdrawals.toLocaleString('pt-AO')} KZ
+                      {user.totalWithdrawals.toLocaleString('pt-AO')} KZ
                     </p>
                     <p className="text-xs sm:text-sm text-yellow-800">Sacado</p>
                   </div>
                   
                   <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg">
                     <p className="text-xl sm:text-2xl font-bold text-purple-600">
-                      {((seller.totalWithdrawals / seller.totalRevenue) * 100 || 0).toFixed(1)}%
+                      {((user.totalWithdrawals / user.totalRevenue) * 100 || 0).toFixed(1)}%
                     </p>
                     <p className="text-xs sm:text-sm text-purple-800">Taxa</p>
                   </div>
@@ -278,12 +293,12 @@ export default function AdminSellers() {
             </Card>
           ))}
           
-          {sellers.length === 0 && (
+          {users.length === 0 && (
             <Card className="shadow-lg border bg-white">
               <CardContent className="text-center py-12 sm:py-16">
                 <Users className="h-12 w-12 sm:h-16 sm:w-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">Nenhum vendedor encontrado</h3>
-                <p className="text-sm sm:text-base text-slate-600">Não há vendedores cadastrados no sistema.</p>
+                <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">Nenhum usuário encontrado</h3>
+                <p className="text-sm sm:text-base text-slate-600">Não há usuários cadastrados no sistema.</p>
               </CardContent>
             </Card>
           )}
