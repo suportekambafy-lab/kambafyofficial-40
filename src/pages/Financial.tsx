@@ -316,14 +316,12 @@ export default function Financial() {
 
         // Usar dados já carregados dos saques (já extraídos acima)
 
-        // ✅ Calcular total sacado = APENAS saques APROVADOS (valor que realmente saiu do sistema)
+        // ✅ Calcular total sacado = APENAS saques APROVADOS (valor após dedução de 8%)
         const totalWithdrawnAmount = withdrawalRequestsData?.reduce((sum, withdrawal) => {
-          // Incluir APENAS os saques APROVADOS - usar valor original
+          // Incluir APENAS os saques APROVADOS - usar valor que realmente saiu
           if (withdrawal.status === 'aprovado') {
             const finalAmount = parseFloat(withdrawal.amount?.toString() || '0');
-            // O valor no banco é após desconto (8%), calcular valor original
-            const originalAmount = finalAmount / 0.92;
-            return sum + originalAmount;
+            return sum + finalAmount;
           }
           return sum;
         }, 0) || 0;
