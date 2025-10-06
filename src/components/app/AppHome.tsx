@@ -506,12 +506,12 @@ export function AppHome() {
         }
       });
 
-      // Calcular total de saques aprovados
+      // Calcular total de saques aprovados e pendentes (deduzir imediatamente do saldo)
       const totalWithdrawnAmount = withdrawals
-        ?.filter(w => w.status === 'aprovado')
+        ?.filter(w => w.status === 'aprovado' || w.status === 'pendente')
         .reduce((sum, w) => sum + (parseFloat(w.amount?.toString() || '0')), 0) || 0;
 
-      // ✅ DEDUZIR SAQUES DO SALDO DISPONÍVEL (igual à Web)
+      // ✅ DEDUZIR SAQUES APROVADOS E PENDENTES DO SALDO DISPONÍVEL
       const finalAvailableBalance = Math.max(0, availableBalance - totalWithdrawnAmount);
       
       console.log('💵 [AppHome] Saldos calculados (fonte: vendas):', {
