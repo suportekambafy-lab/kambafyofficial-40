@@ -121,30 +121,34 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Determinar o ID da transação para consultar
     // Para pagamentos Express: usar order_id como merchantTransactionId
-    // Para pagamentos Reference: usar reference_number
+    // Para pagamentos Reference: não podemos verificar automaticamente
     let checkUrl: string;
     
     if (payment.payment_method === 'express') {
       // Para Express, usar o order_id como merchantTransactionId
       const transactionId = payment.order_id;
-      checkUrl = `https://gwy-api.appypay.co.ao/v2.0/charges/${transactionId}`;
+      checkUrl = `${apiBaseUrl}/v2.0/charges/${transactionId}`;
       console.log('[VERIFY-MODULE-PAYMENT] Checking Express transaction:', transactionId);
+    } else if (payment.payment_method === 'reference') {
+      // Para Reference, não há API de verificação automática
+      // O pagamento deve ser confirmado manualmente ou via webhook
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Pagamentos por Referência Multibanco não podem ser verificados automaticamente. Aguarde a confirmação automática via webhook ou confirme manualmente após receber o pagamento.',
+        cannotVerify: true
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     } else {
-      // Para Reference, consultar por referenceNumber
-      if (!payment.reference_number) {
-        return new Response(JSON.stringify({
-          success: false,
-          message: 'Este pagamento não tem número de referência. Não é possível verificar automaticamente.',
-          cannotVerify: true
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
-        });
-      }
-      
-      // Buscar pela referência (precisamos fazer uma busca geral ou pelo order_id se tivermos)
-      checkUrl = `https://gwy-api.appypay.co.ao/v2.0/charges/${payment.order_id}`;
-      console.log('[VERIFY-MODULE-PAYMENT] Checking Reference transaction:', payment.reference_number);
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Método de pagamento não suportado para verificação automática',
+        cannotVerify: true
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
     const checkResponse = await fetch(checkUrl, {
