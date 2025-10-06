@@ -100,13 +100,14 @@ export function WithdrawalModal({
         availableBalance: availableBalance
       });
 
-      // ✅ Criar solicitação de saque com o valor líquido (após desconto de 8%)
-      // Nota: O saldo será calculado dinamicamente no app descontando os saques pendentes
+      // ✅ Criar solicitação de saque com o valor BRUTO (será descontado do saldo)
+      // O trigger irá descontar automaticamente este valor do saldo disponível
+      // O vendedor receberá o valor líquido (após 8%) quando aprovado
       const { data: insertData, error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({
           user_id: user.id,
-          amount: receiveValue, // Valor que receberá após desconto de 8%
+          amount: amount, // Valor BRUTO que será descontado do saldo
           status: 'pendente'
         })
         .select();
@@ -123,7 +124,7 @@ export function WithdrawalModal({
 
       toast({
         title: 'Sucesso',
-        message: "Solicitação de saque criada com sucesso!",
+        message: "Solicitação de saque criada com sucesso! Seu saldo será atualizado em instantes.",
         variant: 'success'
       });
       setWithdrawalAmount("");
@@ -133,6 +134,13 @@ export function WithdrawalModal({
       if (onWithdrawalSuccess) {
         onWithdrawalSuccess();
       }
+      
+      // Aguardar um pouco para garantir que o trigger foi executado
+      setTimeout(() => {
+        if (onWithdrawalSuccess) {
+          onWithdrawalSuccess();
+        }
+      }, 500);
       
     } catch (error) {
       console.error('💥 Erro inesperado:', error);
