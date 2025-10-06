@@ -27,13 +27,14 @@ export function useCustomerBalance() {
     if (!user) return;
 
     try {
+      // ✅ FONTE ÚNICA DE VERDADE: buscar saldo real do customer_balances
       const { data, error } = await supabase
         .from('customer_balances')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching balance:', error);
         return;
       }

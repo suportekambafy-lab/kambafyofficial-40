@@ -468,6 +468,19 @@ export function AppHome() {
         .select('order_id, amount, processed_at')
         .eq('user_id', user.id);
 
+      // ✅ FONTE ÚNICA DE VERDADE: Buscar saldo real do customer_balances
+      const { data: balanceData, error: balanceError } = await supabase
+        .from('customer_balances')
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (balanceError) {
+        console.error('Error loading balance:', balanceError);
+      }
+
+      const currentBalance = balanceData?.balance || 0;
+
       // Buscar withdrawal_requests
       const { data: withdrawals } = await supabase
         .from('withdrawal_requests')
@@ -475,50 +488,41 @@ export function AppHome() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      const now = new Date();
-      let availableBalance = 0;  // Vendas liberadas (>3 dias)
-      let pendingBalance = 0;    // Vendas aguardando (<3 dias)
-
-      // ✅ CALCULAR SALDOS BASEADOS EM VENDAS (igual à Web)
-      orders.forEach(order => {
-        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
-        
-        // Converter para KZ se necessário
-        if (order.currency && order.currency !== 'KZ') {
-          const exchangeRates: Record<string, number> = {
-            'EUR': 1053,
-            'MZN': 14.3
-          };
-          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-          amount = Math.round(amount * rate);
-        }
-
-        const orderDate = new Date(order.created_at);
-        const releaseDate = new Date(orderDate.getTime() + 3 * 24 * 60 * 60 * 1000); // +3 dias
-
-        // Verificar se foi liberado manualmente via payment_releases
-        const wasReleased = releases?.some(r => r.order_id === order.order_id) || false;
-
-        if (wasReleased || now >= releaseDate) {
-          availableBalance += amount;  // ✅ Liberado
-        } else {
-          pendingBalance += amount;    // ⏳ Pendente
-        }
-      });
-
       // Calcular total de saques aprovados e pendentes (deduzir imediatamente do saldo)
       const totalWithdrawnAmount = withdrawals
         ?.filter(w => w.status === 'aprovado' || w.status === 'pendente')
         .reduce((sum, w) => sum + (parseFloat(w.amount?.toString() || '0')), 0) || 0;
 
-      // ✅ DEDUZIR SAQUES APROVADOS E PENDENTES DO SALDO DISPONÍVEL
-      const finalAvailableBalance = Math.max(0, availableBalance - totalWithdrawnAmount);
+      // ✅ USAR o saldo real do customer_balances como fonte de verdade
+      const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
+
+      // Calcular saldo pendente baseado nas vendas dos últimos 3 dias
+      const now = new Date();
+      let pendingBalance = 0;
+
+      orders.forEach(order => {
+        const orderDate = new Date(order.created_at);
+        const releaseDate = new Date(orderDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+        
+        // Usar earning_amount se disponível, senão usar seller_commission/amount
+        let amount = parseFloat(
+          order.earning_amount?.toString() || 
+          order.seller_commission?.toString() || 
+          order.amount || 
+          '0'
+        );
+        
+        // Se ainda não liberou (dentro de 3 dias)
+        if (now < releaseDate) {
+          pendingBalance += amount;
+        }
+      });
       
-      console.log('💵 [AppHome] Saldos calculados (fonte: vendas):', {
+      console.log('💵 [AppHome] Saldos calculados (fonte: customer_balances):', {
         disponivel: finalAvailableBalance,
         pendente: pendingBalance,
         totalSacado: totalWithdrawnAmount,
-        totalVendas: orders.length
+        balanceReal: currentBalance
       });
 
       setFinancialData({
