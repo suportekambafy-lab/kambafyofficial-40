@@ -98,7 +98,26 @@ export function WithdrawalModal({
         availableBalance: availableBalance
       });
 
-      // ✅ Criar solicitação de saque (a transação será criada apenas quando aprovado)
+      // ✅ Criar transação de débito imediatamente para bloquear o saldo
+      const { error: transactionError } = await supabase
+        .from('balance_transactions')
+        .insert({
+          user_id: user.id,
+          type: 'debit',
+          amount: -amount, // Valor negativo para deduzir
+          currency: 'KZ',
+          description: `Saque solicitado - Valor líquido: ${receiveValue.toLocaleString()} KZ`
+        });
+
+      if (transactionError) {
+        console.error('❌ Erro ao criar transação:', transactionError);
+        setError("Erro ao processar dedução do saldo: " + transactionError.message);
+        return;
+      }
+
+      console.log('✅ Transação de saque criada com sucesso');
+
+      // ✅ Criar solicitação de saque com o valor líquido (após desconto de 8%)
       const { data: insertData, error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({

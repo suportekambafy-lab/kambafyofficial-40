@@ -34,42 +34,6 @@ export function useWithdrawalProcessor(onSuccess: () => void) {
 
       console.log('✅ Saque processado via RPC com sucesso');
 
-      // ✅ Se aprovado, criar transação de débito para deduzir do saldo
-      if (status === 'aprovado') {
-        try {
-          // Buscar dados da solicitação para saber o valor
-          const { data: withdrawal, error: withdrawalError } = await supabase
-            .from('withdrawal_requests')
-            .select('user_id, amount')
-            .eq('id', requestId)
-            .single();
-
-          if (withdrawalError) throw withdrawalError;
-
-          // Calcular o valor bruto original (antes do desconto de 8%)
-          const grossAmount = withdrawal.amount / 0.92;
-
-          // Criar transação de débito
-          const { error: transactionError } = await supabase
-            .from('balance_transactions')
-            .insert({
-              user_id: withdrawal.user_id,
-              type: 'debit',
-              amount: -grossAmount,
-              currency: 'KZ',
-              description: `Saque aprovado - Valor líquido: ${withdrawal.amount.toLocaleString()} KZ`
-            });
-
-          if (transactionError) {
-            console.error('❌ Erro ao criar transação de débito:', transactionError);
-          } else {
-            console.log('✅ Transação de débito criada com sucesso');
-          }
-        } catch (err) {
-          console.error('❌ Erro ao processar transação:', err);
-        }
-      }
-
       // Registrar log administrativo (não bloqueante)
       if (validAdminId) {
         try {
