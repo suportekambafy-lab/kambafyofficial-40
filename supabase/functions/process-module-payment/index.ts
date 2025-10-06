@@ -75,18 +75,28 @@ serve(async (req) => {
       // Chamar função de pagamento AppyPay
       const { data: paymentData, error: paymentError } = await supabase.functions.invoke('create-appypay-charge', {
         body: {
+          amount: parseFloat(amount.toString()),
           productId: moduleData.paid_product_id || moduleId,
-          customerEmail: studentEmail,
-          customerName: customerName || studentEmail.split('@')[0],
-          amount: amount,
-          currency: 'AOA',
+          customerData: {
+            email: studentEmail,
+            name: customerName || studentEmail.split('@')[0],
+            phone: phoneNumber
+          },
+          originalAmount: parseFloat(amount.toString()),
+          originalCurrency: 'AOA',
           paymentMethod: paymentMethod,
           phoneNumber: phoneNumber,
-          checkoutData: {
-            orderId,
-            merchantTransactionId,
-            moduleId,
-            memberAreaId
+          orderData: {
+            product_id: moduleData.paid_product_id || moduleId,
+            order_id: orderId,
+            customer_name: customerName || studentEmail.split('@')[0],
+            customer_email: studentEmail,
+            customer_phone: phoneNumber,
+            amount: amount.toString(),
+            currency: 'AOA',
+            payment_method: paymentMethod,
+            user_id: null,
+            seller_commission: parseFloat(amount.toString())
           }
         }
       });
