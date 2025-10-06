@@ -25,7 +25,19 @@ export const VerifyOrderButton = ({ orderId, paymentMethod, onVerified }: Verify
         body: { orderId }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Tentar extrair mensagem do erro
+        const errorMessage = data?.message || error.message || 'Erro ao verificar encomenda';
+        
+        if (errorMessage.includes('não encontrado') || errorMessage.includes('not found')) {
+          toast.error('Pedido não encontrado. Este pedido pode ter sido removido.');
+        } else if (errorMessage.includes('Transaction not found')) {
+          toast.error('Transação não encontrada no AppyPay. Aguarde alguns instantes e tente novamente.');
+        } else {
+          toast.error(errorMessage);
+        }
+        return;
+      }
 
       if (data.cannotVerify) {
         toast.info(data.message);
@@ -40,15 +52,7 @@ export const VerifyOrderButton = ({ orderId, paymentMethod, onVerified }: Verify
       }
     } catch (error: any) {
       console.error('Error verifying order:', error);
-      
-      // Mensagens de erro mais específicas
-      if (error.message?.includes('Order not found')) {
-        toast.error('Pedido não encontrado. Este pedido pode ter sido removido.');
-      } else if (error.message?.includes('Transaction not found')) {
-        toast.error('Transação não encontrada no AppyPay. Aguarde alguns instantes e tente novamente.');
-      } else {
-        toast.error(error.message || 'Erro ao verificar encomenda');
-      }
+      toast.error('Erro ao verificar encomenda');
     } finally {
       setIsVerifying(false);
     }
