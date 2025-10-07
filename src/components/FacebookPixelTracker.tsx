@@ -130,13 +130,23 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
 
     initFacebookPixel();
 
-    // Track InitiateCheckout immediately when on checkout page
+    // Verificar status do pixel após inicialização
     setTimeout(() => {
+      console.log('🔍 [PIXEL VERIFICATION] Checking pixel status after init:', {
+        fbqExists: !!window.fbq,
+        fbqType: typeof window.fbq,
+        pixelId: pixelSettings.pixelId,
+        // Try to get pixel queue to verify it's working
+        hasQueue: !!(window.fbq as any)?.queue
+      });
+      
       if (window.fbq) {
+        console.log('📤 [PIXEL EVENT] Sending InitiateCheckout event');
         window.fbq('track', 'InitiateCheckout', {
           content_ids: [productId],
           content_type: 'product'
         });
+        console.log('✅ [PIXEL EVENT] InitiateCheckout sent successfully');
       }
     }, 1000);
 
