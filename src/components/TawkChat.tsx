@@ -22,10 +22,26 @@ export function TawkChat({
     (window as any).Tawk_API = (window as any).Tawk_API || {};
     (window as any).Tawk_LoadStart = new Date();
     
-    // Configurar callback onLoad combinado
+    // Customização do widget via JavaScript API
+    (window as any).Tawk_API.customStyle = {
+      zIndex: 1000,
+      visibility: {
+        desktop: {
+          position: 'br', // bottom-right
+          xOffset: 20,
+          yOffset: 20
+        },
+        mobile: {
+          position: 'br',
+          xOffset: 10,
+          yOffset: 10
+        }
+      }
+    };
+    
+    // Configurar callback onLoad
     (window as any).Tawk_API.onLoad = function() {
-      // Ocultar o widget padrão do Tawk.to (usaremos interface customizada)
-      (window as any).Tawk_API.hideWidget();
+      console.log('✅ Tawk.to widget carregado');
       
       // Configurar atributos do vendedor
       if (user) {
@@ -36,6 +52,8 @@ export function TawkChat({
         }, function(error: any) {
           if (error) {
             console.error('Erro ao definir atributos Tawk.to:', error);
+          } else {
+            console.log('✅ Atributos do vendedor configurados');
           }
         });
       }
@@ -48,6 +66,16 @@ export function TawkChat({
         email: user.email || '',
       };
     }
+
+    // Callback quando chat inicia
+    (window as any).Tawk_API.onChatStarted = function() {
+      console.log('💬 Chat iniciado com suporte');
+    };
+
+    // Callback quando chat termina
+    (window as any).Tawk_API.onChatEnded = function() {
+      console.log('👋 Chat encerrado');
+    };
 
     // Criar e inserir o script
     const script = document.createElement('script');
@@ -77,7 +105,7 @@ export function TawkChat({
       delete (window as any).Tawk_API;
       delete (window as any).Tawk_LoadStart;
     };
-  }, [propertyId, widgetId]);
+  }, [propertyId, widgetId, user]);
 
   return null;
 }
