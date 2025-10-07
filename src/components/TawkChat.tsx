@@ -13,8 +13,11 @@ export function TawkChat({
   const { user } = useAuth();
 
   useEffect(() => {
+    console.log('🚀 TawkChat iniciando...');
+    
     // Verificar se o script já foi carregado
     if (document.getElementById('tawk-script')) {
+      console.log('⚠️ Script Tawk já carregado, pulando');
       return;
     }
 
@@ -22,8 +25,10 @@ export function TawkChat({
     const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
       navigator.userAgent.toLowerCase()
     );
+    console.log('📱 Dispositivo detectado:', isMobile ? 'Mobile' : 'Desktop');
 
     // Configurar Tawk_API antes de carregar o script
+    console.log('⚙️ Configurando Tawk_API...');
     (window as any).Tawk_API = (window as any).Tawk_API || {};
     (window as any).Tawk_LoadStart = new Date();
     
@@ -146,15 +151,25 @@ export function TawkChat({
     };
 
     // Criar e inserir o script
+    console.log('📝 Criando script Tawk.to...');
     const script = document.createElement('script');
     script.id = 'tawk-script';
     script.async = true;
     script.src = `https://embed.tawk.to/${propertyId}/${widgetId}`;
     script.charset = 'UTF-8';
     script.setAttribute('crossorigin', '*');
+    
+    script.onload = () => {
+      console.log('✅ Script Tawk.to carregado com sucesso!');
+    };
+    
+    script.onerror = (error) => {
+      console.error('❌ Erro ao carregar script Tawk.to:', error);
+    };
 
     const firstScript = document.getElementsByTagName('script')[0];
     firstScript.parentNode?.insertBefore(script, firstScript);
+    console.log('📦 Script Tawk.to inserido no DOM');
 
     // Cleanup ao desmontar
     return () => {
