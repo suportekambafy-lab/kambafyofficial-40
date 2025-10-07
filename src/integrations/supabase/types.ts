@@ -2871,6 +2871,10 @@ export type Database = {
         }
         Returns: string
       }
+      recalculate_user_balance: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
       unaccent: {
         Args: { "": string }
         Returns: string
