@@ -1,6 +1,5 @@
 
-import { useEffect } from 'react';
-import { useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 declare global {
@@ -17,178 +16,175 @@ interface FacebookPixelTrackerProps {
 export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) => {
   const [pixelSettings, setPixelSettings] = useState<{pixelId: string; enabled: boolean} | null>(null);
   const [loading, setLoading] = useState(true);
+  const initRef = useRef(false);
 
-  // Buscar configurações do pixel para o produto específico
+  // Buscar configurações do pixel
   useEffect(() => {
     const fetchPixelSettings = async () => {
       try {
-        console.log('🎯 [FB PIXEL] Fetching settings for productId:', productId);
+        if (!productId) {
+          console.warn('⚠️ [FB PIXEL] No productId provided');
+          setLoading(false);
+          return;
+        }
+
+        console.log('🔍 [FB PIXEL] Fetching settings for product:', productId);
         
-        // Handle both UUID and slug formats for productId
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        const isUUID = uuidRegex.test(productId || '');
+        const isUUID = uuidRegex.test(productId);
         
-        // Primeiro buscar o produto para ver quem é o dono
+        // Buscar produto
         const { data: product, error: productError } = await supabase
           .from('products')
           .select('user_id')
           .eq(isUUID ? 'id' : 'slug', productId)
           .single();
 
-        if (productError) {
-          console.error('❌ [FB PIXEL] Error fetching product:', productError);
+        if (productError || !product) {
+          console.error('❌ [FB PIXEL] Product not found:', productError);
+          setLoading(false);
           return;
         }
 
-        if (!product) {
-          console.log('❌ [FB PIXEL] Product not found:', productId);
-          return;
-        }
-
-        console.log('📦 [FB PIXEL] Product owner found:', product.user_id);
-
-        // Buscar configurações do pixel do dono do produto
+        // Buscar configurações do pixel
         const { data, error } = await supabase
           .from('facebook_pixel_settings')
-          .select('*')
+          .select('pixel_id, enabled')
           .eq('user_id', product.user_id)
           .eq('product_id', productId)
           .eq('enabled', true)
           .maybeSingle();
 
-        console.log('📊 [FB PIXEL] Settings query result:', { data, error, productId });
-
         if (error && error.code !== 'PGRST116') {
-          console.error('❌ [FB PIXEL] Error fetching pixel settings:', error);
+          console.error('❌ [FB PIXEL] Error fetching settings:', error);
+          setLoading(false);
           return;
         }
 
-        if (data && data.pixel_id && data.enabled) {
-          console.log('✅ [FB PIXEL] Found active pixel settings:', {
-            pixelId: data.pixel_id,
-            enabled: data.enabled,
-            productId: data.product_id
-          });
+        if (data?.pixel_id && data.enabled) {
+          console.log('✅ [FB PIXEL] Settings loaded - Pixel ID:', data.pixel_id);
           setPixelSettings({
             pixelId: data.pixel_id,
             enabled: data.enabled
           });
         } else {
-          console.log('❌ [FB PIXEL] No active pixel settings found for product:', productId);
+          console.log('ℹ️ [FB PIXEL] No active pixel found for this product');
         }
       } catch (error) {
-        console.error('❌ [FB PIXEL] Error in fetchPixelSettings:', error);
+        console.error('❌ [FB PIXEL] Unexpected error:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (productId) {
-      fetchPixelSettings();
-    } else {
-      console.warn('⚠️ [FB PIXEL] No productId provided');
-      setLoading(false);
-    }
+    fetchPixelSettings();
   }, [productId]);
 
+  // Inicializar pixel e enviar eventos
   useEffect(() => {
-    if (loading) {
-      console.log('⏳ [FB PIXEL] Still loading settings...');
+    if (loading || !pixelSettings?.enabled || !pixelSettings?.pixelId || initRef.current) {
       return;
     }
 
-    if (!pixelSettings?.enabled || !pixelSettings?.pixelId) {
-      console.log('⚠️ [FB PIXEL] Pixel not enabled or no pixel ID:', pixelSettings);
-      return;
-    }
+    const pixelId = pixelSettings.pixelId;
+    console.log('🚀 [FB PIXEL] Starting initialization for Pixel ID:', pixelId);
 
-    console.log('🚀 [FB PIXEL] Starting initialization process...');
+    // Esperar pelo fbq com timeout mais longo
+    let attempts = 0;
+    const maxAttempts = 50; // 5 segundos no máximo
+    
+    const checkFbq = setInterval(() => {
+      attempts++;
 
-    // Garantir que o script base do Facebook Pixel está carregado
-    const waitForFbq = (callback: () => void, maxAttempts = 30) => {
-      let attempts = 0;
-      
-      console.log('🔍 [FB PIXEL] Checking for fbq function...');
-      
-      const checkInterval = setInterval(() => {
-        attempts++;
-        
-        if (window.fbq && typeof window.fbq === 'function') {
-          clearInterval(checkInterval);
-          console.log('✅ [FB PIXEL] Facebook Pixel base script detected after', attempts, 'attempts');
-          callback();
-        } else {
-          if (attempts % 5 === 0) {
-            console.log(`⏳ [FB PIXEL] Still waiting for fbq... (attempt ${attempts}/${maxAttempts})`);
-          }
-          
-          if (attempts >= maxAttempts) {
-            clearInterval(checkInterval);
-            console.error('❌ [FB PIXEL] Facebook Pixel base script not loaded after', maxAttempts, 'attempts');
-            console.error('❌ [FB PIXEL] window.fbq:', window.fbq);
-            console.error('❌ [FB PIXEL] window._fbq:', window._fbq);
-          }
-        }
-      }, 100);
-    };
+      if (window.fbq && typeof window.fbq === 'function') {
+        clearInterval(checkFbq);
+        initRef.current = true;
 
-    waitForFbq(() => {
-      try {
-        console.log('🎯 [FB PIXEL] Initializing Pixel ID:', pixelSettings.pixelId);
-        
-        // Inicializar o pixel com o ID específico
-        window.fbq('init', pixelSettings.pixelId);
-        console.log('✅ [FB PIXEL] Init called successfully');
-        
-        // Enviar PageView imediatamente
-        window.fbq('track', 'PageView');
-        console.log('✅ [FB PIXEL] PageView event sent');
-        
-        // Enviar InitiateCheckout após um pequeno delay
-        setTimeout(() => {
-          try {
-            const checkoutData = {
+        console.log('✅ [FB PIXEL] fbq function detected, initializing...');
+
+        try {
+          // 1. INIT - Sempre primeiro
+          window.fbq('init', pixelId);
+          console.log('✅ [FB PIXEL] init() called with ID:', pixelId);
+
+          // 2. PAGE VIEW - Imediatamente após init
+          window.fbq('track', 'PageView');
+          console.log('✅ [FB PIXEL] PageView event tracked');
+
+          // 3. VIEW CONTENT - Visualização do produto
+          setTimeout(() => {
+            window.fbq('track', 'ViewContent', {
+              content_ids: [productId],
+              content_type: 'product',
+              content_name: 'Product Page'
+            });
+            console.log('✅ [FB PIXEL] ViewContent event tracked');
+          }, 500);
+
+          // 4. INITIATE CHECKOUT - Início do checkout
+          setTimeout(() => {
+            window.fbq('track', 'InitiateCheckout', {
               content_ids: [productId],
               content_type: 'product'
-            };
-            
-            window.fbq('track', 'InitiateCheckout', checkoutData);
-            console.log('✅ [FB PIXEL] InitiateCheckout event sent:', checkoutData);
-          } catch (error) {
-            console.error('❌ [FB PIXEL] Error sending InitiateCheckout:', error);
-          }
-        }, 1000);
+            });
+            console.log('✅ [FB PIXEL] InitiateCheckout event tracked');
+          }, 1500);
 
-        // Listener para evento de compra
-        const handlePurchaseComplete = (event: any) => {
-          try {
-            console.log('🎯 [FB PIXEL] Purchase event received:', event.detail);
+          // 5. PURCHASE - Listener para compra
+          const handlePurchase = (event: CustomEvent) => {
+            const { amount, currency } = event.detail || {};
             
             const purchaseData = {
               content_ids: [productId],
               content_type: 'product',
-              value: event.detail?.amount || 0,
-              currency: event.detail?.currency || 'KZ'
+              value: amount || 0,
+              currency: currency || 'KZ'
             };
-            
+
             window.fbq('track', 'Purchase', purchaseData);
-            console.log('✅ [FB PIXEL] Purchase event sent:', purchaseData);
-          } catch (error) {
-            console.error('❌ [FB PIXEL] Error sending Purchase event:', error);
-          }
-        };
+            console.log('✅ [FB PIXEL] Purchase event tracked:', purchaseData);
+          };
 
-        window.addEventListener('purchase-completed', handlePurchaseComplete);
+          window.addEventListener('purchase-completed', handlePurchase as EventListener);
 
-        return () => {
-          console.log('🧹 [FB PIXEL] Cleaning up event listeners');
-          window.removeEventListener('purchase-completed', handlePurchaseComplete);
-        };
-      } catch (error) {
-        console.error('❌ [FB PIXEL] Error initializing Facebook Pixel:', error);
+          // Cleanup
+          return () => {
+            window.removeEventListener('purchase-completed', handlePurchase as EventListener);
+            console.log('🧹 [FB PIXEL] Cleanup completed');
+          };
+
+        } catch (error) {
+          console.error('❌ [FB PIXEL] Error during initialization:', error);
+        }
+
+      } else if (attempts >= maxAttempts) {
+        clearInterval(checkFbq);
+        console.error('❌ [FB PIXEL] fbq not available after', maxAttempts, 'attempts');
+        console.error('❌ [FB PIXEL] Check if Facebook Pixel base script is loaded in index.html');
+      } else if (attempts % 10 === 0) {
+        console.log(`⏳ [FB PIXEL] Waiting for fbq... (${attempts}/${maxAttempts})`);
       }
-    });
+    }, 100);
+
+    return () => {
+      clearInterval(checkFbq);
+    };
   }, [pixelSettings, loading, productId]);
+
+  // Noscript fallback para Pixel Helper
+  if (!loading && pixelSettings?.enabled && pixelSettings?.pixelId) {
+    return (
+      <noscript>
+        <img 
+          height="1" 
+          width="1" 
+          style={{ display: 'none' }}
+          src={`https://www.facebook.com/tr?id=${pixelSettings.pixelId}&ev=PageView&noscript=1`}
+          alt=""
+        />
+      </noscript>
+    );
+  }
 
   return null;
 };
