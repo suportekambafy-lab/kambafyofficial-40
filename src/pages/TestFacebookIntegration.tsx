@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Zap, CheckCircle, AlertCircle } from 'lucide-react';
+import { Zap, CheckCircle, AlertCircle, Package } from 'lucide-react';
+import { FacebookPixelTracker } from '@/components/FacebookPixelTracker';
 
 export default function TestFacebookIntegration() {
   const { toast } = useToast();
@@ -15,6 +16,26 @@ export default function TestFacebookIntegration() {
   const [loading, setLoading] = useState(false);
   const [pixelLoaded, setPixelLoaded] = useState(false);
   const [results, setResults] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  // Validar se é UUID válido
+  const isValidUUID = (uuid: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  };
+
+  // Carregar Pixel quando productId válido muda
+  useEffect(() => {
+    if (productId && isValidUUID(productId)) {
+      // Reset pixel state
+      setPixelLoaded(false);
+      // Aguardar um pouco para o componente carregar
+      setTimeout(() => {
+        testPixelLoad();
+      }, 1000);
+    }
+  }, [productId]);
 
   const addResult = (type: 'success' | 'error' | 'info', message: string, data?: any) => {
     setResults(prev => [...prev, { type, message, data, timestamp: new Date().toLocaleTimeString() }]);
@@ -103,6 +124,41 @@ export default function TestFacebookIntegration() {
     }
   };
 
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, status')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setProducts(data || []);
+      addResult('success', `✅ ${data?.length || 0} produtos encontrados`);
+    } catch (error: any) {
+      addResult('error', '❌ Erro ao buscar produtos', error);
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
   const testConversionsAPI = async () => {
     if (!productId) {
       toast({
@@ -110,6 +166,16 @@ export default function TestFacebookIntegration() {
         description: "Por favor, insira um ID de produto válido",
         variant: "destructive"
       });
+      return;
+    }
+
+    if (!isValidUUID(productId)) {
+      toast({
+        title: "Erro",
+        description: "O ID do produto não é um UUID válido. Use o botão 'Meus Produtos' para selecionar um produto.",
+        variant: "destructive"
+      });
+      addResult('error', '❌ ID inválido. Deve ser um UUID (ex: 550e8400-e29b-41d4-a716-446655440000)');
       return;
     }
 
@@ -164,6 +230,11 @@ export default function TestFacebookIntegration() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
+      {/* Carregar Facebook Pixel se productId for válido */}
+      {productId && isValidUUID(productId) && (
+        <FacebookPixelTracker productId={productId} />
+      )}
+
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">🧪 Teste de Integração Facebook</h1>
         <p className="text-muted-foreground">
@@ -179,16 +250,57 @@ export default function TestFacebookIntegration() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="productId">ID do Produto</Label>
-              <Input
-                id="productId"
-                placeholder="Cole o ID do produto aqui"
-                value={productId}
-                onChange={(e) => setProductId(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="productId"
+                  placeholder="Cole o ID do produto aqui (UUID)"
+                  value={productId}
+                  onChange={(e) => setProductId(e.target.value)}
+                  className={!productId || isValidUUID(productId) ? '' : 'border-red-500'}
+                />
+                <Button 
+                  onClick={fetchProducts} 
+                  variant="outline"
+                  disabled={loadingProducts}
+                >
+                  <Package className="mr-2 h-4 w-4" />
+                  {loadingProducts ? 'Buscando...' : 'Meus Produtos'}
+                </Button>
+              </div>
+              {productId && !isValidUUID(productId) && (
+                <p className="text-xs text-red-500 mt-1">
+                  ⚠️ ID inválido. Deve ser um UUID válido.
+                </p>
+              )}
+              {productId && isValidUUID(productId) && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✅ ID válido. O Facebook Pixel está sendo carregado...
+                </p>
+              )}
               <p className="text-xs text-muted-foreground mt-1">
                 O produto deve ter Facebook Pixel/API configurado
               </p>
             </div>
+
+            {products.length > 0 && (
+              <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
+                <p className="text-sm font-medium">Selecione um produto:</p>
+                {products.map((product) => (
+                  <button
+                    key={product.id}
+                    onClick={() => setProductId(product.id)}
+                    className={`w-full text-left p-2 rounded hover:bg-accent transition-colors ${
+                      productId === product.id ? 'bg-accent' : ''
+                    }`}
+                  >
+                    <div className="text-sm font-medium">{product.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {product.id} • {product.status}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
             
             <div className="grid grid-cols-2 gap-4">
               <div>

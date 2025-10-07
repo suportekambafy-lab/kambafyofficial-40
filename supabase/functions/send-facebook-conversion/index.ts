@@ -39,6 +39,20 @@ Deno.serve(async (req) => {
       customerEmail
     });
 
+    // Validar UUID do produto
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!productId || !uuidRegex.test(productId)) {
+      console.error('❌ Invalid product ID format:', productId);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid product ID format',
+          message: 'O ID do produto deve ser um UUID válido (ex: 550e8400-e29b-41d4-a716-446655440000)',
+          provided: productId
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
     // Buscar o produto para saber quem é o dono
     const { data: product, error: productError } = await supabaseClient
       .from('products')
@@ -73,8 +87,13 @@ Deno.serve(async (req) => {
     if (!apiSettings) {
       console.log('⚠️ No Facebook API settings found for seller');
       return new Response(
-        JSON.stringify({ message: 'No API settings configured' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        JSON.stringify({ 
+          error: 'No Facebook API settings configured',
+          message: 'Este produto não tem as configurações da Facebook Conversions API ativadas. Configure App ID, App Secret e Access Token na página do produto.',
+          productId: productId,
+          sellerId: product.user_id
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
       );
     }
 
