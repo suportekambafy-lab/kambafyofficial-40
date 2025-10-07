@@ -91,7 +91,8 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
     console.log('🎯 FacebookPixelTracker - Checking pixel load conditions:', {
       loading,
       pixelSettings,
-      productId
+      productId,
+      fbqExists: !!window.fbq
     });
 
     if (loading || !pixelSettings?.enabled || !pixelSettings?.pixelId) {
@@ -101,10 +102,21 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
 
     console.log('🚀 Loading Facebook Pixel for product:', productId, 'with ID:', pixelSettings.pixelId);
 
-    // Initialize Facebook Pixel
+    // Initialize Facebook Pixel ONLY if not already loaded
     const initFacebookPixel = () => {
+      // Verificar se o pixel já foi carregado
+      if (window.fbq && typeof window.fbq === 'function') {
+        console.log('✅ Facebook Pixel already loaded, just initializing new ID:', pixelSettings.pixelId);
+        window.fbq('init', pixelSettings.pixelId);
+        window.fbq('track', 'PageView');
+        return;
+      }
+
+      console.log('📦 Loading Facebook Pixel script for the first time');
+      
       // Load Facebook Pixel script
       const script = document.createElement('script');
+      script.id = 'facebook-pixel-script';
       script.innerHTML = `
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -122,6 +134,7 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
 
       // Add noscript fallback
       const noscript = document.createElement('noscript');
+      noscript.id = 'facebook-pixel-noscript';
       noscript.innerHTML = `
         <img height="1" width="1" style="display:none"
         src="https://www.facebook.com/tr?id=${pixelSettings.pixelId}&ev=PageView&noscript=1" />
