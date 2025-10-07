@@ -46,7 +46,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "emola",
     name: "e-Mola",
     image: getPaymentMethodImage("emola"),
-    enabled: true,
+    enabled: false, // ❌ Desabilitado até configuração
     isMozambique: true,
     countryFlag: "🇲🇿",
     countryName: "Moçambique"
@@ -55,7 +55,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "epesa",
     name: "e-Pesa",
     image: getPaymentMethodImage("epesa"),
-    enabled: true,
+    enabled: false, // ❌ Desabilitado até configuração
     isMozambique: true,
     countryFlag: "🇲🇿",
     countryName: "Moçambique"
