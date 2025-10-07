@@ -173,6 +173,26 @@ serve(async (req) => {
         logStep("⚠️ Aviso: Erro ao registrar liberações no histórico:", insertError);
       } else {
         logStep(`✅ ${newReleasesToRecord.length} novas liberações registradas no histórico`);
+        
+        // ✅ NOVO: Criar transações de crédito para creditar o saldo após 3 dias
+        const balanceTransactions = newReleasesToRecord.map(order => ({
+          user_id: order.userId,
+          type: 'credit',
+          amount: order.amount,
+          currency: 'KZ',
+          description: `Venda liberada após 3 dias - ${order.customerName}`,
+          order_id: order.orderId
+        }));
+        
+        const { error: transactionError } = await supabase
+          .from('balance_transactions')
+          .insert(balanceTransactions);
+        
+        if (transactionError) {
+          logStep("⚠️ Aviso: Erro ao criar transações de crédito:", transactionError);
+        } else {
+          logStep(`💰 ${newReleasesToRecord.length} transações de crédito criadas`);
+        }
       }
     } else {
       logStep("ℹ️ Nenhuma nova liberação para registrar");
