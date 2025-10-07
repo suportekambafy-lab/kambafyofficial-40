@@ -212,6 +212,15 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
       return;
     }
 
+    if (!formData.cover) {
+      toast({
+        title: "Erro",
+        description: "A capa do produto é obrigatória para publicar",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (formData.type === "Curso" && !formData.memberAreaId) {
       toast({
         title: "Erro",
@@ -464,7 +473,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
             {renderShareLinkField()}
 
             <div className="space-y-2">
-              <Label htmlFor="cover">Capa do produto</Label>
+              <Label htmlFor="cover">Capa do produto *</Label>
               <div className="flex items-center gap-4">
                 <Input
                   id="cover"
@@ -487,6 +496,9 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
                   />
                 </div>
               )}
+              <p className="text-sm text-muted-foreground">
+                A capa é obrigatória para publicar o produto
+              </p>
             </div>
 
             <div className="space-y-2">

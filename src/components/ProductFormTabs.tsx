@@ -310,6 +310,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       if (!formData.price || parseFloat(formData.price) <= 0) missingFields.push("Preço válido");
       if (!formData.category) missingFields.push("Categoria");
       if (!formData.description) missingFields.push("Descrição");
+      if (!formData.cover) missingFields.push("Capa do produto");
       
       if (formData.type === "Curso" && !formData.memberAreaId) {
         missingFields.push("Área de membros (obrigatória para cursos)");
@@ -664,7 +665,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="cover">Capa do produto</Label>
+        <Label htmlFor="cover">Capa do produto *</Label>
         <div className="flex items-center gap-4">
           <Input
             id="cover"
@@ -690,6 +691,9 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
             />
           </div>
         )}
+        <p className="text-sm text-muted-foreground">
+          A capa é obrigatória para publicar o produto
+        </p>
       </div>
 
       {renderShareLinkField()}
