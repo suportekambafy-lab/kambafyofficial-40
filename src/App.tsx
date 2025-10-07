@@ -5,6 +5,7 @@ import { useRef, useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ImpersonationBanner } from "@/components/ImpersonationBanner";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -80,6 +81,7 @@ const queryClient = new QueryClient({
 const App = () => {
   const toasterRef = useRef<any>(null);
   const [toasterInitialized, setToasterInitialized] = useState(false);
+  const [impersonationData, setImpersonationData] = useState<any>(null);
 
   // Sistema de detecção automática de novas versões
   useVersionCheck();
@@ -93,6 +95,31 @@ const App = () => {
     }
   }, [toasterInitialized]);
 
+  // Verificar se há impersonation ativa
+  useEffect(() => {
+    const checkImpersonation = () => {
+      const data = localStorage.getItem('impersonation_data');
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          setImpersonationData(parsed);
+        } catch (error) {
+          console.error('Erro ao parsear impersonation_data:', error);
+          localStorage.removeItem('impersonation_data');
+        }
+      } else {
+        setImpersonationData(null);
+      }
+    };
+
+    checkImpersonation();
+    
+    // Verificar periodicamente se impersonation ainda está ativa
+    const interval = setInterval(checkImpersonation, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <EnhancedErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -103,6 +130,12 @@ const App = () => {
             <TooltipProvider>
               <CustomToaster ref={toasterRef} />
                <BrowserRouter>
+                 {impersonationData && (
+                   <ImpersonationBanner
+                     targetUserName={impersonationData.targetUser?.full_name || impersonationData.targetUser?.email || 'Usuário'}
+                     targetUserEmail={impersonationData.targetUser?.email || ''}
+                   />
+                 )}
                  <SubdomainGuard>
                    <Suspense fallback={<div className="min-h-screen bg-background" />}>
                      <Routes>

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, UserX, UserCheck, User, Calendar, Mail, Shield, Search } from 'lucide-react';
+import { ArrowLeft, UserX, UserCheck, User, Calendar, Mail, Shield, Search, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { BanUserDialog } from '@/components/BanUserDialog';
@@ -222,6 +222,67 @@ export default function AdminUsers() {
     }
   };
 
+  const handleImpersonateUser = async (user: UserProfile) => {
+    if (!admin?.email) {
+      toast({
+        title: 'Erro',
+        description: 'Email do admin não encontrado',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setProcessingId(user.id);
+    
+    try {
+      console.log('🎭 Iniciando impersonation para:', user.email);
+      
+      // Chamar edge function para criar sessão de impersonation
+      const { data, error } = await supabase.functions.invoke('admin-impersonate-user', {
+        body: {
+          targetUserId: user.user_id,
+          adminEmail: admin.email
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao impersonate:', error);
+        throw error;
+      }
+
+      if (!data?.success || !data?.magicLink) {
+        throw new Error('Dados de impersonation inválidos');
+      }
+
+      console.log('✅ Magic link recebido');
+
+      // Salvar dados de impersonation no localStorage
+      localStorage.setItem('impersonation_data', JSON.stringify({
+        targetUser: data.targetUser,
+        adminEmail: admin.email,
+        startedAt: new Date().toISOString()
+      }));
+
+      toast({
+        title: 'Impersonation iniciado',
+        description: `Você está entrando como ${user.full_name || user.email}`,
+      });
+
+      // Redirecionar para o magic link que fará login automático
+      window.location.href = data.magicLink;
+      
+    } catch (error) {
+      console.error('Error impersonating user:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao entrar como usuário',
+        variant: 'destructive'
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const getStatusBadge = (banned: boolean | null, isCreator: boolean | null) => {
     if (banned) {
       return <Badge className="bg-red-100 text-red-800 border-red-200">Banido</Badge>;
@@ -369,12 +430,21 @@ export default function AdminUsers() {
                   </div>
                 )}
 
-                <div className="flex gap-3 pt-4 border-t border-slate-200">
+                <div className="flex flex-col gap-3 pt-4 border-t border-slate-200">
+                  <Button
+                    onClick={() => handleImpersonateUser(user)}
+                    disabled={processingId === user.id}
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 shadow-sm"
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    {processingId === user.id ? 'Entrando...' : 'Entrar como Usuário'}
+                  </Button>
+                  
                   {user.banned ? (
                     <Button
                       onClick={() => updateUserStatus(user.id, false)}
                       disabled={processingId === user.id}
-                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-0 shadow-sm"
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-0 shadow-sm"
                     >
                       <UserCheck className="h-4 w-4 mr-2" />
                       {processingId === user.id ? 'Desbloqueando...' : 'Desbloquear'}
@@ -383,7 +453,7 @@ export default function AdminUsers() {
                     <Button
                       onClick={() => handleBanUser(user)}
                       disabled={processingId === user.id}
-                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 shadow-sm"
+                      className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 shadow-sm"
                     >
                       <UserX className="h-4 w-4 mr-2" />
                       {processingId === user.id ? 'Banindo...' : 'Banir Usuário'}
