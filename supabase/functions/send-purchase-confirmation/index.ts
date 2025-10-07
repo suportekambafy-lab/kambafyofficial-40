@@ -693,6 +693,61 @@ const handler = async (req: Request): Promise<Response> => {
           });
         }
 
+        // ✅ SEND MEMBER ACCESS EMAIL for main product if it has member area
+        if (memberAreaId) {
+          console.log('=== SENDING MAIN PRODUCT MEMBER ACCESS EMAIL ===');
+          
+          try {
+            // Get member area details
+            const { data: memberArea, error: memberAreaError } = await supabase
+              .from('member_areas')
+              .select('name, url')
+              .eq('id', memberAreaId)
+              .single();
+            
+            if (!memberAreaError && memberArea) {
+              const mainMemberAreaUrl = `https://kambafy.com/members/login/${memberAreaId}`;
+              
+              // Generate temporary password for main product access
+              function generateTemporaryPassword(): string {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+                let password = '';
+                for (let i = 0; i < 10; i++) {
+                  password += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return password;
+              }
+              
+              const mainTemporaryPassword = generateTemporaryPassword();
+              
+              // Send member access email for main product
+              const mainMemberAccessPayload = {
+                studentName: customerName,
+                studentEmail: normalizedEmail,
+                memberAreaName: memberArea.name,
+                memberAreaUrl: mainMemberAreaUrl,
+                sellerName: sellerProfile?.full_name || 'Kambafy',
+                isNewAccount: !!isNewAccount,
+                temporaryPassword: mainTemporaryPassword
+              };
+              
+              console.log('Sending main product member access email:', mainMemberAccessPayload);
+              
+              const { error: mainAccessEmailError } = await supabase.functions.invoke('send-member-access-email', {
+                body: mainMemberAccessPayload
+              });
+              
+              if (mainAccessEmailError) {
+                console.error('Error sending main product access email:', mainAccessEmailError);
+              } else {
+                console.log('✅ Main product access email sent successfully');
+              }
+            }
+          } catch (mainAccessError) {
+            console.error('Error processing main product access email:', mainAccessError);
+          }
+        }
+
         // Process order bump and send separate email if applicable
         if (orderBump && orderBump.bump_product_name) {
           console.log('=== PROCESSING ORDER BUMP EMAIL ===');
