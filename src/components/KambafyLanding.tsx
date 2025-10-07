@@ -112,10 +112,39 @@ export function KambafyLanding() {
 
     return () => {
       clearTimeout(loadChatbase);
+      
+      // Remover script principal do Chatbase
       const existingChatbaseScript = document.querySelector(`script[id="H0mee1mnl3CYCtMtq-hix"]`);
       if (existingChatbaseScript) {
         document.body.removeChild(existingChatbaseScript);
       }
+      
+      // Remover script inline que inicializa o Chatbase
+      const inlineScripts = document.querySelectorAll('script:not([src])');
+      inlineScripts.forEach(script => {
+        if (script.innerHTML.includes('window.chatbase')) {
+          script.remove();
+        }
+      });
+      
+      // Remover widget/iframe do Chatbase
+      const chatbaseIframe = document.querySelector('iframe[src*="chatbase"]');
+      if (chatbaseIframe) {
+        chatbaseIframe.remove();
+      }
+      
+      // Remover container do widget
+      const chatbaseContainer = document.querySelector('#chatbase-bubble-button, #chatbase-bubble-window, [class*="chatbase"]');
+      if (chatbaseContainer) {
+        chatbaseContainer.remove();
+      }
+      
+      // Limpar objeto global
+      if ((window as any).chatbase) {
+        delete (window as any).chatbase;
+      }
+      
+      console.log('🧹 Chatbase completamente removido da página');
     };
   }, []);
   const handleLoginOptionSelect = (option: 'business' | 'customer') => {
