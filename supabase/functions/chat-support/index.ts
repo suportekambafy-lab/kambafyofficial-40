@@ -1,8 +1,11 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -61,23 +64,83 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   try {
-    const { message, conversation = [] } = await req.json();
+    const { message, conversationId, sellerId, sellerName } = await req.json();
 
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    if (!message) {
-      throw new Error('Message is required');
+    if (!message || !sellerId) {
+      throw new Error('Message and sellerId are required');
     }
 
     console.log('Processing chat message:', message);
-    console.log('Conversation history length:', conversation.length);
+    console.log('Seller ID:', sellerId);
+    console.log('Conversation ID:', conversationId);
+
+    // Get or create conversation
+    let activeConversationId = conversationId;
+    
+    if (!activeConversationId) {
+      // Create new conversation
+      const { data: newConversation, error: createError } = await supabase
+        .from('chat_conversations')
+        .insert({
+          seller_id: sellerId,
+          status: 'open',
+          agent_name: 'Assistente AI'
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creating conversation:', createError);
+        throw createError;
+      }
+
+      activeConversationId = newConversation.id;
+      console.log('Created new conversation:', activeConversationId);
+    }
+
+    // Load conversation history from database
+    const { data: messageHistory, error: historyError } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('conversation_id', activeConversationId)
+      .order('created_at', { ascending: true });
+
+    if (historyError) {
+      console.error('Error loading conversation history:', historyError);
+    }
+
+    // Convert database messages to OpenAI format
+    const conversationHistory = (messageHistory || []).map(msg => ({
+      role: msg.sender_type === 'seller' ? 'user' : 'assistant',
+      content: msg.message
+    }));
+
+    console.log('Loaded conversation history:', conversationHistory.length, 'messages');
+
+    // Save user message to database
+    const { error: saveUserError } = await supabase
+      .from('chat_messages')
+      .insert({
+        conversation_id: activeConversationId,
+        sender_type: 'seller',
+        sender_name: sellerName || 'Vendedor',
+        message: message
+      });
+
+    if (saveUserError) {
+      console.error('Error saving user message:', saveUserError);
+    }
 
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...conversation.slice(-10), // Keep last 10 messages for context
+      ...conversationHistory.slice(-10), // Keep last 10 messages for context
       { role: 'user', content: message }
     ];
 
@@ -118,9 +181,32 @@ serve(async (req) => {
     console.log('Reply generated:', reply.substring(0, 100) + '...');
     console.log('Should transfer to human:', shouldTransfer);
 
+    // Save AI response to database
+    const { error: saveAiError } = await supabase
+      .from('chat_messages')
+      .insert({
+        conversation_id: activeConversationId,
+        sender_type: 'assistant',
+        sender_name: 'Assistente AI',
+        message: reply
+      });
+
+    if (saveAiError) {
+      console.error('Error saving AI message:', saveAiError);
+    }
+
+    // Update conversation status if transfer is needed
+    if (shouldTransfer) {
+      await supabase
+        .from('chat_conversations')
+        .update({ status: 'pending_transfer' })
+        .eq('id', activeConversationId);
+    }
+
     return new Response(JSON.stringify({ 
       reply,
       shouldTransfer,
+      conversationId: activeConversationId,
       usage: data.usage
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
