@@ -396,14 +396,31 @@ const Checkout = () => {
         });
         // Disparar evento para Facebook Pixel
         const currentParams = new URLSearchParams(window.location.search);
+        const purchaseAmount = parseFloat(currentParams.get('amount') || '0');
+        const purchaseCurrency = currentParams.get('currency') || 'EUR';
+        
         window.dispatchEvent(new CustomEvent('purchase-completed', {
           detail: {
             productId,
             orderId,
-            amount: parseFloat(currentParams.get('amount') || '0'),
-            currency: currentParams.get('currency') || 'EUR'
+            amount: purchaseAmount,
+            currency: purchaseCurrency
           }
         }));
+
+        // Enviar evento para Facebook Conversions API
+        supabase.functions.invoke('send-facebook-conversion', {
+          body: {
+            productId,
+            orderId,
+            amount: purchaseAmount,
+            currency: purchaseCurrency,
+            customerEmail: formData.email,
+            customerName: formData.fullName,
+            customerPhone: formData.phone,
+            eventSourceUrl: window.location.href
+          }
+        }).catch(err => console.error('Error sending Facebook conversion:', err));
         navigate(`/obrigado?${params.toString()}`);
         return;
       } else if (redirectStatus === 'failed') {
@@ -948,6 +965,20 @@ const Checkout = () => {
           currency: 'KZ'
         }
       }));
+
+      // Enviar evento para Facebook Conversions API
+      supabase.functions.invoke('send-facebook-conversion', {
+        body: {
+          productId,
+          orderId,
+          amount: totalAmountInKZ,
+          currency: 'KZ',
+          customerEmail: formData.email,
+          customerName: formData.fullName,
+          customerPhone: formData.phone,
+          eventSourceUrl: window.location.href
+        }
+      }).catch(err => console.error('Error sending Facebook conversion:', err));
       navigate(`/obrigado?${params.toString()}`);
     } catch (error) {
       console.error('Erro ao processar sucesso do pagamento:', error);
@@ -1652,6 +1683,20 @@ const Checkout = () => {
                   currency: userCountry.currency
                 }
               }));
+
+              // Enviar evento para Facebook Conversions API
+              supabase.functions.invoke('send-facebook-conversion', {
+                body: {
+                  productId,
+                  orderId,
+                  amount: totalAmount,
+                  currency: userCountry.currency,
+                  customerEmail: formData.email,
+                  customerName: formData.fullName,
+                  customerPhone: expressPhone || formData.phone,
+                  eventSourceUrl: window.location.href
+                }
+              }).catch(err => console.error('Error sending Facebook conversion:', err));
               
               // Redirecionar normalmente (toast já está visível)
               params.append('express_confirmed', 'true');
@@ -1715,6 +1760,20 @@ const Checkout = () => {
             currency: userCountry.currency
           }
         }));
+
+        // Enviar evento para Facebook Conversions API
+        supabase.functions.invoke('send-facebook-conversion', {
+          body: {
+            productId,
+            orderId,
+            amount: totalAmount,
+            currency: userCountry.currency,
+            customerEmail: formData.email,
+            customerName: formData.fullName,
+            customerPhone: formData.phone,
+            eventSourceUrl: window.location.href
+          }
+        }).catch(err => console.error('Error sending Facebook conversion:', err));
         navigate(`/obrigado?${params.toString()}`);
       }
     } catch (error) {

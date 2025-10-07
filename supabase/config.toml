@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.verify-module-payment]
 verify_jwt = false
+
+[functions.send-facebook-conversion]
+verify_jwt = false
