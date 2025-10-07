@@ -103,118 +103,32 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
 
     console.log('🚀 Loading Facebook Pixel for product:', productId, 'with ID:', pixelSettings.pixelId);
 
-    // Initialize Facebook Pixel
+    // Initialize Facebook Pixel - agora o script base JÁ está carregado no index.html
     const initFacebookPixel = () => {
       console.log('🔍 [PIXEL DEBUG] Checking if pixel exists:', {
         fbqExists: !!window.fbq,
         fbqType: typeof window.fbq,
-        _fbqExists: !!window._fbq,
         pixelId: pixelSettings.pixelId
       });
 
-      // Verificar se o pixel já foi carregado
+      // O script base já foi carregado no index.html, apenas inicializar o ID específico
       if (window.fbq && typeof window.fbq === 'function') {
-        console.log('✅ Facebook Pixel already loaded, just initializing new ID:', pixelSettings.pixelId);
+        console.log('✅ Facebook Pixel base script already loaded from index.html');
+        console.log('🚀 [PIXEL DEBUG] Initializing Pixel ID:', pixelSettings.pixelId);
+        
         try {
           window.fbq('init', pixelSettings.pixelId);
           window.fbq('track', 'PageView');
-          console.log('✅ Pixel initialized successfully');
-          console.log('🔍 [PIXEL DEBUG] After init - window.fbq:', typeof window.fbq);
+          console.log('✅ Pixel initialized successfully with ID:', pixelSettings.pixelId);
         } catch (e) {
-          console.error('❌ Error initializing existing pixel:', e);
+          console.error('❌ Error initializing pixel:', e);
         }
-        return;
+      } else {
+        console.error('❌ [PIXEL DEBUG] window.fbq not available! Check if base script loaded from index.html');
       }
-
-      console.log('📦 Loading Facebook Pixel script for the first time');
-      console.log('🔍 [PIXEL DEBUG] Document head children before:', document.head.children.length);
-      
-      // Remover script existente se houver
-      const existingScript = document.getElementById('facebook-pixel-script');
-      if (existingScript) {
-        existingScript.remove();
-      }
-      
-      // Carregar o script externo primeiro
-      const fbScript = document.createElement('script');
-      fbScript.async = true;
-      fbScript.src = 'https://connect.facebook.net/en_US/fbevents.js';
-      fbScript.id = 'facebook-pixel-base-script';
-      
-      fbScript.onload = () => {
-        console.log('✅ Facebook Pixel base script loaded');
-        console.log('🔍 [PIXEL DEBUG] After script load - window.fbq:', typeof window.fbq);
-        console.log('🔍 [PIXEL DEBUG] window._fbq:', typeof window._fbq);
-        
-        // Inicializar após carregar
-        if (window.fbq) {
-          console.log('🚀 [PIXEL DEBUG] Calling fbq init with ID:', pixelSettings.pixelId);
-          window.fbq('init', pixelSettings.pixelId);
-          console.log('🚀 [PIXEL DEBUG] Calling fbq track PageView');
-          window.fbq('track', 'PageView');
-          console.log('✅ Pixel initialized with ID:', pixelSettings.pixelId);
-          
-          // Verificar se o pixel foi realmente inicializado
-          setTimeout(() => {
-            console.log('🔍 [PIXEL DEBUG] 1s after init - window.fbq still exists:', typeof window.fbq);
-          }, 1000);
-        } else {
-          console.error('❌ [PIXEL DEBUG] window.fbq not available after script load!');
-        }
-      };
-      
-      fbScript.onerror = (error) => {
-        console.error('❌ [PIXEL DEBUG] Error loading Facebook Pixel script:', error);
-      };
-      
-      // Inicializar a fila antes de carregar o script
-      const initScript = document.createElement('script');
-      initScript.id = 'facebook-pixel-script';
-      initScript.innerHTML = `
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-      `;
-      
-      document.head.appendChild(initScript);
-      console.log('✅ [PIXEL DEBUG] Init script added to head');
-      
-      document.head.appendChild(fbScript);
-      console.log('✅ [PIXEL DEBUG] FB script added to head');
-      console.log('🔍 [PIXEL DEBUG] Document head children after:', document.head.children.length);
-
-      // Add noscript fallback
-      const existingNoscript = document.getElementById('facebook-pixel-noscript');
-      if (existingNoscript) {
-        existingNoscript.remove();
-      }
-      
-      const noscript = document.createElement('noscript');
-      noscript.id = 'facebook-pixel-noscript';
-      noscript.innerHTML = `
-        <img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=${pixelSettings.pixelId}&ev=PageView&noscript=1" />
-      `;
-      document.body.appendChild(noscript);
-      console.log('✅ [PIXEL DEBUG] Noscript fallback added');
     };
 
     initFacebookPixel();
-    
-    // Verificar após 2 segundos se o pixel foi carregado
-    setTimeout(() => {
-      console.log('🔍 [PIXEL DEBUG] 2s check - Pixel status:', {
-        fbqExists: !!window.fbq,
-        fbqType: typeof window.fbq,
-        pixelId: pixelSettings.pixelId,
-        scriptsInHead: Array.from(document.head.getElementsByTagName('script'))
-          .filter(s => s.src.includes('facebook') || s.innerHTML.includes('fbq'))
-          .map(s => ({ src: s.src, id: s.id, hasContent: s.innerHTML.length > 0 }))
-      });
-    }, 2000);
 
     // Track InitiateCheckout immediately when on checkout page
     setTimeout(() => {
