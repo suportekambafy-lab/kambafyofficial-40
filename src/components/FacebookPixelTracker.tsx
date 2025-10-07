@@ -48,12 +48,6 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
         console.log('📦 Product owner found:', product.user_id);
 
         // Buscar configurações do pixel do dono do produto
-        console.log('🔍 Searching pixel with params:', {
-          user_id: product.user_id,
-          product_id: productId,
-          enabled: true
-        });
-
         const { data, error } = await supabase
           .from('facebook_pixel_settings')
           .select('*')
@@ -69,7 +63,7 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
           return;
         }
 
-        if (data && data.enabled) {
+        if (data && data.pixel_id && data.enabled) {
           console.log('✅ Found active pixel settings:', data);
           setPixelSettings({
             pixelId: data.pixel_id,
@@ -89,93 +83,69 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
   }, [productId]);
 
   useEffect(() => {
-    console.log('🎯 FacebookPixelTracker - Checking pixel load conditions:', {
-      loading,
-      pixelSettings,
-      productId,
-      fbqExists: !!window.fbq
-    });
-
     if (loading || !pixelSettings?.enabled || !pixelSettings?.pixelId) {
-      console.log('❌ Pixel not loading - conditions not met');
       return;
     }
 
-    console.log('🚀 Loading Facebook Pixel for product:', productId, 'with ID:', pixelSettings.pixelId);
-
-    // Initialize Facebook Pixel - agora o script base JÁ está carregado no index.html
-    const initFacebookPixel = () => {
-      console.log('🔍 [PIXEL DEBUG] Checking if pixel exists:', {
-        fbqExists: !!window.fbq,
-        fbqType: typeof window.fbq,
-        pixelId: pixelSettings.pixelId
-      });
-
-      // O script base já foi carregado no index.html, apenas inicializar o ID específico
-      if (window.fbq && typeof window.fbq === 'function') {
-        console.log('✅ Facebook Pixel base script already loaded from index.html');
-        console.log('🚀 [PIXEL DEBUG] Initializing Pixel ID:', pixelSettings.pixelId);
-        
-        try {
-          window.fbq('init', pixelSettings.pixelId);
-          window.fbq('track', 'PageView');
-          console.log('✅ Pixel initialized successfully with ID:', pixelSettings.pixelId);
-        } catch (e) {
-          console.error('❌ Error initializing pixel:', e);
+    // Garantir que o script base do Facebook Pixel está carregado
+    const waitForFbq = (callback: () => void, maxAttempts = 20) => {
+      let attempts = 0;
+      const checkInterval = setInterval(() => {
+        attempts++;
+        if (window.fbq && typeof window.fbq === 'function') {
+          clearInterval(checkInterval);
+          console.log('✅ Facebook Pixel base script detected');
+          callback();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(checkInterval);
+          console.error('❌ Facebook Pixel base script not loaded after', maxAttempts, 'attempts');
         }
-      } else {
-        console.error('❌ [PIXEL DEBUG] window.fbq not available! Check if base script loaded from index.html');
-      }
+      }, 100);
     };
 
-    initFacebookPixel();
+    waitForFbq(() => {
+      try {
+        // Inicializar o pixel com o ID específico
+        console.log('🚀 Initializing Facebook Pixel with ID:', pixelSettings.pixelId);
+        window.fbq('init', pixelSettings.pixelId);
+        
+        // Enviar PageView
+        console.log('📤 Sending PageView event');
+        window.fbq('track', 'PageView');
+        
+        // Enviar InitiateCheckout após um pequeno delay
+        setTimeout(() => {
+          console.log('📤 Sending InitiateCheckout event');
+          window.fbq('track', 'InitiateCheckout', {
+            content_ids: [productId],
+            content_type: 'product'
+          });
+        }, 1000);
 
-    // Verificar status do pixel após inicialização
-    setTimeout(() => {
-      console.log('🔍 [PIXEL VERIFICATION] Checking pixel status after init:', {
-        fbqExists: !!window.fbq,
-        fbqType: typeof window.fbq,
-        pixelId: pixelSettings.pixelId,
-        // Try to get pixel queue to verify it's working
-        hasQueue: !!(window.fbq as any)?.queue
-      });
-      
-      if (window.fbq) {
-        console.log('📤 [PIXEL EVENT] Sending InitiateCheckout event');
-        window.fbq('track', 'InitiateCheckout', {
-          content_ids: [productId],
-          content_type: 'product'
-        });
-        console.log('✅ [PIXEL EVENT] InitiateCheckout sent successfully');
-      }
-    }, 1000);
-
-    // Listen for purchase completion events
-    const handlePurchaseComplete = (event: any) => {
-      console.log('🎯 Facebook Pixel - Purchase event received:', event.detail);
-      
-      if (window.fbq) {
-        const purchaseData = {
-          content_ids: [productId],
-          content_type: 'product',
-          value: event.detail?.amount || 0,
-          currency: event.detail?.currency || 'EUR'
+        // Listener para evento de compra
+        const handlePurchaseComplete = (event: any) => {
+          console.log('🎯 Purchase event received:', event.detail);
+          
+          const purchaseData = {
+            content_ids: [productId],
+            content_type: 'product',
+            value: event.detail?.amount || 0,
+            currency: event.detail?.currency || 'KZ'
+          };
+          
+          console.log('📤 Sending Purchase event:', purchaseData);
+          window.fbq('track', 'Purchase', purchaseData);
         };
-        
-        console.log('📤 Facebook Pixel - Sending Purchase event:', purchaseData);
-        
-        window.fbq('track', 'Purchase', purchaseData);
-      } else {
-        console.log('❌ Facebook Pixel - fbq not available');
+
+        window.addEventListener('purchase-completed', handlePurchaseComplete);
+
+        return () => {
+          window.removeEventListener('purchase-completed', handlePurchaseComplete);
+        };
+      } catch (error) {
+        console.error('❌ Error initializing Facebook Pixel:', error);
       }
-    };
-
-    // Add event listener for purchase completion
-    window.addEventListener('purchase-completed', handlePurchaseComplete);
-
-    return () => {
-      window.removeEventListener('purchase-completed', handlePurchaseComplete);
-    };
+    });
   }, [pixelSettings, loading, productId]);
 
   return null;
