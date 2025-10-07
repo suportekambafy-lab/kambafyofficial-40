@@ -88,11 +88,23 @@ async function processModulePayment(
   const isSuccessful = payload.responseStatus?.successful;
   
   let newStatus = 'pending';
-  if (isSuccessful && paymentStatus === 'Success') {
+  
+  // ✅ CRITICAL: Apenas Success + successful=true deve ser completed
+  // TODOS os outros status devem ser failed ou pending
+  if (isSuccessful === true && paymentStatus === 'Success') {
     newStatus = 'completed';
-  } else if (!isSuccessful || paymentStatus === 'Failed') {
+  } else if (paymentStatus === 'Pending') {
+    newStatus = 'pending'; // Ainda aguardando pagamento
+  } else {
+    // Failed, Cancelled, Expired, Rejected, etc = failed
     newStatus = 'failed';
   }
+  
+  console.log('[APPYPAY-WEBHOOK] 🔍 Status mapping debug:', {
+    paymentStatus,
+    isSuccessful,
+    mappedStatus: newStatus
+  });
   
   console.log('[APPYPAY-WEBHOOK] Module payment status:', {
     current: modulePayment.status,
@@ -297,16 +309,23 @@ const handler = async (req: Request): Promise<Response> => {
     
     let newOrderStatus = 'pending'; // default
     
-    if (isSuccessful && paymentStatus === 'Success') {
+    // ✅ CRITICAL: Apenas Success + successful=true deve ser completed
+    // TODOS os outros status devem ser failed ou pending
+    if (isSuccessful === true && paymentStatus === 'Success') {
       newOrderStatus = 'completed';
-    } else if (!isSuccessful || paymentStatus === 'Failed') {
+    } else if (paymentStatus === 'Pending') {
+      newOrderStatus = 'pending'; // Ainda aguardando pagamento
+    } else {
+      // Failed, Cancelled, Expired, Rejected, etc = failed
       newOrderStatus = 'failed';
     }
 
-    console.log(`[APPYPAY-WEBHOOK] Payment status mapping:`, {
+    console.log(`[APPYPAY-WEBHOOK] 🔍 Payment status mapping:`, {
       appyPayStatus: paymentStatus,
       isSuccessful: isSuccessful,
-      newOrderStatus: newOrderStatus
+      successful_type: typeof isSuccessful,
+      newOrderStatus: newOrderStatus,
+      raw_payload: JSON.stringify(payload.responseStatus)
     });
 
     // Only update if status changed
