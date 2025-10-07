@@ -52,6 +52,18 @@ const CheckoutSuccess = () => {
           if (order) {
             console.log('✅ Order data loaded:', order);
             setOrderData(order);
+            
+            // Disparar evento de Purchase para Facebook Pixel
+            console.log('📤 Dispatching purchase-completed event for Facebook Pixel');
+            window.dispatchEvent(new CustomEvent('purchase-completed', {
+              detail: {
+                amount: parseFloat(order.amount) || 0,
+                currency: order.currency || 'KZ',
+                orderId: order.order_id,
+                productId: order.product_id
+              }
+            }));
+            
             if (order.product_id) {
               await checkUpsellConfig(order.product_id);
             }
@@ -89,9 +101,22 @@ const CheckoutSuccess = () => {
         console.log('📊 Setting order status to:', newStatus);
         setOrderStatus(newStatus);
         
-        // Se o pedido estiver completo, verificar configurações de upsell
-        if (newStatus === 'completed' && data.order.product_id) {
-          await checkUpsellConfig(data.order.product_id);
+        // Se o pedido estiver completo, disparar evento e verificar configurações de upsell
+        if (newStatus === 'completed') {
+          // Disparar evento de Purchase para Facebook Pixel
+          console.log('📤 Dispatching purchase-completed event for Facebook Pixel');
+          window.dispatchEvent(new CustomEvent('purchase-completed', {
+            detail: {
+              amount: parseFloat(data.order.amount) || 0,
+              currency: data.order.currency || 'KZ',
+              orderId: data.order.order_id,
+              productId: data.order.product_id
+            }
+          }));
+          
+          if (data.order.product_id) {
+            await checkUpsellConfig(data.order.product_id);
+          }
           return;
         }
       } catch (error) {
