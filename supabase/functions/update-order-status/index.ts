@@ -64,7 +64,32 @@ serve(async (req) => {
 
     // Se o status foi alterado para 'completed', processar pagamento completo
     if (status === 'completed' && orderData.status !== 'completed') {
-      console.log('💰 Order completed, processing payment...');
+      console.log('💰 Order completed - verifying status before processing...');
+      
+      // ✅ VERIFICAÇÃO EXTRA: Buscar o pedido atualizado do banco para garantir que está realmente pago
+      const { data: verifiedOrder, error: verifyError } = await supabase
+        .from('orders')
+        .select('status')
+        .eq('id', orderId)
+        .single();
+      
+      if (verifyError || !verifiedOrder || verifiedOrder.status !== 'completed') {
+        console.log('⚠️ Order status verification failed - not completed. Skipping payment processing.', {
+          verifiedStatus: verifiedOrder?.status,
+          error: verifyError
+        });
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Order status not completed - payment processing skipped',
+          orderId: orderId,
+          status: verifiedOrder?.status || 'unknown'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      console.log('✅ Order status verified as completed - proceeding with payment processing');
 
       // Buscar dados do produto
       const { data: product, error: productError } = await supabase
@@ -293,7 +318,9 @@ serve(async (req) => {
           }
         }
         
-        // 3. DISPARAR WEBHOOKS
+        // 3. DISPARAR WEBHOOKS - SOMENTE PARA PAGAMENTOS VERIFICADOS COMO COMPLETOS
+        console.log('🔔 Triggering webhooks for verified completed payment...');
+        
         // Webhook para o produto principal
         const mainProductPayload = {
           event: 'payment.success',
@@ -306,6 +333,7 @@ serve(async (req) => {
             product_id: orderData.product_id,
             product_name: product.name,
             payment_method: orderData.payment_method,
+            status: 'completed', // ✅ Adicionar status explícito
             timestamp: new Date().toISOString()
           },
           user_id: product.user_id,
@@ -328,6 +356,7 @@ serve(async (req) => {
             customer_name: orderData.customer_name,
             price: orderData.amount,
             currency: orderData.currency,
+            status: 'completed', // ✅ Adicionar status explícito
             timestamp: new Date().toISOString()
           },
           user_id: product.user_id,

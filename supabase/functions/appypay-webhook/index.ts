@@ -330,7 +330,32 @@ const handler = async (req: Request): Promise<Response> => {
 
       // If payment was completed, trigger post-payment actions
       if (newOrderStatus === 'completed') {
-        console.log('[APPYPAY-WEBHOOK] Payment completed - triggering post-payment actions');
+        console.log('[APPYPAY-WEBHOOK] Payment completed - verifying status before triggering notifications');
+        
+        // ✅ VERIFICAÇÃO EXTRA: Buscar o pedido atualizado do banco para garantir que está realmente pago
+        const { data: verifiedOrder, error: verifyError } = await supabase
+          .from('orders')
+          .select('status')
+          .eq('id', order.id)
+          .single();
+        
+        if (verifyError || !verifiedOrder || verifiedOrder.status !== 'completed') {
+          console.log('[APPYPAY-WEBHOOK] ⚠️ Order status verification failed - not completed. Skipping notifications.', {
+            verifiedStatus: verifiedOrder?.status,
+            error: verifyError
+          });
+          return new Response(JSON.stringify({
+            success: true,
+            message: 'Order status not completed - notifications skipped',
+            order_id: order.order_id,
+            status: verifiedOrder?.status || 'unknown'
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          });
+        }
+        
+        console.log('[APPYPAY-WEBHOOK] ✅ Order status verified as completed - proceeding with notifications');
         
         try {
           // Fetch product details for confirmation
@@ -353,7 +378,7 @@ const handler = async (req: Request): Promise<Response> => {
             memberAreaId: product?.member_area_id,
             sellerId: product?.user_id,
             paymentMethod: order.payment_method,
-            paymentStatus: newOrderStatus // ✅ Usar status correto calculado
+            paymentStatus: 'completed' // Garantir que passamos status correto
           };
 
           const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
@@ -376,7 +401,8 @@ const handler = async (req: Request): Promise<Response> => {
               amount: order.amount,
               currency: order.currency,
               customer_email: order.customer_email,
-              payment_method: order.payment_method
+              payment_method: order.payment_method,
+              status: 'completed' // ✅ Adicionar status explícito
             }
           });
 
