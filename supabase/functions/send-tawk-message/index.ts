@@ -8,7 +8,10 @@ serve(async (req) => {
   }
 
   try {
+    console.log('[SEND-TAWK-MESSAGE] 🚀 Function started - NEW VERSION');
+    
     const { message, conversationId } = await req.json();
+    console.log('[SEND-TAWK-MESSAGE] Request data:', { conversationId, messageLength: message?.length });
     
     if (!message || !conversationId) {
       throw new Error('message and conversationId are required');
@@ -16,6 +19,11 @@ serve(async (req) => {
 
     const TAWK_API_KEY = Deno.env.get('TAWK_API_KEY');
     const TAWK_PROPERTY_ID = '68e4dfc836ce7e19507dc359';
+    
+    console.log('[SEND-TAWK-MESSAGE] Config check:', {
+      hasApiKey: !!TAWK_API_KEY,
+      propertyId: TAWK_PROPERTY_ID,
+    });
 
     if (!TAWK_API_KEY) {
       console.error('[SEND-TAWK-MESSAGE] TAWK_API_KEY not configured');
