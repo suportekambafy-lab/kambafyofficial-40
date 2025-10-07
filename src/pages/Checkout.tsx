@@ -1481,8 +1481,15 @@ const Checkout = () => {
           try {
             console.log('🔔 Triggering webhooks for local payment method...');
             
-            // Só disparar webhooks se o pagamento for completado, não para pending
-            const shouldTriggerWebhooks = selectedPayment !== 'reference' || (insertedOrder?.payment_status === 'completed');
+            // ✅ CRITICAL: Só disparar webhooks se o pagamento foi realmente completado
+            // Verificar payment_status para TODOS os métodos (express, reference, etc)
+            const shouldTriggerWebhooks = insertedOrder?.payment_status === 'completed';
+            
+            console.log('🔍 Webhook trigger check:', {
+              payment_status: insertedOrder?.payment_status,
+              shouldTrigger: shouldTriggerWebhooks,
+              payment_method: selectedPayment
+            });
             
             if (shouldTriggerWebhooks) {
               const webhookPayload = {
