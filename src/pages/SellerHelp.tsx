@@ -147,12 +147,19 @@ export default function SellerHelp() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:shadow-md transition-shadow">
+        <Card 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => {
+            if ((window as any).Tawk_API) {
+              (window as any).Tawk_API.maximize();
+            }
+          }}
+        >
           <CardContent className="p-6 text-center">
-            <MessageCircle className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
+            <MessageCircle className="h-8 w-8 mx-auto mb-3 text-primary" />
             <h3 className="font-semibold mb-2">Chat ao Vivo</h3>
             <p className="text-sm text-muted-foreground mb-3">Suporte imediato das 8h às 18h</p>
-            <Badge variant="secondary">Em Breve</Badge>
+            <Badge className="bg-green-500 hover:bg-green-600">Disponível</Badge>
           </CardContent>
         </Card>
 
