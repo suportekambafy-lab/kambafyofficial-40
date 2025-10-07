@@ -57,42 +57,69 @@ serve(async (req) => {
     
     if (!tawkConvId) {
       console.log('[SEND-TAWK-MESSAGE] Creating new Tawk.to conversation');
-      // TODO: Implementar criação de conversa via API do Tawk.to
-      // Por enquanto, apenas logar
-      console.log('[SEND-TAWK-MESSAGE] Tawk.to conversation creation not yet implemented');
-    }
-
-    // Enviar mensagem via API do Tawk.to
-    if (tawkConvId) {
-      console.log('[SEND-TAWK-MESSAGE] Sending message to Tawk.to:', {
-        conversationId: tawkConvId,
-        messageLength: message.length,
-      });
-
-      // TODO: Implementar envio via API REST do Tawk.to
-      // Endpoint: POST https://api.tawk.to/v3/chats/{chatId}/messages
-      // Headers: Authorization: Bearer {API_KEY}
       
-      const tawkResponse = await fetch(`https://api.tawk.to/v3/chats/${tawkConvId}/messages`, {
+      // Criar conversa via API do Tawk.to usando Basic Auth
+      const basicAuth = btoa(`${TAWK_API_KEY}:`);
+      
+      const createResponse = await fetch(`https://api.tawk.to/v1/chat.create`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${TAWK_API_KEY}`,
+          'Authorization': `Basic ${basicAuth}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: message,
-          type: 'text',
+          propertyId: TAWK_PROPERTY_ID,
+          visitorName: user.email?.split('@')[0] || 'Vendedor',
+          visitorEmail: user.email,
         }),
       });
 
-      if (!tawkResponse.ok) {
-        const errorText = await tawkResponse.text();
-        console.error('[SEND-TAWK-MESSAGE] Tawk.to API error:', errorText);
-        throw new Error(`Tawk.to API error: ${tawkResponse.status}`);
+      if (!createResponse.ok) {
+        const errorText = await createResponse.text();
+        console.error('[SEND-TAWK-MESSAGE] Failed to create conversation:', errorText);
+        throw new Error(`Failed to create Tawk.to conversation: ${createResponse.status}`);
       }
 
-      console.log('[SEND-TAWK-MESSAGE] Message sent successfully to Tawk.to');
+      const createData = await createResponse.json();
+      tawkConvId = createData.chatId;
+      
+      // Atualizar conversa no banco com o tawk_conversation_id
+      await supabase
+        .from('chat_conversations')
+        .update({ tawk_conversation_id: tawkConvId })
+        .eq('id', conversationId);
+      
+      console.log('[SEND-TAWK-MESSAGE] Conversation created:', tawkConvId);
     }
+
+    // Enviar mensagem via API do Tawk.to usando Basic Auth
+    console.log('[SEND-TAWK-MESSAGE] Sending message to Tawk.to:', {
+      conversationId: tawkConvId,
+      messageLength: message.length,
+    });
+
+    const basicAuth = btoa(`${TAWK_API_KEY}:`);
+    const tawkResponse = await fetch(`https://api.tawk.to/v1/chat.sendMessage`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${basicAuth}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chatId: tawkConvId,
+        message: message,
+        type: 'msg',
+      }),
+    });
+
+    if (!tawkResponse.ok) {
+      const errorText = await tawkResponse.text();
+      console.error('[SEND-TAWK-MESSAGE] Tawk.to API error:', errorText);
+      throw new Error(`Tawk.to API error: ${tawkResponse.status}`);
+    }
+
+    const responseData = await tawkResponse.json();
+    console.log('[SEND-TAWK-MESSAGE] Message sent successfully:', responseData);
 
     return new Response(
       JSON.stringify({ success: true, conversationId }),
