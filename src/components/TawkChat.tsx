@@ -13,11 +13,8 @@ export function TawkChat({
   const { user } = useAuth();
 
   useEffect(() => {
-    console.log('🚀 TawkChat iniciando...');
-    
-    // Verificar se o script já foi carregado
-    if (document.getElementById('tawk-script')) {
-      console.log('⚠️ Script Tawk já carregado, pulando');
+    // Verificar se o script ou widget já existem
+    if (document.getElementById('tawk-script') || (window as any).Tawk_API) {
       return;
     }
 
@@ -25,16 +22,14 @@ export function TawkChat({
     const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
       navigator.userAgent.toLowerCase()
     );
-    console.log('📱 Dispositivo detectado:', isMobile ? 'Mobile' : 'Desktop');
 
     // Configurar Tawk_API antes de carregar o script
-    console.log('⚙️ Configurando Tawk_API...');
     (window as any).Tawk_API = (window as any).Tawk_API || {};
     (window as any).Tawk_LoadStart = new Date();
     
     // Customização avançada do widget via JavaScript API
     (window as any).Tawk_API.customStyle = {
-      zIndex: isMobile ? 9999 : 1000,
+      zIndex: 2147483647,
       visibility: {
         desktop: {
           position: 'br',
@@ -43,24 +38,23 @@ export function TawkChat({
         },
         mobile: {
           position: 'br',
-          xOffset: 15,
-          yOffset: 80
+          xOffset: 10,
+          yOffset: 10
         }
       }
     };
     
     // Configurar callback onLoad com customizações avançadas
     (window as any).Tawk_API.onLoad = function() {
-      console.log('✅ Tawk.to widget carregado');
-      
       // Customizar aparência do widget
       const style = document.createElement('style');
+      style.id = 'tawk-custom-styles';
       style.textContent = `
         /* Customização do botão do chat */
         #tawk-bubble {
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
           transition: transform 0.2s ease !important;
-          z-index: 9999 !important;
+          z-index: 2147483647 !important;
         }
         #tawk-bubble:hover {
           transform: scale(1.05) !important;
@@ -68,12 +62,12 @@ export function TawkChat({
         
         /* Container do widget */
         .tawk-min-container {
-          z-index: 9999 !important;
+          z-index: 2147483647 !important;
         }
         
         /* Janela do chat */
         iframe#tawk-chat-iframe {
-          z-index: 9999 !important;
+          z-index: 2147483647 !important;
         }
         
         /* Customização da janela do chat */
@@ -93,13 +87,17 @@ export function TawkChat({
         /* Mobile específico */
         @media (max-width: 768px) {
           #tawk-bubble {
-            bottom: 70px !important;
+            bottom: 20px !important;
             right: 10px !important;
-            z-index: 9999 !important;
+            z-index: 2147483647 !important;
           }
           
           .tawk-min-container {
-            z-index: 9999 !important;
+            z-index: 2147483647 !important;
+          }
+          
+          iframe#tawk-chat-iframe {
+            z-index: 2147483647 !important;
           }
         }
       `;
@@ -115,8 +113,6 @@ export function TawkChat({
         }, function(error: any) {
           if (error) {
             console.error('Erro ao definir atributos Tawk.to:', error);
-          } else {
-            console.log('✅ Atributos do vendedor configurados');
           }
         });
       }
@@ -130,46 +126,17 @@ export function TawkChat({
       };
     }
 
-    // Callback quando chat inicia
-    (window as any).Tawk_API.onChatStarted = function() {
-      console.log('💬 Chat iniciado com suporte Kambafy');
-    };
-
-    // Callback quando chat termina
-    (window as any).Tawk_API.onChatEnded = function() {
-      console.log('👋 Chat encerrado');
-    };
-    
-    // Callback quando mensagem é recebida
-    (window as any).Tawk_API.onChatMessageVisitor = function(message: any) {
-      console.log('📤 Mensagem enviada:', message);
-    };
-    
-    // Callback quando agente responde
-    (window as any).Tawk_API.onChatMessageAgent = function(message: any) {
-      console.log('📥 Mensagem recebida do suporte:', message);
-    };
 
     // Criar e inserir o script
-    console.log('📝 Criando script Tawk.to...');
     const script = document.createElement('script');
     script.id = 'tawk-script';
     script.async = true;
     script.src = `https://embed.tawk.to/${propertyId}/${widgetId}`;
     script.charset = 'UTF-8';
     script.setAttribute('crossorigin', '*');
-    
-    script.onload = () => {
-      console.log('✅ Script Tawk.to carregado com sucesso!');
-    };
-    
-    script.onerror = (error) => {
-      console.error('❌ Erro ao carregar script Tawk.to:', error);
-    };
 
     const firstScript = document.getElementsByTagName('script')[0];
     firstScript.parentNode?.insertBefore(script, firstScript);
-    console.log('📦 Script Tawk.to inserido no DOM');
 
     // Cleanup ao desmontar
     return () => {
@@ -185,12 +152,10 @@ export function TawkChat({
       }
       
       // Remover estilos customizados
-      const customStyles = document.querySelectorAll('style');
-      customStyles.forEach(style => {
-        if (style.textContent?.includes('tawk-custom')) {
-          style.remove();
-        }
-      });
+      const customStyle = document.getElementById('tawk-custom-styles');
+      if (customStyle) {
+        customStyle.remove();
+      }
       
       // Limpar objetos globais
       delete (window as any).Tawk_API;
