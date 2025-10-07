@@ -9,6 +9,8 @@ import { SkeletonPage } from '@/components/ui/skeleton-page';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { TawkChat } from '@/components/TawkChat';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load páginas para melhor performance com retry logic
 const createLazyWithRetry = (importFn: () => Promise<any>, name: string) => {
@@ -63,6 +65,26 @@ function SellerDashboardContent() {
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme } = useSellerTheme();
+  const { user } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string>();
+
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      if (user?.id) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (data?.avatar_url) {
+          setAvatarUrl(data.avatar_url);
+        }
+      }
+    };
+    
+    fetchAvatar();
+  }, [user?.id]);
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -98,7 +120,7 @@ function SellerDashboardContent() {
 
   return (
     <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
-        <TawkChat />
+        <TawkChat avatarUrl={avatarUrl} />
         
         <div className="flex flex-1">
           {/* Backdrop para mobile */}

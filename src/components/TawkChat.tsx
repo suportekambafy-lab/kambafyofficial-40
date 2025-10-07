@@ -4,11 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 interface TawkChatProps {
   propertyId?: string;
   widgetId?: string;
+  avatarUrl?: string;
 }
 
 export function TawkChat({ 
   propertyId = '68e4dfc836ce7e19507dc359', 
-  widgetId = '1j6v0ka31' 
+  widgetId = '1j6v0ka31',
+  avatarUrl
 }: TawkChatProps) {
   const { user } = useAuth();
 
@@ -93,6 +95,7 @@ export function TawkChat({
       (window as any).Tawk_API.visitor = {
         name: user.email?.split('@')[0] || 'Vendedor',
         email: user.email || '',
+        ...(avatarUrl && { avatar: avatarUrl })
       };
     }
 
@@ -152,7 +155,7 @@ export function TawkChat({
       delete (window as any).Tawk_API;
       delete (window as any).Tawk_LoadStart;
     };
-  }, [propertyId, widgetId, user]);
+  }, [propertyId, widgetId, user, avatarUrl]);
 
   return null;
 }
