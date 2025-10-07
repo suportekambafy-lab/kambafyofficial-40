@@ -12,9 +12,11 @@ import { ThemeProvider } from "./hooks/useTheme";
 import { SubdomainGuard } from "./components/SubdomainGuard";
 import { OptimizedRoutes } from "./components/OptimizedRoutes";
 import { EnhancedErrorBoundary } from "./components/ui/enhanced-error-boundary";
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import { useVersionCheck } from "./hooks/useVersionCheck";
+
+const TestFacebookIntegration = lazy(() => import("./pages/TestFacebookIntegration"));
 
 // Test Components for debugging member area navigation
 const TestAreaComponent = () => {
@@ -172,6 +174,7 @@ const App = () => {
                        <Route path="/area/teste" element={<TestAreaComponent />} />
                        <Route path="/login/teste" element={<TestLoginComponent />} />
                        <Route path="/bunny-storage-test" element={<OptimizedRoutes.BunnyStorageTest />} />
+                       <Route path="/test-facebook" element={<TestFacebookIntegration />} />
                        
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<OptimizedRoutes.NotFound />} />
