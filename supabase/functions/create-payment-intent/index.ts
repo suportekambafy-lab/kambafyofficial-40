@@ -98,10 +98,28 @@ serve(async (req) => {
       throw new Error('Erro ao processar cliente');
     }
 
-    // Gerar order ID único
-    const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
+    // Verificar se já existe ordem recente para evitar duplicação
+    const { data: existingOrders, error: checkError } = await supabase
+      .from('orders')
+      .select('order_id, id')
+      .eq('customer_email', customerData.email)
+      .eq('product_id', productId)
+      .eq('status', 'pending')
+      .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString()) // Últimos 5 minutos
+      .order('created_at', { ascending: false })
+      .limit(1);
     
-    // Verificar se é um upsell de outro pedido
+    let orderId: string;
+    
+    if (!checkError && existingOrders && existingOrders.length > 0) {
+      // Reutilizar order_id existente para evitar duplicação
+      orderId = existingOrders[0].order_id;
+      console.log('♻️ Reutilizando order_id existente:', orderId);
+    } else {
+      // Gerar novo order ID único
+      orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
+      console.log('🆕 Gerando novo order_id:', orderId);
+    }
 
     let automaticPaymentMethods;
     let allowRedirects;
@@ -233,14 +251,20 @@ serve(async (req) => {
 
     console.log('Saving order with corrected data:', orderData);
 
+    // Usar upsert para evitar duplicação - atualizar se já existe
     const { error: orderError } = await supabase
       .from('orders')
-      .insert(orderData);
+      .upsert(orderData, {
+        onConflict: 'order_id',
+        ignoreDuplicates: false
+      })
+      .select()
+      .single();
 
     if (orderError) {
       console.error('Erro ao salvar ordem:', orderError);
     } else {
-      console.log('Order saved successfully with ID:', orderId);
+      console.log('Order saved/updated successfully with ID:', orderId);
     }
 
     const response = {
