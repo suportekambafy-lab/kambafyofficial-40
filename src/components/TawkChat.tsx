@@ -6,8 +6,8 @@ interface TawkChatProps {
 }
 
 export function TawkChat({ 
-  propertyId = '67040e1c02d78d1a30edb82f', 
-  widgetId = '1i9he3f4k' 
+  propertyId = '68e4dfc836ce7e19507dc359', 
+  widgetId = '1j6v0ka31' 
 }: TawkChatProps) {
   useEffect(() => {
     // Verificar se o script já foi carregado
