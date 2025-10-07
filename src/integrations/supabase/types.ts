@@ -331,6 +331,71 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_conversations: {
+        Row: {
+          agent_name: string | null
+          created_at: string
+          id: string
+          seller_id: string
+          status: string
+          tawk_conversation_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_name?: string | null
+          created_at?: string
+          id?: string
+          seller_id: string
+          status?: string
+          tawk_conversation_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_name?: string | null
+          created_at?: string
+          id?: string
+          seller_id?: string
+          status?: string
+          tawk_conversation_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          message: string
+          sender_name: string
+          sender_type: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          message: string
+          sender_name: string
+          sender_type: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          sender_name?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkout_customizations: {
         Row: {
           created_at: string | null

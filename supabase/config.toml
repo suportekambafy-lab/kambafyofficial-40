@@ -1,5 +1,17 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.tawk-webhook-handler]
+verify_jwt = false
+
+[functions.send-tawk-message]
+verify_jwt = false
+
+[functions.get-tawk-conversations]
+verify_jwt = false
+
+[functions.get-tawk-messages]
+verify_jwt = false
+
 [functions.verify-appypay-order]
 verify_jwt = false
 

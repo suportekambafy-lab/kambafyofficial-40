@@ -21,16 +21,14 @@ export function TawkChat({
     // Configurar Tawk_API antes de carregar o script
     (window as any).Tawk_API = (window as any).Tawk_API || {};
     (window as any).Tawk_LoadStart = new Date();
-
-    // Configurar informações do visitante (vendedor)
-    if (user) {
-      (window as any).Tawk_API.visitor = {
-        name: user.email?.split('@')[0] || 'Vendedor',
-        email: user.email || '',
-      };
-
-      // Adicionar atributos customizados
-      (window as any).Tawk_API.onLoad = function() {
+    
+    // Configurar callback onLoad combinado
+    (window as any).Tawk_API.onLoad = function() {
+      // Ocultar o widget padrão do Tawk.to (usaremos interface customizada)
+      (window as any).Tawk_API.hideWidget();
+      
+      // Configurar atributos do vendedor
+      if (user) {
         (window as any).Tawk_API.setAttributes({
           'user_id': user.id,
           'tipo': 'Vendedor',
@@ -40,6 +38,14 @@ export function TawkChat({
             console.error('Erro ao definir atributos Tawk.to:', error);
           }
         });
+      }
+    };
+
+    // Configurar informações do visitante (vendedor)
+    if (user) {
+      (window as any).Tawk_API.visitor = {
+        name: user.email?.split('@')[0] || 'Vendedor',
+        email: user.email || '',
       };
     }
 
