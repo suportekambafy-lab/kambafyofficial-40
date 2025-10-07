@@ -32,17 +32,15 @@ export const useFacebookApiSettings = () => {
         throw error;
       }
 
-      // Sempre manter campos vazios - não pré-preencher
       if (data) {
         setSettings({
           id: data.id,
-          appId: '', // Campo vazio para o usuário inserir
-          appSecret: '', // Campo vazio para o usuário inserir
-          accessToken: '', // Campo vazio para o usuário inserir
-          enabled: false // Sempre começar desabilitado
+          appId: data.app_id || '',
+          appSecret: data.app_secret || '',
+          accessToken: data.access_token || '',
+          enabled: data.enabled || false
         });
       } else {
-        // Manter campos vazios
         setSettings({
           appId: '',
           appSecret: '',

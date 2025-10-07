@@ -37,12 +37,6 @@ export function FacebookPixelForm({ onSaveSuccess, productId }: FacebookPixelFor
     apiLoading 
   });
 
-  // Forçar campos vazios na primeira renderização
-  useEffect(() => {
-    console.log('🔄 Forcing empty fields on mount');
-    setPixelSettings(prev => ({ ...prev, pixelId: '', enabled: false }));
-    setApiSettings(prev => ({ ...prev, accessToken: '', appId: '', appSecret: '', enabled: false }));
-  }, []);
 
   const handleSavePixel = async () => {
     const success = await savePixelSettings(pixelSettings);
