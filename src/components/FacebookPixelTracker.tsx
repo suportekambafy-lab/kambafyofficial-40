@@ -102,44 +102,74 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
 
     console.log('🚀 Loading Facebook Pixel for product:', productId, 'with ID:', pixelSettings.pixelId);
 
-    // Initialize Facebook Pixel ONLY if not already loaded
+    // Initialize Facebook Pixel
     const initFacebookPixel = () => {
       // Verificar se o pixel já foi carregado
       if (window.fbq && typeof window.fbq === 'function') {
         console.log('✅ Facebook Pixel already loaded, just initializing new ID:', pixelSettings.pixelId);
-        window.fbq('init', pixelSettings.pixelId);
-        window.fbq('track', 'PageView');
+        try {
+          window.fbq('init', pixelSettings.pixelId);
+          window.fbq('track', 'PageView');
+          console.log('✅ Pixel initialized successfully');
+        } catch (e) {
+          console.error('❌ Error initializing existing pixel:', e);
+        }
         return;
       }
 
       console.log('📦 Loading Facebook Pixel script for the first time');
       
-      // Load Facebook Pixel script
-      const script = document.createElement('script');
-      script.id = 'facebook-pixel-script';
-      script.innerHTML = `
+      // Remover script existente se houver
+      const existingScript = document.getElementById('facebook-pixel-script');
+      if (existingScript) {
+        existingScript.remove();
+      }
+      
+      // Carregar o script externo primeiro
+      const fbScript = document.createElement('script');
+      fbScript.async = true;
+      fbScript.src = 'https://connect.facebook.net/en_US/fbevents.js';
+      fbScript.id = 'facebook-pixel-base-script';
+      
+      fbScript.onload = () => {
+        console.log('✅ Facebook Pixel base script loaded');
+        
+        // Inicializar após carregar
+        if (window.fbq) {
+          window.fbq('init', pixelSettings.pixelId);
+          window.fbq('track', 'PageView');
+          console.log('✅ Pixel initialized with ID:', pixelSettings.pixelId);
+        }
+      };
+      
+      // Inicializar a fila antes de carregar o script
+      const initScript = document.createElement('script');
+      initScript.id = 'facebook-pixel-script';
+      initScript.innerHTML = `
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
         n.callMethod.apply(n,arguments):n.queue.push(arguments)};
         if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        n.queue=[];}(window, document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
-        
-        fbq('init', '${pixelSettings.pixelId}');
-        fbq('track', 'PageView');
       `;
-      document.head.appendChild(script);
+      
+      document.head.appendChild(initScript);
+      document.head.appendChild(fbScript);
 
       // Add noscript fallback
+      const existingNoscript = document.getElementById('facebook-pixel-noscript');
+      if (existingNoscript) {
+        existingNoscript.remove();
+      }
+      
       const noscript = document.createElement('noscript');
       noscript.id = 'facebook-pixel-noscript';
       noscript.innerHTML = `
         <img height="1" width="1" style="display:none"
         src="https://www.facebook.com/tr?id=${pixelSettings.pixelId}&ev=PageView&noscript=1" />
       `;
-      document.head.appendChild(noscript);
+      document.body.appendChild(noscript);
     };
 
     initFacebookPixel();
