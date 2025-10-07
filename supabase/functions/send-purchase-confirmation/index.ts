@@ -149,6 +149,28 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Missing required fields: customerEmail, customerName, productName, or orderId');
     }
 
+    // ✅ CRITICAL: Block emails for failed payments
+    if (paymentStatus === 'failed') {
+      console.log('❌ PAYMENT FAILED - Email and access blocked', {
+        orderId,
+        customerEmail: normalizedEmail,
+        paymentStatus
+      });
+      
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Payment failed - no email sent',
+        emailSent: false,
+        paymentStatus: 'failed'
+      }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    }
+
     // Check if this is a pending reference payment
     const isPendingReference = paymentMethod === 'reference' && paymentStatus === 'pending';
     

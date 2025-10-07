@@ -353,7 +353,7 @@ const handler = async (req: Request): Promise<Response> => {
             memberAreaId: product?.member_area_id,
             sellerId: product?.user_id,
             paymentMethod: order.payment_method,
-            paymentStatus: 'completed'
+            paymentStatus: newOrderStatus // ✅ Usar status correto calculado
           };
 
           const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
