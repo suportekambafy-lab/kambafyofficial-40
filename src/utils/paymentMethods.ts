@@ -91,7 +91,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "apple_pay",
     name: "Apple Pay",
     image: getPaymentMethodImage("apple_pay"),
-    enabled: true,
+    enabled: false, // ❌ Desabilitado até configuração
     isPortugal: true,
     countryFlag: "🇵🇹",
     countryName: "Portugal"
