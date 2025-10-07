@@ -1553,51 +1553,55 @@ const Checkout = () => {
           console.error('Unexpected error updating sales:', updateError);
         }
       }
-      try {
-        console.log('Sending confirmation email...');
-        const emailData = {
-          customerName: formData.fullName.trim(),
-          customerEmail: formData.email.trim().toLowerCase(),
-          customerPhone: formData.phone.trim(), // Adicionar telefone para SMS
-          productName: product.name,
-          orderId: orderId,
-          amount: totalAmount.toString(),
-          currency: userCountry.currency,
-          productId: productId,
-          shareLink: product.share_link,
-          memberAreaId: product.member_areas?.id,
-          sellerId: product.user_id,
-          orderBump: orderBump ? {
-            bump_product_name: orderBump.bump_product_name,
-            bump_product_price: orderBump.bump_product_price,
-            bump_product_image: orderBump.bump_product_image,
-            discount: orderBump.discount,
-            discounted_price: totalOrderBumpPrice
-          } : null,
-          baseProductPrice: product.price,
-          paymentMethod: selectedPayment,
-          paymentStatus: selectedPayment === 'reference' ? 'pending' : (insertedOrder?.payment_status || 'completed'),
-          ...(selectedPayment === 'reference' && insertedOrder && {
+      // ✅ Enviar email APENAS para pagamentos pendentes (referência)
+      // Para pagamentos completados, o webhook enviará o email
+      if (selectedPayment === 'reference') {
+        try {
+          console.log('Sending pending payment email...');
+          const emailData = {
+            customerName: formData.fullName.trim(),
+            customerEmail: formData.email.trim().toLowerCase(),
+            customerPhone: formData.phone.trim(),
+            productName: product.name,
+            orderId: orderId,
+            amount: totalAmount.toString(),
+            currency: userCountry.currency,
+            productId: productId,
+            shareLink: product.share_link,
+            memberAreaId: product.member_areas?.id,
+            sellerId: product.user_id,
+            orderBump: orderBump ? {
+              bump_product_name: orderBump.bump_product_name,
+              bump_product_price: orderBump.bump_product_price,
+              bump_product_image: orderBump.bump_product_image,
+              discount: orderBump.discount,
+              discounted_price: totalOrderBumpPrice
+            } : null,
+            baseProductPrice: product.price,
+            paymentMethod: selectedPayment,
+            paymentStatus: 'pending',
             referenceData: {
               referenceNumber: insertedOrder.reference_number,
               entity: insertedOrder.entity,
               dueDate: insertedOrder.due_date
             }
-          })
-        };
-        const {
-          data: emailResponse,
-          error: emailError
-        } = await supabase.functions.invoke('send-purchase-confirmation', {
-          body: emailData
-        });
-        if (emailError) {
-          console.error('Error sending confirmation email:', emailError);
-        } else {
-          console.log('Confirmation email sent successfully:', emailResponse);
+          };
+          const {
+            data: emailResponse,
+            error: emailError
+          } = await supabase.functions.invoke('send-purchase-confirmation', {
+            body: emailData
+          });
+          if (emailError) {
+            console.error('Error sending pending payment email:', emailError);
+          } else {
+            console.log('Pending payment email sent successfully:', emailResponse);
+          }
+        } catch (emailError) {
+          console.error('Unexpected error sending pending payment email:', emailError);
         }
-      } catch (emailError) {
-        console.error('Unexpected error sending confirmation email:', emailError);
+      } else {
+        console.log('✅ Payment completed - email will be sent by webhook');
       }
       const params = new URLSearchParams({
         order_id: orderId,
