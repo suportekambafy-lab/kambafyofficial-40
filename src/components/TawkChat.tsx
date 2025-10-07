@@ -13,15 +13,11 @@ export function TawkChat({
   const { user } = useAuth();
 
   useEffect(() => {
-    // Verificar se o script ou widget já existem
-    if (document.getElementById('tawk-script') || (window as any).Tawk_API) {
-      return;
+    // Limpar instâncias anteriores
+    const existingScript = document.getElementById('tawk-script');
+    if (existingScript) {
+      existingScript.remove();
     }
-
-    // Detectar se é mobile
-    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-      navigator.userAgent.toLowerCase()
-    );
 
     // Configurar Tawk_API antes de carregar o script
     (window as any).Tawk_API = (window as any).Tawk_API || {};
