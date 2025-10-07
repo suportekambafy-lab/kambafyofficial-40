@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 declare global {
   interface Window {
     fbq: any;
+    _fbq: any;
   }
 }
 
@@ -104,6 +105,13 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
 
     // Initialize Facebook Pixel
     const initFacebookPixel = () => {
+      console.log('🔍 [PIXEL DEBUG] Checking if pixel exists:', {
+        fbqExists: !!window.fbq,
+        fbqType: typeof window.fbq,
+        _fbqExists: !!window._fbq,
+        pixelId: pixelSettings.pixelId
+      });
+
       // Verificar se o pixel já foi carregado
       if (window.fbq && typeof window.fbq === 'function') {
         console.log('✅ Facebook Pixel already loaded, just initializing new ID:', pixelSettings.pixelId);
@@ -111,6 +119,7 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
           window.fbq('init', pixelSettings.pixelId);
           window.fbq('track', 'PageView');
           console.log('✅ Pixel initialized successfully');
+          console.log('🔍 [PIXEL DEBUG] After init - window.fbq:', typeof window.fbq);
         } catch (e) {
           console.error('❌ Error initializing existing pixel:', e);
         }
@@ -118,6 +127,7 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
       }
 
       console.log('📦 Loading Facebook Pixel script for the first time');
+      console.log('🔍 [PIXEL DEBUG] Document head children before:', document.head.children.length);
       
       // Remover script existente se houver
       const existingScript = document.getElementById('facebook-pixel-script');
@@ -133,13 +143,28 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
       
       fbScript.onload = () => {
         console.log('✅ Facebook Pixel base script loaded');
+        console.log('🔍 [PIXEL DEBUG] After script load - window.fbq:', typeof window.fbq);
+        console.log('🔍 [PIXEL DEBUG] window._fbq:', typeof window._fbq);
         
         // Inicializar após carregar
         if (window.fbq) {
+          console.log('🚀 [PIXEL DEBUG] Calling fbq init with ID:', pixelSettings.pixelId);
           window.fbq('init', pixelSettings.pixelId);
+          console.log('🚀 [PIXEL DEBUG] Calling fbq track PageView');
           window.fbq('track', 'PageView');
           console.log('✅ Pixel initialized with ID:', pixelSettings.pixelId);
+          
+          // Verificar se o pixel foi realmente inicializado
+          setTimeout(() => {
+            console.log('🔍 [PIXEL DEBUG] 1s after init - window.fbq still exists:', typeof window.fbq);
+          }, 1000);
+        } else {
+          console.error('❌ [PIXEL DEBUG] window.fbq not available after script load!');
         }
+      };
+      
+      fbScript.onerror = (error) => {
+        console.error('❌ [PIXEL DEBUG] Error loading Facebook Pixel script:', error);
       };
       
       // Inicializar a fila antes de carregar o script
@@ -155,7 +180,11 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
       `;
       
       document.head.appendChild(initScript);
+      console.log('✅ [PIXEL DEBUG] Init script added to head');
+      
       document.head.appendChild(fbScript);
+      console.log('✅ [PIXEL DEBUG] FB script added to head');
+      console.log('🔍 [PIXEL DEBUG] Document head children after:', document.head.children.length);
 
       // Add noscript fallback
       const existingNoscript = document.getElementById('facebook-pixel-noscript');
@@ -170,9 +199,22 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
         src="https://www.facebook.com/tr?id=${pixelSettings.pixelId}&ev=PageView&noscript=1" />
       `;
       document.body.appendChild(noscript);
+      console.log('✅ [PIXEL DEBUG] Noscript fallback added');
     };
 
     initFacebookPixel();
+    
+    // Verificar após 2 segundos se o pixel foi carregado
+    setTimeout(() => {
+      console.log('🔍 [PIXEL DEBUG] 2s check - Pixel status:', {
+        fbqExists: !!window.fbq,
+        fbqType: typeof window.fbq,
+        pixelId: pixelSettings.pixelId,
+        scriptsInHead: Array.from(document.head.getElementsByTagName('script'))
+          .filter(s => s.src.includes('facebook') || s.innerHTML.includes('fbq'))
+          .map(s => ({ src: s.src, id: s.id, hasContent: s.innerHTML.length > 0 }))
+      });
+    }, 2000);
 
     // Track InitiateCheckout immediately when on checkout page
     setTimeout(() => {
