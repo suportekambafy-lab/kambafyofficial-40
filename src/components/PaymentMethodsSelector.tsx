@@ -101,16 +101,16 @@ export default function PaymentMethodsSelector({ selectedMethods, onMethodsChang
                      </div>
                    </div>
                    
-                   {/* Mostrar status baseado no PAYMENT_METHODS, não no formData */}
-                   {allMethods.find(m => m.id === method.id)?.enabled === false ? (
-                     <Badge variant="destructive" className="text-xs bg-red-100 text-red-800">
-                       Indisponível
-                     </Badge>
-                   ) : method.enabled ? (
-                     <Badge variant="default" className="text-xs bg-green-100 text-green-800">
-                       Ativo
-                     </Badge>
-                   ) : null}
+                    {/* Mostrar status baseado no PAYMENT_METHODS, não no formData */}
+                    {allMethods.find(m => m.id === method.id)?.enabled === false ? (
+                      <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                        Em breve
+                      </Badge>
+                    ) : method.enabled ? (
+                      <Badge variant="default" className="text-xs bg-green-100 text-green-800">
+                        Ativo
+                      </Badge>
+                    ) : null}
                  </div>
               ))}
             </div>
