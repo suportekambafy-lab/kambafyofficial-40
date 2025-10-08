@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 const professionalWoman = '/lovable-uploads/09933f06-0001-46b9-9e43-62a0ebdd9868.png';
 const professionalMan = '/lovable-uploads/730e6c93-f015-4eb9-a5cb-a980f00fcde0.png';
+import victorAvatar from '@/assets/testimonial-victor-muabi.jpg';
 const transitionVariants = {
   item: {
     hidden: {
@@ -431,20 +432,23 @@ const StatsSection = () => {
 };
 const TestimonialsSection = () => {
   const testimonials = [{
-    name: "Maria Santos",
-    role: "Criadora de Conteúdo",
-    content: "A Kambafy mudou minha vida! Consegui monetizar meu conhecimento em marketing digital e hoje tenho uma renda extra consistente.",
-    rating: 5
+    name: "Victor Muabi",
+    role: "@victormuabi",
+    content: "Esta é a plataforma que faltava no mercado, fácil de usar, converte muito bem, aumentou minha conversão em lançamentos.",
+    rating: 5,
+    avatar: victorAvatar
   }, {
-    name: "João Pedro",
-    role: "Professor de Inglês",
-    content: "Plataforma incrível! Muito fácil de usar e o suporte é excepcional. Recomendo para todos os educadores.",
-    rating: 5
+    name: "Carlos Santos",
+    role: "@carlostech",
+    content: "Este serviço transformou minha forma de trabalhar. Design limpo, recursos poderosos e excelente suporte.",
+    rating: 5,
+    avatar: professionalMan
   }, {
-    name: "Ana Luiza",
-    role: "Coach de Vida",
-    content: "O que mais me impressiona é a qualidade da plataforma e como ela foi pensada para o mercado angolano. Parabéns!",
-    rating: 5
+    name: "Ricardo Lima",
+    role: "@ricardocria",
+    content: "Já testei muitas plataformas, mas esta se destaca. Intuitiva, confiável e genuinamente útil para produtividade.",
+    rating: 5,
+    avatar: professionalMan
   }];
   return <section className="py-24 bg-background">
       <div className="mx-auto max-w-7xl px-6">
@@ -462,7 +466,7 @@ const TestimonialsSection = () => {
           {testimonials.map((testimonial, index) => <div key={index} className="bg-background border border-checkout-green/10 rounded-2xl p-6 hover:shadow-lg hover:shadow-checkout-green/5 transition-all duration-300">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
-                  <img src={index === 1 ? professionalMan : professionalWoman} alt={testimonial.name} className="w-full h-full object-cover" />
+                  <img src={testimonial.avatar} alt={testimonial.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex">
                   {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="w-5 h-5 text-checkout-orange fill-current" />)}
