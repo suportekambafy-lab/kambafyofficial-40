@@ -124,16 +124,16 @@ serve(async (req) => {
             <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
               <tr>
                 <td align="center">
-                  <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
                     
                     <!-- Header -->
                     <tr>
-                      <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
-                          🎉 Seu Acesso Está Pronto!
+                      <td style="padding: 40px 30px; text-align: center; border-bottom: 2px solid #f0f0f0;">
+                        <h1 style="color: #333333; margin: 0; font-size: 24px; font-weight: 600;">
+                          Seu Acesso Está Pronto
                         </h1>
-                        <p style="color: #ffffff; margin: 10px 0 0; font-size: 16px; opacity: 0.9;">
-                          Obrigado pela sua compra, ${order.customer_name}!
+                        <p style="color: #666666; margin: 10px 0 0; font-size: 15px;">
+                          Olá, ${order.customer_name}
                         </p>
                       </td>
                     </tr>
@@ -141,66 +141,58 @@ serve(async (req) => {
                     <!-- Product Info -->
                     <tr>
                       <td style="padding: 30px;">
-                        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                          <h2 style="color: #333; margin: 0 0 10px; font-size: 20px;">
-                            ${product.name}
-                          </h2>
-                          <p style="color: #666; margin: 0; font-size: 14px;">
-                            Pedido: <strong>${order.order_id}</strong>
-                          </p>
-                        </div>
+                        <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+                          Obrigado pela sua compra de <strong>${product.name}</strong>.
+                        </p>
 
-                        <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                          Seu acesso ao <strong>${product.name}</strong> foi confirmado! 
+                        <p style="color: #666666; font-size: 14px; line-height: 1.5; margin: 0 0 25px;">
                           ${product.type === 'E-book' || product.type === 'Ebook' 
-                            ? 'Clique no botão abaixo para fazer o download do seu ebook:' 
-                            : 'Clique no botão abaixo para acessar:'}
+                            ? 'Seu ebook já está disponível para download.' 
+                            : 'Seu acesso já está liberado.'}
                         </p>
 
                         <!-- CTA Button -->
                         <table width="100%" cellpadding="0" cellspacing="0">
                           <tr>
-                            <td align="center" style="padding: 20px 0;">
+                            <td align="center" style="padding: 10px 0 25px 0;">
                               <a href="${product.share_link}" 
-                                 style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
-                                ${product.type === 'E-book' || product.type === 'Ebook' ? '📥 Baixar E-book' : '🚀 Acessar Agora'}
+                                 style="display: inline-block; padding: 14px 35px; background-color: #000000; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 15px;">
+                                ${product.type === 'E-book' || product.type === 'Ebook' ? 'Baixar E-book' : 'Acessar Agora'}
                               </a>
                             </td>
                           </tr>
                         </table>
 
                         <!-- Access Link -->
-                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 20px;">
-                          <p style="color: #666; font-size: 12px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px solid #e0e0e0;">
+                          <p style="color: #666666; font-size: 12px; margin: 0 0 8px; font-weight: 500;">
                             Link de acesso direto:
                           </p>
                           <p style="margin: 0;">
                             <a href="${product.share_link}" 
-                               style="color: #667eea; word-break: break-all; font-size: 13px; text-decoration: none;">
+                               style="color: #0066cc; word-break: break-all; font-size: 13px; text-decoration: underline;">
                               ${product.share_link}
                             </a>
                           </p>
                         </div>
 
-                        <!-- Support Info -->
-                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                          <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0;">
-                            <strong>Precisa de ajuda?</strong><br>
-                            Entre em contato com o vendedor: 
-                            <a href="mailto:${seller.email}" style="color: #667eea; text-decoration: none;">
-                              ${seller.email}
-                            </a>
-                          </p>
-                        </div>
+                        <p style="color: #999999; font-size: 13px; margin: 20px 0 0; line-height: 1.5;">
+                          Pedido: ${order.order_id}
+                        </p>
                       </td>
                     </tr>
 
                     <!-- Footer -->
                     <tr>
                       <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                        <p style="color: #999; font-size: 12px; margin: 0;">
-                          Este email foi enviado pela plataforma Kambafy<br>
-                          Você está recebendo porque completou uma compra
+                        <p style="color: #666666; font-size: 13px; margin: 0 0 8px;">
+                          Precisa de ajuda? Entre em contato: 
+                          <a href="mailto:${seller.email}" style="color: #0066cc; text-decoration: none;">
+                            ${seller.email}
+                          </a>
+                        </p>
+                        <p style="color: #999999; font-size: 12px; margin: 0;">
+                          Kambafy – Plataforma de Vendas Digitais
                         </p>
                       </td>
                     </tr>
