@@ -1,13 +1,10 @@
 
-import { KambafyLanding } from "@/components/KambafyLanding";
-import { useAuth } from '@/contexts/AuthContext';
+import InteractiveHero from "@/components/ui/hero-section-nexus";
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useSubdomain } from '@/hooks/useSubdomain';
-import Mobile from './Mobile';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { SEO, pageSEO } from "@/components/SEO";
-import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -33,9 +30,7 @@ const Index = () => {
   return (
     <>
       <SEO {...pageSEO.home} />
-      <div className="relative overflow-hidden">
-        <KambafyLanding />
-      </div>
+      <InteractiveHero />
     </>
   );
 };
