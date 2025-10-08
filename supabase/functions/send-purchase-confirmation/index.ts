@@ -413,8 +413,22 @@ const handler = async (req: Request): Promise<Response> => {
         console.log('Product type:', productType);
         console.log('Share link:', shareLink);
         
+        // Para E-books, sempre mostrar botão de download
+        if (productType === 'E-book' || productType === 'Ebook') {
+          console.log('Product is E-book - adding download button');
+          accessInfo = `
+            <div style="background-color: #16a34a; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: white; margin: 0 0 10px 0;">📚 Seu E-book está Pronto!</h3>
+              <p style="margin: 0; color: white;">Baixe seu e-book agora mesmo clicando no botão abaixo:</p>
+              <a href="${shareLink}" 
+                 style="display: inline-block; background-color: white; color: #16a34a; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; font-weight: bold;">
+                Baixar E-book
+              </a>
+            </div>
+          `;
+        }
         // Para produtos do tipo "Link de Pagamento", verificar se tem link de acesso
-        if (productType === 'Link de Pagamento' && shareLink) {
+        else if (productType === 'Link de Pagamento' && shareLink) {
           console.log('Product is Payment Link WITH share link - adding access');
           accessInfo = `
             <div style="background-color: #16a34a; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -520,11 +534,10 @@ const handler = async (req: Request): Promise<Response> => {
                   <p style="margin: 8px 0 0; font-size: 16px; color: #64748b;">Obrigado pela sua compra, ${customerName}!</p>
                 </div>
 
-                <!-- Product Info -->
-                <div style="padding: 30px 30px 0;">
-                  <h2 style="text-align: center; color: #16a34a; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">Você comprou: ${productName}</h2>
-                  <p style="text-align: center; font-size: 16px; color: #64748b; margin: 0 0 25px;">de ${sellerProfile?.full_name || 'Kambafy'}</p>
-                </div>
+              <!-- Product Info -->
+              <div style="padding: 30px 30px 0;">
+                <h2 style="text-align: center; color: #16a34a; margin: 0 0 25px 0; font-size: 20px; font-weight: 600;">Você comprou: ${productName}</h2>
+              </div>
 
                 <!-- Order Details -->
                 <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
@@ -634,38 +647,11 @@ const handler = async (req: Request): Promise<Response> => {
                 <p style="margin: 8px 0 0; font-size: 16px; color: #64748b;">Obrigado pela sua compra, ${customerName}!</p>
               </div>
 
-              <!-- Product Info -->
-              <div style="padding: 30px 30px 0;">
-                <h2 style="text-align: center; color: #16a34a; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">Você comprou: ${productName}</h2>
-                <p style="text-align: center; font-size: 16px; color: #64748b; margin: 0 0 25px;">de ${sellerProfile?.full_name || 'Kambafy'}</p>
-              </div>
+            <!-- Product Info -->
+            <div style="padding: 30px 30px 0;">
+              <h2 style="text-align: center; color: #16a34a; margin: 0 0 25px 0; font-size: 20px; font-weight: 600;">Você comprou: ${productName}</h2>
+            </div>
 
-              ${isNewAccount && temporaryPassword ? `
-              <!-- Login Info -->
-              <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
-                <h3 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">🔑 Seus Dados de Acesso</h3>
-                <div style="background-color: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px;">
-                  <p style="margin: 0 0 15px; color: #0c4a6e; font-size: 14px;">
-                    Criamos uma conta para você acessar seus produtos:
-                  </p>
-                  <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                      <td style="padding: 8px 0; font-weight: 500; color: #475569; width: 30%;">Email:</td>
-                      <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${normalizedEmail}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 8px 0; font-weight: 500; color: #475569;">Senha:</td>
-                      <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace; font-weight: 700;">${temporaryPassword}</td>
-                    </tr>
-                  </table>
-                  <div style="background-color: #fef3cd; border: 1px solid #fbbf24; border-radius: 6px; padding: 15px; margin: 15px 0 0;">
-                    <p style="margin: 0; font-size: 13px; color: #92400e; line-height: 1.6;">
-                      <strong>Importante:</strong> Altere esta senha no primeiro acesso por segurança.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              ` : ''}
 
               ${accessInfo}
 
@@ -745,6 +731,120 @@ const handler = async (req: Request): Promise<Response> => {
           subject: `Confirmação de Compra - ${productName} - Pedido #${orderId}`,
           html: customerEmailHtml,
         });
+
+        if (emailError) {
+          console.error('Error sending customer email:', emailError);
+          throw new Error(`Failed to send customer email: ${emailError.message}`);
+        }
+
+        console.log('Customer email sent successfully:', emailResponse);
+
+        // Send separate panel access email if new account was created
+        if (isNewAccount && temporaryPassword) {
+          console.log('Sending separate panel access email for new account...');
+          
+          const panelAccessEmailHtml = `
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Acesso ao Painel Kambafy</title>
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              
+              <!-- Header -->
+              <div style="text-align: center; padding: 40px 30px 30px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <p style="margin: 15px 0 0; font-size: 18px; font-weight: 500; color: #3b82f6;">🔑 Acesso ao Painel do Cliente</p>
+              </div>
+
+              <!-- Welcome Message -->
+              <div style="padding: 30px;">
+                <p style="margin: 0 0 20px; font-size: 16px; color: #1e293b;">Olá, ${customerName}!</p>
+                <p style="margin: 0 0 20px; font-size: 14px; color: #475569; line-height: 1.6;">
+                  Criamos uma conta no painel Kambafy para você acompanhar seus produtos e compras.
+                </p>
+              </div>
+
+              <!-- Login Credentials -->
+              <div style="padding: 0 30px 30px;">
+                <div style="background-color: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px;">
+                  <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #0c4a6e;">Seus Dados de Acesso</h3>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="padding: 8px 0; font-weight: 500; color: #475569; width: 30%;">Email:</td>
+                      <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace;">${normalizedEmail}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; font-weight: 500; color: #475569;">Senha:</td>
+                      <td style="padding: 8px 0; color: #1e293b; font-family: 'Courier New', monospace; font-weight: 700;">${temporaryPassword}</td>
+                    </tr>
+                  </table>
+                </div>
+
+                <!-- Security Warning -->
+                <div style="background-color: #fef3cd; border: 1px solid #fbbf24; border-radius: 6px; padding: 15px; margin: 15px 0 0;">
+                  <p style="margin: 0; font-size: 13px; color: #92400e; line-height: 1.6;">
+                    <strong>⚠️ Importante:</strong> Por favor, altere esta senha no primeiro acesso por questões de segurança.
+                  </p>
+                </div>
+
+                <!-- Access Button -->
+                <div style="text-align: center; margin: 25px 0 0;">
+                  <a href="https://kambafy.com/login" 
+                     style="display: inline-block; background-color: #3b82f6; color: white; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                    Acessar Painel
+                  </a>
+                </div>
+              </div>
+
+              <!-- Benefits -->
+              <div style="padding: 30px; border-top: 1px solid #e2e8f0;">
+                <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">No seu painel você pode:</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 14px; line-height: 1.8;">
+                  <li>Acessar todos os seus produtos comprados</li>
+                  <li>Ver o histórico completo de compras</li>
+                  <li>Atualizar suas informações pessoais</li>
+                  <li>Gerenciar suas preferências</li>
+                </ul>
+              </div>
+
+              <!-- Support -->
+              <div style="padding: 30px; border-top: 1px solid #e2e8f0;">
+                <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">Precisa de Ajuda?</h3>
+                <p style="margin: 0; color: #475569; font-size: 14px;">
+                  <strong>Email:</strong> suporte@kambafy.com
+                </p>
+              </div>
+
+              <!-- Footer -->
+              <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+                <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b;">KAMBAFY</h3>
+                <p style="margin: 0; color: #64748b; font-size: 14px;">
+                  Sua plataforma de produtos digitais
+                </p>
+              </div>
+
+            </div>
+          </body>
+          </html>
+          `;
+
+          const { error: panelEmailError } = await resend.emails.send({
+            from: "Kambafy <noreply@kambafy.com>",
+            to: [normalizedEmail],
+            subject: `🔑 Acesso ao Painel Kambafy - ${customerName}`,
+            html: panelAccessEmailHtml,
+          });
+
+          if (panelEmailError) {
+            console.error('Error sending panel access email:', panelEmailError);
+            // Não lançar erro aqui para não bloquear o fluxo principal
+          } else {
+            console.log('Panel access email sent successfully');
+          }
+        }
 
         if (emailError) {
           console.error('Background task error - sending confirmation email:', emailError);
