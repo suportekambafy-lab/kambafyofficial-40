@@ -274,7 +274,7 @@ export default function UnifiedMembersHub() {
                     const baseUrl = window.location.hostname.includes('localhost') 
                       ? window.location.origin 
                       : 'https://membros.kambafy.com';
-                    window.location.href = `${baseUrl}/area/${area.memberAreaId}`;
+                    window.location.href = `${baseUrl}/area/${area.memberAreaId}?verified=true&email=${encodeURIComponent(studentEmail || '')}`;
                   }}
                 />
               </motion.div>
