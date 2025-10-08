@@ -35,8 +35,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Buscar todos os pedidos completados SEM customer_access
-    const { data: missingAccessOrders, error: fetchError } = await supabase
+    // Buscar todos os pedidos completados
+    const { data: allCompletedOrders, error: fetchError } = await supabase
       .from('orders')
       .select(`
         order_id,
@@ -56,7 +56,6 @@ serve(async (req) => {
         )
       `)
       .eq('status', 'completed')
-      .is('customer_access.id', null)
       .order('created_at', { ascending: false });
 
     if (fetchError) {
@@ -64,7 +63,25 @@ serve(async (req) => {
       throw fetchError;
     }
 
-    console.log(`📦 [RESEND-ACCESS] Found ${missingAccessOrders?.length || 0} orders without access`);
+    console.log(`📦 [RESEND-ACCESS] Found ${allCompletedOrders?.length || 0} completed orders`);
+
+    // Filtrar pedidos que NÃO têm customer_access
+    const missingAccessOrders = [];
+    
+    for (const order of allCompletedOrders || []) {
+      const { data: existingAccess } = await supabase
+        .from('customer_access')
+        .select('id')
+        .eq('customer_email', order.customer_email.toLowerCase().trim())
+        .eq('product_id', order.product_id)
+        .single();
+      
+      if (!existingAccess) {
+        missingAccessOrders.push(order);
+      }
+    }
+
+    console.log(`📦 [RESEND-ACCESS] Found ${missingAccessOrders.length} orders without access`);
 
     let successCount = 0;
     let errorCount = 0;
