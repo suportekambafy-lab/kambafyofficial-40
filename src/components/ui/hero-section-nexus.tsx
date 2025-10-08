@@ -24,10 +24,17 @@ import {
     type TargetAndTransition,
     type Variants,
 } from 'framer-motion';
+import { Button } from "@/components/ui/button";
+import { BookOpen, DollarSign, Users, Shield, Star, Play, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { SubdomainLink } from "@/components/SubdomainLink";
 
 function cn(...classes: (string | undefined | null | boolean)[]): string {
   return classes.filter(Boolean).join(" ");
 }
+
+const professionalWoman = '/lovable-uploads/09933f06-0001-46b9-9e43-62a0ebdd9868.png';
+const professionalMan = '/lovable-uploads/730e6c93-f015-4eb9-a5cb-a980f00fcde0.png';
 
 interface RotatingTextRef {
   next: () => void;
@@ -263,12 +270,6 @@ const ShinyText: React.FC<{ text: string; className?: string }> = ({ text, class
     </span>
 );
 
-const ChevronDownIcon: React.FC<SVGProps<SVGSVGElement>> = (props) => (
-   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3 ml-1 inline-block transition-transform duration-200 group-hover:rotate-180" {...props}>
-     <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-   </svg>
-);
-
 const MenuIcon: React.FC<SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -281,77 +282,22 @@ const CloseIcon: React.FC<SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
-const ExternalLinkIcon: React.FC<SVGProps<SVGSVGElement>> = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 ml-1 opacity-70 group-hover:opacity-100 transition-opacity" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-  </svg>
-);
-
 interface NavLinkProps {
     href?: string;
     children: ReactNode;
-    hasDropdown?: boolean;
     className?: string;
     onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
 }
 
-const NavLink: React.FC<NavLinkProps> = ({ href = "#", children, hasDropdown = false, className = "", onClick }) => (
-   <motion.a
+const NavLink: React.FC<NavLinkProps> = ({ href = "#", children, className = "", onClick }) => (
+   <a
      href={href}
      onClick={onClick}
      className={cn("relative group text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200 flex items-center py-1", className)}
-     whileHover="hover"
    >
      {children}
-     {hasDropdown && <ChevronDownIcon />}
-     {!hasDropdown && (
-         <motion.div
-           className="absolute bottom-[-2px] left-0 right-0 h-[1px] bg-[#0CF2A0]"
-           variants={{ initial: { scaleX: 0, originX: 0.5 }, hover: { scaleX: 1, originX: 0.5 } }}
-           initial="initial"
-           transition={{ duration: 0.3, ease: "easeOut" }}
-         />
-     )}
-   </motion.a>
- );
-
-interface DropdownMenuProps {
-    children: ReactNode;
-    isOpen: boolean;
-}
-
-const DropdownMenu: React.FC<DropdownMenuProps> = ({ children, isOpen }) => (
-   <AnimatePresence>
-     {isOpen && (
-       <motion.div
-         initial={{ opacity: 0, y: 10, scale: 0.95 }}
-         animate={{ opacity: 1, y: 0, scale: 1 }}
-         exit={{ opacity: 0, y: 10, scale: 0.95, transition: { duration: 0.15 } }}
-         transition={{ duration: 0.2, ease: "easeOut" }}
-         className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-56 origin-top z-40"
-       >
-           <div className="bg-[#111111] border border-gray-700/50 rounded-md shadow-xl p-2">
-               {children}
-           </div>
-       </motion.div>
-     )}
-   </AnimatePresence>
-);
-
-interface DropdownItemProps {
-    href?: string;
-    children: ReactNode;
-    icon?: React.ReactElement<SVGProps<SVGSVGElement>>;
-}
-
-const DropdownItem: React.FC<DropdownItemProps> = ({ href = "#", children, icon }) => (
- <a
-   href={href}
-   className="group flex items-center justify-between w-full px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/30 hover:text-white rounded-md transition-colors duration-150"
- >
-   <span>{children}</span>
-   {icon && React.cloneElement(icon, { className: "w-4 h-4 ml-1 opacity-70 group-hover:opacity-100 transition-opacity" })}
- </a>
+     <span className="absolute bottom-[-2px] left-0 right-0 h-[1px] bg-[#0CF2A0] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+   </a>
 );
 
 interface Dot {
@@ -366,6 +312,7 @@ interface Dot {
 }
 
 const InteractiveHero: React.FC = () => {
+   const navigate = useNavigate();
    const canvasRef = useRef<HTMLCanvasElement>(null);
    const animationFrameId = useRef<number | null>(null);
    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -376,6 +323,10 @@ const InteractiveHero: React.FC = () => {
    useMotionValueEvent(scrollY, "change", (latest) => {
        setIsScrolled(latest > 10);
    });
+
+   const handleAuthNavigation = (mode: 'login' | 'signup') => {
+     navigate(`/auth?mode=${mode}`);
+   };
 
    const dotsRef = useRef<Dot[]>([]);
    const gridRef = useRef<Record<string, number[]>>({});
@@ -621,12 +572,13 @@ const InteractiveHero: React.FC = () => {
     };
 
   return (
-    <div className="pt-[100px] relative bg-[#111111] text-gray-300 min-h-screen flex flex-col overflow-x-hidden">
-        <canvas ref={canvasRef} className="absolute inset-0 z-0 pointer-events-none opacity-80" />
-        <div className="absolute inset-0 z-1 pointer-events-none" style={{
+    <div className="relative bg-[#111111] text-gray-300 overflow-x-hidden">
+        <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none opacity-80" />
+        <div className="fixed inset-0 z-1 pointer-events-none" style={{
             background: 'linear-gradient(to bottom, transparent 0%, #111111 90%), radial-gradient(ellipse at center, transparent 40%, #111111 95%)'
         }}></div>
 
+        {/* Header */}
         <motion.header
             variants={headerVariants}
             initial="top"
@@ -636,47 +588,32 @@ const InteractiveHero: React.FC = () => {
         >
             <nav className="flex justify-between items-center max-w-screen-xl mx-auto h-[70px]">
                 <div className="flex items-center flex-shrink-0">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#0CF2A0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M2 17L12 22L22 17" stroke="#0CF2A0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M2 12L12 17L22 12" stroke="#0CF2A0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span className="text-xl font-bold text-white ml-2">Kambafy</span>
+                    <img 
+                      src="/kambafy-logo-new.svg" 
+                      alt="Kambafy" 
+                      className="h-16 w-auto"
+                    />
                 </div>
 
                 <div className="hidden md:flex items-center justify-center flex-grow space-x-6 lg:space-x-8 px-4">
-                    <NavLink href="#">Produtos</NavLink>
-                    <NavLink href="#">Funcionalidades</NavLink>
-
-                    <div
-                        className="relative"
-                        onMouseEnter={() => setOpenDropdown('resources')}
-                        onMouseLeave={() => setOpenDropdown(null)}
-                    >
-                        <NavLink href="#" hasDropdown>Recursos</NavLink>
-                        <DropdownMenu isOpen={openDropdown === 'resources'}>
-                            <DropdownItem href="#" icon={<ExternalLinkIcon/>}>Blog</DropdownItem>
-                            <DropdownItem href="#">Guias</DropdownItem>
-                            <DropdownItem href="#">Central de Ajuda</DropdownItem>
-                            <DropdownItem href="#">API</DropdownItem>
-                        </DropdownMenu>
-                    </div>
-
-                    <NavLink href="#">Preços</NavLink>
+                    <NavLink href="#recursos">Recursos</NavLink>
+                    <NavLink href="#como-funciona">Como Funciona</NavLink>
+                    <NavLink href="#precos">Preços</NavLink>
+                    <NavLink href="#sobre">Sobre</NavLink>
                 </div>
 
                 <div className="flex items-center flex-shrink-0 space-x-4 lg:space-x-6">
-                    <NavLink href="#" className="hidden md:inline-block">Entrar</NavLink>
+                    <button onClick={() => handleAuthNavigation('login')} className="hidden md:inline-block text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200">Entrar</button>
 
-                    <motion.a
-                        href="#"
+                    <motion.button
+                        onClick={() => handleAuthNavigation('signup')}
                         className="bg-[#0CF2A0] text-[#111111] px-4 py-[6px] rounded-md text-sm font-semibold hover:bg-opacity-90 transition-colors duration-200 whitespace-nowrap shadow-sm hover:shadow-md"
                         whileHover={{ scale: 1.03, y: -1 }}
                         whileTap={{ scale: 0.97 }}
                         transition={{ type: "spring", stiffness: 400, damping: 15 }}
                     >
                         Começar Agora
-                    </motion.a>
+                    </motion.button>
 
                     <motion.button
                         className="md:hidden text-gray-300 hover:text-white z-50"
@@ -697,39 +634,40 @@ const InteractiveHero: React.FC = () => {
                         className="md:hidden absolute top-full left-0 right-0 bg-[#111111]/95 backdrop-blur-sm shadow-lg py-4 border-t border-gray-800/50"
                     >
                         <div className="flex flex-col items-center space-y-4 px-6">
-                            <NavLink href="#" onClick={() => setIsMobileMenuOpen(false)}>Produtos</NavLink>
-                            <NavLink href="#" onClick={() => setIsMobileMenuOpen(false)}>Funcionalidades</NavLink>
-                            <NavLink href="#" onClick={() => setIsMobileMenuOpen(false)}>Recursos</NavLink>
-                            <NavLink href="#" onClick={() => setIsMobileMenuOpen(false)}>Preços</NavLink>
+                            <a href="#recursos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Recursos</a>
+                            <a href="#como-funciona" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Como Funciona</a>
+                            <a href="#precos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Preços</a>
+                            <a href="#sobre" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Sobre</a>
                             <hr className="w-full border-t border-gray-700/50 my-2"/>
-                            <NavLink href="#" onClick={() => setIsMobileMenuOpen(false)}>Entrar</NavLink>
+                            <button onClick={() => handleAuthNavigation('login')} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Entrar</button>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
         </motion.header>
 
-        <main className="flex-grow flex flex-col items-center justify-center text-center px-4 pt-8 pb-16 relative z-10">
-
+        {/* Hero Section */}
+        <main className="relative z-10">
+          <section className="flex flex-col items-center justify-center text-center px-4 pt-32 pb-16">
             <motion.div
                 variants={bannerVariants}
                 initial="hidden"
                 animate="visible"
                 className="mb-6"
             >
-                <ShinyText text="Plataforma #1 para Criadores Digitais" className="bg-[#1a1a1a] border border-gray-700 text-[#0CF2A0] px-4 py-1 rounded-full text-xs sm:text-sm font-medium cursor-pointer hover:border-[#0CF2A0]/50 transition-colors" />
+                <ShinyText text="🌍 Plataforma Lusófona de Infoprodutos" className="bg-[#1a1a1a] border border-gray-700 text-[#0CF2A0] px-4 py-1 rounded-full text-xs sm:text-sm font-medium cursor-pointer hover:border-[#0CF2A0]/50 transition-colors" />
             </motion.div>
 
             <motion.h1
                 variants={headlineVariants}
                 initial="hidden"
                 animate="visible"
-                className="text-4xl sm:text-5xl lg:text-[64px] font-semibold text-white leading-tight max-w-4xl mb-4"
+                className="text-4xl sm:text-5xl lg:text-[64px] font-bold text-white leading-tight max-w-4xl mb-4"
             >
-                Venda seus produtos<br />{' '}
-                <span className="inline-block h-[1.2em] sm:h-[1.2em] lg:h-[1.2em] overflow-hidden align-bottom">
+                TRANSFORME SEU<br />
+                <span className="inline-block h-[1.2em] overflow-hidden align-bottom">
                     <RotatingText
-                        texts={['digitais', 'criativos', 'exclusivos', 'incríveis', 'únicos']}
+                        texts={['CONHECIMENTO', 'TALENTO', 'EXPERTISE', 'PAIXÃO', 'CONTEÚDO']}
                         mainClassName="text-[#0CF2A0] mx-1"
                         staggerFrom={"last"}
                         initial={{ y: "-100%", opacity: 0 }}
@@ -742,7 +680,8 @@ const InteractiveHero: React.FC = () => {
                         auto={true}
                         loop={true}
                     />
-                </span>
+                </span>{' '}
+                EM RENDA
             </motion.h1>
 
             <motion.p
@@ -751,76 +690,243 @@ const InteractiveHero: React.FC = () => {
                 animate="visible"
                 className="text-base sm:text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-8"
             >
-                Crie, gerencie e venda seus cursos, e-books e produtos digitais em uma única plataforma. Tudo que você precisa para construir seu negócio online.
+                A Kambafy é uma plataforma digital inovadora que permite a criadores, educadores, marcas e especialistas em toda a lusofonia partilharem conhecimento, criarem infoprodutos e transformarem a sua audiência em rendimento real.
             </motion.p>
 
-            <motion.form
+            <motion.div
                 variants={formVariants}
                 initial="hidden"
                 animate="visible"
-                className="flex flex-col sm:flex-row items-center justify-center gap-2 w-full max-w-md mx-auto mb-3"
-                onSubmit={(e: FormEvent<HTMLFormElement>) => e.preventDefault()}
+                className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto mb-3"
             >
-                <input
-                    type="email"
-                    placeholder="Seu melhor email"
-                    required
-                    aria-label="Email"
-                    className="flex-grow w-full sm:w-auto px-4 py-2 rounded-md bg-[#2a2a2a] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0CF2A0] focus:border-transparent transition-all"
-                />
                 <motion.button
-                    type="submit"
-                    className="w-full sm:w-auto bg-[#0CF2A0] text-[#111111] px-5 py-2 rounded-md text-sm font-semibold hover:bg-opacity-90 transition-colors duration-200 whitespace-nowrap shadow-sm hover:shadow-md flex-shrink-0"
+                    onClick={() => handleAuthNavigation('signup')}
+                    className="w-full sm:w-auto bg-[#0CF2A0] text-[#111111] px-8 py-3 rounded-md text-base font-semibold hover:bg-opacity-90 transition-colors duration-200 shadow-lg hover:shadow-xl flex-shrink-0"
                     whileHover={{ scale: 1.03, y: -1 }}
                     whileTap={{ scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 400, damping: 15 }}
                 >
-                    Começar Gratuitamente
+                    Começar a Vender
                 </motion.button>
-            </motion.form>
+                <motion.button
+                    className="w-full sm:w-auto bg-transparent border border-[#0CF2A0] text-[#0CF2A0] px-8 py-3 rounded-md text-base font-semibold hover:bg-[#0CF2A0]/10 transition-colors duration-200 flex items-center justify-center gap-2"
+                    whileHover={{ scale: 1.03, y: -1 }}
+                    whileTap={{ scale: 0.97 }}
+                >
+                    <Play className="w-4 h-4" />
+                    Ver Como Funciona
+                </motion.button>
+            </motion.div>
 
             <motion.p
                 variants={trialTextVariants}
                 initial="hidden"
                 animate="visible"
-                className="text-xs text-gray-500 mb-10"
+                className="text-xs text-gray-500 mb-16"
             >
-                Teste grátis por 14 dias
+                Sem custos iniciais • Cancele quando quiser
             </motion.p>
-
-            <motion.div
-                variants={worksWithVariants}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col items-center justify-center space-y-2 mb-10"
-            >
-                <span className="text-xs uppercase text-gray-500 tracking-wider font-medium">Confiado por</span>
-                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-gray-400">
-                    <span className="flex items-center whitespace-nowrap">+10.000 criadores</span>
-                    <span className="flex items-center whitespace-nowrap">•</span>
-                    <span className="flex items-center whitespace-nowrap">+50.000 produtos</span>
-                    <span className="flex items-center whitespace-nowrap">•</span>
-                    <span className="flex items-center whitespace-nowrap">Pagamentos seguros</span>
-                </div>
-            </motion.div>
 
             <motion.div
                 variants={imageVariants}
                 initial="hidden"
                 animate="visible"
-                className="w-full max-w-4xl mx-auto px-4 sm:px-0"
+                className="w-full max-w-5xl mx-auto px-4 sm:px-0"
             >
                 <img
-                    src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop"
-                    alt="Dashboard do Kambafy mostrando análises e vendas"
-                    width={1024}
-                    height={640}
-                    className="w-full h-auto object-contain rounded-lg shadow-xl border border-gray-700/50"
+                    src="/lovable-uploads/be22ac17-d2d9-4d84-8ffa-3ed3d91cfaed.png"
+                    alt="Plataforma Kambafy"
+                    className="w-full h-auto object-cover rounded-lg shadow-2xl border border-gray-700/50"
                     loading="lazy"
                 />
             </motion.div>
-        </main>
+          </section>
 
+          {/* Features Section */}
+          <section id="recursos" className="py-24 px-6 relative z-10">
+              <div className="mx-auto max-w-7xl">
+                  <div className="text-center mb-16">
+                      <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
+                          Tudo que Você Precisa para{' '}
+                          <span className="text-[#0CF2A0]">Ter Sucesso</span>
+                      </h2>
+                      <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                          Ferramentas poderosas e simples para transformar seu conhecimento em um negócio próspero
+                      </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {[
+                          { icon: <BookOpen className="w-8 h-8" />, title: "Order Bump", description: "Aumente suas vendas com ofertas complementares no momento da compra." },
+                          { icon: <DollarSign className="w-8 h-8" />, title: "Checkout Personalizado", description: "Customize completamente sua página de checkout para maximizar conversões." },
+                          { icon: <Users className="w-8 h-8" />, title: "Pixel", description: "Integre Facebook Pixel e outras ferramentas de tracking para otimizar campanhas." },
+                          { icon: <Shield className="w-8 h-8" />, title: "Afiliação", description: "Sistema completo de afiliados para expandir suas vendas através de parceiros." }
+                      ].map((feature, index) => (
+                          <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-6 hover:border-[#0CF2A0]/50 transition-all duration-300">
+                              <div className="text-[#0CF2A0] mb-4">{feature.icon}</div>
+                              <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+                              <p className="text-gray-400">{feature.description}</p>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </section>
+
+          {/* Stats Section */}
+          <section className="py-16 px-6 bg-[#0CF2A0]/5 relative z-10">
+              <div className="mx-auto max-w-7xl">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                      {[
+                          { number: "1000+", label: "Criadores Ativos" },
+                          { number: "15k+", label: "Alunos Satisfeitos" },
+                          { number: "500+", label: "Cursos Disponíveis" },
+                          { number: "98%", label: "Satisfação dos Usuários" }
+                      ].map((stat, index) => (
+                          <div key={index}>
+                              <div className="text-4xl font-bold text-[#0CF2A0] mb-2">{stat.number}</div>
+                              <div className="text-gray-400">{stat.label}</div>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </section>
+
+          {/* Testimonials Section */}
+          <section className="py-24 px-6 relative z-10">
+              <div className="mx-auto max-w-7xl">
+                  <div className="text-center mb-16">
+                      <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
+                          O que Dizem Nossos{' '}
+                          <span className="text-[#0CF2A0]">Criadores</span>
+                      </h2>
+                      <p className="text-lg text-gray-400">
+                          Histórias reais de pessoas que transformaram suas vidas com a Kambafy
+                      </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      {[
+                          { name: "Maria Santos", role: "Criadora de Conteúdo", content: "A Kambafy mudou minha vida! Consegui monetizar meu conhecimento em marketing digital e hoje tenho uma renda extra consistente.", image: professionalWoman },
+                          { name: "João Pedro", role: "Professor de Inglês", content: "Plataforma incrível! Muito fácil de usar e o suporte é excepcional. Recomendo para todos os educadores.", image: professionalMan },
+                          { name: "Ana Luiza", role: "Coach de Vida", content: "O que mais me impressiona é a qualidade da plataforma e como ela foi pensada para o mercado angolano. Parabéns!", image: professionalWoman }
+                      ].map((testimonial, index) => (
+                          <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-6">
+                              <div className="flex items-center mb-4">
+                                  <img src={testimonial.image} alt={testimonial.name} className="w-12 h-12 rounded-full object-cover mr-4" />
+                                  <div className="flex">
+                                      {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-[#0CF2A0] fill-current" />)}
+                                  </div>
+                              </div>
+                              <p className="text-gray-400 mb-4 italic">"{testimonial.content}"</p>
+                              <div>
+                                  <h4 className="font-semibold text-white">{testimonial.name}</h4>
+                                  <p className="text-sm text-gray-500">{testimonial.role}</p>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </section>
+
+          {/* About Section */}
+          <section id="sobre" className="py-24 px-6 bg-[#0CF2A0]/5 relative z-10">
+              <div className="mx-auto max-w-7xl">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                      <div>
+                          <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
+                              Sobre a{' '}
+                              <span className="text-[#0CF2A0]">Kambafy</span>
+                          </h2>
+                          <p className="text-lg text-gray-400 mb-6">
+                              Somos uma startup angolana dedicada a democratizar o acesso ao conhecimento e 
+                              empoderar criadores de conteúdo em toda Angola e países lusófonos.
+                          </p>
+                          <p className="text-lg text-gray-400 mb-8">
+                              Nossa missão é criar uma ponte entre quem tem conhecimento e quem quer aprender, 
+                              proporcionando oportunidades de crescimento pessoal e profissional para todos.
+                          </p>
+                          <div className="space-y-4">
+                              {["Plataforma 100% nacional", "Pagamentos em multimoedas", "Suporte em português"].map((item, index) => (
+                                  <div key={index} className="flex items-center space-x-3">
+                                      <div className="w-2 h-2 bg-[#0CF2A0] rounded-full"></div>
+                                      <span className="text-gray-300">{item}</span>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                      <div className="relative">
+                          <img src={professionalMan} alt="Profissional" className="rounded-lg shadow-xl object-cover w-full h-96" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#0CF2A0]/30 to-transparent rounded-lg"></div>
+                      </div>
+                  </div>
+              </div>
+          </section>
+
+          {/* CTA Section */}
+          <section className="py-24 px-6 relative z-10">
+              <div className="mx-auto max-w-4xl text-center">
+                  <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
+                      Pronto para{' '}
+                      <span className="text-[#0CF2A0]">Começar?</span>
+                  </h2>
+                  <p className="text-lg text-gray-400 mb-8">
+                      Cadastre-se gratuitamente e comece a monetizar seu conhecimento hoje mesmo
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <Button 
+                          size="lg" 
+                          className="bg-[#0CF2A0] hover:bg-[#0CF2A0]/90 text-[#111111] px-8 text-lg"
+                          onClick={() => handleAuthNavigation('signup')}
+                      >
+                          Criar Conta Grátis
+                          <ArrowRight className="ml-2 w-5 h-5" />
+                      </Button>
+                      <Button size="lg" variant="outline" className="border-[#0CF2A0] text-[#0CF2A0] hover:bg-[#0CF2A0]/10 px-8 text-lg">
+                          Falar com Especialista
+                      </Button>
+                  </div>
+              </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="bg-[#0a0a0a] text-gray-300 py-16 px-6 relative z-10 border-t border-gray-800">
+              <div className="mx-auto max-w-7xl">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                      <div>
+                          <img src="/kambafy-logo-white.png" alt="Kambafy" className="h-16 w-auto mb-4" />
+                          <p className="text-gray-500 text-sm">A maior plataforma Lusófona de infoprodutos</p>
+                      </div>
+                      <div>
+                          <h4 className="font-semibold text-white mb-4">Plataforma</h4>
+                          <ul className="space-y-2 text-sm">
+                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Como Funciona</a></li>
+                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Preços</a></li>
+                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Recursos</a></li>
+                          </ul>
+                      </div>
+                      <div>
+                          <h4 className="font-semibold text-white mb-4">Suporte</h4>
+                          <ul className="space-y-2 text-sm">
+                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Central de Ajuda</a></li>
+                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Contacto</a></li>
+                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Status</a></li>
+                          </ul>
+                      </div>
+                      <div>
+                          <h4 className="font-semibold text-white mb-4">Legal</h4>
+                          <ul className="space-y-2 text-sm">
+                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Privacidade</a></li>
+                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Termos</a></li>
+                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Cookies</a></li>
+                          </ul>
+                      </div>
+                  </div>
+                  <div className="border-t border-gray-800 pt-8 text-center">
+                      <p className="text-gray-500 text-sm">© 2025 Kambafy. Todos os direitos reservados. Feito com ❤️ em Angola.</p>
+                  </div>
+              </div>
+          </footer>
+        </main>
     </div>
   );
 };
