@@ -170,11 +170,17 @@ const App = () => {
                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                         
                         {/* Member Area Routes - Modern Authentication System */}
-                            {/* Nova estrutura moderna de área de membros */}
+                            {/* Hub unificado de cursos (sem ID) */}
+                            <Route path="/members/login" element={<OptimizedRoutes.UnifiedMembersLogin />} />
+                            <Route path="/members/dashboard" element={<OptimizedRoutes.UnifiedMembersHub />} />
+                            
+                            {/* Nova estrutura moderna de área de membros (com ID) */}
                             <Route path="/members/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
                             <Route path="/members/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
                             
                             {/* Rotas para subdomínio membros (sem prefixo /members) */}
+                            <Route path="/login" element={<OptimizedRoutes.UnifiedMembersLogin />} />
+                            <Route path="/dashboard" element={<OptimizedRoutes.UnifiedMembersHub />} />
                             <Route path="/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
                             <Route path="/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
                         <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />

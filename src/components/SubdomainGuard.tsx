@@ -104,7 +104,9 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     }
     
     // QUINTA VERIFICAÇÃO: ÁREA DE MEMBROS (apenas para produção kambafy.com)
-    if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/')) {
+    if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/') || 
+        currentPath === '/dashboard' || currentPath === '/members/dashboard' ||
+        (currentPath === '/members/login' && !currentPath.includes('/:id'))) {
       console.log('🎓 SubdomainGuard: DETECTADA rota de área de membros em PRODUÇÃO', {
         currentPath,
         currentSubdomain,
@@ -178,15 +180,16 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         }
       }
     } else if (currentSubdomain === 'membros') {
-      // membros.kambafy.com: permitir apenas rotas de área de membros (/login/ e /area/)
+      // membros.kambafy.com: permitir rotas de área de membros (/login, /dashboard, /login/:id, /area/:id)
       console.log('🎓 SubdomainGuard: Verificando subdomínio MEMBROS', {
         currentPath,
-        isLoginRoute: currentPath.startsWith('/login/'),
-        isAreaRoute: currentPath.startsWith('/area/'),
-        isValidMemberRoute: (currentPath.startsWith('/login/') || currentPath.startsWith('/area/'))
+        isLoginRoute: currentPath.startsWith('/login'),
+        isAreaRoute: currentPath.startsWith('/area'),
+        isDashboard: currentPath === '/dashboard',
+        isValidMemberRoute: (currentPath.startsWith('/login') || currentPath.startsWith('/area') || currentPath === '/dashboard')
       });
       
-      if (!(currentPath.startsWith('/login/') || currentPath.startsWith('/area/'))) {
+      if (!(currentPath.startsWith('/login') || currentPath.startsWith('/area') || currentPath === '/dashboard')) {
         console.log('❌ SubdomainGuard: Rota inválida para subdomínio membros', {
           currentPath,
           message: 'Redirecionando para subdomínio apropriado'
