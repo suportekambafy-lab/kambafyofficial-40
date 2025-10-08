@@ -724,7 +724,7 @@ const InteractiveHero: React.FC = () => {
                 animate="visible"
                 className="text-xs text-gray-500 mb-16"
             >
-                Sem custos iniciais • Cancele quando quiser
+                Sem custos fixos • Sem mensalidades
             </motion.p>
           </section>
 
