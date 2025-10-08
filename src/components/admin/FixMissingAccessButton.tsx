@@ -19,19 +19,29 @@ export function FixMissingAccessButton() {
   const handleFixAccess = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('fix-missing-access');
+      toast.info('Processando...', {
+        description: 'Buscando pedidos sem acesso e enviando emails...'
+      });
+
+      const { data, error } = await supabase.functions.invoke('resend-missing-access-emails');
       
       if (error) throw error;
       
-      setResults(data.results);
+      setResults(data);
       setShowResults(true);
       
-      toast.success(`✅ Acessos corrigidos!`, {
-        description: `${data.results.accessCreated} acessos criados, ${data.results.alreadyHadAccess} já existentes`
-      });
+      if (data.success) {
+        toast.success(`✅ Emails enviados!`, {
+          description: `${data.emails_sent} emails enviados de ${data.total_orders} pedidos`
+        });
+      } else {
+        toast.warning('Concluído com avisos', {
+          description: data.message || 'Alguns emails não foram enviados'
+        });
+      }
     } catch (error: any) {
-      console.error('Erro ao corrigir acessos:', error);
-      toast.error('Erro ao corrigir acessos', {
+      console.error('Erro ao enviar emails:', error);
+      toast.error('Erro ao enviar emails', {
         description: error.message
       });
     } finally {
@@ -49,12 +59,12 @@ export function FixMissingAccessButton() {
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Corrigindo acessos...
+            Enviando emails...
           </>
         ) : (
           <>
             <CheckCircle2 className="mr-2 h-4 w-4" />
-            Corrigir Acessos Faltantes
+            Enviar Emails Faltantes
           </>
         )}
       </Button>
@@ -62,9 +72,9 @@ export function FixMissingAccessButton() {
       <Dialog open={showResults} onOpenChange={setShowResults}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Resultados da Correção</DialogTitle>
+            <DialogTitle>Resultados do Envio de Emails</DialogTitle>
             <DialogDescription>
-              Correção de acessos concluída
+              Envio de emails de acesso concluído
             </DialogDescription>
           </DialogHeader>
           
@@ -72,36 +82,37 @@ export function FixMissingAccessButton() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
-                  <div className="text-sm text-blue-600 font-medium">Total Processado</div>
-                  <div className="text-2xl font-bold text-blue-700">{results.total}</div>
+                  <div className="text-sm text-blue-600 font-medium">Total de Pedidos</div>
+                  <div className="text-2xl font-bold text-blue-700">{results.total_orders || 0}</div>
                 </div>
                 
                 <div className="p-4 bg-green-50 rounded-lg">
-                  <div className="text-sm text-green-600 font-medium">Acessos Criados</div>
-                  <div className="text-2xl font-bold text-green-700">{results.accessCreated}</div>
+                  <div className="text-sm text-green-600 font-medium">Emails Enviados</div>
+                  <div className="text-2xl font-bold text-green-700">{results.emails_sent || 0}</div>
                 </div>
                 
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm text-gray-600 font-medium">Já Existentes</div>
-                  <div className="text-2xl font-bold text-gray-700">{results.alreadyHadAccess}</div>
-                </div>
-                
-                <div className="p-4 bg-red-50 rounded-lg">
+                <div className="p-4 bg-red-50 rounded-lg col-span-2">
                   <div className="text-sm text-red-600 font-medium">Erros</div>
-                  <div className="text-2xl font-bold text-red-700">{results.errors?.length || 0}</div>
+                  <div className="text-2xl font-bold text-red-700">{results.errors || 0}</div>
                 </div>
               </div>
 
-              {results.errors && results.errors.length > 0 && (
+              {results.error_details && results.error_details.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="font-medium text-sm mb-2">Erros:</h4>
+                  <h4 className="font-medium text-sm mb-2">Detalhes dos erros:</h4>
                   <div className="max-h-40 overflow-y-auto space-y-1">
-                    {results.errors.map((err: any, idx: number) => (
+                    {results.error_details.map((err: any, idx: number) => (
                       <div key={idx} className="text-xs text-red-600 p-2 bg-red-50 rounded">
-                        {err.order_id}: {err.error}
+                        {err.email}: {err.error}
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {results.message && (
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-700">{results.message}</p>
                 </div>
               )}
             </div>
