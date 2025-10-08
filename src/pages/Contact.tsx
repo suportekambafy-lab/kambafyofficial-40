@@ -1,9 +1,9 @@
 import { SEO } from "@/components/SEO";
-import { Mail, MessageSquare, Phone, Send } from "lucide-react";
+import { PageLayout } from "@/components/PageLayout";
+import { Mail, MessageSquare, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { SubdomainLink } from "@/components/SubdomainLink";
 
 const Contact = () => {
   return (
@@ -12,148 +12,86 @@ const Contact = () => {
         title="Contato | Kambafy"
         description="Entre em contato conosco. Estamos aqui para ajudar."
       />
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-        {/* Header */}
-        <header className="border-b border-white/10 backdrop-blur-sm bg-black/20">
-          <div className="mx-auto max-w-7xl px-6 py-6">
-            <div className="flex items-center justify-between">
-              <SubdomainLink to="/" className="flex items-center">
-                <img 
-                  src="/kambafy-logo-white.png" 
-                  alt="Kambafy" 
-                  className="h-8"
-                />
-              </SubdomainLink>
-              <Button asChild variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                <SubdomainLink to="/">
-                  Voltar ao Início
-                </SubdomainLink>
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <section className="py-20 px-6">
-          <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
+      <PageLayout title="Contato">
+        <div className="grid md:grid-cols-2 gap-12">
+          <div>
+            <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               Fale Conosco
-            </h1>
-            <p className="text-xl text-gray-400 animate-fade-in">
-              Estamos aqui para ajudar você
-            </p>
-          </div>
-        </section>
-
-        {/* Contact Section */}
-        <section className="py-16 px-6">
-          <div className="mx-auto max-w-6xl">
-            <div className="grid md:grid-cols-2 gap-12">
-              {/* Contact Info */}
-              <div className="space-y-8">
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Mail className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white mb-2">Email</h3>
-                      <p className="text-gray-400">contato@kambafy.com</p>
-                    </div>
-                  </div>
+            </h2>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800">
+                <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-lg">
+                  <Mail className="w-6 h-6 text-white" />
                 </div>
-
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-gradient-to-br from-blue-500 to-cyan-500 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Phone className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white mb-2">Telefone</h3>
-                      <p className="text-gray-400">+244 123 456 789</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-gradient-to-br from-green-500 to-emerald-500 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <MessageSquare className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white mb-2">Chat Online</h3>
-                      <p className="text-gray-400">Disponível de segunda a sexta, 9h às 18h</p>
-                    </div>
-                  </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Email</h3>
+                  <p className="text-muted-foreground">contato@kambafy.com</p>
                 </div>
               </div>
 
-              {/* Contact Form */}
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                <form className="space-y-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                      Nome
-                    </label>
-                    <Input 
-                      id="name" 
-                      placeholder="Seu nome completo" 
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
-                    />
-                  </div>
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border border-blue-200 dark:border-blue-800">
+                <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-3 rounded-lg">
+                  <Phone className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Telefone</h3>
+                  <p className="text-muted-foreground">+244 123 456 789</p>
+                </div>
+              </div>
 
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                      Email
-                    </label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      placeholder="seu@email.com" 
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
-                      Assunto
-                    </label>
-                    <Input 
-                      id="subject" 
-                      placeholder="Como podemos ajudar?" 
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
-                      Mensagem
-                    </label>
-                    <Textarea 
-                      id="message" 
-                      placeholder="Descreva sua dúvida ou solicitação..." 
-                      rows={5}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0">
-                    Enviar Mensagem
-                    <Send className="ml-2 w-4 h-4" />
-                  </Button>
-                </form>
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800">
+                <div className="bg-gradient-to-br from-green-500 to-emerald-500 p-3 rounded-lg">
+                  <MessageSquare className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Chat Online</h3>
+                  <p className="text-muted-foreground">Disponível de segunda a sexta, 9h às 18h</p>
+                </div>
               </div>
             </div>
           </div>
-        </section>
 
-        {/* Footer */}
-        <footer className="border-t border-white/10 py-8 mt-20">
-          <div className="mx-auto max-w-7xl px-6 text-center text-gray-500">
-            <p>© 2024 Kambafy. Todos os direitos reservados.</p>
+          <div className="border rounded-2xl p-8 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50">
+            <form className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium mb-2">
+                  Nome
+                </label>
+                <Input id="name" placeholder="Seu nome completo" />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium mb-2">
+                  Email
+                </label>
+                <Input id="email" type="email" placeholder="seu@email.com" />
+              </div>
+
+              <div>
+                <label htmlFor="subject" className="block text-sm font-medium mb-2">
+                  Assunto
+                </label>
+                <Input id="subject" placeholder="Como podemos ajudar?" />
+              </div>
+
+              <div>
+                <label htmlFor="message" className="block text-sm font-medium mb-2">
+                  Mensagem
+                </label>
+                <Textarea 
+                  id="message" 
+                  placeholder="Descreva sua dúvida ou solicitação..." 
+                  rows={5}
+                />
+              </div>
+
+              <Button type="submit" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg">
+                Enviar Mensagem
+              </Button>
+            </form>
           </div>
-        </footer>
-      </div>
+        </div>
+      </PageLayout>
     </>
   );
 };

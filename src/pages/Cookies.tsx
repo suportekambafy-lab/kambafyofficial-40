@@ -1,7 +1,7 @@
 import { SEO } from "@/components/SEO";
-import { SubdomainLink } from "@/components/SubdomainLink";
-import { Button } from "@/components/ui/button";
+import { PageLayout } from "@/components/PageLayout";
 import { Cookie } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Cookies = () => {
   return (
@@ -10,142 +10,80 @@ const Cookies = () => {
         title="Política de Cookies | Kambafy"
         description="Entenda como usamos cookies e tecnologias similares na plataforma."
       />
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-        {/* Header */}
-        <header className="border-b border-white/10 backdrop-blur-sm bg-black/20">
-          <div className="mx-auto max-w-7xl px-6 py-6">
-            <div className="flex items-center justify-between">
-              <SubdomainLink to="/" className="flex items-center">
-                <img 
-                  src="/kambafy-logo-white.png" 
-                  alt="Kambafy" 
-                  className="h-8"
-                />
-              </SubdomainLink>
-              <Button asChild variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                <SubdomainLink to="/">
-                  Voltar ao Início
-                </SubdomainLink>
-              </Button>
+      <PageLayout title="Política de Cookies">
+        <div className="prose prose-gray max-w-none space-y-6">
+          <div className="flex items-center gap-4 mb-8 p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 border border-orange-200 dark:border-orange-800">
+            <div className="bg-gradient-to-br from-orange-500 to-red-500 p-4 rounded-xl">
+              <Cookie className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Última atualização: Janeiro de 2024</p>
+              <p className="text-lg font-medium">
+                Saiba como usamos cookies para melhorar sua experiência.
+              </p>
             </div>
           </div>
-        </header>
 
-        {/* Hero Section */}
-        <section className="py-20 px-6">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="flex justify-center mb-6">
-              <div className="bg-gradient-to-br from-orange-500 to-red-500 w-20 h-20 rounded-2xl flex items-center justify-center">
-                <Cookie className="w-10 h-10 text-white" />
-              </div>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
-              Política de Cookies
-            </h1>
-            <p className="text-gray-400">Última atualização: Janeiro de 2024</p>
-          </div>
-        </section>
+          <section className="p-6 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800">
+            <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              1. O que são Cookies?
+            </h2>
+            <p className="text-muted-foreground">
+              Cookies são pequenos arquivos de texto armazenados em seu dispositivo quando você visita um website. Eles nos ajudam a personalizar sua experiência.
+            </p>
+          </section>
 
-        {/* Content Section */}
-        <section className="py-16 px-6">
-          <div className="mx-auto max-w-4xl">
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 md:p-12 space-y-10">
-              <div>
-                <h2 className="text-2xl font-semibold text-white mb-4">1. O que são Cookies?</h2>
-                <p className="text-gray-400 leading-relaxed">
-                  Cookies são pequenos arquivos de texto armazenados em seu dispositivo quando você visita um website. Eles nos ajudam a entender como você usa nossa plataforma e a personalizar sua experiência.
+          <section className="p-6 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border border-blue-200 dark:border-blue-800">
+            <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              2. Tipos de Cookies
+            </h2>
+            <div className="space-y-4">
+              <div className="p-4 bg-white/50 dark:bg-gray-900/50 rounded-lg border">
+                <h3 className="text-lg font-medium mb-2">Cookies Essenciais</h3>
+                <p className="text-sm text-muted-foreground">
+                  Necessários para o funcionamento básico: autenticação, segurança, preferências.
                 </p>
               </div>
-
-              <div>
-                <h2 className="text-2xl font-semibold text-white mb-4">2. Tipos de Cookies</h2>
-                <div className="space-y-6">
-                  <div className="bg-white/5 rounded-xl p-6 border border-white/5">
-                    <h3 className="text-lg font-semibold text-white mb-3">Cookies Essenciais</h3>
-                    <p className="text-gray-400 mb-3">Necessários para o funcionamento básico da plataforma.</p>
-                    <ul className="list-disc list-inside space-y-2 text-gray-400">
-                      <li>Autenticação e segurança</li>
-                      <li>Preferências de idioma</li>
-                      <li>Carrinho de compras</li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-white/5 rounded-xl p-6 border border-white/5">
-                    <h3 className="text-lg font-semibold text-white mb-3">Cookies de Performance</h3>
-                    <p className="text-gray-400 mb-3">Coletam informações sobre como você usa nosso site.</p>
-                    <ul className="list-disc list-inside space-y-2 text-gray-400">
-                      <li>Páginas mais visitadas</li>
-                      <li>Tempo gasto na plataforma</li>
-                      <li>Detecção de erros</li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-white/5 rounded-xl p-6 border border-white/5">
-                    <h3 className="text-lg font-semibold text-white mb-3">Cookies de Funcionalidade</h3>
-                    <p className="text-gray-400 mb-3">Permitem lembrar suas escolhas e personalizar sua experiência.</p>
-                    <ul className="list-disc list-inside space-y-2 text-gray-400">
-                      <li>Configurações de interface</li>
-                      <li>Histórico de navegação</li>
-                      <li>Conteúdo personalizado</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h2 className="text-2xl font-semibold text-white mb-4">3. Cookies de Terceiros</h2>
-                <p className="text-gray-400 leading-relaxed mb-4">
-                  Também usamos cookies de parceiros confiáveis para melhorar nossos serviços:
-                </p>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/5">
-                    <h4 className="font-semibold text-white mb-2">Google Analytics</h4>
-                    <p className="text-sm text-gray-400">Análise de tráfego e comportamento</p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/5">
-                    <h4 className="font-semibold text-white mb-2">Stripe</h4>
-                    <p className="text-sm text-gray-400">Processamento seguro de pagamentos</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h2 className="text-2xl font-semibold text-white mb-4">4. Gerenciar Cookies</h2>
-                <p className="text-gray-400 leading-relaxed mb-4">
-                  Você pode controlar e gerenciar cookies através das configurações do seu navegador:
-                </p>
-                <ul className="list-disc list-inside space-y-2 text-gray-400">
-                  <li>Chrome: Configurações → Privacidade e segurança → Cookies</li>
-                  <li>Firefox: Preferências → Privacidade e segurança</li>
-                  <li>Safari: Preferências → Privacidade</li>
-                  <li>Edge: Configurações → Privacidade, pesquisa e serviços</li>
-                </ul>
-              </div>
-
-              <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6">
-                <h3 className="font-semibold text-white mb-3">⚠️ Atenção</h3>
-                <p className="text-gray-400">
-                  Desativar cookies pode afetar a funcionalidade da plataforma. Alguns recursos podem não funcionar corretamente, como login automático, preferências salvas e carrinho de compras.
+              <div className="p-4 bg-white/50 dark:bg-gray-900/50 rounded-lg border">
+                <h3 className="text-lg font-medium mb-2">Cookies de Performance</h3>
+                <p className="text-sm text-muted-foreground">
+                  Analisam o uso da plataforma: páginas visitadas, tempo de uso, detecção de erros.
                 </p>
               </div>
-
-              <div className="pt-6 border-t border-white/10">
-                <h2 className="text-2xl font-semibold text-white mb-4">Contato</h2>
-                <p className="text-gray-400 leading-relaxed">
-                  Para questões sobre cookies, entre em contato: <span className="text-orange-400">privacidade@kambafy.com</span>
+              <div className="p-4 bg-white/50 dark:bg-gray-900/50 rounded-lg border">
+                <h3 className="text-lg font-medium mb-2">Cookies de Funcionalidade</h3>
+                <p className="text-sm text-muted-foreground">
+                  Personalizam sua experiência: configurações, histórico, conteúdo adaptado.
                 </p>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Footer */}
-        <footer className="border-t border-white/10 py-8 mt-20">
-          <div className="mx-auto max-w-7xl px-6 text-center text-gray-500">
-            <p>© 2024 Kambafy. Todos os direitos reservados.</p>
+          <section className="p-6 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800">
+            <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              3. Gerenciar Cookies
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Você pode controlar cookies através das configurações do seu navegador:
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+              <li>Chrome: Configurações → Privacidade e segurança</li>
+              <li>Firefox: Preferências → Privacidade</li>
+              <li>Safari: Preferências → Privacidade</li>
+            </ul>
+          </section>
+
+          <div className="p-6 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 border text-center">
+            <h3 className="text-lg font-semibold mb-3">Configurar Preferências</h3>
+            <p className="text-muted-foreground mb-4">
+              Personalize suas preferências de cookies.
+            </p>
+            <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg">
+              Gerenciar Cookies
+            </Button>
           </div>
-        </footer>
-      </div>
+        </div>
+      </PageLayout>
     </>
   );
 };

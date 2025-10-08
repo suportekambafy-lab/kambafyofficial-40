@@ -1,128 +1,106 @@
 import { SEO } from "@/components/SEO";
-import { SubdomainLink } from "@/components/SubdomainLink";
-import { Button } from "@/components/ui/button";
+import { PageLayout } from "@/components/PageLayout";
 import { CheckCircle, AlertCircle, Clock, Activity } from "lucide-react";
 
 const Status = () => {
+  const services = [
+    { name: "Plataforma Principal", status: "operational", uptime: "99.9%" },
+    { name: "Sistema de Pagamentos", status: "operational", uptime: "99.8%" },
+    { name: "Upload de Conteúdo", status: "operational", uptime: "99.7%" },
+    { name: "API", status: "maintenance", uptime: "99.5%" },
+    { name: "Suporte ao Cliente", status: "operational", uptime: "100%" }
+  ];
+
+  const incidents = [
+    {
+      date: "01 Jan 2024",
+      title: "Manutenção Programada da API",
+      description: "Manutenção de rotina para melhorar a performance.",
+      status: "Em andamento",
+      severity: "low"
+    },
+    {
+      date: "28 Dez 2023",
+      title: "Problema Resolvido - Lentidão nos Uploads",
+      description: "Identificamos e corrigimos lentidão no upload de vídeos.",
+      status: "Resolvido",
+      severity: "medium"
+    }
+  ];
+
   return (
     <>
       <SEO 
         title="Status da Plataforma | Kambafy"
         description="Acompanhe o status dos serviços da Kambafy em tempo real."
       />
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-        {/* Header */}
-        <header className="border-b border-white/10 backdrop-blur-sm bg-black/20">
-          <div className="mx-auto max-w-7xl px-6 py-6">
-            <div className="flex items-center justify-between">
-              <SubdomainLink to="/" className="flex items-center">
-                <img 
-                  src="/kambafy-logo-white.png" 
-                  alt="Kambafy" 
-                  className="h-8"
-                />
-              </SubdomainLink>
-              <Button asChild variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                <SubdomainLink to="/">
-                  Voltar ao Início
-                </SubdomainLink>
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <section className="py-20 px-6">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="flex justify-center mb-6">
-              <div className="bg-gradient-to-br from-green-500 to-emerald-500 w-20 h-20 rounded-2xl flex items-center justify-center">
-                <Activity className="w-10 h-10 text-white" />
+      <PageLayout title="Status da Plataforma">
+        <div className="space-y-8">
+          <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800">
+            <div className="inline-flex items-center gap-3 mb-4">
+              <div className="bg-gradient-to-br from-green-500 to-emerald-500 p-3 rounded-xl">
+                <Activity className="w-6 h-6 text-white" />
               </div>
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
-              Status da Plataforma
-            </h1>
-            <div className="inline-flex items-center gap-3 bg-green-500/10 border border-green-500/30 rounded-full px-6 py-3">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <span className="text-green-400 font-medium">Todos os sistemas operacionais</span>
+            <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-4 py-2 rounded-full border border-green-200 dark:border-green-800">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">Todos os sistemas operacionais</span>
             </div>
+            <p className="text-sm text-muted-foreground mt-3">
+              Última atualização: {new Date().toLocaleString('pt-BR')}
+            </p>
           </div>
-        </section>
 
-        {/* Services Status */}
-        <section className="py-16 px-6">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl font-semibold text-white mb-8">Status dos Serviços</h2>
+          <div>
+            <h3 className="text-xl font-semibold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Status dos Serviços
+            </h3>
             <div className="space-y-4">
-              {[
-                { name: "Plataforma Principal", status: "operational", uptime: "99.9%" },
-                { name: "Sistema de Pagamentos", status: "operational", uptime: "99.8%" },
-                { name: "Upload de Conteúdo", status: "operational", uptime: "99.7%" },
-                { name: "API", status: "maintenance", uptime: "99.5%" },
-                { name: "Suporte ao Cliente", status: "operational", uptime: "100%" }
-              ].map((service, index) => (
-                <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      {service.status === "operational" ? (
-                        <CheckCircle className="w-6 h-6 text-green-400" />
-                      ) : service.status === "maintenance" ? (
-                        <Clock className="w-6 h-6 text-orange-400" />
-                      ) : (
-                        <AlertCircle className="w-6 h-6 text-red-400" />
-                      )}
-                      <div>
-                        <h3 className="font-semibold text-white">{service.name}</h3>
-                        <p className="text-sm text-gray-400">
-                          {service.status === "operational" ? "Operacional" : "Manutenção"}
-                        </p>
-                      </div>
+              {services.map((service, index) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 border rounded-xl hover:shadow-md transition-all">
+                  <div className="flex items-center gap-3">
+                    {service.status === "operational" ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    ) : service.status === "maintenance" ? (
+                      <Clock className="w-5 h-5 text-orange-500" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-red-500" />
+                    )}
+                    <div>
+                      <h4 className="font-medium">{service.name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {service.status === "operational" ? "Operacional" : "Manutenção"}
+                      </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-green-400">{service.uptime}</p>
-                      <p className="text-sm text-gray-400">Uptime 30 dias</p>
-                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-green-600 dark:text-green-400">{service.uptime}</p>
+                    <p className="text-xs text-muted-foreground">30 dias</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </section>
 
-        {/* Incidents History */}
-        <section className="py-16 px-6">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl font-semibold text-white mb-8">Histórico de Incidentes</h2>
+          <div>
+            <h3 className="text-xl font-semibold mb-6 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              Histórico de Incidentes
+            </h3>
             <div className="space-y-4">
-              {[
-                {
-                  date: "01 Jan 2024",
-                  title: "Manutenção Programada da API",
-                  description: "Manutenção de rotina para melhorar a performance da API.",
-                  status: "Em andamento",
-                  severity: "low"
-                },
-                {
-                  date: "28 Dez 2023",
-                  title: "Problema Resolvido - Lentidão nos Uploads",
-                  description: "Identificamos e corrigimos um problema que causava lentidão no upload de vídeos.",
-                  status: "Resolvido",
-                  severity: "medium"
-                }
-              ].map((incident, index) => (
-                <div key={index} className={`bg-white/5 backdrop-blur-sm border rounded-xl p-6 ${
-                  incident.severity === "high" ? "border-red-500/30 bg-red-500/5" :
-                  incident.severity === "medium" ? "border-orange-500/30 bg-orange-500/5" :
-                  "border-blue-500/30 bg-blue-500/5"
+              {incidents.map((incident, index) => (
+                <div key={index} className={`p-6 rounded-xl border ${
+                  incident.severity === "high" ? "bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border-red-200 dark:border-red-800" :
+                  incident.severity === "medium" ? "bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20 border-orange-200 dark:border-orange-800" :
+                  "bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border-blue-200 dark:border-blue-800"
                 }`}>
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-semibold text-white">{incident.title}</h3>
-                    <span className="text-sm text-gray-400">{incident.date}</span>
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-medium">{incident.title}</h4>
+                    <span className="text-sm text-muted-foreground">{incident.date}</span>
                   </div>
-                  <p className="text-gray-400 text-sm mb-3">{incident.description}</p>
+                  <p className="text-sm text-muted-foreground mb-3">{incident.description}</p>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                    incident.status === "Resolvido" ? "bg-green-500/20 text-green-400" :
-                    "bg-orange-500/20 text-orange-400"
+                    incident.status === "Resolvido" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" :
+                    "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
                   }`}>
                     {incident.status}
                   </span>
@@ -130,15 +108,8 @@ const Status = () => {
               ))}
             </div>
           </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="border-t border-white/10 py-8 mt-20">
-          <div className="mx-auto max-w-7xl px-6 text-center text-gray-500">
-            <p>© 2024 Kambafy. Todos os direitos reservados.</p>
-          </div>
-        </footer>
-      </div>
+        </div>
+      </PageLayout>
     </>
   );
 };
