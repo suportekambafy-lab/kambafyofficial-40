@@ -8,7 +8,7 @@ import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
 import { SkeletonPage } from '@/components/ui/skeleton-page';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { TawkChat } from '@/components/TawkChat';
+import { CrispChat } from '@/components/CrispChat';
 
 // Lazy load páginas para melhor performance com retry logic
 const createLazyWithRetry = (importFn: () => Promise<any>, name: string) => {
@@ -98,7 +98,7 @@ function SellerDashboardContent() {
 
   return (
     <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
-        <TawkChat />
+        <CrispChat />
         
         <div className="flex flex-1">
           {/* Backdrop para mobile */}

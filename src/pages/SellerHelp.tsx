@@ -23,6 +23,21 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ChatWidget from "@/components/ChatWidget";
 
+// Função para abrir o Crisp Chat
+const openCrispChat = () => {
+  if (window.$crisp) {
+    window.$crisp.push(['do', 'chat:show']);
+    window.$crisp.push(['do', 'chat:open']);
+  }
+};
+
+// Declaração de tipos globais
+declare global {
+  interface Window {
+    $crisp: any[];
+  }
+}
+
 export default function SellerHelp() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -152,11 +167,7 @@ export default function SellerHelp() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card 
           className="hover:shadow-md transition-shadow cursor-pointer"
-          onClick={() => {
-            if ((window as any).Tawk_API) {
-              (window as any).Tawk_API.maximize();
-            }
-          }}
+          onClick={openCrispChat}
         >
           <CardContent className="p-6 text-center">
             <MessageCircle className="h-8 w-8 mx-auto mb-3 text-primary" />
