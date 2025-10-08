@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, lazy, Suspense } from "react";
+import { memo, useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Shield, Check, AlertTriangle, CheckCircle, Wallet, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,12 +22,13 @@ import { OptimizedContainer } from "@/components/ui/optimized-containers";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { TrustBadgesSection } from "@/components/checkout/TrustBadgesSection";
-import { LiveViewersNotification } from "@/components/checkout/LiveViewersNotification";
+import { OptimizedLiveViewers } from "@/components/checkout/OptimizedLiveViewers";
 import { MobileFloatingButton } from "@/components/checkout/MobileFloatingButton";
 import { CheckoutLoadingSkeleton } from "@/components/checkout/ImprovedSkeletons";
 import { ValidationFeedback, validateEmail, validateName, validatePhone } from "@/components/checkout/EnhancedFormValidation";
+import { useOptimizedValidation } from "@/hooks/useOptimizedValidation";
 
-// Lazy load componentes pesados apenas quando necessário
+// Lazy load apenas componentes não-críticos
 const OptimizedCustomBanner = lazy(() => 
   import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedCustomBanner }))
 );
@@ -43,14 +44,12 @@ const OptimizedSocialProof = lazy(() =>
 const OptimizedSpotsCounter = lazy(() => 
   import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedSpotsCounter }))
 );
-const OptimizedOrderBump = lazy(() => 
-  import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedOrderBump }))
-);
-const OptimizedProductHeader = lazy(() => 
-  import('@/components/checkout/OptimizedCheckoutComponents').then(m => ({ default: m.OptimizedProductHeader }))
-);
 
-// Componente StripeCardPayment importado normalmente (mais complexo para otimizar)
+// Componentes críticos - importados normalmente para melhor performance
+import { OptimizedOrderBump } from '@/components/checkout/OptimizedCheckoutComponents';
+import { OptimizedProductHeader } from '@/components/checkout/OptimizedCheckoutComponents';
+
+// Lazy load payment methods apenas quando selecionados
 const StripeCardPayment = lazy(() => import('@/components/checkout/StripeCardPayment'));
 const KambaPayCheckoutOption = lazy(() => 
   import('@/components/KambaPayCheckoutOption').then(module => ({ default: module.KambaPayCheckoutOption }))
@@ -481,8 +480,8 @@ const OptimizedCheckout = () => {
             </Suspense>
           )}
 
-          {/* Live Viewers Notification */}
-          {product && <LiveViewersNotification productId={productId || ''} />}
+          {/* Live Viewers Notification - Otimizado sem framer-motion */}
+          {product && <OptimizedLiveViewers initialCount={47} minViewers={32} maxViewers={89} />}
 
           {/* Header do produto */}
           {showingSkeleton ? (
