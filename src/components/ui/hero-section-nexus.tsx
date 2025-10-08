@@ -744,14 +744,24 @@ const InteractiveHero: React.FC = () => {
           {/* Features Section */}
           <section id="recursos" className="py-24 px-6 relative z-10">
               <div className="mx-auto max-w-7xl">
-                  <div className="text-center mb-16">
-                      <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-                          Tudo que Você Precisa para{' '}
-                          <span className="text-[#0CF2A0]">Ter Sucesso</span>
-                      </h2>
-                      <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                          Ferramentas poderosas e simples para transformar seu conhecimento em um negócio próspero
-                      </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-16">
+                      <div className="text-center lg:text-left">
+                          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+                              Tudo que Você Precisa para{' '}
+                              <span className="text-[#0CF2A0]">Ter Sucesso</span>
+                          </h2>
+                          <p className="text-lg text-gray-400">
+                              Ferramentas poderosas e simples para transformar seu conhecimento em um negócio próspero
+                          </p>
+                      </div>
+                      <div className="relative">
+                          <img 
+                              src="/lovable-uploads/be22ac17-d2d9-4d84-8ffa-3ed3d91cfaed.png" 
+                              alt="Profissional jovem trabalhando" 
+                              className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#0CF2A0]/20 to-transparent rounded-2xl"></div>
+                      </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
