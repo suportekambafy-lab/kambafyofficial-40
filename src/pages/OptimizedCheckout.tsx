@@ -21,6 +21,11 @@ import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { OptimizedContainer } from "@/components/ui/optimized-containers";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { supabase } from "@/integrations/supabase/client";
+import { TrustBadgesSection } from "@/components/checkout/TrustBadgesSection";
+import { LiveViewersNotification } from "@/components/checkout/LiveViewersNotification";
+import { MobileFloatingButton } from "@/components/checkout/MobileFloatingButton";
+import { CheckoutLoadingSkeleton } from "@/components/checkout/ImprovedSkeletons";
+import { ValidationFeedback, validateEmail, validateName, validatePhone } from "@/components/checkout/EnhancedFormValidation";
 
 // Lazy load componentes pesados apenas quando necessário
 const OptimizedCustomBanner = lazy(() => 
@@ -187,6 +192,14 @@ const OptimizedCheckout = () => {
   const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
   const [bankTransferData, setBankTransferData] = useState<{file: File, bank: string} | null>(null);
   const [applePayModalOpen, setApplePayModalOpen] = useState(false);
+  
+  // Validation states
+  const [fieldTouched, setFieldTouched] = useState({
+    fullName: false,
+    email: false,
+    phone: false
+  });
+  const [showMobileButton, setShowMobileButton] = useState(false);
 
   // Hook otimizado centralizado
   const {
@@ -263,10 +276,28 @@ const OptimizedCheckout = () => {
     console.log('🚨 FORCING CARD METHOD FOR US');
   }
 
+  // Auto-preencher email se usuário estiver logado
+  useEffect(() => {
+    if (user?.email && !formData.email) {
+      handleInputChange('email', user.email);
+    }
+  }, [user?.email]);
+
   // Forçar modo claro sempre
   useEffect(() => {
     setTheme('light');
   }, [setTheme]);
+
+  // Show/hide mobile floating button based on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show button after scrolling 300px
+      setShowMobileButton(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Abrir modal do Apple Pay quando selecionado
   useEffect(() => {
@@ -287,8 +318,24 @@ const OptimizedCheckout = () => {
     }
   }, [finalPaymentMethods, selectedPayment]);
 
+  // Validation helpers
+  const isNameValid = validateName(formData.fullName);
+  const isEmailValid = validateEmail(formData.email);
+  const isPhoneValid = validatePhone(formData.phone);
+
+  // Check if phone is required for selected payment method
+  const phoneRequiredMethods = ['express', 'transfer'];
+  const isPhoneRequired = phoneRequiredMethods.includes(selectedPayment);
+
   // Mostrar skeleton checkout enquanto carrega - sem tela branca
   const showingSkeleton = loading || !product;
+
+  // Calculate total price
+  const totalPrice = formatPrice(
+    parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice,
+    userCountry,
+    product?.custom_prices
+  );
 
   // Skeleton components para carregamento imediato
   const SkeletonProductHeader = () => (
@@ -434,9 +481,12 @@ const OptimizedCheckout = () => {
             </Suspense>
           )}
 
+          {/* Live Viewers Notification */}
+          {product && <LiveViewersNotification productId={productId || ''} />}
+
           {/* Header do produto */}
           {showingSkeleton ? (
-            <SkeletonProductHeader />
+            <CheckoutLoadingSkeleton />
           ) : (
             <Suspense fallback={<SkeletonProductHeader />}>
               <OptimizedProductHeader 
@@ -529,7 +579,7 @@ const OptimizedCheckout = () => {
                   {showingSkeleton ? (
                     <SkeletonForm />
                   ) : (
-                    <div className="space-y-4">
+                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="fullName">{isTranslationReady ? t('form.name') : 'Nome Completo'} *</Label>
                         <Input
@@ -537,7 +587,14 @@ const OptimizedCheckout = () => {
                           placeholder={isTranslationReady ? t('form.name.placeholder') : 'Digite seu nome completo'}
                           value={formData.fullName}
                           onChange={(e) => handleInputChange('fullName', e.target.value)}
+                          onBlur={() => setFieldTouched(prev => ({ ...prev, fullName: true }))}
+                          className={fieldTouched.fullName && !isNameValid ? 'border-red-500' : fieldTouched.fullName && isNameValid ? 'border-green-500' : ''}
                           required
+                        />
+                        <ValidationFeedback 
+                          isValid={isNameValid}
+                          message={isNameValid ? '✓ Nome válido' : 'Nome deve ter pelo menos 3 caracteres'}
+                          show={fieldTouched.fullName}
                         />
                       </div>
 
@@ -549,7 +606,14 @@ const OptimizedCheckout = () => {
                           placeholder={isTranslationReady ? t('form.email.placeholder') : 'Digite seu email'}
                           value={formData.email}
                           onChange={(e) => handleInputChange('email', e.target.value)}
+                          onBlur={() => setFieldTouched(prev => ({ ...prev, email: true }))}
+                          className={fieldTouched.email && !isEmailValid ? 'border-red-500' : fieldTouched.email && isEmailValid ? 'border-green-500' : ''}
                           required
+                        />
+                        <ValidationFeedback 
+                          isValid={isEmailValid}
+                          message={isEmailValid ? '✓ Email válido' : 'Por favor, insira um email válido'}
+                          show={fieldTouched.email}
                         />
                       </div>
 
@@ -573,20 +637,30 @@ const OptimizedCheckout = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor="phone">{isTranslationReady ? t('form.phone') : 'Telefone'} *</Label>
+                        <Label htmlFor="phone">
+                          {isTranslationReady ? t('form.phone') : 'Telefone'} {isPhoneRequired && '*'}
+                          {!isPhoneRequired && <span className="text-xs text-gray-500">(opcional)</span>}
+                        </Label>
                         <PhoneInput
                           value={formData.phone}
                           onChange={(value) => handleInputChange('phone', value)}
                           selectedCountry={formData.phoneCountry}
                           onCountryChange={handlePhoneCountryChange}
                         />
+                        {isPhoneRequired && (
+                          <ValidationFeedback 
+                            isValid={isPhoneValid}
+                            message={isPhoneValid ? '✓ Telefone válido' : 'Telefone obrigatório para este método de pagamento'}
+                            show={fieldTouched.phone || isPhoneRequired}
+                          />
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Métodos de pagamento - FORÇADO A APARECER */}
-                <div>
+                <div data-payment-section>
                   <h2 className="text-xl font-semibold mb-6">{isTranslationReady ? t('payment.title') : 'Pagamento'}</h2>
                   
                   <PaymentMethods
@@ -1079,6 +1153,9 @@ const OptimizedCheckout = () => {
             </CardContent>
           </Card>
 
+          {/* Trust Badges Section */}
+          <TrustBadgesSection totalSales={product?.sales || 0} />
+
           {/* Reviews falsas - lazy load */}
           {checkoutSettings?.reviews?.enabled && (
             <Suspense fallback={<div />}>
@@ -1098,6 +1175,22 @@ const OptimizedCheckout = () => {
 
         </div>
       </div>
+
+      {/* Mobile Floating Button */}
+      <MobileFloatingButton 
+        show={showMobileButton && !processing}
+        disabled={!formData.fullName || !formData.email || (!isPhoneValid && isPhoneRequired) || !selectedPayment}
+        processing={processing}
+        totalPrice={totalPrice}
+        onSubmit={() => {
+          // Scroll to payment method section
+          const paymentSection = document.querySelector('[data-payment-section]');
+          if (paymentSection) {
+            paymentSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        buttonText="Finalizar Compra"
+      />
 
       {/* Apple Pay Modal */}
       {selectedPayment === 'apple_pay' && (
