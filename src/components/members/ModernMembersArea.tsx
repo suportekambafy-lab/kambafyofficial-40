@@ -151,19 +151,21 @@ export default function ModernMembersArea() {
     const isVerified = urlParams.get('verified') === 'true';
     const emailParam = urlParams.get('email');
     
-    if (isVerified && emailParam && !authLoading) {
-      console.log('🔑 Acesso verificado via query params, carregando área diretamente');
-      return; // Não fazer nada, apenas carregar o conteúdo
+    // ✅ CRÍTICO: Se tem verified=true na URL, NUNCA redirecionar
+    // Esperar o ModernMembersAuth processar e criar a sessão virtual
+    if (isVerified && emailParam) {
+      console.log('🔑 Acesso verificado via query params - aguardando criação de sessão');
+      return; // Não fazer NADA, deixar o auth processar
     }
     
-    // Se não tem verificação e não está autenticado, redirecionar para login
-    if (!authLoading && !isAuthenticated && !isVerified) {
-      console.log('🔄 ModernMembersArea: Redirecionando para login - não autenticado');
+    // Só redirecionar se NÃO for acesso verificado E não estiver autenticado
+    if (!authLoading && !isAuthenticated) {
+      console.log('🔄 ModernMembersArea: Redirecionando para login - não autenticado e sem verificação');
       window.location.href = `/members/login/${memberAreaId}`;
       return;
     }
     
-    console.log('ℹ️ ModernMembersArea: Usuário autenticado ou acesso verificado, carregando área');
+    console.log('ℹ️ ModernMembersArea: Usuário autenticado, carregando área');
   }, [authLoading, isAuthenticated, memberAreaId]);
 
   // Carregar conteúdo da área independente de loading - sempre mostrar o que tem
