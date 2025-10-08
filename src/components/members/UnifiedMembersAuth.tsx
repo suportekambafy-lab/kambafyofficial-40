@@ -69,8 +69,8 @@ export function UnifiedMembersAuthProvider({ children }: UnifiedMembersAuthProvi
       
       const normalizedEmail = email.toLowerCase().trim();
 
-      // Query para buscar todas as áreas de membros do cliente (apenas Cursos)
-      const { data, error } = await supabase
+      // Query para buscar todas as áreas de membros do cliente
+      const { data: studentAreas, error } = await supabase
         .from('member_area_students')
         .select(`
           member_area_id,
@@ -79,37 +79,44 @@ export function UnifiedMembersAuthProvider({ children }: UnifiedMembersAuthProvi
             name,
             logo_url,
             hero_image_url,
-            user_id,
-            products!member_areas_id_fkey (
-              id,
-              name,
-              type
-            )
+            user_id
           )
         `)
         .eq('student_email', normalizedEmail);
 
       if (error) throw error;
 
-      console.log('📋 Member areas data:', data);
+      console.log('📋 Member areas data:', studentAreas);
 
-      if (!data || data.length === 0) {
+      if (!studentAreas || studentAreas.length === 0) {
         console.log('❌ No member areas found');
+        setMemberAreas([]);
+        return;
+      }
+
+      // Buscar produtos das áreas (apenas Cursos)
+      const memberAreaIds = studentAreas.map((s: any) => s.member_area_id);
+      
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, name, type, member_area_id')
+        .in('member_area_id', memberAreaIds)
+        .eq('type', 'Curso');
+
+      console.log('📦 Products found:', products);
+
+      if (!products || products.length === 0) {
+        console.log('❌ No course products found');
         setMemberAreas([]);
         return;
       }
 
       // Processar cada área para calcular progresso
       const areasWithProgress = await Promise.all(
-        data
-          .filter((item: any) => {
-            // Filtrar apenas produtos do tipo 'Curso'
-            const product = item.member_areas.products?.[0];
-            return product && product.type === 'Curso';
-          })
+        studentAreas
           .map(async (item: any) => {
             const memberArea = item.member_areas;
-            const product = memberArea.products?.[0];
+            const product = products.find((p: any) => p.member_area_id === memberArea.id);
             
             if (!product) return null;
 
@@ -185,25 +192,14 @@ export function UnifiedMembersAuthProvider({ children }: UnifiedMembersAuthProvi
         .from('member_area_students')
         .select(`
           student_name,
-          member_areas!inner (
-            id,
-            products!member_areas_id_fkey (
-              type
-            )
-          )
+          member_area_id
         `)
         .eq('student_email', normalizedEmail)
         .limit(1);
 
       if (error) throw error;
 
-      // Filtrar apenas áreas com produtos do tipo 'Curso'
-      const courseAreas = studentData?.filter((item: any) => {
-        const product = item.member_areas.products?.[0];
-        return product && product.type === 'Curso';
-      });
-
-      if (!courseAreas || courseAreas.length === 0) {
+      if (!studentData || studentData.length === 0) {
         console.log('❌ No course access found');
         toast({
           title: 'Acesso negado',
@@ -213,7 +209,26 @@ export function UnifiedMembersAuthProvider({ children }: UnifiedMembersAuthProvi
         return false;
       }
 
-      const studentName = courseAreas[0]?.student_name || normalizedEmail;
+      // Verificar se as áreas de membros têm produtos do tipo 'Curso'
+      const memberAreaIds = studentData.map((s: any) => s.member_area_id);
+      
+      const { data: products } = await supabase
+        .from('products')
+        .select('member_area_id, type')
+        .in('member_area_id', memberAreaIds)
+        .eq('type', 'Curso');
+
+      if (!products || products.length === 0) {
+        console.log('❌ No course products found');
+        toast({
+          title: 'Acesso negado',
+          description: 'Você ainda não tem acesso a nenhum curso.',
+          variant: 'destructive'
+        });
+        return false;
+      }
+
+      const studentName = studentData[0]?.student_name || normalizedEmail;
 
       // Salvar sessão
       const session = {
