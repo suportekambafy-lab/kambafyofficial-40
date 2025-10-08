@@ -655,7 +655,7 @@ const InteractiveHero: React.FC = () => {
                 animate="visible"
                 className="mb-6"
             >
-                <ShinyText text="🌍 Plataforma Lusófona de Infoprodutos" className="bg-[#1a1a1a] border border-gray-700 text-[#0CF2A0] px-4 py-1 rounded-full text-xs sm:text-sm font-medium cursor-pointer hover:border-[#0CF2A0]/50 transition-colors" />
+                <ShinyText text="Plataforma #1 para Criadores Digitais" className="bg-[#1a1a1a] border border-gray-700 text-[#0CF2A0] px-4 py-1 rounded-full text-xs sm:text-sm font-medium cursor-pointer hover:border-[#0CF2A0]/50 transition-colors" />
             </motion.div>
 
             <motion.h1
@@ -664,10 +664,10 @@ const InteractiveHero: React.FC = () => {
                 animate="visible"
                 className="text-4xl sm:text-5xl lg:text-[64px] font-bold text-white leading-tight max-w-4xl mb-4"
             >
-                TRANSFORME SEU<br />
+                Venda seus produtos<br />
                 <span className="inline-block h-[1.2em] overflow-hidden align-bottom">
                     <RotatingText
-                        texts={['CONHECIMENTO', 'TALENTO', 'EXPERTISE', 'PAIXÃO', 'CONTEÚDO']}
+                        texts={['digitais', 'criativos', 'exclusivos', 'incríveis', 'únicos']}
                         mainClassName="text-[#0CF2A0] mx-1"
                         staggerFrom={"last"}
                         initial={{ y: "-100%", opacity: 0 }}
@@ -680,8 +680,7 @@ const InteractiveHero: React.FC = () => {
                         auto={true}
                         loop={true}
                     />
-                </span>{' '}
-                EM RENDA
+                </span>
             </motion.h1>
 
             <motion.p
@@ -690,7 +689,7 @@ const InteractiveHero: React.FC = () => {
                 animate="visible"
                 className="text-base sm:text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-8"
             >
-                A Kambafy é uma plataforma digital inovadora que permite a criadores, educadores, marcas e especialistas em toda a lusofonia partilharem conhecimento, criarem infoprodutos e transformarem a sua audiência em rendimento real.
+                Crie, gerencie e venda seus cursos, e-books e produtos digitais em uma única plataforma. Tudo que você precisa para construir seu negócio online.
             </motion.p>
 
             <motion.div
