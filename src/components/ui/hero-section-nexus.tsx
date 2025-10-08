@@ -30,6 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import { SubdomainLink } from "@/components/SubdomainLink";
 import kambafy_icon from "@/assets/kambafy-icon-gray.png";
 import teamImage from "@/assets/team-collaboration.jpg";
+import aboutSectionImage from "@/assets/about-section-team.jpg";
 
 function cn(...classes: (string | undefined | null | boolean)[]): string {
   return classes.filter(Boolean).join(" ");
@@ -852,7 +853,7 @@ const InteractiveHero: React.FC = () => {
                           </div>
                       </div>
                       <div className="relative">
-                          <img src={professionalMan} alt="Profissional" className="rounded-lg shadow-xl object-cover w-full h-96" />
+                          <img src={aboutSectionImage} alt="Equipe profissional" className="rounded-lg shadow-xl object-cover w-full h-96" />
                           <div className="absolute inset-0 bg-gradient-to-t from-[#0CF2A0]/30 to-transparent rounded-lg"></div>
                       </div>
                   </div>
