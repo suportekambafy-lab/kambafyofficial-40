@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useUnifiedMembersAuth } from './UnifiedMembersAuth';
 import { CourseCard } from './CourseCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   BookOpen, 
   GraduationCap, 
   Clock, 
   Search, 
   LogOut,
-  Loader2
+  Loader2,
+  TrendingUp,
+  Award,
+  Sparkles
 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 
 type FilterType = 'all' | 'in-progress' | 'completed' | 'not-started';
 
@@ -62,79 +64,125 @@ export default function UnifiedMembersHub() {
   const completedLessons = memberAreas.reduce((sum, area) => sum + area.completedLessons, 0);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-3xl" />
+      </div>
+
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
+      <motion.header 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="sticky top-0 z-10 border-b border-border/30 bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 shadow-sm"
+      >
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <GraduationCap className="w-8 h-8 text-primary" />
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
+                <Sparkles className="w-6 h-6 text-primary" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold">Meus Cursos</h1>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                  Meus Cursos
+                </h1>
                 <p className="text-sm text-muted-foreground">
-                  Olá, {studentName || studentEmail}! Continue seu aprendizado
+                  Olá, {studentName || studentEmail} 👋
                 </p>
               </div>
             </div>
-
-            <Button variant="ghost" size="sm" onClick={logout}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={logout}
+              className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+            >
               <LogOut className="w-4 h-4 mr-2" />
               Sair
             </Button>
           </div>
         </div>
-      </header>
+      </motion.header>
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main className="container mx-auto px-4 py-8 space-y-8 relative z-10">
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="p-3 bg-primary/10 rounded-lg">
-                <BookOpen className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{totalCourses}</p>
-                <p className="text-sm text-muted-foreground">
-                  {totalCourses === 1 ? 'Curso' : 'Cursos'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="p-3 bg-blue-500/10 rounded-lg">
-                <GraduationCap className="w-6 h-6 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{completedLessons}</p>
-                <p className="text-sm text-muted-foreground">Aulas Concluídas</p>
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
+                  <BookOpen className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Total de Cursos</p>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    {totalCourses}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="p-3 bg-green-500/10 rounded-lg">
-                <Clock className="w-6 h-6 text-green-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{totalLessons}</p>
-                <p className="text-sm text-muted-foreground">Total de Aulas</p>
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-green-500/20 transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-green-500/5">
+                  <Award className="w-6 h-6 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Aulas Concluídas</p>
+                  <p className="text-3xl font-bold text-green-500">
+                    {completedLessons}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
+
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-blue-500/20 transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5">
+                  <TrendingUp className="w-6 h-6 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Total de Aulas</p>
+                  <p className="text-3xl font-bold text-blue-500">
+                    {totalLessons}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Filtros e Busca */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+        >
           <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterType)}>
-            <TabsList>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="in-progress">Em andamento</TabsTrigger>
-              <TabsTrigger value="completed">Concluídos</TabsTrigger>
-              <TabsTrigger value="not-started">Não iniciados</TabsTrigger>
+            <TabsList className="bg-card/50 backdrop-blur-sm border border-border/50">
+              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                Todos
+              </TabsTrigger>
+              <TabsTrigger value="in-progress" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                Em andamento
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                Concluídos
+              </TabsTrigger>
+              <TabsTrigger value="not-started" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                Não iniciados
+              </TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -144,32 +192,53 @@ export default function UnifiedMembersHub() {
               placeholder="Buscar curso..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-card/50 backdrop-blur-sm border-border/50"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Grid de Cursos */}
         {filteredAreas.length === 0 ? (
-          <div className="text-center py-12">
-            <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum curso encontrado</h3>
-            <p className="text-muted-foreground">
-              {searchQuery || filter !== 'all'
-                ? 'Tente ajustar seus filtros'
-                : 'Você ainda não tem acesso a nenhum curso'}
-            </p>
-          </div>
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="p-12 bg-card/50 backdrop-blur-sm border-border/50">
+              <div className="text-center">
+                <div className="p-4 rounded-full bg-muted/50 w-fit mx-auto mb-4">
+                  <GraduationCap className="w-16 h-16 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Nenhum curso encontrado</h3>
+                <p className="text-muted-foreground">
+                  {searchQuery || filter !== 'all'
+                    ? 'Tente ajustar seus filtros'
+                    : 'Você ainda não tem acesso a nenhum curso'}
+                </p>
+              </div>
+            </Card>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAreas.map((area) => (
-              <CourseCard
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {filteredAreas.map((area, index) => (
+              <motion.div
                 key={area.memberAreaId}
-                {...area}
-                onClick={() => navigate(`/members/area/${area.memberAreaId}`)}
-              />
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 + (index * 0.1) }}
+              >
+                <CourseCard
+                  {...area}
+                  onClick={() => navigate(`/members/area/${area.memberAreaId}`)}
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </main>
     </div>
