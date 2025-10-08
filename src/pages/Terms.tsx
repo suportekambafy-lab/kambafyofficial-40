@@ -92,8 +92,9 @@ const Terms = () => {
             <div>
               <h3 className="text-lg font-medium mb-2">5.1 Comissões</h3>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                <li>Plano Gratuito: 10% de comissão por venda</li>
-                <li>Plano Profissional: 5% de comissão por venda</li>
+                <li>Taxa única de 8% por transação bem-sucedida</li>
+                <li>Sem mensalidades ou custos fixos</li>
+                <li>Você paga apenas quando vende</li>
                 <li>Taxas claramente informadas antes da transação</li>
               </ul>
             </div>

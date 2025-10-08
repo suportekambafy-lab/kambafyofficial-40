@@ -150,9 +150,9 @@ export const pageSEO = {
   },
   
   pricing: {
-    title: 'Preços e Planos da Kambafy - Comece Grátis',
-    description: 'Conheça os planos da Kambafy. Comece grátis e escale conforme seu crescimento. Sem taxas ocultas, apenas resultados.',
-    keywords: 'preços kambafy, planos kambafy, grátis, pricing, custos plataforma vendas'
+    title: 'Preços da Kambafy - Apenas 8% por Transação',
+    description: 'Conheça a precificação da Kambafy. Apenas 8% por transação, sem taxas ocultas ou mensalidades. Você paga apenas quando vende.',
+    keywords: 'preços kambafy, 8% por transação, sem mensalidade, custos plataforma vendas, taxa única'
   },
   
   howItWorks: {

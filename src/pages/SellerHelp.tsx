@@ -61,7 +61,7 @@ export default function SellerHelp() {
     },
     {
       question: "Como funciona o sistema de comissões?",
-      answer: "As comissões da Kambafy são transparentes: no plano gratuito cobramos 10% por venda, e no plano profissional apenas 5%. A comissão é automaticamente deduzida do valor da venda e o restante fica disponível em seu saldo para saque.",
+      answer: "A Kambafy cobra apenas 8% por cada venda realizada. A comissão é automaticamente deduzida do valor da venda e o restante fica disponível em seu saldo para saque. Sem planos, sem mensalidades - você paga apenas quando vende.",
       category: "financeiro"
     },
     {

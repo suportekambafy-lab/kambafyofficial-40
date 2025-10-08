@@ -31,7 +31,7 @@ const HelpCenter = () => {
     answer: "Aceitamos Multicaixa Express, BAI Direto, transferências bancárias e outros métodos populares em Angola. Todos os pagamentos são processados em Kwanza."
   }, {
     question: "Como funciona a comissão da plataforma?",
-    answer: "No plano gratuito, cobramos 10% por venda. No plano profissional, apenas 5%. Não há taxas ocultas ou custos adicionais."
+    answer: "A Kambafy cobra apenas 8% por cada venda realizada. Não há planos ou mensalidades - você paga apenas quando vende."
   }, {
     question: "Posso personalizar minha página de criador?",
     answer: "Sim! Você pode personalizar cores, logos, descrições e até usar seu próprio domínio no plano profissional."
