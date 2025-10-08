@@ -1,82 +1,165 @@
-import { SEO } from "@/components/SEO";
+
 import { PageLayout } from "@/components/PageLayout";
-import { FileText } from "lucide-react";
 
 const Terms = () => {
   return (
-    <>
-      <SEO 
-        title="Termos de Uso | Kambafy"
-        description="Leia nossos termos de uso e entenda as regras de utilização da plataforma."
-      />
-      <PageLayout title="Termos de Uso">
-        <div className="prose prose-gray max-w-none">
-          <div className="flex items-center gap-4 mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border border-blue-200 dark:border-blue-800">
-            <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-4 rounded-xl">
-              <FileText className="w-8 h-8 text-white" />
-            </div>
+    <PageLayout title="Termos de Uso">
+      <div className="prose prose-gray max-w-none space-y-6 sm:space-y-8 px-4">
+        <div className="bg-checkout-green/5 border border-checkout-green/20 rounded-2xl p-4 sm:p-6">
+          <p className="text-xs sm:text-sm text-muted-foreground mb-2">Última atualização: 1 de julho de 2025</p>
+          <p className="text-sm sm:text-base">
+            Estes Termos de Uso estabelecem as condições para utilização da plataforma Kambafy. 
+            Ao usar nossos serviços, você concorda com estes termos.
+          </p>
+        </div>
+
+        <section>
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-3 sm:mb-4 text-checkout-green">1. Aceitação dos Termos</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Ao acessar e usar a plataforma Kambafy, você concorda em cumprir estes Termos de Uso 
+            e todas as leis aplicáveis. Se você não concordar com qualquer parte destes termos, 
+            não deve usar nossos serviços.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-4 text-checkout-green">2. Descrição do Serviço</h2>
+          <p className="text-muted-foreground mb-4">
+            A Kambafy é uma plataforma que permite a criação, venda e compra de infoprodutos. 
+            Nossos serviços incluem:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+            <li>Ferramentas para criação de conteúdo digital</li>
+            <li>Sistema de pagamentos seguro</li>
+            <li>Hospedagem e distribuição de conteúdo</li>
+            <li>Analytics e relatórios</li>
+            <li>Suporte ao cliente</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-4 text-checkout-green">3. Cadastro e Conta</h2>
+          <div className="space-y-4">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Última atualização: Janeiro de 2024</p>
-              <p className="text-lg font-medium">
-                Entenda os termos e condições de uso da plataforma Kambafy.
+              <h3 className="text-lg font-medium mb-2">3.1 Elegibilidade</h3>
+              <p className="text-muted-foreground">
+                Para usar nossos serviços, você deve ter pelo menos 18 anos de idade 
+                ou ter permissão dos pais/responsáveis.
               </p>
             </div>
+            
+            <div>
+              <h3 className="text-lg font-medium mb-2">3.2 Responsabilidades</h3>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                <li>Fornecer informações precisas e atualizadas</li>
+                <li>Manter a segurança de sua conta</li>
+                <li>Não compartilhar suas credenciais</li>
+                <li>Notificar-nos sobre uso não autorizado</li>
+              </ul>
+            </div>
           </div>
+        </section>
 
-          <section className="mt-8 p-6 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800">
-            <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              1. Aceitação dos Termos
-            </h2>
-            <p className="text-muted-foreground">
-              Ao acessar e usar a plataforma Kambafy, você concorda em cumprir e estar vinculado aos seguintes termos e condições de uso.
-            </p>
-          </section>
+        <section>
+          <h2 className="text-2xl font-semibold mb-4 text-checkout-green">4. Conteúdo e Propriedade Intelectual</h2>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium mb-2">4.1 Seu Conteúdo</h3>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                <li>Você mantém todos os direitos sobre o conteúdo que cria</li>
+                <li>Deve ter os direitos necessários para todo conteúdo publicado</li>
+                <li>É responsável pela qualidade e legalidade do conteúdo</li>
+                <li>Concede à Kambafy licença para hospedar e distribuir seu conteúdo</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium mb-2">4.2 Conteúdo Proibido</h3>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                <li>Conteúdo ilegal, difamatório ou prejudicial</li>
+                <li>Material protegido por direitos autorais sem autorização</li>
+                <li>Conteúdo pornográfico ou sexualmente explícito</li>
+                <li>Spam ou conteúdo enganoso</li>
+                <li>Vírus ou código malicioso</li>
+              </ul>
+            </div>
+          </div>
+        </section>
 
-          <section className="mt-6 p-6 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800">
-            <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-              2. Uso da Plataforma
-            </h2>
-            <p className="text-muted-foreground">
-              A Kambafy fornece uma plataforma para criação e gestão de lojas online. Você é responsável por manter a confidencialidade de sua conta e senha.
-            </p>
-          </section>
+        <section>
+          <h2 className="text-2xl font-semibold mb-4 text-checkout-green">5. Pagamentos e Taxas</h2>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium mb-2">5.1 Comissões</h3>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                <li>Plano Gratuito: 10% de comissão por venda</li>
+                <li>Plano Profissional: 5% de comissão por venda</li>
+                <li>Taxas claramente informadas antes da transação</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium mb-2">5.2 Pagamentos</h3>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                <li>Processamento seguro através de parceiros confiáveis</li>
+                <li>Repasses realizados conforme cronograma estabelecido</li>
+                <li>Retenção de impostos conforme legislação angolana</li>
+              </ul>
+            </div>
+          </div>
+        </section>
 
-          <section className="mt-6 p-6 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border border-blue-200 dark:border-blue-800">
-            <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              3. Contas de Usuário
-            </h2>
-            <p className="text-muted-foreground">
-              Para usar determinados recursos da plataforma, você precisará criar uma conta. Você deve fornecer informações precisas e completas.
-            </p>
-          </section>
+        <section>
+          <h2 className="text-2xl font-semibold mb-4 text-checkout-green">6. Uso Adequado</h2>
+          <p className="text-muted-foreground mb-4">Você concorda em não:</p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+            <li>Violar leis ou regulamentos aplicáveis</li>
+            <li>Interferir no funcionamento da plataforma</li>
+            <li>Tentar acessar contas de outros usuários</li>
+            <li>Usar a plataforma para atividades fraudulentas</li>
+            <li>Copiar ou reproduzir conteúdo sem autorização</li>
+          </ul>
+        </section>
 
-          <section className="mt-6 p-6 rounded-xl bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 border border-orange-200 dark:border-orange-800">
-            <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-              4. Pagamentos e Taxas
-            </h2>
-            <p className="text-muted-foreground">
-              Alguns recursos da plataforma podem estar sujeitos a taxas. Você concorda em pagar todas as taxas aplicáveis conforme descrito em nossos planos de preços.
-            </p>
-          </section>
+        <section>
+          <h2 className="text-2xl font-semibold mb-4 text-checkout-green">7. Rescisão</h2>
+          <p className="text-muted-foreground">
+            Você pode encerrar sua conta a qualquer momento. Podemos suspender ou encerrar 
+            sua conta por violação destes termos, com aviso prévio quando possível. 
+            Após o encerramento, você perde o acesso à plataforma, mas mantém os direitos 
+            sobre seu conteúdo.
+          </p>
+        </section>
 
-          <section className="mt-6 p-6 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800">
-            <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              5. Conteúdo do Usuário
-            </h2>
-            <p className="text-muted-foreground">
-              Você mantém todos os direitos sobre o conteúdo que você carrega ou compartilha através da plataforma.
-            </p>
-          </section>
+        <section>
+          <h2 className="text-2xl font-semibold mb-4 text-checkout-green">8. Limitação de Responsabilidade</h2>
+          <p className="text-muted-foreground">
+            A Kambafy não se responsabiliza por danos indiretos, incidentais ou consequentes 
+            decorrentes do uso da plataforma. Nossa responsabilidade total é limitada ao 
+            valor pago pelos serviços nos últimos 12 meses.
+          </p>
+        </section>
 
-          <section className="mt-6 p-6 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 border">
-            <h2 className="text-xl font-semibold mb-4">6. Contato</h2>
-            <p className="text-muted-foreground">
-              Para questões sobre estes termos, entre em contato: <span className="text-blue-600 dark:text-blue-400 font-semibold">legal@kambafy.com</span>
-            </p>
-          </section>
-        </div>
-      </PageLayout>
-    </>
+        <section>
+          <h2 className="text-2xl font-semibold mb-4 text-checkout-green">9. Lei Aplicável</h2>
+          <p className="text-muted-foreground">
+            Estes termos são regidos pelas leis da República de Angola. 
+            Disputas serão resolvidas nos tribunais competentes de Luanda.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-3 sm:mb-4 text-checkout-green">10. Contato</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Para questões sobre estes termos, entre em contato:
+          </p>
+          <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm sm:text-base"><strong>Email:</strong> legal@kambafy.com</p>
+            <p className="text-sm sm:text-base"><strong>Endereço:</strong> Rua da Independência, Nº 123, Maianga, Luanda - Angola</p>
+          </div>
+        </section>
+      </div>
+    </PageLayout>
   );
 };
 

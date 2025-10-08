@@ -1,79 +1,89 @@
-import { SEO } from "@/components/SEO";
 import { PageLayout } from "@/components/PageLayout";
-import { CheckCircle, Zap, Shield, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CheckCircle, Users, BookOpen, DollarSign, Shield } from 'lucide-react';
+import { SEO, pageSEO } from "@/components/SEO";
 
 const HowItWorks = () => {
+  const steps = [
+    {
+      step: "1",
+      title: "Crie sua Conta",
+      description: "Cadastre-se gratuitamente e configure seu perfil de criador em poucos minutos."
+    },
+    {
+      step: "2", 
+      title: "Desenvolva seu Conteúdo",
+      description: "Use nossas ferramentas para criar cursos, ebooks ou outros infoprodutos de qualidade."
+    },
+    {
+      step: "3",
+      title: "Publique e Venda",
+      description: "Publique seu conteúdo na plataforma e comece a receber por cada venda realizada."
+    },
+    {
+      step: "4",
+      title: "Acompanhe Resultados",
+      description: "Monitore suas vendas, engajamento e receita através do nosso dashboard completo."
+    }
+  ];
+
+  const benefits = [
+    { icon: <BookOpen className="w-6 h-6" />, text: "Criação de conteúdo simplificada" },
+    { icon: <Users className="w-6 h-6" />, text: "Acesso a milhares de potenciais alunos" },
+    { icon: <DollarSign className="w-6 h-6" />, text: "Pagamentos seguros em Kwanza" },
+    { icon: <Shield className="w-6 h-6" />, text: "Proteção total do seu conteúdo" }
+  ];
+
   return (
     <>
-      <SEO 
-        title="Como Funciona | Kambafy"
-        description="Entenda como a Kambafy funciona e comece a vender online hoje mesmo."
-      />
+      <SEO {...pageSEO.howItWorks} />
       <PageLayout title="Como Funciona">
-        <div className="space-y-12">
-          <section className="text-center">
-            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Simples e Rápido
+        <div className="space-y-6 sm:space-y-8 md:space-y-12">
+          <div className="text-center px-4 sm:px-6 lg:px-8">
+            <h2 className="text-xl xs:text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4 leading-tight">
+              Transforme seu Conhecimento em <span className="text-checkout-green">Renda</span>
             </h2>
-            <p className="text-muted-foreground mb-6 text-lg">
-              A Kambafy foi desenvolvida para tornar suas vendas online simples e eficientes.
+            <p className="text-sm xs:text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              A Kambafy torna simples o processo de criar, vender e gerenciar seus infoprodutos. 
+              Siga estes passos para começar sua jornada.
             </p>
-          </section>
+          </div>
 
-          <section className="grid md:grid-cols-2 gap-8">
-            <div className="border rounded-2xl p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 hover:shadow-lg transition-all duration-300 border-purple-200 dark:border-purple-800">
-              <div className="bg-gradient-to-br from-purple-500 to-pink-500 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
-                <CheckCircle className="w-8 h-8 text-white" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 xs:gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-6 lg:px-8">
+            {steps.map((step, index) => (
+              <div key={index} className="flex items-start space-x-3 xs:space-x-4 p-3 xs:p-4 sm:p-6 bg-checkout-green/5 rounded-xl sm:rounded-2xl border border-checkout-green/10 hover:bg-checkout-green/10 transition-colors">
+                <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 bg-checkout-green rounded-full flex items-center justify-center text-white font-bold text-sm xs:text-base sm:text-lg flex-shrink-0">
+                  {step.step}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base xs:text-lg sm:text-xl font-semibold mb-1 sm:mb-2 leading-tight">{step.title}</h3>
+                  <p className="text-xs xs:text-sm sm:text-base text-muted-foreground leading-relaxed">{step.description}</p>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">1. Cadastre seus Produtos</h3>
-              <p className="text-muted-foreground">
-                Adicione seus produtos digitais ou físicos em minutos com nossa interface intuitiva.
-              </p>
-            </div>
+            ))}
+          </div>
 
-            <div className="border rounded-2xl p-6 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 hover:shadow-lg transition-all duration-300 border-blue-200 dark:border-blue-800">
-              <div className="bg-gradient-to-br from-blue-500 to-cyan-500 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
-                <Zap className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">2. Configure o Checkout</h3>
-              <p className="text-muted-foreground">
-                Personalize sua página de checkout com seu logo, cores e informações da marca.
-              </p>
+          <div className="bg-background border border-checkout-green/20 rounded-xl sm:rounded-2xl p-4 xs:p-5 sm:p-6 lg:p-8 mx-4 sm:mx-6 lg:mx-8">
+            <h3 className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-4 sm:mb-6 lg:mb-8">Benefícios da Kambafy</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4 sm:gap-6">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex items-center space-x-3 p-2 sm:p-0">
+                  <div className="text-checkout-green flex-shrink-0">{benefit.icon}</div>
+                  <span className="text-sm xs:text-base sm:text-lg leading-tight">{benefit.text}</span>
+                </div>
+              ))}
             </div>
+          </div>
 
-            <div className="border rounded-2xl p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 hover:shadow-lg transition-all duration-300 border-green-200 dark:border-green-800">
-              <div className="bg-gradient-to-br from-green-500 to-emerald-500 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">3. Receba Pagamentos</h3>
-              <p className="text-muted-foreground">
-                Aceite pagamentos seguros via PIX, cartão e boleto com aprovação instantânea.
-              </p>
-            </div>
-
-            <div className="border rounded-2xl p-6 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 hover:shadow-lg transition-all duration-300 border-orange-200 dark:border-orange-800">
-              <div className="bg-gradient-to-br from-orange-500 to-red-500 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
-                <TrendingUp className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">4. Acompanhe Resultados</h3>
-              <p className="text-muted-foreground">
-                Monitore suas vendas, clientes e métricas em tempo real no dashboard completo.
-              </p>
-            </div>
-          </section>
-
-          <section className="text-center bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-3xl p-12 border border-purple-200 dark:border-purple-800">
-            <h3 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Pronto para Começar?
-            </h3>
-            <p className="text-muted-foreground mb-6 text-lg">
-              Junte-se a centenas de empreendedores que já estão vendendo online.
+          <div className="text-center px-4 sm:px-6 lg:px-8">
+            <h3 className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4">Pronto para Começar?</h3>
+            <p className="text-xs xs:text-sm sm:text-base lg:text-lg text-muted-foreground mb-4 sm:mb-6 max-w-2xl mx-auto leading-relaxed">
+              Junte-se a centenas de criadores que já estão monetizando seu conhecimento.
             </p>
-            <Button size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg">
+            <Button size="lg" className="bg-checkout-green hover:bg-checkout-green/90 text-white w-full xs:w-auto px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base">
               Criar Conta Grátis
             </Button>
-          </section>
+          </div>
         </div>
       </PageLayout>
     </>
