@@ -1703,7 +1703,7 @@ export function AppHome() {
             </button>
 
             {/* Navigation Icons - Centered Group */}
-            <div className="flex items-center gap-4 flex-1 justify-center rounded-full px-6 py-2">
+            <div className="flex items-center gap-4 flex-1 justify-center rounded-full px-6 py-2 bg-background/95 backdrop-blur-xl border border-border/50 shadow-lg transition-all duration-300">
               <button
                 onClick={() => setActiveTab('home')}
                 className={`p-2.5 rounded-full transition-colors ${
