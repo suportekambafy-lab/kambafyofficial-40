@@ -123,19 +123,6 @@ export function CourseCard({
             </p>
           </div>
 
-          {/* Última atividade */}
-          {lastActivity && (
-            <div className="flex items-center gap-1.5 text-xs text-zinc-500 bg-zinc-900/50 rounded-lg px-2.5 py-1.5 border border-white/5">
-              <Clock className="w-3 h-3" />
-              <span className="text-xs">
-                {formatDistanceToNow(new Date(lastActivity), { 
-                  addSuffix: true, 
-                  locale: ptBR 
-                })}
-              </span>
-            </div>
-          )}
-
           {/* Botão de ação */}
           <button 
             className={`w-full group/btn relative overflow-hidden rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
