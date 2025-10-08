@@ -21,6 +21,7 @@ interface UnifiedMembersAuthContextType {
   studentName: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isLoggingOut: boolean;
   memberAreas: MemberAreaAccess[];
   login: (email: string) => Promise<boolean>;
   logout: () => void;
@@ -45,6 +46,7 @@ export function UnifiedMembersAuthProvider({ children }: UnifiedMembersAuthProvi
   const [studentName, setStudentName] = useState<string | null>(null);
   const [memberAreas, setMemberAreas] = useState<MemberAreaAccess[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -260,16 +262,21 @@ export function UnifiedMembersAuthProvider({ children }: UnifiedMembersAuthProvi
   };
 
   const logout = () => {
-    localStorage.removeItem('unified_members_session');
-    setStudentEmail(null);
-    setStudentName(null);
-    setMemberAreas([]);
+    console.log('🚪 Starting logout...');
     
+    // Ativar estado de logout IMEDIATAMENTE para esconder o conteúdo
+    setIsLoggingOut(true);
+    
+    // Limpar sessão do localStorage
+    localStorage.removeItem('unified_members_session');
+    
+    // Redirecionar IMEDIATAMENTE sem atualizar estados (evita flash de conteúdo)
     const loginUrl = window.location.hostname.includes('localhost')
       ? `${window.location.origin}/login`
       : 'https://membros.kambafy.com/login';
     
-    window.location.href = loginUrl;
+    // Usar replace para não deixar na história do navegador
+    window.location.replace(loginUrl);
   };
 
   const value = {
@@ -277,6 +284,7 @@ export function UnifiedMembersAuthProvider({ children }: UnifiedMembersAuthProvi
     studentName,
     isAuthenticated: !!studentEmail,
     isLoading,
+    isLoggingOut,
     memberAreas,
     login,
     logout

@@ -22,7 +22,7 @@ import {
 type FilterType = 'all' | 'in-progress' | 'completed' | 'not-started';
 
 export default function UnifiedMembersHub() {
-  const { studentName, studentEmail, memberAreas, isLoading, logout } = useUnifiedMembersAuth();
+  const { studentName, studentEmail, memberAreas, isLoading, isLoggingOut, logout } = useUnifiedMembersAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
   const navigate = useNavigate();
@@ -33,10 +33,14 @@ export default function UnifiedMembersHub() {
     }
   }, [isLoading, studentEmail, navigate]);
 
-  if (isLoading) {
+  // Mostrar loading durante logout para evitar flash de conteúdo
+  if (isLoading || isLoggingOut) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-[#00A651] mx-auto" />
+          {isLoggingOut && <p className="text-zinc-500 text-sm">Saindo...</p>}
+        </div>
       </div>
     );
   }
