@@ -103,10 +103,10 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       return;
     }
     
-    // QUINTA VERIFICAÇÃO: ÁREA DE MEMBROS (apenas para produção kambafy.com)
+    // QUINTA VERIFICAÇÃO: ÁREA DE MEMBROS - SEMPRE redirecionar para membros.kambafy.com
     if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/') || 
         currentPath === '/dashboard' || currentPath === '/members/dashboard' ||
-        (currentPath === '/members/login' && !currentPath.includes('/:id'))) {
+        currentPath.startsWith('/members/login') || currentPath.startsWith('/members/area')) {
       console.log('🎓 SubdomainGuard: DETECTADA rota de área de membros em PRODUÇÃO', {
         currentPath,
         currentSubdomain,
@@ -114,13 +114,23 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         message: 'Verificando se deve redirecionar para subdomínio membros'
       });
       
-      // Se estamos em kambafy.com (não no subdomínio membros), redirecionar
-      if (currentSubdomain === 'main') {
-        const targetUrl = getSubdomainUrl('membros', currentPath);
+      // Se NÃO estamos no subdomínio membros, redirecionar
+      if (currentSubdomain !== 'membros') {
+        // Remover prefixo /members se existir
+        let cleanPath = currentPath;
+        if (currentPath.startsWith('/members/login')) {
+          cleanPath = currentPath.replace('/members/login', '/login');
+        } else if (currentPath.startsWith('/members/area')) {
+          cleanPath = currentPath.replace('/members/area', '/area');
+        } else if (currentPath === '/members/dashboard') {
+          cleanPath = '/dashboard';
+        }
+        
+        const targetUrl = `${window.location.protocol}//membros.kambafy.com${cleanPath}`;
         console.log('🔄 SubdomainGuard: REDIRECIONANDO área de membros para subdomínio correto', {
           from: window.location.href,
           to: targetUrl,
-          reason: 'Área de membros deve estar no subdomínio membros'
+          reason: 'Área de membros SEMPRE usa membros.kambafy.com em produção'
         });
         window.location.href = targetUrl;
         return;
