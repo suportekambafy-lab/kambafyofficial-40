@@ -1691,19 +1691,19 @@ export function AppHome() {
       </div>
 
       {/* Horizontal Bottom Navigation */}
-      <nav className="fixed bottom-6 left-0 right-0 z-10 bg-background/80 backdrop-blur-md pb-safe">
+      <nav className="fixed bottom-6 left-0 right-0 z-10 pb-safe">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between gap-3 max-w-2xl mx-auto">
             {/* Back Button */}
             <button
               onClick={() => activeTab !== 'home' ? setActiveTab('home') : window.history.back()}
-              className="w-12 h-12 rounded-full bg-card shadow-md flex items-center justify-center hover:shadow-lg transition-shadow flex-shrink-0"
+              className="w-12 h-12 rounded-full flex items-center justify-center transition-shadow flex-shrink-0"
             >
               <ChevronLeft className="h-5 w-5 text-foreground" />
             </button>
 
             {/* Navigation Icons - Centered Group */}
-            <div className="flex items-center gap-4 flex-1 justify-center bg-card rounded-full shadow-md px-6 py-2">
+            <div className="flex items-center gap-4 flex-1 justify-center rounded-full px-6 py-2">
               <button
                 onClick={() => setActiveTab('home')}
                 className={`p-2.5 rounded-full transition-colors ${
@@ -1735,7 +1735,7 @@ export function AppHome() {
             {/* Profile Button */}
             <button
               onClick={() => setActiveTab('profile')}
-              className={`relative w-12 h-12 rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow flex-shrink-0 overflow-hidden ${
+              className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-shadow flex-shrink-0 overflow-hidden ${
                 activeTab === 'profile' ? 'ring-2 ring-primary ring-offset-2' : ''
               }`}
             >
