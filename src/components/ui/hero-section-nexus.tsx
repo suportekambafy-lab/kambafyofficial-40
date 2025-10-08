@@ -894,25 +894,25 @@ const InteractiveHero: React.FC = () => {
                       <div>
                           <h4 className="font-semibold text-white mb-4">Plataforma</h4>
                           <ul className="space-y-2 text-sm">
-                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Como Funciona</a></li>
-                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Preços</a></li>
-                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Recursos</a></li>
+                              <li><SubdomainLink to="/como-funciona" className="text-gray-500 hover:text-white transition-colors">Como Funciona</SubdomainLink></li>
+                              <li><SubdomainLink to="/precos" className="text-gray-500 hover:text-white transition-colors">Preços</SubdomainLink></li>
+                              <li><SubdomainLink to="/recursos" className="text-gray-500 hover:text-white transition-colors">Recursos</SubdomainLink></li>
                           </ul>
                       </div>
                       <div>
                           <h4 className="font-semibold text-white mb-4">Suporte</h4>
                           <ul className="space-y-2 text-sm">
-                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Central de Ajuda</a></li>
-                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Contacto</a></li>
-                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Status</a></li>
+                              <li><SubdomainLink to="/ajuda" className="text-gray-500 hover:text-white transition-colors">Central de Ajuda</SubdomainLink></li>
+                              <li><SubdomainLink to="/contato" className="text-gray-500 hover:text-white transition-colors">Contacto</SubdomainLink></li>
+                              <li><SubdomainLink to="/status" className="text-gray-500 hover:text-white transition-colors">Status</SubdomainLink></li>
                           </ul>
                       </div>
                       <div>
                           <h4 className="font-semibold text-white mb-4">Legal</h4>
                           <ul className="space-y-2 text-sm">
-                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Privacidade</a></li>
-                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Termos</a></li>
-                              <li><a href="#" className="text-gray-500 hover:text-white transition-colors">Cookies</a></li>
+                              <li><SubdomainLink to="/privacidade" className="text-gray-500 hover:text-white transition-colors">Privacidade</SubdomainLink></li>
+                              <li><SubdomainLink to="/termos" className="text-gray-500 hover:text-white transition-colors">Termos</SubdomainLink></li>
+                              <li><SubdomainLink to="/cookies" className="text-gray-500 hover:text-white transition-colors">Cookies</SubdomainLink></li>
                           </ul>
                       </div>
                   </div>
