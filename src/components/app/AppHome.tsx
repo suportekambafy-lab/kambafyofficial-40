@@ -1697,7 +1697,7 @@ export function AppHome() {
             {/* Back Button */}
             <button
               onClick={() => activeTab !== 'home' ? setActiveTab('home') : window.history.back()}
-              className="w-12 h-12 rounded-full flex items-center justify-center transition-shadow flex-shrink-0"
+              className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 flex-shrink-0 bg-background/95 backdrop-blur-xl border border-border/50 shadow-lg hover:shadow-xl"
             >
               <ChevronLeft className="h-5 w-5 text-foreground" />
             </button>
