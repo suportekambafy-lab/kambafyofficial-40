@@ -27,12 +27,16 @@ export default function UnifiedMembersLogin() {
       if (success) {
         // Aguardar um momento para carregar as áreas
         setTimeout(() => {
+          const baseUrl = window.location.hostname.includes('localhost') 
+            ? window.location.origin 
+            : 'https://membros.kambafy.com';
+            
           if (memberAreas.length === 1) {
             // Se tiver apenas 1 curso, redirecionar direto
-            navigate(`/members/area/${memberAreas[0].memberAreaId}`);
+            window.location.href = `${baseUrl}/area/${memberAreas[0].memberAreaId}`;
           } else {
             // Se tiver múltiplos, ir para dashboard
-            navigate('/members/dashboard');
+            window.location.href = `${baseUrl}/dashboard`;
           }
         }, 500);
       }

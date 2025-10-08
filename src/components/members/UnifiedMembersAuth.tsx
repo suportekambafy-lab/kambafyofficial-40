@@ -264,7 +264,12 @@ export function UnifiedMembersAuthProvider({ children }: UnifiedMembersAuthProvi
     setStudentEmail(null);
     setStudentName(null);
     setMemberAreas([]);
-    navigate('/members/login');
+    
+    const loginUrl = window.location.hostname.includes('localhost')
+      ? `${window.location.origin}/login`
+      : 'https://membros.kambafy.com/login';
+    
+    window.location.href = loginUrl;
   };
 
   const value = {
