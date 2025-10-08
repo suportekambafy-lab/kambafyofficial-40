@@ -27,6 +27,10 @@ import { MobileFloatingButton } from "@/components/checkout/MobileFloatingButton
 import { CheckoutLoadingSkeleton } from "@/components/checkout/ImprovedSkeletons";
 import { ValidationFeedback, validateEmail, validateName, validatePhone } from "@/components/checkout/EnhancedFormValidation";
 import { useOptimizedValidation } from "@/hooks/useOptimizedValidation";
+import { ResourceHints } from "@/components/checkout/ResourceHints";
+import { OptimizedProductImage } from "@/components/checkout/OptimizedProductImage";
+import { OptimizedPaymentLogo } from "@/components/checkout/OptimizedPaymentLogo";
+import { usePaymentMethodPrefetch } from "@/hooks/usePaymentMethodPrefetch";
 
 // Lazy load apenas componentes não-críticos
 const OptimizedCustomBanner = lazy(() => 
@@ -88,10 +92,10 @@ const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-8">
       <div className="flex flex-col md:flex-row gap-6">
         <div className="w-full md:w-1/3">
-          <img
-            src={getProductImage(product.cover)}
+          <OptimizedProductImage
+            src={product.cover}
             alt={product.name}
-            className="w-full h-48 md:h-64 object-cover rounded-lg"
+            className="w-full h-48 md:h-64 rounded-lg"
           />
         </div>
         <div className="w-full md:w-2/3">
@@ -127,6 +131,7 @@ const PaymentMethods = memo(({
   availablePaymentMethods, 
   selectedPayment, 
   setSelectedPayment,
+  setHoveredPayment,
   userCountry,
   t,
   isTranslationReady
@@ -149,6 +154,8 @@ const PaymentMethods = memo(({
           <div
             key={method.id}
             onClick={() => setSelectedPayment(method.id)}
+            onMouseEnter={() => setHoveredPayment(method.id)}
+            onMouseLeave={() => setHoveredPayment(null)}
             className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
               selectedPayment === method.id
                 ? 'border-primary bg-primary/5'
@@ -156,10 +163,10 @@ const PaymentMethods = memo(({
             }`}
           >
             <div className="flex flex-col items-center gap-2">
-              <img
+              <OptimizedPaymentLogo
                 src={method.image}
                 alt={method.name}
-                className="w-8 h-8 object-contain"
+                className="w-8 h-8"
               />
               <span className="text-sm font-medium text-center">
                 {method.name}
@@ -187,6 +194,7 @@ const OptimizedCheckout = () => {
   const { t, isTranslationReady } = useTranslation();
   
   const [selectedPayment, setSelectedPayment] = useState("");
+  const [hoveredPayment, setHoveredPayment] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
   const [bankTransferData, setBankTransferData] = useState<{file: File, bank: string} | null>(null);
@@ -274,6 +282,9 @@ const OptimizedCheckout = () => {
   if (forceCardForUS && countryPaymentMethods.length === 0) {
     console.log('🚨 FORCING CARD METHOD FOR US');
   }
+
+  // Prefetch inteligente de métodos de pagamento
+  usePaymentMethodPrefetch(finalPaymentMethods, hoveredPayment);
 
   // Auto-preencher email se usuário estiver logado
   useEffect(() => {
@@ -442,6 +453,12 @@ const OptimizedCheckout = () => {
         <SEO 
           title={`${product?.name} - Checkout`}
           description={`Finalize sua compra: ${product?.name}`}
+        />
+        
+        {/* Resource Hints para performance */}
+        <ResourceHints 
+          selectedPayment={selectedPayment}
+          userCountry={userCountry?.code}
         />
         
         <FacebookPixelTracker productId={productId || ''} />
@@ -666,6 +683,7 @@ const OptimizedCheckout = () => {
                     availablePaymentMethods={finalPaymentMethods}
                     selectedPayment={selectedPayment}
                     setSelectedPayment={setSelectedPayment}
+                    setHoveredPayment={setHoveredPayment}
                     userCountry={userCountry}
                     t={t}
                     isTranslationReady={isTranslationReady}
