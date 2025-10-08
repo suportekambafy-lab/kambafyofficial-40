@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, DollarSign, Users, Shield, Star, Play, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SubdomainLink } from "@/components/SubdomainLink";
+import kambafy_icon from "@/assets/kambafy-icon-gray.png";
 
 function cn(...classes: (string | undefined | null | boolean)[]): string {
   return classes.filter(Boolean).join(" ");
@@ -888,7 +889,7 @@ const InteractiveHero: React.FC = () => {
               <div className="mx-auto max-w-7xl">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                       <div>
-                          <img src="/kambafy-logo-white.png" alt="Kambafy" className="h-12 w-auto mb-4" />
+                          <img src={kambafy_icon} alt="Kambafy" className="h-12 w-auto mb-4" />
                           <p className="text-gray-500 text-sm">A maior plataforma Lusófona de infoprodutos</p>
                       </div>
                       <div>
