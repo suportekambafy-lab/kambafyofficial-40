@@ -725,20 +725,6 @@ const InteractiveHero: React.FC = () => {
             >
                 Sem custos iniciais • Cancele quando quiser
             </motion.p>
-
-            <motion.div
-                variants={imageVariants}
-                initial="hidden"
-                animate="visible"
-                className="w-full max-w-5xl mx-auto px-4 sm:px-0"
-            >
-                <img
-                    src="/lovable-uploads/be22ac17-d2d9-4d84-8ffa-3ed3d91cfaed.png"
-                    alt="Plataforma Kambafy"
-                    className="w-full h-auto object-cover rounded-lg shadow-2xl border border-gray-700/50"
-                    loading="lazy"
-                />
-            </motion.div>
           </section>
 
           {/* Features Section */}
