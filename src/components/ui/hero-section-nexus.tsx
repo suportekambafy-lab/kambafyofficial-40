@@ -29,6 +29,7 @@ import { BookOpen, DollarSign, Users, Shield, Star, Play, ArrowRight } from 'luc
 import { useNavigate } from 'react-router-dom';
 import { SubdomainLink } from "@/components/SubdomainLink";
 import kambafy_icon from "@/assets/kambafy-icon-gray.png";
+import teamImage from "@/assets/team-collaboration.jpg";
 
 function cn(...classes: (string | undefined | null | boolean)[]): string {
   return classes.filter(Boolean).join(" ");
@@ -743,8 +744,8 @@ const InteractiveHero: React.FC = () => {
                       </div>
                       <div className="relative">
                           <img 
-                              src="/lovable-uploads/be22ac17-d2d9-4d84-8ffa-3ed3d91cfaed.png" 
-                              alt="Profissional jovem trabalhando" 
+                              src={teamImage} 
+                              alt="Profissionais colaborando" 
                               className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-[#0CF2A0]/20 to-transparent rounded-2xl"></div>
