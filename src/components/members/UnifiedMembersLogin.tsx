@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Loader2 } from 'lucide-react';
+import { Mail, Loader2, Sparkles, GraduationCap } from 'lucide-react';
 import { useUnifiedMembersAuth } from './UnifiedMembersAuth';
 
 export default function UnifiedMembersLogin() {
@@ -42,34 +42,75 @@ export default function UnifiedMembersLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-[#09090b] relative overflow-hidden flex items-center justify-center p-4">
+      {/* Animated background with grid */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Gradient orbs */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#00A651]/8 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-[#00A651]/5 rounded-full blur-[120px]" />
+        
+        {/* Grid overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,166,81,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,166,81,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,black,transparent)]" />
+      </div>
+
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="w-full max-w-md space-y-8 relative z-10"
+      >
         {/* Logo */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Kambafy
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Área de Membros
-          </p>
-        </div>
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="text-center space-y-4"
+        >
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-[#00A651]/30 rounded-3xl blur-2xl" />
+              <div className="relative p-4 rounded-3xl bg-[#00A651]/10 border border-[#00A651]/20">
+                <Sparkles className="w-12 h-12 text-[#00A651]" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              Kambafy
+            </h1>
+            <p className="text-zinc-500 text-sm">
+              Área de Membros
+            </p>
+          </div>
+        </motion.div>
 
         {/* Card de Login */}
-        <Card className="border-border/50 shadow-lg">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Acessar Meus Cursos</CardTitle>
-            <CardDescription>
-              Entre com seu email para acessar todos os seus cursos
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="relative group"
+        >
+          {/* Glow effect */}
+          <div className="absolute -inset-0.5 bg-[#00A651]/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+          
+          <div className="relative bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-8">
+            <div className="space-y-2 mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <GraduationCap className="w-6 h-6 text-[#00A651]" />
+                <h2 className="text-2xl font-bold text-white">Acessar Meus Cursos</h2>
+              </div>
+              <p className="text-zinc-500 text-sm">
+                Entre com seu email para acessar todos os seus cursos
+              </p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-3">
+                <label htmlFor="email" className="text-sm font-medium text-zinc-400">
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-600" />
                   <Input
                     id="email"
                     type="email"
@@ -77,7 +118,7 @@ export default function UnifiedMembersLogin() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
-                    className="pl-10"
+                    className="pl-12 h-12 bg-zinc-900/50 backdrop-blur-xl border-white/5 text-white placeholder:text-zinc-600 focus:border-[#00A651]/50 transition-all rounded-xl"
                     required
                   />
                 </div>
@@ -85,12 +126,12 @@ export default function UnifiedMembersLogin() {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full h-12 bg-[#00A651] hover:bg-[#00A651]/90 text-white font-semibold rounded-xl shadow-lg shadow-[#00A651]/20 hover:shadow-[#00A651]/40 transition-all"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Verificando...
                   </>
                 ) : (
@@ -99,19 +140,24 @@ export default function UnifiedMembersLogin() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              <p>
+            <div className="mt-6 pt-6 border-t border-white/5">
+              <p className="text-center text-sm text-zinc-500">
                 Primeiro acesso? Use o email da sua compra
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </motion.div>
 
         {/* Footer */}
-        <div className="text-center text-sm text-muted-foreground">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-center text-xs text-zinc-600"
+        >
           <p>© 2024 Kambafy. Todos os direitos reservados.</p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
