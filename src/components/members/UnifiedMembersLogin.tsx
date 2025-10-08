@@ -65,10 +65,12 @@ export default function UnifiedMembersLogin() {
           transition={{ delay: 0.1 }}
           className="text-center space-y-2"
         >
-          <h1 className="text-5xl font-bold text-white mb-3">
-            Kambafy
-          </h1>
-          <p className="text-zinc-500">
+          <img 
+            src="/kambafy-logo-light-green.png" 
+            alt="Kambafy" 
+            className="h-16 w-auto mx-auto mb-2"
+          />
+          <p className="text-zinc-500 text-sm">
             Área de Membros
           </p>
         </motion.div>
