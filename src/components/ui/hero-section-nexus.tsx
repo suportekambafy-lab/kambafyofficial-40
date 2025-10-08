@@ -589,7 +589,7 @@ const InteractiveHero: React.FC = () => {
             <nav className="flex justify-between items-center max-w-screen-xl mx-auto h-[70px]">
                 <div className="flex items-center flex-shrink-0">
                     <img 
-                      src="/kambafy-logo-green.png" 
+                      src="/kambafy-logo-white.png" 
                       alt="Kambafy" 
                       className="h-12 w-auto"
                     />
@@ -888,7 +888,7 @@ const InteractiveHero: React.FC = () => {
               <div className="mx-auto max-w-7xl">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                       <div>
-                          <img src="/kambafy-logo-green.png" alt="Kambafy" className="h-12 w-auto mb-4" />
+                          <img src="/kambafy-logo-white.png" alt="Kambafy" className="h-12 w-auto mb-4" />
                           <p className="text-gray-500 text-sm">A maior plataforma Lusófona de infoprodutos</p>
                       </div>
                       <div>
