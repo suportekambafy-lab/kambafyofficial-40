@@ -29,6 +29,7 @@ import { useNativeCamera } from '@/hooks/useNativeCamera';
 import { useAppState } from '@/hooks/useAppState';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
+import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -1480,30 +1481,8 @@ export function AppHome() {
               </Card>
             </div>
 
-            {/* Quick Actions */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-base mb-4 text-foreground">Acesso Rápido</h3>
-                <div className="space-y-2">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-12 hover:bg-primary/5 hover:text-primary transition-colors"
-                    onClick={() => setActiveTab('stats')}
-                  >
-                    <Wallet className="h-5 w-5 mr-3" />
-                    <span className="font-medium">Ver financeiro</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-12 hover:bg-primary/5 hover:text-primary transition-colors"
-                    onClick={() => setActiveTab('products')}
-                  >
-                    <Package className="h-5 w-5 mr-3" />
-                    <span className="font-medium">Meus produtos</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Sales Chart */}
+            <ModernSalesChart />
 
             {/* Info Card */}
             <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-primary/5">
