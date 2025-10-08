@@ -41,8 +41,8 @@ export function CrispChat({ websiteId = '62ac656c-3096-4b39-bbe1-05a210b6dfc4' }
         // Customizar cores (tema Kambafy)
         window.$crisp.push(['config', 'color:theme', ['#10b981']]);
         
-        // Ocultar por padrão (usuário clica para abrir)
-        window.$crisp.push(['do', 'chat:hide']);
+        // Chat fica visível e acessível
+        window.$crisp.push(['do', 'chat:show']);
         
         // Se o usuário estiver logado, enviar informações
         if (user) {
