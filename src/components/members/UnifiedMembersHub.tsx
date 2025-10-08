@@ -88,7 +88,11 @@ export default function UnifiedMembersHub() {
               <div className="relative">
                 <div className="absolute inset-0 bg-[#00A651]/20 rounded-2xl blur-xl" />
                 <div className="relative p-2.5 rounded-2xl bg-[#00A651]/10 border border-[#00A651]/20">
-                  <Sparkles className="w-6 h-6 text-[#00A651]" />
+                  <img 
+                    src="/kambafy-logo-light-green.png" 
+                    alt="Kambafy" 
+                    className="w-8 h-8 object-contain brightness-0 invert"
+                  />
                 </div>
               </div>
               <div>
