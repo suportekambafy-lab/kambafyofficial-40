@@ -270,7 +270,12 @@ export default function UnifiedMembersHub() {
               >
                 <CourseCard
                   {...area}
-                  onClick={() => navigate(`/members/area/${area.memberAreaId}`)}
+                  onClick={() => {
+                    const baseUrl = window.location.hostname.includes('localhost') 
+                      ? window.location.origin 
+                      : 'https://membros.kambafy.com';
+                    window.location.href = `${baseUrl}/area/${area.memberAreaId}`;
+                  }}
                 />
               </motion.div>
             ))}
