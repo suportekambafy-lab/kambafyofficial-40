@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Mail, Loader2, Sparkles, GraduationCap } from 'lucide-react';
+import { Mail, Loader2 } from 'lucide-react';
 import { useUnifiedMembersAuth } from './UnifiedMembersAuth';
 
 export default function UnifiedMembersLogin() {
@@ -63,24 +63,14 @@ export default function UnifiedMembersLogin() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="text-center space-y-4"
+          className="text-center space-y-2"
         >
-          <div className="flex justify-center">
-            <div className="relative">
-              <div className="absolute inset-0 bg-[#00A651]/30 rounded-3xl blur-2xl" />
-              <div className="relative p-4 rounded-3xl bg-[#00A651]/10 border border-[#00A651]/20">
-                <Sparkles className="w-12 h-12 text-[#00A651]" />
-              </div>
-            </div>
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2">
-              Kambafy
-            </h1>
-            <p className="text-zinc-500 text-sm">
-              Área de Membros
-            </p>
-          </div>
+          <h1 className="text-5xl font-bold text-white mb-3">
+            Kambafy
+          </h1>
+          <p className="text-zinc-500">
+            Área de Membros
+          </p>
         </motion.div>
 
         {/* Card de Login */}
@@ -95,10 +85,7 @@ export default function UnifiedMembersLogin() {
           
           <div className="relative bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-8">
             <div className="space-y-2 mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <GraduationCap className="w-6 h-6 text-[#00A651]" />
-                <h2 className="text-2xl font-bold text-white">Acessar Meus Cursos</h2>
-              </div>
+              <h2 className="text-2xl font-bold text-white">Acessar Meus Cursos</h2>
               <p className="text-zinc-500 text-sm">
                 Entre com seu email para acessar todos os seus cursos
               </p>
