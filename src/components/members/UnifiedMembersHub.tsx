@@ -89,9 +89,9 @@ export default function UnifiedMembersHub() {
                 <div className="absolute inset-0 bg-[#00A651]/20 rounded-2xl blur-xl" />
                 <div className="relative p-3 rounded-2xl bg-[#00A651]/10 border border-[#00A651]/20">
                   <img 
-                    src="/kambafy-icon-white.png" 
+                    src="/kambafy-icon-white.png?v=2" 
                     alt="Kambafy" 
-                    className="w-12 h-12 object-contain"
+                    className="w-12 h-12 object-contain brightness-0 invert"
                   />
                 </div>
               </div>
