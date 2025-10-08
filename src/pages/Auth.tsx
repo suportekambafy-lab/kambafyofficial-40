@@ -8,13 +8,14 @@ import SignUpCodeVerification from '@/components/SignUpCodeVerification';
 import { supabase } from '@/integrations/supabase/client';
 import { SignInPage, Testimonial } from '@/components/ui/sign-in';
 import loginHeroImage from '@/assets/about-section-team.jpg';
+import victorAvatar from '@/assets/testimonial-victor-muabi.jpg';
 
 const sampleTestimonials: Testimonial[] = [
   {
-    avatarSrc: "https://randomuser.me/api/portraits/women/57.jpg",
-    name: "Ana Silva",
-    handle: "@anadigital",
-    text: "Plataforma incrível! A experiência do usuário é perfeita e os recursos são exatamente o que eu precisava."
+    avatarSrc: victorAvatar,
+    name: "Victor Muabi",
+    handle: "@victormuabi",
+    text: "Esta é a plataforma que faltava no mercado, fácil de usar, converte muito bem, aumentou minha conversão em lançamentos."
   },
   {
     avatarSrc: "https://randomuser.me/api/portraits/men/64.jpg",
