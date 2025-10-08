@@ -86,24 +86,24 @@ export default function UnifiedMembersHub() {
         animate={{ y: 0, opacity: 1 }}
         className="sticky top-0 z-50 border-b border-white/5 bg-[#09090b]/60 backdrop-blur-2xl"
       >
-        <div className="container mx-auto px-4 py-5">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="absolute inset-0 bg-[#00A651]/20 rounded-2xl blur-xl" />
-                <div className="relative p-3 rounded-2xl bg-[#00A651]/10 border border-[#00A651]/20">
+                <div className="absolute inset-0 bg-[#00A651]/20 rounded-xl blur-lg" />
+                <div className="relative p-2 rounded-xl bg-[#00A651]/10 border border-[#00A651]/20">
                   <img 
                     src="/kambafy-icon-white.png?v=2" 
                     alt="Kambafy" 
-                    className="w-12 h-12 object-contain brightness-0 invert"
+                    className="w-8 h-8 object-contain brightness-0 invert"
                   />
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">
+                <h1 className="text-lg font-bold text-white">
                   Meus Cursos
                 </h1>
-                <p className="text-sm text-zinc-500">
+                <p className="text-xs text-zinc-500">
                   {studentName || studentEmail}
                 </p>
               </div>
@@ -112,37 +112,37 @@ export default function UnifiedMembersHub() {
               variant="ghost" 
               size="sm" 
               onClick={logout}
-              className="text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+              className="text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all text-xs h-8"
             >
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
               Sair
             </Button>
           </div>
         </div>
       </motion.header>
 
-      <main className="container mx-auto px-4 py-10 space-y-8 relative z-10">
+      <main className="container mx-auto px-4 py-6 space-y-6 relative z-10">
         {/* Estatísticas */}
         <motion.div 
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
           {/* Total Cursos */}
           <div className="group relative">
-            <div className="absolute inset-0 bg-[#00A651]/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-6 hover:border-[#00A651]/30 transition-all">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-xl bg-[#00A651]/10 border border-[#00A651]/20">
-                  <BookOpen className="w-6 h-6 text-[#00A651]" />
+            <div className="absolute inset-0 bg-[#00A651]/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-xl p-4 hover:border-[#00A651]/30 transition-all">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-2 rounded-lg bg-[#00A651]/10 border border-[#00A651]/20">
+                  <BookOpen className="w-4 h-4 text-[#00A651]" />
                 </div>
                 <div className="text-right">
-                  <div className="text-4xl font-bold text-white mb-1">{totalCourses}</div>
-                  <p className="text-sm text-zinc-500">Cursos</p>
+                  <div className="text-2xl font-bold text-white mb-0.5">{totalCourses}</div>
+                  <p className="text-xs text-zinc-500">Cursos</p>
                 </div>
               </div>
-              <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
+              <div className="h-0.5 bg-zinc-900 rounded-full overflow-hidden">
                 <div className="h-full bg-[#00A651] rounded-full" style={{ width: '100%' }} />
               </div>
             </div>
@@ -150,18 +150,18 @@ export default function UnifiedMembersHub() {
 
           {/* Aulas Concluídas */}
           <div className="group relative">
-            <div className="absolute inset-0 bg-emerald-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-6 hover:border-emerald-500/30 transition-all">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                  <Award className="w-6 h-6 text-emerald-400" />
+            <div className="absolute inset-0 bg-emerald-500/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-xl p-4 hover:border-emerald-500/30 transition-all">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <Award className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div className="text-right">
-                  <div className="text-4xl font-bold text-white mb-1">{completedLessons}</div>
-                  <p className="text-sm text-zinc-500">Concluídas</p>
+                  <div className="text-2xl font-bold text-white mb-0.5">{completedLessons}</div>
+                  <p className="text-xs text-zinc-500">Concluídas</p>
                 </div>
               </div>
-              <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
+              <div className="h-0.5 bg-zinc-900 rounded-full overflow-hidden">
                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: totalLessons > 0 ? `${(completedLessons / totalLessons) * 100}%` : '0%' }} />
               </div>
             </div>
@@ -169,18 +169,18 @@ export default function UnifiedMembersHub() {
 
           {/* Total Aulas */}
           <div className="group relative">
-            <div className="absolute inset-0 bg-zinc-600/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-6 hover:border-zinc-600/30 transition-all">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
-                  <TrendingUp className="w-6 h-6 text-zinc-400" />
+            <div className="absolute inset-0 bg-zinc-600/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-xl p-4 hover:border-zinc-600/30 transition-all">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
+                  <TrendingUp className="w-4 h-4 text-zinc-400" />
                 </div>
                 <div className="text-right">
-                  <div className="text-4xl font-bold text-white mb-1">{totalLessons}</div>
-                  <p className="text-sm text-zinc-500">Total</p>
+                  <div className="text-2xl font-bold text-white mb-0.5">{totalLessons}</div>
+                  <p className="text-xs text-zinc-500">Total</p>
                 </div>
               </div>
-              <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
+              <div className="h-0.5 bg-zinc-900 rounded-full overflow-hidden">
                 <div className="h-full bg-zinc-600 rounded-full" style={{ width: '100%' }} />
               </div>
             </div>
@@ -192,44 +192,44 @@ export default function UnifiedMembersHub() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex flex-col sm:flex-row gap-4"
+          className="flex flex-col sm:flex-row gap-3"
         >
           <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterType)} className="flex-1">
-            <TabsList className="bg-[#18181b]/80 backdrop-blur-xl border border-white/5 p-1 h-auto">
+            <TabsList className="bg-[#18181b]/80 backdrop-blur-xl border border-white/5 p-0.5 h-auto">
               <TabsTrigger 
                 value="all" 
-                className="data-[state=active]:bg-[#00A651] data-[state=active]:text-white text-zinc-500 rounded-lg px-4 py-2.5 transition-all"
+                className="data-[state=active]:bg-[#00A651] data-[state=active]:text-white text-zinc-500 rounded-lg px-3 py-1.5 text-sm transition-all"
               >
                 Todos
               </TabsTrigger>
               <TabsTrigger 
                 value="in-progress" 
-                className="data-[state=active]:bg-[#00A651] data-[state=active]:text-white text-zinc-500 rounded-lg px-4 py-2.5 transition-all"
+                className="data-[state=active]:bg-[#00A651] data-[state=active]:text-white text-zinc-500 rounded-lg px-3 py-1.5 text-sm transition-all"
               >
                 Em andamento
               </TabsTrigger>
               <TabsTrigger 
                 value="completed" 
-                className="data-[state=active]:bg-[#00A651] data-[state=active]:text-white text-zinc-500 rounded-lg px-4 py-2.5 transition-all"
+                className="data-[state=active]:bg-[#00A651] data-[state=active]:text-white text-zinc-500 rounded-lg px-3 py-1.5 text-sm transition-all"
               >
                 Concluídos
               </TabsTrigger>
               <TabsTrigger 
                 value="not-started" 
-                className="data-[state=active]:bg-[#00A651] data-[state=active]:text-white text-zinc-500 rounded-lg px-4 py-2.5 transition-all"
+                className="data-[state=active]:bg-[#00A651] data-[state=active]:text-white text-zinc-500 rounded-lg px-3 py-1.5 text-sm transition-all"
               >
                 Não iniciados
               </TabsTrigger>
             </TabsList>
           </Tabs>
 
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-600" />
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" />
             <Input
               placeholder="Buscar curso..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 bg-[#18181b]/80 backdrop-blur-xl border-white/5 text-white placeholder:text-zinc-600 focus:border-[#00A651]/50 transition-all rounded-xl"
+              className="pl-10 h-9 bg-[#18181b]/80 backdrop-blur-xl border-white/5 text-white text-sm placeholder:text-zinc-600 focus:border-[#00A651]/50 transition-all rounded-lg"
             />
           </div>
         </motion.div>
@@ -241,16 +241,16 @@ export default function UnifiedMembersHub() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-16">
+            <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-xl p-12">
               <div className="text-center">
-                <div className="relative w-fit mx-auto mb-6">
-                  <div className="absolute inset-0 bg-zinc-900/50 rounded-full blur-2xl" />
-                  <div className="relative p-6 rounded-full bg-zinc-900/50 border border-white/5">
-                    <GraduationCap className="w-16 h-16 text-zinc-600" />
+                <div className="relative w-fit mx-auto mb-4">
+                  <div className="absolute inset-0 bg-zinc-900/50 rounded-full blur-xl" />
+                  <div className="relative p-4 rounded-full bg-zinc-900/50 border border-white/5">
+                    <GraduationCap className="w-12 h-12 text-zinc-600" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Nenhum curso encontrado</h3>
-                <p className="text-zinc-500">
+                <h3 className="text-lg font-bold text-white mb-1">Nenhum curso encontrado</h3>
+                <p className="text-sm text-zinc-500">
                   {searchQuery || filter !== 'all'
                     ? 'Tente ajustar seus filtros'
                     : 'Você ainda não tem acesso a nenhum curso'}
@@ -263,7 +263,7 @@ export default function UnifiedMembersHub() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
             {filteredAreas.map((area, index) => (
               <motion.div
