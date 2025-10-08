@@ -380,9 +380,65 @@ const handler = async (req: Request): Promise<Response> => {
           // Fetch product details for confirmation
           const { data: product } = await supabase
             .from('products')
-            .select('name, user_id, member_area_id')
+            .select('*')
             .eq('id', order.product_id)
             .single();
+
+          // ✅ CRIAR CUSTOMER_ACCESS ANTES DE ENVIAR EMAIL
+          console.log('[APPYPAY-WEBHOOK] 🔓 Creating customer access...');
+          
+          // Verificar se já existe acesso
+          const { data: existingAccess } = await supabase
+            .from('customer_access')
+            .select('id, is_active')
+            .eq('customer_email', order.customer_email.toLowerCase().trim())
+            .eq('product_id', order.product_id)
+            .single();
+          
+          if (existingAccess) {
+            console.log('[APPYPAY-WEBHOOK] ⚠️ Access already exists, updating...');
+            await supabase
+              .from('customer_access')
+              .update({ 
+                is_active: true,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existingAccess.id);
+            console.log('[APPYPAY-WEBHOOK] ✅ Customer access updated');
+          } else {
+            // Calcular expiração de acesso
+            const accessExpiresAt = product.access_duration_type === 'lifetime' || !product.access_duration_type
+              ? null
+              : (() => {
+                  const now = new Date();
+                  switch (product.access_duration_type) {
+                    case 'days':
+                      return new Date(now.setDate(now.getDate() + product.access_duration_value));
+                    case 'months':
+                      return new Date(now.setMonth(now.getMonth() + product.access_duration_value));
+                    case 'years':
+                      return new Date(now.setFullYear(now.getFullYear() + product.access_duration_value));
+                    default:
+                      return null;
+                  }
+                })();
+            
+            const { error: accessError } = await supabase.from('customer_access').insert({
+              customer_email: order.customer_email.toLowerCase().trim(),
+              customer_name: order.customer_name,
+              product_id: order.product_id,
+              order_id: order.order_id,
+              access_granted_at: new Date().toISOString(),
+              access_expires_at: accessExpiresAt,
+              is_active: true
+            });
+            
+            if (accessError) {
+              console.error('[APPYPAY-WEBHOOK] ❌ Error creating customer access:', accessError);
+            } else {
+              console.log('[APPYPAY-WEBHOOK] ✅ Customer access created successfully');
+            }
+          }
 
           // Send purchase confirmation email and SMS
           const confirmationPayload = {
