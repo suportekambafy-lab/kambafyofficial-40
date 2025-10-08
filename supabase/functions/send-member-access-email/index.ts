@@ -310,9 +310,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending member access email...');
     const { data: emailResponse, error: emailError } = await resend.emails.send({
-      from: sellerProfile?.full_name 
-        ? `${sellerProfile.full_name} via Kambafy <noreply@kambafy.com>`
-        : "Kambafy <noreply@kambafy.com>",
+      from: "Kambafy <noreply@kambafy.com>",
       to: [normalizedEmail],
       subject: emailSubject || `🎓 Acesso Liberado - ${memberAreaName}`,
       html: memberAccessEmailHtml,
@@ -446,9 +444,7 @@ const handler = async (req: Request): Promise<Response> => {
       `;
 
       const { data: panelEmailResponse, error: panelEmailError } = await resend.emails.send({
-        from: sellerProfile?.full_name 
-          ? `${sellerProfile.full_name} via Kambafy <noreply@kambafy.com>`
-          : "Kambafy <noreply@kambafy.com>",
+        from: "Kambafy <noreply@kambafy.com>",
         to: [normalizedEmail],
         subject: `🚀 Acesso ao Painel Kambafy - ${studentName}`,
         html: panelEmailHtml,

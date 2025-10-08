@@ -312,9 +312,7 @@ const handler = async (req: Request): Promise<Response> => {
         try {
           console.log('Background task: Sending pending payment email');
           const { data: pendingEmailResponse, error: pendingEmailError } = await resend.emails.send({
-            from: sellerProfile?.full_name 
-              ? `${sellerProfile.full_name} via Kambafy <noreply@kambafy.com>`
-              : "Kambafy <noreply@kambafy.com>",
+            from: "Kambafy <noreply@kambafy.com>",
             to: [normalizedEmail],
             subject: `Pagamento Pendente - ${productName} - Pedido #${orderId}`,
             html: pendingEmailHtml,
@@ -742,9 +740,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Send the customer email
         const { data: emailResponse, error: emailError } = await resend.emails.send({
-          from: sellerProfile?.full_name 
-            ? `${sellerProfile.full_name} via Kambafy <noreply@kambafy.com>`
-            : "Kambafy <noreply@kambafy.com>",
+          from: "Kambafy <noreply@kambafy.com>",
           to: [normalizedEmail],
           subject: `Confirmação de Compra - ${productName} - Pedido #${orderId}`,
           html: customerEmailHtml,

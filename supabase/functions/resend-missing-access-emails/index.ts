@@ -222,9 +222,7 @@ serve(async (req) => {
         `;
 
         const { error: emailError } = await resend.emails.send({
-          from: seller?.full_name 
-            ? `${seller.full_name} via Kambafy <noreply@kambafy.com>`
-            : 'Kambafy <noreply@kambafy.com>',
+          from: 'Kambafy <noreply@kambafy.com>',
           to: [order.customer_email],
           subject: `✅ Seu acesso ao ${product.name} está pronto!`,
           html: emailHtml,
