@@ -182,15 +182,32 @@ serve(async (req) => {
                       </td>
                     </tr>
 
+                    <!-- Contact Info -->
+                    <tr>
+                      <td style="padding: 30px; border-top: 1px solid #e0e0e0;">
+                        <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #333333;">📧 Informações de Contato</h3>
+                        <p style="margin: 0 0 15px; color: #666666; font-size: 14px;">
+                          <strong>Vendedor:</strong> ${seller.full_name}
+                        </p>
+                        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #0066cc;">
+                          <p style="margin: 0 0 12px; color: #666666; font-size: 14px;">
+                            <strong>📧 Contato do Vendedor:</strong><br>
+                            <a href="mailto:${seller.email}" style="color: #0066cc; text-decoration: none;">${seller.email}</a>
+                          </p>
+                          <p style="margin: 0; color: #666666; font-size: 14px;">
+                            <strong>🏢 Suporte Kambafy:</strong><br>
+                            <a href="mailto:suporte@kambafy.com" style="color: #0066cc; text-decoration: none;">suporte@kambafy.com</a>
+                          </p>
+                        </div>
+                        <p style="margin: 15px 0 0; color: #999999; font-size: 13px; font-style: italic;">
+                          💡 Para dúvidas sobre o produto, contacte o vendedor. Para questões técnicas da plataforma, contacte o suporte Kambafy.
+                        </p>
+                      </td>
+                    </tr>
+
                     <!-- Footer -->
                     <tr>
                       <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                        <p style="color: #666666; font-size: 13px; margin: 0 0 8px;">
-                          Precisa de ajuda? Entre em contato: 
-                          <a href="mailto:${seller.email}" style="color: #0066cc; text-decoration: none;">
-                            ${seller.email}
-                          </a>
-                        </p>
                         <p style="color: #999999; font-size: 12px; margin: 0;">
                           Kambafy – Plataforma de Vendas Digitais
                         </p>
@@ -205,7 +222,9 @@ serve(async (req) => {
         `;
 
         const { error: emailError } = await resend.emails.send({
-          from: 'Kambafy <noreply@kambafy.com>',
+          from: seller?.full_name 
+            ? `${seller.full_name} via Kambafy <noreply@kambafy.com>`
+            : 'Kambafy <noreply@kambafy.com>',
           to: [order.customer_email],
           subject: `✅ Seu acesso ao ${product.name} está pronto!`,
           html: emailHtml,
