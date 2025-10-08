@@ -31,6 +31,7 @@ import { SubdomainLink } from "@/components/SubdomainLink";
 import kambafy_icon from "@/assets/kambafy-icon-gray.png";
 import teamImage from "@/assets/team-collaboration.jpg";
 import aboutSectionImage from "@/assets/about-section-team.jpg";
+import victorAvatar from "@/assets/testimonial-victor-muabi.jpg";
 
 function cn(...classes: (string | undefined | null | boolean)[]): string {
   return classes.filter(Boolean).join(" ");
@@ -804,9 +805,9 @@ const InteractiveHero: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       {[
-                          { name: "Maria Santos", role: "Criadora de Conteúdo", content: "A Kambafy mudou minha vida! Consegui monetizar meu conhecimento em marketing digital e hoje tenho uma renda extra consistente.", image: professionalWoman },
-                          { name: "João Pedro", role: "Professor de Inglês", content: "Plataforma incrível! Muito fácil de usar e o suporte é excepcional. Recomendo para todos os educadores.", image: professionalMan },
-                          { name: "Ana Luiza", role: "Coach de Vida", content: "O que mais me impressiona é a qualidade da plataforma e como ela foi pensada para o mercado angolano. Parabéns!", image: professionalWoman }
+                          { name: "Victor Muabi", role: "@victormuabi", content: "Esta é a plataforma que faltava no mercado, fácil de usar, converte muito bem, aumentou minha conversão em lançamentos.", image: victorAvatar },
+                          { name: "Carlos Santos", role: "@carlostech", content: "Este serviço transformou minha forma de trabalhar. Design limpo, recursos poderosos e excelente suporte.", image: professionalMan },
+                          { name: "Ricardo Lima", role: "@ricardocria", content: "Já testei muitas plataformas, mas esta se destaca. Intuitiva, confiável e genuinamente útil para produtividade.", image: professionalMan }
                       ].map((testimonial, index) => (
                           <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-6">
                               <div className="flex items-center mb-4">
