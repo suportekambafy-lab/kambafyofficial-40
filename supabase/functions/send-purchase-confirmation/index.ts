@@ -271,6 +271,19 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
             </div>
 
+            ${sellerProfile ? `
+            <!-- Seller Info -->
+            <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+              <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações do Vendedor</h3>
+              <p style="margin: 0 0 8px; color: #475569; font-size: 14px;">
+                Este produto é vendido por: <strong>${sellerProfile.full_name}</strong>
+              </p>
+              <p style="margin: 0; color: #475569; font-size: 14px;">
+                Para dúvidas sobre o produto: <strong>${sellerProfile.email}</strong>
+              </p>
+            </div>
+            ` : ''}
+
             <!-- Footer -->
             <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
               <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
@@ -289,7 +302,9 @@ const handler = async (req: Request): Promise<Response> => {
         try {
           console.log('Background task: Sending pending payment email');
           const { data: pendingEmailResponse, error: pendingEmailError } = await resend.emails.send({
-            from: "Kambafy <noreply@kambafy.com>",
+            from: sellerProfile?.full_name 
+              ? `${sellerProfile.full_name} via Kambafy <noreply@kambafy.com>`
+              : "Kambafy <noreply@kambafy.com>",
             to: [normalizedEmail],
             subject: `Pagamento Pendente - ${productName} - Pedido #${orderId}`,
             html: pendingEmailHtml,
@@ -550,6 +565,19 @@ const handler = async (req: Request): Promise<Response> => {
                   </div>
                 </div>
 
+                ${sellerProfile ? `
+                <!-- Seller Info -->
+                <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+                  <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações do Vendedor</h3>
+                  <p style="margin: 0 0 8px; color: #475569; font-size: 14px;">
+                    Este produto é vendido por: <strong>${sellerProfile.full_name}</strong>
+                  </p>
+                  <p style="margin: 0; color: #475569; font-size: 14px;">
+                    Para dúvidas sobre o produto: <strong>${sellerProfile.email}</strong>
+                  </p>
+                </div>
+                ` : ''}
+
                 <!-- Footer -->
                 <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
                   <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
@@ -657,6 +685,19 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
               </div>
 
+              ${sellerProfile ? `
+              <!-- Seller Info -->
+              <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+                <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações do Vendedor</h3>
+                <p style="margin: 0 0 8px; color: #475569; font-size: 14px;">
+                  Este produto é vendido por: <strong>${sellerProfile.full_name}</strong>
+                </p>
+                <p style="margin: 0; color: #475569; font-size: 14px;">
+                  Para dúvidas sobre o produto: <strong>${sellerProfile.email}</strong>
+                </p>
+              </div>
+              ` : ''}
+
               <!-- Footer -->
               <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
                 <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">KAMBAFY</h3>
@@ -671,7 +712,9 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Send the customer email
         const { data: emailResponse, error: emailError } = await resend.emails.send({
-          from: "Kambafy <noreply@kambafy.com>",
+          from: sellerProfile?.full_name 
+            ? `${sellerProfile.full_name} via Kambafy <noreply@kambafy.com>`
+            : "Kambafy <noreply@kambafy.com>",
           to: [normalizedEmail],
           subject: `Confirmação de Compra - ${productName} - Pedido #${orderId}`,
           html: customerEmailHtml,
