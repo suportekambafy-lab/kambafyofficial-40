@@ -1509,7 +1509,7 @@ export function AppHome() {
 
   return (
     <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-background pb-24 pt-0 overflow-x-hidden">
+      <div className="min-h-screen bg-background pb-28 pt-0 overflow-x-hidden">
         {/* Fixed Header - Similar to Landing */}
         <header className="fixed top-0 left-0 right-0 z-20">
         <nav className="px-2 pt-2">
@@ -1691,7 +1691,7 @@ export function AppHome() {
       </div>
 
       {/* Horizontal Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-md pb-safe">
+      <nav className="fixed bottom-6 left-0 right-0 z-10 bg-background/80 backdrop-blur-md pb-safe">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between gap-3 max-w-2xl mx-auto">
             {/* Back Button */}
