@@ -64,31 +64,39 @@ export default function UnifiedMembersHub() {
   const completedLessons = memberAreas.reduce((sum, area) => sum + area.completedLessons, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-[#0A0A0A] relative overflow-hidden">
+      {/* Animated background with grid */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Gradient orbs */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px]" />
+        
+        {/* Grid overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,black,transparent)]" />
       </div>
 
       {/* Header */}
       <motion.header 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-10 border-b border-border/30 bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 shadow-sm"
+        className="sticky top-0 z-50 border-b border-white/5 bg-black/40 backdrop-blur-2xl"
       >
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
-                <Sparkles className="w-6 h-6 text-primary" />
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl" />
+                <div className="relative p-2.5 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold text-white">
                   Meus Cursos
                 </h1>
-                <p className="text-sm text-muted-foreground">
-                  Olá, {studentName || studentEmail} 👋
+                <p className="text-sm text-zinc-400">
+                  {studentName || studentEmail}
                 </p>
               </div>
             </div>
@@ -96,7 +104,7 @@ export default function UnifiedMembersHub() {
               variant="ghost" 
               size="sm" 
               onClick={logout}
-              className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+              className="text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Sair
@@ -105,61 +113,70 @@ export default function UnifiedMembersHub() {
         </div>
       </motion.header>
 
-      <main className="container mx-auto px-4 py-8 space-y-8 relative z-10">
+      <main className="container mx-auto px-4 py-10 space-y-8 relative z-10">
         {/* Estatísticas */}
         <motion.div 
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
+          {/* Total Cursos */}
+          <div className="group relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative bg-gradient-to-br from-zinc-900/90 to-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-primary/30 transition-all">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
                   <BookOpen className="w-6 h-6 text-primary" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground font-medium">Total de Cursos</p>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                    {totalCourses}
-                  </p>
+                <div className="text-right">
+                  <div className="text-4xl font-bold text-white mb-1">{totalCourses}</div>
+                  <p className="text-sm text-zinc-400">Cursos</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-primary to-primary/50 rounded-full" style={{ width: '100%' }} />
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-green-500/20 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-green-500/5">
+          {/* Aulas Concluídas */}
+          <div className="group relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-green-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative bg-gradient-to-br from-zinc-900/90 to-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-green-500/30 transition-all">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/20">
                   <Award className="w-6 h-6 text-green-500" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground font-medium">Aulas Concluídas</p>
-                  <p className="text-3xl font-bold text-green-500">
-                    {completedLessons}
-                  </p>
+                <div className="text-right">
+                  <div className="text-4xl font-bold text-white mb-1">{completedLessons}</div>
+                  <p className="text-sm text-zinc-400">Concluídas</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full" style={{ width: totalLessons > 0 ? `${(completedLessons / totalLessons) * 100}%` : '0%' }} />
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-blue-500/20 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5">
+          {/* Total Aulas */}
+          <div className="group relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative bg-gradient-to-br from-zinc-900/90 to-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-blue-500/30 transition-all">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20">
                   <TrendingUp className="w-6 h-6 text-blue-500" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground font-medium">Total de Aulas</p>
-                  <p className="text-3xl font-bold text-blue-500">
-                    {totalLessons}
-                  </p>
+                <div className="text-right">
+                  <div className="text-4xl font-bold text-white mb-1">{totalLessons}</div>
+                  <p className="text-sm text-zinc-400">Total</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" style={{ width: '100%' }} />
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Filtros e Busca */}
@@ -167,32 +184,44 @@ export default function UnifiedMembersHub() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+          className="flex flex-col sm:flex-row gap-4"
         >
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterType)}>
-            <TabsList className="bg-card/50 backdrop-blur-sm border border-border/50">
-              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterType)} className="flex-1">
+            <TabsList className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-1 h-auto">
+              <TabsTrigger 
+                value="all" 
+                className="data-[state=active]:bg-primary data-[state=active]:text-white text-zinc-400 rounded-lg px-4 py-2.5 transition-all"
+              >
                 Todos
               </TabsTrigger>
-              <TabsTrigger value="in-progress" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsTrigger 
+                value="in-progress" 
+                className="data-[state=active]:bg-primary data-[state=active]:text-white text-zinc-400 rounded-lg px-4 py-2.5 transition-all"
+              >
                 Em andamento
               </TabsTrigger>
-              <TabsTrigger value="completed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsTrigger 
+                value="completed" 
+                className="data-[state=active]:bg-primary data-[state=active]:text-white text-zinc-400 rounded-lg px-4 py-2.5 transition-all"
+              >
                 Concluídos
               </TabsTrigger>
-              <TabsTrigger value="not-started" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsTrigger 
+                value="not-started" 
+                className="data-[state=active]:bg-primary data-[state=active]:text-white text-zinc-400 rounded-lg px-4 py-2.5 transition-all"
+              >
                 Não iniciados
               </TabsTrigger>
             </TabsList>
           </Tabs>
 
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
             <Input
               placeholder="Buscar curso..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-card/50 backdrop-blur-sm border-border/50"
+              className="pl-12 h-12 bg-zinc-900/50 backdrop-blur-xl border-white/10 text-white placeholder:text-zinc-500 focus:border-primary/50 transition-all rounded-xl"
             />
           </div>
         </motion.div>
@@ -204,19 +233,22 @@ export default function UnifiedMembersHub() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="p-12 bg-card/50 backdrop-blur-sm border-border/50">
+            <div className="bg-gradient-to-br from-zinc-900/90 to-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-16">
               <div className="text-center">
-                <div className="p-4 rounded-full bg-muted/50 w-fit mx-auto mb-4">
-                  <GraduationCap className="w-16 h-16 text-muted-foreground" />
+                <div className="relative w-fit mx-auto mb-6">
+                  <div className="absolute inset-0 bg-zinc-800/50 rounded-full blur-2xl" />
+                  <div className="relative p-6 rounded-full bg-zinc-800/50 border border-white/10">
+                    <GraduationCap className="w-16 h-16 text-zinc-500" />
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Nenhum curso encontrado</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-xl font-bold text-white mb-2">Nenhum curso encontrado</h3>
+                <p className="text-zinc-400">
                   {searchQuery || filter !== 'all'
                     ? 'Tente ajustar seus filtros'
                     : 'Você ainda não tem acesso a nenhum curso'}
                 </p>
               </div>
-            </Card>
+            </div>
           </motion.div>
         ) : (
           <motion.div 
@@ -230,7 +262,7 @@ export default function UnifiedMembersHub() {
                 key={area.memberAreaId}
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 + (index * 0.1) }}
+                transition={{ delay: 0.3 + (index * 0.05) }}
               >
                 <CourseCard
                   {...area}
