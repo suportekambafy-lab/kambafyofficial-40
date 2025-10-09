@@ -66,19 +66,26 @@ export default function AdminIdentityVerification() {
     try {
       setLoading(true);
       
-      // Get identity verifications
+      console.log('🔍 Buscando verificações KYC para admin...');
+      
+      // Usar função RPC que tem SECURITY DEFINER para contornar RLS
       const { data: verifications, error: verificationsError } = await supabase
-        .from('identity_verification')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .rpc('get_all_identity_verifications_for_admin');
 
-      if (verificationsError) throw verificationsError;
+      console.log('📊 Verificações recebidas:', verifications);
+
+      if (verificationsError) {
+        console.error('❌ Erro ao buscar verificações:', verificationsError);
+        throw verificationsError;
+      }
 
       // Filter by status if needed
       let filteredVerifications = verifications || [];
       if (statusFilter !== 'todos') {
         filteredVerifications = filteredVerifications.filter(v => v.status === statusFilter);
       }
+
+      console.log('✅ Total de verificações após filtro:', filteredVerifications.length);
 
       // Get user profiles for each verification
       const userIds = filteredVerifications.map(v => v.user_id) || [];
@@ -88,7 +95,10 @@ export default function AdminIdentityVerification() {
           .select('user_id, full_name, email')
           .in('user_id', userIds);
 
-        if (profilesError) throw profilesError;
+        if (profilesError) {
+          console.error('❌ Erro ao buscar perfis:', profilesError);
+          throw profilesError;
+        }
 
         // Combine data
         const verificationsWithProfiles = filteredVerifications.map(verification => ({
@@ -118,6 +128,8 @@ export default function AdminIdentityVerification() {
     try {
       setProcessingId(id);
 
+      console.log('🔄 Atualizando status da verificação:', { id, newStatus, reason });
+
       const updateData: any = {
         status: newStatus,
         updated_at: new Date().toISOString()
@@ -136,7 +148,12 @@ export default function AdminIdentityVerification() {
         .update(updateData)
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao atualizar verificação:', error);
+        throw error;
+      }
+
+      console.log('✅ Verificação atualizada com sucesso');
 
       // Registrar log administrativo (não bloqueante)
       if (admin?.id) {
