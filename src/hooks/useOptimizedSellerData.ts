@@ -38,7 +38,15 @@ export const useSellerData = () => {
       if (!user) return null;
       
       // Buscar apenas dados essenciais em uma query otimizada
-      const [productsData, ordersData, profileData] = await Promise.all([
+      // Primeiro buscar member_areas do usuário
+      const { data: memberAreas } = await supabase
+        .from('member_areas')
+        .select('id')
+        .eq('user_id', user.id);
+      
+      const memberAreaIds = memberAreas?.map(ma => ma.id) || [];
+      
+      const [productsData, ordersData, modulePaymentsData, profileData] = await Promise.all([
         supabase
           .from('products')
           .select('id, name, sales, price, status, created_at')
@@ -50,8 +58,16 @@ export const useSellerData = () => {
           .from('orders')
           .select('id, amount, created_at, status, product_id, customer_name, customer_email, order_bump_data')
           .eq('user_id', user.id)
-          .in('status', ['completed', 'pending', 'cancelled', 'failed'])
-          .order('created_at', { ascending: false }), // ✅ SEM LIMIT - buscar todas para stats corretos
+          .eq('status', 'completed') // ✅ Apenas vendas pagas
+          .order('created_at', { ascending: false }),
+        
+        // ✅ Buscar vendas de módulos também
+        memberAreaIds.length > 0 ? supabase
+          .from('module_payments')
+          .select('id, order_id, amount, created_at, status, module_id, student_name, student_email')
+          .in('member_area_id', memberAreaIds)
+          .eq('status', 'completed') // ✅ Apenas vendas pagas
+          .order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
         
         supabase
           .from('profiles')
@@ -60,9 +76,24 @@ export const useSellerData = () => {
           .maybeSingle()
       ]);
 
+      // Combinar orders normais + module_payments em um array unificado
+      const allOrders = [
+        ...(ordersData.data || []),
+        ...(modulePaymentsData.data || []).map(mp => ({
+          id: mp.id,
+          amount: mp.amount?.toString() || '0',
+          created_at: mp.created_at,
+          status: mp.status,
+          product_id: mp.module_id,
+          customer_name: mp.student_name,
+          customer_email: mp.student_email,
+          order_bump_data: null // Module payments não têm order bumps
+        }))
+      ];
+
       return {
         products: productsData.data || [],
-        orders: ordersData.data || [],
+        orders: allOrders,
         profile: profileData.data,
         productsError: productsData.error,
         ordersError: ordersData.error,
