@@ -28,9 +28,6 @@ const HelpCenter = () => {
     question: "Como começar a vender na Kambafy?",
     answer: "Para começar, crie sua conta gratuita, configure seu perfil de criador e publique seu primeiro produto. Nossa equipe está disponível para ajudar em cada passo."
   }, {
-    question: "Quais métodos de pagamento são aceitos?",
-    answer: "Aceitamos Multicaixa Express, BAI Direto, Cartão de Crédito/Débito e Transferência Bancária. Todos os pagamentos são processados de forma segura em Kwanza."
-  }, {
     question: "Como funciona a comissão da plataforma?",
     answer: "A Kambafy cobra apenas 8% por cada venda realizada. Não há planos ou mensalidades - você paga apenas quando vende."
   }, {
