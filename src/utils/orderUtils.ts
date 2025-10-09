@@ -16,9 +16,16 @@ export const countOrderItems = (order: any): number => {
         ? JSON.parse(order.order_bump_data) 
         : order.order_bump_data;
       
-      // If bump data exists and has a product, count it
-      if (bumpData && (bumpData.bump_product_name || bumpData.bump_product_id)) {
-        count += 1;
+      // If bump data exists, count all items inside it
+      if (bumpData) {
+        // Check if it has an items array (multiple items)
+        if (Array.isArray(bumpData.items)) {
+          count += bumpData.items.length;
+        }
+        // Or if it's a single item (legacy format)
+        else if (bumpData.bump_product_name || bumpData.bump_product_id) {
+          count += 1;
+        }
       }
     } catch (error) {
       console.error('Error parsing order_bump_data:', error);
