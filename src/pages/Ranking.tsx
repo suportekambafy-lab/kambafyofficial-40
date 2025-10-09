@@ -243,7 +243,6 @@ const Ranking = () => {
                         {/* Name */}
                         <div>
                           <h3 className="font-bold text-lg">{seller.full_name}</h3>
-                          <p className="text-sm text-muted-foreground truncate">{seller.email}</p>
                         </div>
 
                         {/* Stats */}
