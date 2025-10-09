@@ -171,17 +171,13 @@ export default function Financial() {
 
       const userProductIds = userProducts?.map(p => p.id) || [];
 
-      // ✅ Buscar vendas dos ÚLTIMOS 5 DIAS para capturar vendas recém-liberadas
-      // Hoje (09/10) - vendas de 06/10 (3 dias atrás) já estão liberadas
-      const fiveDaysAgo = new Date();
-      fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
-      
+      // ✅ BUSCAR TODAS AS VENDAS (sem filtro de data)
+      // Vamos usar balance_transactions como fonte de verdade para saber quais foram liberadas
       const { data: ownOrders, error: ordersError } = await supabase
         .from('orders')
         .select('order_id, amount, currency, created_at, status, affiliate_commission, seller_commission, product_id')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
-        .gte('created_at', fiveDaysAgo.toISOString())
         .order('created_at', { ascending: false });
 
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
@@ -207,7 +203,26 @@ export default function Financial() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      // Buscar vendas como afiliado dos últimos 5 dias se houver códigos
+      // ✅ Buscar TODAS balance_transactions de crédito do usuário
+      // Isso nos diz quais vendas já foram liberadas
+      const { data: balanceTransactions, error: transactionsError } = await supabase
+        .from('balance_transactions')
+        .select('order_id, amount, type, created_at')
+        .eq('user_id', user.id)
+        .eq('type', 'credit');
+
+      if (transactionsError) {
+        console.error('Error loading balance transactions:', transactionsError);
+      }
+
+      // Criar set de order_ids que já têm transação de crédito (já foram liberados)
+      const releasedOrderIds = new Set(
+        (balanceTransactions || []).map(t => t.order_id).filter(Boolean)
+      );
+
+      console.error(`🔥 TRANSAÇÕES DE CRÉDITO ENCONTRADAS: ${releasedOrderIds.size} vendas já liberadas`);
+
+      // Buscar vendas como afiliado (TODAS) se houver códigos
       let affiliateOrders: any[] = [];
       if (userAffiliateCodes.length > 0) {
         const { data: affiliateData, error: affiliateError } = await supabase
@@ -216,7 +231,6 @@ export default function Financial() {
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
           .eq('status', 'completed')
-          .gte('created_at', fiveDaysAgo.toISOString())
           .order('created_at', { ascending: false});
         
         if (!affiliateError) {
@@ -294,25 +308,14 @@ export default function Financial() {
         // ✅ USAR o saldo real do customer_balances como fonte de verdade
         const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
 
-        // ✅ Calcular saldo pendente baseado na data de criação (3 dias corridos)
+        // ✅ CALCULAR SALDO PENDENTE usando balance_transactions como fonte de verdade
         const now = new Date();
         let pendingBalance = 0;
         const pendingOrdersData: Array<{date: Date, amount: number}> = [];
 
         console.error(`🔥 CALCULANDO SALDO PENDENTE para ${allOrders.length} vendas`);
-        console.error(`🔥 Data atual: ${now.toISOString()}`);
+        console.error(`🔥 Vendas com transação de crédito (liberadas): ${releasedOrderIds.size}`);
         console.error(`🔥 Saldo disponível atual (customer_balances): ${currentBalance.toLocaleString()} KZ`);
-
-        // Análise de todas as datas das vendas
-        const vendaDates = allOrders.map(o => ({
-          order_id: o.order_id,
-          created_at: new Date(o.created_at),
-          amount: o.earning_amount
-        })).sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
-        
-        console.error(`🔥 ANÁLISE DAS DATAS:`);
-        console.error(`   📅 Venda mais ANTIGA: ${vendaDates[0]?.created_at.toLocaleDateString()} - ${vendaDates[0]?.order_id}`);
-        console.error(`   📅 Venda mais RECENTE: ${vendaDates[vendaDates.length - 1]?.created_at.toLocaleDateString()} - ${vendaDates[vendaDates.length - 1]?.order_id}`);
 
         let releasedCount = 0;
         let pendingCount = 0;
@@ -323,25 +326,21 @@ export default function Financial() {
           const releaseDate = new Date(orderDate);
           releaseDate.setDate(orderDate.getDate() + 3); // 3 dias corridos
           
-          // ✅ Zerar horas para comparação correta de datas
-          const releaseDateStart = new Date(releaseDate);
-          releaseDateStart.setHours(0, 0, 0, 0);
-          
-          const nowStart = new Date(now);
-          nowStart.setHours(0, 0, 0, 0);
-          
           const amount = order.earning_amount;
           
-          // ✅ Se a data de liberação JÁ PASSOU = NÃO contar no pendente (já foi liberada)
-          if (nowStart >= releaseDateStart) {
+          // ✅ VERIFICAR SE JÁ TEM BALANCE_TRANSACTION (fonte de verdade)
+          const hasTransaction = releasedOrderIds.has(order.order_id);
+          
+          if (hasTransaction) {
+            // ✅ Tem transação = já foi liberada
             releasedCount++;
             totalReleased += amount;
             
             if (releasedCount <= 5) {
-              console.error(`🟢 LIBERADA: ${order.order_id} - ${amount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()} - liberou em ${releaseDate.toLocaleDateString()}`);
+              console.error(`🟢 LIBERADA (tem transação): ${order.order_id} - ${amount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()}`);
             }
           } else {
-            // ❌ Se a data de liberação é FUTURA = ainda está pendente
+            // ❌ Sem transação = ainda está pendente
             pendingBalance += amount;
             pendingCount++;
             pendingOrdersData.push({
@@ -349,15 +348,15 @@ export default function Financial() {
               amount: amount
             });
             
-            if (pendingCount <= 3) {
-              console.error(`🟡 PENDENTE: ${order.order_id} - ${amount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()} - libera em ${releaseDate.toLocaleDateString()}`);
+            if (pendingCount <= 5) {
+              console.error(`🟡 PENDENTE (sem transação): ${order.order_id} - ${amount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()} - libera em ${releaseDate.toLocaleDateString()}`);
             }
           }
         });
 
-        console.error(`🔥 RESULTADO FINAL:`);
-        console.error(`   ✅ ${releasedCount} vendas JÁ LIBERADAS = ${totalReleased.toLocaleString()} KZ (no saldo disponível)`);
-        console.error(`   🟡 ${pendingCount} vendas PENDENTES = ${pendingBalance.toLocaleString()} KZ`);
+        console.error(`🔥 RESULTADO FINAL (baseado em balance_transactions):`);
+        console.error(`   ✅ ${releasedCount} vendas JÁ LIBERADAS (com transação) = ${totalReleased.toLocaleString()} KZ`);
+        console.error(`   🟡 ${pendingCount} vendas PENDENTES (sem transação) = ${pendingBalance.toLocaleString()} KZ`);
         console.error(`   💰 Saldo disponível (balance): ${currentBalance.toLocaleString()} KZ`);
 
         // Encontrar próxima liberação
