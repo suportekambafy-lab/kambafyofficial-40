@@ -589,71 +589,67 @@ const VideoPlayer = ({
               </div>
 
               <div className="flex items-center justify-center flex-wrap gap-2">
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <Button onClick={() => skipTime(-10)} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                    <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Button onClick={() => skipTime(-10)} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
+                  <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+                <Button onClick={togglePlay} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
+                  {isPlaying ? <Pause className="h-4 w-4 sm:h-5 sm:w-5" /> : <Play className="h-4 w-4 sm:h-5 sm:w-5" />}
+                </Button>
+                <Button onClick={() => skipTime(10)} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
+                  <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+                
+                <div className="flex items-center gap-x-1">
+                  <Button onClick={toggleMute} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
+                    {isMuted ? <VolumeX className="h-4 w-4 sm:h-5 sm:w-5" /> : volume > 0.5 ? <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" /> : <Volume1 className="h-4 w-4 sm:h-5 sm:w-5" />}
                   </Button>
-                  <Button onClick={togglePlay} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                    {isPlaying ? <Pause className="h-4 w-4 sm:h-5 sm:w-5" /> : <Play className="h-4 w-4 sm:h-5 sm:w-5" />}
-                  </Button>
-                  <Button onClick={() => skipTime(10)} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                    <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </Button>
-                  
-                  <div className="flex items-center gap-x-1">
-                    <Button onClick={toggleMute} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                      {isMuted ? <VolumeX className="h-4 w-4 sm:h-5 sm:w-5" /> : volume > 0.5 ? <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" /> : <Volume1 className="h-4 w-4 sm:h-5 sm:w-5" />}
-                    </Button>
-                    <div className="w-16 sm:w-24 hidden sm:block">
-                      <CustomSlider value={volume * 100} onChange={handleVolumeChange} />
-                    </div>
+                  <div className="w-16 sm:w-24 hidden sm:block">
+                    <CustomSlider value={volume * 100} onChange={handleVolumeChange} />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  {availableQualities.length > 0 && (
-                    <Popover open={showQualityMenu} onOpenChange={setShowQualityMenu}>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                          <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10 z-[200]" side="top" align="end">
-                        <div className="space-y-1">
-                          <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
-                          <button
-                            onClick={() => changeQuality('auto')}
-                            className={cn("w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors", currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70")}
-                          >
-                            Automática
-                          </button>
-                          {availableQualities.map((quality) => (
-                            <button
-                              key={quality.height}
-                              onClick={() => changeQuality(quality.height.toString())}
-                              className={cn("w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors", currentQuality === quality.height.toString() ? "text-white bg-white/10" : "text-white/70")}
-                            >
-                              {quality.label}
-                            </button>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                  
-                  <div className="hidden md:flex items-center gap-1">
-                    {[0.5, 1, 1.5, 2].map((speed) => (
-                      <Button
-                        key={speed}
-                        onClick={() => setSpeed(speed)}
-                        variant="ghost"
-                        size="sm"
-                        className={cn("text-white hover:bg-[#111111d1] h-8 px-2 text-xs", playbackSpeed === speed && "bg-[#111111d1]")}
-                      >
-                        {speed}x
+                {availableQualities.length > 0 && (
+                  <Popover open={showQualityMenu} onOpenChange={setShowQualityMenu}>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
+                        <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
                       </Button>
-                    ))}
-                  </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10 z-[200]" side="top" align="end">
+                      <div className="space-y-1">
+                        <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
+                        <button
+                          onClick={() => changeQuality('auto')}
+                          className={cn("w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors", currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70")}
+                        >
+                          Automática
+                        </button>
+                        {availableQualities.map((quality) => (
+                          <button
+                            key={quality.height}
+                            onClick={() => changeQuality(quality.height.toString())}
+                            className={cn("w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors", currentQuality === quality.height.toString() ? "text-white bg-white/10" : "text-white/70")}
+                          >
+                            {quality.label}
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+                
+                <div className="hidden md:flex items-center gap-1">
+                  {[0.5, 1, 1.5, 2].map((speed) => (
+                    <Button
+                      key={speed}
+                      onClick={() => setSpeed(speed)}
+                      variant="ghost"
+                      size="sm"
+                      className={cn("text-white hover:bg-[#111111d1] h-8 px-2 text-xs", playbackSpeed === speed && "bg-[#111111d1]")}
+                    >
+                      {speed}x
+                    </Button>
+                  ))}
                 </div>
               </div>
             </motion.div>
@@ -756,24 +752,22 @@ const VideoPlayer = ({
                 <span className="text-white text-xs sm:text-sm">{formatTime(duration)}</span>
               </div>
 
-              <div className="flex items-center justify-center gap-2">
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <Button onClick={() => skipTime(-10)} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                    <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
+              <div className="flex items-center justify-center flex-wrap gap-2">
+                <Button onClick={() => skipTime(-10)} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
+                  <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+                <Button onClick={togglePlay} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
+                  {isPlaying ? <Pause className="h-4 w-4 sm:h-5 sm:w-5" /> : <Play className="h-4 w-4 sm:h-5 sm:w-5" />}
+                </Button>
+                <Button onClick={() => skipTime(10)} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
+                  <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+                <div className="flex items-center gap-x-1">
+                  <Button onClick={toggleMute} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
+                    {isMuted ? <VolumeX className="h-4 w-4 sm:h-5 sm:w-5" /> : volume > 0.5 ? <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" /> : <Volume1 className="h-4 w-4 sm:h-5 sm:w-5" />}
                   </Button>
-                  <Button onClick={togglePlay} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                    {isPlaying ? <Pause className="h-4 w-4 sm:h-5 sm:w-5" /> : <Play className="h-4 w-4 sm:h-5 sm:w-5" />}
-                  </Button>
-                  <Button onClick={() => skipTime(10)} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                    <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </Button>
-                  <div className="flex items-center gap-x-1">
-                    <Button onClick={toggleMute} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                      {isMuted ? <VolumeX className="h-4 w-4 sm:h-5 sm:w-5" /> : volume > 0.5 ? <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" /> : <Volume1 className="h-4 w-4 sm:h-5 sm:w-5" />}
-                    </Button>
-                    <div className="w-16 sm:w-24 hidden sm:block">
-                      <CustomSlider value={volume * 100} onChange={handleVolumeChange} />
-                    </div>
+                  <div className="w-16 sm:w-24 hidden sm:block">
+                    <CustomSlider value={volume * 100} onChange={handleVolumeChange} />
                   </div>
                 </div>
 
