@@ -36,11 +36,10 @@ interface ProductCardProps {
   onShare: (product: Product) => void;
   onDelete: (product: Product) => void;
   onToggleStatus: (product: Product) => void;
-  onRequestRevision?: (productId: string) => void;
-  requestingRevision?: string | null;
+  onRequestRevision?: (product: Product) => void;
 }
 
-export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleStatus, onRequestRevision, requestingRevision }: ProductCardProps) => {
+export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleStatus, onRequestRevision }: ProductCardProps) => {
   const isActive = product.status === 'Ativo';
   const salesCount = product.sales || 0;
   const isAffiliate = product.is_affiliate;
@@ -208,16 +207,11 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onRequestRevision?.(product.id)}
-                    disabled={requestingRevision === product.id}
+                    onClick={() => onRequestRevision?.(product)}
                     className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-xs h-8"
                   >
-                    {requestingRevision === product.id ? (
-                      <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-                    ) : (
-                      <AlertCircle className="w-3 h-3 mr-1" />
-                    )}
-                    <span>{requestingRevision === product.id ? 'Solicitando...' : 'Solicitar Revisão'}</span>
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    <span>Solicitar Revisão</span>
                   </Button>
                 ) : (
                   // Produto normal - mostrar botões padrão

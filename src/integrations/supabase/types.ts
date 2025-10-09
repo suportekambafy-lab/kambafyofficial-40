@@ -1775,6 +1775,8 @@ export type Database = {
           name: string
           payment_methods: Json | null
           price: string
+          revision_documents: Json | null
+          revision_explanation: string | null
           revision_requested: boolean | null
           revision_requested_at: string | null
           sales: number | null
@@ -1815,6 +1817,8 @@ export type Database = {
           name: string
           payment_methods?: Json | null
           price: string
+          revision_documents?: Json | null
+          revision_explanation?: string | null
           revision_requested?: boolean | null
           revision_requested_at?: string | null
           sales?: number | null
@@ -1855,6 +1859,8 @@ export type Database = {
           name?: string
           payment_methods?: Json | null
           price?: string
+          revision_documents?: Json | null
+          revision_explanation?: string | null
           revision_requested?: boolean | null
           revision_requested_at?: string | null
           sales?: number | null
