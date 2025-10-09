@@ -132,16 +132,59 @@ export default function UserIdentity() {
     }
 
     const url = await uploadDocument(file, type);
-    if (url) {
-      setVerification(prev => prev ? {
-        ...prev,
+    if (url && user) {
+      // ✅ Atualizar estado local primeiro
+      const newVerification = verification ? {
+        ...verification,
         [`document_${type}_url`]: url
-      } : null);
-      toast({
-        title: 'Sucesso',
-        message: 'Documento enviado com sucesso',
-        variant: 'success'
-      });
+      } : null;
+      
+      setVerification(newVerification);
+
+      // ✅ SALVAR NO BANCO DE DADOS
+      try {
+        if (verification?.id) {
+          // Se já existe verificação, atualizar
+          const { error } = await supabase
+            .from('identity_verification')
+            .update({ [`document_${type}_url`]: url })
+            .eq('id', verification.id)
+            .eq('user_id', user.id);
+
+          if (error) throw error;
+        } else if (formData.full_name && formData.birth_date && formData.document_type && formData.document_number) {
+          // Se não existe verificação mas tem todos os dados obrigatórios, criar
+          const { data, error } = await supabase
+            .from('identity_verification')
+            .insert([{
+              user_id: user.id,
+              full_name: formData.full_name,
+              birth_date: formData.birth_date,
+              document_type: formData.document_type,
+              document_number: formData.document_number,
+              [`document_${type}_url`]: url,
+              status: 'pendente'
+            }])
+            .select()
+            .single();
+
+          if (error) throw error;
+          if (data) setVerification(data as IdentityVerification);
+        }
+
+        toast({
+          title: 'Sucesso',
+          message: 'Documento enviado e salvo com sucesso',
+          variant: 'success'
+        });
+      } catch (error) {
+        console.error('Erro ao salvar documento:', error);
+        toast({
+          title: 'Aviso',
+          message: 'Documento enviado, mas preencha todos os campos para salvar',
+          variant: 'warning'
+        });
+      }
     }
   };
 
