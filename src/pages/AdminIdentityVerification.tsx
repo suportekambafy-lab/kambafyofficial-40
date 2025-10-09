@@ -174,6 +174,33 @@ export default function AdminIdentityVerification() {
         }
       }
 
+      // Enviar email de notificação (não bloqueante)
+      try {
+        if (newStatus === 'aprovado') {
+          console.log('📧 Enviando email de aprovação...');
+          const { error: emailError } = await supabase.functions.invoke('send-identity-approval-email', {
+            body: { verificationId: id }
+          });
+          if (emailError) {
+            console.warn('⚠️ Erro ao enviar email de aprovação:', emailError);
+          } else {
+            console.log('✅ Email de aprovação enviado');
+          }
+        } else if (newStatus === 'rejeitado' && reason) {
+          console.log('📧 Enviando email de reprovação...');
+          const { error: emailError } = await supabase.functions.invoke('send-identity-rejection-email', {
+            body: { verificationId: id, rejectionReason: reason }
+          });
+          if (emailError) {
+            console.warn('⚠️ Erro ao enviar email de reprovação:', emailError);
+          } else {
+            console.log('✅ Email de reprovação enviado');
+          }
+        }
+      } catch (emailError) {
+        console.warn('⚠️ Erro ao processar envio de email:', emailError);
+      }
+
       toast.success(`Verificação ${newStatus === 'aprovado' ? 'aprovada' : 'rejeitada'} com sucesso`);
       setRejectionReason('');
       setSelectedVerification(null);
