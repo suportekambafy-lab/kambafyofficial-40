@@ -29,11 +29,19 @@ export default function AdminKYCTest() {
 
     try {
       setUploading(true);
+      
+      // Buscar session do admin para usar o user_id real
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('📋 Session:', session);
+      
       const fileExt = testFile.name.split('.').pop();
-      const testUserId = 'test-' + Date.now();
-      const fileName = `${testUserId}/test_document_${Date.now()}.${fileExt}`;
+      
+      // Usar o UUID do admin se disponível, senão usar "admin-test"
+      const adminId = session?.user?.id || 'admin-test-' + Date.now();
+      const fileName = `${adminId}/test_document_${Date.now()}.${fileExt}`;
 
       console.log('📤 Iniciando upload:', fileName);
+      console.log('👤 Admin ID:', adminId);
 
       const { error: uploadError } = await supabase.storage
         .from('identity-documents')
