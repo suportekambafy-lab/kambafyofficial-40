@@ -28,7 +28,6 @@ interface IdentityVerification {
 
 const documentTypes = [
   { value: 'BI', label: 'Bilhete de Identidade (BI)' },
-  { value: 'RG', label: 'RG (Registro Geral)' },
   { value: 'Passaporte', label: 'Passaporte' },
   { value: 'Cartao_Residencia', label: 'Cartão de Residência' },
   { value: 'Outro', label: 'Outro' }
@@ -157,9 +156,9 @@ export default function UserIdentity() {
       return;
     }
 
-    // Para BI e RG, o verso também é obrigatório
+    // Para BI, o verso também é obrigatório
     if (needsBackside && !verification?.document_back_url) {
-      toast.error('É obrigatório anexar o verso do documento');
+      toast.error('É obrigatório anexar o verso do Bilhete de Identidade');
       return;
     }
 
@@ -213,7 +212,7 @@ export default function UserIdentity() {
     }
   };
 
-  const needsBackside = formData.document_type === 'BI' || formData.document_type === 'RG';
+  const needsBackside = formData.document_type === 'BI';
   const isReadOnly = verification?.status === 'aprovado';
 
   return (

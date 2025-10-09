@@ -416,6 +416,7 @@ export default function AdminIdentityVerification() {
                     )}
                   </div>
 
+                  {/* Botões de ação para verificações pendentes */}
                   {verification.status === 'pendente' && (
                     <div className="flex flex-col sm:flex-row items-center gap-2">
                       <Button
@@ -476,6 +477,57 @@ export default function AdminIdentityVerification() {
                         </DialogContent>
                       </Dialog>
                     </div>
+                  )}
+
+                  {/* Botão para reprovar verificações já aprovadas */}
+                  {verification.status === 'aprovado' && (
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setSelectedVerification(verification)}
+                          className="w-full sm:w-auto"
+                        >
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          Reprovar Verificação
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="text-base sm:text-lg">Reprovar Verificação Aprovada</DialogTitle>
+                          <DialogDescription className="text-xs sm:text-sm">
+                            Esta verificação já foi aprovada. Informe o motivo da reprovação para {verification.profiles?.full_name}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="rejection-reason-approved" className="text-xs sm:text-sm">Motivo da Reprovação</Label>
+                            <Textarea
+                              id="rejection-reason-approved"
+                              value={rejectionReason}
+                              onChange={(e) => setRejectionReason(e.target.value)}
+                              placeholder="Ex: Documento ilegível, informações não conferem, necessário reenvio..."
+                              rows={3}
+                              className="text-sm"
+                            />
+                          </div>
+                          <div className="flex flex-col sm:flex-row justify-end gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setRejectionReason('')}>
+                              Cancelar
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => updateVerificationStatus(verification.id, 'rejeitado', rejectionReason)}
+                              disabled={!rejectionReason.trim() || processingId === verification.id}
+                            >
+                              Reprovar
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   )}
                 </CardContent>
               </Card>

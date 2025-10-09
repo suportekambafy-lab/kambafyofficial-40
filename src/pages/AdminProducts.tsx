@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BanProductModal from '@/components/BanProductModal';
-import ReviewRevisionModal from '@/components/ReviewRevisionModal';
 import { SEO } from '@/components/SEO';
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 import { getProductImageUrl } from '@/utils/imageUtils';
@@ -32,9 +31,6 @@ interface ProductWithProfile {
   created_at: string;
   revision_requested: boolean;
   revision_requested_at: string | null;
-  revision_explanation?: string;
-  revision_documents?: any; // Json type from database
-  share_link?: string;
   member_areas?: {
     id: string;
     name: string;
@@ -55,8 +51,6 @@ export default function AdminProducts() {
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [banModalOpen, setBanModalOpen] = useState(false);
   const [selectedProductForBan, setSelectedProductForBan] = useState<{ id: string; name: string } | null>(null);
-  const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const [selectedProductForReview, setSelectedProductForReview] = useState<ProductWithProfile | null>(null);
 
   useEffect(() => {
     if (admin) {
@@ -184,8 +178,7 @@ export default function AdminProducts() {
       const { data, error } = await supabase.rpc('admin_ban_product', {
         product_id: selectedProductForBan.id,
         admin_id: admin?.id || null,
-        ban_reason_text: reason,
-        p_admin_email: admin?.email || null
+        ban_reason_text: reason
       });
 
       console.log('🔍 Resultado RPC admin_ban_product:', { data, error });
@@ -247,15 +240,7 @@ export default function AdminProducts() {
     }
   };
 
-  const openReviewModal = (product: ProductWithProfile) => {
-    setSelectedProductForReview(product);
-    setReviewModalOpen(true);
-  };
-
-  const handleApproveAfterReview = async () => {
-    if (!selectedProductForReview) return;
-    
-    const productId = selectedProductForReview.id;
+  const approveProduct = async (productId: string) => {
     setProcessingId(productId);
     
     try {
@@ -280,8 +265,7 @@ export default function AdminProducts() {
       // Usar função RPC específica para admin (bypass RLS)
       const { data, error } = await supabase.rpc('admin_approve_product', {
         product_id: productId,
-        admin_id: admin?.id || null,
-        p_admin_email: admin?.email || null
+        admin_id: admin?.id || null
       });
 
       console.log('🔍 Resultado RPC admin_approve_product:', { data, error });
@@ -334,23 +318,12 @@ export default function AdminProducts() {
 
       // Recarregar dados
       await loadProducts();
-      
-      // Fechar modal
-      setReviewModalOpen(false);
-      setSelectedProductForReview(null);
     } catch (error) {
       console.error('Error approving product:', error);
       toast.error(`Erro inesperado: ${error}`);
     } finally {
       setProcessingId(null);
     }
-  };
-
-  const handleRejectRevision = () => {
-    // Apenas fechar o modal, manter o produto banido
-    toast.info('Revisão rejeitada. O produto permanece banido.');
-    setReviewModalOpen(false);
-    setSelectedProductForReview(null);
   };
 
   const viewProductContent = async (productId: string, productType: string, productName: string, event?: React.MouseEvent) => {
@@ -658,13 +631,13 @@ export default function AdminProducts() {
                   {/* Debug: revision_requested=${product.revision_requested}, status=${product.status} */}
                   {product.revision_requested && product.status === 'Banido' && (
                     <Button
-                      onClick={() => openReviewModal(product)}
+                      onClick={() => approveProduct(product.id)}
                       disabled={processingId === product.id}
                       size="sm"
                       variant="outline"
                       className="w-full border-green-500 text-green-600 hover:bg-green-50 text-xs"
                     >
-                      {processingId === product.id ? 'Aprovando...' : 'Revisar Solicitação'}
+                      {processingId === product.id ? 'Aprovando...' : 'Aprovar Produto'}
                     </Button>
                   )}
                 </div>
@@ -694,18 +667,6 @@ export default function AdminProducts() {
         productName={selectedProductForBan?.name || ''}
         isLoading={processingId === selectedProductForBan?.id}
       />
-
-      {/* Modal de Revisão */}
-      {selectedProductForReview && (
-        <ReviewRevisionModal
-          open={reviewModalOpen}
-          onOpenChange={setReviewModalOpen}
-          product={selectedProductForReview}
-          onApprove={handleApproveAfterReview}
-          onReject={handleRejectRevision}
-          loading={processingId === selectedProductForReview.id}
-        />
-      )}
     </div>
   );
 }

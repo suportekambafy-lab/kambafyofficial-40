@@ -1775,8 +1775,6 @@ export type Database = {
           name: string
           payment_methods: Json | null
           price: string
-          revision_documents: Json | null
-          revision_explanation: string | null
           revision_requested: boolean | null
           revision_requested_at: string | null
           sales: number | null
@@ -1817,8 +1815,6 @@ export type Database = {
           name: string
           payment_methods?: Json | null
           price: string
-          revision_documents?: Json | null
-          revision_explanation?: string | null
           revision_requested?: boolean | null
           revision_requested_at?: string | null
           sales?: number | null
@@ -1859,8 +1855,6 @@ export type Database = {
           name?: string
           payment_methods?: Json | null
           price?: string
-          revision_documents?: Json | null
-          revision_explanation?: string | null
           revision_requested?: boolean | null
           revision_requested_at?: string | null
           sales?: number | null
@@ -2642,19 +2636,11 @@ export type Database = {
     }
     Functions: {
       admin_approve_product: {
-        Args:
-          | { admin_id?: string; p_admin_email?: string; product_id: string }
-          | { admin_id?: string; product_id: string }
+        Args: { admin_id?: string; product_id: string }
         Returns: undefined
       }
       admin_ban_product: {
         Args:
-          | {
-              admin_id?: string
-              ban_reason_text?: string
-              p_admin_email?: string
-              product_id: string
-            }
           | { admin_id?: string; ban_reason_text?: string; product_id: string }
           | { admin_id?: string; product_id: string }
         Returns: undefined
@@ -2727,10 +2713,6 @@ export type Database = {
       cleanup_passwordless_users: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      count_duplicate_withdrawals: {
-        Args: Record<PropertyKey, never>
-        Returns: number
       }
       create_customer_access_manual: {
         Args: {
@@ -2909,10 +2891,6 @@ export type Database = {
       recalculate_user_balance: {
         Args: { target_user_id: string }
         Returns: undefined
-      }
-      remove_duplicate_withdrawals: {
-        Args: Record<PropertyKey, never>
-        Returns: number
       }
       unaccent: {
         Args: { "": string }
