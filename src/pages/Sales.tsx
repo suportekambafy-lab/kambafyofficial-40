@@ -103,7 +103,7 @@ export default function Sales() {
   const loadingRef = useRef(false); // Controle via ref para evitar loops
   
   // ✅ VERSÃO DO CÓDIGO - Incrementar quando houver mudança importante
-  const CODE_VERSION = 'v2.3'; // Mudou de v2.2 para v2.3 (contar order bumps separadamente)
+  const CODE_VERSION = 'v2.4'; // Forçar reload completo - contar order bumps como Dashboard
   const hasLoadedRef = useRef(false); // ✅ Controle para executar apenas uma vez automaticamente
   const lastCodeVersionRef = useRef<string | null>(null);
 
@@ -181,16 +181,25 @@ export default function Sales() {
   // E forçar recarregamento quando o código é atualizado
   useEffect(() => {
     if (user) {
-      // Se a versão do código mudou, forçar recarregamento
+      // Se a versão do código mudou, forçar recarregamento IMEDIATO
       if (lastCodeVersionRef.current !== CODE_VERSION) {
-        console.log(`🔄 Nova versão do código detectada (${lastCodeVersionRef.current} → ${CODE_VERSION}), forçando recarregamento...`);
+        console.log(`🔄 Nova versão do código detectada (${lastCodeVersionRef.current} → ${CODE_VERSION}), forçando recarregamento IMEDIATO...`);
         lastCodeVersionRef.current = CODE_VERSION;
         hasLoadedRef.current = false; // Resetar para forçar reload
+        // Limpar dados antigos
+        setSales([]);
+        setSalesStats({
+          paid: 0, pending: 0, cancelled: 0,
+          paidTotal: 0, pendingTotal: 0, cancelledTotal: 0,
+          totalAffiliateCommissions: 0,
+          totalSellerEarnings: 0
+        });
       }
       
       // Carregar se ainda não carregou
       if (!hasLoadedRef.current) {
         hasLoadedRef.current = true;
+        console.log(`🚀 Iniciando carregamento de vendas - versão ${CODE_VERSION}`);
         loadSales();
       }
     }
