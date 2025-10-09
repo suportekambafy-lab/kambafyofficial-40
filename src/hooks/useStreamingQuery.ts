@@ -2,9 +2,35 @@ import { useCallback, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getAllPaymentMethods } from '@/utils/paymentMethods';
 
+/**
+ * ⚠️ IMPORTANTE - PADRÃO DE USO CORRETO:
+ * 
+ * Este hook retorna uma função estável (loadOrdersWithStats) que NÃO deve ser
+ * incluída como dependência em useCallback/useEffect de componentes.
+ * 
+ * ❌ ERRADO:
+ * const loadData = useCallback(async () => {
+ *   await loadOrdersWithStats(...);
+ * }, [loadOrdersWithStats]); // ← Causa loops infinitos
+ * 
+ * ✅ CORRETO:
+ * const loadData = useCallback(async () => {
+ *   await loadOrdersWithStats(...);
+ * }, [user, toast]); // ← Sem incluir loadOrdersWithStats
+ * 
+ * E no useEffect, use um useRef para garantir execução única:
+ * const hasLoadedRef = useRef(false);
+ * useEffect(() => {
+ *   if (user && !hasLoadedRef.current) {
+ *     hasLoadedRef.current = true;
+ *     loadData();
+ *   }
+ * }, [user, loadData]);
+ */
 export const useStreamingQuery = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
+  const isLoadingRef = useRef(false); // ✅ Proteção contra chamadas simultâneas
 
   // 🔥 VERSÃO PARA TODAS AS VENDAS - Chunks maiores, todos os dados (vendas próprias + afiliado)
   const loadOrdersWithStats = useCallback(async (
@@ -13,6 +39,14 @@ export const useStreamingQuery = () => {
     onOrdersChunk: (orders: any[]) => void,
     chunkSize = 100 // Chunks maiores para eficiência
   ) => {
+    // ✅ PROTEÇÃO: Evitar chamadas simultâneas
+    if (isLoadingRef.current) {
+      console.warn('⚠️ useStreamingQuery: Tentativa de chamada simultânea bloqueada');
+      return;
+    }
+    
+    isLoadingRef.current = true;
+    
     // Cancelar query anterior se existir
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -469,6 +503,9 @@ export const useStreamingQuery = () => {
         console.error('❌ Erro no carregamento:', error);
         throw error;
       }
+    } finally {
+      // ✅ SEMPRE liberar o lock, mesmo em caso de erro
+      isLoadingRef.current = false;
     }
   }, []);
 
