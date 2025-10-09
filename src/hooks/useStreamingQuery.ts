@@ -129,6 +129,13 @@ export const useStreamingQuery = () => {
 
       const statsData = [...ownSalesData, ...moduleSalesData, ...affiliateSalesData];
 
+      console.log(`📊 STATS INPUT DATA:`, {
+        ownSales: ownSalesData.length,
+        moduleSales: moduleSalesData.length,
+        affiliateSales: affiliateSalesData.length,
+        total: statsData.length
+      });
+
       // ✅ UNIFICADO: Calcular stats SEM conversão de moeda
       // Todos os valores são mantidos em suas moedas originais do banco
       // Isso garante que Dashboard, Vendas e Financeiro mostrem os mesmos valores
@@ -136,35 +143,23 @@ export const useStreamingQuery = () => {
         let amount = parseFloat(order.amount) || 0;
         const isAffiliateEarning = userAffiliateCodes.includes(order.affiliate_code);
         
-        console.log('💰 Processando venda para stats:', {
-          orderId: order.order_id,
-          amount: order.amount,
-          status: order.status,
-          isAffiliate: isAffiliateEarning,
-          affiliateCommission: order.affiliate_commission
-        });
-        
         if (isAffiliateEarning) {
           // Para vendas como afiliado, mostra apenas a comissão
           const affiliateCommission = parseFloat(order.affiliate_commission?.toString() || '0');
           acc.paid++;
           acc.paidTotal += affiliateCommission;
           acc.totalAffiliateCommissions += affiliateCommission;
-          console.log('  → Venda como AFILIADO, comissão:', affiliateCommission);
         } else {
           // Para vendedores - usar valores brutos SEM conversão
           if (order.status === 'completed') {
             acc.paid++;
             acc.paidTotal += amount;
-            console.log('  → Venda PRÓPRIA completed, valor:', amount);
           } else if (order.status === 'pending') {
             acc.pending++;
             acc.pendingTotal += amount;
-            console.log('  → Venda PRÓPRIA pending, valor:', amount);
           } else if (order.status === 'failed' || order.status === 'cancelled') {
             acc.cancelled++;
             acc.cancelledTotal += amount;
-            console.log('  → Venda PRÓPRIA cancelled/failed, valor:', amount);
           }
         }
 
@@ -200,6 +195,15 @@ export const useStreamingQuery = () => {
         totalAffiliateCommissions: stats.totalAffiliateCommissions,
         totalSellerEarnings: stats.totalSellerEarnings
       });
+
+      console.log('🔍 DETALHAMENTO POR STATUS:');
+      const completedSales = statsData.filter(o => o.status === 'completed');
+      const pendingSales = statsData.filter(o => o.status === 'pending');
+      const failedSales = statsData.filter(o => o.status === 'failed' || o.status === 'cancelled');
+      
+      console.log(`  ✅ Completed: ${completedSales.length} vendas, total: ${completedSales.reduce((sum, o) => sum + parseFloat(o.amount || 0), 0).toFixed(2)} KZ`);
+      console.log(`  ⏳ Pending: ${pendingSales.length} vendas, total: ${pendingSales.reduce((sum, o) => sum + parseFloat(o.amount || 0), 0).toFixed(2)} KZ`);
+      console.log(`  ❌ Failed/Cancelled: ${failedSales.length} vendas, total: ${failedSales.reduce((sum, o) => sum + parseFloat(o.amount || 0), 0).toFixed(2)} KZ`);
 
       setTotalCount(statsData?.length || 0);
       onStatsUpdate(stats);
