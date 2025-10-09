@@ -268,9 +268,8 @@ const Ranking = () => {
                   Crie sua conta e comece a vender na Kambafy hoje mesmo!
                 </p>
                 <SubdomainLink to="/auth">
-                  <Button size="lg" className="gap-2">
+                  <Button size="lg">
                     Começar Agora
-                    <TrendingUp className="w-5 h-5" />
                   </Button>
                 </SubdomainLink>
               </Card>
