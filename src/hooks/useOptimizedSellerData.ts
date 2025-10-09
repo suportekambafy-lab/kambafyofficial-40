@@ -48,10 +48,10 @@ export const useSellerData = () => {
         
         supabase
           .from('orders')
-          .select('id, amount, created_at, status, product_id, customer_name')
+          .select('id, amount, created_at, status, product_id, customer_name, customer_email, order_bump_data')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(10), // Limitar resultados iniciais
+          .in('status', ['completed', 'pending', 'cancelled', 'failed'])
+          .order('created_at', { ascending: false }), // ✅ SEM LIMIT - buscar todas para stats corretos
         
         supabase
           .from('profiles')

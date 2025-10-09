@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { countOrderItems } from '@/utils/orderUtils';
 
 // Dashboard do vendedor otimizado
 const OptimizedSellerDashboard = memo(() => {
@@ -43,8 +44,11 @@ const OptimizedSellerDashboard = memo(() => {
   // ✅ UNIFICADO: Estatísticas calculadas SEM conversão de moeda
   // Todos os valores são mantidos em suas moedas originais do banco de dados
   // Isso garante consistência entre Dashboard, Vendas e Financeiro
+  // ⚡ IMPORTANTE: Conta order bumps separadamente usando countOrderItems()
   const stats = {
-    totalSales: sellerData?.orders?.length || 0,
+    totalSales: sellerData?.orders?.reduce((sum: number, order: any) => {
+      return sum + countOrderItems(order); // ✅ Conta produto principal + order bumps
+    }, 0) || 0,
     totalRevenue: sellerData?.orders?.reduce((sum: number, order: any) => {
       const amount = parseFloat(order.amount) || 0;
       // NÃO converter moeda - usar valor bruto do banco
@@ -53,6 +57,17 @@ const OptimizedSellerDashboard = memo(() => {
     totalProducts: sellerData?.products?.length || 0,
     totalCustomers: new Set(sellerData?.orders?.map((order: any) => order.customer_email))?.size || 0
   };
+
+  console.log('📊 DASHBOARD STATS DEBUG:', {
+    totalSales: stats.totalSales,
+    ordersLength: sellerData?.orders?.length,
+    ordersWithDetails: sellerData?.orders?.map((o: any) => ({
+      id: o.id,
+      items: countOrderItems(o),
+      hasBump: !!o.order_bump_data
+    })),
+    note: 'Dashboard conta order bumps separadamente (igual Sales)'
+  });
 
   return (
     <div className="space-y-6 p-6">
