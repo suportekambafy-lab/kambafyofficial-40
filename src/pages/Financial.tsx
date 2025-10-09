@@ -287,42 +287,24 @@ export default function Financial() {
           return sum;
         }, 0) || 0;
 
-        // ✅ Buscar vendas já liberadas através das transações de crédito
-        const { data: creditTransactions } = await supabase
-          .from('balance_transactions')
-          .select('order_id, description')
-          .eq('user_id', user.id)
-          .eq('type', 'credit')
-          .like('description', '%Venda liberada após 3 dias%');
-
-        const releasedOrderIds = new Set(creditTransactions?.map(t => t.order_id) || []);
-        
-        console.log(`🔒 ${releasedOrderIds.size} vendas já foram liberadas para usuário ${user.id}`, {
-          creditTransactionsFound: creditTransactions?.length || 0,
-          releasedOrders: Array.from(releasedOrderIds)
-        });
-
         // ✅ USAR o saldo real do customer_balances como fonte de verdade
         const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
 
-        // ✅ Calcular saldo pendente APENAS para vendas NÃO liberadas ainda (3 dias corridos)
+        // ✅ Calcular saldo pendente baseado na data de criação (3 dias corridos)
         const now = new Date();
         let pendingBalance = 0;
         const pendingOrdersData: Array<{date: Date, amount: number}> = [];
 
-        allOrders.forEach(order => {
-          // ❌ Ignorar se já foi liberada (já está no saldo disponível)
-          if (releasedOrderIds.has(order.order_id)) {
-            return;
-          }
+        console.log(`💰 Calculando saldo pendente para ${allOrders.length} vendas do usuário ${user.id}`);
 
+        allOrders.forEach(order => {
           const orderDate = new Date(order.created_at);
           const releaseDate = new Date(orderDate);
           releaseDate.setDate(orderDate.getDate() + 3); // 3 dias corridos
           
           const amount = order.earning_amount;
           
-          // Se ainda não liberou (data de liberação é futura)
+          // ✅ Se a data de liberação é FUTURA = ainda está pendente
           if (now < releaseDate) {
             pendingBalance += amount;
             pendingOrdersData.push({
@@ -330,7 +312,10 @@ export default function Financial() {
               amount: amount
             });
           }
+          // ❌ Se a data de liberação JÁ PASSOU = não contar (já está no saldo disponível)
         });
+
+        console.log(`✅ Saldo pendente calculado: ${pendingBalance} KZ de ${pendingOrdersData.length} vendas pendentes`);
 
         // Encontrar próxima liberação
         let nextReleaseDate = null;
