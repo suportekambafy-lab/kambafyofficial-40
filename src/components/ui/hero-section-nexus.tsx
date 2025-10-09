@@ -895,14 +895,15 @@ const InteractiveHero: React.FC = () => {
                           <img src={kambafy_icon} alt="Kambafy" className="h-12 w-auto mb-4" />
                           <p className="text-gray-500 text-sm">A maior plataforma Lusófona de infoprodutos</p>
                       </div>
-                      <div>
-                          <h4 className="font-semibold text-white mb-4">Plataforma</h4>
-                          <ul className="space-y-2 text-sm">
-                              <li><SubdomainLink to="/como-funciona" className="text-gray-500 hover:text-white transition-colors">Como Funciona</SubdomainLink></li>
-                              <li><SubdomainLink to="/precos" className="text-gray-500 hover:text-white transition-colors">Preços</SubdomainLink></li>
-                              <li><SubdomainLink to="/recursos" className="text-gray-500 hover:text-white transition-colors">Recursos</SubdomainLink></li>
-                          </ul>
-                      </div>
+                       <div>
+                           <h4 className="font-semibold text-white mb-4">Plataforma</h4>
+                           <ul className="space-y-2 text-sm">
+                               <li><SubdomainLink to="/como-funciona" className="text-gray-500 hover:text-white transition-colors">Como Funciona</SubdomainLink></li>
+                               <li><SubdomainLink to="/precos" className="text-gray-500 hover:text-white transition-colors">Preços</SubdomainLink></li>
+                               <li><SubdomainLink to="/recursos" className="text-gray-500 hover:text-white transition-colors">Recursos</SubdomainLink></li>
+                               <li><SubdomainLink to="/ranking" className="text-gray-500 hover:text-[#0CF2A0] transition-colors">🏆 Ranking</SubdomainLink></li>
+                           </ul>
+                       </div>
                       <div>
                           <h4 className="font-semibold text-white mb-4">Suporte</h4>
                           <ul className="space-y-2 text-sm">

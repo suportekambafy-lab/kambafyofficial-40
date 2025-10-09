@@ -148,8 +148,9 @@ const App = () => {
                          });
                          return null;
                        })()}
-                       <Route path="/" element={<OptimizedRoutes.Index />} />
-                      <Route path="/auth" element={<OptimizedRoutes.Auth />} />
+                        <Route path="/" element={<OptimizedRoutes.Index />} />
+                       <Route path="/ranking" element={<OptimizedRoutes.Ranking />} />
+                       <Route path="/auth" element={<OptimizedRoutes.Auth />} />
                       <Route path="/reset-password" element={<OptimizedRoutes.ResetPassword />} />
                       <Route path="/checkout/:productId" element={<OptimizedRoutes.Checkout />} />
                       <Route path="/checkout/:productId/success" element={<OptimizedRoutes.CheckoutSuccess />} />
