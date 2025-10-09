@@ -295,10 +295,10 @@ export default function Financial() {
           return sum + order.earning_amount;
         }, 0);
 
-        // ✅ Calcular total sacado = APROVADOS + PENDENTES (descontar do saldo)
+        // ✅ Calcular total sacado APROVADO (apenas para exibição, não descontar do saldo)
         const totalWithdrawnAmount = withdrawalRequestsData?.reduce((sum, withdrawal) => {
-          // Incluir saques APROVADOS e PENDENTES
-          if (withdrawal.status === 'aprovado' || withdrawal.status === 'pendente') {
+          // Incluir APENAS saques APROVADOS para exibição
+          if (withdrawal.status === 'aprovado') {
             const finalAmount = parseFloat(withdrawal.amount?.toString() || '0');
             return sum + finalAmount;
           }
@@ -306,7 +306,8 @@ export default function Financial() {
         }, 0) || 0;
 
         // ✅ USAR o saldo real do customer_balances como fonte de verdade
-        const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
+        // O saldo já reflete os débitos de saques pendentes via trigger
+        const finalAvailableBalance = Math.max(0, currentBalance);
 
         // ✅ CALCULAR SALDO PENDENTE usando balance_transactions como fonte de verdade
         const now = new Date();
