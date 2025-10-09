@@ -607,15 +607,27 @@ export default function AdminIdentityVerification() {
           {/* Documento */}
           <div className="flex justify-center items-center p-4 bg-gray-50 rounded-lg">
             {documentModal.imageUrl && (
-              <img 
-                src={documentModal.imageUrl} 
-                alt={documentModal.title}
-                className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-lg"
-                onError={(e) => {
-                  console.error('Erro ao carregar imagem:', e);
-                  toast.error('Erro ao carregar documento');
-                }}
-              />
+              documentModal.imageUrl.toLowerCase().endsWith('.pdf') ? (
+                <iframe 
+                  src={documentModal.imageUrl} 
+                  title={documentModal.title}
+                  className="w-full h-[70vh] rounded-lg shadow-lg border-0"
+                  onError={(e) => {
+                    console.error('Erro ao carregar PDF:', e);
+                    toast.error('Erro ao carregar documento PDF');
+                  }}
+                />
+              ) : (
+                <img 
+                  src={documentModal.imageUrl} 
+                  alt={documentModal.title}
+                  className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-lg"
+                  onError={(e) => {
+                    console.error('Erro ao carregar imagem:', e);
+                    toast.error('Erro ao carregar documento');
+                  }}
+                />
+              )
             )}
           </div>
         </DialogContent>
