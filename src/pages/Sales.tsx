@@ -103,7 +103,7 @@ export default function Sales() {
   const loadingRef = useRef(false); // Controle via ref para evitar loops
   
   // ✅ VERSÃO DO CÓDIGO - Incrementar quando houver mudança importante
-  const CODE_VERSION = 'v2.6'; // Corrigido: mostrar apenas vendas pagas (completed)
+  const CODE_VERSION = 'v2.7'; // Habilitado: vendas pendentes e canceladas funcionais
   const hasLoadedRef = useRef(false); // ✅ Controle para executar apenas uma vez automaticamente
   const lastCodeVersionRef = useRef<string | null>(null);
 
