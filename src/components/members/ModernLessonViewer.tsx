@@ -71,8 +71,9 @@ export function ModernLessonViewer({
   const isScheduled = lesson.is_scheduled && lesson.scheduled_at;
   const isNotYetReleased = isScheduled && new Date(lesson.scheduled_at) > new Date();
 
-  // Derivar HLS URL do embed URL do Bunny se necessário
-  const getHlsUrl = () => {
+  // ✅ CORREÇÃO: Usar embed do Bunny diretamente (já tem CORS configurado)
+  // Não tentar derivar HLS pois causa problemas de CORS
+  const getVideoUrls = () => {
     console.log('🎥 [ModernLessonViewer] Verificando URLs da aula:', {
       lessonId: lesson.id,
       lessonTitle: lesson.title,
@@ -81,25 +82,41 @@ export function ModernLessonViewer({
       video_url: lesson.video_url
     });
     
+    // PRIORIDADE 1: Se tem embed URL da Bunny, usar iframe (já tem CORS)
+    if (lesson.bunny_embed_url?.includes('iframe.mediadelivery.net/embed/')) {
+      console.log('✅ [ModernLessonViewer] Usando Bunny embed (iframe):', lesson.bunny_embed_url);
+      return {
+        hlsUrl: null,
+        embedUrl: lesson.bunny_embed_url
+      };
+    }
+    
+    // PRIORIDADE 2: Se tem HLS URL explícito, usar
     if (lesson.hls_url) {
-      console.log('✅ [ModernLessonViewer] Usando hls_url do lesson:', lesson.hls_url);
-      return lesson.hls_url;
+      console.log('✅ [ModernLessonViewer] Usando HLS explícito:', lesson.hls_url);
+      return {
+        hlsUrl: lesson.hls_url,
+        embedUrl: null
+      };
     }
     
-    // Se temos um embed URL do Bunny, derivar o HLS URL
-    const embedUrl = lesson.bunny_embed_url || lesson.video_url;
-    if (embedUrl?.includes('iframe.mediadelivery.net/embed/')) {
-      const videoId = embedUrl.split('/').pop();
-      const derivedHls = `https://vz-5c879716-268.b-cdn.net/${videoId}/playlist.m3u8`;
-      console.log('🔗 [ModernLessonViewer] HLS derivado do embed:', derivedHls);
-      return derivedHls;
+    // PRIORIDADE 3: Video URL direto
+    if (lesson.video_url) {
+      console.log('✅ [ModernLessonViewer] Usando video_url:', lesson.video_url);
+      return {
+        hlsUrl: null,
+        embedUrl: lesson.video_url
+      };
     }
     
-    console.log('⚠️ [ModernLessonViewer] Nenhuma URL HLS encontrada');
-    return null;
+    console.log('⚠️ [ModernLessonViewer] Nenhuma URL de vídeo encontrada');
+    return {
+      hlsUrl: null,
+      embedUrl: null
+    };
   };
 
-  const hlsUrl = getHlsUrl();
+  const { hlsUrl, embedUrl: videoEmbedUrl } = getVideoUrls();
 
   // Gerenciar countdown quando vídeo termina
   useEffect(() => {
@@ -166,15 +183,14 @@ export function ModernLessonViewer({
               releaseDate={new Date(lesson.scheduled_at!)} 
               lessonTitle={lesson.title}
             />
-          ) : hlsUrl || lesson.video_url || lesson.bunny_embed_url ? (
+          ) : hlsUrl || videoEmbedUrl ? (
             <div className="w-full aspect-video bg-black relative">
               {(() => {
-                const embedUrl = !hlsUrl ? (lesson.bunny_embed_url || lesson.video_url) : undefined;
                 console.log('🎬 [ModernLessonViewer] Renderizando VideoPlayer:', {
                   lessonId: lesson.id,
                   lessonTitle: lesson.title,
                   hlsUrl,
-                  embedUrl,
+                  embedUrl: videoEmbedUrl,
                   videoKey,
                   hasOnTimeUpdate: !!onUpdateProgress,
                   isReplayMode
@@ -183,7 +199,7 @@ export function ModernLessonViewer({
                   <VideoPlayer
                     key={`${lesson.id}-${videoKey}`}
                     hlsUrl={hlsUrl}
-                    embedUrl={embedUrl}
+                    embedUrl={videoEmbedUrl}
                     startTime={startTime}
                     onTimeUpdate={onUpdateProgress && !isReplayMode ? (currentTime, duration) => {
                       onUpdateProgress(lesson.id, currentTime, duration);
