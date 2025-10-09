@@ -159,6 +159,7 @@ export function ModernLessonViewer({
                 hlsUrl={hlsUrl}
                 embedUrl={!hlsUrl ? (lesson.bunny_embed_url || lesson.video_url) : undefined}
                 startTime={startTime}
+                autoPlay={true}
                 onTimeUpdate={onUpdateProgress && !isReplayMode ? (currentTime, duration) => {
                   onUpdateProgress(lesson.id, currentTime, duration);
                 } : undefined}

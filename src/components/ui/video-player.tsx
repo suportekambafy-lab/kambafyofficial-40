@@ -56,6 +56,7 @@ interface VideoPlayerProps {
   hlsUrl?: string;
   embedUrl?: string;
   startTime?: number;
+  autoPlay?: boolean;
   onProgress?: (progress: number) => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onPlay?: () => void;
@@ -73,6 +74,7 @@ const VideoPlayer = ({
   hlsUrl,
   embedUrl,
   startTime = 0,
+  autoPlay = false,
   onProgress,
   onTimeUpdate,
   onPlay,
@@ -218,6 +220,10 @@ const VideoPlayer = ({
           setIsLoading(false);
           setErrorMessage(null);
           if (startTime > 0) video.currentTime = startTime;
+          if (autoPlay) {
+            video.play().catch(err => console.log('Autoplay impedido:', err));
+            setIsPlaying(true);
+          }
         }
       };
       
@@ -291,6 +297,10 @@ const VideoPlayer = ({
         setAvailableQualities(uniqueQualities);
         
         if (startTime > 0) video.currentTime = startTime;
+        if (autoPlay) {
+          video.play().catch(err => console.log('Autoplay impedido:', err));
+          setIsPlaying(true);
+        }
       });
       
       hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -441,6 +451,11 @@ const VideoPlayer = ({
         const initialProgress = (startTime / videoRef.current.duration) * 100;
         setProgress(initialProgress);
         setCurrentTime(startTime);
+      }
+      
+      if (autoPlay) {
+        videoRef.current.play().catch(err => console.log('Autoplay impedido:', err));
+        setIsPlaying(true);
       }
       
       setIsLoading(false);
