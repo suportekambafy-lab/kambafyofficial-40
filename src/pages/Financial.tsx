@@ -295,21 +295,38 @@ export default function Financial() {
         let pendingBalance = 0;
         const pendingOrdersData: Array<{date: Date, amount: number}> = [];
 
-        console.error(`🔥 CALCULANDO SALDO PENDENTE para ${allOrders.length} vendas do usuário ${user.id}`);
+        console.error(`🔥 CALCULANDO SALDO PENDENTE para ${allOrders.length} vendas`);
         console.error(`🔥 Data atual: ${now.toISOString()}`);
+        console.error(`🔥 Saldo disponível atual (customer_balances): ${currentBalance.toLocaleString()} KZ`);
 
         let releasedCount = 0;
         let pendingCount = 0;
+        let totalReleased = 0;
 
         allOrders.forEach(order => {
           const orderDate = new Date(order.created_at);
           const releaseDate = new Date(orderDate);
           releaseDate.setDate(orderDate.getDate() + 3); // 3 dias corridos
           
+          // ✅ Zerar horas para comparação correta de datas
+          const releaseDateStart = new Date(releaseDate);
+          releaseDateStart.setHours(0, 0, 0, 0);
+          
+          const nowStart = new Date(now);
+          nowStart.setHours(0, 0, 0, 0);
+          
           const amount = order.earning_amount;
           
-          // ✅ Se a data de liberação é FUTURA = ainda está pendente
-          if (now < releaseDate) {
+          // ✅ Se a data de liberação JÁ PASSOU = NÃO contar no pendente (já foi liberada)
+          if (nowStart >= releaseDateStart) {
+            releasedCount++;
+            totalReleased += amount;
+            
+            if (releasedCount <= 3) {
+              console.error(`🟢 LIBERADA: ${order.order_id} - ${amount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()} - liberou em ${releaseDate.toLocaleDateString()}`);
+            }
+          } else {
+            // ❌ Se a data de liberação é FUTURA = ainda está pendente
             pendingBalance += amount;
             pendingCount++;
             pendingOrdersData.push({
@@ -318,19 +335,15 @@ export default function Financial() {
             });
             
             if (pendingCount <= 3) {
-              console.error(`🟡 PENDENTE: ${order.order_id} - ${amount} KZ - libera em ${releaseDate.toLocaleDateString()}`);
-            }
-          } else {
-            // ❌ Se a data de liberação JÁ PASSOU = não contar (já está no saldo disponível)
-            releasedCount++;
-            
-            if (releasedCount <= 3) {
-              console.error(`🟢 LIBERADA: ${order.order_id} - ${amount} KZ - liberada em ${releaseDate.toLocaleDateString()}`);
+              console.error(`🟡 PENDENTE: ${order.order_id} - ${amount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()} - libera em ${releaseDate.toLocaleDateString()}`);
             }
           }
         });
 
-        console.error(`🔥 RESULTADO: ${pendingBalance.toLocaleString()} KZ pendentes (${pendingCount} vendas) | ${releasedCount} vendas já liberadas`);
+        console.error(`🔥 RESULTADO FINAL:`);
+        console.error(`   ✅ ${releasedCount} vendas JÁ LIBERADAS = ${totalReleased.toLocaleString()} KZ (no saldo disponível)`);
+        console.error(`   🟡 ${pendingCount} vendas PENDENTES = ${pendingBalance.toLocaleString()} KZ`);
+        console.error(`   💰 Saldo disponível (balance): ${currentBalance.toLocaleString()} KZ`);
 
         // Encontrar próxima liberação
         let nextReleaseDate = null;
