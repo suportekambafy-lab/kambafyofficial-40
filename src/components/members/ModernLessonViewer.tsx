@@ -73,15 +73,29 @@ export function ModernLessonViewer({
 
   // Derivar HLS URL do embed URL do Bunny se necessário
   const getHlsUrl = () => {
-    if (lesson.hls_url) return lesson.hls_url;
+    console.log('🎥 [ModernLessonViewer] Verificando URLs da aula:', {
+      lessonId: lesson.id,
+      lessonTitle: lesson.title,
+      hls_url: lesson.hls_url,
+      bunny_embed_url: lesson.bunny_embed_url,
+      video_url: lesson.video_url
+    });
+    
+    if (lesson.hls_url) {
+      console.log('✅ [ModernLessonViewer] Usando hls_url do lesson:', lesson.hls_url);
+      return lesson.hls_url;
+    }
     
     // Se temos um embed URL do Bunny, derivar o HLS URL
     const embedUrl = lesson.bunny_embed_url || lesson.video_url;
     if (embedUrl?.includes('iframe.mediadelivery.net/embed/')) {
       const videoId = embedUrl.split('/').pop();
-      return `https://vz-5c879716-268.b-cdn.net/${videoId}/playlist.m3u8`;
+      const derivedHls = `https://vz-5c879716-268.b-cdn.net/${videoId}/playlist.m3u8`;
+      console.log('🔗 [ModernLessonViewer] HLS derivado do embed:', derivedHls);
+      return derivedHls;
     }
     
+    console.log('⚠️ [ModernLessonViewer] Nenhuma URL HLS encontrada');
     return null;
   };
 
@@ -154,16 +168,30 @@ export function ModernLessonViewer({
             />
           ) : hlsUrl || lesson.video_url || lesson.bunny_embed_url ? (
             <div className="w-full aspect-video bg-black relative">
-              <VideoPlayer
-                key={`${lesson.id}-${videoKey}`}
-                hlsUrl={hlsUrl}
-                embedUrl={!hlsUrl ? (lesson.bunny_embed_url || lesson.video_url) : undefined}
-                startTime={startTime}
-                onTimeUpdate={onUpdateProgress && !isReplayMode ? (currentTime, duration) => {
-                  onUpdateProgress(lesson.id, currentTime, duration);
-                } : undefined}
-                onEnded={handleVideoEnd}
-              />
+              {(() => {
+                const embedUrl = !hlsUrl ? (lesson.bunny_embed_url || lesson.video_url) : undefined;
+                console.log('🎬 [ModernLessonViewer] Renderizando VideoPlayer:', {
+                  lessonId: lesson.id,
+                  lessonTitle: lesson.title,
+                  hlsUrl,
+                  embedUrl,
+                  videoKey,
+                  hasOnTimeUpdate: !!onUpdateProgress,
+                  isReplayMode
+                });
+                return (
+                  <VideoPlayer
+                    key={`${lesson.id}-${videoKey}`}
+                    hlsUrl={hlsUrl}
+                    embedUrl={embedUrl}
+                    startTime={startTime}
+                    onTimeUpdate={onUpdateProgress && !isReplayMode ? (currentTime, duration) => {
+                      onUpdateProgress(lesson.id, currentTime, duration);
+                    } : undefined}
+                    onEnded={handleVideoEnd}
+                  />
+                );
+              })()}
               
               {/* Overlay de fim de vídeo */}
               <AnimatePresence>

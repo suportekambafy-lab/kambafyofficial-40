@@ -110,16 +110,26 @@ const VideoPlayer = ({
 
   // Determine initial source priority
   useEffect(() => {
+    console.log('🎬 [VideoPlayer] Determinando fonte inicial:', {
+      hlsUrl,
+      embedUrl,
+      src,
+      currentSource,
+      failedSourcesCount: failedSources.size
+    });
+    
     if (!currentSource && !failedSources.size) {
       if (hlsUrl) {
-        console.log('🎬 Tentando HLS como fonte principal');
+        console.log('✅ [VideoPlayer] Selecionando HLS como fonte principal');
         setCurrentSource('hls');
       } else if (embedUrl) {
-        console.log('🎬 Tentando iframe como fonte principal');
+        console.log('✅ [VideoPlayer] Selecionando iframe como fonte principal');
         setCurrentSource('iframe');
       } else if (src) {
-        console.log('🎬 Tentando vídeo direto como fonte principal');
+        console.log('✅ [VideoPlayer] Selecionando vídeo direto como fonte principal');
         setCurrentSource('direct');
+      } else {
+        console.error('❌ [VideoPlayer] ERRO: Nenhuma fonte disponível!');
       }
     }
   }, [hlsUrl, embedUrl, src, currentSource, failedSources]);
