@@ -411,6 +411,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Digite o nome do seu produto"
+                disabled={editingProduct?.revision_requested}
               />
             </div>
 
@@ -449,6 +450,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
                 value={formData.price}
                 onChange={(e) => handleInputChange("price", e.target.value)}
                 placeholder="Ex: 5000"
+                disabled={editingProduct?.revision_requested}
               />
             </div>
 
@@ -467,6 +469,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="Descreva seu produto"
                 rows={4}
+                disabled={editingProduct?.revision_requested}
               />
             </div>
 
@@ -481,8 +484,14 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
                   accept="image/*"
                   onChange={handleImageUpload}
                   className="flex-1"
+                  disabled={editingProduct?.revision_requested}
                 />
-                <Button type="button" variant="outline" size="sm">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  disabled={editingProduct?.revision_requested}
+                >
                   <Upload className="w-4 h-4 mr-2" />
                   Upload
                 </Button>
@@ -560,13 +569,29 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
               </p>
             </div>
 
+            {editingProduct?.revision_requested && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <p className="text-yellow-800 font-medium text-sm">
+                  ⚠️ Produto enviado para revisão
+                </p>
+                <p className="text-yellow-700 text-xs mt-1">
+                  Não é possível editar o produto enquanto está em revisão administrativa.
+                </p>
+              </div>
+            )}
+
             <div className="flex gap-2 pt-4 sticky bottom-0 bg-background">
               <Button 
                 onClick={handleSave} 
-                disabled={saving}
+                disabled={saving || editingProduct?.revision_requested}
                 className="flex-1"
               >
-                {saving ? (
+                {editingProduct?.revision_requested ? (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Enviado para Revisão
+                  </>
+                ) : saving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Salvando...
