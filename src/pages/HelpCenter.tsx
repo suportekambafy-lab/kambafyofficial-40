@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Mail, Phone, Search, Send } from 'lucide-react';
+import { MessageCircle, Mail, Search, Send } from 'lucide-react';
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +41,7 @@ const HelpCenter = () => {
     answer: "Usamos tecnologia avançada de proteção, incluindo marca d'água em vídeos, acesso restrito e monitoramento contínuo."
   }, {
     question: "Qual suporte técnico disponível?",
-    answer: "Oferecemos suporte por email, chat ao vivo e telefone. Usuários profissionais têm suporte prioritário 24/7."
+    answer: "Oferecemos suporte por email e chat ao vivo. Usuários profissionais têm suporte prioritário 24/7."
   }];
   const filteredFaqs = faqs.filter(faq => faq.question.toLowerCase().includes(searchQuery.toLowerCase()) || faq.answer.toLowerCase().includes(searchQuery.toLowerCase()));
   const handleContactSubmit = async (e: React.FormEvent) => {
@@ -106,12 +106,6 @@ const HelpCenter = () => {
     description: "suporte@kambafy.com",
     action: "Enviar Email",
     onClick: () => window.location.href = 'mailto:suporte@kambafy.com'
-  }, {
-    icon: <Phone className="w-6 h-6 text-checkout-green" />,
-    title: "Telefone",
-    description: "+244 XXX XXX XXX",
-    action: "Ligar Agora",
-    onClick: () => window.location.href = 'tel:+244XXXXXXXXX'
   }];
   return <>
       <SEO {...pageSEO.helpCenter} />

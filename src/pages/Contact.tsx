@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Mail, Phone, Clock } from 'lucide-react';
+import { MapPin, Mail, Clock } from 'lucide-react';
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,15 +172,6 @@ const Contact = () => {
                   <div>
                     <h4 className="font-medium">Email</h4>
                     <p className="text-muted-foreground">suporte@kambafy.com</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <Phone className="w-6 h-6 text-checkout-green mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Telefone</h4>
-                    <p className="text-muted-foreground">+244 XXX XXX XXX</p>
-                    <p className="text-muted-foreground">+244 YYY YYY YYY</p>
                   </div>
                 </div>
 

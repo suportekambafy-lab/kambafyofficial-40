@@ -370,14 +370,6 @@ export default function SellerHelp() {
                       <p className="text-sm text-muted-foreground">suporte@kambafy.com</p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => window.location.href = 'tel:+244XXXXXXXXX'}>
-                    <Phone className="h-5 w-5 text-orange-600" />
-                    <div>
-                      <p className="font-medium">Telefone</p>
-                      <p className="text-sm text-muted-foreground">+244 XXX XXX XXX</p>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </div>
