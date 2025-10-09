@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { countOrderItems } from "@/utils/orderUtils";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Trophy, TrendingUp, DollarSign } from "lucide-react";
@@ -66,9 +67,12 @@ const Ranking = () => {
           ? parseFloat(String(order.seller_commission))
           : parseFloat(String(order.amount));
         
+        // ✅ Conta order bumps separadamente (igual ao Dashboard)
+        const itemCount = countOrderItems(order);
+        
         sellerMap.set(order.user_id, {
           revenue: current.revenue + revenue,
-          sales: current.sales + 1
+          sales: current.sales + itemCount
         });
       });
 
