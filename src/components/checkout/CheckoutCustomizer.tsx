@@ -207,6 +207,9 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
                 <CardContent className="space-y-4">
                   <div>
                     <Label>Upload de Imagem do Banner</Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Tamanho recomendado: 1200x300px ou 1920x400px (formato largo)
+                    </p>
                     <div className="mt-2">
                       <input
                         type="file"

@@ -477,6 +477,9 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
 
             <div className="space-y-2">
               <Label htmlFor="cover">Capa do produto *</Label>
+              <p className="text-xs text-muted-foreground">
+                Tamanho recomendado: 800x1200px ou 1000x1500px (proporção de capa de livro)
+              </p>
               <div className="flex items-center gap-4">
                 <Input
                   id="cover"

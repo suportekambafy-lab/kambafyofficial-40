@@ -15,7 +15,20 @@ interface ImageUploaderProps {
   className?: string;
   aspectRatio?: string;
   disabled?: boolean;
+  recommendedDimensions?: string;
 }
+
+const getRecommendedDimensions = (aspectRatio: string): string => {
+  const dimensionsMap: Record<string, string> = {
+    '16/9': '1920x1080px ou 1280x720px',
+    '9/16': '1080x1920px (vertical)',
+    '1/1': '1080x1080px (quadrado)',
+    '4/3': '1600x1200px',
+    '3/2': '1500x1000px',
+  };
+  
+  return dimensionsMap[aspectRatio] || '1920x1080px';
+};
 
 export function ImageUploader({
   label,
@@ -26,7 +39,8 @@ export function ImageUploader({
   accept = "image/*",
   className = "",
   aspectRatio = "16/9",
-  disabled = false
+  disabled = false,
+  recommendedDimensions
 }: ImageUploaderProps) {
   const { toast } = useToast();
   const { uploadFile, uploading } = useBunnyUpload();
@@ -61,9 +75,16 @@ export function ImageUploader({
     onChange(null);
   };
 
+  const dimensions = recommendedDimensions || getRecommendedDimensions(aspectRatio);
+
   return (
     <div className={`space-y-2 ${className}`}>
-      <Label className="text-sm font-medium">{label}</Label>
+      <div className="flex items-center justify-between">
+        <Label className="text-sm font-medium">{label}</Label>
+        <span className="text-xs text-muted-foreground">
+          Recomendado: {dimensions}
+        </span>
+      </div>
       
       {value ? (
         <div className="relative group">
@@ -117,6 +138,9 @@ export function ImageUploader({
                 <div className="text-center">
                   <p className="text-sm font-medium text-foreground">Clique para enviar uma imagem</p>
                   <p className="text-xs text-muted-foreground">PNG, JPG, WEBP até 50MB</p>
+                  <p className="text-xs text-primary font-medium mt-1">
+                    Tamanho ideal: {dimensions}
+                  </p>
                 </div>
                 <Upload className="w-4 h-4 text-muted-foreground" />
               </div>
