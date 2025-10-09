@@ -19,7 +19,6 @@ import professionalManImage from "@/assets/professional-man.jpg";
 import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod } from "@/utils/paymentMethods";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
-import { useCorrectSalesDisplay } from "@/hooks/useCorrectSalesDisplay";
 
 interface Sale {
   id: string;
@@ -68,9 +67,6 @@ export default function Sales() {
   const {
     getCurrencyInfo
   } = useCurrencyToCountry();
-  const {
-    correctSalesData
-  } = useCorrectSalesDisplay();
   const [sales, setSales] = useState<Sale[]>([]);
   const [salesStats, setSalesStats] = useState<SalesStats>({
     paid: 0,
@@ -116,12 +112,15 @@ export default function Sales() {
     try {
       setLoading(true);
       setDataComplete(false);
+      
+      // ✅ UNIFICADO: Usar valores diretos do banco sem conversões
+      // Todos os valores são mantidos em suas moedas originais
       await loadOrdersWithStats(user.id, stats => {
+        console.log('📊 Stats recebidos:', stats);
         setSalesStats(stats);
       }, orders => {
-        const correctedOrders = correctSalesData(orders);
-        console.log(`🔧 Aplicando correções automáticas em ${correctedOrders.length} vendas`);
-        setSales(correctedOrders);
+        console.log(`✅ ${orders.length} vendas carregadas diretamente (sem correções)`);
+        setSales(orders);
       });
       console.log('✅ Carregamento concluído com sucesso');
       setDataComplete(true);

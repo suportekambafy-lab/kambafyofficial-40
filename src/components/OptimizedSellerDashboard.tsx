@@ -40,20 +40,14 @@ const OptimizedSellerDashboard = memo(() => {
     );
   }
 
-  // Estatísticas calculadas
+  // ✅ UNIFICADO: Estatísticas calculadas SEM conversão de moeda
+  // Todos os valores são mantidos em suas moedas originais do banco de dados
+  // Isso garante consistência entre Dashboard, Vendas e Financeiro
   const stats = {
     totalSales: sellerData?.orders?.length || 0,
     totalRevenue: sellerData?.orders?.reduce((sum: number, order: any) => {
-      let amount = parseFloat(order.amount) || 0;
-      // Converter para KZ se necessário
-      if (order.currency && order.currency !== 'KZ') {
-        const exchangeRates: Record<string, number> = {
-          'EUR': 1053, // 1 EUR = ~1053 KZ
-          'MZN': 14.3  // 1 MZN = ~14.3 KZ
-        };
-        const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-        amount = Math.round(amount * rate);
-      }
+      const amount = parseFloat(order.amount) || 0;
+      // NÃO converter moeda - usar valor bruto do banco
       return sum + amount;
     }, 0) || 0,
     totalProducts: sellerData?.products?.length || 0,
@@ -126,16 +120,8 @@ const OptimizedSellerDashboard = memo(() => {
       <AnimatedWrapper delay={300}>
         <OptimizedVirtualTable
           items={sellerData?.orders?.map((order: any) => {
-            let amount = parseFloat(order.amount) || 0;
-            // Converter para KZ se necessário
-            if (order.currency && order.currency !== 'KZ') {
-              const exchangeRates: Record<string, number> = {
-                'EUR': 1053, // 1 EUR = ~1053 KZ
-                'MZN': 14.3  // 1 MZN = ~14.3 KZ
-              };
-              const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-              amount = Math.round(amount * rate);
-            }
+            const amount = parseFloat(order.amount) || 0;
+            // NÃO converter moeda - usar valor bruto do banco
             return {
               id: order.id,
               name: `Pedido #${order.id.slice(0, 8)}`,

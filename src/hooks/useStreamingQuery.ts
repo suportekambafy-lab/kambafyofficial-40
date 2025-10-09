@@ -129,10 +129,20 @@ export const useStreamingQuery = () => {
 
       const statsData = [...ownSalesData, ...moduleSalesData, ...affiliateSalesData];
 
-      // Calcular stats - apenas contadores, não valores
+      // ✅ UNIFICADO: Calcular stats SEM conversão de moeda
+      // Todos os valores são mantidos em suas moedas originais do banco
+      // Isso garante que Dashboard, Vendas e Financeiro mostrem os mesmos valores
       const stats = (statsData || []).reduce((acc, order) => {
         let amount = parseFloat(order.amount) || 0;
         const isAffiliateEarning = userAffiliateCodes.includes(order.affiliate_code);
+        
+        console.log('💰 Processando venda para stats:', {
+          orderId: order.order_id,
+          amount: order.amount,
+          status: order.status,
+          isAffiliate: isAffiliateEarning,
+          affiliateCommission: order.affiliate_commission
+        });
         
         if (isAffiliateEarning) {
           // Para vendas como afiliado, mostra apenas a comissão
@@ -140,17 +150,21 @@ export const useStreamingQuery = () => {
           acc.paid++;
           acc.paidTotal += affiliateCommission;
           acc.totalAffiliateCommissions += affiliateCommission;
+          console.log('  → Venda como AFILIADO, comissão:', affiliateCommission);
         } else {
-          // Para vendedores - usar valores brutos apenas para contadores
+          // Para vendedores - usar valores brutos SEM conversão
           if (order.status === 'completed') {
             acc.paid++;
             acc.paidTotal += amount;
+            console.log('  → Venda PRÓPRIA completed, valor:', amount);
           } else if (order.status === 'pending') {
             acc.pending++;
             acc.pendingTotal += amount;
+            console.log('  → Venda PRÓPRIA pending, valor:', amount);
           } else if (order.status === 'failed' || order.status === 'cancelled') {
             acc.cancelled++;
             acc.cancelledTotal += amount;
+            console.log('  → Venda PRÓPRIA cancelled/failed, valor:', amount);
           }
         }
 
@@ -175,12 +189,18 @@ export const useStreamingQuery = () => {
         }, {} as Record<string, number>)
       });
 
-      setTotalCount(statsData?.length || 0);
-      onStatsUpdate(stats);
+      console.log('📊 RESUMO FINAL DAS STATS:', {
+        totalVendas: statsData?.length || 0,
+        paid: stats.paid,
+        paidTotal: stats.paidTotal,
+        pending: stats.pending,
+        pendingTotal: stats.pendingTotal,
+        cancelled: stats.cancelled,
+        cancelledTotal: stats.cancelledTotal,
+        totalAffiliateCommissions: stats.totalAffiliateCommissions,
+        totalSellerEarnings: stats.totalSellerEarnings
+      });
 
-      // 🔍 VERIFICAÇÃO DE RLS - Contar total sem RLS para debug
-      console.log(`🔍 Total de vendas encontradas (próprias + afiliado): ${statsData?.length || 0}`);
-      
       setTotalCount(statsData?.length || 0);
       onStatsUpdate(stats);
 
