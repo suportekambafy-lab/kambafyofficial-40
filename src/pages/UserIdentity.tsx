@@ -173,30 +173,50 @@ export default function UserIdentity() {
         document_type: formData.document_type,
         document_number: formData.document_number,
         document_front_url: verification?.document_front_url,
-        document_back_url: verification?.document_back_url,
+        document_back_url: verification?.document_back_url || null,
         status: 'pendente'
       };
 
+      console.log('📝 Salvando verificação:', verificationData);
+
       if (verification) {
-        const { error } = await supabase
+        console.log('🔄 Atualizando verificação existente:', verification.id);
+        const { data, error } = await supabase
           .from('identity_verification')
           .update(verificationData)
-          .eq('id', verification.id);
+          .eq('id', verification.id)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro no UPDATE:', error);
+          throw error;
+        }
+        console.log('✅ Verificação atualizada:', data);
       } else {
-        const { error } = await supabase
+        console.log('➕ Criando nova verificação');
+        const { data, error } = await supabase
           .from('identity_verification')
-          .insert([verificationData]);
+          .insert([verificationData])
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro no INSERT:', error);
+          throw error;
+        }
+        console.log('✅ Verificação criada:', data);
       }
 
       toast.success('Dados de verificação salvos com sucesso');
       await loadVerification();
-    } catch (error) {
-      console.error('Erro ao salvar:', error);
-      toast.error('Erro ao salvar dados de verificação');
+    } catch (error: any) {
+      console.error('❌ Erro ao salvar:', error);
+      console.error('❌ Detalhes do erro:', {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code
+      });
+      toast.error(error?.message || 'Erro ao salvar dados de verificação');
     } finally {
       setLoading(false);
     }
