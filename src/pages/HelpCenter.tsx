@@ -126,7 +126,7 @@ const HelpCenter = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
           {contactOptions.map((option, index) => <div key={index} className="text-center p-4 sm:p-6 bg-checkout-green/5 border border-checkout-green/10 rounded-2xl">
               <div className="mb-3 sm:mb-4 flex justify-center">{option.icon}</div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">{option.title}</h3>
