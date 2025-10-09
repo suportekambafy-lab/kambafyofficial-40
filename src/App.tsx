@@ -197,8 +197,9 @@ const App = () => {
                        <Route path="/admin/users" element={<AdminProtectedRoute><OptimizedRoutes.AdminUsers /></AdminProtectedRoute>} />
                         <Route path="/admin/logs" element={<AdminProtectedRoute><OptimizedRoutes.AdminLogs /></AdminProtectedRoute>} />
                         <Route path="/admin/sellers" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellers /></AdminProtectedRoute>} />
-                        <Route path="/admin/identity" element={<AdminProtectedRoute><OptimizedRoutes.AdminIdentityVerification /></AdminProtectedRoute>} />
-                        <Route path="/admin/partners" element={<AdminProtectedRoute><OptimizedRoutes.AdminPartners /></AdminProtectedRoute>} />
+                         <Route path="/admin/identity" element={<AdminProtectedRoute><OptimizedRoutes.AdminIdentityVerification /></AdminProtectedRoute>} />
+                         <Route path="/admin/teste-kyc" element={<AdminProtectedRoute><OptimizedRoutes.AdminKYCTest /></AdminProtectedRoute>} />
+                         <Route path="/admin/partners" element={<AdminProtectedRoute><OptimizedRoutes.AdminPartners /></AdminProtectedRoute>} />
                         <Route path="/admin/seller-reports" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellerReports /></AdminProtectedRoute>} />
                         <Route path="/admin/payment-approvals" element={<AdminProtectedRoute><OptimizedRoutes.AdminPaymentApprovals /></AdminProtectedRoute>} />
                       
