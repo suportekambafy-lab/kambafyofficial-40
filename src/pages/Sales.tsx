@@ -189,7 +189,9 @@ export default function Sales() {
         loadSales();
       }
     }
-  }, [user, loadSales, CODE_VERSION]);
+    // ⚠️ IMPORTANTE: loadSales NÃO deve estar nas dependências (causa loop infinito)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, CODE_VERSION]);
   
   // ✅ Handler para refresh manual (botão Atualizar)
   const handleRefresh = useCallback(() => {
