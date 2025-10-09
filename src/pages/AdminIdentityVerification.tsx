@@ -148,7 +148,8 @@ export default function AdminIdentityVerification() {
         p_verification_id: id,
         p_status: newStatus,
         p_rejection_reason: reason || null,
-        p_admin_id: admin?.id || null
+        p_admin_id: admin?.id || null,
+        p_admin_email: admin?.email || null
       });
 
       if (error) {
