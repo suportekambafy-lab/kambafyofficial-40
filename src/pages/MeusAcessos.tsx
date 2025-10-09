@@ -48,6 +48,8 @@ export default function MeusAcessos() {
   const [accesses, setAccesses] = useState<Access[]>([]);
   const [loading, setLoading] = useState(true);
   const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
+  const [profileAvatar, setProfileAvatar] = useState("");
+  const [profileName, setProfileName] = useState("");
   
   // Hook para buscar saldo KambaPay
   const { balance, fetchBalanceByEmail } = useKambaPayBalance();
@@ -119,6 +121,35 @@ export default function MeusAcessos() {
       fetchBalanceByEmail(user.email);
     }
   }, [user, fetchBalanceByEmail]);
+
+  // Buscar dados do perfil do usuário
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('avatar_url, full_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading profile:', error);
+          return;
+        }
+
+        if (profile) {
+          setProfileAvatar(profile.avatar_url || "");
+          setProfileName(profile.full_name || "");
+        }
+      } catch (error) {
+        console.error('Error loading profile data:', error);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
 
   const getProductImage = (cover: string) => {
     if (!cover) return professionalManImage;
@@ -233,9 +264,9 @@ export default function MeusAcessos() {
                 onClick={() => setAvatarDrawerOpen(true)}
               >
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src="" />
+                  <AvatarImage src={profileAvatar} />
                   <AvatarFallback className="bg-green-600 text-white text-sm">
-                    {user?.email?.charAt(0).toUpperCase() || 'U'}
+                    {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -396,8 +427,8 @@ export default function MeusAcessos() {
         <AvatarDrawer
           isOpen={avatarDrawerOpen}
           onClose={() => setAvatarDrawerOpen(false)}
-          profileAvatar=""
-          profileName={user?.email || 'Usuário'}
+          profileAvatar={profileAvatar}
+          profileName={profileName || user?.email || 'Usuário'}
           isMobile={false}
         />
       </div>
