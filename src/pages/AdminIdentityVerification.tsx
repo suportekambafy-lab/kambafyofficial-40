@@ -210,15 +210,27 @@ export default function AdminIdentityVerification() {
         }
         
         const filePath = pathParts.slice(bucketIndex + 1).join('/');
-        console.log('📂 Criando signed URL para:', filePath);
+        console.log('📂 Arquivo esperado:', filePath);
         
+        // Listar arquivos no bucket para debug
+        const userFolder = filePath.split('/')[0];
+        console.log('📁 Listando arquivos na pasta:', userFolder);
+        
+        const { data: files, error: listError } = await supabase.storage
+          .from('identity-documents')
+          .list(userFolder);
+        
+        console.log('📋 Arquivos encontrados:', files);
+        if (listError) console.error('❌ Erro ao listar:', listError);
+        
+        // Tentar criar signed URL
         const { data, error } = await supabase.storage
           .from('identity-documents')
           .createSignedUrl(filePath, 3600);
         
         if (error) {
           console.error('❌ Erro ao criar URL assinada:', error);
-          toast.error('Erro ao gerar link do documento: ' + error.message);
+          toast.error('Documento não encontrado no servidor. Pode ter sido movido ou deletado.');
           return;
         }
         
@@ -228,7 +240,7 @@ export default function AdminIdentityVerification() {
           return;
         }
         
-        console.log('✅ URL assinada gerada, abrindo documento...');
+        console.log('✅ URL assinada gerada');
         setDocumentModal({
           isOpen: true,
           imageUrl: data.signedUrl,
