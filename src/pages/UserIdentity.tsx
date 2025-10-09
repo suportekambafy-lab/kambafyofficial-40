@@ -150,6 +150,18 @@ export default function UserIdentity() {
       return;
     }
 
+    // ✅ VALIDAÇÃO OBRIGATÓRIA: Verificar se os documentos foram anexados
+    if (!verification?.document_front_url) {
+      toast.error('É obrigatório anexar a frente do documento');
+      return;
+    }
+
+    // Para BI, o verso também é obrigatório
+    if (needsBackside && !verification?.document_back_url) {
+      toast.error('É obrigatório anexar o verso do Bilhete de Identidade');
+      return;
+    }
+
     try {
       setLoading(true);
 

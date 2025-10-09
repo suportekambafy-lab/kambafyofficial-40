@@ -195,30 +195,38 @@ export default function AdminIdentityVerification() {
 
   const openDocument = async (url: string, title: string, verification: IdentityVerification) => {
     try {
-      // Extract file path from URL
-      const urlParts = url.split('/');
-      const objectIndex = urlParts.indexOf('object');
-      if (objectIndex === -1) {
-        toast.error('URL de documento inválida');
-        return;
-      }
+      console.log('🔍 Tentando abrir documento:', { url, title });
       
-      const bucketName = urlParts[objectIndex + 2]; // Skip 'object' and 'public'
-      const fileName = urlParts.slice(objectIndex + 3).join('/');
-      
-      console.log('Bucket:', bucketName, 'File:', fileName);
-      
-      if (bucketName === 'identity-documents') {
-        const { data, error } = await supabase.storage
-          .from('identity-documents')
-          .createSignedUrl(fileName, 3600); // 1 hour expiry
+      // Para identity-documents (bucket privado), usar URL assinada
+      if (url.includes('identity-documents')) {
+        // Extrair o caminho do arquivo do URL
+        const urlObj = new URL(url);
+        const pathParts = urlObj.pathname.split('/');
         
-        if (error) {
-          console.error('Erro ao criar URL assinada:', error);
-          toast.error('Erro ao acessar documento');
+        // O formato típico é: /storage/v1/object/public/identity-documents/user_id/filename
+        // Procurar pelo índice de 'identity-documents' e pegar tudo depois
+        const bucketIndex = pathParts.indexOf('identity-documents');
+        if (bucketIndex === -1) {
+          console.error('❌ Bucket identity-documents não encontrado no URL');
+          toast.error('URL de documento inválida');
           return;
         }
         
+        // Pegar o path completo após 'identity-documents'
+        const filePath = pathParts.slice(bucketIndex + 1).join('/');
+        console.log('📂 Caminho do arquivo extraído:', filePath);
+        
+        const { data, error } = await supabase.storage
+          .from('identity-documents')
+          .createSignedUrl(filePath, 3600); // 1 hora de validade
+        
+        if (error) {
+          console.error('❌ Erro ao criar URL assinada:', error);
+          toast.error('Erro ao acessar documento: ' + error.message);
+          return;
+        }
+        
+        console.log('✅ URL assinada criada com sucesso');
         setDocumentModal({
           isOpen: true,
           imageUrl: data.signedUrl,
@@ -226,6 +234,8 @@ export default function AdminIdentityVerification() {
           verification: verification
         });
       } else {
+        // Para URLs públicas, usar diretamente
+        console.log('✅ Usando URL pública diretamente');
         setDocumentModal({
           isOpen: true,
           imageUrl: url,
@@ -234,7 +244,7 @@ export default function AdminIdentityVerification() {
         });
       }
     } catch (error) {
-      console.error('Erro ao abrir documento:', error);
+      console.error('❌ Erro ao abrir documento:', error);
       toast.error('Erro ao acessar documento');
     }
   };
