@@ -248,8 +248,7 @@ const Ranking = () => {
 
                         {/* Stats */}
                         <div className="space-y-2 pt-2">
-                          <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
-                            <DollarSign className="w-5 h-5" />
+                          <div className="text-center text-green-600 dark:text-green-400">
                             <span className="text-xl font-bold">{formatCurrency(seller.total_revenue)}</span>
                           </div>
                           
