@@ -15,6 +15,7 @@ const CheckoutSuccess = () => {
   const [orderStatus, setOrderStatus] = useState<'loading' | 'pending' | 'completed' | 'error'>('loading');
   const [orderData, setOrderData] = useState<any>(null);
   const [upsellConfig, setUpsellConfig] = useState<any>(null);
+  const [productData, setProductData] = useState<any>(null);
 
   console.log('🔍 CheckoutSuccess - URL Params:', {
     orderId,
@@ -52,6 +53,19 @@ const CheckoutSuccess = () => {
           if (order) {
             console.log('✅ Order data loaded:', order);
             setOrderData(order);
+            
+            // Buscar dados do produto para mostrar contatos de suporte
+            if (order.product_id) {
+              const { data: product } = await supabase
+                .from('products')
+                .select('support_email, support_whatsapp')
+                .eq('id', order.product_id)
+                .single();
+              
+              if (product) {
+                setProductData(product);
+              }
+            }
             
             // Disparar evento de Purchase para Facebook Pixel
             console.log('📤 Dispatching purchase-completed event for Facebook Pixel');
@@ -97,6 +111,20 @@ const CheckoutSuccess = () => {
 
         console.log('✅ Order found:', data.order);
         setOrderData(data.order);
+        
+        // Buscar dados do produto para mostrar contatos de suporte
+        if (data.order.product_id) {
+          const { data: product } = await supabase
+            .from('products')
+            .select('support_email, support_whatsapp')
+            .eq('id', data.order.product_id)
+            .single();
+          
+          if (product) {
+            setProductData(product);
+          }
+        }
+        
         const newStatus = data.order.status === 'completed' ? 'completed' : 'pending';
         console.log('📊 Setting order status to:', newStatus);
         setOrderStatus(newStatus);
@@ -276,23 +304,60 @@ const CheckoutSuccess = () => {
           )}
           
           {!upsellConfig && (
-            <div className="space-y-3">
-              <Button 
-                className="w-full" 
-                onClick={() => window.location.href = '/minhas-compras'}
-              >
-                <ArrowRight className="w-4 h-4 mr-2" />
-                Ver Meus Acessos
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => window.open('mailto:suporte@kambafy.com', '_blank')}
-              >
-                Falar com Suporte
-              </Button>
-            </div>
+            <>
+              <div className="space-y-3">
+                <Button 
+                  className="w-full" 
+                  onClick={() => window.location.href = '/minhas-compras'}
+                >
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Ver Meus Acessos
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.open('mailto:suporte@kambafy.com', '_blank')}
+                >
+                  Falar com Suporte
+                </Button>
+              </div>
+
+              {/* Support Section */}
+              {productData && (productData.support_email || productData.support_whatsapp) && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                    📞 Suporte do Vendedor
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    {productData.support_email && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-600">Email:</span>
+                        <a 
+                          href={`mailto:${productData.support_email}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {productData.support_email}
+                        </a>
+                      </div>
+                    )}
+                    {productData.support_whatsapp && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-600">WhatsApp:</span>
+                        <a 
+                          href={`https://wa.me/${productData.support_whatsapp.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:underline"
+                        >
+                          {productData.support_whatsapp}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
           )}
           
           <div className="mt-8 flex flex-col items-center space-y-2">
