@@ -129,10 +129,9 @@ const Ranking = () => {
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'AOA',
-      minimumFractionDigits: 2
-    }).format(value);
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value) + ' Kz';
   };
 
   const getPositionIcon = (position: number) => {
@@ -162,10 +161,13 @@ const Ranking = () => {
           <div className="container mx-auto px-4 py-4">
             <SubdomainLink 
               to="/" 
-              className="inline-flex items-center gap-2 text-2xl font-bold text-primary hover:opacity-80 transition-opacity"
+              className="inline-flex items-center hover:opacity-80 transition-opacity"
             >
-              <TrendingUp className="w-6 h-6" />
-              Kambafy
+              <img 
+                src="/kambafy-logo-new.svg" 
+                alt="Kambafy" 
+                className="h-12 w-auto"
+              />
             </SubdomainLink>
           </div>
         </header>
