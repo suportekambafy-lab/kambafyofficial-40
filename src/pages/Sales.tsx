@@ -96,6 +96,7 @@ export default function Sales() {
   } = useStreamingQuery();
   const [dataComplete, setDataComplete] = useState(false);
   const loadingRef = useRef(false); // Controle via ref para evitar loops
+  const hasLoadedRef = useRef(false); // ✅ Controle para executar apenas uma vez
 
   // 🔥 CARREGAMENTO FIXO - Sem dependência de loading state
   const loadSales = useCallback(async () => {
@@ -137,7 +138,7 @@ export default function Sales() {
       setLoading(false);
       loadingRef.current = false; // Libera para próxima execução
     }
-  }, [user, loadOrdersWithStats, toast]);
+  }, [user, toast]); // ✅ Removido loadOrdersWithStats das dependências
 
   // Filtros otimizados
   const filteredSales = useMemo(() => {
@@ -164,8 +165,10 @@ export default function Sales() {
   const displayedPaymentMethods = useMemo(() => {
     return showAllPaymentMethods ? getAllPaymentMethods() : getAngolaPaymentMethods();
   }, [showAllPaymentMethods]);
+  // ✅ Executar apenas uma vez quando o usuário estiver disponível
   useEffect(() => {
-    if (user) {
+    if (user && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
       loadSales();
     }
   }, [user, loadSales]);
