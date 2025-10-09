@@ -46,7 +46,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "emola",
     name: "e-Mola",
     image: getPaymentMethodImage("emola"),
-    enabled: false, // ❌ Desabilitado até configuração
+    enabled: true,
     isMozambique: true,
     countryFlag: "🇲🇿",
     countryName: "Moçambique"
@@ -55,7 +55,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "epesa",
     name: "e-Pesa",
     image: getPaymentMethodImage("epesa"),
-    enabled: false, // ❌ Desabilitado até configuração
+    enabled: true,
     isMozambique: true,
     countryFlag: "🇲🇿",
     countryName: "Moçambique"
@@ -91,7 +91,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "apple_pay",
     name: "Apple Pay",
     image: getPaymentMethodImage("apple_pay"),
-    enabled: false, // ❌ Desabilitado até configuração
+    enabled: true,
     isPortugal: true,
     countryFlag: "🇵🇹",
     countryName: "Portugal"
@@ -108,14 +108,11 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     
     // Portugal  
     'card': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
-    'stripe': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
-    'paypal': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
     'multibanco': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
     'klarna': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
     'apple_pay': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
     
     // Moçambique
-    'mpesa': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
     'emola': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
     'epesa': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
   };

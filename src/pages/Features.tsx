@@ -30,8 +30,8 @@ const Features = () => {
     },
     {
       icon: <DollarSign className="w-8 h-8 text-checkout-green" />,
-      title: "Pagamentos Locais Angolanos",
-      description: "Aceite pagamentos em Kwanza via Multicaixa Express, Referência Bancária, Transferência e Apple Pay."
+      title: "Pagamentos em Multimoedas",
+      description: "Aceite pagamentos em Angola (Multicaixa Express, Referência, Transferência), Portugal (Cartão, Multibanco, Apple Pay, Klarna) e Moçambique (e-Mola, e-Pesa)."
     },
     {
       icon: <ShoppingCart className="w-8 h-8 text-checkout-green" />,
