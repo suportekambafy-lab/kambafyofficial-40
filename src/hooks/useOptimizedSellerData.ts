@@ -1,7 +1,7 @@
-import { memo } from 'react';
-import { useCachedQuery } from '@/hooks/useCachedQuery';
-import { supabase } from '@/integrations/supabase/client';
+import { useEnhancedCache } from './useEnhancedCache';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { memo } from 'react';
 
 interface OptimizedDataFetcherProps {
   queryKey: string;
@@ -17,28 +17,27 @@ export const OptimizedDataFetcher = memo(({
   queryFn, 
   children, 
   enabled = true,
-  staleTime = 5 * 60 * 1000 // 5 minutos
+  staleTime = 30 * 1000 // 30 segundos
 }: OptimizedDataFetcherProps) => {
-  const { data, isLoading, error } = useCachedQuery(
-    queryKey, 
+  const { data, isLoading, error } = useEnhancedCache(
+    [queryKey], 
     queryFn, 
-    { enabled, staleTime }
+    { staleTime }
   );
 
   return children(data, isLoading, error);
 });
 
-// Hook otimizado para dados do vendedor
+// Hook otimizado para dados do vendedor com cache ultra-agressivo
 export const useSellerData = () => {
   const { user } = useAuth();
   
-  return useCachedQuery(
-    `seller-dashboard-${user?.id}`,
+  return useEnhancedCache(
+    ['seller-dashboard', user?.id],
     async () => {
       if (!user) return null;
       
-      // Buscar apenas dados essenciais em uma query otimizada
-      // Primeiro buscar member_areas do usuário
+      // Buscar member_areas do usuário
       const { data: memberAreas } = await supabase
         .from('member_areas')
         .select('id')
@@ -52,21 +51,20 @@ export const useSellerData = () => {
           .select('id, name, sales, price, status, created_at')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
-          .limit(10), // Limitar resultados iniciais
+          .limit(10),
         
         supabase
           .from('orders')
           .select('id, amount, created_at, status, product_id, customer_name, customer_email, order_bump_data')
           .eq('user_id', user.id)
-          .eq('status', 'completed') // ✅ Apenas vendas pagas
+          .eq('status', 'completed')
           .order('created_at', { ascending: false }),
         
-        // ✅ Buscar vendas de módulos também
         memberAreaIds.length > 0 ? supabase
           .from('module_payments')
           .select('id, order_id, amount, created_at, status, module_id, student_name, student_email')
           .in('member_area_id', memberAreaIds)
-          .eq('status', 'completed') // ✅ Apenas vendas pagas
+          .eq('status', 'completed')
           .order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
         
         supabase
@@ -76,7 +74,7 @@ export const useSellerData = () => {
           .maybeSingle()
       ]);
 
-      // Combinar orders normais + module_payments em um array unificado
+      // Combinar orders normais + module_payments
       const allOrders = [
         ...(ordersData.data || []),
         ...(modulePaymentsData.data || []).map(mp => ({
@@ -87,7 +85,7 @@ export const useSellerData = () => {
           product_id: mp.module_id,
           customer_name: mp.student_name,
           customer_email: mp.student_email,
-          order_bump_data: null // Module payments não têm order bumps
+          order_bump_data: null
         }))
       ];
 
@@ -101,9 +99,10 @@ export const useSellerData = () => {
       };
     },
     { 
-      enabled: !!user,
-      staleTime: 3 * 60 * 1000, // 3 minutos para dados do dashboard
-      cacheTime: 10 * 60 * 1000 // 10 minutos no cache
+      staleTime: 30 * 1000, // 30 segundos
+      refetchInterval: 60 * 1000, // Atualizar automaticamente a cada 60 segundos
+      enableMemoryCache: true,
+      prefetchRelated: ['seller-stats'] // Prefetch de stats relacionadas
     }
   );
 };
@@ -112,12 +111,11 @@ export const useSellerData = () => {
 export const useSellerStats = () => {
   const { user } = useAuth();
   
-  return useCachedQuery(
-    `seller-stats-${user?.id}`,
+  return useEnhancedCache(
+    ['seller-stats', user?.id],
     async () => {
       if (!user) return null;
       
-      // Query otimizada para estatísticas
       const { data, error } = await supabase
         .rpc('get_seller_stats', { seller_id: user.id });
       
@@ -125,8 +123,9 @@ export const useSellerStats = () => {
       return data;
     },
     { 
-      enabled: !!user,
-      staleTime: 5 * 60 * 1000, // 5 minutos para stats
+      staleTime: 30 * 1000, // 30 segundos
+      refetchInterval: 60 * 1000, // Atualizar a cada 60 segundos
+      enableMemoryCache: true,
     }
   );
 };
