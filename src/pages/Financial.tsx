@@ -287,23 +287,50 @@ export default function Financial() {
           return sum;
         }, 0) || 0;
 
+        // ✅ Buscar vendas já liberadas do payment_releases
+        const { data: releasedPayments } = await supabase
+          .from('payment_releases')
+          .select('order_id, amount, release_date')
+          .eq('user_id', user.id);
+
+        const releasedOrderIds = new Set(releasedPayments?.map(r => r.order_id) || []);
+        
+        // Função para calcular data de liberação (3 dias úteis) - igual ao backend
+        const calculateReleaseDate = (orderDate: Date): Date => {
+          let businessDaysToAdd = 3;
+          let currentDay = new Date(orderDate);
+          
+          while (businessDaysToAdd > 0) {
+            currentDay.setDate(currentDay.getDate() + 1);
+            // Se não for fim de semana (sábado = 6, domingo = 0)
+            if (currentDay.getDay() !== 0 && currentDay.getDay() !== 6) {
+              businessDaysToAdd--;
+            }
+          }
+          
+          return currentDay;
+        };
+
         // ✅ USAR o saldo real do customer_balances como fonte de verdade
-        // Esse saldo já está sincronizado com as balance_transactions
         const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
 
-        // Calcular saldo pendente baseado nas vendas dos últimos 3 dias
+        // ✅ Calcular saldo pendente APENAS para vendas NÃO liberadas ainda
         const now = new Date();
         let pendingBalance = 0;
         const pendingOrdersData: Array<{date: Date, amount: number}> = [];
 
         allOrders.forEach(order => {
+          // ❌ Ignorar se já foi liberada
+          if (releasedOrderIds.has(order.order_id)) {
+            return;
+          }
+
           const orderDate = new Date(order.created_at);
-          const releaseDate = new Date(orderDate);
-          releaseDate.setDate(orderDate.getDate() + 3);
+          const releaseDate = calculateReleaseDate(orderDate); // ✅ Usar dias úteis
           
           const amount = order.earning_amount;
           
-          // Se ainda não liberou (dentro de 3 dias)
+          // Se ainda não liberou (data de liberação é futura)
           if (now < releaseDate) {
             pendingBalance += amount;
             pendingOrdersData.push({
