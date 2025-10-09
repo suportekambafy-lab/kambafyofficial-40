@@ -182,6 +182,15 @@ export const useStreamingQuery = () => {
         affiliateSales: affiliateSalesData.length,
         total: statsData.length
       });
+      
+      // Debug: Contar por status ANTES do reduce
+      const statusBreakdown = {
+        completed: statsData.filter(o => o.status === 'completed').length,
+        pending: statsData.filter(o => o.status === 'pending').length,
+        failed: statsData.filter(o => o.status === 'failed').length,
+        cancelled: statsData.filter(o => o.status === 'cancelled').length,
+      };
+      console.log('🔍 STATUS BREAKDOWN (antes do reduce):', statusBreakdown);
 
       // ✅ CALCULAR STATS POR STATUS: completed, pending, cancelled/failed
       // ✅ CONTAR ORDER BUMPS SEPARADAMENTE (igual ao Dashboard)
@@ -266,9 +275,9 @@ export const useStreamingQuery = () => {
       const pendingSales = statsData.filter(o => o.status === 'pending');
       const failedSales = statsData.filter(o => o.status === 'failed' || o.status === 'cancelled');
       
-      console.log(`  ✅ Completed: ${completedSales.length} vendas`);
-      console.log(`  ⏳ Pending: ${pendingSales.length} vendas`);
-      console.log(`  ❌ Failed/Cancelled: ${failedSales.length} vendas`);
+      console.log(`  ✅ Completed: ${completedSales.length} vendas (esperado: ${statusBreakdown.completed})`);
+      console.log(`  ⏳ Pending: ${pendingSales.length} vendas (esperado: ${statusBreakdown.pending})`);
+      console.log(`  ❌ Failed/Cancelled: ${failedSales.length} vendas (esperado: ${statusBreakdown.failed + statusBreakdown.cancelled})`);
       
       // Calcular lucro real para cada categoria
       const completedEarnings = completedSales.reduce((sum, o) => {
@@ -280,7 +289,11 @@ export const useStreamingQuery = () => {
         return sum + sellerEarning;
       }, 0);
       
+      // Contar items com order bumps COMPLETED
+      const completedItemsWithBumps = completedSales.reduce((sum, o) => sum + countOrderItems(o), 0);
       console.log(`  💰 Completed earnings total: ${completedEarnings.toFixed(2)} KZ`);
+      console.log(`  📦 Completed items (com bumps): ${completedItemsWithBumps} items`);
+      console.log(`  🎯 VALOR QUE DEVE APARECER NO CARD: ${completedItemsWithBumps} vendas`);
 
       setTotalCount(statsData?.length || 0);
       onStatsUpdate(stats);
