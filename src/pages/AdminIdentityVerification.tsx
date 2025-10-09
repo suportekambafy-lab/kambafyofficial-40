@@ -148,8 +148,7 @@ export default function AdminIdentityVerification() {
         p_verification_id: id,
         p_status: newStatus,
         p_rejection_reason: reason || null,
-        p_admin_id: admin?.id || null,
-        p_admin_email: admin?.email || null
+        p_admin_id: admin?.id || null
       });
 
       if (error) {
@@ -172,33 +171,6 @@ export default function AdminIdentityVerification() {
         } catch (logErr) {
           console.warn('⚠️ Falha ao registrar log de KYC:', logErr);
         }
-      }
-
-      // Enviar email de notificação (não bloqueante)
-      try {
-        if (newStatus === 'aprovado') {
-          console.log('📧 Enviando email de aprovação...');
-          const { error: emailError } = await supabase.functions.invoke('send-identity-approval-email', {
-            body: { verificationId: id }
-          });
-          if (emailError) {
-            console.warn('⚠️ Erro ao enviar email de aprovação:', emailError);
-          } else {
-            console.log('✅ Email de aprovação enviado');
-          }
-        } else if (newStatus === 'rejeitado' && reason) {
-          console.log('📧 Enviando email de reprovação...');
-          const { error: emailError } = await supabase.functions.invoke('send-identity-rejection-email', {
-            body: { verificationId: id, rejectionReason: reason }
-          });
-          if (emailError) {
-            console.warn('⚠️ Erro ao enviar email de reprovação:', emailError);
-          } else {
-            console.log('✅ Email de reprovação enviado');
-          }
-        }
-      } catch (emailError) {
-        console.warn('⚠️ Erro ao processar envio de email:', emailError);
       }
 
       toast.success(`Verificação ${newStatus === 'aprovado' ? 'aprovada' : 'rejeitada'} com sucesso`);
@@ -443,7 +415,6 @@ export default function AdminIdentityVerification() {
                     )}
                   </div>
 
-                  {/* Botões de ação para verificações pendentes */}
                   {verification.status === 'pendente' && (
                     <div className="flex flex-col sm:flex-row items-center gap-2">
                       <Button
@@ -504,57 +475,6 @@ export default function AdminIdentityVerification() {
                         </DialogContent>
                       </Dialog>
                     </div>
-                  )}
-
-                  {/* Botão para reprovar verificações já aprovadas */}
-                  {verification.status === 'aprovado' && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => setSelectedVerification(verification)}
-                          className="w-full sm:w-auto"
-                        >
-                          <AlertCircle className="h-4 w-4 mr-1" />
-                          Reprovar Verificação
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-md">
-                        <DialogHeader>
-                          <DialogTitle className="text-base sm:text-lg">Reprovar Verificação Aprovada</DialogTitle>
-                          <DialogDescription className="text-xs sm:text-sm">
-                            Esta verificação já foi aprovada. Informe o motivo da reprovação para {verification.profiles?.full_name}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="rejection-reason-approved" className="text-xs sm:text-sm">Motivo da Reprovação</Label>
-                            <Textarea
-                              id="rejection-reason-approved"
-                              value={rejectionReason}
-                              onChange={(e) => setRejectionReason(e.target.value)}
-                              placeholder="Ex: Documento ilegível, informações não conferem, necessário reenvio..."
-                              rows={3}
-                              className="text-sm"
-                            />
-                          </div>
-                          <div className="flex flex-col sm:flex-row justify-end gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setRejectionReason('')}>
-                              Cancelar
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => updateVerificationStatus(verification.id, 'rejeitado', rejectionReason)}
-                              disabled={!rejectionReason.trim() || processingId === verification.id}
-                            >
-                              Reprovar
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
                   )}
                 </CardContent>
               </Card>
@@ -633,43 +553,17 @@ export default function AdminIdentityVerification() {
           
           {/* Documento */}
           <div className="flex justify-center items-center p-4 bg-gray-50 rounded-lg">
-            {documentModal.imageUrl && (() => {
-              // Detectar se é PDF (remover query params antes de verificar)
-              const urlWithoutQuery = documentModal.imageUrl.split('?')[0];
-              const isPdf = urlWithoutQuery.toLowerCase().endsWith('.pdf');
-              
-              console.log('📄 Tipo de documento detectado:', { 
-                url: documentModal.imageUrl, 
-                urlWithoutQuery, 
-                isPdf 
-              });
-
-              if (isPdf) {
-                return (
-                  <iframe 
-                    src={documentModal.imageUrl} 
-                    title={documentModal.title}
-                    className="w-full h-[70vh] rounded-lg shadow-lg border-0"
-                    onError={(e) => {
-                      console.error('Erro ao carregar PDF:', e);
-                      toast.error('Erro ao carregar documento PDF');
-                    }}
-                  />
-                );
-              } else {
-                return (
-                  <img 
-                    src={documentModal.imageUrl} 
-                    alt={documentModal.title}
-                    className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-lg"
-                    onError={(e) => {
-                      console.error('Erro ao carregar imagem:', e);
-                      toast.error('Erro ao carregar documento');
-                    }}
-                  />
-                );
-              }
-            })()}
+            {documentModal.imageUrl && (
+              <img 
+                src={documentModal.imageUrl} 
+                alt={documentModal.title}
+                className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-lg"
+                onError={(e) => {
+                  console.error('Erro ao carregar imagem:', e);
+                  toast.error('Erro ao carregar documento');
+                }}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>

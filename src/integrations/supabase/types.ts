@@ -2636,19 +2636,11 @@ export type Database = {
     }
     Functions: {
       admin_approve_product: {
-        Args:
-          | { admin_id?: string; p_admin_email?: string; product_id: string }
-          | { admin_id?: string; product_id: string }
+        Args: { admin_id?: string; product_id: string }
         Returns: undefined
       }
       admin_ban_product: {
         Args:
-          | {
-              admin_id?: string
-              ban_reason_text?: string
-              p_admin_email?: string
-              product_id: string
-            }
           | { admin_id?: string; ban_reason_text?: string; product_id: string }
           | { admin_id?: string; product_id: string }
         Returns: undefined
@@ -2671,20 +2663,12 @@ export type Database = {
         Returns: undefined
       }
       admin_update_identity_verification: {
-        Args:
-          | {
-              p_admin_email?: string
-              p_admin_id?: string
-              p_rejection_reason?: string
-              p_status: string
-              p_verification_id: string
-            }
-          | {
-              p_admin_id?: string
-              p_rejection_reason?: string
-              p_status: string
-              p_verification_id: string
-            }
+        Args: {
+          p_admin_id?: string
+          p_rejection_reason?: string
+          p_status: string
+          p_verification_id: string
+        }
         Returns: undefined
       }
       approve_partner: {

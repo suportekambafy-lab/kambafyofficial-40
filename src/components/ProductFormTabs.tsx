@@ -322,11 +322,6 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         missingFields.push("Pelo menos um método de pagamento ativo");
       }
 
-      // Validar se pelo menos um contato de suporte foi fornecido
-      if (!formData.supportEmail && !formData.supportWhatsapp) {
-        missingFields.push("Pelo menos um contato de suporte (Email ou WhatsApp)");
-      }
-
       console.log("❌ Campos faltando:", missingFields);
 
       if (missingFields.length > 0) {
@@ -798,29 +793,29 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="supportEmail">Email de Suporte *</Label>
+        <Label htmlFor="supportEmail">Email de Suporte</Label>
         <Input
           id="supportEmail"
           type="email"
           value={formData.supportEmail}
           onChange={(e) => handleInputChange("supportEmail", e.target.value)}
-          placeholder="Digite o email de suporte"
+          placeholder="Digite o email de suporte (opcional)"
         />
         <p className="text-sm text-muted-foreground">
-          Este email aparecerá na página de obrigado e nos emails de confirmação. Você deve fornecer pelo menos um contato (Email ou WhatsApp).
+          Este email aparecerá na página de obrigado para suporte ao cliente.
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="supportWhatsapp">WhatsApp de Suporte *</Label>
+        <Label htmlFor="supportWhatsapp">WhatsApp de Suporte</Label>
         <Input
           id="supportWhatsapp"
           value={formData.supportWhatsapp}
           onChange={(e) => handleInputChange("supportWhatsapp", e.target.value)}
-          placeholder="Digite o número do WhatsApp (ex: +244 900 000 000)"
+          placeholder="Digite o número do WhatsApp (opcional)"
         />
         <p className="text-sm text-muted-foreground">
-          Este número aparecerá na página de obrigado e nos emails de confirmação. Você deve fornecer pelo menos um contato (Email ou WhatsApp).
+          Este número aparecerá na página de obrigado para contato via WhatsApp.
         </p>
       </div>
     </div>

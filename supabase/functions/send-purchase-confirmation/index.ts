@@ -586,38 +586,28 @@ const handler = async (req: Request): Promise<Response> => {
                   </div>
                 </div>
 
-              ${(sellerProfile || (productData && (productData.support_email || productData.support_whatsapp))) ? `
-              <!-- Seller Info -->
-              <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
-                <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações de Contato</h3>
                 ${sellerProfile ? `
-                <p style="margin: 0 0 15px; color: #475569; font-size: 14px;">
-                  <strong>Vendedor:</strong> ${sellerProfile.full_name}
-                </p>
-                ` : ''}
-                <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #3b82f6;">
-                  ${(productData?.support_email || sellerProfile?.email) ? `
-                  <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
-                    <strong>📧 Email do Vendedor:</strong><br>
-                    <a href="mailto:${productData?.support_email || sellerProfile?.email}" style="color: #3b82f6; text-decoration: none;">${productData?.support_email || sellerProfile?.email}</a>
+                <!-- Seller Info -->
+                <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+                  <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações de Contato</h3>
+                  <p style="margin: 0 0 15px; color: #475569; font-size: 14px;">
+                    <strong>Vendedor:</strong> ${sellerProfile.full_name}
                   </p>
-                  ` : ''}
-                  ${productData?.support_whatsapp ? `
-                  <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
-                    <strong>📱 WhatsApp do Vendedor:</strong><br>
-                    <a href="https://wa.me/${productData.support_whatsapp.replace(/[^0-9]/g, '')}" style="color: #25D366; text-decoration: none;">${productData.support_whatsapp}</a>
-                  </p>
-                  ` : ''}
-                  <p style="margin: 0; color: #475569; font-size: 14px;">
-                    <strong>🏢 Suporte Kambafy:</strong><br>
-                    <a href="mailto:suporte@kambafy.com" style="color: #3b82f6; text-decoration: none;">suporte@kambafy.com</a>
+                  <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #3b82f6;">
+                    <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
+                      <strong>📧 Contato do Vendedor:</strong><br>
+                      <a href="mailto:${sellerProfile.email}" style="color: #3b82f6; text-decoration: none;">${sellerProfile.email}</a>
+                    </p>
+                    <p style="margin: 0; color: #475569; font-size: 14px;">
+                      <strong>🏢 Suporte Kambafy:</strong><br>
+                      <a href="mailto:suporte@kambafy.com" style="color: #3b82f6; text-decoration: none;">suporte@kambafy.com</a>
+                    </p>
+                  </div>
+                  <p style="margin: 15px 0 0; color: #64748b; font-size: 13px; font-style: italic;">
+                    💡 Para dúvidas sobre o produto, contacte o vendedor. Para questões técnicas da plataforma, contacte o suporte Kambafy.
                   </p>
                 </div>
-                <p style="margin: 15px 0 0; color: #64748b; font-size: 13px; font-style: italic;">
-                  💡 Para dúvidas sobre o produto, contacte o vendedor. Para questões técnicas da plataforma, contacte o suporte Kambafy.
-                </p>
-              </div>
-              ` : ''}
+                ` : ''}
 
                 <!-- Footer -->
                 <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
@@ -699,28 +689,18 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
               </div>
 
-              ${(sellerProfile || (productData && (productData.support_email || productData.support_whatsapp))) ? `
+              ${sellerProfile ? `
               <!-- Seller Info -->
               <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
                 <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações de Contato</h3>
-                ${sellerProfile ? `
                 <p style="margin: 0 0 15px; color: #475569; font-size: 14px;">
                   <strong>Vendedor:</strong> ${sellerProfile.full_name}
                 </p>
-                ` : ''}
                 <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #3b82f6;">
-                  ${(productData?.support_email || sellerProfile?.email) ? `
                   <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
-                    <strong>📧 Email do Vendedor:</strong><br>
-                    <a href="mailto:${productData?.support_email || sellerProfile?.email}" style="color: #3b82f6; text-decoration: none;">${productData?.support_email || sellerProfile?.email}</a>
+                    <strong>📧 Contato do Vendedor:</strong><br>
+                    <a href="mailto:${sellerProfile.email}" style="color: #3b82f6; text-decoration: none;">${sellerProfile.email}</a>
                   </p>
-                  ` : ''}
-                  ${productData?.support_whatsapp ? `
-                  <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
-                    <strong>📱 WhatsApp do Vendedor:</strong><br>
-                    <a href="https://wa.me/${productData.support_whatsapp.replace(/[^0-9]/g, '')}" style="color: #25D366; text-decoration: none;">${productData.support_whatsapp}</a>
-                  </p>
-                  ` : ''}
                   <p style="margin: 0; color: #475569; font-size: 14px;">
                     <strong>🏢 Suporte Kambafy:</strong><br>
                     <a href="mailto:suporte@kambafy.com" style="color: #3b82f6; text-decoration: none;">suporte@kambafy.com</a>

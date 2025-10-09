@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff, MessageCircle } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -30,7 +30,6 @@ import { useAppState } from '@/hooks/useAppState';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
 import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
-import { AppCrispChat, openCrispChat } from '@/components/app/AppCrispChat';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -1509,10 +1508,8 @@ export function AppHome() {
   }, []);
 
   return (
-    <>
-      <AppCrispChat hideByDefault={true} />
-      <div className={isDark ? 'dark' : ''}>
-        <div className="min-h-screen bg-background pb-28 pt-0 overflow-x-hidden">
+    <div className={isDark ? 'dark' : ''}>
+      <div className="min-h-screen bg-background pb-28 pt-0 overflow-x-hidden">
         {/* Fixed Header - Similar to Landing */}
         <header className="fixed top-0 left-0 right-0 z-20">
         <nav className="px-2 pt-2">
@@ -1693,17 +1690,6 @@ export function AppHome() {
         {renderContent()}
       </div>
 
-      {/* Chat Button - Above Profile Avatar */}
-      <button
-        onClick={() => {
-          openCrispChat();
-          triggerHaptic('light');
-        }}
-        className="fixed bottom-28 right-6 z-20 w-12 h-12 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center shadow-lg transition-all duration-300 hover:shadow-xl"
-      >
-        <MessageCircle className="h-6 w-6 text-white" />
-      </button>
-
       {/* Horizontal Bottom Navigation */}
       <nav className="fixed bottom-6 left-0 right-0 z-10 pb-safe">
         <div className="px-4 py-3">
@@ -1783,6 +1769,5 @@ export function AppHome() {
       />
       </div>
     </div>
-    </>
   );
 }
