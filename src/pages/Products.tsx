@@ -10,6 +10,7 @@ import ProductFormTabs from '@/components/ProductFormTabs';
 import ProductTypeSelector from '@/components/ProductTypeSelector';
 import ProductShareDialog from '@/components/ProductShareDialog';
 import DeleteProductModal from '@/components/DeleteProductModal';
+import RequestRevisionModal from '@/components/RequestRevisionModal';
 import { useOptimizedQuery } from '@/hooks/useOptimizedQuery';
 import { ProductCard } from '@/components/ProductCard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -44,7 +45,7 @@ export default function Products() {
   const [shareProduct, setShareProduct] = useState<Product | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [requestingRevision, setRequestingRevision] = useState<string | null>(null);
+  const [revisionProduct, setRevisionProduct] = useState<Product | null>(null);
 
   // Use optimized query with caching
   const { data: products = [], isLoading: loading, refetch } = useOptimizedQuery(
@@ -286,50 +287,10 @@ export default function Products() {
     }
   }, [deleteProduct, user, toast, refetch]);
 
-  // Função para solicitar revisão de produto banido
-  const handleRequestRevision = useCallback(async (productId: string) => {
-    if (!user) return;
-    
-    setRequestingRevision(productId);
-    
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ 
-          revision_requested: true,
-          revision_requested_at: new Date().toISOString()
-        })
-        .eq('id', productId)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Erro ao solicitar revisão:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao solicitar revisão do produto",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      toast({
-        title: "Solicitação Enviada",
-        description: "Revisão solicitada com sucesso. O administrador será notificado."
-      });
-
-      // Atualizar a lista
-      await refetch();
-    } catch (error) {
-      console.error('Erro ao solicitar revisão:', error);
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao solicitar revisão",
-        variant: "destructive"
-      });
-    } finally {
-      setRequestingRevision(null);
-    }
-  }, [user, toast, refetch]);
+  // Função para abrir modal de revisão
+  const handleRequestRevision = useCallback((product: Product) => {
+    setRevisionProduct(product);
+  }, []);
 
   const handleEditProduct = useCallback((product: Product) => {
     // Não permitir edição de produtos de afiliação
@@ -430,7 +391,6 @@ export default function Products() {
                   onDelete={(prod) => setDeleteProduct(prod)}
                   onToggleStatus={handleToggleStatus}
                   onRequestRevision={handleRequestRevision}
-                  requestingRevision={requestingRevision}
                 />
               ))}
             </div>
@@ -460,6 +420,19 @@ export default function Products() {
           productName={deleteProduct.name}
           onConfirm={handleDeleteProduct}
           loading={deleteLoading}
+        />
+      )}
+
+      {revisionProduct && (
+        <RequestRevisionModal
+          open={!!revisionProduct}
+          onOpenChange={(open) => !open && setRevisionProduct(null)}
+          productId={revisionProduct.id}
+          productName={revisionProduct.name}
+          onSuccess={() => {
+            refetch();
+            setRevisionProduct(null);
+          }}
         />
       )}
     </div>
