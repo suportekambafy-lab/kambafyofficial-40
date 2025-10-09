@@ -171,17 +171,17 @@ export default function Financial() {
 
       const userProductIds = userProducts?.map(p => p.id) || [];
 
-      // ✅ Buscar apenas vendas dos ÚLTIMOS 4 DIAS para cálculo de pendente
-      // Vendas antigas já estão refletidas no customer_balances
-      const fourDaysAgo = new Date();
-      fourDaysAgo.setDate(fourDaysAgo.getDate() - 4);
+      // ✅ Buscar vendas dos ÚLTIMOS 5 DIAS para capturar vendas recém-liberadas
+      // Hoje (09/10) - vendas de 06/10 (3 dias atrás) já estão liberadas
+      const fiveDaysAgo = new Date();
+      fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
       
       const { data: ownOrders, error: ordersError } = await supabase
         .from('orders')
         .select('order_id, amount, currency, created_at, status, affiliate_commission, seller_commission, product_id')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
-        .gte('created_at', fourDaysAgo.toISOString())
+        .gte('created_at', fiveDaysAgo.toISOString())
         .order('created_at', { ascending: false });
 
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
@@ -207,7 +207,7 @@ export default function Financial() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      // Buscar vendas como afiliado dos últimos 4 dias se houver códigos
+      // Buscar vendas como afiliado dos últimos 5 dias se houver códigos
       let affiliateOrders: any[] = [];
       if (userAffiliateCodes.length > 0) {
         const { data: affiliateData, error: affiliateError } = await supabase
@@ -216,8 +216,8 @@ export default function Financial() {
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
           .eq('status', 'completed')
-          .gte('created_at', fourDaysAgo.toISOString())
-          .order('created_at', { ascending: false });
+          .gte('created_at', fiveDaysAgo.toISOString())
+          .order('created_at', { ascending: false});
         
         if (!affiliateError) {
           affiliateOrders = affiliateData || [];
