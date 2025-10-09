@@ -41,7 +41,7 @@ export function ModernDashboardHome() {
     sales: true,
   });
 
-  // Load all orders (own sales + affiliate commissions)
+  // Load all orders (own sales + affiliate commissions + module payments)
   const loadAllOrders = useCallback(async () => {
     if (!user) return;
 
@@ -57,6 +57,14 @@ export function ModernDashboardHome() {
       if (productsError) throw productsError;
 
       const userProductIds = userProducts?.map(p => p.id) || [];
+
+      // Buscar member_areas do usuário
+      const { data: memberAreas } = await supabase
+        .from('member_areas')
+        .select('id')
+        .eq('user_id', user.id);
+      
+      const memberAreaIds = memberAreas?.map(ma => ma.id) || [];
 
       // Segundo, buscar códigos de afiliação do usuário
       const { data: affiliateCodes, error: affiliateError } = await supabase
@@ -96,6 +104,18 @@ export function ModernDashboardHome() {
         );
       }
 
+      // ✅ Adicionar pagamentos de módulos (apenas completed)
+      if (memberAreaIds.length > 0) {
+        promises.push(
+          supabase
+            .from('module_payments')
+            .select('id, order_id, amount, created_at, status, module_id, student_name, student_email, currency')
+            .in('member_area_id', memberAreaIds)
+            .eq('status', 'completed')
+            .order('created_at', { ascending: false })
+        );
+      }
+
       if (promises.length === 0) {
         setAllOrders([]);
         return;
@@ -104,6 +124,7 @@ export function ModernDashboardHome() {
       const results = await Promise.all(promises);
       let ownOrders: any[] = [];
       let affiliateOrders: any[] = [];
+      let modulePayments: any[] = [];
 
       if (userProductIds.length > 0) {
         const ownOrdersData = results[0];
@@ -113,9 +134,22 @@ export function ModernDashboardHome() {
           const affiliateOrdersData = results[1];
           affiliateOrders = affiliateOrdersData.data || [];
         }
+        
+        if (memberAreaIds.length > 0 && results[2]) {
+          const modulePaymentsData = results[2];
+          modulePayments = modulePaymentsData.data || [];
+        }
       } else if (userAffiliateCodes.length > 0) {
         const affiliateOrdersData = results[0];
         affiliateOrders = affiliateOrdersData.data || [];
+        
+        if (memberAreaIds.length > 0 && results[1]) {
+          const modulePaymentsData = results[1];
+          modulePayments = modulePaymentsData.data || [];
+        }
+      } else if (memberAreaIds.length > 0) {
+        const modulePaymentsData = results[0];
+        modulePayments = modulePaymentsData.data || [];
       }
 
       if (results[0]?.error) {
@@ -123,7 +157,7 @@ export function ModernDashboardHome() {
         return;
       }
 
-      // Combinar vendas próprias e comissões de afiliado
+      // Combinar vendas próprias, comissões de afiliado E pagamentos de módulos
       const allOrdersWithEarnings = [
         // Vendas próprias - usar comissão do vendedor ou converter vendas antigas
         ...(ownOrders || []).map((order: any) => {
@@ -148,6 +182,22 @@ export function ModernDashboardHome() {
           ...order,
           earning_amount: parseFloat(order.affiliate_commission?.toString() || '0'),
           order_type: 'affiliate'
+        })),
+        // ✅ Pagamentos de módulos - converter para formato compatível
+        ...(modulePayments || []).map((mp: any) => ({
+          id: mp.id,
+          order_id: mp.order_id,
+          amount: mp.amount?.toString() || '0',
+          currency: mp.currency || 'KZ',
+          created_at: mp.created_at,
+          status: mp.status,
+          product_id: mp.module_id,
+          customer_name: mp.student_name,
+          customer_email: mp.student_email,
+          order_bump_data: null, // Módulos não têm order bumps
+          earning_amount: parseFloat(mp.amount?.toString() || '0'),
+          earning_currency: mp.currency || 'KZ',
+          order_type: 'module'
         }))
       ];
 
@@ -158,7 +208,7 @@ export function ModernDashboardHome() {
       const totalEarnings = allOrdersWithEarnings
         .reduce((sum, o) => sum + (o.earning_amount || 0), 0);
 
-      console.log(`✅ Dashboard carregou ${ownOrders?.length || 0} vendas próprias (completed) e ${affiliateOrders?.length || 0} comissões para usuário ${user.id}`);
+      console.log(`✅ Dashboard carregou ${ownOrders?.length || 0} vendas próprias + ${affiliateOrders?.length || 0} comissões + ${modulePayments?.length || 0} módulos (completed) para usuário ${user.id}`);
       console.log(`💰 LUCRO TOTAL (completed): ${totalEarnings.toFixed(2)} KZ`);
       console.log(`📊 TOTAL VENDAS PAGAS (contando order bumps): ${countTotalSales(allOrdersWithEarnings)}`);
       
@@ -292,8 +342,8 @@ export function ModernDashboardHome() {
     if (user) {
       loadAllOrders();
       
-      // Set up real-time subscription for orders
-      const channel = supabase
+      // Set up real-time subscription for orders AND module_payments
+      const ordersChannel = supabase
         .channel('dashboard-orders-changes')
         .on(
           'postgres_changes',
@@ -309,11 +359,29 @@ export function ModernDashboardHome() {
           }
         )
         .subscribe();
+      
+      const modulePaymentsChannel = supabase
+        .channel('dashboard-module-payments-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'module_payments'
+          },
+          (payload) => {
+            console.log('🔔 Dashboard module_payments real-time update triggered');
+            // Recarregar dados com debounce para evitar multiple calls
+            setTimeout(() => loadAllOrders(), 500);
+          }
+        )
+        .subscribe();
 
       // Removido log desnecessário
 
       return () => {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(ordersChannel);
+        supabase.removeChannel(modulePaymentsChannel);
       };
     }
   }, [user, loadAllOrders]);
