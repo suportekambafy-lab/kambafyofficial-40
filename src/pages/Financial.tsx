@@ -295,38 +295,25 @@ export default function Financial() {
 
         const releasedOrderIds = new Set(releasedPayments?.map(r => r.order_id) || []);
         
-        // Função para calcular data de liberação (3 dias úteis) - igual ao backend
-        const calculateReleaseDate = (orderDate: Date): Date => {
-          let businessDaysToAdd = 3;
-          let currentDay = new Date(orderDate);
-          
-          while (businessDaysToAdd > 0) {
-            currentDay.setDate(currentDay.getDate() + 1);
-            // Se não for fim de semana (sábado = 6, domingo = 0)
-            if (currentDay.getDay() !== 0 && currentDay.getDay() !== 6) {
-              businessDaysToAdd--;
-            }
-          }
-          
-          return currentDay;
-        };
+        console.log(`🔒 ${releasedOrderIds.size} vendas já foram liberadas para usuário ${user.id}`);
 
         // ✅ USAR o saldo real do customer_balances como fonte de verdade
         const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
 
-        // ✅ Calcular saldo pendente APENAS para vendas NÃO liberadas ainda
+        // ✅ Calcular saldo pendente APENAS para vendas NÃO liberadas ainda (3 dias corridos)
         const now = new Date();
         let pendingBalance = 0;
         const pendingOrdersData: Array<{date: Date, amount: number}> = [];
 
         allOrders.forEach(order => {
-          // ❌ Ignorar se já foi liberada
+          // ❌ Ignorar se já foi liberada (já está no saldo disponível)
           if (releasedOrderIds.has(order.order_id)) {
             return;
           }
 
           const orderDate = new Date(order.created_at);
-          const releaseDate = calculateReleaseDate(orderDate); // ✅ Usar dias úteis
+          const releaseDate = new Date(orderDate);
+          releaseDate.setDate(orderDate.getDate() + 3); // 3 dias corridos
           
           const amount = order.earning_amount;
           

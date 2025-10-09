@@ -14,20 +14,11 @@ const logStep = (step: string, details?: any) => {
   console.log(`[AUTO-RELEASE] ${timestamp} ${step}${detailsStr}`);
 };
 
-// Função para calcular data de liberação (3 dias úteis)
+// Função para calcular data de liberação (3 dias corridos)
 const calculateReleaseDate = (orderDate: Date): Date => {
-  let businessDaysToAdd = 3;
-  let currentDay = new Date(orderDate);
-  
-  while (businessDaysToAdd > 0) {
-    currentDay.setDate(currentDay.getDate() + 1);
-    // Se não for fim de semana (sábado = 6, domingo = 0)
-    if (currentDay.getDay() !== 0 && currentDay.getDay() !== 6) {
-      businessDaysToAdd--;
-    }
-  }
-  
-  return currentDay;
+  const releaseDate = new Date(orderDate);
+  releaseDate.setDate(orderDate.getDate() + 3); // 3 dias corridos
+  return releaseDate;
 };
 
 serve(async (req) => {
