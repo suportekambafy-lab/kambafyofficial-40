@@ -362,7 +362,21 @@ export default function UserIdentity() {
   };
 
   const needsBackside = formData.document_type === 'BI' || formData.document_type === 'RG';
-  const isReadOnly = verification?.status === 'aprovado';
+  const isReadOnly = verification?.status === 'aprovado' || verification?.status === 'pendente';
+  
+  // Determinar o texto do botão baseado no status
+  const getButtonText = () => {
+    if (!verification) {
+      return 'Enviar para Verificação';
+    }
+    if (verification.status === 'pendente') {
+      return 'Enviada para Verificação';
+    }
+    if (verification.status === 'rejeitado') {
+      return 'Atualizar Verificação';
+    }
+    return 'Atualizar Verificação';
+  };
 
   return (
     <ProtectedRoute>
@@ -386,10 +400,17 @@ export default function UserIdentity() {
               </div>
             </CardHeader>
             <CardContent>
+              {verification.status === 'pendente' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-yellow-800 font-medium mb-2">Verificação em Análise</p>
+                  <p className="text-yellow-700">Sua verificação de identidade foi enviada e está sendo analisada pela nossa equipe. Você será notificado quando o processo for concluído.</p>
+                </div>
+              )}
               {verification.status === 'rejeitado' && verification.rejection_reason && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                   <p className="text-red-800 font-medium mb-2">Motivo da rejeição:</p>
                   <p className="text-red-700">{verification.rejection_reason}</p>
+                  <p className="text-red-700 mt-2 text-sm">Por favor, atualize as informações e envie novamente.</p>
                 </div>
               )}
               <p className="text-sm text-muted-foreground">
@@ -580,15 +601,15 @@ export default function UserIdentity() {
           </Card>
         )}
 
-        {!isReadOnly && (
+        {verification?.status !== 'aprovado' && (
           <div className="flex justify-end">
             <Button
               onClick={handleSubmit}
-              disabled={loading || uploading}
+              disabled={loading || uploading || verification?.status === 'pendente'}
               size="lg"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {verification ? 'Atualizar Verificação' : 'Enviar para Verificação'}
+              {getButtonText()}
             </Button>
           </div>
         )}
