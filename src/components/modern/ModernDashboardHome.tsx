@@ -107,15 +107,16 @@ export function ModernDashboardHome() {
 
       // ✅ Adicionar pagamentos de módulos (apenas completed)
       if (memberAreaIds.length > 0) {
-        console.log(`🔍 Dashboard: Buscando module_payments para ${memberAreaIds.length} member areas...`);
-        promises.push(
-          supabase
-            .from('module_payments')
-            .select('id, order_id, amount, created_at, status, module_id, student_name, student_email, currency')
-            .in('member_area_id', memberAreaIds)
-            .eq('status', 'completed')
-            .order('created_at', { ascending: false })
-        );
+        console.log(`🔍 Dashboard: Buscando module_payments para ${memberAreaIds.length} member areas:`, memberAreaIds);
+        const moduleQuery = supabase
+          .from('module_payments')
+          .select('id, order_id, amount, created_at, status, module_id, student_name, student_email, currency')
+          .in('member_area_id', memberAreaIds)
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false });
+        
+        promises.push(moduleQuery);
+        console.log('🔍 Dashboard: Query de module_payments criada');
       }
 
       if (promises.length === 0) {
@@ -124,6 +125,8 @@ export function ModernDashboardHome() {
       }
 
       const results = await Promise.all(promises);
+      console.log('🔍 Dashboard: Results recebidos:', results.map((r, i) => ({ index: i, hasData: !!r.data, dataLength: r.data?.length || 0, hasError: !!r.error })));
+      
       let ownOrders: any[] = [];
       let affiliateOrders: any[] = [];
       let modulePayments: any[] = [];
@@ -140,7 +143,10 @@ export function ModernDashboardHome() {
         if (memberAreaIds.length > 0 && results[2]) {
           const modulePaymentsData = results[2];
           modulePayments = modulePaymentsData.data || [];
-          console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[2]:`, modulePayments);
+          console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[2]`);
+          if (modulePaymentsData.error) {
+            console.error('❌ Dashboard: Erro ao carregar module_payments:', modulePaymentsData.error);
+          }
         }
       } else if (userAffiliateCodes.length > 0) {
         const affiliateOrdersData = results[0];
@@ -149,12 +155,18 @@ export function ModernDashboardHome() {
         if (memberAreaIds.length > 0 && results[1]) {
           const modulePaymentsData = results[1];
           modulePayments = modulePaymentsData.data || [];
-          console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[1]:`, modulePayments);
+          console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[1]`);
+          if (modulePaymentsData.error) {
+            console.error('❌ Dashboard: Erro ao carregar module_payments (results[1]):', modulePaymentsData.error);
+          }
         }
       } else if (memberAreaIds.length > 0) {
         const modulePaymentsData = results[0];
         modulePayments = modulePaymentsData.data || [];
-        console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[0]:`, modulePayments);
+        console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[0]`);
+        if (modulePaymentsData.error) {
+          console.error('❌ Dashboard: Erro ao carregar module_payments (results[0]):', modulePaymentsData.error);
+        }
       }
 
       if (results[0]?.error) {
