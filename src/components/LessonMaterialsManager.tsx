@@ -6,6 +6,7 @@ import { Trash2, Upload, File, FileText, Image, Download } from 'lucide-react';
 import { LessonMaterial } from '@/types/memberArea';
 import { toast } from '@/hooks/use-toast';
 import { useBunnyUpload } from '@/hooks/useBunnyUpload';
+import { openFile } from '@/utils/fileUtils';
 
 interface LessonMaterialsManagerProps {
   materials: LessonMaterial[];
@@ -128,15 +129,16 @@ export function LessonMaterialsManager({ materials, onChange }: LessonMaterialsM
                         {material.size && (
                           <span>{formatFileSize(material.size)}</span>
                         )}
-                        <a 
-                          href={material.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        <button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openFile(material.url, material.name);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
                         >
                           <Download className="h-3 w-3" />
                           Download
-                        </a>
+                        </button>
                       </div>
                     </div>
                   </div>

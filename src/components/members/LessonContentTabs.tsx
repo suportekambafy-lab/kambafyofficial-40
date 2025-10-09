@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Download, ExternalLink, BookOpen, File, Image } from 'lucide-react';
 import { Lesson } from '@/types/memberArea';
 import { ComplementaryLink, LessonMaterial } from '@/types/memberArea';
+import { openFile } from '@/utils/fileUtils';
 interface LessonContentTabsProps {
   lesson: Lesson;
 }
@@ -101,11 +102,14 @@ export function LessonContentTabs({
                               </p>}
                           </div>
                         </div>
-                        <Button asChild variant="outline" size="sm" className="w-full">
-                          <a href={material.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                            <Download className="h-4 w-4" />
-                            Download
-                          </a>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => openFile(material.url, material.name)}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
                         </Button>
                       </div>)}
                   </div>

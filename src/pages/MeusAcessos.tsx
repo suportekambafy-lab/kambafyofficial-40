@@ -185,7 +185,11 @@ export default function MeusAcessos() {
     } else if (product.share_link) {
       const fileUrl = getFileUrl(product.share_link);
       console.log('🔗 MinhasCompras - Abrindo share_link:', fileUrl);
-      window.open(fileUrl, '_blank');
+      
+      // Import dinamically to avoid circular deps
+      import('@/utils/fileUtils').then(({ openFile }) => {
+        openFile(fileUrl, product.name);
+      });
     } else {
       console.log('❌ MinhasCompras - Nenhum link de acesso disponível');
       alert('Link de acesso não disponível para este produto.');

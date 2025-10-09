@@ -58,11 +58,66 @@ export const getStorageProvider = (url: string): 'bunny' | 'supabase' | 'other' 
 };
 
 /**
+ * Check if browser is Safari
+ */
+export const isSafari = (): boolean => {
+  const ua = navigator.userAgent.toLowerCase();
+  return ua.includes('safari') && !ua.includes('chrome') && !ua.includes('android');
+};
+
+/**
+ * Open file in browser (Safari-compatible)
+ * Safari has issues with direct window.open for PDFs from CDN
+ */
+export const openFile = async (url: string, filename?: string): Promise<void> => {
+  try {
+    // For Safari, fetch and create blob URL to avoid CORS issues
+    if (isSafari() && isDocumentFile(url)) {
+      console.log('🍎 Safari detected - using blob URL for document');
+      const response = await fetch(url, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch file');
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Open in new tab
+      const newWindow = window.open(blobUrl, '_blank');
+      
+      // Clean up after a delay to ensure it opens
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 5000);
+      
+      if (!newWindow) {
+        throw new Error('Popup blocked');
+      }
+    } else {
+      // For other browsers or non-document files, use direct open
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  } catch (error) {
+    console.error('Error opening file:', error);
+    // Fallback: try to download
+    downloadFile(url, filename);
+  }
+};
+
+/**
  * Download a file from any storage provider
  */
 export const downloadFile = async (url: string, filename?: string): Promise<void> => {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch file');
+    
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
     
@@ -77,7 +132,7 @@ export const downloadFile = async (url: string, filename?: string): Promise<void
   } catch (error) {
     console.error('Error downloading file:', error);
     // Fallback: open in new tab
-    window.open(url, '_blank');
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 };
 
