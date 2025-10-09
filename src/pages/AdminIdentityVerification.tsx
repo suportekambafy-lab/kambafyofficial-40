@@ -543,22 +543,72 @@ export default function AdminIdentityVerification() {
                     )}
                     
                     {verification.status === 'aprovado' && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUserForBan({
-                            id: verification.user_id,
-                            name: verification.profiles?.full_name || 'Usuário',
-                            email: verification.profiles?.email || ''
-                          });
-                          setBanDialogOpen(true);
-                        }}
-                        className="w-full sm:w-auto"
-                      >
-                        <UserX className="h-4 w-4 mr-1" />
-                        Banir Usuário
-                      </Button>
+                      <>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedVerification(verification)}
+                              className="w-full sm:w-auto border-orange-500 text-orange-600 hover:bg-orange-50"
+                            >
+                              <AlertCircle className="h-4 w-4 mr-1" />
+                              Reprovar Verificação
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle className="text-base sm:text-lg">Reprovar Verificação</DialogTitle>
+                              <DialogDescription className="text-xs sm:text-sm">
+                                Esta ação irá remover a verificação de identidade de {verification.profiles?.full_name}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <Label htmlFor="rejection-reason-approved" className="text-xs sm:text-sm">Motivo da Reprovação</Label>
+                                <Textarea
+                                  id="rejection-reason-approved"
+                                  value={rejectionReason}
+                                  onChange={(e) => setRejectionReason(e.target.value)}
+                                  placeholder="Ex: Documento expirado, informações desatualizadas..."
+                                  rows={3}
+                                  className="text-sm"
+                                />
+                              </div>
+                              <div className="flex flex-col sm:flex-row justify-end gap-2">
+                                <Button variant="outline" size="sm" onClick={() => setRejectionReason('')}>
+                                  Cancelar
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => updateVerificationStatus(verification.id, 'rejeitado', rejectionReason)}
+                                  disabled={!rejectionReason.trim() || processingId === verification.id}
+                                >
+                                  Reprovar
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUserForBan({
+                              id: verification.user_id,
+                              name: verification.profiles?.full_name || 'Usuário',
+                              email: verification.profiles?.email || ''
+                            });
+                            setBanDialogOpen(true);
+                          }}
+                          className="w-full sm:w-auto"
+                        >
+                          <UserX className="h-4 w-4 mr-1" />
+                          Banir Usuário
+                        </Button>
+                      </>
                     )}
                   </div>
                 </CardContent>
