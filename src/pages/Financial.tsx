@@ -299,6 +299,17 @@ export default function Financial() {
         console.error(`🔥 Data atual: ${now.toISOString()}`);
         console.error(`🔥 Saldo disponível atual (customer_balances): ${currentBalance.toLocaleString()} KZ`);
 
+        // Análise de todas as datas das vendas
+        const vendaDates = allOrders.map(o => ({
+          order_id: o.order_id,
+          created_at: new Date(o.created_at),
+          amount: o.earning_amount
+        })).sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
+        
+        console.error(`🔥 ANÁLISE DAS DATAS:`);
+        console.error(`   📅 Venda mais ANTIGA: ${vendaDates[0]?.created_at.toLocaleDateString()} - ${vendaDates[0]?.order_id}`);
+        console.error(`   📅 Venda mais RECENTE: ${vendaDates[vendaDates.length - 1]?.created_at.toLocaleDateString()} - ${vendaDates[vendaDates.length - 1]?.order_id}`);
+
         let releasedCount = 0;
         let pendingCount = 0;
         let totalReleased = 0;
@@ -322,7 +333,7 @@ export default function Financial() {
             releasedCount++;
             totalReleased += amount;
             
-            if (releasedCount <= 3) {
+            if (releasedCount <= 5) {
               console.error(`🟢 LIBERADA: ${order.order_id} - ${amount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()} - liberou em ${releaseDate.toLocaleDateString()}`);
             }
           } else {
