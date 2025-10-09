@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import type { AdminStats } from '@/types/admin';
-import { Users, Package, CreditCard, TrendingUp, LogOut, FileText, AlertTriangle, CheckCircle, DollarSign, PieChart, Activity, Clock, Shield, Menu, Globe } from 'lucide-react';
+import { Users, Package, CreditCard, TrendingUp, LogOut, FileText, AlertTriangle, CheckCircle, DollarSign, PieChart, Activity, Clock, Shield, Menu, Globe, Mail } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,8 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { FixMissingAccessButton } from '@/components/admin/FixMissingAccessButton';
+import { AutoProcessMissingAccess } from '@/components/admin/AutoProcessMissingAccess';
+import { ResendMissingAccessEmails } from '@/components/admin/ResendMissingAccessEmails';
 interface ModernAdminMetricCardProps {
   title: string;
   value: string;
@@ -635,6 +637,21 @@ export default function AdminDashboard() {
             </Card>
           </div>
         )}
+
+        {/* Email Management Section */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <div className="h-7 w-7 sm:h-8 sm:w-8 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
+              <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Gestão de Emails de Acesso</h2>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <AutoProcessMissingAccess />
+            <ResendMissingAccessEmails />
+          </div>
+        </div>
 
       </div>
     </div>
