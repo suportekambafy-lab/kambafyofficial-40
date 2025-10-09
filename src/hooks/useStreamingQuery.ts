@@ -111,7 +111,7 @@ export const useStreamingQuery = () => {
       if (userProductIds.length > 0) {
         const { data, error: ownSalesError } = await supabase
           .from('orders')
-          .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id')
+          .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id, order_bump_data')
           .in('product_id', userProductIds)
           .in('status', ['completed', 'pending', 'cancelled', 'failed']);
 
@@ -140,7 +140,7 @@ export const useStreamingQuery = () => {
       if (userAffiliateCodes.length > 0) {
         const { data: affiliateData, error: affiliateDataError } = await supabase
           .from('orders')
-          .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code')
+          .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code, order_bump_data')
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
           .in('status', ['completed', 'pending', 'cancelled', 'failed']); // Incluir todas as vendas
