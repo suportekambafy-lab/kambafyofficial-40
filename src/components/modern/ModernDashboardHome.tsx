@@ -154,8 +154,14 @@ export function ModernDashboardHome() {
       // Ordenar por data
       allOrdersWithEarnings.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
+      // 🔍 DEBUG: Calcular lucro total para comparação
+      const totalEarnings = allOrdersWithEarnings
+        .filter(o => o.status === 'completed')
+        .reduce((sum, o) => sum + (o.earning_amount || 0), 0);
+
       console.log(`✅ Dashboard carregou ${ownOrders?.length || 0} vendas próprias e ${affiliateOrders?.length || 0} comissões para usuário ${user.id}`);
-      // Removido console.log das vendas para performance
+      console.log(`💰 LUCRO TOTAL (completed): ${totalEarnings.toFixed(2)} KZ`);
+      
       setAllOrders(allOrdersWithEarnings);
     } catch (error) {
       console.error('💥 Erro no carregamento do dashboard:', error);

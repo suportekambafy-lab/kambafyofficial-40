@@ -170,30 +170,45 @@ export const useStreamingQuery = () => {
         total: statsData.length
       });
 
-      // ✅ UNIFICADO: Calcular stats SEM conversão de moeda
-      // Todos os valores são mantidos em suas moedas originais do banco
+      // ✅ UNIFICADO: Calcular stats usando LUCRO REAL (seller_commission)
+      // Todos os valores representam o que o vendedor VAI RECEBER
       // Isso garante que Dashboard, Vendas e Financeiro mostrem os mesmos valores
       const stats = (statsData || []).reduce((acc, order) => {
-        let amount = parseFloat(order.amount) || 0;
         const isAffiliateEarning = userAffiliateCodes.includes(order.affiliate_code);
         
         if (isAffiliateEarning) {
-          // Para vendas como afiliado, mostra apenas a comissão
+          // Para vendas como afiliado, mostra apenas a comissão que ele recebe
           const affiliateCommission = parseFloat(order.affiliate_commission?.toString() || '0');
-          acc.paid++;
-          acc.paidTotal += affiliateCommission;
-          acc.totalAffiliateCommissions += affiliateCommission;
-        } else {
-          // Para vendedores - usar valores brutos SEM conversão
           if (order.status === 'completed') {
             acc.paid++;
-            acc.paidTotal += amount;
+            acc.paidTotal += affiliateCommission;
+            acc.totalAffiliateCommissions += affiliateCommission;
           } else if (order.status === 'pending') {
             acc.pending++;
-            acc.pendingTotal += amount;
+            acc.pendingTotal += affiliateCommission;
           } else if (order.status === 'failed' || order.status === 'cancelled') {
             acc.cancelled++;
-            acc.cancelledTotal += amount;
+            acc.cancelledTotal += affiliateCommission;
+          }
+        } else {
+          // Para vendas próprias - usar seller_commission (lucro após descontar comissão do afiliado)
+          // Se não tiver seller_commission, usar amount (vendas antigas)
+          let sellerEarning = parseFloat(order.seller_commission?.toString() || '0');
+          
+          if (sellerEarning === 0) {
+            // Venda antiga sem comissão registrada - usar valor total
+            sellerEarning = parseFloat(order.amount || '0');
+          }
+          
+          if (order.status === 'completed') {
+            acc.paid++;
+            acc.paidTotal += sellerEarning;
+          } else if (order.status === 'pending') {
+            acc.pending++;
+            acc.pendingTotal += sellerEarning;
+          } else if (order.status === 'failed' || order.status === 'cancelled') {
+            acc.cancelled++;
+            acc.cancelledTotal += sellerEarning;
           }
         }
 
@@ -227,7 +242,8 @@ export const useStreamingQuery = () => {
         cancelled: stats.cancelled,
         cancelledTotal: stats.cancelledTotal,
         totalAffiliateCommissions: stats.totalAffiliateCommissions,
-        totalSellerEarnings: stats.totalSellerEarnings
+        totalSellerEarnings: stats.totalSellerEarnings,
+        nota: 'paidTotal representa LUCRO REAL do vendedor (seller_commission + affiliate_commission)'
       });
 
       console.log('🔍 DETALHAMENTO POR STATUS:');
@@ -235,9 +251,19 @@ export const useStreamingQuery = () => {
       const pendingSales = statsData.filter(o => o.status === 'pending');
       const failedSales = statsData.filter(o => o.status === 'failed' || o.status === 'cancelled');
       
-      console.log(`  ✅ Completed: ${completedSales.length} vendas, total: ${completedSales.reduce((sum, o) => sum + parseFloat(o.amount || 0), 0).toFixed(2)} KZ`);
-      console.log(`  ⏳ Pending: ${pendingSales.length} vendas, total: ${pendingSales.reduce((sum, o) => sum + parseFloat(o.amount || 0), 0).toFixed(2)} KZ`);
-      console.log(`  ❌ Failed/Cancelled: ${failedSales.length} vendas, total: ${failedSales.reduce((sum, o) => sum + parseFloat(o.amount || 0), 0).toFixed(2)} KZ`);
+      // Calcular lucro real para cada categoria
+      const completedEarnings = completedSales.reduce((sum, o) => {
+        const isAffiliate = userAffiliateCodes.includes(o.affiliate_code);
+        if (isAffiliate) {
+          return sum + parseFloat(o.affiliate_commission?.toString() || '0');
+        }
+        const sellerEarning = parseFloat(o.seller_commission?.toString() || '0') || parseFloat(o.amount || '0');
+        return sum + sellerEarning;
+      }, 0);
+      
+      console.log(`  ✅ Completed: ${completedSales.length} vendas, lucro real: ${completedEarnings.toFixed(2)} KZ`);
+      console.log(`  ⏳ Pending: ${pendingSales.length} vendas`);
+      console.log(`  ❌ Failed/Cancelled: ${failedSales.length} vendas`);
 
       setTotalCount(statsData?.length || 0);
       onStatsUpdate(stats);

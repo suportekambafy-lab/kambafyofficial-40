@@ -304,10 +304,10 @@ export default function Sales() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        <HighlightedCard highlightColor="green">
+         <HighlightedCard highlightColor="green">
           <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <HighlightedCardTitle className="text-sm font-medium">
-              Vendas Pagas
+              Vendas Pagas (Lucro)
             </HighlightedCardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </HighlightedCardHeader>
@@ -316,7 +316,7 @@ export default function Sales() {
               {formatCurrency(salesStats.paidTotal)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {salesStats.paid} vendas confirmadas e pagas
+              {salesStats.paid} vendas confirmadas - lucro líquido
             </p>
           </HighlightedCardContent>
         </HighlightedCard>
