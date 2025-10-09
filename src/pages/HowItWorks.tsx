@@ -30,7 +30,7 @@ const HowItWorks = () => {
   const benefits = [
     { icon: <BookOpen className="w-6 h-6" />, text: "Criação de conteúdo simplificada" },
     { icon: <Users className="w-6 h-6" />, text: "Acesso a milhares de potenciais alunos" },
-    { icon: <DollarSign className="w-6 h-6" />, text: "Pagamentos seguros em Kwanza" },
+    { icon: <DollarSign className="w-6 h-6" />, text: "Pagamento seguro em multimoedas" },
     { icon: <Shield className="w-6 h-6" />, text: "Proteção total do seu conteúdo" }
   ];
 
