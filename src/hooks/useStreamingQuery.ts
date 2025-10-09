@@ -106,17 +106,33 @@ export const useStreamingQuery = () => {
         return;
       }
 
-      // Buscar vendas de produtos normais - TODAS as vendas
+      // Buscar vendas de produtos normais - TODAS as vendas (SEM LIMIT)
       let ownSalesData: any[] = [];
       if (userProductIds.length > 0) {
-        const { data, error: ownSalesError } = await supabase
-          .from('orders')
-          .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id, order_bump_data')
-          .in('product_id', userProductIds)
-          .in('status', ['completed', 'pending', 'failed', 'cancelled']); // Todas as vendas
+        // Buscar TODAS as vendas para stats corretos (sem paginação)
+        let allOwnSales: any[] = [];
+        let offset = 0;
+        const batchSize = 1000;
+        let hasMore = true;
+        
+        while (hasMore) {
+          const { data, error: ownSalesError } = await supabase
+            .from('orders')
+            .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id, order_bump_data')
+            .in('product_id', userProductIds)
+            .in('status', ['completed', 'pending', 'failed', 'cancelled'])
+            .range(offset, offset + batchSize - 1);
 
-        if (ownSalesError) throw ownSalesError;
-        ownSalesData = data || [];
+          if (ownSalesError) throw ownSalesError;
+          
+          if (!data || data.length === 0) break;
+          
+          allOwnSales.push(...data);
+          hasMore = data.length === batchSize;
+          offset += batchSize;
+        }
+        
+        ownSalesData = allOwnSales;
       }
 
       // Buscar vendas de módulos - TODAS as vendas
