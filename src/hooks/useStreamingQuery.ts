@@ -311,7 +311,9 @@ export const useStreamingQuery = () => {
       console.log(`  📦 Completed items (com bumps): ${completedItemsWithBumps} items`);
       console.log(`  🎯 VALOR QUE DEVE APARECER NO CARD: ${completedItemsWithBumps} vendas`);
 
-      setTotalCount(statsData?.length || 0);
+      // ✅ Contar ITEMS (orders + order bumps) para totalCount, igual aos outros cards
+      const totalItems = statsData.reduce((sum, order) => sum + countOrderItems(order), 0);
+      setTotalCount(totalItems);
       onStatsUpdate(stats);
 
       // 📋 CARREGANDO TODAS AS VENDAS progressivamente (próprias + afiliado)
