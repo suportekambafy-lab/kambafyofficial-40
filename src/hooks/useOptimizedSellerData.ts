@@ -58,7 +58,7 @@ export const useSellerData = () => {
           .from('orders')
           .select('id, amount, created_at, status, product_id, customer_name, customer_email, order_bump_data')
           .eq('user_id', user.id)
-          .eq('status', 'completed') // ✅ Apenas vendas pagas
+          .in('status', ['completed', 'pending', 'cancelled', 'failed']) // Todos os status
           .order('created_at', { ascending: false }),
         
         // ✅ Buscar vendas de módulos também
@@ -66,7 +66,7 @@ export const useSellerData = () => {
           .from('module_payments')
           .select('id, order_id, amount, created_at, status, module_id, student_name, student_email')
           .in('member_area_id', memberAreaIds)
-          .eq('status', 'completed') // ✅ Apenas vendas pagas
+          .in('status', ['completed', 'pending', 'cancelled', 'failed']) // Todos os status
           .order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
         
         supabase
