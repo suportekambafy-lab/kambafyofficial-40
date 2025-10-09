@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { useBunnyUpload } from '@/hooks/useBunnyUpload';
 import { format } from 'date-fns';
-import { Loader2, Upload, X, Shield, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { Loader2, Upload, X, Shield, CheckCircle, AlertCircle, Clock, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
@@ -37,6 +38,7 @@ const documentTypes = [
 
 export default function UserIdentity() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useCustomToast();
   const { uploadFile: bunnyUpload, uploading } = useBunnyUpload();
   const [loading, setLoading] = useState(false);
@@ -381,13 +383,24 @@ export default function UserIdentity() {
   return (
     <ProtectedRoute>
       <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <Shield className="w-8 h-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Verificação de Identidade</h1>
-            <p className="text-muted-foreground">
-              Complete sua verificação de identidade para habilitar funcionalidades adicionais
-            </p>
+        <div className="space-y-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </Button>
+          
+          <div className="flex items-center gap-3">
+            <Shield className="w-8 h-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Verificação de Identidade</h1>
+              <p className="text-muted-foreground">
+                Complete sua verificação de identidade para habilitar funcionalidades adicionais
+              </p>
+            </div>
           </div>
         </div>
 
