@@ -23,7 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import { BankingInfo } from "@/components/BankingInfo";
-import { toast } from "sonner";
+import { useCustomToast } from '@/hooks/useCustomToast';
 import { WithdrawalModal } from "@/components/WithdrawalModal";
 import { useTabVisibilityOptimizer } from "@/hooks/useTabVisibilityOptimizer";
 
@@ -54,6 +54,7 @@ interface IdentityVerification {
 
 export default function Financial() {
   const { user } = useAuth();
+  const { toast } = useCustomToast();
   const { shouldSkipUpdate } = useTabVisibilityOptimizer();
   const [loading, setLoading] = useState(true);
   const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
@@ -455,7 +456,11 @@ export default function Financial() {
 
       if (error) {
         console.error('Error generating report:', error);
-        toast.error("Erro ao gerar relatório");
+        toast({
+          title: 'Erro',
+          message: 'Erro ao gerar relatório',
+          variant: 'error'
+        });
         return;
       }
 
@@ -528,11 +533,19 @@ export default function Financial() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success("Relatório completo gerado com sucesso!");
+      toast({
+        title: 'Sucesso',
+        message: 'Relatório completo gerado com sucesso!',
+        variant: 'success'
+      });
 
     } catch (error) {
       console.error('Error generating report:', error);
-      toast.error("Erro inesperado ao gerar relatório");
+      toast({
+        title: 'Erro',
+        message: 'Erro inesperado ao gerar relatório',
+        variant: 'error'
+      });
     }
   };
 
@@ -540,7 +553,11 @@ export default function Financial() {
     if (!user) return;
 
     try {
-      toast.info("🔄 Executando liberação automática...");
+      toast({
+        title: 'Liberação automática',
+        message: '🔄 Executando liberação automática...',
+        variant: 'default'
+      });
       
       const { data, error } = await supabase.functions.invoke('auto-release-payments', {
         body: { 
@@ -552,26 +569,46 @@ export default function Financial() {
 
       if (error) {
         console.error('Erro na liberação automática:', error);
-        toast.error("Erro ao executar liberação automática");
+        toast({
+          title: 'Erro',
+          message: 'Erro ao executar liberação automática',
+          variant: 'error'
+        });
         return;
       }
 
       console.log('Resultado da liberação automática:', data);
       
       if (data.success) {
-        toast.success(`✅ ${data.message}`);
+        toast({
+          title: 'Sucesso',
+          message: `✅ ${data.message}`,
+          variant: 'success'
+        });
         if (data.summary?.ordersReleased > 0) {
-          toast.success(`💰 ${data.summary.ordersReleased} vendas liberadas: ${data.summary.totalAmountReleased.toLocaleString()} KZ`);
+          toast({
+            title: 'Vendas liberadas',
+            message: `💰 ${data.summary.ordersReleased} vendas liberadas: ${data.summary.totalAmountReleased.toLocaleString()} KZ`,
+            variant: 'success'
+          });
         }
         // Recarregar dados financeiros
         loadFinancialData(false);
       } else {
-        toast.error(`Erro: ${data.error}`);
+        toast({
+          title: 'Erro',
+          message: `Erro: ${data.error}`,
+          variant: 'error'
+        });
       }
 
     } catch (error) {
       console.error('Erro ao executar liberação automática:', error);
-      toast.error("Erro inesperado ao executar liberação");
+      toast({
+        title: 'Erro',
+        message: 'Erro inesperado ao executar liberação',
+        variant: 'error'
+      });
     }
   };
 

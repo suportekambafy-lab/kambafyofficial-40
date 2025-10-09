@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
+import { useCustomToast } from '@/hooks/useCustomToast';
 import { format } from 'date-fns';
 import { Loader2, Upload, X, Shield, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,7 @@ const documentTypes = [
 
 export default function UserIdentity() {
   const { user } = useAuth();
+  const { toast } = useCustomToast();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [verification, setVerification] = useState<IdentityVerification | null>(null);
@@ -69,7 +70,11 @@ export default function UserIdentity() {
       }
     } catch (error) {
       console.error('Erro ao carregar verificação:', error);
-      toast.error('Erro ao carregar dados de verificação');
+      toast({
+        title: 'Erro',
+        message: 'Erro ao carregar dados de verificação',
+        variant: 'error'
+      });
     }
   };
 
@@ -102,7 +107,11 @@ export default function UserIdentity() {
       return storageUrl;
     } catch (error) {
       console.error('Erro no upload:', error);
-      toast.error('Erro ao fazer upload do documento');
+      toast({
+        title: 'Erro',
+        message: 'Erro ao fazer upload do documento',
+        variant: 'error'
+      });
       return null;
     } finally {
       setUploading(false);
@@ -114,7 +123,11 @@ export default function UserIdentity() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Arquivo muito grande. Máximo 5MB');
+      toast({
+        title: 'Arquivo muito grande',
+        message: 'O arquivo deve ter no máximo 5MB',
+        variant: 'error'
+      });
       return;
     }
 
@@ -124,7 +137,11 @@ export default function UserIdentity() {
         ...prev,
         [`document_${type}_url`]: url
       } : null);
-      toast.success('Documento enviado com sucesso');
+      toast({
+        title: 'Sucesso',
+        message: 'Documento enviado com sucesso',
+        variant: 'success'
+      });
     }
   };
 
@@ -147,19 +164,31 @@ export default function UserIdentity() {
 
   const handleSubmit = async () => {
     if (!user || !formData.full_name || !formData.birth_date || !formData.document_type || !formData.document_number) {
-      toast.error('Preencha todos os campos obrigatórios');
+      toast({
+        title: 'Campos obrigatórios',
+        message: 'Preencha todos os campos obrigatórios',
+        variant: 'error'
+      });
       return;
     }
 
     // ✅ VALIDAÇÃO OBRIGATÓRIA: Verificar se os documentos foram anexados
     if (!verification?.document_front_url) {
-      toast.error('É obrigatório anexar a frente do documento');
+      toast({
+        title: 'Documento obrigatório',
+        message: 'É obrigatório anexar a frente do documento',
+        variant: 'error'
+      });
       return;
     }
 
     // Para BI e RG, o verso também é obrigatório
     if (needsBackside && !verification?.document_back_url) {
-      toast.error('É obrigatório anexar o verso do documento');
+      toast({
+        title: 'Documento obrigatório',
+        message: 'É obrigatório anexar o verso do documento',
+        variant: 'error'
+      });
       return;
     }
 
@@ -211,7 +240,11 @@ export default function UserIdentity() {
         console.log('✅ Verificação criada:', data);
       }
 
-      toast.success('Dados de verificação salvos com sucesso');
+      toast({
+        title: 'Verificação enviada',
+        message: 'Seus dados foram enviados para verificação com sucesso',
+        variant: 'success'
+      });
       await loadVerification();
     } catch (error: any) {
       console.error('❌ Erro ao salvar:', error);
@@ -221,7 +254,11 @@ export default function UserIdentity() {
         hint: error?.hint,
         code: error?.code
       });
-      toast.error(error?.message || 'Erro ao salvar dados de verificação');
+      toast({
+        title: 'Erro ao salvar',
+        message: error?.message || 'Erro ao salvar dados de verificação',
+        variant: 'error'
+      });
     } finally {
       setLoading(false);
     }

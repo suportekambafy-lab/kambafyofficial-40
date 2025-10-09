@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
+import { useCustomToast } from '@/hooks/useCustomToast';
 import { format } from 'date-fns';
 import { SEO } from '@/components/SEO';
 import { BanUserDialog } from '@/components/BanUserDialog';
@@ -50,6 +50,7 @@ interface IdentityVerification {
 
 export default function AdminIdentityVerification() {
   const { admin } = useAdminAuth();
+  const { toast } = useCustomToast();
   const navigate = useNavigate();
   const [verifications, setVerifications] = useState<IdentityVerification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +118,11 @@ export default function AdminIdentityVerification() {
       }
     } catch (error) {
       console.error('Erro ao carregar verificações:', error);
-      toast.error('Erro ao carregar verificações de identidade');
+      toast({
+        title: 'Erro',
+        message: 'Erro ao carregar verificações de identidade',
+        variant: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -179,13 +184,21 @@ export default function AdminIdentityVerification() {
         }
       }
 
-      toast.success(`Verificação ${newStatus === 'aprovado' ? 'aprovada' : 'rejeitada'} com sucesso`);
+      toast({
+        title: 'Sucesso',
+        message: `Verificação ${newStatus === 'aprovado' ? 'aprovada' : 'rejeitada'} com sucesso`,
+        variant: 'success'
+      });
       setRejectionReason('');
       setSelectedVerification(null);
       await loadVerifications();
     } catch (error) {
       console.error('Erro ao atualizar verificação:', error);
-      toast.error('Erro ao atualizar status da verificação');
+      toast({
+        title: 'Erro',
+        message: 'Erro ao atualizar status da verificação',
+        variant: 'error'
+      });
     } finally {
       setProcessingId(null);
     }
@@ -248,13 +261,21 @@ export default function AdminIdentityVerification() {
         }
       }
 
-      toast.success('Usuário banido com sucesso');
+      toast({
+        title: 'Usuário banido',
+        message: 'Usuário banido com sucesso',
+        variant: 'success'
+      });
       setBanDialogOpen(false);
       setSelectedUserForBan(null);
       await loadVerifications();
     } catch (error) {
       console.error('Erro ao banir usuário:', error);
-      toast.error('Erro ao banir usuário');
+      toast({
+        title: 'Erro',
+        message: 'Erro ao banir usuário',
+        variant: 'error'
+      });
     } finally {
       setIsBanning(false);
     }
@@ -272,7 +293,11 @@ export default function AdminIdentityVerification() {
         const bucketIndex = pathParts.indexOf('identity-documents');
         if (bucketIndex === -1) {
           console.error('❌ Bucket não encontrado no URL');
-          toast.error('URL de documento inválido');
+          toast({
+            title: 'Erro',
+            message: 'URL de documento inválido',
+            variant: 'error'
+          });
           return;
         }
         
@@ -285,13 +310,21 @@ export default function AdminIdentityVerification() {
         
         if (error) {
           console.error('❌ Erro ao criar URL assinada:', error);
-          toast.error('Documento não encontrado no servidor. Pode ter sido movido ou deletado.');
+          toast({
+            title: 'Erro',
+            message: 'Documento não encontrado no servidor. Pode ter sido movido ou deletado.',
+            variant: 'error'
+          });
           return;
         }
         
         if (!data?.signedUrl) {
           console.error('❌ URL assinada vazia');
-          toast.error('Erro ao gerar link do documento');
+          toast({
+            title: 'Erro',
+            message: 'Erro ao gerar link do documento',
+            variant: 'error'
+          });
           return;
         }
         
@@ -313,7 +346,11 @@ export default function AdminIdentityVerification() {
       }
     } catch (error) {
       console.error('❌ Erro ao abrir documento:', error);
-      toast.error('Erro ao acessar documento');
+      toast({
+        title: 'Erro',
+        message: 'Erro ao acessar documento',
+        variant: 'error'
+      });
     }
   };
 
@@ -695,7 +732,11 @@ export default function AdminIdentityVerification() {
                 className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-lg"
                 onError={(e) => {
                   console.error('Erro ao carregar imagem:', e);
-                  toast.error('Erro ao carregar documento');
+                  toast({
+                    title: 'Erro',
+                    message: 'Erro ao carregar documento',
+                    variant: 'error'
+                  });
                 }}
               />
             )}
