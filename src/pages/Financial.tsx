@@ -171,14 +171,13 @@ export default function Financial() {
 
       const userProductIds = userProducts?.map(p => p.id) || [];
 
-      // Buscar vendas dos produtos do usuário
+      // Buscar TODAS as vendas dos produtos do usuário (sem limit) para cálculo correto
       const { data: ownOrders, error: ordersError } = await supabase
         .from('orders')
         .select('order_id, amount, currency, created_at, status, affiliate_commission, seller_commission, product_id')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(200);
+        .order('created_at', { ascending: false });
 
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
       const recoveredOrderIds = new Set();
@@ -212,8 +211,7 @@ export default function Financial() {
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
           .eq('status', 'completed')
-          .order('created_at', { ascending: false })
-          .limit(200);
+          .order('created_at', { ascending: false });
         
         if (!affiliateError) {
           affiliateOrders = affiliateData || [];
