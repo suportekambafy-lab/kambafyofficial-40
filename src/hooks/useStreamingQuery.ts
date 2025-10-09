@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getAllPaymentMethods } from '@/utils/paymentMethods';
+import { countOrderItems } from '@/utils/orderUtils';
 
 /**
  * ⚠️ IMPORTANTE - PADRÃO DE USO CORRETO:
@@ -171,23 +172,27 @@ export const useStreamingQuery = () => {
       });
 
       // ✅ UNIFICADO: Calcular stats usando LUCRO REAL (seller_commission)
+      // ✅ CONTAR ORDER BUMPS SEPARADAMENTE (igual ao Dashboard)
       // Todos os valores representam o que o vendedor VAI RECEBER
       // Isso garante que Dashboard, Vendas e Financeiro mostrem os mesmos valores
       const stats = (statsData || []).reduce((acc, order) => {
         const isAffiliateEarning = userAffiliateCodes.includes(order.affiliate_code);
         
+        // ✅ Contar items (principal + order bumps) usando countOrderItems
+        const itemCount = countOrderItems(order);
+        
         if (isAffiliateEarning) {
           // Para vendas como afiliado, mostra apenas a comissão que ele recebe
           const affiliateCommission = parseFloat(order.affiliate_commission?.toString() || '0');
           if (order.status === 'completed') {
-            acc.paid++;
+            acc.paid += itemCount; // ✅ Conta order bumps
             acc.paidTotal += affiliateCommission;
             acc.totalAffiliateCommissions += affiliateCommission;
           } else if (order.status === 'pending') {
-            acc.pending++;
+            acc.pending += itemCount; // ✅ Conta order bumps
             acc.pendingTotal += affiliateCommission;
           } else if (order.status === 'failed' || order.status === 'cancelled') {
-            acc.cancelled++;
+            acc.cancelled += itemCount; // ✅ Conta order bumps
             acc.cancelledTotal += affiliateCommission;
           }
         } else {
@@ -201,13 +206,13 @@ export const useStreamingQuery = () => {
           }
           
           if (order.status === 'completed') {
-            acc.paid++;
+            acc.paid += itemCount; // ✅ Conta order bumps
             acc.paidTotal += sellerEarning;
           } else if (order.status === 'pending') {
-            acc.pending++;
+            acc.pending += itemCount; // ✅ Conta order bumps
             acc.pendingTotal += sellerEarning;
           } else if (order.status === 'failed' || order.status === 'cancelled') {
-            acc.cancelled++;
+            acc.cancelled += itemCount; // ✅ Conta order bumps
             acc.cancelledTotal += sellerEarning;
           }
         }
@@ -217,7 +222,7 @@ export const useStreamingQuery = () => {
           if (!acc[order.payment_method]) {
             acc[order.payment_method] = 0;
           }
-          acc[order.payment_method]++;
+          acc[order.payment_method] += itemCount; // ✅ Conta order bumps
         }
 
         return acc;
