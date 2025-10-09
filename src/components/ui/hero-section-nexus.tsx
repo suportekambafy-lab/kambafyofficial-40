@@ -845,7 +845,7 @@ const InteractiveHero: React.FC = () => {
                               proporcionando oportunidades de crescimento pessoal e profissional para todos.
                           </p>
                           <div className="space-y-4">
-                              {["Plataforma 100% nacional", "Pagamentos em multimoedas", "Suporte em português"].map((item, index) => (
+                              {["Plataforma 100% nacional", "Pagamentos em multimoedas"].map((item, index) => (
                                   <div key={index} className="flex items-center space-x-3">
                                       <div className="w-2 h-2 bg-[#0CF2A0] rounded-full"></div>
                                       <span className="text-gray-300">{item}</span>
