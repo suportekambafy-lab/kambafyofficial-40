@@ -588,7 +588,7 @@ const VideoPlayer = ({
                 <span className="text-white text-xs sm:text-sm">{formatTime(duration)}</span>
               </div>
 
-              <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center justify-center flex-wrap gap-2">
                 <div className="flex items-center gap-2 sm:gap-4">
                   <Button onClick={() => skipTime(-10)} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
                     <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -756,7 +756,7 @@ const VideoPlayer = ({
                 <span className="text-white text-xs sm:text-sm">{formatTime(duration)}</span>
               </div>
 
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <div className="flex items-center gap-2 sm:gap-4">
                   <Button onClick={() => skipTime(-10)} variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
                     <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
