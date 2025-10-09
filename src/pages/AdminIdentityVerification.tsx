@@ -143,10 +143,13 @@ export default function AdminIdentityVerification() {
         updateData.verified_by = admin?.id;
       }
 
-      const { error } = await supabase
-        .from('identity_verification')
-        .update(updateData)
-        .eq('id', id);
+      // Usar função admin para atualizar verificação
+      const { error } = await supabase.rpc('admin_update_identity_verification', {
+        p_verification_id: id,
+        p_status: newStatus,
+        p_rejection_reason: reason || null,
+        p_admin_id: admin?.id || null
+      });
 
       if (error) {
         console.error('❌ Erro ao atualizar verificação:', error);
