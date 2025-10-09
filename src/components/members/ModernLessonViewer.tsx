@@ -71,52 +71,21 @@ export function ModernLessonViewer({
   const isScheduled = lesson.is_scheduled && lesson.scheduled_at;
   const isNotYetReleased = isScheduled && new Date(lesson.scheduled_at) > new Date();
 
-  // ✅ CORREÇÃO: Usar embed do Bunny diretamente (já tem CORS configurado)
-  // Não tentar derivar HLS pois causa problemas de CORS
-  const getVideoUrls = () => {
-    console.log('🎥 [ModernLessonViewer] Verificando URLs da aula:', {
-      lessonId: lesson.id,
-      lessonTitle: lesson.title,
-      hls_url: lesson.hls_url,
-      bunny_embed_url: lesson.bunny_embed_url,
-      video_url: lesson.video_url
-    });
+  // Derivar HLS URL do embed URL do Bunny se necessário
+  const getHlsUrl = () => {
+    if (lesson.hls_url) return lesson.hls_url;
     
-    // PRIORIDADE 1: Se tem embed URL da Bunny, usar iframe (já tem CORS)
-    if (lesson.bunny_embed_url?.includes('iframe.mediadelivery.net/embed/')) {
-      console.log('✅ [ModernLessonViewer] Usando Bunny embed (iframe):', lesson.bunny_embed_url);
-      return {
-        hlsUrl: null,
-        embedUrl: lesson.bunny_embed_url
-      };
+    // Se temos um embed URL do Bunny, derivar o HLS URL
+    const embedUrl = lesson.bunny_embed_url || lesson.video_url;
+    if (embedUrl?.includes('iframe.mediadelivery.net/embed/')) {
+      const videoId = embedUrl.split('/').pop();
+      return `https://vz-5c879716-268.b-cdn.net/${videoId}/playlist.m3u8`;
     }
     
-    // PRIORIDADE 2: Se tem HLS URL explícito, usar
-    if (lesson.hls_url) {
-      console.log('✅ [ModernLessonViewer] Usando HLS explícito:', lesson.hls_url);
-      return {
-        hlsUrl: lesson.hls_url,
-        embedUrl: null
-      };
-    }
-    
-    // PRIORIDADE 3: Video URL direto
-    if (lesson.video_url) {
-      console.log('✅ [ModernLessonViewer] Usando video_url:', lesson.video_url);
-      return {
-        hlsUrl: null,
-        embedUrl: lesson.video_url
-      };
-    }
-    
-    console.log('⚠️ [ModernLessonViewer] Nenhuma URL de vídeo encontrada');
-    return {
-      hlsUrl: null,
-      embedUrl: null
-    };
+    return null;
   };
 
-  const { hlsUrl, embedUrl: videoEmbedUrl } = getVideoUrls();
+  const hlsUrl = getHlsUrl();
 
   // Gerenciar countdown quando vídeo termina
   useEffect(() => {
@@ -183,31 +152,18 @@ export function ModernLessonViewer({
               releaseDate={new Date(lesson.scheduled_at!)} 
               lessonTitle={lesson.title}
             />
-          ) : hlsUrl || videoEmbedUrl ? (
+          ) : hlsUrl || lesson.video_url || lesson.bunny_embed_url ? (
             <div className="w-full aspect-video bg-black relative">
-              {(() => {
-                console.log('🎬 [ModernLessonViewer] Renderizando VideoPlayer:', {
-                  lessonId: lesson.id,
-                  lessonTitle: lesson.title,
-                  hlsUrl,
-                  embedUrl: videoEmbedUrl,
-                  videoKey,
-                  hasOnTimeUpdate: !!onUpdateProgress,
-                  isReplayMode
-                });
-                return (
-                  <VideoPlayer
-                    key={`${lesson.id}-${videoKey}`}
-                    hlsUrl={hlsUrl}
-                    embedUrl={videoEmbedUrl}
-                    startTime={startTime}
-                    onTimeUpdate={onUpdateProgress && !isReplayMode ? (currentTime, duration) => {
-                      onUpdateProgress(lesson.id, currentTime, duration);
-                    } : undefined}
-                    onEnded={handleVideoEnd}
-                  />
-                );
-              })()}
+              <VideoPlayer
+                key={`${lesson.id}-${videoKey}`}
+                hlsUrl={hlsUrl}
+                embedUrl={!hlsUrl ? (lesson.bunny_embed_url || lesson.video_url) : undefined}
+                startTime={startTime}
+                onTimeUpdate={onUpdateProgress && !isReplayMode ? (currentTime, duration) => {
+                  onUpdateProgress(lesson.id, currentTime, duration);
+                } : undefined}
+                onEnded={handleVideoEnd}
+              />
               
               {/* Overlay de fim de vídeo */}
               <AnimatePresence>
