@@ -210,20 +210,8 @@ export default function AdminIdentityVerification() {
         }
         
         const filePath = pathParts.slice(bucketIndex + 1).join('/');
-        console.log('📂 Arquivo esperado:', filePath);
+        console.log('📂 Gerando signed URL para:', filePath);
         
-        // Listar arquivos no bucket para debug
-        const userFolder = filePath.split('/')[0];
-        console.log('📁 Listando arquivos na pasta:', userFolder);
-        
-        const { data: files, error: listError } = await supabase.storage
-          .from('identity-documents')
-          .list(userFolder);
-        
-        console.log('📋 Arquivos encontrados:', files);
-        if (listError) console.error('❌ Erro ao listar:', listError);
-        
-        // Tentar criar signed URL
         const { data, error } = await supabase.storage
           .from('identity-documents')
           .createSignedUrl(filePath, 3600);

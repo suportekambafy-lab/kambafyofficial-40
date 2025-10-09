@@ -94,11 +94,11 @@ export default function UserIdentity() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('identity-documents')
-        .getPublicUrl(fileName);
-
-      return publicUrl;
+      // Retornar o caminho completo no formato da URL do storage
+      // Isso permitirá extrair o caminho quando precisar gerar signed URLs
+      const storageUrl = `https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/identity-documents/${fileName}`;
+      
+      return storageUrl;
     } catch (error) {
       console.error('Erro no upload:', error);
       toast.error('Erro ao fazer upload do documento');
