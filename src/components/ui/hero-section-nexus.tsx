@@ -806,8 +806,8 @@ const InteractiveHero: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       {[
                           { name: "Victor Muabi", role: "@victormuabi", content: "Esta é a plataforma que faltava no mercado, fácil de usar, converte muito bem, aumentou minha conversão em lançamentos.", image: victorAvatar },
-                          { name: "Carlos Santos", role: "@carlostech", content: "Este serviço transformou minha forma de trabalhar. Design limpo, recursos poderosos e excelente suporte.", image: professionalMan },
-                          { name: "Ricardo Lima", role: "@ricardocria", content: "Já testei muitas plataformas, mas esta se destaca. Intuitiva, confiável e genuinamente útil para produtividade.", image: professionalMan }
+                          { name: "Carlos Santos", role: "@carlostech", content: "Este serviço transformou minha forma de trabalhar. Design limpo, recursos poderosos e excelente suporte.", image: "https://randomuser.me/api/portraits/men/64.jpg" },
+                          { name: "Ricardo Lima", role: "@ricardocria", content: "Já testei muitas plataformas, mas esta se destaca. Intuitiva, confiável e genuinamente útil para produtividade.", image: "https://randomuser.me/api/portraits/men/32.jpg" }
                       ].map((testimonial, index) => (
                           <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-6">
                               <div className="flex items-center mb-4">
