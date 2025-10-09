@@ -38,7 +38,7 @@ export const useStreamingQuery = () => {
     userId: string,
     onStatsUpdate: (stats: any) => void,
     onOrdersChunk: (orders: any[]) => void,
-    chunkSize = 100 // Chunks maiores para eficiência
+    chunkSize = 500 // ⚡ Chunks MUITO maiores para carregar mais rápido
   ) => {
     // ✅ PROTEÇÃO: Evitar chamadas simultâneas
     if (isLoadingRef.current) {
@@ -274,7 +274,7 @@ export const useStreamingQuery = () => {
       onStatsUpdate(stats);
 
       // 📋 CARREGANDO TODAS AS VENDAS progressivamente (próprias + afiliado)
-      console.log('📋 Iniciando carregamento de TODAS as vendas (próprias + afiliado)...');
+      console.log('⚡ Iniciando carregamento RÁPIDO de vendas (chunks de 500)...');
       let offset = 0;
       let hasMore = true;
       const allOrders: any[] = [];
@@ -353,30 +353,13 @@ export const useStreamingQuery = () => {
 
           allOrders.push(...ordersWithProducts);
 
-          // Verifica se há mais dados de forma mais robusta
-          if (ownOrders.length === chunkSize) {
-            hasMore = true;
-          } else {
-            // Fazer uma verificação extra para ter certeza
-            console.log(`🔍 Verificando se há mais vendas próprias além do offset ${offset + chunkSize}...`);
-            const { data: nextChunk } = await supabase
-              .from('orders')
-              .select('id')
-              .in('product_id', userProductIds)
-              .order('created_at', { ascending: false })
-              .range(offset + chunkSize, offset + chunkSize);
-            
-            hasMore = nextChunk && nextChunk.length > 0;
-            console.log(`🔍 Verificação vendas próprias: ${hasMore ? 'Há mais dados' : 'Não há mais dados'}`);
-          }
+          // Verifica se há mais dados
+          hasMore = ownOrders.length === chunkSize;
 
           offset += chunkSize;
           chunkNumber++;
 
           console.log(`📊 Total acumulado (próprias): ${allOrders.length} vendas | Continuar: ${hasMore}`);
-
-          // Pequeno delay para não travar UI
-          await new Promise(resolve => setTimeout(resolve, 5));
         }
       }
 
