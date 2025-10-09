@@ -106,6 +106,7 @@ const VideoPlayer = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [showDnsHelp, setShowDnsHelp] = useState(false);
+  const [isNativeHls, setIsNativeHls] = useState(false);
 
   // Determine initial source priority
   useEffect(() => {
@@ -208,6 +209,7 @@ const VideoPlayer = ({
     // Native HLS support (Safari/iOS)
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       console.log('🎬 Usando HLS nativo (Safari/iOS)');
+      setIsNativeHls(true);
       video.src = hlsUrl;
       
       const handleSuccess = () => {
@@ -219,9 +221,16 @@ const VideoPlayer = ({
         }
       };
       
-      const handleError = () => {
+      const handleError = (e: Event) => {
         if (mounted) {
-          console.error('❌ Erro no HLS nativo');
+          const videoError = (e.target as HTMLVideoElement)?.error;
+          console.error('❌ Erro no HLS nativo:', videoError?.code, videoError?.message);
+          
+          // Safari-specific: Try iframe fallback immediately if CORS error
+          if (videoError?.code === 2) { // MEDIA_ERR_NETWORK
+            console.log('🔄 Detectado erro de rede no Safari, tentando iframe...');
+          }
+          
           handleSourceFailure('hls', 'Erro ao carregar HLS nativo');
         }
       };
@@ -234,7 +243,7 @@ const VideoPlayer = ({
         video.removeEventListener('loadedmetadata', handleSuccess);
         video.removeEventListener('error', handleError);
       };
-    } 
+    }
     // hls.js for other browsers
     else if (Hls.isSupported()) {
       console.log('🎬 Usando hls.js');
@@ -558,10 +567,9 @@ const VideoPlayer = ({
           }}
           onError={handleVideoError}
           onClick={togglePlay}
-          crossOrigin={crossOrigin}
+          {...(!isNativeHls && { crossOrigin })}
           preload="metadata"
           controls={false}
-          autoPlay
           playsInline
         />
 
