@@ -43,10 +43,12 @@ const Ranking = () => {
       const { data: orders, error } = await supabase
         .from('orders')
         .select(`
+          id,
           user_id,
           seller_commission,
           amount,
-          status
+          status,
+          order_bump_data
         `)
         .eq('status', 'completed')
         .gte('created_at', firstDay.toISOString())
@@ -56,6 +58,8 @@ const Ranking = () => {
 
       // Group by seller and calculate totals
       const sellerMap = new Map<string, { revenue: number; sales: number }>();
+      
+      console.log('📊 RANKING: Total de orders do mês:', orders?.length);
       
       orders?.forEach(order => {
         if (!order.user_id) return;
@@ -70,11 +74,25 @@ const Ranking = () => {
         // ✅ Conta order bumps separadamente (igual ao Dashboard)
         const itemCount = countOrderItems(order);
         
+        console.log('📦 RANKING Order:', {
+          order_id: order.id,
+          user_id: order.user_id,
+          has_bump: !!order.order_bump_data,
+          itemCount,
+          revenue
+        });
+        
         sellerMap.set(order.user_id, {
           revenue: current.revenue + revenue,
           sales: current.sales + itemCount
         });
       });
+      
+      console.log('📊 RANKING: SellerMap final:', Array.from(sellerMap.entries()).map(([id, stats]) => ({
+        user_id: id,
+        sales: stats.sales,
+        revenue: stats.revenue
+      })));
 
       // Get top 3 sellers
       const sortedSellers = Array.from(sellerMap.entries())
