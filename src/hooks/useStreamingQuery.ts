@@ -106,27 +106,27 @@ export const useStreamingQuery = () => {
         return;
       }
 
-      // Buscar vendas de produtos normais - TODOS OS STATUS
+      // Buscar vendas de produtos normais - APENAS vendas pagas (completed)
       let ownSalesData: any[] = [];
       if (userProductIds.length > 0) {
         const { data, error: ownSalesError } = await supabase
           .from('orders')
           .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id, order_bump_data')
           .in('product_id', userProductIds)
-          .in('status', ['completed', 'pending', 'cancelled', 'failed']); // Todos os status
+          .eq('status', 'completed'); // Apenas vendas pagas
 
         if (ownSalesError) throw ownSalesError;
         ownSalesData = data || [];
       }
 
-      // Buscar vendas de módulos - TODOS OS STATUS
+      // Buscar vendas de módulos - APENAS vendas pagas (completed)
       let moduleSalesData: any[] = [];
       if (memberAreaIds.length > 0) {
         const { data, error: moduleSalesError } = await supabase
           .from('module_payments')
           .select('status, payment_method, amount, member_area_id, order_id')
           .in('member_area_id', memberAreaIds)
-          .in('status', ['completed', 'pending', 'cancelled', 'failed']); // Todos os status
+          .eq('status', 'completed'); // Apenas vendas pagas
 
         if (moduleSalesError) throw moduleSalesError;
         moduleSalesData = data || [];
@@ -135,7 +135,7 @@ export const useStreamingQuery = () => {
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
       const recoveredOrderIds = new Set();
 
-      // 📊 STATS RÁPIDOS - vendas como afiliado - TODOS OS STATUS
+      // 📊 STATS RÁPIDOS - vendas como afiliado - APENAS vendas pagas (completed)
       let affiliateSalesData: any[] = [];
       if (userAffiliateCodes.length > 0) {
         const { data: affiliateData, error: affiliateDataError } = await supabase
@@ -143,7 +143,7 @@ export const useStreamingQuery = () => {
           .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code, order_bump_data')
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
-          .in('status', ['completed', 'pending', 'cancelled', 'failed']); // Todos os status
+          .eq('status', 'completed'); // Apenas vendas pagas
 
         if (affiliateDataError) throw affiliateDataError;
         affiliateSalesData = affiliateData || [];
@@ -171,52 +171,43 @@ export const useStreamingQuery = () => {
         total: statsData.length
       });
 
-      // ✅ TODOS OS STATUS: Contar vendas pagas, pendentes e canceladas
+      // ✅ APENAS VENDAS PAGAS: Agora só contamos vendas completed
       // ✅ CONTAR ORDER BUMPS SEPARADAMENTE (igual ao Dashboard)
       // Todos os valores representam o que o vendedor VAI RECEBER
       // Isso garante que Dashboard, Vendas e Financeiro mostrem os mesmos valores
       const stats = (statsData || []).reduce((acc, order) => {
         const isAffiliateEarning = userAffiliateCodes.includes(order.affiliate_code);
-        const orderStatus = order.status;
         
         // ✅ Contar items (principal + order bumps) usando countOrderItems
         const itemCount = countOrderItems(order);
         
-        // Calcular o valor da venda
-        let orderValue = 0;
+        // Como agora só temos vendas completed, simplificamos a lógica
         if (isAffiliateEarning) {
-          // Para vendas como afiliado, usar a comissão
-          orderValue = parseFloat(order.affiliate_commission?.toString() || '0');
-          if (orderStatus === 'completed') {
-            acc.totalAffiliateCommissions += orderValue;
-          }
+          // Para vendas como afiliado, mostra apenas a comissão que ele recebe
+          const affiliateCommission = parseFloat(order.affiliate_commission?.toString() || '0');
+          acc.paid += itemCount; // ✅ Conta order bumps
+          acc.paidTotal += affiliateCommission;
+          acc.totalAffiliateCommissions += affiliateCommission;
         } else {
-          // Para vendas próprias - usar seller_commission ou amount
+          // Para vendas próprias - usar seller_commission (lucro após descontar comissão do afiliado)
+          // Se não tiver seller_commission, usar amount (vendas antigas)
           let sellerEarning = parseFloat(order.seller_commission?.toString() || '0');
+          
           if (sellerEarning === 0) {
+            // Venda antiga sem comissão registrada - usar valor total
             sellerEarning = parseFloat(order.amount || '0');
           }
-          orderValue = sellerEarning;
-        }
-        
-        // Distribuir por status
-        if (orderStatus === 'completed') {
-          acc.paid += itemCount;
-          acc.paidTotal += orderValue;
-        } else if (orderStatus === 'pending') {
-          acc.pending += itemCount;
-          acc.pendingTotal += orderValue;
-        } else if (orderStatus === 'cancelled' || orderStatus === 'failed') {
-          acc.cancelled += itemCount;
-          acc.cancelledTotal += orderValue;
+          
+          acc.paid += itemCount; // ✅ Conta order bumps
+          acc.paidTotal += sellerEarning;
         }
 
-        // Contar vendas por método de pagamento (apenas completed)
-        if (orderStatus === 'completed' && order.payment_method) {
+        // Contar vendas por método de pagamento
+        if (order.payment_method) {
           if (!acc[order.payment_method]) {
             acc[order.payment_method] = 0;
           }
-          acc[order.payment_method] += itemCount;
+          acc[order.payment_method] += itemCount; // ✅ Conta order bumps
         }
 
         return acc;

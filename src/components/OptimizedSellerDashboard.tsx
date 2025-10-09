@@ -45,18 +45,17 @@ const OptimizedSellerDashboard = memo(() => {
   // Todos os valores são mantidos em suas moedas originais do banco de dados
   // Isso garante consistência entre Dashboard, Vendas e Financeiro
   // ⚡ IMPORTANTE: Conta order bumps separadamente usando countOrderItems()
-  // ✅ FILTRAR: Mostrar apenas vendas PAGAS (completed) no Dashboard
   const stats = {
-    totalSales: sellerData?.orders?.filter((order: any) => order.status === 'completed').reduce((sum: number, order: any) => {
+    totalSales: sellerData?.orders?.reduce((sum: number, order: any) => {
       return sum + countOrderItems(order); // ✅ Conta produto principal + order bumps
     }, 0) || 0,
-    totalRevenue: sellerData?.orders?.filter((order: any) => order.status === 'completed').reduce((sum: number, order: any) => {
+    totalRevenue: sellerData?.orders?.reduce((sum: number, order: any) => {
       const amount = parseFloat(order.amount) || 0;
       // NÃO converter moeda - usar valor bruto do banco
       return sum + amount;
     }, 0) || 0,
     totalProducts: sellerData?.products?.length || 0,
-    totalCustomers: new Set(sellerData?.orders?.filter((order: any) => order.status === 'completed').map((order: any) => order.customer_email))?.size || 0
+    totalCustomers: new Set(sellerData?.orders?.map((order: any) => order.customer_email))?.size || 0
   };
 
   console.log('📊 DASHBOARD STATS DEBUG:', {
