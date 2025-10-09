@@ -6,6 +6,7 @@ import { AppOnboarding } from '@/components/app/AppOnboarding';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
 import { initializeNativeFeatures } from '@/utils/nativeService';
+import { CrispChat } from '@/components/CrispChat';
 
 const ONBOARDING_KEY = 'kambafy_onboarding_completed';
 
@@ -56,6 +57,7 @@ export default function AppMobile() {
 
   return (
     <SellerThemeProvider>
+      <CrispChat />
       {!user ? <AppLogin /> : <AppHome />}
     </SellerThemeProvider>
   );
