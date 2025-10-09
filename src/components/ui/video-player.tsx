@@ -576,7 +576,7 @@ const VideoPlayer = ({
         <AnimatePresence>
           {showControls && (
             <motion.div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[90%] max-w-3xl p-2 sm:p-4 m-1 sm:m-2 bg-[#11111198] backdrop-blur-md rounded-lg"
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[95%] sm:w-[85%] md:w-[75%] lg:w-[65%] xl:w-[60%] max-w-4xl p-3 sm:p-4 bg-[#11111198] backdrop-blur-md rounded-lg"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 20, opacity: 0 }}
@@ -741,7 +741,7 @@ const VideoPlayer = ({
         <AnimatePresence>
           {showControls && (
             <motion.div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[90%] max-w-3xl p-2 sm:p-4 m-1 sm:m-2 bg-[#11111198] backdrop-blur-md rounded-lg"
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[95%] sm:w-[85%] md:w-[75%] lg:w-[65%] xl:w-[60%] max-w-4xl p-3 sm:p-4 bg-[#11111198] backdrop-blur-md rounded-lg"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 20, opacity: 0 }}
