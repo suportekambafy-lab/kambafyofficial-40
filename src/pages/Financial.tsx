@@ -287,15 +287,20 @@ export default function Financial() {
           return sum;
         }, 0) || 0;
 
-        // ✅ Buscar vendas já liberadas do payment_releases
-        const { data: releasedPayments } = await supabase
-          .from('payment_releases')
-          .select('order_id, amount, release_date')
-          .eq('user_id', user.id);
+        // ✅ Buscar vendas já liberadas através das transações de crédito
+        const { data: creditTransactions } = await supabase
+          .from('balance_transactions')
+          .select('order_id, description')
+          .eq('user_id', user.id)
+          .eq('type', 'credit')
+          .like('description', '%Venda liberada após 3 dias%');
 
-        const releasedOrderIds = new Set(releasedPayments?.map(r => r.order_id) || []);
+        const releasedOrderIds = new Set(creditTransactions?.map(t => t.order_id) || []);
         
-        console.log(`🔒 ${releasedOrderIds.size} vendas já foram liberadas para usuário ${user.id}`);
+        console.log(`🔒 ${releasedOrderIds.size} vendas já foram liberadas para usuário ${user.id}`, {
+          creditTransactionsFound: creditTransactions?.length || 0,
+          releasedOrders: Array.from(releasedOrderIds)
+        });
 
         // ✅ USAR o saldo real do customer_balances como fonte de verdade
         const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
