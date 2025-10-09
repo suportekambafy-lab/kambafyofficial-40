@@ -71,19 +71,19 @@ export function ModernDashboardHome() {
 
       const promises = [];
 
-      // ✅ Vendas próprias - usando product_id
+      // ✅ Vendas próprias - usando product_id (TODAS as vendas, não só completed)
       if (userProductIds.length > 0) {
         promises.push(
           supabase
             .from('orders')
             .select('*')
             .in('product_id', userProductIds)
-            .eq('status', 'completed')
+            .in('status', ['completed', 'pending', 'cancelled', 'failed'])
             .order('created_at', { ascending: false })
         );
       }
 
-      // Adicionar vendas como afiliado se houver códigos
+      // Adicionar vendas como afiliado se houver códigos (TODAS as vendas)
       if (userAffiliateCodes.length > 0) {
         promises.push(
           supabase
@@ -91,7 +91,7 @@ export function ModernDashboardHome() {
             .select('*')
             .in('affiliate_code', userAffiliateCodes)
             .not('affiliate_commission', 'is', null)
-            .eq('status', 'completed')
+            .in('status', ['completed', 'pending', 'cancelled', 'failed'])
             .order('created_at', { ascending: false })
         );
       }
@@ -154,13 +154,16 @@ export function ModernDashboardHome() {
       // Ordenar por data
       allOrdersWithEarnings.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-      // 🔍 DEBUG: Calcular lucro total para comparação
+      // 🔍 DEBUG: Calcular lucro total apenas de completed para comparação
       const totalEarnings = allOrdersWithEarnings
         .filter(o => o.status === 'completed')
         .reduce((sum, o) => sum + (o.earning_amount || 0), 0);
 
-      console.log(`✅ Dashboard carregou ${ownOrders?.length || 0} vendas próprias e ${affiliateOrders?.length || 0} comissões para usuário ${user.id}`);
-      console.log(`💰 LUCRO TOTAL (completed): ${totalEarnings.toFixed(2)} KZ`);
+      console.log(`✅ Dashboard carregou ${ownOrders?.length || 0} vendas próprias (todos status) e ${affiliateOrders?.length || 0} comissões para usuário ${user.id}`);
+      console.log(`💰 LUCRO TOTAL (completed apenas): ${totalEarnings.toFixed(2)} KZ`);
+      console.log(`📊 TOTAL VENDAS (contando order bumps): ${countTotalSales(allOrdersWithEarnings)}`);
+      console.log(`📊 TOTAL VENDAS COMPLETED (contando order bumps): ${countTotalSales(allOrdersWithEarnings.filter(o => o.status === 'completed'))}`);
+      
       
       setAllOrders(allOrdersWithEarnings);
     } catch (error) {
