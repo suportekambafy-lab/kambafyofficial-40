@@ -119,10 +119,22 @@ export default function UserIdentity() {
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
+    console.log('📤 Iniciando upload de documento:', { type, hasFile: !!event.target.files?.[0] });
+    
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('❌ Nenhum arquivo selecionado');
+      return;
+    }
+
+    console.log('📄 Arquivo selecionado:', { 
+      name: file.name, 
+      size: file.size, 
+      type: file.type 
+    });
 
     if (file.size > 5 * 1024 * 1024) {
+      console.log('❌ Arquivo muito grande:', file.size);
       toast({
         title: 'Arquivo muito grande',
         message: 'O arquivo deve ter no máximo 5MB',
@@ -131,8 +143,16 @@ export default function UserIdentity() {
       return;
     }
 
+    console.log('🔄 Fazendo upload do arquivo...');
     const url = await uploadDocument(file, type);
+    
+    console.log('📥 URL retornada do upload:', url);
+    
     if (url && user) {
+      console.log('✅ Upload bem-sucedido, atualizando estado local');
+      console.log('📋 Dados do formulário:', formData);
+      console.log('📋 Verificação existente:', verification);
+      
       // ✅ Atualizar estado local primeiro
       const newVerification = verification ? {
         ...verification,
@@ -140,51 +160,100 @@ export default function UserIdentity() {
       } : null;
       
       setVerification(newVerification);
+      console.log('✅ Estado local atualizado');
 
       // ✅ SALVAR NO BANCO DE DADOS
       try {
         if (verification?.id) {
-          // Se já existe verificação, atualizar
-          const { error } = await supabase
+          console.log('🔄 Atualizando verificação existente:', verification.id);
+          
+          const { data, error } = await supabase
             .from('identity_verification')
             .update({ [`document_${type}_url`]: url })
             .eq('id', verification.id)
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .select();
+
+          console.log('📤 Resultado do UPDATE:', { data, error });
 
           if (error) throw error;
+          
+          if (data && data[0]) {
+            console.log('✅ Verificação atualizada no banco:', data[0]);
+            setVerification(data[0] as IdentityVerification);
+          }
+          
+          toast({
+            title: 'Sucesso',
+            message: 'Documento enviado e salvo com sucesso',
+            variant: 'success'
+          });
         } else if (formData.full_name && formData.birth_date && formData.document_type && formData.document_number) {
-          // Se não existe verificação mas tem todos os dados obrigatórios, criar
+          console.log('➕ Criando nova verificação com documento');
+          
+          const insertData = {
+            user_id: user.id,
+            full_name: formData.full_name,
+            birth_date: formData.birth_date,
+            document_type: formData.document_type,
+            document_number: formData.document_number,
+            [`document_${type}_url`]: url,
+            status: 'pendente' as const
+          };
+          
+          console.log('📤 Dados para INSERT:', insertData);
+          
           const { data, error } = await supabase
             .from('identity_verification')
-            .insert([{
-              user_id: user.id,
-              full_name: formData.full_name,
-              birth_date: formData.birth_date,
-              document_type: formData.document_type,
-              document_number: formData.document_number,
-              [`document_${type}_url`]: url,
-              status: 'pendente'
-            }])
+            .insert([insertData])
             .select()
             .single();
 
-          if (error) throw error;
-          if (data) setVerification(data as IdentityVerification);
-        }
+          console.log('📤 Resultado do INSERT:', { data, error });
 
-        toast({
-          title: 'Sucesso',
-          message: 'Documento enviado e salvo com sucesso',
-          variant: 'success'
+          if (error) throw error;
+          
+          if (data) {
+            console.log('✅ Verificação criada no banco:', data);
+            setVerification(data as IdentityVerification);
+          }
+          
+          toast({
+            title: 'Sucesso',
+            message: 'Documento enviado e salvo com sucesso',
+            variant: 'success'
+          });
+        } else {
+          console.log('⚠️ Campos obrigatórios faltando:', {
+            full_name: !!formData.full_name,
+            birth_date: !!formData.birth_date,
+            document_type: !!formData.document_type,
+            document_number: !!formData.document_number
+          });
+          
+          toast({
+            title: 'Documento enviado',
+            message: 'Preencha todos os campos para salvar a verificação',
+            variant: 'warning'
+          });
+        }
+      } catch (error: any) {
+        console.error('❌ Erro ao salvar documento no banco:', error);
+        console.error('❌ Detalhes do erro:', {
+          message: error?.message,
+          details: error?.details,
+          hint: error?.hint,
+          code: error?.code
         });
-      } catch (error) {
-        console.error('Erro ao salvar documento:', error);
+        
         toast({
-          title: 'Aviso',
-          message: 'Documento enviado, mas preencha todos os campos para salvar',
-          variant: 'warning'
+          title: 'Erro',
+          message: error?.message || 'Erro ao salvar documento',
+          variant: 'error'
         });
       }
+    } else {
+      console.log('❌ Upload falhou ou usuário não autenticado');
     }
   };
 
