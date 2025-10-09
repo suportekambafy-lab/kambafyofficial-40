@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO, pageSEO } from "@/components/SEO";
+import { CrispChat } from "@/components/CrispChat";
 const HelpCenter = () => {
   const {
     toast
@@ -89,11 +90,16 @@ const HelpCenter = () => {
     }
   };
   const contactOptions = [{
-    icon: <MessageCircle className="w-6 h-6 text-muted-foreground" />,
+    icon: <MessageCircle className="w-6 h-6 text-checkout-green" />,
     title: "Chat ao Vivo",
     description: "Resposta imediata das 8h às 18h",
-    action: "Em Breve",
-    disabled: true
+    action: "Iniciar Chat",
+    onClick: () => {
+      if (window.$crisp) {
+        window.$crisp.push(['do', 'chat:show']);
+        window.$crisp.push(['do', 'chat:open']);
+      }
+    }
   }, {
     icon: <Mail className="w-6 h-6 text-checkout-green" />,
     title: "Email",
@@ -109,6 +115,7 @@ const HelpCenter = () => {
   }];
   return <>
       <SEO {...pageSEO.helpCenter} />
+      <CrispChat />
       <PageLayout title="Centro de Ajuda">
       <div className="space-y-8 md:space-y-12 px-4">
         <div className="text-center">
@@ -130,9 +137,9 @@ const HelpCenter = () => {
               <div className="mb-3 sm:mb-4 flex justify-center">{option.icon}</div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">{option.title}</h3>
               <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">{option.description}</p>
-              {option.disabled ? <Badge variant="secondary">{option.action}</Badge> : <Button variant="outline" size="sm" className="border-checkout-green text-checkout-green hover:bg-checkout-green/10 w-full sm:w-auto" onClick={option.onClick}>
+              <Button variant="outline" size="sm" className="border-checkout-green text-checkout-green hover:bg-checkout-green/10 w-full sm:w-auto" onClick={option.onClick}>
                   {option.action}
-                </Button>}
+                </Button>
             </div>)}
         </div>
 
