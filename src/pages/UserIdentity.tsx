@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCustomToast } from '@/hooks/useCustomToast';
+import { useBunnyUpload } from '@/hooks/useBunnyUpload';
 import { format } from 'date-fns';
 import { Loader2, Upload, X, Shield, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -37,8 +38,8 @@ const documentTypes = [
 export default function UserIdentity() {
   const { user } = useAuth();
   const { toast } = useCustomToast();
+  const { uploadFile: bunnyUpload, uploading } = useBunnyUpload();
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [verification, setVerification] = useState<IdentityVerification | null>(null);
   const [formData, setFormData] = useState({
     full_name: '',
@@ -86,38 +87,6 @@ export default function UserIdentity() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const uploadDocument = async (file: File, type: 'front' | 'back') => {
-    if (!user) return null;
-
-    try {
-      setUploading(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${formData.document_type}_${type}_${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('identity-documents')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      // Retornar o caminho completo no formato da URL do storage
-      // Isso permitirá extrair o caminho quando precisar gerar signed URLs
-      const storageUrl = `https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/identity-documents/${fileName}`;
-      
-      return storageUrl;
-    } catch (error) {
-      console.error('Erro no upload:', error);
-      toast({
-        title: 'Erro',
-        message: 'Erro ao fazer upload do documento',
-        variant: 'error'
-      });
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
     console.log('📤 Iniciando upload de documento:', { type, hasFile: !!event.target.files?.[0] });
     
@@ -143,10 +112,10 @@ export default function UserIdentity() {
       return;
     }
 
-    console.log('🔄 Fazendo upload do arquivo...');
-    const url = await uploadDocument(file, type);
+    console.log('🔄 Fazendo upload via Bunny CDN...');
+    const url = await bunnyUpload(file);
     
-    console.log('📥 URL retornada do upload:', url);
+    console.log('📥 URL retornada do Bunny:', url);
     
     if (url && user) {
       console.log('✅ Upload bem-sucedido, atualizando estado local');
@@ -258,20 +227,25 @@ export default function UserIdentity() {
   };
 
   const removeDocument = async (type: 'front' | 'back') => {
-    const currentUrl = verification?.[`document_${type}_url` as keyof IdentityVerification];
-    if (currentUrl && typeof currentUrl === 'string') {
-      const fileName = currentUrl.split('/').pop();
-      if (fileName) {
-        await supabase.storage
-          .from('identity-documents')
-          .remove([`${user?.id}/${fileName}`]);
-      }
-    }
-
+    // Apenas remove do estado local e do banco
+    // Bunny CDN files não precisam ser deletados manualmente
     setVerification(prev => prev ? {
       ...prev,
       [`document_${type}_url`]: undefined
     } : null);
+
+    // Atualizar no banco se já existe verificação
+    if (verification?.id && user) {
+      try {
+        await supabase
+          .from('identity_verification')
+          .update({ [`document_${type}_url`]: null })
+          .eq('id', verification.id)
+          .eq('user_id', user.id);
+      } catch (error) {
+        console.error('Erro ao remover documento do banco:', error);
+      }
+    }
   };
 
   const handleSubmit = async () => {
