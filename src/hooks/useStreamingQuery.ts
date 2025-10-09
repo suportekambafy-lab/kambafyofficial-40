@@ -135,15 +135,27 @@ export const useStreamingQuery = () => {
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
       const recoveredOrderIds = new Set();
 
-      // 📊 STATS RÁPIDOS - vendas como afiliado - TODAS as vendas
+      // 📊 STATS RÁPIDOS - vendas como afiliado - TODAS as vendas (excluindo vendas próprias)
       let affiliateSalesData: any[] = [];
-      if (userAffiliateCodes.length > 0) {
+      if (userAffiliateCodes.length > 0 && userProductIds.length > 0) {
+        const { data: affiliateData, error: affiliateDataError } = await supabase
+          .from('orders')
+          .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code, order_bump_data, product_id')
+          .in('affiliate_code', userAffiliateCodes)
+          .not('affiliate_commission', 'is', null)
+          .not('product_id', 'in', `(${userProductIds.join(',')})`) // Excluir vendas próprias
+          .in('status', ['completed', 'pending', 'failed', 'cancelled']); // Todas as vendas
+
+        if (affiliateDataError) throw affiliateDataError;
+        affiliateSalesData = affiliateData || [];
+      } else if (userAffiliateCodes.length > 0) {
+        // Caso não tenha produtos próprios, buscar todas as vendas de afiliado
         const { data: affiliateData, error: affiliateDataError } = await supabase
           .from('orders')
           .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code, order_bump_data')
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
-          .in('status', ['completed', 'pending', 'failed', 'cancelled']); // Todas as vendas
+          .in('status', ['completed', 'pending', 'failed', 'cancelled']);
 
         if (affiliateDataError) throw affiliateDataError;
         affiliateSalesData = affiliateData || [];
@@ -254,6 +266,10 @@ export const useStreamingQuery = () => {
       const pendingSales = statsData.filter(o => o.status === 'pending');
       const failedSales = statsData.filter(o => o.status === 'failed' || o.status === 'cancelled');
       
+      console.log(`  ✅ Completed: ${completedSales.length} vendas`);
+      console.log(`  ⏳ Pending: ${pendingSales.length} vendas`);
+      console.log(`  ❌ Failed/Cancelled: ${failedSales.length} vendas`);
+      
       // Calcular lucro real para cada categoria
       const completedEarnings = completedSales.reduce((sum, o) => {
         const isAffiliate = userAffiliateCodes.includes(o.affiliate_code);
@@ -264,9 +280,7 @@ export const useStreamingQuery = () => {
         return sum + sellerEarning;
       }, 0);
       
-      console.log(`  ✅ Completed: ${completedSales.length} vendas, lucro real: ${completedEarnings.toFixed(2)} KZ`);
-      console.log(`  ⏳ Pending: ${pendingSales.length} vendas`);
-      console.log(`  ❌ Failed/Cancelled: ${failedSales.length} vendas`);
+      console.log(`  💰 Completed earnings total: ${completedEarnings.toFixed(2)} KZ`);
 
       setTotalCount(statsData?.length || 0);
       onStatsUpdate(stats);
