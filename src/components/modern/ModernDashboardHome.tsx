@@ -65,6 +65,7 @@ export function ModernDashboardHome() {
         .eq('user_id', user.id);
       
       const memberAreaIds = memberAreas?.map(ma => ma.id) || [];
+      console.log(`🔍 Dashboard: Usuario ${user.id} tem ${memberAreaIds.length} member areas:`, memberAreaIds);
 
       // Segundo, buscar códigos de afiliação do usuário
       const { data: affiliateCodes, error: affiliateError } = await supabase
@@ -106,6 +107,7 @@ export function ModernDashboardHome() {
 
       // ✅ Adicionar pagamentos de módulos (apenas completed)
       if (memberAreaIds.length > 0) {
+        console.log(`🔍 Dashboard: Buscando module_payments para ${memberAreaIds.length} member areas...`);
         promises.push(
           supabase
             .from('module_payments')
@@ -138,6 +140,7 @@ export function ModernDashboardHome() {
         if (memberAreaIds.length > 0 && results[2]) {
           const modulePaymentsData = results[2];
           modulePayments = modulePaymentsData.data || [];
+          console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[2]:`, modulePayments);
         }
       } else if (userAffiliateCodes.length > 0) {
         const affiliateOrdersData = results[0];
@@ -146,10 +149,12 @@ export function ModernDashboardHome() {
         if (memberAreaIds.length > 0 && results[1]) {
           const modulePaymentsData = results[1];
           modulePayments = modulePaymentsData.data || [];
+          console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[1]:`, modulePayments);
         }
       } else if (memberAreaIds.length > 0) {
         const modulePaymentsData = results[0];
         modulePayments = modulePaymentsData.data || [];
+        console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[0]:`, modulePayments);
       }
 
       if (results[0]?.error) {
