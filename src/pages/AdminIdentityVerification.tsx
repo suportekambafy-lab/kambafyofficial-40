@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { SEO } from '@/components/SEO';
+import { BanUserDialog } from '@/components/BanUserDialog';
 import { 
   Shield, 
   CheckCircle, 
@@ -23,7 +24,8 @@ import {
   Calendar,
   Hash,
   ExternalLink,
-  ArrowLeft
+  ArrowLeft,
+  UserX
 } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
@@ -61,6 +63,9 @@ export default function AdminIdentityVerification() {
     title: '',
     verification: undefined
   });
+  const [banDialogOpen, setBanDialogOpen] = useState(false);
+  const [selectedUserForBan, setSelectedUserForBan] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [isBanning, setIsBanning] = useState(false);
 
   const loadVerifications = async () => {
     try {
@@ -194,6 +199,64 @@ export default function AdminIdentityVerification() {
         return <Badge className="bg-red-100 text-red-800"><AlertCircle className="w-3 h-3 mr-1" />Rejeitado</Badge>;
       default:
         return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />Pendente</Badge>;
+    }
+  };
+
+  const handleBanUser = async (reason: string) => {
+    if (!selectedUserForBan) return;
+
+    try {
+      setIsBanning(true);
+      console.log('🚫 Banindo usuário:', selectedUserForBan);
+
+      // Atualizar perfil para marcar como banido
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ banned: true })
+        .eq('user_id', selectedUserForBan.id);
+
+      if (profileError) {
+        console.error('❌ Erro ao banir usuário:', profileError);
+        throw profileError;
+      }
+
+      // Enviar email de notificação de banimento
+      const { error: emailError } = await supabase.functions.invoke('send-user-ban-notification', {
+        body: {
+          userEmail: selectedUserForBan.email,
+          userName: selectedUserForBan.name,
+          banReason: reason
+        }
+      });
+
+      if (emailError) {
+        console.warn('⚠️ Erro ao enviar email de banimento:', emailError);
+      }
+
+      // Registrar log administrativo
+      if (admin?.id) {
+        try {
+          await supabase.from('admin_logs').insert({
+            admin_id: admin.id,
+            action: 'ban_user',
+            target_type: 'user',
+            target_id: selectedUserForBan.id,
+            details: { reason, email: selectedUserForBan.email }
+          });
+        } catch (logErr) {
+          console.warn('⚠️ Falha ao registrar log:', logErr);
+        }
+      }
+
+      toast.success('Usuário banido com sucesso');
+      setBanDialogOpen(false);
+      setSelectedUserForBan(null);
+      await loadVerifications();
+    } catch (error) {
+      console.error('Erro ao banir usuário:', error);
+      toast.error('Erro ao banir usuário');
+    } finally {
+      setIsBanning(false);
     }
   };
 
@@ -416,67 +479,88 @@ export default function AdminIdentityVerification() {
                     )}
                   </div>
 
-                  {verification.status === 'pendente' && (
-                    <div className="flex flex-col sm:flex-row items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
+                    {verification.status === 'pendente' && (
+                      <>
+                        <Button
+                          onClick={() => updateVerificationStatus(verification.id, 'aprovado')}
+                          disabled={processingId === verification.id}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Aprovar
+                        </Button>
+                        
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => setSelectedVerification(verification)}
+                              className="w-full sm:w-auto"
+                            >
+                              <AlertCircle className="h-4 w-4 mr-1" />
+                              Reprovar
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle className="text-base sm:text-lg">Reprovar Verificação</DialogTitle>
+                              <DialogDescription className="text-xs sm:text-sm">
+                                Informe o motivo para {verification.profiles?.full_name}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <Label htmlFor="rejection-reason" className="text-xs sm:text-sm">Motivo da Reprovação</Label>
+                                <Textarea
+                                  id="rejection-reason"
+                                  value={rejectionReason}
+                                  onChange={(e) => setRejectionReason(e.target.value)}
+                                  placeholder="Ex: Documento ilegível, informações não conferem..."
+                                  rows={3}
+                                  className="text-sm"
+                                />
+                              </div>
+                              <div className="flex flex-col sm:flex-row justify-end gap-2">
+                                <Button variant="outline" size="sm" onClick={() => setRejectionReason('')}>
+                                  Cancelar
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => updateVerificationStatus(verification.id, 'rejeitado', rejectionReason)}
+                                  disabled={!rejectionReason.trim() || processingId === verification.id}
+                                >
+                                  Reprovar
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </>
+                    )}
+                    
+                    {verification.status === 'aprovado' && (
                       <Button
-                        onClick={() => updateVerificationStatus(verification.id, 'aprovado')}
-                        disabled={processingId === verification.id}
+                        variant="destructive"
                         size="sm"
-                        className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+                        onClick={() => {
+                          setSelectedUserForBan({
+                            id: verification.user_id,
+                            name: verification.profiles?.full_name || 'Usuário',
+                            email: verification.profiles?.email || ''
+                          });
+                          setBanDialogOpen(true);
+                        }}
+                        className="w-full sm:w-auto"
                       >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Aprovar
+                        <UserX className="h-4 w-4 mr-1" />
+                        Banir Usuário
                       </Button>
-                      
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setSelectedVerification(verification)}
-                            className="w-full sm:w-auto"
-                          >
-                            <AlertCircle className="h-4 w-4 mr-1" />
-                            Reprovar
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle className="text-base sm:text-lg">Reprovar Verificação</DialogTitle>
-                            <DialogDescription className="text-xs sm:text-sm">
-                              Informe o motivo para {verification.profiles?.full_name}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <Label htmlFor="rejection-reason" className="text-xs sm:text-sm">Motivo da Reprovação</Label>
-                              <Textarea
-                                id="rejection-reason"
-                                value={rejectionReason}
-                                onChange={(e) => setRejectionReason(e.target.value)}
-                                placeholder="Ex: Documento ilegível, informações não conferem..."
-                                rows={3}
-                                className="text-sm"
-                              />
-                            </div>
-                            <div className="flex flex-col sm:flex-row justify-end gap-2">
-                              <Button variant="outline" size="sm" onClick={() => setRejectionReason('')}>
-                                Cancelar
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => updateVerificationStatus(verification.id, 'rejeitado', rejectionReason)}
-                                disabled={!rejectionReason.trim() || processingId === verification.id}
-                              >
-                                Reprovar
-                              </Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))
@@ -568,6 +652,18 @@ export default function AdminIdentityVerification() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Ban User Dialog */}
+      <BanUserDialog
+        isOpen={banDialogOpen}
+        onClose={() => {
+          setBanDialogOpen(false);
+          setSelectedUserForBan(null);
+        }}
+        onConfirm={handleBanUser}
+        userName={selectedUserForBan?.name || ''}
+        isLoading={isBanning}
+      />
     </div>
   );
 }
