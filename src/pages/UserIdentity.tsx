@@ -181,10 +181,15 @@ export default function UserIdentity() {
 
       if (verification) {
         console.log('🔄 Atualizando verificação existente:', verification.id);
+        
+        // Remover user_id do update - não deve ser atualizado
+        const { user_id, ...updateData } = verificationData;
+        
         const { data, error } = await supabase
           .from('identity_verification')
-          .update(verificationData)
+          .update(updateData)
           .eq('id', verification.id)
+          .eq('user_id', user.id) // Garantir que só atualiza a própria verificação
           .select();
 
         if (error) {
