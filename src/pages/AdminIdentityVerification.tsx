@@ -285,8 +285,20 @@ export default function AdminIdentityVerification() {
     try {
       console.log('🔍 Tentando abrir documento:', { url, title });
       
-      // Para identity-documents (bucket privado), gerar URL assinada
-      if (url.includes('identity-documents')) {
+      // Verificar se é URL do Bunny CDN (público e direto)
+      if (url.includes('b-cdn.net') || url.includes('bunnycdn.net')) {
+        console.log('✅ Documento do Bunny CDN - abrindo diretamente');
+        setDocumentModal({
+          isOpen: true,
+          imageUrl: url,
+          title: title,
+          verification: verification
+        });
+        return;
+      }
+      
+      // Para documentos antigos no Supabase Storage (bucket privado), gerar URL assinada
+      if (url.includes('supabase.co') && url.includes('identity-documents')) {
         const urlObj = new URL(url);
         const pathParts = urlObj.pathname.split('/');
         
@@ -302,7 +314,7 @@ export default function AdminIdentityVerification() {
         }
         
         const filePath = pathParts.slice(bucketIndex + 1).join('/');
-        console.log('📂 Gerando signed URL para:', filePath);
+        console.log('📂 Gerando signed URL para documento antigo do Supabase:', filePath);
         
         const { data, error } = await supabase.storage
           .from('identity-documents')
@@ -328,7 +340,7 @@ export default function AdminIdentityVerification() {
           return;
         }
         
-        console.log('✅ URL assinada gerada');
+        console.log('✅ URL assinada gerada para documento antigo');
         setDocumentModal({
           isOpen: true,
           imageUrl: data.signedUrl,
