@@ -96,7 +96,11 @@ export default function Sales() {
   } = useStreamingQuery();
   const [dataComplete, setDataComplete] = useState(false);
   const loadingRef = useRef(false); // Controle via ref para evitar loops
-  const hasLoadedRef = useRef(false); // ✅ Controle para executar apenas uma vez
+  
+  // ✅ VERSÃO DO CÓDIGO - Incrementar quando houver mudança importante
+  const CODE_VERSION = 'v2.1'; // Mudou de v2.0 para v2.1 (correção seller_commission)
+  const hasLoadedRef = useRef(false); // ✅ Controle para executar apenas uma vez automaticamente
+  const lastCodeVersionRef = useRef<string | null>(null);
 
   // 🔥 CARREGAMENTO FIXO - Sem dependência de loading state
   const loadSales = useCallback(async () => {
@@ -114,13 +118,15 @@ export default function Sales() {
       setLoading(true);
       setDataComplete(false);
       
+      console.log('🔄 Carregando vendas...');
+      
       // ✅ UNIFICADO: Usar valores diretos do banco sem conversões
       // Todos os valores são mantidos em suas moedas originais
       await loadOrdersWithStats(user.id, stats => {
         console.log('📊 Stats recebidos:', stats);
         setSalesStats(stats);
       }, orders => {
-        console.log(`✅ ${orders.length} vendas carregadas diretamente (sem correções)`);
+        console.log(`✅ ${orders.length} vendas carregadas diretamente`);
         setSales(orders);
       });
       console.log('✅ Carregamento concluído com sucesso');
@@ -165,13 +171,31 @@ export default function Sales() {
   const displayedPaymentMethods = useMemo(() => {
     return showAllPaymentMethods ? getAllPaymentMethods() : getAngolaPaymentMethods();
   }, [showAllPaymentMethods]);
-  // ✅ Executar apenas uma vez quando o usuário estiver disponível
+  // ✅ Executar apenas uma vez automaticamente quando o usuário estiver disponível
+  // Mas permitir refresh manual através do botão "Atualizar"
+  // E forçar recarregamento quando o código é atualizado
   useEffect(() => {
-    if (user && !hasLoadedRef.current) {
-      hasLoadedRef.current = true;
-      loadSales();
+    if (user) {
+      // Se a versão do código mudou, forçar recarregamento
+      if (lastCodeVersionRef.current !== CODE_VERSION) {
+        console.log(`🔄 Nova versão do código detectada (${lastCodeVersionRef.current} → ${CODE_VERSION}), forçando recarregamento...`);
+        lastCodeVersionRef.current = CODE_VERSION;
+        hasLoadedRef.current = false; // Resetar para forçar reload
+      }
+      
+      // Carregar se ainda não carregou
+      if (!hasLoadedRef.current) {
+        hasLoadedRef.current = true;
+        loadSales();
+      }
     }
-  }, [user, loadSales]);
+  }, [user, loadSales, CODE_VERSION]);
+  
+  // ✅ Handler para refresh manual (botão Atualizar)
+  const handleRefresh = useCallback(() => {
+    console.log('🔄 Refresh manual solicitado');
+    loadSales(); // Chama diretamente, não reseta hasLoadedRef
+  }, [loadSales]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -295,7 +319,7 @@ export default function Sales() {
             <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             Exportar
           </Button>
-          <Button variant="outline" size="sm" onClick={loadSales} className="text-xs md:text-sm text-foreground">
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="text-xs md:text-sm text-foreground">
             <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             Atualizar
           </Button>
