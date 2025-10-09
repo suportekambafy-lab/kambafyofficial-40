@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff, MessageCircle } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -30,6 +30,7 @@ import { useAppState } from '@/hooks/useAppState';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
 import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
+import { AppCrispChat, openCrispChat } from '@/components/app/AppCrispChat';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -1132,6 +1133,27 @@ export function AppHome() {
 
                 <div className="h-px bg-border my-1" />
 
+                <button
+                  onClick={() => {
+                    openCrispChat();
+                    triggerHaptic('light');
+                  }}
+                  className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <MessageCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-medium text-foreground">Chat ao Vivo</p>
+                      <p className="text-xs text-muted-foreground">Fale com o suporte</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+
+                <div className="h-px bg-border my-1" />
+
                 <div className="w-full flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
@@ -1508,8 +1530,10 @@ export function AppHome() {
   }, []);
 
   return (
-    <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-background pb-28 pt-0 overflow-x-hidden">
+    <>
+      <AppCrispChat hideByDefault={true} />
+      <div className={isDark ? 'dark' : ''}>
+        <div className="min-h-screen bg-background pb-28 pt-0 overflow-x-hidden">
         {/* Fixed Header - Similar to Landing */}
         <header className="fixed top-0 left-0 right-0 z-20">
         <nav className="px-2 pt-2">
@@ -1769,5 +1793,6 @@ export function AppHome() {
       />
       </div>
     </div>
+    </>
   );
 }
