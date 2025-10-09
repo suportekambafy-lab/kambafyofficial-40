@@ -125,7 +125,13 @@ export function ModernDashboardHome() {
       }
 
       const results = await Promise.all(promises);
-      console.log('🔍 Dashboard: Results recebidos:', results.map((r, i) => ({ index: i, hasData: !!r.data, dataLength: r.data?.length || 0, hasError: !!r.error })));
+      console.log('🔍 Dashboard: Results recebidos:', results.map((r, i) => ({ 
+        index: i, 
+        hasData: !!r.data, 
+        dataLength: r.data?.length || 0, 
+        hasError: !!r.error,
+        error: r.error 
+      })));
       
       let ownOrders: any[] = [];
       let affiliateOrders: any[] = [];
@@ -135,15 +141,18 @@ export function ModernDashboardHome() {
         const ownOrdersData = results[0];
         ownOrders = ownOrdersData.data || [];
         
-        if (userAffiliateCodes.length > 0 && results[1]) {
-          const affiliateOrdersData = results[1];
+        let nextIndex = 1;
+        
+        if (userAffiliateCodes.length > 0 && results[nextIndex]) {
+          const affiliateOrdersData = results[nextIndex];
           affiliateOrders = affiliateOrdersData.data || [];
+          nextIndex++;
         }
         
-        if (memberAreaIds.length > 0 && results[2]) {
-          const modulePaymentsData = results[2];
+        if (memberAreaIds.length > 0 && results[nextIndex]) {
+          const modulePaymentsData = results[nextIndex];
           modulePayments = modulePaymentsData.data || [];
-          console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[2]`);
+          console.log(`✅ Dashboard: Carregados ${modulePayments.length} module_payments do results[${nextIndex}]`);
           if (modulePaymentsData.error) {
             console.error('❌ Dashboard: Erro ao carregar module_payments:', modulePaymentsData.error);
           }
