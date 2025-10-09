@@ -197,14 +197,12 @@ export default function AdminIdentityVerification() {
     try {
       console.log('🔍 Tentando abrir documento:', { url, title });
       
-      // Para identity-documents (bucket privado), usar URL assinada
+      // Se o bucket identity-documents é privado, precisamos gerar URL assinada
       if (url.includes('identity-documents')) {
-        // Extrair o caminho do arquivo do URL
         const urlObj = new URL(url);
         const pathParts = urlObj.pathname.split('/');
         
-        // O formato típico é: /storage/v1/object/public/identity-documents/user_id/filename
-        // Procurar pelo índice de 'identity-documents' e pegar tudo depois
+        // Encontrar índice de 'identity-documents'
         const bucketIndex = pathParts.indexOf('identity-documents');
         if (bucketIndex === -1) {
           console.error('❌ Bucket identity-documents não encontrado no URL');
@@ -212,13 +210,29 @@ export default function AdminIdentityVerification() {
           return;
         }
         
-        // Pegar o path completo após 'identity-documents'
+        // Extrair caminho do arquivo
         const filePath = pathParts.slice(bucketIndex + 1).join('/');
         console.log('📂 Caminho do arquivo extraído:', filePath);
         
+        // Verificar se o arquivo existe antes de criar signed URL
+        const { data: fileExists, error: listError } = await supabase.storage
+          .from('identity-documents')
+          .list(filePath.split('/')[0], {
+            search: filePath.split('/')[1]
+          });
+        
+        if (listError || !fileExists || fileExists.length === 0) {
+          console.error('❌ Arquivo não encontrado no storage:', listError);
+          toast.error('Documento não encontrado no servidor');
+          return;
+        }
+        
+        console.log('✅ Arquivo encontrado, gerando URL assinada...');
+        
+        // Criar URL assinada para bucket privado
         const { data, error } = await supabase.storage
           .from('identity-documents')
-          .createSignedUrl(filePath, 3600); // 1 hora de validade
+          .createSignedUrl(filePath, 3600);
         
         if (error) {
           console.error('❌ Erro ao criar URL assinada:', error);
