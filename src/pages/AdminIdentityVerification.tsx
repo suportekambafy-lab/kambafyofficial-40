@@ -197,50 +197,38 @@ export default function AdminIdentityVerification() {
     try {
       console.log('🔍 Tentando abrir documento:', { url, title });
       
-      // Se o bucket identity-documents é privado, precisamos gerar URL assinada
+      // Para identity-documents (bucket privado), gerar URL assinada
       if (url.includes('identity-documents')) {
         const urlObj = new URL(url);
         const pathParts = urlObj.pathname.split('/');
         
-        // Encontrar índice de 'identity-documents'
         const bucketIndex = pathParts.indexOf('identity-documents');
         if (bucketIndex === -1) {
-          console.error('❌ Bucket identity-documents não encontrado no URL');
-          toast.error('URL de documento inválida');
+          console.error('❌ Bucket não encontrado no URL');
+          toast.error('URL de documento inválido');
           return;
         }
         
-        // Extrair caminho do arquivo
         const filePath = pathParts.slice(bucketIndex + 1).join('/');
-        console.log('📂 Caminho do arquivo extraído:', filePath);
+        console.log('📂 Criando signed URL para:', filePath);
         
-        // Verificar se o arquivo existe antes de criar signed URL
-        const { data: fileExists, error: listError } = await supabase.storage
-          .from('identity-documents')
-          .list(filePath.split('/')[0], {
-            search: filePath.split('/')[1]
-          });
-        
-        if (listError || !fileExists || fileExists.length === 0) {
-          console.error('❌ Arquivo não encontrado no storage:', listError);
-          toast.error('Documento não encontrado no servidor');
-          return;
-        }
-        
-        console.log('✅ Arquivo encontrado, gerando URL assinada...');
-        
-        // Criar URL assinada para bucket privado
         const { data, error } = await supabase.storage
           .from('identity-documents')
           .createSignedUrl(filePath, 3600);
         
         if (error) {
           console.error('❌ Erro ao criar URL assinada:', error);
-          toast.error('Erro ao acessar documento: ' + error.message);
+          toast.error('Erro ao gerar link do documento: ' + error.message);
           return;
         }
         
-        console.log('✅ URL assinada criada com sucesso');
+        if (!data?.signedUrl) {
+          console.error('❌ URL assinada vazia');
+          toast.error('Erro ao gerar link do documento');
+          return;
+        }
+        
+        console.log('✅ URL assinada gerada, abrindo documento...');
         setDocumentModal({
           isOpen: true,
           imageUrl: data.signedUrl,
@@ -248,7 +236,6 @@ export default function AdminIdentityVerification() {
           verification: verification
         });
       } else {
-        // Para URLs públicas, usar diretamente
         console.log('✅ Usando URL pública diretamente');
         setDocumentModal({
           isOpen: true,
