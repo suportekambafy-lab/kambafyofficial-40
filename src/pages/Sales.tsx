@@ -37,7 +37,12 @@ interface Sale {
   affiliate_code?: string;
   affiliate_commission?: number;
   seller_commission?: number;
-  sale_type?: 'own' | 'affiliate' | 'recovered';
+  sale_type?: 'own' | 'affiliate' | 'recovered' | 'module';
+  order_bump_data?: Array<{
+    bump_product_name: string;
+    bump_product_price: string;
+    bump_product_image?: string;
+  }>;
   products: {
     id: string;
     name: string;
@@ -98,7 +103,7 @@ export default function Sales() {
   const loadingRef = useRef(false); // Controle via ref para evitar loops
   
   // ✅ VERSÃO DO CÓDIGO - Incrementar quando houver mudança importante
-  const CODE_VERSION = 'v2.1'; // Mudou de v2.0 para v2.1 (correção seller_commission)
+  const CODE_VERSION = 'v2.2'; // Mudou de v2.1 para v2.2 (incluir order bumps e módulos)
   const hasLoadedRef = useRef(false); // ✅ Controle para executar apenas uma vez automaticamente
   const lastCodeVersionRef = useRef<string | null>(null);
 
@@ -333,7 +338,7 @@ export default function Sales() {
          <HighlightedCard highlightColor="green">
           <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <HighlightedCardTitle className="text-sm font-medium">
-              Vendas Pagas (Lucro)
+              Vendas Pagas
             </HighlightedCardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </HighlightedCardHeader>
@@ -342,7 +347,7 @@ export default function Sales() {
               {formatCurrency(salesStats.paidTotal)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {salesStats.paid} vendas confirmadas - lucro líquido
+              {salesStats.paid} vendas confirmadas
             </p>
           </HighlightedCardContent>
         </HighlightedCard>
@@ -535,7 +540,10 @@ export default function Sales() {
                           </div>
                           
                           <div className="flex flex-wrap gap-1">
-                            {sale.sale_type === 'affiliate' ? <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                            {sale.sale_type === 'module' ? <Badge variant="outline" className="text-xs bg-cyan-50 text-cyan-700 border-cyan-200">
+                                <User className="h-3 w-3 mr-1" />
+                                Pagamento de Módulo
+                              </Badge> : sale.sale_type === 'affiliate' ? <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
                                 <User className="h-3 w-3 mr-1" />
                                 Comissão Afiliado
                               </Badge> : sale.sale_type === 'recovered' ? <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
@@ -557,6 +565,36 @@ export default function Sales() {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Order Bumps */}
+                  {sale.order_bump_data && Array.isArray(sale.order_bump_data) && sale.order_bump_data.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">
+                        Order Bumps ({sale.order_bump_data.length})
+                      </p>
+                      <div className="space-y-2">
+                        {sale.order_bump_data.map((bump: any, index: number) => (
+                          <div key={index} className="flex items-center justify-between text-xs bg-muted/50 p-2 rounded">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded overflow-hidden bg-background flex-shrink-0">
+                                {bump.bump_product_image && (
+                                  <img 
+                                    src={getProductImage(bump.bump_product_image)} 
+                                    alt={bump.bump_product_name || 'Order Bump'} 
+                                    className="w-full h-full object-cover" 
+                                  />
+                                )}
+                              </div>
+                              <span className="font-medium">{bump.bump_product_name || 'Order Bump'}</span>
+                            </div>
+                            <span className="font-bold text-green-600">
+                              {formatCurrency(parseFloat(bump.bump_product_price || '0'))}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>)}
           </div>
