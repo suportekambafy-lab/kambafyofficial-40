@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useBunnyUpload } from '@/hooks/useBunnyUpload';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,7 @@ export default function UserIdentity() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const { uploadFile } = useBunnyUpload();
   const [verification, setVerification] = useState<IdentityVerification | null>(null);
   const [formData, setFormData] = useState({
     full_name: '',
@@ -85,20 +87,20 @@ export default function UserIdentity() {
 
     try {
       setUploading(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${formData.document_type}_${type}_${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('identity-documents')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      // Retornar o caminho completo no formato da URL do storage
-      // Isso permitirá extrair o caminho quando precisar gerar signed URLs
-      const storageUrl = `https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/identity-documents/${fileName}`;
       
-      return storageUrl;
+      // Upload para Bunny CDN usando o hook
+      const bunnyUrl = await uploadFile(file, {
+        onProgress: (progress) => {
+          console.log(`📤 Upload progress: ${progress}%`);
+        }
+      });
+      
+      if (!bunnyUrl) {
+        throw new Error('Erro ao fazer upload para o Bunny CDN');
+      }
+      
+      console.log('✅ Documento enviado para Bunny CDN:', bunnyUrl);
+      return bunnyUrl;
     } catch (error) {
       console.error('Erro no upload:', error);
       toast.error('Erro ao fazer upload do documento');
@@ -128,20 +130,13 @@ export default function UserIdentity() {
   };
 
   const removeDocument = async (type: 'front' | 'back') => {
-    const currentUrl = verification?.[`document_${type}_url` as keyof IdentityVerification];
-    if (currentUrl && typeof currentUrl === 'string') {
-      const fileName = currentUrl.split('/').pop();
-      if (fileName) {
-        await supabase.storage
-          .from('identity-documents')
-          .remove([`${user?.id}/${fileName}`]);
-      }
-    }
-
+    // Apenas remover a URL do estado, não precisamos deletar do Bunny
     setVerification(prev => prev ? {
       ...prev,
       [`document_${type}_url`]: undefined
     } : null);
+    
+    toast.success('Documento removido');
   };
 
   const handleSubmit = async () => {
