@@ -137,14 +137,14 @@ const Ranking = () => {
   const getPositionIcon = (position: number) => {
     if (position === 0) return <Trophy className="w-8 h-8 text-yellow-500" />;
     if (position === 1) return <Trophy className="w-7 h-7 text-gray-400" />;
-    if (position === 2) return <Trophy className="w-6 h-6 text-amber-700" />;
+    if (position === 2) return <Trophy className="w-6 h-6 text-gray-400" />;
     return null;
   };
 
   const getPositionStyles = (position: number) => {
     if (position === 0) return "border-yellow-500 bg-gradient-to-br from-yellow-50 to-amber-50 scale-105";
     if (position === 1) return "border-gray-400 bg-gradient-to-br from-gray-50 to-slate-50";
-    if (position === 2) return "border-amber-700 bg-gradient-to-br from-amber-50 to-orange-50";
+    if (position === 2) return "border-gray-400 bg-gradient-to-br from-gray-50 to-slate-50";
     return "";
   };
 
