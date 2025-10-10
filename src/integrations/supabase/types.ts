@@ -2840,22 +2840,13 @@ export type Database = {
         Returns: undefined
       }
       admin_ban_product: {
-        Args:
-          | {
-              admin_id?: string
-              ban_reason_text?: string
-              p_admin_email?: string
-              p_jwt_token?: string
-              product_id: string
-            }
-          | {
-              admin_id?: string
-              ban_reason_text?: string
-              p_admin_email?: string
-              product_id: string
-            }
-          | { admin_id?: string; ban_reason_text?: string; product_id: string }
-          | { admin_id?: string; product_id: string }
+        Args: {
+          admin_id?: string
+          ban_reason_text?: string
+          p_admin_email?: string
+          p_jwt_token?: string
+          product_id: string
+        }
         Returns: undefined
       }
       admin_confirm_user_email: {
