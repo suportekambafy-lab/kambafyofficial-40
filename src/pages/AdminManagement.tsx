@@ -188,22 +188,38 @@ export default function AdminManagement() {
   const handleSavePermissions = async () => {
     if (!editingAdmin) return;
     
+    console.log('💾 Salvando permissões:', {
+      adminId: editingAdmin.id,
+      adminEmail: editingAdmin.email,
+      permissions: editPermissions,
+      currentAdminEmail: admin?.email
+    });
+    
     setSavingPermissions(true);
     try {
-      const { error } = await supabase.rpc('update_admin_permissions', {
+      const { data, error } = await supabase.rpc('update_admin_permissions', {
         p_admin_id: editingAdmin.id,
         p_permissions: editPermissions,
         p_admin_email: admin?.email,
       });
 
-      if (error) throw error;
+      console.log('✅ Resposta do RPC:', { data, error });
 
+      if (error) {
+        console.error('❌ Erro no RPC:', error);
+        throw error;
+      }
+
+      console.log('✅ Permissões salvas com sucesso!');
       toast.success('Permissões atualizadas com sucesso!');
       setIsPermissionsDialogOpen(false);
       setEditingAdmin(null);
       setEditPermissions([]);
+      
+      // Atualizar lista de admins
+      loadAdmins();
     } catch (error: any) {
-      console.error('Erro ao atualizar permissões:', error);
+      console.error('❌ Erro ao atualizar permissões:', error);
       toast.error(error.message || 'Erro ao atualizar permissões');
     } finally {
       setSavingPermissions(false);
