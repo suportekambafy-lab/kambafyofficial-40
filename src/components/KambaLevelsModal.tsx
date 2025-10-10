@@ -50,7 +50,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-[1900px] h-[90vh] md:h-[650px] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-2xl md:rounded-3xl">
+      <DialogContent className="w-[95vw] max-w-[1900px] h-auto max-h-[90vh] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-2xl md:rounded-3xl">
         <button
           onClick={() => onOpenChange(false)}
           className="absolute right-4 top-4 md:right-8 md:top-8 z-50 rounded-full bg-background/80 backdrop-blur p-2 md:p-2.5 hover:bg-background transition-colors"
@@ -58,33 +58,33 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           <X className="h-5 w-5 md:h-6 md:w-6" />
         </button>
 
-        <div className="p-4 md:p-8 lg:p-12 space-y-4 md:space-y-6 overflow-y-auto h-full">
+        <div className="p-4 md:p-8 lg:p-10 space-y-4 md:space-y-5">
           {/* Header */}
-          <div className="space-y-2 md:space-y-3">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold">Próximas conquistas</h2>
-            <p className="text-sm md:text-base lg:text-lg text-muted-foreground">
+          <div className="space-y-2">
+            <h2 className="text-2xl md:text-3xl font-bold">Próximas conquistas</h2>
+            <p className="text-sm md:text-base text-muted-foreground">
               Para cada marco, um prêmio para te lembrar: você faz acontecer
             </p>
           </div>
 
           {/* Progress Section */}
-          <div className="space-y-3 md:space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center gap-2 text-primary">
-              <Target className="h-5 w-5 md:h-6 md:w-6" />
-              <p className="font-medium text-base md:text-lg">Você está conseguindo!</p>
+              <Target className="h-5 w-5" />
+              <p className="font-medium text-sm md:text-base">Você está conseguindo!</p>
             </div>
             
-            <div className="space-y-2 md:space-y-3">
-              <Progress value={progress} className="h-2 md:h-3" />
-              <p className="text-xs md:text-sm lg:text-base text-muted-foreground">
+            <div className="space-y-2">
+              <Progress value={progress} className="h-2" />
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Fature <span className="font-semibold text-primary">{nextLevel ? formatCurrency(nextLevel.threshold) : formatCurrency(allLevels[allLevels.length - 1].threshold)}</span> e desbloqueie o {nextLevel ? nextLevel.name : 'nível máximo'}
               </p>
             </div>
           </div>
 
           {/* Carousel */}
-          <div className="relative py-2 md:py-4">
-            <div className="flex gap-4 md:gap-6 lg:gap-8 justify-center items-stretch overflow-x-auto md:overflow-x-visible pb-4 md:pb-0">
+          <div className="relative py-2">
+            <div className="flex gap-4 md:gap-6 justify-center items-stretch overflow-x-auto md:overflow-x-visible pb-4 md:pb-0">
               {visibleLevels.map((level, index) => {
                 const achieved = isAchieved(level.threshold);
                 const isCurrent = currentLevel && level.id === currentLevel.id;
@@ -93,27 +93,27 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
                 return (
                   <div
                     key={level.id}
-                    className={`relative rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 transition-all duration-300 flex-shrink-0 w-[calc(100vw-60px)] sm:w-[300px] md:w-[320px] lg:w-[360px] xl:w-[420px] min-h-[420px] md:min-h-[480px] lg:min-h-[520px] ${
+                    className={`relative rounded-2xl md:rounded-3xl p-4 md:p-5 transition-all duration-300 flex-shrink-0 w-[calc(100vw-60px)] sm:w-[280px] md:w-[300px] lg:w-[340px] ${
                       achieved 
                         ? 'bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border-2 border-primary/30' 
                         : 'bg-gradient-to-br from-muted/50 to-muted/30 border-2 border-border/50'
                     }`}
                   >
                     {/* Lock Icon */}
-                    <div className="absolute top-3 right-3 md:top-6 md:right-6">
+                    <div className="absolute top-3 right-3">
                       {achieved ? (
-                        <div className="p-1.5 md:p-2.5 rounded-lg bg-primary/20">
-                          <LockOpen className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-primary" />
+                        <div className="p-1.5 rounded-lg bg-primary/20">
+                          <LockOpen className="h-4 w-4 text-primary" />
                         </div>
                       ) : (
-                        <div className="p-1.5 md:p-2.5 rounded-lg bg-muted">
-                          <Lock className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-muted-foreground" />
+                        <div className="p-1.5 rounded-lg bg-muted">
+                          <Lock className="h-4 w-4 text-muted-foreground" />
                         </div>
                       )}
                     </div>
 
                     {/* Badge Icon with glow effect */}
-                    <div className="flex justify-center mb-4 md:mb-6 lg:mb-8 mt-3 md:mt-6">
+                    <div className="flex justify-center mb-3 mt-2">
                       <div className={`relative ${achieved ? 'animate-pulse' : ''}`}>
                         {achieved && (
                           <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl" />
@@ -121,56 +121,56 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
                         <img 
                           src={level.seal} 
                           alt={level.name}
-                          className={`relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain ${!achieved ? 'opacity-30 grayscale' : ''}`}
+                          className={`relative w-20 h-20 md:w-24 md:h-24 object-contain ${!achieved ? 'opacity-30 grayscale' : ''}`}
                         />
                       </div>
                     </div>
 
                     {/* Level Info */}
-                    <div className="text-center space-y-2 md:space-y-3 lg:space-y-4">
-                      <h3 className={`text-xl md:text-2xl lg:text-3xl font-bold ${achieved ? 'text-primary' : 'text-muted-foreground'}`}>
+                    <div className="text-center space-y-2">
+                      <h3 className={`text-lg md:text-xl font-bold ${achieved ? 'text-primary' : 'text-muted-foreground'}`}>
                         {level.name.replace('Kamba ', '')}
                       </h3>
-                      <p className={`text-sm md:text-base ${achieved ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      <p className={`text-xs md:text-sm ${achieved ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {globalIndex + 1}º marco
                       </p>
 
                       {/* Rewards or message */}
-                      <div className="pt-3 md:pt-4 lg:pt-6 space-y-1 md:space-y-2">
+                      <div className="pt-2 space-y-1">
                         {achieved ? (
                           <>
-                            <p className="text-sm md:text-base font-medium">
+                            <p className="text-xs md:text-sm font-medium">
                               {level.rewards[0]}
                             </p>
                             {level.rewards.length > 1 && (
-                              <p className="text-xs md:text-sm text-muted-foreground">
+                              <p className="text-xs text-muted-foreground">
                                 Nível desbloqueado!
                               </p>
                             )}
                           </>
                         ) : (
-                          <p className="text-sm md:text-base">
+                          <p className="text-xs md:text-sm">
                             Faturamento
                           </p>
                         )}
                       </div>
 
                       {/* Threshold */}
-                      <div className={`pt-2 md:pt-3 ${achieved ? 'text-primary' : 'text-foreground'}`}>
-                        <p className="text-xl md:text-2xl lg:text-3xl font-bold">
+                      <div className={`pt-2 ${achieved ? 'text-primary' : 'text-foreground'}`}>
+                        <p className="text-xl md:text-2xl font-bold">
                           {formatCurrency(level.threshold)}
                         </p>
                       </div>
 
                       {/* Lock Button for locked levels */}
                       {!achieved && (
-                        <div className="pt-3 md:pt-4 lg:pt-6">
+                        <div className="pt-3">
                           <Button
                             variant="outline"
                             disabled
-                            className="w-full text-sm md:text-base py-4 md:py-6"
+                            className="w-full text-xs md:text-sm py-3"
                           >
-                            <Lock className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                            <Lock className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                             Prêmio bloqueado
                           </Button>
                         </div>
@@ -185,18 +185,18 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
             {canGoPrev && (
               <button
                 onClick={handlePrevious}
-                className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 lg:-translate-x-6 bg-background border-2 rounded-full p-2 md:p-3 lg:p-4 hover:bg-accent transition-colors shadow-lg"
+                className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-background border-2 rounded-full p-3 hover:bg-accent transition-colors shadow-lg"
               >
-                <ChevronLeft className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
+                <ChevronLeft className="h-6 w-6" />
               </button>
             )}
 
             {canGoNext && (
               <button
                 onClick={handleNext}
-                className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 lg:translate-x-6 bg-background border-2 rounded-full p-2 md:p-3 lg:p-4 hover:bg-accent transition-colors shadow-lg"
+                className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-background border-2 rounded-full p-3 hover:bg-accent transition-colors shadow-lg"
               >
-                <ChevronRight className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
+                <ChevronRight className="h-6 w-6" />
               </button>
             )}
           </div>
