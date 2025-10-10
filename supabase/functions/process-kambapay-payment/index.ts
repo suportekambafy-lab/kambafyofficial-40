@@ -78,6 +78,10 @@ serve(async (req) => {
     // 3. Criar o pedido
     const orderId = `KAMBAPAY_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
     
+    // Calcular seller_commission com desconto de 8%
+    const grossAmount = productPrice;
+    const sellerCommission = grossAmount * 0.92; // 8% platform fee
+    
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .insert([{
@@ -86,12 +90,12 @@ serve(async (req) => {
         customer_email: email,
         customer_name: customerName || 'Cliente KambaPay',
         customer_phone: customerPhone || null,
-        amount: productPrice.toString(),
+        amount: grossAmount.toString(),
         currency: 'KZ',
         payment_method: 'kambapay',
         status: 'completed',
         user_id: null, // Anonymous checkout - user_id should be null
-        seller_commission: productPrice * 0.92 // 8% platform fee
+        seller_commission: sellerCommission // 8% platform fee
       }])
       .select()
       .single();

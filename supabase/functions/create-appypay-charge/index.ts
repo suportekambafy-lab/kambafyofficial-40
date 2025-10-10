@@ -335,6 +335,7 @@ serve(async (req) => {
 
     // Salvar ordem no banco apenas se não for módulo (skipOrderSave = false)
     if (!skipOrderSave) {
+      // Calcular seller_commission PRIMEIRO
       const grossAmount = parseFloat(originalAmount?.toString() || amount.toString());
       const sellerCommission = grossAmount * 0.92; // 8% platform fee
       
@@ -344,7 +345,8 @@ serve(async (req) => {
         appypay_transaction_id: merchantTransactionId, // Save AppyPay transaction ID for webhook lookup
         stripe_session_id: null, // AppyPay doesn't use Stripe
         status: orderStatus,
-        seller_commission: sellerCommission // SEMPRE aplicar 8% de desconto
+        amount: grossAmount.toString(), // Garantir que amount está correto
+        seller_commission: sellerCommission // SOBRESCREVER com desconto de 8%
       } : {
         product_id: productId,
         order_id: orderId,
