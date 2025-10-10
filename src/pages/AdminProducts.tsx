@@ -644,7 +644,57 @@ export default function AdminProducts() {
                     Ver Conteúdo
                   </Button>
                   
-                  {/* Fluxo correto de aprovação */}
+                  {/* Botão aprovar - para produtos pendentes (não aprovados) */}
+                  {!product.admin_approved && product.status !== 'Banido' && !product.revision_requested && (
+                    <Button
+                      onClick={async () => {
+                        setProcessingId(product.id);
+                        try {
+                          const { data: productData } = await supabase
+                            .from('products')
+                            .select('*, profiles!inner(email, full_name)')
+                            .eq('id', product.id)
+                            .single();
+                          
+                          const { error } = await supabase.rpc('admin_approve_product', {
+                            product_id: product.id,
+                            admin_id: admin?.id || null,
+                            p_admin_email: admin?.email || null
+                          });
+                          
+                          if (error) {
+                            toast.error(`Erro ao aprovar: ${error.message}`);
+                            return;
+                          }
+                          
+                          if (productData) {
+                            await supabase.functions.invoke('send-product-approval-notification', {
+                              body: {
+                                sellerEmail: productData.profiles.email,
+                                sellerName: productData.profiles.full_name || 'Vendedor',
+                                productName: productData.name,
+                                productUrl: productData.share_link || undefined
+                              }
+                            });
+                          }
+                          
+                          toast.success('✅ Produto aprovado com sucesso!');
+                          await loadProducts();
+                        } catch (error) {
+                          toast.error('Erro ao aprovar produto');
+                        } finally {
+                          setProcessingId(null);
+                        }
+                      }}
+                      disabled={processingId === product.id}
+                      size="sm"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white text-xs"
+                    >
+                      {processingId === product.id ? 'Aprovando...' : 'Aprovar Produto'}
+                    </Button>
+                  )}
+                  
+                  {/* Botão banir */}
                   {product.status !== 'Banido' && (
                     <Button
                       onClick={() => handleBanClick(product.id, product.name)}
@@ -656,8 +706,7 @@ export default function AdminProducts() {
                     </Button>
                   )}
                   
-                  {/* Mostrar botão aprovar APENAS quando vendedor solicitar revisão */}
-                  {/* Debug: revision_requested=${product.revision_requested}, status=${product.status} */}
+                  {/* Botão revisar - quando vendedor solicitar revisão de produto banido */}
                   {product.revision_requested && product.status === 'Banido' && (
                     <Button
                       onClick={() => openReviewModal(product)}
