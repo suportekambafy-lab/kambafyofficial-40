@@ -50,7 +50,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
+      <DialogContent className="max-w-7xl max-h-[85vh] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-3xl">
         <button
           onClick={() => onOpenChange(false)}
           className="absolute right-6 top-6 z-50 rounded-full bg-background/80 backdrop-blur p-2 hover:bg-background transition-colors"
@@ -58,7 +58,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           <X className="h-5 w-5" />
         </button>
 
-        <div className="p-8 space-y-6 overflow-y-auto max-h-[85vh]">
+        <div className="p-8 space-y-6 overflow-y-auto max-h-[80vh]">
           {/* Header */}
           <div className="space-y-3">
             <h2 className="text-3xl font-bold">Próximas conquistas</h2>
@@ -99,8 +99,8 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
                         : 'bg-gradient-to-br from-muted/50 to-muted/30 border-2 border-border/50'
                     }`}
                     style={{
-                      maxWidth: '320px',
-                      minHeight: '420px'
+                      maxWidth: '380px',
+                      minHeight: '460px'
                     }}
                   >
                     {/* Lock Icon */}
