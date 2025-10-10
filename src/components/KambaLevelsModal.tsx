@@ -22,16 +22,20 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
   const { currentLevel, nextLevel, progress, allLevels } = useKambaLevels(totalRevenue);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
+  const mouseCoords = useRef({
+    startX: 0,
+    scrollLeft: 0
+  });
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const element = scrollRef.current;
     if (!element) return;
     
+    const startX = e.pageX - element.offsetLeft;
+    const scrollLeft = element.scrollLeft;
+    mouseCoords.current = { startX, scrollLeft };
     setIsDragging(true);
-    setStartX(e.pageX - element.offsetLeft);
-    setScrollLeft(element.scrollLeft);
+    element.style.cursor = 'grabbing';
     element.style.scrollSnapType = 'none';
   };
 
@@ -42,20 +46,24 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
     
     e.preventDefault();
     const x = e.pageX - element.offsetLeft;
-    const walk = (x - startX) * 2;
-    element.scrollLeft = scrollLeft - walk;
+    const walkX = (x - mouseCoords.current.startX) * 1.5;
+    element.scrollLeft = mouseCoords.current.scrollLeft - walkX;
   };
 
   const handleMouseUp = () => {
-    if (scrollRef.current) {
-      scrollRef.current.style.scrollSnapType = 'x mandatory';
+    const element = scrollRef.current;
+    if (element) {
+      element.style.cursor = 'grab';
+      element.style.scrollSnapType = 'x mandatory';
     }
     setIsDragging(false);
   };
 
   const handleMouseLeave = () => {
-    if (isDragging && scrollRef.current) {
-      scrollRef.current.style.scrollSnapType = 'x mandatory';
+    const element = scrollRef.current;
+    if (isDragging && element) {
+      element.style.cursor = 'grab';
+      element.style.scrollSnapType = 'x mandatory';
     }
     setIsDragging(false);
   };
@@ -118,11 +126,12 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseLeave}
-              className="flex gap-4 md:gap-6 items-stretch overflow-x-scroll overflow-y-hidden pb-4 snap-x snap-mandatory scrollbar-hide select-none"
+              className="flex gap-4 md:gap-6 items-stretch overflow-x-scroll overflow-y-hidden pb-4 snap-x snap-mandatory scrollbar-hide"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 scrollBehavior: 'smooth',
-                cursor: isDragging ? 'grabbing' : 'grab'
+                cursor: 'grab',
+                userSelect: 'none'
               }}
             >
               {visibleLevels.map((level, index) => {
