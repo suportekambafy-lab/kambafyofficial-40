@@ -324,16 +324,6 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         return;
       }
     } else {
-      // Bloquear publicação de rascunhos
-      if (editingProduct?.status === "Rascunho") {
-        toast({
-          title: "Erro",
-          message: "Produtos em rascunho não podem ser publicados diretamente. Complete todos os campos obrigatórios e salve novamente.",
-          variant: "error"
-        });
-        return;
-      }
-
       // Para publicar, validar todos os campos obrigatórios e mostrar informações específicas
       console.log("🔍 Validando campos para publicação:");
       console.log("- Nome:", formData.name);
