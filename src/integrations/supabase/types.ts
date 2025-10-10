@@ -3043,6 +3043,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_super_admin: {
+        Args: { user_email: string }
+        Returns: boolean
+      }
       is_suspicious_ip: {
         Args: { _ip_address: string; _user_id: string }
         Returns: boolean
