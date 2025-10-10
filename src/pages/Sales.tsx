@@ -503,18 +503,18 @@ export default function Sales() {
                             <p className="text-xs md:text-sm text-muted-foreground">
                               Pedido #{sale.order_id}
                           </p>
-                          <div className="space-y-1">
+                          <div className="space-y-0.5 md:space-y-1">
                             <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                               <User className="h-3 w-3 md:h-4 md:w-4" />
-                              <span>{sale.customer_name}</span>
+                              <span className="truncate">{sale.customer_name}</span>
                             </div>
                             {sale.customer_email && (
-                              <div className="text-xs text-muted-foreground pl-5">
+                              <div className="text-xs text-muted-foreground pl-3 md:pl-5 truncate">
                                 {sale.customer_email}
                               </div>
                             )}
                             {sale.customer_phone && (
-                              <div className="text-xs text-muted-foreground pl-5">
+                              <div className="text-xs text-muted-foreground pl-3 md:pl-5">
                                 {sale.customer_phone}
                               </div>
                             )}
