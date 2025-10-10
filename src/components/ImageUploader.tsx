@@ -22,7 +22,7 @@ const getRecommendedDimensions = (aspectRatio: string): string => {
   const dimensionsMap: Record<string, string> = {
     '16/9': '1920x1080px ou 1280x720px',
     '9/16': '1080x1920px (vertical)',
-    '1/1': '1080x1080px (quadrado)',
+    '1/1': '600x600px (quadrado)',
     '4/3': '1600x1200px',
     '3/2': '1500x1000px',
   };

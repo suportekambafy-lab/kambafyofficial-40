@@ -362,7 +362,8 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                   onChange={(url) => setFormData({ ...formData, cover: url || '' })}
                   bucket="product-images"
                   folder="covers"
-                  aspectRatio="4/3"
+                  aspectRatio="1/1"
+                  recommendedDimensions="600x600px"
                 />
               </div>
             </>
