@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,33 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
   totalRevenue
 }) => {
   const { currentLevel, nextLevel, progress, allLevels } = useKambaLevels(totalRevenue);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
@@ -74,10 +101,17 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           {/* Carousel */}
           <div className="relative py-2 -mx-4 px-4 md:mx-0 md:px-0">
             <div 
+              ref={scrollRef}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
               className="flex gap-4 md:gap-6 items-stretch overflow-x-scroll overflow-y-hidden pb-4 snap-x snap-mandatory scrollbar-hide"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
-                scrollBehavior: 'smooth'
+                scrollBehavior: isDragging ? 'auto' : 'smooth',
+                cursor: isDragging ? 'grabbing' : 'grab',
+                userSelect: 'none'
               }}
             >
               {visibleLevels.map((level, index) => {
