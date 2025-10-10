@@ -373,7 +373,7 @@ export default function KambaExtra() {
                       <img
                         src={getProductImageUrl(product.cover)}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
@@ -457,7 +457,7 @@ export default function KambaExtra() {
                   <img
                     src={getProductImageUrl(selectedProduct.cover)}
                     alt={selectedProduct.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               )}

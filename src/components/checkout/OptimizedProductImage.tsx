@@ -34,7 +34,7 @@ export const OptimizedProductImage = memo(({ src, alt, className }: OptimizedPro
         loading="lazy"
         decoding="async"
         className={cn(
-          'w-full h-full object-cover transition-opacity duration-300',
+          'w-full h-full object-contain transition-opacity duration-300',
           isLoaded ? 'opacity-100' : 'opacity-0'
         )}
         onLoad={() => setIsLoaded(true)}
