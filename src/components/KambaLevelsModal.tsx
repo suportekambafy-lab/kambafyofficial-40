@@ -72,8 +72,14 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           </div>
 
           {/* Carousel */}
-          <div className="relative py-2">
-            <div className="flex gap-4 md:gap-6 justify-start items-stretch overflow-x-auto overflow-y-hidden pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="relative py-2 -mx-4 px-4 md:mx-0 md:px-0">
+            <div 
+              className="flex gap-4 md:gap-6 items-stretch overflow-x-scroll overflow-y-hidden pb-4 snap-x snap-mandatory scrollbar-hide"
+              style={{ 
+                WebkitOverflowScrolling: 'touch',
+                scrollBehavior: 'smooth'
+              }}
+            >
               {visibleLevels.map((level, index) => {
                 const achieved = isAchieved(level.threshold);
                 const isCurrent = currentLevel && level.id === currentLevel.id;
@@ -81,7 +87,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
                 return (
                   <div
                     key={level.id}
-                    className={`relative rounded-2xl md:rounded-3xl p-4 md:p-5 transition-all duration-300 flex-shrink-0 snap-center w-[calc(100vw-60px)] sm:w-[280px] md:w-[300px] lg:w-[340px] ${
+                    className={`relative rounded-2xl md:rounded-3xl p-4 md:p-5 transition-all duration-300 flex-shrink-0 snap-start w-[85vw] sm:w-[280px] md:w-[300px] lg:w-[340px] touch-pan-x ${
                       achieved 
                         ? 'bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border-2 border-primary/30' 
                         : 'bg-gradient-to-br from-muted/50 to-muted/30 border-2 border-border/50'
