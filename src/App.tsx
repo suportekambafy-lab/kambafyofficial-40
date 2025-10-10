@@ -15,6 +15,7 @@ import { OptimizedRoutes } from "./components/OptimizedRoutes";
 import { EnhancedErrorBoundary } from "./components/ui/enhanced-error-boundary";
 import { Suspense, lazy } from "react";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import AdminPermissionRoute from "./components/AdminPermissionRoute";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 
 const TestFacebookIntegration = lazy(() => import("./pages/TestFacebookIntegration"));
@@ -199,18 +200,18 @@ const App = () => {
                         {/* Admin Routes */}
                        <Route path="/admin/login" element={<OptimizedRoutes.AdminLogin />} />
                        <Route path="/admin" element={<AdminProtectedRoute><OptimizedRoutes.AdminDashboard /></AdminProtectedRoute>} />
-                       <Route path="/admin/sales" element={<AdminProtectedRoute><OptimizedRoutes.AdminSales /></AdminProtectedRoute>} />
-                       <Route path="/admin/withdrawals" element={<AdminProtectedRoute><OptimizedRoutes.AdminWithdrawals /></AdminProtectedRoute>} />
-                       <Route path="/admin/products" element={<AdminProtectedRoute><OptimizedRoutes.AdminProducts /></AdminProtectedRoute>} />
-                       <Route path="/admin/users" element={<AdminProtectedRoute><OptimizedRoutes.AdminUsers /></AdminProtectedRoute>} />
-                       <Route path="/admin/logs" element={<AdminProtectedRoute><OptimizedRoutes.AdminLogs /></AdminProtectedRoute>} />
-                        <Route path="/admin/sellers" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellers /></AdminProtectedRoute>} />
-                         <Route path="/admin/identity" element={<AdminProtectedRoute><OptimizedRoutes.AdminIdentityVerification /></AdminProtectedRoute>} />
-                         <Route path="/admin/management" element={<AdminProtectedRoute><OptimizedRoutes.AdminManagement /></AdminProtectedRoute>} />
-                         <Route path="/admin/teste-kyc" element={<AdminProtectedRoute><OptimizedRoutes.AdminKYCTest /></AdminProtectedRoute>} />
-                         <Route path="/admin/partners" element={<AdminProtectedRoute><OptimizedRoutes.AdminPartners /></AdminProtectedRoute>} />
-                        <Route path="/admin/seller-reports" element={<AdminProtectedRoute><OptimizedRoutes.AdminSellerReports /></AdminProtectedRoute>} />
-                        <Route path="/admin/payment-approvals" element={<AdminProtectedRoute><OptimizedRoutes.AdminPaymentApprovals /></AdminProtectedRoute>} />
+                       <Route path="/admin/sales" element={<AdminPermissionRoute requiredPermission="view_analytics"><OptimizedRoutes.AdminSales /></AdminPermissionRoute>} />
+                       <Route path="/admin/withdrawals" element={<AdminPermissionRoute requiredPermission="manage_withdrawals"><OptimizedRoutes.AdminWithdrawals /></AdminPermissionRoute>} />
+                       <Route path="/admin/products" element={<AdminPermissionRoute requiredPermission="manage_products"><OptimizedRoutes.AdminProducts /></AdminPermissionRoute>} />
+                       <Route path="/admin/users" element={<AdminPermissionRoute requiredPermission="manage_users"><OptimizedRoutes.AdminUsers /></AdminPermissionRoute>} />
+                       <Route path="/admin/logs" element={<AdminPermissionRoute requiredPermission="view_analytics"><OptimizedRoutes.AdminLogs /></AdminPermissionRoute>} />
+                        <Route path="/admin/sellers" element={<AdminPermissionRoute requiredPermission="manage_users"><OptimizedRoutes.AdminSellers /></AdminPermissionRoute>} />
+                         <Route path="/admin/identity" element={<AdminPermissionRoute requiredPermission="manage_verifications"><OptimizedRoutes.AdminIdentityVerification /></AdminPermissionRoute>} />
+                         <Route path="/admin/management" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminManagement /></AdminPermissionRoute>} />
+                         <Route path="/admin/teste-kyc" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminKYCTest /></AdminPermissionRoute>} />
+                         <Route path="/admin/partners" element={<AdminPermissionRoute requiredPermission="manage_products"><OptimizedRoutes.AdminPartners /></AdminPermissionRoute>} />
+                        <Route path="/admin/seller-reports" element={<AdminPermissionRoute requiredPermission="view_analytics"><OptimizedRoutes.AdminSellerReports /></AdminPermissionRoute>} />
+                        <Route path="/admin/payment-approvals" element={<AdminPermissionRoute requiredPermission="manage_transfers"><OptimizedRoutes.AdminPaymentApprovals /></AdminPermissionRoute>} />
                       
                        {/* Partner Routes */}
                        <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />
