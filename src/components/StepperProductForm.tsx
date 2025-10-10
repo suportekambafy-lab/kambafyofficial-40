@@ -487,20 +487,20 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                     <SelectValue placeholder="Selecione uma categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="E-book">E-book</SelectItem>
-                    <SelectItem value="Curso Online">Curso Online</SelectItem>
-                    <SelectItem value="Consultoria">Consultoria</SelectItem>
-                    <SelectItem value="Mentoria">Mentoria</SelectItem>
-                    <SelectItem value="Software">Software</SelectItem>
-                    <SelectItem value="Templates">Templates</SelectItem>
+                    <SelectItem value="Finanças">Finanças</SelectItem>
+                    <SelectItem value="Negócios Digitais">Negócios Digitais</SelectItem>
                     <SelectItem value="Marketing">Marketing</SelectItem>
                     <SelectItem value="Vendas">Vendas</SelectItem>
                     <SelectItem value="Desenvolvimento Pessoal">Desenvolvimento Pessoal</SelectItem>
-                    <SelectItem value="Negócios">Negócios</SelectItem>
+                    <SelectItem value="Empreendedorismo">Empreendedorismo</SelectItem>
+                    <SelectItem value="Investimentos">Investimentos</SelectItem>
                     <SelectItem value="Design">Design</SelectItem>
                     <SelectItem value="Tecnologia">Tecnologia</SelectItem>
                     <SelectItem value="Saúde e Bem-estar">Saúde e Bem-estar</SelectItem>
                     <SelectItem value="Educação">Educação</SelectItem>
+                    <SelectItem value="Produtividade">Produtividade</SelectItem>
+                    <SelectItem value="Gestão">Gestão</SelectItem>
+                    <SelectItem value="Redes Sociais">Redes Sociais</SelectItem>
                     <SelectItem value="Outros">Outros</SelectItem>
                   </SelectContent>
                 </Select>
