@@ -14,11 +14,11 @@ interface FacebookPixelTrackerProps {
 }
 
 export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) => {
-  const [pixelSettings, setPixelSettings] = useState<{pixelId: string; enabled: boolean} | null>(null);
+  const [pixelIds, setPixelIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const initRef = useRef(false);
+  const initRef = useRef<Set<string>>(new Set());
 
-  // Buscar configurações do pixel
+  // Buscar todos os pixels ativos do produto
   useEffect(() => {
     const fetchPixelSettings = async () => {
       try {
@@ -46,14 +46,13 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
           return;
         }
 
-        // Buscar configurações do pixel
+        // Buscar TODOS os pixels ativos
         const { data, error } = await supabase
           .from('facebook_pixel_settings')
-          .select('pixel_id, enabled')
+          .select('pixel_id')
           .eq('user_id', product.user_id)
           .eq('product_id', productId)
-          .eq('enabled', true)
-          .maybeSingle();
+          .eq('enabled', true);
 
         if (error && error.code !== 'PGRST116') {
           console.error('❌ [FB PIXEL] Error fetching settings:', error);
@@ -61,14 +60,12 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
           return;
         }
 
-        if (data?.pixel_id && data.enabled) {
-          console.log('✅ [FB PIXEL] Settings loaded - Pixel ID:', data.pixel_id);
-          setPixelSettings({
-            pixelId: data.pixel_id,
-            enabled: data.enabled
-          });
+        if (data && data.length > 0) {
+          const ids = data.map(d => d.pixel_id);
+          console.log(`✅ [FB PIXEL] ${ids.length} pixel(s) loaded:`, ids);
+          setPixelIds(ids);
         } else {
-          console.log('ℹ️ [FB PIXEL] No active pixel found for this product');
+          console.log('ℹ️ [FB PIXEL] No active pixels found for this product');
         }
       } catch (error) {
         console.error('❌ [FB PIXEL] Unexpected error:', error);
@@ -80,38 +77,40 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
     fetchPixelSettings();
   }, [productId]);
 
-  // Inicializar pixel e enviar eventos
+  // Inicializar pixels e enviar eventos
   useEffect(() => {
-    if (loading || !pixelSettings?.enabled || !pixelSettings?.pixelId || initRef.current) {
+    if (loading || pixelIds.length === 0) {
       return;
     }
 
-    const pixelId = pixelSettings.pixelId;
-    console.log('🚀 [FB PIXEL] Starting initialization for Pixel ID:', pixelId);
+    console.log('🚀 [FB PIXEL] Starting initialization for', pixelIds.length, 'pixel(s):', pixelIds);
 
-    // Esperar pelo fbq com timeout mais longo
+    // Esperar pelo fbq com timeout
     let attempts = 0;
-    const maxAttempts = 50; // 5 segundos no máximo
+    const maxAttempts = 50;
     
     const checkFbq = setInterval(() => {
       attempts++;
 
       if (window.fbq && typeof window.fbq === 'function') {
         clearInterval(checkFbq);
-        initRef.current = true;
 
         console.log('✅ [FB PIXEL] fbq function detected, initializing...');
 
         try {
-          // 1. INIT - Sempre primeiro
-          window.fbq('init', pixelId);
-          console.log('✅ [FB PIXEL] init() called with ID:', pixelId);
+          // Inicializar todos os pixels
+          pixelIds.forEach(pixelId => {
+            if (!initRef.current.has(pixelId)) {
+              window.fbq('init', pixelId);
+              initRef.current.add(pixelId);
+              console.log('✅ [FB PIXEL] init() called with ID:', pixelId);
+            }
+          });
 
-          // 2. PAGE VIEW - Imediatamente após init
+          // Eventos (trackados para todos os pixels)
           window.fbq('track', 'PageView');
           console.log('✅ [FB PIXEL] PageView event tracked');
 
-          // 3. VIEW CONTENT - Visualização do produto
           setTimeout(() => {
             window.fbq('track', 'ViewContent', {
               content_ids: [productId],
@@ -121,7 +120,6 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
             console.log('✅ [FB PIXEL] ViewContent event tracked');
           }, 500);
 
-          // 4. INITIATE CHECKOUT - Início do checkout
           setTimeout(() => {
             window.fbq('track', 'InitiateCheckout', {
               content_ids: [productId],
@@ -130,7 +128,6 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
             console.log('✅ [FB PIXEL] InitiateCheckout event tracked');
           }, 1500);
 
-          // 5. PURCHASE - Listener para compra
           const handlePurchase = (event: CustomEvent) => {
             const { amount, currency } = event.detail || {};
             
@@ -147,7 +144,6 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
 
           window.addEventListener('purchase-completed', handlePurchase as EventListener);
 
-          // Cleanup
           return () => {
             window.removeEventListener('purchase-completed', handlePurchase as EventListener);
             console.log('🧹 [FB PIXEL] Cleanup completed');
@@ -160,7 +156,6 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
       } else if (attempts >= maxAttempts) {
         clearInterval(checkFbq);
         console.error('❌ [FB PIXEL] fbq not available after', maxAttempts, 'attempts');
-        console.error('❌ [FB PIXEL] Check if Facebook Pixel base script is loaded in index.html');
       } else if (attempts % 10 === 0) {
         console.log(`⏳ [FB PIXEL] Waiting for fbq... (${attempts}/${maxAttempts})`);
       }
@@ -169,20 +164,24 @@ export const FacebookPixelTracker = ({ productId }: FacebookPixelTrackerProps) =
     return () => {
       clearInterval(checkFbq);
     };
-  }, [pixelSettings, loading, productId]);
+  }, [pixelIds, loading, productId]);
 
-  // Noscript fallback para Pixel Helper
-  if (!loading && pixelSettings?.enabled && pixelSettings?.pixelId) {
+  // Noscript fallback para todos os pixels
+  if (!loading && pixelIds.length > 0) {
     return (
-      <noscript>
-        <img 
-          height="1" 
-          width="1" 
-          style={{ display: 'none' }}
-          src={`https://www.facebook.com/tr?id=${pixelSettings.pixelId}&ev=PageView&noscript=1`}
-          alt=""
-        />
-      </noscript>
+      <>
+        {pixelIds.map(pixelId => (
+          <noscript key={pixelId}>
+            <img 
+              height="1" 
+              width="1" 
+              style={{ display: 'none' }}
+              src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
+              alt=""
+            />
+          </noscript>
+        ))}
+      </>
     );
   }
 
