@@ -82,6 +82,54 @@ export type Database = {
           },
         ]
       }
+      admin_impersonation_sessions: {
+        Row: {
+          actions_performed: Json | null
+          admin_email: string
+          created_at: string
+          ended_at: string | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          is_active: boolean
+          read_only_mode: boolean
+          started_at: string
+          target_user_email: string
+          target_user_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          actions_performed?: Json | null
+          admin_email: string
+          created_at?: string
+          ended_at?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean
+          read_only_mode?: boolean
+          started_at?: string
+          target_user_email: string
+          target_user_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          actions_performed?: Json | null
+          admin_email?: string
+          created_at?: string
+          ended_at?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean
+          read_only_mode?: boolean
+          started_at?: string
+          target_user_email?: string
+          target_user_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_logs: {
         Row: {
           action: string
@@ -299,10 +347,12 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          created_by_impersonation: boolean | null
           currency: string
           description: string
           email: string | null
           id: string
+          impersonation_session_id: string | null
           order_id: string | null
           type: string
           user_id: string | null
@@ -310,10 +360,12 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          created_by_impersonation?: boolean | null
           currency?: string
           description: string
           email?: string | null
           id?: string
+          impersonation_session_id?: string | null
           order_id?: string | null
           type: string
           user_id?: string | null
@@ -321,15 +373,25 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          created_by_impersonation?: boolean | null
           currency?: string
           description?: string
           email?: string | null
           id?: string
+          impersonation_session_id?: string | null
           order_id?: string | null
           type?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "balance_transactions_impersonation_session_id_fkey"
+            columns: ["impersonation_session_id"]
+            isOneToOne: false
+            referencedRelation: "admin_impersonation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_conversations: {
         Row: {
@@ -1523,11 +1585,13 @@ export type Database = {
           appypay_transaction_id: string | null
           cohort_id: string | null
           created_at: string
+          created_by_impersonation: boolean | null
           currency: string | null
           customer_email: string
           customer_name: string
           customer_phone: string | null
           id: string
+          impersonation_session_id: string | null
           order_bump_data: Json | null
           order_id: string
           payment_method: string | null
@@ -1547,11 +1611,13 @@ export type Database = {
           appypay_transaction_id?: string | null
           cohort_id?: string | null
           created_at?: string
+          created_by_impersonation?: boolean | null
           currency?: string | null
           customer_email: string
           customer_name: string
           customer_phone?: string | null
           id?: string
+          impersonation_session_id?: string | null
           order_bump_data?: Json | null
           order_id: string
           payment_method?: string | null
@@ -1571,11 +1637,13 @@ export type Database = {
           appypay_transaction_id?: string | null
           cohort_id?: string | null
           created_at?: string
+          created_by_impersonation?: boolean | null
           currency?: string | null
           customer_email?: string
           customer_name?: string
           customer_phone?: string | null
           id?: string
+          impersonation_session_id?: string | null
           order_bump_data?: Json | null
           order_id?: string
           payment_method?: string | null
@@ -1594,6 +1662,13 @@ export type Database = {
             columns: ["cohort_id"]
             isOneToOne: false
             referencedRelation: "member_area_cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_impersonation_session_id_fkey"
+            columns: ["impersonation_session_id"]
+            isOneToOne: false
+            referencedRelation: "admin_impersonation_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -1765,11 +1840,13 @@ export type Database = {
           compare_at_price: string | null
           cover: string | null
           created_at: string
+          created_by_impersonation: boolean | null
           custom_prices: Json | null
           description: string | null
           fantasy_name: string | null
           id: string
           image_alt: string | null
+          impersonation_session_id: string | null
           member_area_id: string | null
           minimum_price: number | null
           name: string
@@ -1807,11 +1884,13 @@ export type Database = {
           compare_at_price?: string | null
           cover?: string | null
           created_at?: string
+          created_by_impersonation?: boolean | null
           custom_prices?: Json | null
           description?: string | null
           fantasy_name?: string | null
           id?: string
           image_alt?: string | null
+          impersonation_session_id?: string | null
           member_area_id?: string | null
           minimum_price?: number | null
           name: string
@@ -1849,11 +1928,13 @@ export type Database = {
           compare_at_price?: string | null
           cover?: string | null
           created_at?: string
+          created_by_impersonation?: boolean | null
           custom_prices?: Json | null
           description?: string | null
           fantasy_name?: string | null
           id?: string
           image_alt?: string | null
+          impersonation_session_id?: string | null
           member_area_id?: string | null
           minimum_price?: number | null
           name?: string
@@ -1879,6 +1960,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "products_impersonation_session_id_fkey"
+            columns: ["impersonation_session_id"]
+            isOneToOne: false
+            referencedRelation: "admin_impersonation_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_member_area_id_fkey"
             columns: ["member_area_id"]
@@ -2719,6 +2807,10 @@ export type Database = {
       check_customer_access: {
         Args: { p_customer_email: string; p_product_id: string }
         Returns: boolean
+      }
+      cleanup_expired_impersonation_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       cleanup_expired_member_sessions: {
         Args: Record<PropertyKey, never>

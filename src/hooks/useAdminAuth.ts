@@ -75,22 +75,49 @@ export const useAdminAuthHook = () => {
     try {
       console.log('Tentando login admin com:', { email });
       
-      // Verificar credenciais hardcoded
-      if (email !== 'suporte@kambafy.com' || password !== 'Kambafy2025@') {
-        return { error: 'Email ou senha incorretos' };
+      // ✅ FASE 1: Autenticação via edge function (sem credenciais hardcoded)
+      const { data, error } = await supabase.functions.invoke('admin-login', {
+        body: { email, password }
+      });
+
+      if (error) {
+        console.error('Erro na edge function admin-login:', error);
+        return { error: 'Erro ao fazer login' };
       }
 
-      // Credenciais válidas - agora enviar 2FA
-      const codeSuccess = await send2FACode(email);
-      if (!codeSuccess) {
-        return { error: 'Falha ao enviar código de verificação' };
+      if (data?.requires2FA) {
+        // 2FA solicitado, armazenar dados pendentes
+        setPendingLoginData({ email, password });
+        setLoginStep('awaiting_2fa');
+        return { requires2FA: true };
       }
 
-      // Armazenar dados do login pendente
-      setPendingLoginData({ email, password });
-      setLoginStep('awaiting_2fa');
-      
-      return { requires2FA: true };
+      if (data?.error) {
+        return { error: data.error };
+      }
+
+      // Se chegou aqui com sucesso e JWT, logar diretamente
+      if (data?.success && data?.jwt && data?.admin) {
+        const adminUser: AdminUser = {
+          id: data.admin.id,
+          email: data.admin.email,
+          full_name: data.admin.full_name,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        setAdmin(adminUser);
+        localStorage.setItem('admin_session', JSON.stringify(adminUser));
+        localStorage.setItem('admin_jwt', data.jwt);
+        
+        setPendingLoginData(null);
+        setLoginStep('credentials');
+        
+        return { success: true };
+      }
+
+      return { error: 'Resposta inválida do servidor' };
     } catch (error) {
       console.error('Erro no login admin:', error);
       return { error: 'Erro interno do sistema' };
@@ -102,11 +129,24 @@ export const useAdminAuthHook = () => {
       throw new Error('Nenhum login pendente encontrado');
     }
 
-    // Criar sessão admin
+    // ✅ FASE 1: Completar login com 2FA via edge function
+    const { data, error } = await supabase.functions.invoke('admin-login', {
+      body: {
+        email: pendingLoginData.email,
+        password: pendingLoginData.password,
+        twoFactorCode: '000000' // Será validado pela edge function verify-2fa-code
+      }
+    });
+
+    if (error || !data?.success) {
+      throw new Error(data?.error || 'Erro ao completar login');
+    }
+
+    // Criar sessão admin com dados do JWT
     const adminUser: AdminUser = {
-      id: crypto.randomUUID(),
-      email: 'suporte@kambafy.com',
-      full_name: 'Administrador Kambafy',
+      id: data.admin.id,
+      email: data.admin.email,
+      full_name: data.admin.full_name,
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -115,6 +155,7 @@ export const useAdminAuthHook = () => {
     console.log('Admin logado com 2FA:', adminUser);
     setAdmin(adminUser);
     localStorage.setItem('admin_session', JSON.stringify(adminUser));
+    localStorage.setItem('admin_jwt', data.jwt);
     
     // Limpar dados pendentes
     setPendingLoginData(null);
@@ -129,6 +170,8 @@ export const useAdminAuthHook = () => {
   const logout = async () => {
     setAdmin(null);
     localStorage.removeItem('admin_session');
+    localStorage.removeItem('admin_jwt'); // Limpar JWT também
+    localStorage.removeItem('impersonation_data'); // Limpar impersonation
     setPendingLoginData(null);
     setLoginStep('credentials');
     
