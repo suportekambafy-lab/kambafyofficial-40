@@ -1,11 +1,22 @@
 
+export type AdminRole = 'super_admin' | 'admin' | 'support' | 'moderator';
+
 export interface AdminUser {
   id: string;
   email: string;
   full_name: string | null;
   is_active: boolean;
+  role: AdminRole;
   created_at: string;
   updated_at: string;
+}
+
+export interface AdminPermission {
+  id: string;
+  admin_id: string;
+  permission: string;
+  granted_at: string;
+  granted_by: string | null;
 }
 
 export interface AdminLog {

@@ -207,6 +207,45 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_permissions: {
+        Row: {
+          admin_id: string
+          granted_at: string
+          granted_by: string | null
+          id: string
+          permission: string
+        }
+        Insert: {
+          admin_id: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          permission: string
+        }
+        Update: {
+          admin_id?: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          permission?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_permissions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -215,6 +254,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           password_hash: string
+          role: Database["public"]["Enums"]["admin_role"]
           updated_at: string
         }
         Insert: {
@@ -224,6 +264,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           password_hash: string
+          role?: Database["public"]["Enums"]["admin_role"]
           updated_at?: string
         }
         Update: {
@@ -233,6 +274,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           password_hash?: string
+          role?: Database["public"]["Enums"]["admin_role"]
           updated_at?: string
         }
         Relationships: []
@@ -2768,6 +2810,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: undefined
       }
+      admin_has_permission: {
+        Args: { _admin_email: string; _permission: string }
+        Returns: boolean
+      }
       admin_process_transfer_request: {
         Args: { p_action: string; p_transfer_id: string }
         Returns: Json
@@ -2840,6 +2886,16 @@ export type Database = {
       count_duplicate_withdrawals: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      create_admin_user: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_password: string
+          p_permissions?: string[]
+          p_role?: Database["public"]["Enums"]["admin_role"]
+        }
+        Returns: string
       }
       create_customer_access_manual: {
         Args: {
@@ -3033,7 +3089,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      admin_role: "super_admin" | "admin" | "support" | "moderator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3160,6 +3216,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      admin_role: ["super_admin", "admin", "support", "moderator"],
+    },
   },
 } as const

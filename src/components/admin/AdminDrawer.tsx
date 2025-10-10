@@ -98,6 +98,12 @@ const menuItems = [
     icon: CreditCard,
     description: 'Transferências pendentes',
     badge: 'pending_transfers'
+  },
+  {
+    href: '/admin/management',
+    label: 'Gerenciar Admins',
+    icon: Shield,
+    description: 'Administrar equipe'
   }
 ];
 

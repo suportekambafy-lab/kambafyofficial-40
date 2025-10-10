@@ -102,6 +102,7 @@ export const useAdminAuthHook = () => {
           id: data.admin.id,
           email: data.admin.email,
           full_name: data.admin.full_name,
+          role: data.admin.role || 'admin',
           is_active: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -147,6 +148,7 @@ export const useAdminAuthHook = () => {
       id: data.admin.id,
       email: data.admin.email,
       full_name: data.admin.full_name,
+      role: data.admin.role || 'admin',
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
