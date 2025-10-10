@@ -672,8 +672,8 @@ export default function AdminProducts() {
                     Ver Conteúdo
                   </Button>
                   
-                  {/* Botão aprovar - para produtos pendentes (não aprovados) */}
-                  {!product.admin_approved && product.status !== 'Banido' && !product.revision_requested && (
+                  {/* Botão aprovar - para produtos pendentes (não aprovados) mas não rascunhos */}
+                  {!product.admin_approved && product.status !== 'Banido' && product.status !== 'Rascunho' && !product.revision_requested && (
                     <Button
                       onClick={async () => {
                         setProcessingId(product.id);
