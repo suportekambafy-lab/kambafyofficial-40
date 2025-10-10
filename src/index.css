@@ -587,6 +587,6 @@ html {
 
 /* Ajustar posição do chat Crisp para não sobrepor a barra inferior */
 .crisp-client {
-  bottom: 150px !important;
+  bottom: 180px !important;
   z-index: 9999999 !important;
 }
