@@ -45,6 +45,30 @@ interface FormData {
   accessDurationDescription: string;
 }
 
+const getStepTitle = (stepId: number, productType: string) => {
+  const baseSteps = [
+    { id: 1, title: "Informações Básicas", description: "Nome e descrição" },
+    { id: 2, title: "Preço", description: "Defina os valores" },
+    { id: 3, title: "Métodos de Pagamento", description: "Formas de recebimento" },
+    { id: 4, title: "Configurações", description: "Tags, categoria e suporte" },
+  ];
+  
+  if (stepId === 5) {
+    switch (productType) {
+      case "Curso":
+        return { id: 5, title: "Área de Membros", description: "Selecione a área de membros" };
+      case "E-book":
+        return { id: 5, title: "Arquivo do E-book", description: "Upload do arquivo PDF" };
+      case "Link de Pagamento":
+        return { id: 5, title: "Link de Entrega", description: "Link opcional do produto" };
+      default:
+        return { id: 5, title: "Conteúdo do Produto", description: "Link de compartilhamento" };
+    }
+  }
+  
+  return baseSteps[stepId - 1];
+};
+
 const STEPS = [
   { id: 1, title: "Informações Básicas", description: "Nome e descrição" },
   { id: 2, title: "Preço", description: "Defina os valores" },
@@ -183,7 +207,12 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
           toast.error("Selecione uma área de membros para o curso");
           return false;
         }
-        if (formData.type !== "Curso" && !formData.shareLink.trim()) {
+        if (formData.type === "E-book" && !formData.shareLink.trim()) {
+          toast.error("Upload do arquivo PDF é obrigatório");
+          return false;
+        }
+        // Para "Link de Pagamento", o link é opcional
+        if (formData.type !== "Curso" && formData.type !== "Link de Pagamento" && !formData.shareLink.trim()) {
           toast.error("Link de compartilhamento é obrigatório");
           return false;
         }
@@ -375,8 +404,8 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
       {/* Conteúdo da Etapa Atual */}
       <Card>
         <CardHeader>
-          <CardTitle>{STEPS[currentStep - 1].title}</CardTitle>
-          <p className="text-sm text-muted-foreground">{STEPS[currentStep - 1].description}</p>
+          <CardTitle>{getStepTitle(currentStep, formData.type).title}</CardTitle>
+          <p className="text-sm text-muted-foreground">{getStepTitle(currentStep, formData.type).description}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Etapa 1: Informações Básicas */}
@@ -621,9 +650,23 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                     bucket="product-files"
                     folder="ebooks"
                     accept=".pdf,application/pdf"
+                    recommendedDimensions=""
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Faça upload do arquivo PDF que será enviado ao cliente após a compra
+                  </p>
+                </div>
+              ) : formData.type === "Link de Pagamento" ? (
+                <div>
+                  <Label htmlFor="shareLink">Link de Entrega (opcional)</Label>
+                  <Input
+                    id="shareLink"
+                    value={formData.shareLink}
+                    onChange={(e) => setFormData({ ...formData, shareLink: e.target.value })}
+                    placeholder="https://exemplo.com/arquivo"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Link opcional do produto que será enviado ao cliente após a compra
                   </p>
                 </div>
               ) : (

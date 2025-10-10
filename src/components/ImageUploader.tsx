@@ -137,10 +137,12 @@ export function ImageUploader({
               )}
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            A imagem escolhida deve estar no formato JPG ou PNG e ter no máximo 5 MB de tamanho. Dimensões ideais:{' '}
-            <span className="text-primary font-medium">{dimensions}</span>
-          </p>
+          {dimensions && (
+            <p className="text-xs text-muted-foreground">
+              A imagem escolhida deve estar no formato JPG ou PNG e ter no máximo 5 MB de tamanho. Dimensões ideais:{' '}
+              <span className="text-primary font-medium">{dimensions}</span>
+            </p>
+          )}
         </div>
       )}
     </div>
