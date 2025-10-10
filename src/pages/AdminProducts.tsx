@@ -735,8 +735,8 @@ export default function AdminProducts() {
                     </Button>
                   )}
                   
-                  {/* Botão revisar - quando vendedor solicitar revisão de produto banido */}
-                  {product.revision_requested && product.status === 'Banido' && (
+                  {/* Botão revisar - quando vendedor solicitar revisão (qualquer status) */}
+                  {product.revision_requested && (
                     <Button
                       onClick={() => openReviewModal(product)}
                       disabled={processingId === product.id}
@@ -744,7 +744,7 @@ export default function AdminProducts() {
                       variant="outline"
                       className="w-full border-green-500 text-green-600 hover:bg-green-50 text-xs"
                     >
-                      {processingId === product.id ? 'Aprovando...' : 'Revisar Solicitação'}
+                      {processingId === product.id ? 'Aprovando...' : 'Revisar Alterações'}
                     </Button>
                   )}
                 </div>
