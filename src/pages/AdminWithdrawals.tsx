@@ -204,10 +204,9 @@ export default function AdminWithdrawals() {
                 {selectedIds.size} de {pendingRequests.length}
               </span>
               <span className="w-full sm:w-auto sm:ml-auto text-xs sm:text-sm text-gray-600">
-                Total líquido: {Array.from(selectedIds).reduce((sum, id) => {
+                Total: {Array.from(selectedIds).reduce((sum, id) => {
                   const r = filteredRequests.find(fr => fr.id === id);
-                  const netAmount = r ? Number(r.amount) * 0.92 : 0; // 92% após descontar 8%
-                  return sum + netAmount;
+                  return sum + (r ? Number(r.amount) : 0);
                 }, 0).toLocaleString('pt-AO')} KZ
               </span>
             </div>

@@ -91,7 +91,7 @@ serve(async (req) => {
         payment_method: 'kambapay',
         status: 'completed',
         user_id: null, // Anonymous checkout - user_id should be null
-        seller_commission: productPrice
+        seller_commission: productPrice * 0.92 // 8% platform fee
       }])
       .select()
       .single();

@@ -31,11 +31,8 @@ interface WithdrawalRequestCardProps {
   onProcess: (id: string, status: 'aprovado' | 'rejeitado') => void;
 }
 
-// Calcula o valor líquido após descontar 8% de taxa da plataforma
-const calculateNetAmount = (amount: number): number => {
-  const platformFee = amount * 0.08; // 8% platform fee
-  return amount - platformFee;
-};
+// Nota: O valor já vem líquido (8% descontado) para vendas novas
+// Vendas antigas são calculadas automaticamente pela função do banco
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -74,11 +71,8 @@ export function WithdrawalRequestCard({
             </div>
             <div>
               <CardTitle className="text-xl text-gray-900">
-                {calculateNetAmount(Number(request.amount)).toLocaleString('pt-AO')} KZ
+                {Number(request.amount).toLocaleString('pt-AO')} KZ
               </CardTitle>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Valor bruto: {Number(request.amount).toLocaleString('pt-AO')} KZ (taxa 8%: {(Number(request.amount) * 0.08).toLocaleString('pt-AO')} KZ)
-              </p>
               <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />

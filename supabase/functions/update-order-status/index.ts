@@ -119,7 +119,7 @@ serve(async (req) => {
             // Calcular comissão do afiliado
             const commissionRate = parseFloat(affiliate.commission_rate.replace('%', '')) / 100;
             const affiliateCommission = orderAmount * commissionRate;
-            const sellerCommission = orderAmount - affiliateCommission;
+            const sellerCommission = (orderAmount - affiliateCommission) * 0.92; // 8% platform fee
             
             console.log(`💰 Affiliate commission: ${affiliateCommission}, Seller commission: ${sellerCommission}`);
             
@@ -144,12 +144,13 @@ serve(async (req) => {
             });
           }
         } else {
-          // Sem afiliado - vendedor recebe tudo
-          console.log(`💰 No affiliate - seller gets full amount: ${orderAmount}`);
+          // Sem afiliado - vendedor recebe com 8% de taxa descontado
+          const netAmount = orderAmount * 0.92; // 8% platform fee
+          console.log(`💰 No affiliate - seller gets net amount: ${netAmount} (8% platform fee applied)`);
           await supabase.from('balance_transactions').insert({
             user_id: product.user_id,
             type: 'sale_revenue',
-            amount: orderAmount,
+            amount: netAmount,
             currency: orderData.currency || 'KZ',
             description: `Receita de venda - Pedido ${orderId}`,
             order_id: orderId

@@ -354,7 +354,7 @@ serve(async (req) => {
         payment_method: paymentMethod,
         status: orderStatus,
         user_id: null, // Anonymous checkout - user_id should be null for anonymous orders
-        seller_commission: parseFloat(originalAmount?.toString() || amount.toString())
+        seller_commission: parseFloat(originalAmount?.toString() || amount.toString()) * 0.92 // 8% platform fee
       };
 
       logStep("Saving order", orderDataToSave);
