@@ -487,6 +487,13 @@ const Checkout = () => {
             setProductNotFound(true);
           }, 2000);
           setProduct(null);
+        } else if (productData?.status === 'Pendente') {
+          console.log('Product is under review:', productId);
+          setTimeout(() => {
+            setError("Este produto está em revisão e não está disponível para compra no momento");
+            setProductNotFound(true);
+          }, 2000);
+          setProduct(null);
         } else if (productData?.status === 'Inativo') {
           console.log('Product is inactive:', productId);
           setProduct(productData);
