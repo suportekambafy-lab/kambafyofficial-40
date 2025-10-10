@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Eye, Share, Package } from "lucide-react";
 import { toast } from "@/hooks/useCustomToast";
 import ProductFormTabs from '@/components/ProductFormTabs';
+import StepperProductForm from '@/components/StepperProductForm';
 import ProductTypeSelector from '@/components/ProductTypeSelector';
 import ProductShareDialog from '@/components/ProductShareDialog';
 import DeleteProductModal from '@/components/DeleteProductModal';
@@ -355,10 +356,10 @@ export default function Products() {
   return (
     <div className="p-6 space-y-6">
       {showProductForm ? (
-        <ProductFormTabs
+        <StepperProductForm
           editingProduct={selectedProduct}
           selectedType={selectedProductType}
-          onSave={handleProductSaved}
+          onSuccess={handleProductSaved}
           onCancel={handleCancelProductForm}
         />
       ) : (
