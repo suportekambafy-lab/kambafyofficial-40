@@ -73,6 +73,9 @@ serve(async (req) => {
 
     console.log(`Final amount for Stripe: ${amountInCents} cents in ${currency.toLowerCase()}`);
 
+    // Calcular expires_at (sessão Stripe expira em 30 minutos)
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+
     // Criar sessão de checkout
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -101,7 +104,8 @@ serve(async (req) => {
         customer_email: customerEmail,
         original_amount: amount.toString(), // Valor original antes da conversão para centavos
         original_currency: currency.toUpperCase(), // Moeda original
-        has_custom_prices: hasCustomPrices.toString() // Indicar se usa preço personalizado
+        has_custom_prices: hasCustomPrices.toString(), // Indicar se usa preço personalizado
+        expires_at: expiresAt
       },
       payment_intent_data: {
         metadata: {
@@ -110,7 +114,8 @@ serve(async (req) => {
           customer_email: customerEmail,
           original_amount: amount.toString(), // Valor original antes da conversão para centavos
           original_currency: currency.toUpperCase(), // Moeda original
-          has_custom_prices: hasCustomPrices.toString() // Indicar se usa preço personalizado
+          has_custom_prices: hasCustomPrices.toString(), // Indicar se usa preço personalizado
+          expires_at: expiresAt
         }
       }
     });

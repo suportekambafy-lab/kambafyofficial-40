@@ -624,7 +624,81 @@ serve(async (req) => {
       } else {
         console.log('⚠️ No order_id found in payment intent metadata');
       }
-    } else {
+    } 
+    // Fase 4: Cancelar pagamentos falhados imediatamente
+    else if (event.type === 'payment_intent.payment_failed') {
+      console.log('💳 Payment failed event received');
+      const paymentIntent = event.data.object;
+      const orderId = paymentIntent.metadata.order_id;
+
+      if (orderId) {
+        console.log('❌ Cancelling failed payment order:', orderId);
+        
+        const { error: cancelError } = await supabase
+          .from('orders')
+          .update({ 
+            status: 'cancelled',
+            cancellation_reason: 'payment_failed',
+            updated_at: new Date().toISOString()
+          })
+          .eq('order_id', orderId);
+
+        if (cancelError) {
+          console.error('❌ Error cancelling failed order:', cancelError);
+        } else {
+          console.log('✅ Order cancelled due to payment failure');
+        }
+      }
+    }
+    else if (event.type === 'checkout.session.expired') {
+      console.log('⏱️ Checkout session expired');
+      const session = event.data.object;
+      const orderId = session.metadata?.order_id;
+
+      if (orderId) {
+        console.log('❌ Cancelling expired session order:', orderId);
+        
+        const { error: cancelError } = await supabase
+          .from('orders')
+          .update({ 
+            status: 'cancelled',
+            cancellation_reason: 'expired_payment_session',
+            updated_at: new Date().toISOString()
+          })
+          .eq('order_id', orderId);
+
+        if (cancelError) {
+          console.error('❌ Error cancelling expired session:', cancelError);
+        } else {
+          console.log('✅ Order cancelled due to expired checkout session');
+        }
+      }
+    }
+    else if (event.type === 'payment_intent.canceled') {
+      console.log('🚫 Payment intent cancelled');
+      const paymentIntent = event.data.object;
+      const orderId = paymentIntent.metadata.order_id;
+
+      if (orderId) {
+        console.log('❌ Cancelling cancelled payment order:', orderId);
+        
+        const { error: cancelError } = await supabase
+          .from('orders')
+          .update({ 
+            status: 'cancelled',
+            cancellation_reason: 'payment_failed',
+            updated_at: new Date().toISOString()
+          })
+          .eq('order_id', orderId);
+
+        if (cancelError) {
+          console.error('❌ Error cancelling cancelled payment:', cancelError);
+        } else {
+          console.log('✅ Order cancelled due to payment cancellation');
+        }
+      }
+    }
+    else {
       console.log('ℹ️ Webhook event type not handled:', event.type);
     }
 

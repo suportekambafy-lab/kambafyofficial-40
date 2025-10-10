@@ -1594,6 +1594,7 @@ export type Database = {
           affiliate_commission: number | null
           amount: string
           appypay_transaction_id: string | null
+          cancellation_reason: string | null
           cohort_id: string | null
           created_at: string
           created_by_impersonation: boolean | null
@@ -1601,6 +1602,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string | null
+          expires_at: string | null
           id: string
           impersonation_session_id: string | null
           order_bump_data: Json | null
@@ -1620,6 +1622,7 @@ export type Database = {
           affiliate_commission?: number | null
           amount: string
           appypay_transaction_id?: string | null
+          cancellation_reason?: string | null
           cohort_id?: string | null
           created_at?: string
           created_by_impersonation?: boolean | null
@@ -1627,6 +1630,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone?: string | null
+          expires_at?: string | null
           id?: string
           impersonation_session_id?: string | null
           order_bump_data?: Json | null
@@ -1646,6 +1650,7 @@ export type Database = {
           affiliate_commission?: number | null
           amount?: string
           appypay_transaction_id?: string | null
+          cancellation_reason?: string | null
           cohort_id?: string | null
           created_at?: string
           created_by_impersonation?: boolean | null
@@ -1653,6 +1658,7 @@ export type Database = {
           customer_email?: string
           customer_name?: string
           customer_phone?: string | null
+          expires_at?: string | null
           id?: string
           impersonation_session_id?: string | null
           order_bump_data?: Json | null

@@ -339,6 +339,16 @@ serve(async (req) => {
       const grossAmount = parseFloat(originalAmount?.toString() || amount.toString());
       const sellerCommission = grossAmount * 0.92; // 8% platform fee
       
+      // Calcular expires_at baseado no método de pagamento
+      let expiresAt = null;
+      if (paymentMethod === 'express') {
+        // Multicaixa Express expira em 15 minutos
+        expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      } else if (paymentMethod === 'reference' && chargeResult.responseStatus?.reference?.dueDate) {
+        // Usar dueDate da referência AppyPay
+        expiresAt = new Date(chargeResult.responseStatus.reference.dueDate).toISOString();
+      }
+      
       const orderDataToSave = checkoutOrderData ? {
         ...checkoutOrderData,
         order_id: orderId, // Always use reference number as order_id
@@ -346,7 +356,8 @@ serve(async (req) => {
         stripe_session_id: null, // AppyPay doesn't use Stripe
         status: orderStatus,
         amount: grossAmount.toString(), // Garantir que amount está correto
-        seller_commission: sellerCommission // SOBRESCREVER com desconto de 8%
+        seller_commission: sellerCommission, // SOBRESCREVER com desconto de 8%
+        expires_at: expiresAt
       } : {
         product_id: productId,
         order_id: orderId,
@@ -360,7 +371,8 @@ serve(async (req) => {
         payment_method: paymentMethod,
         status: orderStatus,
         user_id: null, // Anonymous checkout - user_id should be null for anonymous orders
-        seller_commission: sellerCommission // 8% platform fee já calculado acima
+        seller_commission: sellerCommission, // 8% platform fee já calculado acima
+        expires_at: expiresAt
       };
 
       logStep("Saving order", orderDataToSave);
