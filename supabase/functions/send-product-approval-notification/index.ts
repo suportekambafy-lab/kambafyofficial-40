@@ -54,7 +54,6 @@ const handler = async (req: Request): Promise<Response> => {
               .header {
                 padding: 40px 20px;
                 text-align: center;
-                border-bottom: 1px solid #e5e5e5;
               }
               .header h1 {
                 margin: 0;
@@ -71,8 +70,6 @@ const handler = async (req: Request): Promise<Response> => {
                 font-weight: 600;
               }
               .section {
-                border: 1px solid #e5e5e5;
-                border-radius: 8px;
                 padding: 20px;
                 margin-bottom: 30px;
               }
@@ -138,7 +135,6 @@ const handler = async (req: Request): Promise<Response> => {
                 padding: 30px;
                 text-align: center;
                 font-size: 14px;
-                border-top: 1px solid #e5e5e5;
               }
               .footer p {
                 margin: 8px 0;
