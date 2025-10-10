@@ -9,7 +9,7 @@ interface AdminAuthContextType {
   logout: () => Promise<void>;
   loading: boolean;
   loginStep: 'credentials' | 'awaiting_2fa';
-  completeAdminLogin: () => Promise<void>;
+  completeAdminLogin: (verifiedCode: string) => Promise<{ success: boolean }>;
   cancelAdminLogin: () => void;
 }
 
@@ -27,7 +27,7 @@ export const useAdminAuthHook = () => {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [loginStep, setLoginStep] = useState<'credentials' | 'awaiting_2fa'>('credentials');
-  const [pendingLoginData, setPendingLoginData] = useState<{ email: string; password: string } | null>(null);
+  const [pendingLoginData, setPendingLoginData] = useState<{ email: string; password: string; code?: string } | null>(null);
 
   useEffect(() => {
     checkAdminSession();
@@ -125,14 +125,55 @@ export const useAdminAuthHook = () => {
     }
   };
 
-  const completeAdminLogin = async () => {
+  const completeAdminLogin = async (verifiedCode: string) => {
     if (!pendingLoginData) {
       throw new Error('Nenhum login pendente encontrado');
     }
 
-    // Nota: Este método não é mais necessário pois o 2FA é verificado diretamente no primeiro login
-    // Mantido para compatibilidade, mas agora apenas redireciona
-    throw new Error('Método obsoleto - use login direto com código 2FA');
+    try {
+      console.log('Completando login admin com código 2FA verificado');
+      
+      // Chamar admin-login novamente com o código verificado
+      const { data, error } = await supabase.functions.invoke('admin-login', {
+        body: { 
+          email: pendingLoginData.email, 
+          password: pendingLoginData.password,
+          twoFactorCode: verifiedCode
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao completar login:', error);
+        throw new Error('Erro ao completar login');
+      }
+
+      if (data?.success && data?.jwt && data?.admin) {
+        const adminUser: AdminUser = {
+          id: data.admin.id,
+          email: data.admin.email,
+          full_name: data.admin.full_name,
+          role: data.admin.role || 'admin',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        setAdmin(adminUser);
+        localStorage.setItem('admin_session', JSON.stringify(adminUser));
+        localStorage.setItem('admin_jwt', data.jwt);
+        
+        setPendingLoginData(null);
+        setLoginStep('credentials');
+        
+        console.log('✅ Login admin completado com sucesso');
+        return { success: true };
+      }
+
+      throw new Error(data?.error || 'Resposta inválida do servidor');
+    } catch (error) {
+      console.error('Erro ao completar login admin:', error);
+      throw error;
+    }
   };
 
   const cancelAdminLogin = () => {
