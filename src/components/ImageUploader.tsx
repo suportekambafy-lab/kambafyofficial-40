@@ -122,7 +122,7 @@ export function ImageUploader({
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
           <div 
-            className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+            className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
             style={{ aspectRatio }}
           >
             {uploading ? (

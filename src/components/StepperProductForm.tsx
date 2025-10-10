@@ -354,7 +354,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                 />
               </div>
 
-              <div>
+              <div className="max-w-md">
                 <Label>Imagem de Capa</Label>
                 <ImageUploader
                   label="Capa do produto"
@@ -362,6 +362,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                   onChange={(url) => setFormData({ ...formData, cover: url || '' })}
                   bucket="product-images"
                   folder="covers"
+                  aspectRatio="4/3"
                 />
               </div>
             </>
