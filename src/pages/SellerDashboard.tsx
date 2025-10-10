@@ -5,6 +5,7 @@ import { ModernSidebar } from '@/components/modern/ModernSidebar';
 import { ModernTopBar } from '@/components/modern/ModernTopBar';
 import { ModernDashboardHome } from '@/components/modern/ModernDashboardHome';
 import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
+import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 import { SkeletonPage } from '@/components/ui/skeleton-page';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -59,42 +60,8 @@ const SellerMemberModulePayments = createLazyWithRetry(() => import("./SellerMem
 function SellerDashboardContent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { collapsed, isMobile, sidebarOpen, toggleSidebarOpen, closeSidebar } = useSidebar();
   const { theme } = useSellerTheme();
-
-  useEffect(() => {
-    const checkIsMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      
-      if (mobile) {
-        setSidebarCollapsed(false);
-        setSidebarOpen(false);
-      } else {
-        setSidebarOpen(true);
-      }
-    };
-
-    checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
-    return () => window.removeEventListener('resize', checkIsMobile);
-  }, []);
-
-  const toggleSidebar = () => {
-    if (isMobile) {
-      setSidebarOpen(!sidebarOpen);
-    } else {
-      setSidebarCollapsed(!sidebarCollapsed);
-    }
-  };
-
-  const closeSidebar = () => {
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  };
 
   return (
     <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
@@ -111,8 +78,8 @@ function SellerDashboardContent() {
 
           {/* Sidebar */}
           <ModernSidebar 
-            collapsed={isMobile ? false : sidebarCollapsed}
-            onToggle={toggleSidebar}
+            collapsed={isMobile ? false : collapsed}
+            onToggle={toggleSidebarOpen}
             isMobile={isMobile}
             isOpen={isMobile ? sidebarOpen : true}
             onClose={closeSidebar}
@@ -122,13 +89,13 @@ function SellerDashboardContent() {
           <div 
             className={`
               flex-1 flex flex-col
-              ${isMobile ? 'ml-0' : (sidebarCollapsed ? 'ml-20' : 'ml-80')}
+              ${isMobile ? 'ml-0' : (collapsed ? 'ml-20' : 'ml-80')}
             `}
           >
             {/* Top bar */}
             <ModernTopBar 
-              sidebarCollapsed={sidebarCollapsed} 
-              onToggleSidebar={toggleSidebar}
+              sidebarCollapsed={collapsed} 
+              onToggleSidebar={toggleSidebarOpen}
               isMobile={isMobile}
             />
           
@@ -164,7 +131,9 @@ export default function SellerDashboard() {
     <ProtectedRoute>
       <ModernErrorBoundary>
         <SellerThemeProvider>
-          <SellerDashboardContent />
+          <SidebarProvider>
+            <SellerDashboardContent />
+          </SidebarProvider>
         </SellerThemeProvider>
       </ModernErrorBoundary>
     </ProtectedRoute>

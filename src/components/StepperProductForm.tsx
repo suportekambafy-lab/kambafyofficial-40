@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSidebar } from "@/contexts/SidebarContext";
 import { ChevronRight, ChevronLeft, Check } from "lucide-react";
 import PaymentMethodsSelector from "./PaymentMethodsSelector";
 import CountryPriceConfig from "./CountryPriceConfig";
@@ -54,6 +55,7 @@ const STEPS = [
 
 export default function StepperProductForm({ editingProduct, onSuccess, onCancel, selectedType }: StepperProductFormProps) {
   const { user } = useAuth();
+  const { collapsed, isMobile } = useSidebar();
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [memberAreas, setMemberAreas] = useState<any[]>([]);
@@ -501,6 +503,22 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                     <SelectItem value="Produtividade">Produtividade</SelectItem>
                     <SelectItem value="Gestão">Gestão</SelectItem>
                     <SelectItem value="Redes Sociais">Redes Sociais</SelectItem>
+                    <SelectItem value="Fotografia">Fotografia</SelectItem>
+                    <SelectItem value="Vídeo">Vídeo</SelectItem>
+                    <SelectItem value="Música">Música</SelectItem>
+                    <SelectItem value="Arte">Arte</SelectItem>
+                    <SelectItem value="Culinária">Culinária</SelectItem>
+                    <SelectItem value="Moda">Moda</SelectItem>
+                    <SelectItem value="Beleza">Beleza</SelectItem>
+                    <SelectItem value="Fitness">Fitness</SelectItem>
+                    <SelectItem value="Esportes">Esportes</SelectItem>
+                    <SelectItem value="Viagens">Viagens</SelectItem>
+                    <SelectItem value="Idiomas">Idiomas</SelectItem>
+                    <SelectItem value="Relacionamentos">Relacionamentos</SelectItem>
+                    <SelectItem value="Espiritualidade">Espiritualidade</SelectItem>
+                    <SelectItem value="E-commerce">E-commerce</SelectItem>
+                    <SelectItem value="Afiliados">Afiliados</SelectItem>
+                    <SelectItem value="Programação">Programação</SelectItem>
                     <SelectItem value="Outros">Outros</SelectItem>
                   </SelectContent>
                 </Select>
@@ -628,7 +646,9 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
       </Card>
 
       {/* Barra inferior fixa com ações */}
-      <div className="fixed bottom-0 left-0 md:left-80 right-0 bg-background border-t border-border shadow-lg z-50 p-4 flex items-center justify-between">
+      <div className={`fixed bottom-0 right-0 bg-background border-t border-border shadow-lg z-50 p-4 flex items-center justify-between transition-all duration-300 ${
+        isMobile ? 'left-0' : (collapsed ? 'left-20' : 'left-80')
+      }`}>
         <Button variant="outline" onClick={onCancel} disabled={saving}>
           Cancelar
         </Button>
