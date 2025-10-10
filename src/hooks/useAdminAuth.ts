@@ -31,6 +31,48 @@ export const useAdminAuthHook = () => {
 
   useEffect(() => {
     checkAdminSession();
+    
+    // Verificar e atualizar dados do admin a cada 30 segundos
+    const interval = setInterval(async () => {
+      const adminData = localStorage.getItem('admin_session');
+      if (adminData) {
+        const parsedAdmin = JSON.parse(adminData);
+        
+        // Buscar dados atualizados do banco
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('email', parsedAdmin.email)
+          .single();
+        
+        if (data && !error) {
+          // Verificar se o role mudou
+          if (data.role !== parsedAdmin.role || data.is_active !== parsedAdmin.is_active) {
+            console.log('🔄 Atualizando dados do admin:', {
+              oldRole: parsedAdmin.role,
+              newRole: data.role,
+              oldActive: parsedAdmin.is_active,
+              newActive: data.is_active
+            });
+            
+            const updatedAdmin: AdminUser = {
+              id: data.id,
+              email: data.email,
+              full_name: data.full_name,
+              role: data.role,
+              is_active: data.is_active,
+              created_at: data.created_at,
+              updated_at: data.updated_at
+            };
+            
+            setAdmin(updatedAdmin);
+            localStorage.setItem('admin_session', JSON.stringify(updatedAdmin));
+          }
+        }
+      }
+    }, 30000); // Verificar a cada 30 segundos
+    
+    return () => clearInterval(interval);
   }, []);
 
   const checkAdminSession = async () => {
@@ -39,7 +81,40 @@ export const useAdminAuthHook = () => {
       if (adminData) {
         const parsedAdmin = JSON.parse(adminData);
         console.log('Admin session encontrada:', parsedAdmin);
-        setAdmin(parsedAdmin);
+        
+        // Buscar dados atualizados do banco para verificar se mudou
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('email', parsedAdmin.email)
+          .single();
+        
+        if (data && !error) {
+          // Verificar se o role mudou
+          if (data.role !== parsedAdmin.role || data.is_active !== parsedAdmin.is_active) {
+            console.log('🔄 Role atualizado detectado na inicialização:', {
+              oldRole: parsedAdmin.role,
+              newRole: data.role
+            });
+            
+            const updatedAdmin: AdminUser = {
+              id: data.id,
+              email: data.email,
+              full_name: data.full_name,
+              role: data.role,
+              is_active: data.is_active,
+              created_at: data.created_at,
+              updated_at: data.updated_at
+            };
+            
+            setAdmin(updatedAdmin);
+            localStorage.setItem('admin_session', JSON.stringify(updatedAdmin));
+          } else {
+            setAdmin(parsedAdmin);
+          }
+        } else {
+          setAdmin(parsedAdmin);
+        }
       }
     } catch (error) {
       console.error('Error checking admin session:', error);
