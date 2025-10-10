@@ -36,51 +36,42 @@ const handler = async (req: Request): Promise<Response> => {
           <head>
             <meta charset="utf-8">
             <style>
-              .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
-              .header { background: #dc2626; color: white; padding: 20px; text-align: center; }
-              .content { padding: 30px; background: #f9fafb; }
-              .reason-box { background: #fee2e2; border: 1px solid #fecaca; padding: 15px; border-radius: 8px; margin: 20px 0; }
-              .action-box { background: #dbeafe; border: 1px solid #93c5fd; padding: 15px; border-radius: 8px; margin: 20px 0; }
-              .footer { background: #374151; color: white; padding: 20px; text-align: center; font-size: 14px; }
-              .button { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 0; }
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              h2 { margin-top: 0; }
+              p { margin: 10px 0; }
+              .reason { background: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 3px solid #333; }
+              .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
             </style>
           </head>
           <body>
             <div class="container">
-              <div class="header">
-                <h1>🚫 Conta Suspensa</h1>
+              <h2>Conta Suspensa</h2>
+              
+              <p>Olá ${userName},</p>
+              
+              <p>Informamos que sua conta na plataforma Kambafy foi suspensa.</p>
+              
+              <div class="reason">
+                <p><strong>Motivo:</strong></p>
+                <p>${banReason}</p>
               </div>
               
-              <div class="content">
-                <p>Olá <strong>${userName}</strong>,</p>
-                
-                <p>Informamos que sua conta na plataforma Kambafy foi suspensa temporariamente.</p>
-                
-                <div class="reason-box">
-                  <h3>📋 Motivo da suspensão:</h3>
-                  <p><strong>${banReason}</strong></p>
-                </div>
-                
-                <div class="action-box">
-                  <h3>🔄 Como contestar esta decisão:</h3>
-                  <p>Se você acredita que esta suspensão foi um erro ou possui informações que podem alterar nossa decisão, envie um email para:</p>
-                  <p><strong>suporte@kambafy.com</strong></p>
-                  <p>Inclua em seu email:</p>
-                  <ul>
-                    <li>Seu nome completo e email</li>
-                    <li>Explicação detalhada da situação</li>
-                    <li>Documentos ou evidências que comprovem sua versão</li>
-                  </ul>
-                </div>
-                
-                <p>Nossa equipe analisará seu caso em até 48-72 horas úteis.</p>
-                
-                <p><strong>Importante:</strong> Enquanto sua conta estiver suspensa, você não poderá acessar a plataforma ou realizar vendas.</p>
-              </div>
+              <p><strong>Como contestar:</strong></p>
+              <p>Se você acredita que esta decisão foi um erro, envie um email para <strong>suporte@kambafy.com</strong> com:</p>
+              <ul>
+                <li>Seu nome completo e email</li>
+                <li>Explicação detalhada da situação</li>
+                <li>Documentos ou evidências que comprovem sua versão</li>
+              </ul>
+              
+              <p>Nossa equipe analisará seu caso em até 48-72 horas úteis.</p>
+              
+              <p><strong>Importante:</strong> Enquanto sua conta estiver suspensa, você não poderá acessar a plataforma.</p>
               
               <div class="footer">
-                <p>© 2024 Kambafy - Plataforma de Vendas Digitais</p>
-                <p>Este email foi enviado automaticamente. Para contestar, envie email para suporte@kambafy.com</p>
+                <p>Kambafy - Plataforma de Vendas Digitais</p>
+                <p>Para contestar: suporte@kambafy.com</p>
               </div>
             </div>
           </body>

@@ -39,41 +39,37 @@ const handler = async (req: Request): Promise<Response> => {
             <style>
               body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { text-align: center; padding: 20px 0; }
-              .content { background: #f9f9f9; padding: 30px; border-radius: 8px; }
-              .reason-box { background: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0; }
-              .footer { text-align: center; padding: 20px 0; font-size: 14px; color: #666; }
+              h2 { margin-top: 0; }
+              p { margin: 10px 0; }
+              .reason { background: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 3px solid #333; }
+              .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
             </style>
           </head>
           <body>
             <div class="container">
-              <div class="header">
-                <h1>❌ Produto Rejeitado</h1>
+              <h2>Produto Rejeitado</h2>
+              
+              <p>Olá ${sellerName},</p>
+              
+              <p>Seu produto "<strong>${productName}</strong>" não foi aprovado pela nossa equipe.</p>
+              
+              <div class="reason">
+                <p><strong>Motivo:</strong></p>
+                <p>${banReason}</p>
               </div>
               
-              <div class="content">
-                <p>Olá <strong>${sellerName}</strong>,</p>
-                
-                <p>Seu produto <strong>"${productName}"</strong> não foi aprovado porque não atende às diretrizes da plataforma.</p>
-                
-                <div class="reason-box">
-                  <h3>Motivo:</h3>
-                  <p><strong>${banReason}</strong></p>
-                </div>
-                
-                <p>Você pode fazer as correções necessárias e solicitar uma nova revisão através do painel do vendedor.</p>
-                
-                <p><strong>Próximos passos:</strong></p>
-                <ul>
-                  <li>Revise o motivo da rejeição</li>
-                  <li>Faça as alterações necessárias no produto</li>
-                  <li>Solicite uma nova revisão</li>
-                </ul>
-              </div>
+              <p>O que você pode fazer:</p>
+              <ul>
+                <li>Revise o motivo da rejeição</li>
+                <li>Faça as correções necessárias</li>
+                <li>Solicite nova revisão pelo painel</li>
+              </ul>
+              
+              <p>Acesse: <a href="https://kambafy.com/vendedor/produtos">https://kambafy.com/vendedor/produtos</a></p>
               
               <div class="footer">
-                <p>© 2024 Kambafy - Plataforma de Vendas Digitais</p>
-                <p>Em caso de dúvidas, entre em contato conosco em suporte@kambafy.com</p>
+                <p>Kambafy - Plataforma de Vendas Digitais</p>
+                <p>Dúvidas? Entre em contato: suporte@kambafy.com</p>
               </div>
             </div>
           </body>
