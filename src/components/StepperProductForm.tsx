@@ -45,7 +45,7 @@ interface FormData {
 }
 
 const STEPS = [
-  { id: 1, title: "Informações Básicas", description: "Nome, tipo e descrição" },
+  { id: 1, title: "Informações Básicas", description: "Nome e descrição" },
   { id: 2, title: "Preço", description: "Defina os valores" },
   { id: 3, title: "Métodos de Pagamento", description: "Formas de recebimento" },
   { id: 4, title: "Configurações", description: "Tags, categoria e suporte" },
@@ -138,10 +138,6 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
       case 1:
         if (!formData.name.trim()) {
           toast.error("Nome do produto é obrigatório");
-          return false;
-        }
-        if (!formData.type) {
-          toast.error("Tipo do produto é obrigatório");
           return false;
         }
         if (!formData.description.trim()) {
@@ -327,20 +323,6 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Ex: E-book de Marketing Digital"
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="type">Tipo de Produto *</Label>
-                <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="E-book">E-book</SelectItem>
-                    <SelectItem value="Curso">Curso</SelectItem>
-                    <SelectItem value="Link De Pagamento">Link De Pagamento</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div>
