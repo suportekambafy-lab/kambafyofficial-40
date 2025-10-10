@@ -313,7 +313,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">{/* pb-24 para dar espaço para a barra fixa */}
       {/* Header com Stepper e Botões */}
       <div className="flex items-center justify-between border-b pb-4">
         <div className="flex items-center gap-2">
@@ -585,8 +585,8 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         </CardContent>
       </Card>
 
-      {/* Barra inferior com ações */}
-      <div className="sticky bottom-0 left-0 right-0 bg-background border-t border-border p-4 flex items-center justify-between">
+      {/* Barra inferior fixa com ações */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg z-50 p-4 flex items-center justify-between">
         <Button variant="outline" onClick={onCancel} disabled={saving}>
           Cancelar
         </Button>
