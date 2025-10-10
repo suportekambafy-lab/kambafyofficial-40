@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import EbookUploader from "./EbookUploader";
 import PaymentMethodsSelector from "./PaymentMethodsSelector";
 import CountryPriceConfig from "./CountryPriceConfig";
-import { PaymentMethod } from "@/utils/paymentMethods";
+import { getAllPaymentMethods, PaymentMethod } from "@/utils/paymentMethods";
 import { ImageUploader } from "./ImageUploader";
 
 interface ProductFormProps {
@@ -107,6 +107,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         customPrices: editingProduct.custom_prices || {}
       });
     } else {
+      const defaultPaymentMethods = getAllPaymentMethods().filter(m => m.enabled);
       setFormData({
         name: "",
         type: selectedType || "E-book",
@@ -117,7 +118,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         commission: "10%",
         tags: [],
         memberAreaId: "",
-        paymentMethods: [],
+        paymentMethods: defaultPaymentMethods,
         fantasyName: "",
         customPrices: {}
       });

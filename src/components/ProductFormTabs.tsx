@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import EbookUploader from "./EbookUploader";
 import PaymentMethodsSelector from "./PaymentMethodsSelector";
 import CountryPriceConfig from "./CountryPriceConfig";
-import { PaymentMethod } from "@/utils/paymentMethods";
+import { getAllPaymentMethods, PaymentMethod } from "@/utils/paymentMethods";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
 import { AccessDurationSelector } from "./AccessDurationSelector";
 import { useBunnyUpload } from "@/hooks/useBunnyUpload";
@@ -129,6 +129,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         accessDurationDescription: editingProduct.access_duration_description || ""
       });
     } else {
+      const defaultPaymentMethods = getAllPaymentMethods().filter(m => m.enabled);
       setFormData({
         name: "",
         type: selectedType || "E-book",
@@ -140,7 +141,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         commission: "10%",
         tags: [],
         memberAreaId: "",
-        paymentMethods: [],
+        paymentMethods: defaultPaymentMethods,
         fantasyName: "",
         customPrices: {},
         allowAffiliates: false,
