@@ -335,12 +335,16 @@ serve(async (req) => {
 
     // Salvar ordem no banco apenas se não for módulo (skipOrderSave = false)
     if (!skipOrderSave) {
+      const grossAmount = parseFloat(originalAmount?.toString() || amount.toString());
+      const sellerCommission = grossAmount * 0.92; // 8% platform fee
+      
       const orderDataToSave = checkoutOrderData ? {
         ...checkoutOrderData,
         order_id: orderId, // Always use reference number as order_id
         appypay_transaction_id: merchantTransactionId, // Save AppyPay transaction ID for webhook lookup
         stripe_session_id: null, // AppyPay doesn't use Stripe
-        status: orderStatus
+        status: orderStatus,
+        seller_commission: sellerCommission // SEMPRE aplicar 8% de desconto
       } : {
         product_id: productId,
         order_id: orderId,
@@ -354,7 +358,7 @@ serve(async (req) => {
         payment_method: paymentMethod,
         status: orderStatus,
         user_id: null, // Anonymous checkout - user_id should be null for anonymous orders
-        seller_commission: parseFloat(originalAmount?.toString() || amount.toString()) * 0.92 // 8% platform fee
+        seller_commission: sellerCommission // 8% platform fee já calculado acima
       };
 
       logStep("Saving order", orderDataToSave);
