@@ -79,18 +79,12 @@ export function ImageUploader({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium">{label}</Label>
-        <span className="text-xs text-muted-foreground">
-          Recomendado: {dimensions}
-        </span>
-      </div>
+      <Label className="text-sm font-medium">{label}</Label>
       
       {value ? (
         <div className="relative group">
           <div 
-            className="relative w-full bg-muted rounded-lg overflow-hidden border border-border"
-            style={{ aspectRatio }}
+            className="relative w-40 h-40 bg-muted rounded-lg overflow-hidden border border-border"
           >
             <img
               src={value}
@@ -113,39 +107,40 @@ export function ImageUploader({
           </div>
         </div>
       ) : (
-        <div className="relative">
-          <Input
-            type="file"
-            accept={accept}
-            onChange={handleFileChange}
-            disabled={uploading || disabled}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          />
-          <div 
-            className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-            style={{ aspectRatio }}
-          >
-            {uploading ? (
-              <div className="flex flex-col items-center space-y-2">
-                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-muted-foreground">Enviando...</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center space-y-2">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <ImageIcon className="w-6 h-6 text-primary" />
+        <div className="space-y-2">
+          <div className="relative">
+            <Input
+              type="file"
+              accept={accept}
+              onChange={handleFileChange}
+              disabled={uploading || disabled}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              id="file-upload"
+            />
+            <div className="flex items-center justify-center gap-4 p-8 border-2 border-dashed border-border rounded-lg bg-background hover:bg-muted/30 transition-colors cursor-pointer">
+              {uploading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm text-muted-foreground">Enviando...</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">Clique para enviar uma imagem</p>
-                  <p className="text-xs text-muted-foreground">PNG, JPG, WEBP até 50MB</p>
-                  <p className="text-xs text-primary font-medium mt-1">
-                    Tamanho ideal: {dimensions}
-                  </p>
-                </div>
-                <Upload className="w-4 h-4 text-muted-foreground" />
-              </div>
-            )}
+              ) : (
+                <>
+                  <span className="text-sm text-muted-foreground">Arraste o arquivo para cá</span>
+                  <span className="text-sm text-muted-foreground">ou</span>
+                  <label 
+                    htmlFor="file-upload"
+                    className="px-6 py-2 text-sm font-medium text-primary border-2 border-primary rounded-md cursor-pointer hover:bg-primary/5 transition-colors"
+                  >
+                    Selecione um arquivo
+                  </label>
+                </>
+              )}
+            </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            A imagem escolhida deve estar no formato JPG ou PNG e ter no máximo 5 MB de tamanho. Dimensões ideais:{' '}
+            <span className="text-primary font-medium">{dimensions}</span>
+          </p>
         </div>
       )}
     </div>
