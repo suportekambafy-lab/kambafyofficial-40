@@ -520,19 +520,30 @@ export function AppHome() {
       // ✅ USAR o saldo real do customer_balances como fonte de verdade
       const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
 
-      // Calcular saldo pendente baseado nas vendas dos últimos 3 dias (igual ao Financial.tsx)
-      const now = new Date();
+      // ✅ CALCULAR SALDO PENDENTE baseado em balance_transactions (igual ao Financial.tsx)
+      // Buscar transações de crédito de vendas (sale_revenue)
+      const { data: balanceTransactions } = await supabase
+        .from('balance_transactions')
+        .select('order_id')
+        .eq('user_id', user.id)
+        .eq('type', 'sale_revenue');
+
+      const releasedOrderIds = new Set(
+        (balanceTransactions || [])
+          .map(t => t.order_id)
+          .filter((id): id is string => id !== null)
+      );
+
       let pendingBalance = 0;
 
       processedOrders.forEach(order => {
-        const orderDate = new Date(order.created_at);
-        const releaseDate = new Date(orderDate);
-        releaseDate.setDate(orderDate.getDate() + 3);
-        
         const amount = order.earning_amount;
         
-        // Se ainda não liberou (dentro de 3 dias)
-        if (now < releaseDate) {
+        // ✅ VERIFICAR SE JÁ TEM BALANCE_TRANSACTION (fonte de verdade)
+        const hasTransaction = releasedOrderIds.has(order.order_id);
+        
+        if (!hasTransaction) {
+          // ❌ Sem transação = ainda está pendente
           pendingBalance += amount;
         }
       });
