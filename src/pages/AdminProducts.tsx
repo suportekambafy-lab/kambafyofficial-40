@@ -515,19 +515,37 @@ export default function AdminProducts() {
       );
     }
     
-    // Pendente de aprovação (não aprovado ainda)
-    if (!product.admin_approved) {
+    // Ativo (aprovado)
+    if (product.status === 'Ativo') {
       return (
-        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-          Pendente
+        <Badge className="bg-green-100 text-green-800 border-green-200">
+          Ativo
         </Badge>
       );
     }
     
-    // Aprovado e ativo
+    // Inativo
+    if (product.status === 'Inativo') {
+      return (
+        <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+          Inativo
+        </Badge>
+      );
+    }
+    
+    // Pendente de aprovação
+    if (product.status === 'Pendente' || !product.admin_approved) {
+      return (
+        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+          Pendente Aprovação
+        </Badge>
+      );
+    }
+    
+    // Fallback - não deveria chegar aqui
     return (
-      <Badge className="bg-green-100 text-green-800 border-green-200">
-        Aprovado
+      <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+        {product.status || 'Desconhecido'}
       </Badge>
     );
   };
