@@ -63,9 +63,9 @@ export default function AdminLogin() {
     }
   };
 
-  const handle2FASuccess = async (verifiedCode: string) => {
+  const handle2FASuccess = async () => {
     try {
-      await completeAdminLogin(verifiedCode);
+      await completeAdminLogin();
       toast({
         title: 'Acesso autorizado',
         description: 'Bem-vindo ao painel administrativo'

@@ -9,7 +9,7 @@ interface AdminAuthContextType {
   logout: () => Promise<void>;
   loading: boolean;
   loginStep: 'credentials' | 'awaiting_2fa';
-  completeAdminLogin: (verifiedCode: string) => Promise<{ success: boolean }>;
+  completeAdminLogin: () => Promise<void>;
   cancelAdminLogin: () => void;
 }
 
@@ -27,7 +27,7 @@ export const useAdminAuthHook = () => {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [loginStep, setLoginStep] = useState<'credentials' | 'awaiting_2fa'>('credentials');
-  const [pendingLoginData, setPendingLoginData] = useState<{ email: string; password: string; code?: string } | null>(null);
+  const [pendingLoginData, setPendingLoginData] = useState<{ email: string; password: string } | null>(null);
 
   useEffect(() => {
     checkAdminSession();
@@ -125,53 +125,43 @@ export const useAdminAuthHook = () => {
     }
   };
 
-  const completeAdminLogin = async (verifiedCode: string) => {
+  const completeAdminLogin = async () => {
     if (!pendingLoginData) {
       throw new Error('Nenhum login pendente encontrado');
     }
 
-    try {
-      console.log('✅ Código 2FA já verificado, completando login...');
-      
-      // Código já foi verificado com sucesso, apenas gerar JWT agora
-      const { data, error } = await supabase.functions.invoke('complete-admin-login', {
-        body: { 
-          email: pendingLoginData.email
-        }
-      });
-
-      if (error) {
-        console.error('Erro ao completar login:', error);
-        throw new Error('Erro ao completar login');
+    // ✅ FASE 2: Completar login após 2FA já verificado
+    const { data, error } = await supabase.functions.invoke('admin-login', {
+      body: {
+        email: pendingLoginData.email,
+        password: pendingLoginData.password,
+        codeAlreadyVerified: true // Código já foi verificado no frontend
       }
+    });
 
-      if (data?.success && data?.jwt && data?.admin) {
-        const adminUser: AdminUser = {
-          id: data.admin.id,
-          email: data.admin.email,
-          full_name: data.admin.full_name,
-          role: data.admin.role || 'admin',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-
-        setAdmin(adminUser);
-        localStorage.setItem('admin_session', JSON.stringify(adminUser));
-        localStorage.setItem('admin_jwt', data.jwt);
-        
-        setPendingLoginData(null);
-        setLoginStep('credentials');
-        
-        console.log('✅ Login admin completado com sucesso');
-        return { success: true };
-      }
-
-      throw new Error(data?.error || 'Resposta inválida do servidor');
-    } catch (error) {
-      console.error('Erro ao completar login admin:', error);
-      throw error;
+    if (error || !data?.success) {
+      throw new Error(data?.error || 'Erro ao completar login');
     }
+
+    // Criar sessão admin com dados do JWT
+    const adminUser: AdminUser = {
+      id: data.admin.id,
+      email: data.admin.email,
+      full_name: data.admin.full_name,
+      role: data.admin.role || 'admin',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    console.log('Admin logado com 2FA:', adminUser);
+    setAdmin(adminUser);
+    localStorage.setItem('admin_session', JSON.stringify(adminUser));
+    localStorage.setItem('admin_jwt', data.jwt);
+    
+    // Limpar dados pendentes
+    setPendingLoginData(null);
+    setLoginStep('credentials');
   };
 
   const cancelAdminLogin = () => {
@@ -182,11 +172,12 @@ export const useAdminAuthHook = () => {
   const logout = async () => {
     setAdmin(null);
     localStorage.removeItem('admin_session');
-    localStorage.removeItem('admin_jwt');
-    localStorage.removeItem('impersonation_data');
+    localStorage.removeItem('admin_jwt'); // Limpar JWT também
+    localStorage.removeItem('impersonation_data'); // Limpar impersonation
     setPendingLoginData(null);
     setLoginStep('credentials');
     
+    // Redirecionar para login admin
     window.location.href = '/admin/login';
   };
 

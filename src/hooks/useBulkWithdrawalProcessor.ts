@@ -29,8 +29,7 @@ export function useBulkWithdrawalProcessor(onSuccess: () => void) {
     requestIds: string[], 
     status: 'aprovado' | 'rejeitado', 
     adminId?: string,
-    notes?: string,
-    adminJwt?: string | null
+    notes?: string
   ) => {
     setProcessing(true);
     
@@ -40,14 +39,13 @@ export function useBulkWithdrawalProcessor(onSuccess: () => void) {
       // Validar se adminId é um UUID válido
       const validAdminId = adminId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(adminId) ? adminId : null;
       
-      // Processar cada saque usando RPC com JWT
+      // Processar cada saque usando RPC (para garantir que bypassa RLS)
       const processPromises = requestIds.map(requestId =>
         supabase.rpc('admin_process_withdrawal_request', {
           request_id: requestId,
           new_status: status,
           admin_id: validAdminId,
-          notes_text: notes || null,
-          p_jwt_token: adminJwt
+          notes_text: notes || null
         })
       );
 

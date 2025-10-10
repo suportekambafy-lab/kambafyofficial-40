@@ -13,7 +13,7 @@ import {
 
 interface TwoFactorVerificationProps {
   email: string;
-  onVerificationSuccess: (code?: string) => void;
+  onVerificationSuccess: () => void;
   onBack: () => void;
   context?: 'login' | 'bank_details_change' | 'withdrawal' | 'password_change' | 'disable_2fa';
   skipInitialSend?: boolean;
@@ -161,8 +161,8 @@ const TwoFactorVerification = ({
           description: "Código verificado com sucesso.",
         });
 
-        console.log('✅ Chamando onVerificationSuccess com código');
-        onVerificationSuccess(code);
+        console.log('✅ Chamando onVerificationSuccess');
+        onVerificationSuccess();
         return;
       }
       

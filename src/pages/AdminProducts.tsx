@@ -180,14 +180,12 @@ export default function AdminProducts() {
         return;
       }
       
-      // Usar função RPC específica para admin com JWT
-      const adminJwt = localStorage.getItem('admin_jwt');
+      // Usar função RPC específica para admin (bypass RLS)
       const { data, error } = await supabase.rpc('admin_ban_product', {
         product_id: selectedProductForBan.id,
         admin_id: admin?.id || null,
         ban_reason_text: reason,
-        p_admin_email: admin?.email || null,
-        p_jwt_token: adminJwt
+        p_admin_email: admin?.email || null
       });
 
       console.log('🔍 Resultado RPC admin_ban_product:', { data, error });
@@ -279,13 +277,11 @@ export default function AdminProducts() {
         return;
       }
       
-      // Usar função RPC específica para admin com JWT
-      const adminJwt = localStorage.getItem('admin_jwt');
+      // Usar função RPC específica para admin (bypass RLS)
       const { data, error } = await supabase.rpc('admin_approve_product', {
         product_id: productId,
         admin_id: admin?.id || null,
-        p_admin_email: admin?.email || null,
-        p_jwt_token: adminJwt
+        p_admin_email: admin?.email || null
       });
 
       console.log('🔍 Resultado RPC admin_approve_product:', { data, error });

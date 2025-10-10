@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { targetUserId, adminEmail, twoFactorCode, adminJwt } = await req.json()
+    const { targetUserId, adminEmail, twoFactorCode } = await req.json()
 
     if (!targetUserId || !adminEmail) {
       throw new Error('targetUserId and adminEmail são obrigatórios')
@@ -33,20 +33,7 @@ Deno.serve(async (req) => {
 
     console.log(`🎭 Admin ${adminEmail} tentando impersonar usuário: ${targetUserId}`)
 
-    // 1. Validar JWT do admin (se fornecido)
-    if (adminJwt) {
-      console.log('🔐 Validando JWT do admin...')
-      const { data: jwtValidation, error: jwtError } = await supabaseAdmin
-        .rpc('verify_admin_jwt', { jwt_token: adminJwt })
-
-      if (jwtError || !jwtValidation?.[0]?.is_valid) {
-        console.error('❌ JWT inválido:', jwtError)
-        throw new Error('Autenticação inválida ou expirada')
-      }
-      console.log('✅ JWT validado:', jwtValidation[0].email)
-    }
-
-    // 2. Verificar se quem está fazendo a requisição é admin
+    // 1. Verificar se quem está fazendo a requisição é admin
     const { data: adminUser, error: adminError } = await supabaseAdmin
       .from('admin_users')
       .select('id, email, is_active')

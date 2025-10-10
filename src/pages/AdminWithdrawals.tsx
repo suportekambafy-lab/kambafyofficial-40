@@ -36,16 +36,14 @@ export default function AdminWithdrawals() {
   };
 
   const handleProcess = (requestId: string, status: 'aprovado' | 'rejeitado') => {
-    const adminJwt = localStorage.getItem('admin_jwt');
-    processRequest(requestId, status, admin?.id, adminJwt);
+    processRequest(requestId, status, admin?.id);
   };
 
   const handleBulkProcess = (status: 'aprovado' | 'rejeitado') => {
     const selectedArray = Array.from(selectedIds);
     if (selectedArray.length === 0) return;
     
-    const adminJwt = localStorage.getItem('admin_jwt');
-    processBulkRequests(selectedArray, status, admin?.id, bulkNotes, adminJwt);
+    processBulkRequests(selectedArray, status, admin?.id, bulkNotes);
   };
 
   const [bulkNotes, setBulkNotes] = useState('');

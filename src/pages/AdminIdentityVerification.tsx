@@ -153,15 +153,13 @@ export default function AdminIdentityVerification() {
         updateData.verified_by = admin?.id;
       }
 
-      // Usar função admin para atualizar verificação com JWT
-      const adminJwt = localStorage.getItem('admin_jwt');
+      // Usar função admin para atualizar verificação
       const { error } = await supabase.rpc('admin_update_identity_verification', {
         p_verification_id: id,
         p_status: newStatus,
         p_rejection_reason: reason || null,
         p_admin_id: admin?.id || null,
-        p_admin_email: admin?.email || null,
-        p_jwt_token: adminJwt
+        p_admin_email: admin?.email || null
       });
 
       if (error) {

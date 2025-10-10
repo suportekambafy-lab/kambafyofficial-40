@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { email, password, twoFactorCode } = await req.json()
+    const { email, password, twoFactorCode, codeAlreadyVerified } = await req.json()
 
     if (!email || !password) {
       throw new Error('Email e senha são obrigatórios')
@@ -91,50 +91,53 @@ Deno.serve(async (req) => {
     // Por enquanto, validação simplificada
     console.log('✅ Admin encontrado')
 
-    // 3. Se não tem código 2FA, solicitar
-    if (!twoFactorCode) {
-      // Enviar código 2FA
-      const { error: twoFAError } = await supabaseAdmin.functions.invoke('send-2fa-code', {
+    // 3. Se código não foi verificado ainda, solicitar ou verificar
+    if (!codeAlreadyVerified) {
+      // Se não tem código 2FA, solicitar
+      if (!twoFactorCode) {
+        // Enviar código 2FA
+        const { error: twoFAError } = await supabaseAdmin.functions.invoke('send-2fa-code', {
+          body: {
+            email: adminUser.email,
+            event_type: 'admin_login',
+            user_email: adminUser.email
+          }
+        })
+
+        if (twoFAError) {
+          console.error('❌ Erro ao enviar 2FA:', twoFAError)
+          throw new Error('Erro ao enviar código de verificação')
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: false,
+            requires2FA: true,
+            message: 'Código de verificação enviado por email'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200
+          }
+        )
+      }
+
+      // Verificar código 2FA
+      const { data: verifyData, error: verifyError } = await supabaseAdmin.functions.invoke('verify-2fa-code', {
         body: {
           email: adminUser.email,
-          event_type: 'admin_login',
-          user_email: adminUser.email
+          code: twoFactorCode,
+          event_type: 'admin_login'
         }
       })
 
-      if (twoFAError) {
-        console.error('❌ Erro ao enviar 2FA:', twoFAError)
-        throw new Error('Erro ao enviar código de verificação')
+      if (verifyError || !verifyData?.valid) {
+        console.error('❌ Código 2FA inválido')
+        throw new Error('Código de verificação inválido')
       }
-
-      return new Response(
-        JSON.stringify({
-          success: false,
-          requires2FA: true,
-          message: 'Código de verificação enviado por email'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200
-        }
-      )
+    } else {
+      console.log('✅ Código 2FA já foi verificado no frontend')
     }
-
-    // 4. Verificar código 2FA (SEMPRE OBRIGATÓRIO)
-    const { data: verifyData, error: verifyError } = await supabaseAdmin.functions.invoke('verify-2fa-code', {
-      body: {
-        email: adminUser.email,
-        code: twoFactorCode,
-        event_type: 'admin_login'
-      }
-    })
-
-    if (verifyError || !verifyData?.valid) {
-      console.error('❌ Código 2FA inválido')
-      throw new Error('Código de verificação inválido')
-    }
-    
-    console.log('✅ Código 2FA verificado com sucesso')
 
     // 5. Gerar JWT de autenticação
     const jwt = await generateJWT(adminUser.email)
