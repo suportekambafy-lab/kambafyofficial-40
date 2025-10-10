@@ -27,17 +27,18 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!scrollRef.current) return;
+    e.preventDefault();
     setIsDragging(true);
-    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setStartX(e.pageX);
     setScrollLeft(scrollRef.current.scrollLeft);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !scrollRef.current) return;
     e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    scrollRef.current.scrollLeft = scrollLeft - walk;
+    const x = e.pageX;
+    const walk = (startX - x) * 1.5;
+    scrollRef.current.scrollLeft = scrollLeft + walk;
   };
 
   const handleMouseUp = () => {
@@ -106,12 +107,14 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseLeave}
-              className="flex gap-4 md:gap-6 items-stretch overflow-x-scroll overflow-y-hidden pb-4 snap-x snap-mandatory scrollbar-hide"
+              className={`flex gap-4 md:gap-6 items-stretch overflow-x-scroll overflow-y-hidden pb-4 scrollbar-hide ${!isDragging ? 'snap-x snap-mandatory' : ''}`}
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 scrollBehavior: isDragging ? 'auto' : 'smooth',
                 cursor: isDragging ? 'grabbing' : 'grab',
-                userSelect: 'none'
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                msUserSelect: 'none'
               }}
             >
               {visibleLevels.map((level, index) => {
