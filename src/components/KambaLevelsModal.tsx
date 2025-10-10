@@ -25,27 +25,38 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollRef.current) return;
-    e.preventDefault();
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const element = scrollRef.current;
+    if (!element) return;
+    
     setIsDragging(true);
-    setStartX(e.pageX);
-    setScrollLeft(scrollRef.current.scrollLeft);
+    setStartX(e.pageX - element.offsetLeft);
+    setScrollLeft(element.scrollLeft);
+    element.style.scrollSnapType = 'none';
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollRef.current) return;
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    const element = scrollRef.current;
+    if (!element) return;
+    
     e.preventDefault();
-    const x = e.pageX;
-    const walk = (startX - x) * 1.5;
-    scrollRef.current.scrollLeft = scrollLeft + walk;
+    const x = e.pageX - element.offsetLeft;
+    const walk = (x - startX) * 2;
+    element.scrollLeft = scrollLeft - walk;
   };
 
   const handleMouseUp = () => {
+    if (scrollRef.current) {
+      scrollRef.current.style.scrollSnapType = 'x mandatory';
+    }
     setIsDragging(false);
   };
 
   const handleMouseLeave = () => {
+    if (isDragging && scrollRef.current) {
+      scrollRef.current.style.scrollSnapType = 'x mandatory';
+    }
     setIsDragging(false);
   };
 
@@ -107,14 +118,11 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseLeave}
-              className={`flex gap-4 md:gap-6 items-stretch overflow-x-scroll overflow-y-hidden pb-4 scrollbar-hide ${!isDragging ? 'snap-x snap-mandatory' : ''}`}
+              className="flex gap-4 md:gap-6 items-stretch overflow-x-scroll overflow-y-hidden pb-4 snap-x snap-mandatory scrollbar-hide select-none"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
-                scrollBehavior: isDragging ? 'auto' : 'smooth',
-                cursor: isDragging ? 'grabbing' : 'grab',
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                msUserSelect: 'none'
+                scrollBehavior: 'smooth',
+                cursor: isDragging ? 'grabbing' : 'grab'
               }}
             >
               {visibleLevels.map((level, index) => {
