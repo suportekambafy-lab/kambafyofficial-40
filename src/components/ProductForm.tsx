@@ -482,8 +482,8 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
               onChange={(url) => handleInputChange("cover", url || "")}
               bucket="product-images"
               folder="covers"
-              aspectRatio="1/1"
-              recommendedDimensions="1200x1200px"
+              aspectRatio="3/4"
+              recommendedDimensions="1200x1600px"
               disabled={editingProduct?.revision_requested}
             />
 
