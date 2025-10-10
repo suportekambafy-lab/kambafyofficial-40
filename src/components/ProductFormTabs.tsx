@@ -258,6 +258,35 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
     });
   };
 
+  const sendReviewEmail = async (productName: string) => {
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileData) {
+        console.log('📧 Tentando enviar email de produto em revisão...');
+        const emailResponse = await supabase.functions.invoke('send-product-under-review-notification', {
+          body: {
+            sellerEmail: profileData.email,
+            sellerName: profileData.full_name || 'Vendedor',
+            productName: productName
+          }
+        });
+
+        if (emailResponse.error) {
+          console.warn('⚠️ Erro ao enviar email de revisão (não-crítico):', emailResponse.error);
+        } else {
+          console.log('✅ Email de revisão enviado com sucesso');
+        }
+      }
+    } catch (emailError) {
+      console.warn('⚠️ Erro ao enviar email (não-crítico):', emailError);
+    }
+  };
+
   const handleSave = async (isDraft = false) => {
     // Evitar múltiplas chamadas simultâneas
     if (saving) {
@@ -368,7 +397,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         access_duration_value: formData.accessDurationValue,
         access_duration_description: formData.accessDurationDescription,
         user_id: user.id,
-        status: isDraft ? "Rascunho" : "Pendente"
+        status: isDraft ? "Rascunho" : (editingProduct?.status === "Rascunho" ? "Pendente" : editingProduct?.status || "Pendente")
       };
 
       console.log('Saving product data:', productData);
@@ -379,6 +408,11 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       if (editingProduct) {
         console.log('Updating product with ID:', editingProduct.id);
         console.log('User ID for update:', user.id);
+        
+        // Verificar se estava em Rascunho e agora está sendo publicado
+        const wasRascunho = editingProduct.status === "Rascunho";
+        const isPublishing = !isDraft && wasRascunho;
+        
         const { error: updateError } = await supabase
           .from('products')
           .update(productData)
@@ -388,6 +422,10 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         console.log('Update result error:', error);
         if (error) {
           console.error('🚨 ERRO AO ATUALIZAR:', error);
+        } else if (isPublishing) {
+          // Se estava em rascunho e agora está publicando, enviar email
+          console.log('📧 Produto estava em rascunho e agora está sendo publicado, enviando email...');
+          await sendReviewEmail(formData.name);
         }
       } else {
         console.log('Creating new product');
@@ -401,34 +439,9 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         if (error) {
           console.error('🚨 ERRO AO INSERIR:', error);
         } else if (data && data[0] && !isDraft) {
-          // Enviar email de "produto em revisão" apenas para produtos não-rascunho
-          // Não bloquear criação do produto se o email falhar
-          try {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('email, full_name')
-              .eq('user_id', user.id)
-              .single();
-
-            if (profileData) {
-              console.log('📧 Tentando enviar email de produto em revisão...');
-              const emailResponse = await supabase.functions.invoke('send-product-under-review-notification', {
-                body: {
-                  sellerEmail: profileData.email,
-                  sellerName: profileData.full_name || 'Vendedor',
-                  productName: formData.name
-                }
-              });
-
-              if (emailResponse.error) {
-                console.warn('⚠️ Erro ao enviar email de revisão (não-crítico):', emailResponse.error);
-              } else {
-                console.log('✅ Email de revisão enviado com sucesso');
-              }
-            }
-          } catch (emailError) {
-            console.warn('⚠️ Erro ao enviar email (não-crítico):', emailError);
-          }
+          // Enviar email de "produto em revisão" apenas para produtos publicados
+          console.log('📧 Produto criado e publicado, enviando email...');
+          await sendReviewEmail(formData.name);
         }
       }
 
