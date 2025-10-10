@@ -23,10 +23,23 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { userId } = await req.json()
+    const { userId, adminJwt } = await req.json()
 
     if (!userId) {
       throw new Error('User ID is required')
+    }
+
+    // Validar JWT do admin
+    if (adminJwt) {
+      console.log('🔐 Validando JWT do admin...')
+      const { data: jwtValidation, error: jwtError } = await supabaseAdmin
+        .rpc('verify_admin_jwt', { jwt_token: adminJwt })
+
+      if (jwtError || !jwtValidation?.[0]?.is_valid) {
+        console.error('❌ JWT inválido:', jwtError)
+        throw new Error('Autenticação inválida ou expirada')
+      }
+      console.log('✅ JWT validado:', jwtValidation[0].email)
     }
 
     console.log(`🗑️ Deletando usuário: ${userId}`)

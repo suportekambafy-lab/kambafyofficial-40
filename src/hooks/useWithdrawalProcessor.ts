@@ -8,7 +8,12 @@ export function useWithdrawalProcessor(onSuccess: () => void) {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [notes, setNotes] = useState<{ [key: string]: string }>({});
 
-  const processRequest = async (requestId: string, status: 'aprovado' | 'rejeitado', adminId?: string) => {
+  const processRequest = async (
+    requestId: string, 
+    status: 'aprovado' | 'rejeitado', 
+    adminId?: string,
+    adminJwt?: string | null
+  ) => {
     setProcessingId(requestId);
     
     try {
@@ -19,12 +24,13 @@ export function useWithdrawalProcessor(onSuccess: () => void) {
       
       console.log('⚙️ Admin ID validado:', { original: adminId, valid: validAdminId });
 
-      // Usar função RPC específica para admin que bypassa RLS
+      // Usar função RPC específica para admin que bypassa RLS com JWT
       const { error } = await supabase.rpc('admin_process_withdrawal_request', {
         request_id: requestId,
         new_status: status,
         admin_id: validAdminId,
-        notes_text: notes[requestId] || null
+        notes_text: notes[requestId] || null,
+        p_jwt_token: adminJwt
       });
 
       if (error) {

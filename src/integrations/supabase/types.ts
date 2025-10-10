@@ -82,6 +82,45 @@ export type Database = {
           },
         ]
       }
+      admin_action_logs: {
+        Row: {
+          action: string
+          admin_email: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: string | null
+          jwt_used: boolean | null
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_email: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          jwt_used?: boolean | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_email?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          jwt_used?: boolean | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_impersonation_sessions: {
         Row: {
           actions_performed: Json | null
@@ -2790,12 +2829,25 @@ export type Database = {
     Functions: {
       admin_approve_product: {
         Args:
+          | {
+              admin_id?: string
+              p_admin_email?: string
+              p_jwt_token?: string
+              product_id: string
+            }
           | { admin_id?: string; p_admin_email?: string; product_id: string }
           | { admin_id?: string; product_id: string }
         Returns: undefined
       }
       admin_ban_product: {
         Args:
+          | {
+              admin_id?: string
+              ban_reason_text?: string
+              p_admin_email?: string
+              p_jwt_token?: string
+              product_id: string
+            }
           | {
               admin_id?: string
               ban_reason_text?: string
@@ -2815,20 +2867,38 @@ export type Database = {
         Returns: boolean
       }
       admin_process_transfer_request: {
-        Args: { p_action: string; p_transfer_id: string }
+        Args:
+          | { p_action: string; p_jwt_token?: string; p_transfer_id: string }
+          | { p_action: string; p_transfer_id: string }
         Returns: Json
       }
       admin_process_withdrawal_request: {
-        Args: {
-          admin_id?: string
-          new_status: string
-          notes_text?: string
-          request_id: string
-        }
+        Args:
+          | {
+              admin_id?: string
+              new_status: string
+              notes_text?: string
+              p_jwt_token?: string
+              request_id: string
+            }
+          | {
+              admin_id?: string
+              new_status: string
+              notes_text?: string
+              request_id: string
+            }
         Returns: undefined
       }
       admin_update_identity_verification: {
         Args:
+          | {
+              p_admin_email?: string
+              p_admin_id?: string
+              p_jwt_token?: string
+              p_rejection_reason?: string
+              p_status: string
+              p_verification_id: string
+            }
           | {
               p_admin_email?: string
               p_admin_id?: string
@@ -3099,6 +3169,14 @@ export type Database = {
       unaccent_init: {
         Args: { "": unknown }
         Returns: unknown
+      }
+      verify_admin_jwt: {
+        Args: { jwt_token: string }
+        Returns: {
+          email: string
+          is_valid: boolean
+          role: string
+        }[]
       }
     }
     Enums: {

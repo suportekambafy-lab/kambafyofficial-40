@@ -240,11 +240,13 @@ export default function AdminUsers() {
     try {
       console.log('🎭 Iniciando impersonation para:', user.email);
       
-      // Primeira chamada sem código 2FA
+      // Primeira chamada sem código 2FA mas com JWT
+      const adminJwt = localStorage.getItem('admin_jwt');
       const { data, error } = await supabase.functions.invoke('admin-impersonate-user', {
         body: {
           targetUserId: user.user_id,
-          adminEmail: admin.email
+          adminEmail: admin.email,
+          adminJwt
         }
       });
 
@@ -292,12 +294,14 @@ export default function AdminUsers() {
     try {
       console.log('🔐 Verificando código 2FA...');
 
-      // Segunda chamada com código 2FA
+      // Segunda chamada com código 2FA e JWT
+      const adminJwt = localStorage.getItem('admin_jwt');
       const { data, error } = await supabase.functions.invoke('admin-impersonate-user', {
         body: {
           targetUserId: pendingImpersonation.user_id,
           adminEmail: admin.email,
-          twoFactorCode: code
+          twoFactorCode: code,
+          adminJwt
         }
       });
 

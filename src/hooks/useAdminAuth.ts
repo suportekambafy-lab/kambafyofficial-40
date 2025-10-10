@@ -130,38 +130,9 @@ export const useAdminAuthHook = () => {
       throw new Error('Nenhum login pendente encontrado');
     }
 
-    // ✅ FASE 2: Completar login após 2FA já verificado
-    const { data, error } = await supabase.functions.invoke('admin-login', {
-      body: {
-        email: pendingLoginData.email,
-        password: pendingLoginData.password,
-        codeAlreadyVerified: true // Código já foi verificado no frontend
-      }
-    });
-
-    if (error || !data?.success) {
-      throw new Error(data?.error || 'Erro ao completar login');
-    }
-
-    // Criar sessão admin com dados do JWT
-    const adminUser: AdminUser = {
-      id: data.admin.id,
-      email: data.admin.email,
-      full_name: data.admin.full_name,
-      role: data.admin.role || 'admin',
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    console.log('Admin logado com 2FA:', adminUser);
-    setAdmin(adminUser);
-    localStorage.setItem('admin_session', JSON.stringify(adminUser));
-    localStorage.setItem('admin_jwt', data.jwt);
-    
-    // Limpar dados pendentes
-    setPendingLoginData(null);
-    setLoginStep('credentials');
+    // Nota: Este método não é mais necessário pois o 2FA é verificado diretamente no primeiro login
+    // Mantido para compatibilidade, mas agora apenas redireciona
+    throw new Error('Método obsoleto - use login direto com código 2FA');
   };
 
   const cancelAdminLogin = () => {
@@ -172,12 +143,11 @@ export const useAdminAuthHook = () => {
   const logout = async () => {
     setAdmin(null);
     localStorage.removeItem('admin_session');
-    localStorage.removeItem('admin_jwt'); // Limpar JWT também
-    localStorage.removeItem('impersonation_data'); // Limpar impersonation
+    localStorage.removeItem('admin_jwt');
+    localStorage.removeItem('impersonation_data');
     setPendingLoginData(null);
     setLoginStep('credentials');
     
-    // Redirecionar para login admin
     window.location.href = '/admin/login';
   };
 

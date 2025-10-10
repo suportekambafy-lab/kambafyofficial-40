@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAdminJwtValidation } from '@/hooks/useAdminJwtValidation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield } from 'lucide-react';
 
@@ -10,6 +11,9 @@ interface AdminProtectedRouteProps {
 
 export default function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
   const { admin, loading, loginStep } = useAdminAuth();
+  
+  // Validar JWT automaticamente
+  useAdminJwtValidation();
 
   if (loading) {
     return (

@@ -86,13 +86,15 @@ export default function AdminManagement() {
     setCreating(true);
 
     try {
+      const adminJwt = localStorage.getItem('admin_jwt');
       const { data, error } = await supabase.rpc('create_admin_user', {
         p_email: email,
         p_password: password,
         p_full_name: fullName,
         p_role: role,
         p_permissions: selectedPermissions,
-        p_admin_email: admin?.email, // Email do admin que está criando
+        p_admin_email: admin?.email,
+        p_jwt_token: adminJwt
       });
 
       if (error) throw error;

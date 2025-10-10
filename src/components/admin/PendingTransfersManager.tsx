@@ -250,13 +250,15 @@ export function PendingTransfersManager() {
         }
       }
 
-      // Usar função RPC específica para admin
+      // Usar função RPC específica para admin com JWT
       console.log('🔄 Usando função RPC para processar transferência...');
       
+      const adminJwt = localStorage.getItem('admin_jwt');
       const { data: updateResult, error: updateError } = await supabase
         .rpc('admin_process_transfer_request', {
           p_transfer_id: transferId,
-          p_action: action
+          p_action: action,
+          p_jwt_token: adminJwt
         });
 
       if (updateError) {
