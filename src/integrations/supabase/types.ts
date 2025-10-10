@@ -3012,6 +3012,13 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_admin_permissions: {
+        Args: { p_admin_email?: string; p_admin_id: string }
+        Returns: {
+          granted_at: string
+          permission: string
+        }[]
+      }
       get_all_identity_verifications_for_admin: {
         Args: Record<PropertyKey, never>
         Returns: {

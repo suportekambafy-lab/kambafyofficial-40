@@ -164,10 +164,10 @@ export default function AdminManagement() {
     console.log('📋 Carregando permissões para admin:', adminId);
     setLoadingPermissions(true);
     try {
-      const { data, error } = await supabase
-        .from('admin_permissions')
-        .select('permission')
-        .eq('admin_id', adminId);
+      const { data, error } = await supabase.rpc('get_admin_permissions', {
+        p_admin_id: adminId,
+        p_admin_email: admin?.email,
+      });
 
       console.log('📋 Resposta das permissões:', { data, error, adminId });
 
