@@ -578,6 +578,7 @@ export type Database = {
           created_at: string | null
           enabled: boolean | null
           id: string
+          product_id: string | null
           updated_at: string | null
           user_id: string
         }
@@ -588,6 +589,7 @@ export type Database = {
           created_at?: string | null
           enabled?: boolean | null
           id?: string
+          product_id?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -598,10 +600,19 @@ export type Database = {
           created_at?: string | null
           enabled?: boolean | null
           id?: string
+          product_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "facebook_api_settings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       facebook_pixel_settings: {
         Row: {
