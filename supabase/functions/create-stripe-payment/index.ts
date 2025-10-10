@@ -73,8 +73,15 @@ serve(async (req) => {
 
     console.log(`Final amount for Stripe: ${amountInCents} cents in ${currency.toLowerCase()}`);
 
-    // Calcular expires_at (sessão Stripe expira em 30 minutos)
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    // Calcular expires_at baseado no método de pagamento
+    // Multibanco: 5 dias | Cartão e outros: 15 minutos
+    const paymentMethodType = req.headers.get('x-payment-method-type') || 'card';
+    const isMultibanco = paymentMethodType === 'multibanco';
+    
+    const expirationMinutes = isMultibanco ? (5 * 24 * 60) : 15; // 5 dias ou 15 minutos
+    const expiresAt = new Date(Date.now() + expirationMinutes * 60 * 1000).toISOString();
+    
+    console.log(`Expiration set: ${isMultibanco ? '5 days' : '15 minutes'} for ${paymentMethodType}`);
 
     // Criar sessão de checkout
     const session = await stripe.checkout.sessions.create({

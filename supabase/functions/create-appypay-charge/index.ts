@@ -344,9 +344,9 @@ serve(async (req) => {
       if (paymentMethod === 'express') {
         // Multicaixa Express expira em 15 minutos
         expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-      } else if (paymentMethod === 'reference' && chargeResult.responseStatus?.reference?.dueDate) {
-        // Usar dueDate da referência AppyPay
-        expiresAt = new Date(chargeResult.responseStatus.reference.dueDate).toISOString();
+      } else if (paymentMethod === 'reference') {
+        // Referência expira em 5 dias (forçado)
+        expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
       }
       
       const orderDataToSave = checkoutOrderData ? {
