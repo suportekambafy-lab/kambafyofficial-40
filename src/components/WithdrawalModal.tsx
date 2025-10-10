@@ -2,8 +2,6 @@
 import { useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PiggyBank, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,14 +27,9 @@ export function WithdrawalModal({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const calculateReceiveAmount = (amount: number) => {
-    // Desconta 8% da taxa da plataforma
-    return amount * 0.92;
-  };
-
-  // Sempre usar o saldo disponível total
+  // ✅ Saldo disponível já tem 8% descontado (seller_commission)
+  // O vendedor receberá exatamente este valor quando o saque for aprovado
   const withdrawalValue = availableBalance;
-  const receiveValue = withdrawalValue > 0 ? calculateReceiveAmount(withdrawalValue) : 0;
 
   const handleSubmit = async () => {
     if (!user) {
@@ -81,18 +74,17 @@ export function WithdrawalModal({
       console.log('🔍 Iniciando solicitação de saque:', {
         user_id: user.id,
         amount: amount,
-        receiveValue: receiveValue,
         availableBalance: availableBalance
       });
 
-      // ✅ Criar solicitação de saque com o valor BRUTO (será descontado do saldo)
-      // O trigger irá descontar automaticamente este valor do saldo disponível
-      // O vendedor receberá o valor líquido (após 8%) quando aprovado
+      // ✅ Criar solicitação de saque
+      // O saldo disponível já está com 8% descontado (seller_commission)
+      // O vendedor receberá exatamente este valor quando aprovado
       const { data: insertData, error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({
           user_id: user.id,
-          amount: amount, // Valor BRUTO que será descontado do saldo
+          amount: amount, // Valor exato que será transferido (já tem 8% descontado)
           status: 'pendente'
         })
         .select();
@@ -150,6 +142,9 @@ export function WithdrawalModal({
             <p className="text-3xl font-bold text-primary mb-3">
               {availableBalance.toLocaleString()} KZ
             </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Este é o valor líquido que você receberá após aprovação
+            </p>
             {error && (
               <div className="flex items-center gap-2 text-sm text-red-600 mt-2">
                 <AlertCircle className="h-4 w-4" />
@@ -157,20 +152,6 @@ export function WithdrawalModal({
               </div>
             )}
           </div>
-
-          {withdrawalValue > 0 && (
-            <div className="space-y-2">
-              <Label>Valor a Receber (após taxa de 8%)</Label>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-2xl font-bold text-green-800">
-                  {receiveValue.toLocaleString()} KZ
-                </p>
-                <p className="text-xs text-green-600 mt-1">
-                  Valor líquido que será transferido para sua conta
-                </p>
-              </div>
-            </div>
-          )}
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs text-blue-800">
