@@ -52,15 +52,15 @@ const handler = async (req: Request): Promise<Response> => {
                 background-color: #ffffff;
               }
               .header {
-                background-color: #10b981;
-                color: white;
                 padding: 40px 20px;
                 text-align: center;
+                border-bottom: 1px solid #e5e5e5;
               }
               .header h1 {
                 margin: 0;
-                font-size: 32px;
+                font-size: 28px;
                 font-weight: bold;
+                color: #333;
               }
               .content {
                 padding: 40px 30px;
@@ -70,41 +70,31 @@ const handler = async (req: Request): Promise<Response> => {
                 margin-bottom: 30px;
                 font-weight: 600;
               }
-              .success-box {
-                background-color: #d1fae5;
+              .section {
+                border: 1px solid #e5e5e5;
                 border-radius: 8px;
                 padding: 20px;
                 margin-bottom: 30px;
               }
-              .success-box h2 {
+              .section h2 {
                 margin: 0 0 15px 0;
-                font-size: 20px;
+                font-size: 18px;
                 font-weight: bold;
+                color: #333;
               }
-              .success-box p {
+              .section p {
                 margin: 0;
                 font-size: 16px;
               }
-              .info-box {
-                background-color: #dbeafe;
-                border-radius: 8px;
-                padding: 20px;
-                margin-bottom: 30px;
-              }
-              .info-box h2 {
-                margin: 0 0 20px 0;
-                font-size: 20px;
-                font-weight: bold;
-              }
-              .info-box ul {
+              .section ul {
                 margin: 0;
                 padding-left: 20px;
               }
-              .info-box li {
+              .section li {
                 margin-bottom: 12px;
                 font-size: 15px;
               }
-              .info-box li strong {
+              .section li strong {
                 font-weight: 600;
               }
               .next-steps {
@@ -129,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
               }
               .button {
                 display: inline-block;
-                background-color: #10b981;
+                background-color: #333;
                 color: white;
                 text-decoration: none;
                 padding: 16px 40px;
@@ -143,18 +133,19 @@ const handler = async (req: Request): Promise<Response> => {
                 font-size: 16px;
               }
               .footer { 
-                background-color: #374151;
-                color: #d1d5db;
+                background-color: #f5f5f5;
+                color: #666;
                 padding: 30px;
                 text-align: center;
                 font-size: 14px;
+                border-top: 1px solid #e5e5e5;
               }
               .footer p {
                 margin: 8px 0;
               }
               .footer a {
-                color: #60a5fa;
-                text-decoration: none;
+                color: #333;
+                text-decoration: underline;
               }
             </style>
           </head>
@@ -167,12 +158,12 @@ const handler = async (req: Request): Promise<Response> => {
               <div class="content">
                 <p class="greeting">Parabéns <strong>${sellerName}</strong>!</p>
                 
-                <div class="success-box">
+                <div class="section">
                   <h2>✅ Ótimas notícias!</h2>
                   <p>O seu produto "<strong>${productName}</strong>" foi aprovado e já está disponível na plataforma Kambafy!</p>
                 </div>
                 
-                <div class="info-box">
+                <div class="section">
                   <h2>🚀 O que isso significa:</h2>
                   <ul>
                     <li><strong>Visibilidade total:</strong> Seu produto agora está visível para todos os clientes</li>
