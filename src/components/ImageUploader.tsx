@@ -117,7 +117,7 @@ export function ImageUploader({
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               id="file-upload"
             />
-            <div className="flex items-center justify-center gap-4 p-8 border-2 border-dashed border-border rounded-lg bg-background hover:bg-muted/30 transition-colors cursor-pointer">
+            <div className="flex items-center justify-center gap-2 md:gap-4 p-4 md:p-8 border-2 border-dashed border-border rounded-lg bg-background hover:bg-muted/30 transition-colors cursor-pointer flex-wrap">
               {uploading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -125,11 +125,11 @@ export function ImageUploader({
                 </div>
               ) : (
                 <>
-                  <span className="text-sm text-muted-foreground">Arraste o arquivo para cá</span>
-                  <span className="text-sm text-muted-foreground">ou</span>
+                  <span className="text-sm text-muted-foreground hidden sm:inline">Arraste o arquivo para cá</span>
+                  <span className="text-sm text-muted-foreground hidden sm:inline">ou</span>
                   <label 
                     htmlFor="file-upload"
-                    className="px-6 py-2 text-sm font-medium text-primary border-2 border-primary rounded-md cursor-pointer hover:bg-primary/5 transition-colors"
+                    className="px-4 md:px-6 py-2 text-sm font-medium text-primary border-2 border-primary rounded-md cursor-pointer hover:bg-primary/5 transition-colors"
                   >
                     Selecione um arquivo
                   </label>

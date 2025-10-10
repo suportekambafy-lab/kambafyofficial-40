@@ -114,13 +114,13 @@ export default function CountryPriceConfig({
             
             <div className="grid gap-4">
               {countries.map((country) => (
-                <div key={country.code} className="grid grid-cols-4 items-center gap-4">
+                <div key={country.code} className="flex flex-col md:grid md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">{country.flag}</span>
                     <span className="font-medium">{country.name}</span>
                   </div>
                   
-                  <div className="col-span-3">
+                  <div className="w-full md:col-span-3">
                     <Label htmlFor={`price-${country.code}`}>
                       Preço em {country.currency}
                     </Label>

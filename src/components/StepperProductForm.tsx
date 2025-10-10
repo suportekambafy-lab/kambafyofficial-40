@@ -357,45 +357,47 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
   return (
     <div className="space-y-6 pb-24">{/* pb-24 para dar espaço para a barra fixa */}
       {/* Header com Stepper e Botões */}
-      <div className="flex items-center justify-between border-b pb-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b pb-4 gap-4">
+        {/* Stepper - compacto no mobile */}
+        <div className="flex items-center gap-1 md:gap-2 overflow-x-auto pb-2 md:pb-0">
           {STEPS.map((step, index) => (
             <React.Fragment key={step.id}>
-              <div className="flex flex-col items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${
+              <div className="flex flex-col items-center flex-shrink-0">
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-base font-medium transition-colors ${
                   currentStep === step.id 
                     ? 'bg-primary text-primary-foreground' 
                     : currentStep > step.id
                     ? 'bg-green-500 text-white'
                     : 'bg-muted text-muted-foreground'
                 }`}>
-                  {currentStep > step.id ? <Check className="w-5 h-5" /> : step.id}
+                  {currentStep > step.id ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : step.id}
                 </div>
-                <span className="text-xs mt-1 hidden sm:block">{step.title}</span>
+                <span className="text-xs mt-1 hidden md:block max-w-[80px] text-center">{step.title}</span>
               </div>
               {index < STEPS.length - 1 && (
-                <div className={`w-12 h-0.5 ${currentStep > step.id ? 'bg-green-500' : 'bg-muted'}`} />
+                <div className={`w-6 md:w-12 h-0.5 flex-shrink-0 ${currentStep > step.id ? 'bg-green-500' : 'bg-muted'}`} />
               )}
             </React.Fragment>
           ))}
         </div>
 
-        <div className="flex gap-2">
+        {/* Botões de navegação */}
+        <div className="flex gap-2 justify-end">
           {currentStep > 1 && (
-            <Button variant="outline" onClick={handlePrevious} disabled={saving}>
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Anterior
+            <Button variant="outline" onClick={handlePrevious} disabled={saving} size="sm" className="md:h-10">
+              <ChevronLeft className="w-4 h-4 md:mr-1" />
+              <span className="hidden md:inline">Anterior</span>
             </Button>
           )}
           
           {currentStep < STEPS.length ? (
-            <Button onClick={handleNext} disabled={saving}>
-              Seguinte
-              <ChevronRight className="w-4 h-4 ml-1" />
+            <Button onClick={handleNext} disabled={saving} size="sm" className="md:h-10">
+              <span className="hidden md:inline">Seguinte</span>
+              <ChevronRight className="w-4 h-4 md:ml-1" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={saving}>
-              {saving ? "Salvando..." : editingProduct ? "Atualizar" : "Criar Produto"}
+            <Button onClick={handleSubmit} disabled={saving} size="sm" className="md:h-10">
+              {saving ? "Salvando..." : editingProduct ? "Atualizar" : "Criar"}
             </Button>
           )}
         </div>
@@ -689,14 +691,14 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
       </Card>
 
       {/* Barra inferior fixa com ações */}
-      <div className={`fixed bottom-0 right-0 bg-background border-t border-border shadow-lg z-50 p-4 flex items-center justify-between transition-all duration-300 ${
+      <div className={`fixed bottom-0 right-0 bg-background border-t border-border shadow-lg z-50 p-3 md:p-4 flex items-center justify-between gap-2 transition-all duration-300 ${
         isMobile ? 'left-0' : (collapsed ? 'left-20' : 'left-80')
       }`}>
-        <Button variant="outline" onClick={onCancel} disabled={saving}>
+        <Button variant="outline" onClick={onCancel} disabled={saving} size="sm" className="md:h-10">
           Cancelar
         </Button>
-        <Button variant="outline" onClick={handleSaveDraft} disabled={saving}>
-          Guardar rascunho
+        <Button variant="outline" onClick={handleSaveDraft} disabled={saving} size="sm" className="md:h-10">
+          <span className="hidden sm:inline">Guardar </span>Rascunho
         </Button>
       </div>
     </div>

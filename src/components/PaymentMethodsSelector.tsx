@@ -61,7 +61,7 @@ export default function PaymentMethodsSelector({ selectedMethods, onMethodsChang
             
             <div className="space-y-2">
               {methods.map((method) => (
-                 <div key={method.id} className={`flex items-center justify-between p-3 border rounded-lg ${
+                 <div key={method.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-3 ${
                    // Verificar se o método está habilitado no PAYMENT_METHODS (não apenas no formData)
                    allMethods.find(m => m.id === method.id)?.enabled === false 
                      ? 'bg-gray-50 opacity-60' 
@@ -103,11 +103,11 @@ export default function PaymentMethodsSelector({ selectedMethods, onMethodsChang
                    
                     {/* Mostrar status baseado no PAYMENT_METHODS, não no formData */}
                     {allMethods.find(m => m.id === method.id)?.enabled === false ? (
-                      <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                      <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 self-start sm:self-auto">
                         Em breve
                       </Badge>
                     ) : method.enabled ? (
-                      <Badge variant="default" className="text-xs bg-green-100 text-green-800">
+                      <Badge variant="default" className="text-xs bg-green-100 text-green-800 self-start sm:self-auto">
                         Ativo
                       </Badge>
                     ) : null}
