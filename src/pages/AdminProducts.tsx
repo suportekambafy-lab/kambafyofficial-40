@@ -105,29 +105,23 @@ export default function AdminProducts() {
 
         console.log('Resultado final:', productsWithProfiles);
         
-        // Debug específico para produtos banidos com revisão solicitada
-        const bannedProducts = productsWithProfiles.filter(p => p.status === 'Banido');
+        // Debug específico para produtos com revisão solicitada (qualquer status)
+        const productsWithRevision = productsWithProfiles.filter(p => p.revision_requested);
+        const activeWithRevision = productsWithProfiles.filter(p => 
+          p.status === 'Ativo' && p.revision_requested
+        );
         const bannedWithRevision = productsWithProfiles.filter(p => 
           p.status === 'Banido' && p.revision_requested
         );
         
-        console.log('📊 Debug produtos:');
+        console.log('📊 Debug produtos com revisão solicitada:');
         console.log(`- Total produtos: ${productsWithProfiles.length}`);
-        console.log(`- Produtos banidos: ${bannedProducts.length}`);
+        console.log(`- TOTAL com revisão solicitada: ${productsWithRevision.length}`);
+        console.log(`- Ativos com revisão solicitada: ${activeWithRevision.length}`);
         console.log(`- Banidos com revisão solicitada: ${bannedWithRevision.length}`);
         
-        if (bannedProducts.length > 0) {
-          console.log('🚫 Produtos banidos:', bannedProducts.map(p => ({
-            id: p.id,
-            name: p.name,
-            status: p.status,
-            revision_requested: p.revision_requested,
-            revision_requested_at: p.revision_requested_at
-          })));
-        }
-        
-        if (bannedWithRevision.length > 0) {
-          console.log('✅ Produtos banidos com revisão solicitada (mostrarão botão aprovar):', bannedWithRevision.map(p => ({
+        if (productsWithRevision.length > 0) {
+          console.log('📝 Produtos com revisão solicitada:', productsWithRevision.map(p => ({
             id: p.id,
             name: p.name,
             status: p.status,
@@ -135,7 +129,7 @@ export default function AdminProducts() {
             revision_requested_at: p.revision_requested_at
           })));
         } else {
-          console.log('ℹ️ Nenhum produto banido com revisão solicitada encontrado');
+          console.log('ℹ️ Nenhum produto com revisão solicitada encontrado');
         }
         
         setProducts(productsWithProfiles);
