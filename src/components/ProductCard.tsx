@@ -182,8 +182,8 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                   <Edit className="w-3 h-3 mr-1" />
                   <span>Editar</span>
                 </Button>
-                {/* Não mostrar botão Ativar/Desativar para produtos banidos */}
-                {product.status !== 'Banido' && (
+                {/* Não mostrar botão Ativar/Desativar para produtos banidos ou pendentes */}
+                {product.status !== 'Banido' && product.status !== 'Pendente' && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -197,6 +197,14 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                     {isActive ? <PowerOff className="w-3 h-3 mr-1" /> : <Power className="w-3 h-3 mr-1" />}
                     <span>{isActive ? 'Desativar' : 'Ativar'}</span>
                   </Button>
+                )}
+                {/* Mensagem informativa para produtos pendentes */}
+                {product.status === 'Pendente' && (
+                  <div className="flex-1 bg-yellow-50 border border-yellow-200 rounded-md px-3 py-2 text-center">
+                    <p className="text-xs text-yellow-700 font-medium">
+                      🔍 Aguardando aprovação
+                    </p>
+                  </div>
                 )}
               </div>
               

@@ -22,6 +22,18 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Validar RESEND_API_KEY
+    if (!Deno.env.get("RESEND_API_KEY")) {
+      console.error("❌ RESEND_API_KEY não configurada");
+      return new Response(
+        JSON.stringify({ error: "Email service not configured" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     const { sellerEmail, sellerName, productName }: UnderReviewNotificationRequest = await req.json();
 
     console.log('📧 Enviando email de produto em revisão para:', sellerEmail);
@@ -83,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("❌ Erro ao enviar email de produto em revisão:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "Failed to send email" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

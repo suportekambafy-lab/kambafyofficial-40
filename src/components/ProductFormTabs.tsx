@@ -401,6 +401,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
           console.error('🚨 ERRO AO INSERIR:', error);
         } else if (data && data[0] && !isDraft) {
           // Enviar email de "produto em revisão" apenas para produtos não-rascunho
+          // Não bloquear criação do produto se o email falhar
           try {
             const { data: profileData } = await supabase
               .from('profiles')
@@ -409,7 +410,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
               .single();
 
             if (profileData) {
-              console.log('📧 Enviando email de produto em revisão...');
+              console.log('📧 Tentando enviar email de produto em revisão...');
               const emailResponse = await supabase.functions.invoke('send-product-under-review-notification', {
                 body: {
                   sellerEmail: profileData.email,
@@ -419,13 +420,13 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
               });
 
               if (emailResponse.error) {
-                console.error('❌ Erro ao enviar email de revisão:', emailResponse.error);
+                console.warn('⚠️ Erro ao enviar email de revisão (não-crítico):', emailResponse.error);
               } else {
                 console.log('✅ Email de revisão enviado com sucesso');
               }
             }
           } catch (emailError) {
-            console.error('❌ Erro inesperado ao enviar email:', emailError);
+            console.warn('⚠️ Erro ao enviar email (não-crítico):', emailError);
           }
         }
       }

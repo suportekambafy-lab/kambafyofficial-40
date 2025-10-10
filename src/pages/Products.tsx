@@ -136,6 +136,16 @@ export default function Products() {
       return;
     }
 
+    // Não permitir ativar produtos pendentes - devem ser aprovados pelo admin primeiro
+    if (product.status === 'Pendente') {
+      toast({
+        title: "Ação não permitida",
+        description: "Produtos em revisão não podem ser ativados. Aguarde a aprovação do administrador.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Não permitir que vendedor ative produtos banidos - apenas admin pode aprovar
     if (product.status === 'Banido') {
       toast({
