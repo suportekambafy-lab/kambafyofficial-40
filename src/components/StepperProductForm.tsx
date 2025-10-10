@@ -247,6 +247,60 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
     }
   };
 
+  const handleSaveDraft = async () => {
+    setSaving(true);
+    try {
+      const productData = {
+        name: formData.name || "Rascunho sem título",
+        type: formData.type,
+        price: formData.price || "0",
+        compare_at_price: formData.compareAtPrice || null,
+        description: formData.description || "",
+        share_link: formData.type === "Curso" ? null : formData.shareLink,
+        cover: formData.cover || "",
+        commission: formData.commission,
+        tags: formData.tags,
+        member_area_id: formData.type === "Curso" ? formData.memberAreaId : null,
+        payment_methods: formData.paymentMethods as any,
+        fantasy_name: formData.fantasyName || null,
+        custom_prices: formData.customPrices,
+        allow_affiliates: formData.allowAffiliates,
+        category: formData.category || null,
+        support_email: formData.supportEmail || null,
+        support_whatsapp: formData.supportWhatsapp || null,
+        access_duration_type: formData.accessDurationType,
+        access_duration_value: formData.accessDurationValue,
+        access_duration_description: formData.accessDurationDescription || null,
+        user_id: user?.id,
+        status: 'Rascunho'
+      };
+
+      if (editingProduct) {
+        const { error } = await supabase
+          .from('products')
+          .update(productData)
+          .eq('id', editingProduct.id);
+
+        if (error) throw error;
+        toast.success("Rascunho atualizado com sucesso!");
+      } else {
+        const { error } = await supabase
+          .from('products')
+          .insert(productData);
+
+        if (error) throw error;
+        toast.success("Rascunho guardado com sucesso!");
+      }
+
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Error saving draft:', error);
+      toast.error(error.message || "Erro ao guardar rascunho");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData({ ...formData, tags: [...formData.tags, newTag.trim()] });
@@ -531,13 +585,15 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         </CardContent>
       </Card>
 
-      {onCancel && (
-        <div className="flex justify-end">
-          <Button variant="ghost" onClick={onCancel}>
-            Cancelar
-          </Button>
-        </div>
-      )}
+      {/* Barra inferior com ações */}
+      <div className="sticky bottom-0 left-0 right-0 bg-background border-t border-border p-4 flex items-center justify-between">
+        <Button variant="outline" onClick={onCancel} disabled={saving}>
+          Cancelar
+        </Button>
+        <Button variant="outline" onClick={handleSaveDraft} disabled={saving}>
+          Guardar rascunho
+        </Button>
+      </div>
     </div>
   );
 }
