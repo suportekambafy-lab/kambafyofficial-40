@@ -340,11 +340,29 @@ export default function AdminProducts() {
     }
   };
 
-  const handleRejectRevision = () => {
-    // Apenas fechar o modal, manter o produto banido
-    toast.info('Revisão rejeitada. O produto permanece banido.');
-    setReviewModalOpen(false);
-    setSelectedProductForReview(null);
+  const handleRejectRevision = async () => {
+    if (!selectedProductForReview) return;
+    
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({
+          revision_requested: false,
+          revision_requested_at: null
+        })
+        .eq('id', selectedProductForReview.id);
+
+      if (error) throw error;
+
+      toast.info('Revisão rejeitada. O produto mantém seu status atual.');
+      await loadProducts();
+    } catch (error) {
+      console.error('Erro ao rejeitar revisão:', error);
+      toast.error('Erro ao rejeitar revisão');
+    } finally {
+      setReviewModalOpen(false);
+      setSelectedProductForReview(null);
+    }
   };
 
   const viewProductContent = async (productId: string, productType: string, productName: string, event?: React.MouseEvent) => {
@@ -470,6 +488,15 @@ export default function AdminProducts() {
       );
     }
     
+    // Em Revisão
+    if (product.status === 'Em Revisão') {
+      return (
+        <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+          Em Revisão
+        </Badge>
+      );
+    }
+    
     // Banido
     if (product.status === 'Banido') {
       return (
@@ -512,9 +539,10 @@ export default function AdminProducts() {
     if (statusFilter === 'ativo') return product.status === 'Ativo';
     if (statusFilter === 'banido') return product.status === 'Banido';
     if (statusFilter === 'inativo') return product.status === 'Inativo';
+    if (statusFilter === 'em_revisao') return product.status === 'Em Revisão';
     if (statusFilter === 'revisao') return product.revision_requested === true;
     // Filtro "pendente" = produtos não aprovados, excluindo banidos, revisão solicitada E rascunhos
-    if (statusFilter === 'pendente') return product.status === 'Pendente' || (!product.admin_approved && product.status !== 'Banido' && product.status !== 'Rascunho' && !product.revision_requested);
+    if (statusFilter === 'pendente') return product.status === 'Pendente' || (!product.admin_approved && product.status !== 'Banido' && product.status !== 'Rascunho' && product.status !== 'Em Revisão' && !product.revision_requested);
     return true;
   });
 
@@ -558,11 +586,12 @@ export default function AdminProducts() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos ({products.length})</SelectItem>
-                <SelectItem value="pendente">Aprovar Produtos ({products.filter(p => p.status === 'Pendente' || (!p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && !p.revision_requested)).length})</SelectItem>
+                <SelectItem value="pendente">Aprovar Produtos ({products.filter(p => p.status === 'Pendente' || (!p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested)).length})</SelectItem>
                 <SelectItem value="rascunho">Rascunhos ({products.filter(p => p.status === 'Rascunho').length})</SelectItem>
                 <SelectItem value="ativo">Ativos ({products.filter(p => p.status === 'Ativo').length})</SelectItem>
                 <SelectItem value="banido">Banidos ({products.filter(p => p.status === 'Banido').length})</SelectItem>
                 <SelectItem value="inativo">Inativos ({products.filter(p => p.status === 'Inativo').length})</SelectItem>
+                <SelectItem value="em_revisao">Em Revisão ({products.filter(p => p.status === 'Em Revisão').length})</SelectItem>
                 <SelectItem value="revisao">Revisão Solicitada ({products.filter(p => p.revision_requested === true).length})</SelectItem>
               </SelectContent>
             </Select>

@@ -148,7 +148,7 @@ export default function ReviewRevisionModal({
           <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
             <p className="text-sm text-blue-800 dark:text-blue-200">
               ⚠️ Analise cuidadosamente a explicação e os documentos antes de tomar uma decisão.
-              Se aprovar, o produto voltará a ficar ativo. Se rejeitar, o produto permanecerá banido.
+              Se aprovar, o produto voltará a ficar ativo. Se rejeitar, o produto permanecerá {product.ban_reason ? 'banido' : 'em revisão'}.
             </p>
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function ReviewRevisionModal({
             className="text-red-600 hover:text-red-700 hover:bg-red-50"
           >
             <XCircle className="w-4 h-4 mr-2" />
-            Manter Banido
+            Rejeitar
           </Button>
           <Button
             onClick={onApprove}

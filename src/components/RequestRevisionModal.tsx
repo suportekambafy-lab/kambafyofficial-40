@@ -102,9 +102,23 @@ export default function RequestRevisionModal({
     setSubmitting(true);
 
     try {
+      // Primeiro, buscar o status atual do produto
+      const { data: currentProduct, error: fetchError } = await supabase
+        .from('products')
+        .select('status')
+        .eq('id', productId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Se o produto está Ativo, mudar para "Em Revisão" para não ficar visível
+      // Se está Banido, manter Banido
+      const newStatus = currentProduct.status === 'Ativo' ? 'Em Revisão' : currentProduct.status;
+
       const { error } = await supabase
         .from('products')
         .update({
+          status: newStatus,
           revision_requested: true,
           revision_requested_at: new Date().toISOString(),
           revision_explanation: explanation.trim(),
