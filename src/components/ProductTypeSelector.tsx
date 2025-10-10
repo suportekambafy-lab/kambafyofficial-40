@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, BookOpen, GraduationCap, CreditCard } from "lucide-react";
+import { X } from "lucide-react";
 
 interface ProductTypeSelectorProps {
   onClose: () => void;
@@ -29,7 +29,6 @@ export default function ProductTypeSelector({ onClose, onSelectType }: ProductTy
               className="h-20 flex-col gap-2 hover:bg-primary/5"
               onClick={() => onSelectType("E-book")}
             >
-              <BookOpen className="h-8 w-8" />
               <span className="font-medium">E-book</span>
               <span className="text-xs text-muted-foreground">Livro digital ou material de leitura</span>
             </Button>
@@ -39,7 +38,6 @@ export default function ProductTypeSelector({ onClose, onSelectType }: ProductTy
               className="h-20 flex-col gap-2 hover:bg-primary/5"
               onClick={() => onSelectType("Curso")}
             >
-              <GraduationCap className="h-8 w-8" />
               <span className="font-medium">Curso</span>
               <span className="text-xs text-muted-foreground">Conteúdo educacional estruturado</span>
             </Button>
@@ -49,7 +47,6 @@ export default function ProductTypeSelector({ onClose, onSelectType }: ProductTy
               className="h-20 flex-col gap-2 hover:bg-primary/5"
               onClick={() => onSelectType("Link de Pagamento")}
             >
-              <CreditCard className="h-8 w-8" />
               <span className="font-medium">Link de Pagamento</span>
               <span className="text-xs text-muted-foreground">Para serviços, consultorias e mentorias</span>
             </Button>
