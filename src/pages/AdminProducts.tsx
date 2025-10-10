@@ -607,7 +607,15 @@ export default function AdminProducts() {
                 <div className="flex justify-between text-xs mb-3">
                   <div>
                     <span className="font-medium">Status:</span>
-                    <span className="ml-1 text-slate-600">{product.status}</span>
+                    <span className="ml-1 text-slate-600">
+                      {product.status === 'Banido' 
+                        ? 'Banido' 
+                        : product.revision_requested 
+                          ? 'Em Revisão'
+                          : product.admin_approved 
+                            ? product.status 
+                            : 'Pendente Aprovação'}
+                    </span>
                   </div>
                   <div>
                     <span className="font-medium">Vendas:</span>
