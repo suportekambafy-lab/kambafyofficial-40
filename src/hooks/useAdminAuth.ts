@@ -129,12 +129,12 @@ export const useAdminAuthHook = () => {
       throw new Error('Nenhum login pendente encontrado');
     }
 
-    // ✅ FASE 1: Completar login com 2FA via edge function
+    // ✅ FASE 2: Completar login após 2FA já verificado
     const { data, error } = await supabase.functions.invoke('admin-login', {
       body: {
         email: pendingLoginData.email,
         password: pendingLoginData.password,
-        twoFactorCode: '000000' // Será validado pela edge function verify-2fa-code
+        codeAlreadyVerified: true // Código já foi verificado no frontend
       }
     });
 
