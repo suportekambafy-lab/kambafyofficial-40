@@ -28,15 +28,25 @@ export default function AdminPermissionRoute({
         return;
       }
 
-      // Super admins têm acesso a tudo
-      if ((admin as any).role === 'super_admin') {
+      console.log('🔐 Verificando permissões:', {
+        adminEmail: admin.email,
+        adminRole: (admin as any).role,
+        requiredPermission,
+        requireSuperAdmin
+      });
+
+      // CRITICAL: Super admins SEMPRE têm acesso a tudo
+      const isSuperAdmin = (admin as any).role === 'super_admin';
+      if (isSuperAdmin) {
+        console.log('✅ Super admin detectado - acesso total concedido');
         setHasPermission(true);
         setLoading(false);
         return;
       }
 
       // Se requer super admin e não é super admin, negar acesso
-      if (requireSuperAdmin && (admin as any).role !== 'super_admin') {
+      if (requireSuperAdmin) {
+        console.log('❌ Página requer super admin e usuário não é super admin');
         setHasPermission(false);
         setLoading(false);
         return;
@@ -44,6 +54,7 @@ export default function AdminPermissionRoute({
 
       // Se não há permissão específica requerida, permitir acesso
       if (!requiredPermission) {
+        console.log('✅ Nenhuma permissão específica requerida - acesso concedido');
         setHasPermission(true);
         setLoading(false);
         return;
@@ -59,13 +70,15 @@ export default function AdminPermissionRoute({
           .maybeSingle();
 
         if (error) {
-          console.error('Erro ao verificar permissão:', error);
+          console.error('❌ Erro ao verificar permissão:', error);
           setHasPermission(false);
         } else {
-          setHasPermission(!!data);
+          const hasAccess = !!data;
+          console.log(hasAccess ? '✅ Permissão encontrada' : '❌ Permissão não encontrada');
+          setHasPermission(hasAccess);
         }
       } catch (error) {
-        console.error('Erro ao verificar permissão:', error);
+        console.error('❌ Erro ao verificar permissão:', error);
         setHasPermission(false);
       } finally {
         setLoading(false);
