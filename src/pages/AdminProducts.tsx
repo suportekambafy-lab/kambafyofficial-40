@@ -519,7 +519,8 @@ export default function AdminProducts() {
     if (statusFilter === 'banido') return product.status === 'Banido';
     if (statusFilter === 'inativo') return product.status === 'Inativo';
     if (statusFilter === 'revisao') return product.revision_requested === true;
-    if (statusFilter === 'pendente') return product.status === 'Pendente' || (!product.admin_approved && product.status !== 'Banido' && !product.revision_requested);
+    // Filtro "pendente" = produtos não aprovados, excluindo banidos, revisão solicitada E rascunhos
+    if (statusFilter === 'pendente') return product.status === 'Pendente' || (!product.admin_approved && product.status !== 'Banido' && product.status !== 'Rascunho' && !product.revision_requested);
     return true;
   });
 
@@ -563,7 +564,7 @@ export default function AdminProducts() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos ({products.length})</SelectItem>
-                <SelectItem value="pendente">Aprovar Produtos ({products.filter(p => p.status === 'Pendente' || (!p.admin_approved && p.status !== 'Banido' && !p.revision_requested)).length})</SelectItem>
+                <SelectItem value="pendente">Aprovar Produtos ({products.filter(p => p.status === 'Pendente' || (!p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && !p.revision_requested)).length})</SelectItem>
                 <SelectItem value="rascunho">Rascunhos ({products.filter(p => p.status === 'Rascunho').length})</SelectItem>
                 <SelectItem value="ativo">Ativos ({products.filter(p => p.status === 'Ativo').length})</SelectItem>
                 <SelectItem value="banido">Banidos ({products.filter(p => p.status === 'Banido').length})</SelectItem>
