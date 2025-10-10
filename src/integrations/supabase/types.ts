@@ -2829,12 +2829,6 @@ export type Database = {
     Functions: {
       admin_approve_product: {
         Args:
-          | {
-              admin_id?: string
-              p_admin_email?: string
-              p_jwt_token?: string
-              product_id: string
-            }
           | { admin_id?: string; p_admin_email?: string; product_id: string }
           | { admin_id?: string; product_id: string }
         Returns: undefined
