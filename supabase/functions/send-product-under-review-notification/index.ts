@@ -9,11 +9,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface BanNotificationRequest {
+interface UnderReviewNotificationRequest {
   sellerEmail: string;
   sellerName: string;
   productName: string;
-  banReason: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -23,14 +22,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { sellerEmail, sellerName, productName, banReason }: BanNotificationRequest = await req.json();
+    const { sellerEmail, sellerName, productName }: UnderReviewNotificationRequest = await req.json();
 
-    console.log('📧 Enviando email de banimento para:', sellerEmail);
+    console.log('📧 Enviando email de produto em revisão para:', sellerEmail);
 
     const emailResponse = await resend.emails.send({
       from: "Kambafy <noreply@kambafy.com>",
       to: [sellerEmail],
-      subject: `Seu produto foi rejeitado - "${productName}"`,
+      subject: `Seu produto está em revisão - "${productName}"`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -41,34 +40,25 @@ const handler = async (req: Request): Promise<Response> => {
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
               .header { text-align: center; padding: 20px 0; }
               .content { background: #f9f9f9; padding: 30px; border-radius: 8px; }
-              .reason-box { background: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0; }
               .footer { text-align: center; padding: 20px 0; font-size: 14px; color: #666; }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
-                <h1>❌ Produto Rejeitado</h1>
+                <h1>🔍 Produto em Revisão</h1>
               </div>
               
               <div class="content">
                 <p>Olá <strong>${sellerName}</strong>,</p>
                 
-                <p>Seu produto <strong>"${productName}"</strong> não foi aprovado porque não atende às diretrizes da plataforma.</p>
+                <p>Seu produto <strong>"${productName}"</strong> foi submetido com sucesso e agora está em revisão.</p>
                 
-                <div class="reason-box">
-                  <h3>Motivo:</h3>
-                  <p><strong>${banReason}</strong></p>
-                </div>
+                <p>Nossa equipe está analisando o conteúdo para garantir que está de acordo com as diretrizes da plataforma.</p>
                 
-                <p>Você pode fazer as correções necessárias e solicitar uma nova revisão através do painel do vendedor.</p>
+                <p>Você receberá uma notificação por email assim que a revisão for concluída.</p>
                 
-                <p><strong>Próximos passos:</strong></p>
-                <ul>
-                  <li>Revise o motivo da rejeição</li>
-                  <li>Faça as alterações necessárias no produto</li>
-                  <li>Solicite uma nova revisão</li>
-                </ul>
+                <p><strong>Importante:</strong> Durante o período de revisão, seu produto não estará disponível para venda.</p>
               </div>
               
               <div class="footer">
@@ -81,7 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("✅ Email de banimento enviado com sucesso:", emailResponse);
+    console.log("✅ Email de produto em revisão enviado com sucesso:", emailResponse);
 
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
@@ -91,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("❌ Erro ao enviar email de banimento:", error);
+    console.error("❌ Erro ao enviar email de produto em revisão:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

@@ -349,7 +349,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       const productData = {
         name: formData.name,
         type: formData.type,
-        price: isDraft ? (formData.price || "0") : formData.price, // Para rascunho, usar 0 se vazio
+        price: isDraft ? (formData.price || "0") : formData.price,
         compare_at_price: formData.compareAtPrice || null,
         description: formData.description,
         share_link: formData.type === "Curso" ? null : formData.shareLink,
@@ -357,17 +357,17 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         commission: formData.allowAffiliates ? formData.commission : null,
         tags: formData.tags,
         member_area_id: (formData.type === "Curso" && formData.memberAreaId) ? formData.memberAreaId : null,
-        payment_methods: isDraft ? [] as any : (formData.paymentMethods as any), // Para rascunho, array vazio é ok
+        payment_methods: isDraft ? [] as any : (formData.paymentMethods as any),
         custom_prices: formData.customPrices,
         allow_affiliates: formData.allowAffiliates,
-        category: isDraft ? (formData.category || null) : formData.category, // Para rascunho, categoria pode ser null
+        category: isDraft ? (formData.category || null) : formData.category,
         support_email: formData.supportEmail || null,
         support_whatsapp: formData.supportWhatsapp || null,
         access_duration_type: formData.accessDurationType,
         access_duration_value: formData.accessDurationValue,
         access_duration_description: formData.accessDurationDescription,
         user_id: user.id,
-        status: isDraft ? "Rascunho" : "Ativo"
+        status: isDraft ? "Rascunho" : "Pendente"
       };
 
       console.log('Saving product data:', productData);
@@ -399,6 +399,34 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         console.log('🔥 RESULTADO INSERT:', { data, error });
         if (error) {
           console.error('🚨 ERRO AO INSERIR:', error);
+        } else if (data && data[0] && !isDraft) {
+          // Enviar email de "produto em revisão" apenas para produtos não-rascunho
+          try {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('email, full_name')
+              .eq('user_id', user.id)
+              .single();
+
+            if (profileData) {
+              console.log('📧 Enviando email de produto em revisão...');
+              const emailResponse = await supabase.functions.invoke('send-product-under-review-notification', {
+                body: {
+                  sellerEmail: profileData.email,
+                  sellerName: profileData.full_name || 'Vendedor',
+                  productName: formData.name
+                }
+              });
+
+              if (emailResponse.error) {
+                console.error('❌ Erro ao enviar email de revisão:', emailResponse.error);
+              } else {
+                console.log('✅ Email de revisão enviado com sucesso');
+              }
+            }
+          } catch (emailError) {
+            console.error('❌ Erro inesperado ao enviar email:', emailError);
+          }
         }
       }
 
@@ -413,7 +441,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         console.log('Product saved successfully');
         const successMessage = isDraft 
           ? (editingProduct ? "Rascunho atualizado com sucesso" : "Produto salvo como rascunho")
-          : (editingProduct ? "Produto atualizado com sucesso" : "Produto criado com sucesso");
+          : (editingProduct ? "Produto atualizado com sucesso" : "Produto enviado para revisão! Você será notificado por email quando for aprovado.");
         
         toast({
           title: "Sucesso",
