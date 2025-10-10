@@ -467,7 +467,16 @@ export default function AdminProducts() {
   };
 
   const getStatusBadge = (product: ProductWithProfile) => {
-    // Banido tem prioridade
+    // Rascunho tem prioridade
+    if (product.status === 'Rascunho') {
+      return (
+        <Badge className="bg-orange-100 text-orange-800 border-orange-200">
+          Rascunho
+        </Badge>
+      );
+    }
+    
+    // Banido
     if (product.status === 'Banido') {
       return (
         <Badge className="bg-red-100 text-red-800 border-red-200">
@@ -505,6 +514,7 @@ export default function AdminProducts() {
   // Filtrar produtos baseado no filtro selecionado
   const filteredProducts = products.filter(product => {
     if (statusFilter === 'todos') return true;
+    if (statusFilter === 'rascunho') return product.status === 'Rascunho';
     if (statusFilter === 'ativo') return product.status === 'Ativo';
     if (statusFilter === 'banido') return product.status === 'Banido';
     if (statusFilter === 'inativo') return product.status === 'Inativo';
@@ -554,6 +564,7 @@ export default function AdminProducts() {
               <SelectContent>
                 <SelectItem value="todos">Todos ({products.length})</SelectItem>
                 <SelectItem value="pendente">Aprovar Produtos ({products.filter(p => p.status === 'Pendente' || (!p.admin_approved && p.status !== 'Banido' && !p.revision_requested)).length})</SelectItem>
+                <SelectItem value="rascunho">Rascunhos ({products.filter(p => p.status === 'Rascunho').length})</SelectItem>
                 <SelectItem value="ativo">Ativos ({products.filter(p => p.status === 'Ativo').length})</SelectItem>
                 <SelectItem value="banido">Banidos ({products.filter(p => p.status === 'Banido').length})</SelectItem>
                 <SelectItem value="inativo">Inativos ({products.filter(p => p.status === 'Inativo').length})</SelectItem>
@@ -638,15 +649,16 @@ export default function AdminProducts() {
                 )}
 
                 <div className="space-y-2">
-                  {/* Botão para copiar link do checkout */}
+                  {/* Botão para copiar link do checkout - desabilitado para rascunhos */}
                   <Button
                     onClick={() => copyCheckoutLink(product.id, product.name)}
                     size="sm"
                     variant="outline"
-                    className="w-full border-primary text-primary hover:bg-primary/10 text-xs"
+                    className="w-full border-primary text-primary hover:bg-primary/10 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={product.status === 'Rascunho'}
                   >
                     <Copy className="h-3 w-3 mr-1" />
-                    Copiar Link Checkout
+                    {product.status === 'Rascunho' ? 'Link Indisponível (Rascunho)' : 'Copiar Link Checkout'}
                   </Button>
                   
                   {/* Botão para acessar conteúdo do produto */}

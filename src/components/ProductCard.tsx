@@ -229,9 +229,10 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                       size="sm"
                       onClick={() => onShare(product)}
                       className="flex-1 text-xs h-8"
+                      disabled={product.status === 'Rascunho'}
                     >
                       <Share className="w-3 h-3 mr-1" />
-                      <span>Partilhar</span>
+                      <span>{product.status === 'Rascunho' ? 'Indisponível' : 'Partilhar'}</span>
                     </Button>
                     <Button
                       variant="outline"

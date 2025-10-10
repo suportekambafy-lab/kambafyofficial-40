@@ -92,6 +92,9 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
     window.open(checkoutLink, '_blank');
   };
 
+  // Verificar se o produto é um rascunho
+  const isRascunho = product.status === 'Rascunho';
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-lg">
@@ -105,6 +108,17 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
+          {isRascunho && (
+            <div className="bg-orange-50 border border-orange-200 rounded-md p-3 mb-4">
+              <p className="text-sm text-orange-800 font-medium">
+                ⚠️ Este produto está em rascunho
+              </p>
+              <p className="text-xs text-orange-700 mt-1">
+                Produtos em rascunho não podem ser compartilhados. Complete e publique o produto para gerar links de checkout.
+              </p>
+            </div>
+          )}
+          
           <div>
             <h3 className="font-medium mb-2">{product.name}</h3>
             <p className="text-sm text-muted-foreground">
@@ -123,13 +137,15 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
               <Label>Link do Produto</Label>
               <div className="flex gap-2">
                 <Input 
-                  value={previewLink} 
+                  value={isRascunho ? "Link indisponível para rascunhos" : previewLink} 
                   readOnly 
                   className="font-mono text-xs"
+                  disabled={isRascunho}
                 />
                 <Button 
                   size="sm" 
                   onClick={() => copyToClipboard(previewLink, "Link com preview", "checkout")}
+                  disabled={isRascunho}
                 >
                   {copiedLinks.checkout ? (
                     <Check className="h-4 w-4 text-green-600" />
@@ -145,6 +161,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
                 onClick={openCheckoutInNewTab}
                 className="w-full mt-2"
                 variant="outline"
+                disabled={isRascunho}
               >
                 <Link className="h-4 w-4 mr-2" />
                 Testar Checkout
