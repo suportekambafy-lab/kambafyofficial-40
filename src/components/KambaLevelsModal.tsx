@@ -50,7 +50,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1600px] h-[650px] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-3xl">
+      <DialogContent className="max-w-[1800px] h-[600px] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-3xl">
         <button
           onClick={() => onOpenChange(false)}
           className="absolute right-8 top-8 z-50 rounded-full bg-background/80 backdrop-blur p-2.5 hover:bg-background transition-colors"
