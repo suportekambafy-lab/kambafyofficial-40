@@ -97,8 +97,19 @@ export default function AdminPermissionRoute({
     );
   }
 
+  // Log do estado atual para debug
+  console.log('🔍 AdminPermissionRoute - Estado atual:', {
+    admin,
+    adminRole: admin ? (admin as any).role : null,
+    hasPermission,
+    requiredPermission,
+    requireSuperAdmin,
+    loginStep
+  });
+
   // Redirect to login if not authenticated
   if (!admin || loginStep === 'awaiting_2fa') {
+    console.log('❌ Redirecionando para login - sem admin ou aguardando 2FA');
     return <Navigate to="/admin/login" replace />;
   }
 
