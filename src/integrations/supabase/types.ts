@@ -2888,13 +2888,22 @@ export type Database = {
         Returns: number
       }
       create_admin_user: {
-        Args: {
-          p_email: string
-          p_full_name: string
-          p_password: string
-          p_permissions?: string[]
-          p_role?: Database["public"]["Enums"]["admin_role"]
-        }
+        Args:
+          | {
+              p_admin_email?: string
+              p_email: string
+              p_full_name: string
+              p_password: string
+              p_permissions?: string[]
+              p_role?: Database["public"]["Enums"]["admin_role"]
+            }
+          | {
+              p_email: string
+              p_full_name: string
+              p_password: string
+              p_permissions?: string[]
+              p_role?: Database["public"]["Enums"]["admin_role"]
+            }
         Returns: string
       }
       create_customer_access_manual: {

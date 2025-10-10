@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Shield, UserPlus, Trash2, Crown, Menu, ArrowLeft } from 'lucide-react';
 import { AdminUser, AdminRole } from '@/types/admin';
 import { useNavigate } from 'react-router-dom';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 import AdminDrawer from '@/components/admin/AdminDrawer';
 import {
   Dialog,
@@ -45,6 +46,7 @@ const ROLE_DESCRIPTIONS: Record<AdminRole, string> = {
 
 export default function AdminManagement() {
   const navigate = useNavigate();
+  const { admin } = useAdminAuth();
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -90,6 +92,7 @@ export default function AdminManagement() {
         p_full_name: fullName,
         p_role: role,
         p_permissions: selectedPermissions,
+        p_admin_email: admin?.email, // Email do admin que está criando
       });
 
       if (error) throw error;
