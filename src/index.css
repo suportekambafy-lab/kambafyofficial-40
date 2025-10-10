@@ -584,3 +584,13 @@ html {
     animation: shine 5s linear infinite;
   }
 }
+
+/* Ajustar posição do chat Crisp para não sobrepor a barra inferior */
+.crisp-client {
+  bottom: 90px !important;
+}
+
+/* Ajustar z-index para garantir que a barra inferior fique acima de outros elementos mas abaixo do Crisp */
+.crisp-client {
+  z-index: 9999999 !important;
+}

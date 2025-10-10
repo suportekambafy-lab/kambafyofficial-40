@@ -57,6 +57,14 @@ export function CrispChat({ websiteId = '62ac656c-3096-4b39-bbe1-05a210b6dfc4' }
             ['platform', 'web']
           ]]]);
         }
+
+        // Ajustar posição do chat para não sobrepor a barra inferior
+        setTimeout(() => {
+          const crispChat = document.querySelector('.crisp-client') as HTMLElement;
+          if (crispChat) {
+            crispChat.style.bottom = '90px';
+          }
+        }, 1000);
       }
     };
 
