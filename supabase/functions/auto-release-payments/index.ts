@@ -44,13 +44,83 @@ serve(async (req) => {
 
     logStep("✅ Cliente Supabase configurado com service role");
 
-    // Primeiro, buscar vendas já liberadas para evitar duplicatas
+    // ============================================================
+    // ETAPA 1: Processar liberações pendentes (já registradas mas sem crédito)
+    // ============================================================
+    logStep("🔍 ETAPA 1: Verificando liberações pendentes...");
+    
+    const { data: pendingReleases } = await supabase
+      .from('payment_releases')
+      .select(`
+        id,
+        order_id,
+        user_id,
+        amount,
+        currency,
+        release_date,
+        orders!inner(
+          customer_name,
+          customer_email
+        )
+      `)
+      .lte('release_date', new Date().toISOString());
+
+    logStep(`📦 Encontradas ${pendingReleases?.length || 0} liberações registradas`);
+
+    let creditedPending = 0;
+    
+    // Para cada liberação pendente, verificar se já tem crédito
+    for (const release of pendingReleases || []) {
+      // Verificar se já existe transação de crédito para esta ordem
+      const { data: existingCredit } = await supabase
+        .from('balance_transactions')
+        .select('id')
+        .eq('order_id', release.order_id)
+        .eq('type', 'credit')
+        .maybeSingle();
+
+      if (!existingCredit) {
+        // Criar transação de crédito para esta liberação pendente
+        const netAmount = release.amount * 0.92; // 92% após taxa de 8%
+        
+        const { error: creditError } = await supabase
+          .from('balance_transactions')
+          .insert({
+            user_id: release.user_id,
+            type: 'credit',
+            amount: netAmount,
+            currency: release.currency,
+            description: `Crédito de liberação automática (3 dias) - ${release.orders?.customer_name || 'Cliente'}`,
+            order_id: release.order_id
+          });
+
+        if (creditError) {
+          logStep(`⚠️ Erro ao creditar liberação pendente ${release.order_id}:`, creditError);
+        } else {
+          creditedPending++;
+          logStep(`✅ Creditada liberação pendente: ${release.order_id} - ${netAmount} KZ`);
+        }
+      }
+    }
+
+    if (creditedPending > 0) {
+      logStep(`💰 ETAPA 1 CONCLUÍDA: ${creditedPending} liberações pendentes creditadas`);
+    } else {
+      logStep(`ℹ️ ETAPA 1 CONCLUÍDA: Nenhuma liberação pendente para creditar`);
+    }
+
+    // ============================================================
+    // ETAPA 2: Registrar e creditar novas liberações
+    // ============================================================
+    logStep("🔍 ETAPA 2: Processando novas liberações...");
+
+    // Buscar vendas já liberadas para evitar duplicatas
     const { data: alreadyReleased } = await supabase
       .from('payment_releases')
       .select('order_id');
 
     const releasedOrderIds = new Set(alreadyReleased?.map(r => r.order_id) || []);
-    logStep(`🔒 ${releasedOrderIds.size} vendas já foram liberadas anteriormente`);
+    logStep(`🔒 ${releasedOrderIds.size} vendas já registradas em payment_releases`);
 
     // Buscar todas as vendas completed que ainda não foram liberadas
     const { data: orders, error: ordersError } = await supabase
@@ -197,8 +267,10 @@ serve(async (req) => {
     // Resposta com resumo
     const summary = {
       processedAt: now.toISOString(),
-      totalOrdersProcessed: orders?.length || 0,
-      ordersReleased: releasedOrders.length,
+      step1PendingCredited: creditedPending,
+      step2NewReleasesFound: orders?.length || 0,
+      step2NewReleasesProcessed: releasedOrders.length,
+      step2NewReleasesRecorded: newReleasesToRecord.length,
       totalAmountReleased: totalReleasedAmount,
       usersSummary: Object.keys(userReleases).length,
       releasedOrders: releasedOrders.map(order => ({
@@ -213,7 +285,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      message: `Liberação automática concluída: ${newReleasesToRecord.length} novas vendas liberadas`,
+      message: `Liberação automática concluída - Etapa 1: ${creditedPending} pendentes creditados | Etapa 2: ${newReleasesToRecord.length} novas vendas liberadas`,
       summary
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
