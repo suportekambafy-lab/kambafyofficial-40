@@ -131,14 +131,12 @@ export const useAdminAuthHook = () => {
     }
 
     try {
-      console.log('Completando login admin com código 2FA verificado');
+      console.log('✅ Código 2FA já verificado, completando login...');
       
-      // Chamar admin-login novamente com o código verificado
-      const { data, error } = await supabase.functions.invoke('admin-login', {
+      // Código já foi verificado com sucesso, apenas gerar JWT agora
+      const { data, error } = await supabase.functions.invoke('complete-admin-login', {
         body: { 
-          email: pendingLoginData.email, 
-          password: pendingLoginData.password,
-          twoFactorCode: verifiedCode
+          email: pendingLoginData.email
         }
       });
 
