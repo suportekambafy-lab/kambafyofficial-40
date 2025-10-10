@@ -586,7 +586,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
       </Card>
 
       {/* Barra inferior fixa com ações */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg z-50 p-4 flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 md:left-80 right-0 bg-background border-t border-border shadow-lg z-50 p-4 flex items-center justify-between">
         <Button variant="outline" onClick={onCancel} disabled={saving}>
           Cancelar
         </Button>
