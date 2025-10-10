@@ -3161,6 +3161,14 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      update_admin_permissions: {
+        Args: {
+          p_admin_email?: string
+          p_admin_id: string
+          p_permissions: string[]
+        }
+        Returns: undefined
+      }
       verify_admin_jwt: {
         Args: { jwt_token: string }
         Returns: {

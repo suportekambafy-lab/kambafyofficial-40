@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Shield, UserPlus, Trash2, Crown, Menu, ArrowLeft } from 'lucide-react';
+import { Shield, UserPlus, Trash2, Crown, Menu, ArrowLeft, Settings } from 'lucide-react';
 import { AdminUser, AdminRole } from '@/types/admin';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
@@ -59,6 +59,13 @@ export default function AdminManagement() {
   const [role, setRole] = useState<AdminRole>('admin');
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
+  
+  // Edit permissions state
+  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
+  const [editPermissions, setEditPermissions] = useState<string[]>([]);
+  const [loadingPermissions, setLoadingPermissions] = useState(false);
+  const [savingPermissions, setSavingPermissions] = useState(false);
 
   useEffect(() => {
     loadAdmins();
@@ -150,6 +157,56 @@ export default function AdminManagement() {
     } catch (error: any) {
       console.error('Erro ao atualizar status:', error);
       toast.error('Erro ao atualizar status do administrador');
+    }
+  };
+
+  const loadAdminPermissions = async (adminId: string) => {
+    setLoadingPermissions(true);
+    try {
+      const { data, error } = await supabase
+        .from('admin_permissions')
+        .select('permission')
+        .eq('admin_id', adminId);
+
+      if (error) throw error;
+
+      setEditPermissions(data?.map(p => p.permission) || []);
+    } catch (error: any) {
+      console.error('Erro ao carregar permissões:', error);
+      toast.error('Erro ao carregar permissões');
+    } finally {
+      setLoadingPermissions(false);
+    }
+  };
+
+  const handleEditPermissions = async (admin: AdminUser) => {
+    setEditingAdmin(admin);
+    setIsPermissionsDialogOpen(true);
+    await loadAdminPermissions(admin.id);
+  };
+
+  const handleSavePermissions = async () => {
+    if (!editingAdmin) return;
+    
+    setSavingPermissions(true);
+    try {
+      const { error } = await supabase.rpc('update_admin_permissions', {
+        p_admin_id: editingAdmin.id,
+        p_permissions: editPermissions,
+        p_admin_email: admin?.email,
+      });
+
+      if (error) throw error;
+
+      toast.success('Permissões atualizadas com sucesso!');
+      setIsPermissionsDialogOpen(false);
+      setEditingAdmin(null);
+      setEditPermissions([]);
+    } catch (error: any) {
+      console.error('Erro ao atualizar permissões:', error);
+      toast.error(error.message || 'Erro ao atualizar permissões');
+    } finally {
+      setSavingPermissions(false);
     }
   };
 
@@ -342,13 +399,21 @@ export default function AdminManagement() {
                     </CardDescription>
                   </div>
                   
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                     <span className="text-sm font-medium px-3 py-1 bg-primary/10 text-primary rounded-full">
                       {ROLE_LABELS[admin.role]}
                     </span>
                     
                     {admin.role !== 'super_admin' && (
                       <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditPermissions(admin)}
+                        >
+                          <Settings className="h-4 w-4 mr-1" />
+                          Permissões
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -376,6 +441,78 @@ export default function AdminManagement() {
             </Card>
           ))}
         </div>
+
+        {/* Dialog para editar permissões */}
+        <Dialog open={isPermissionsDialogOpen} onOpenChange={setIsPermissionsDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Gerenciar Permissões</DialogTitle>
+              <DialogDescription>
+                Edite as permissões de {editingAdmin?.full_name || editingAdmin?.email}
+              </DialogDescription>
+            </DialogHeader>
+
+            {loadingPermissions ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-3 border rounded-lg p-4 max-h-96 overflow-y-auto">
+                  {AVAILABLE_PERMISSIONS.map((permission) => (
+                    <div key={permission.id} className="flex items-start space-x-3">
+                      <Checkbox
+                        id={`edit-${permission.id}`}
+                        checked={editPermissions.includes(permission.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setEditPermissions([...editPermissions, permission.id]);
+                          } else {
+                            setEditPermissions(
+                              editPermissions.filter((p) => p !== permission.id)
+                            );
+                          }
+                        }}
+                      />
+                      <div className="grid gap-1.5 leading-none">
+                        <label
+                          htmlFor={`edit-${permission.id}`}
+                          className="text-sm font-medium leading-none cursor-pointer"
+                        >
+                          {permission.label}
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                          {permission.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsPermissionsDialogOpen(false);
+                      setEditingAdmin(null);
+                      setEditPermissions([]);
+                    }}
+                    disabled={savingPermissions}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    onClick={handleSavePermissions} 
+                    disabled={savingPermissions}
+                  >
+                    {savingPermissions ? 'Salvando...' : 'Salvar Permissões'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
