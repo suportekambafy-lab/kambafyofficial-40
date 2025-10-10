@@ -2951,11 +2951,11 @@ export type Database = {
       create_admin_user: {
         Args:
           | {
-              p_admin_email: string
+              p_admin_email?: string
               p_email: string
               p_full_name: string
               p_password: string
-              p_permissions: string[]
+              p_permissions?: string[]
               p_role: Database["public"]["Enums"]["admin_role"]
             }
           | {
