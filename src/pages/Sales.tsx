@@ -230,16 +230,20 @@ export default function Sales() {
     return `https://images.unsplash.com/${cover}`;
   };
   const formatPrice = (sale: Sale) => {
-    // Usar valores originais preservados se disponível, senão usar valores atuais
-    const originalAmount = sale.original_amount || sale.amount;
+    // ✅ USAR SELLER_COMMISSION (valor líquido com 8% descontado)
+    // Se não tiver seller_commission, usar amount (vendas antigas)
+    let displayAmount = parseFloat(sale.seller_commission?.toString() || '0');
+    
+    if (displayAmount === 0) {
+      // Venda antiga sem seller_commission - usar amount
+      displayAmount = parseFloat(sale.amount || '0');
+    }
+    
     const originalCurrency = sale.original_currency || sale.currency;
-    const currencyInfo = getCurrencyInfo(originalCurrency);
-
-    // Usar o valor original preservado
-    const paidAmount = parseFloat(originalAmount);
+    
     return <div className="text-right">
         <div className="font-bold text-checkout-green">
-          {formatPriceForSeller(paidAmount, originalCurrency)}
+          {formatPriceForSeller(displayAmount, originalCurrency)}
         </div>
         {originalCurrency !== 'KZ'}
       </div>;
