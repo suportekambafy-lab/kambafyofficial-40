@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
 import { useKambaLevels } from "@/hooks/useKambaLevels";
-import { ChevronLeft, ChevronRight, X, Lock, LockOpen, Target } from "lucide-react";
+import { X, Lock, LockOpen, Target } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 
@@ -20,7 +20,6 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
   totalRevenue
 }) => {
   const { currentLevel, nextLevel, progress, allLevels } = useKambaLevels(totalRevenue);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
@@ -36,21 +35,8 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
     return totalRevenue >= levelThreshold;
   };
 
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(allLevels.length - 1, prev + 1));
-  };
-
-  const visibleLevels = allLevels.slice(currentIndex, currentIndex + 3);
-  const canGoPrev = currentIndex > 0;
-  const canGoNext = currentIndex < allLevels.length - 3;
-
-  // Em mobile, mostrar todos os níveis para scroll horizontal
-  const displayLevels = typeof window !== 'undefined' && window.innerWidth < 768 ? allLevels : visibleLevels;
-
+  const visibleLevels = allLevels;
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-[1900px] h-auto max-h-[90vh] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-2xl md:rounded-3xl">
@@ -87,11 +73,10 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
 
           {/* Carousel */}
           <div className="relative py-2">
-            <div className="flex gap-4 md:gap-6 justify-start md:justify-center items-stretch overflow-x-auto overflow-y-hidden pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-              {displayLevels.map((level, index) => {
+            <div className="flex gap-4 md:gap-6 justify-start items-stretch overflow-x-auto overflow-y-hidden pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+              {visibleLevels.map((level, index) => {
                 const achieved = isAchieved(level.threshold);
                 const isCurrent = currentLevel && level.id === currentLevel.id;
-                const globalIndex = typeof window !== 'undefined' && window.innerWidth < 768 ? index : currentIndex + index;
                 
                 return (
                   <div
@@ -135,7 +120,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
                         {level.name.replace('Kamba ', '')}
                       </h3>
                       <p className={`text-xs md:text-sm ${achieved ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        {globalIndex + 1}º marco
+                        {index + 1}º marco
                       </p>
 
                       {/* Rewards or message */}
@@ -183,25 +168,6 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
                 );
               })}
             </div>
-
-            {/* Navigation Arrows */}
-            {canGoPrev && (
-              <button
-                onClick={handlePrevious}
-                className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-background border-2 rounded-full p-3 hover:bg-accent transition-colors shadow-lg"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-            )}
-
-            {canGoNext && (
-              <button
-                onClick={handleNext}
-                className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-background border-2 rounded-full p-3 hover:bg-accent transition-colors shadow-lg"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </button>
-            )}
           </div>
         </div>
       </DialogContent>
