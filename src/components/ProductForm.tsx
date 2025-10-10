@@ -15,6 +15,7 @@ import EbookUploader from "./EbookUploader";
 import PaymentMethodsSelector from "./PaymentMethodsSelector";
 import CountryPriceConfig from "./CountryPriceConfig";
 import { PaymentMethod } from "@/utils/paymentMethods";
+import { ImageUploader } from "./ImageUploader";
 
 interface ProductFormProps {
   editingProduct?: any;
@@ -475,43 +476,16 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
 
             {renderShareLinkField()}
 
-            <div className="space-y-2">
-              <Label htmlFor="cover">Capa do produto *</Label>
-              <p className="text-xs text-muted-foreground">
-                Tamanho recomendado: 800x1200px ou 1000x1500px (proporção de capa de livro)
-              </p>
-              <div className="flex items-center gap-4">
-                <Input
-                  id="cover"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="flex-1"
-                  disabled={editingProduct?.revision_requested}
-                />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm"
-                  disabled={editingProduct?.revision_requested}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload
-                </Button>
-              </div>
-              {formData.cover && (
-                <div className="mt-2">
-                  <img 
-                    src={formData.cover} 
-                    alt="Preview" 
-                    className="w-32 h-40 object-cover rounded border"
-                  />
-                </div>
-              )}
-              <p className="text-sm text-muted-foreground">
-                A capa é obrigatória para publicar o produto
-              </p>
-            </div>
+            <ImageUploader
+              label="Capa do produto *"
+              value={formData.cover}
+              onChange={(url) => handleInputChange("cover", url || "")}
+              bucket="product-images"
+              folder="covers"
+              aspectRatio="3/4"
+              recommendedDimensions="1200x1600px"
+              disabled={editingProduct?.revision_requested}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="commission">Comissão (%)</Label>
