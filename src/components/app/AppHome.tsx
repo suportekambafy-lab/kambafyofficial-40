@@ -528,13 +528,19 @@ export function AppHome() {
         .eq('user_id', user.id)
         .eq('type', 'sale_revenue');
 
+      console.log('🔍 [AppHome] Transações encontradas:', balanceTransactions?.length || 0);
+
       const releasedOrderIds = new Set(
         (balanceTransactions || [])
           .map(t => t.order_id)
           .filter((id): id is string => id !== null)
       );
 
+      console.log('🔍 [AppHome] Orders com transação (liberados):', releasedOrderIds.size);
+
       let pendingBalance = 0;
+      let pendingCount = 0;
+      let releasedCount = 0;
 
       processedOrders.forEach(order => {
         const amount = order.earning_amount;
@@ -545,7 +551,17 @@ export function AppHome() {
         if (!hasTransaction) {
           // ❌ Sem transação = ainda está pendente
           pendingBalance += amount;
+          pendingCount++;
+        } else {
+          releasedCount++;
         }
+      });
+
+      console.log('🔍 [AppHome] Contagem:', {
+        totalOrders: processedOrders.length,
+        liberados: releasedCount,
+        pendentes: pendingCount,
+        saldoPendente: pendingBalance
       });
       
       console.log('💵 [AppHome] Saldos calculados (fonte: customer_balances):', {
