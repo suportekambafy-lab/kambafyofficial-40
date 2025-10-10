@@ -50,7 +50,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-[1800px] h-[90vh] md:h-[600px] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-2xl md:rounded-3xl">
+      <DialogContent className="w-[95vw] max-w-[1900px] h-[90vh] md:h-[650px] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-2xl md:rounded-3xl">
         <button
           onClick={() => onOpenChange(false)}
           className="absolute right-4 top-4 md:right-8 md:top-8 z-50 rounded-full bg-background/80 backdrop-blur p-2 md:p-2.5 hover:bg-background transition-colors"
@@ -58,7 +58,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           <X className="h-5 w-5 md:h-6 md:w-6" />
         </button>
 
-        <div className="p-4 md:p-8 lg:p-10 space-y-4 md:space-y-6 overflow-y-auto h-full">
+        <div className="p-4 md:p-8 lg:p-12 space-y-4 md:space-y-6 overflow-y-auto h-full">
           {/* Header */}
           <div className="space-y-2 md:space-y-3">
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold">Próximas conquistas</h2>
@@ -93,7 +93,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
                 return (
                   <div
                     key={level.id}
-                    className={`relative rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 transition-all duration-300 flex-shrink-0 w-[calc(100vw-60px)] sm:!w-[320px] md:!w-[340px] lg:!w-[400px] min-h-[420px] ${
+                    className={`relative rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 transition-all duration-300 flex-shrink-0 w-[calc(100vw-60px)] sm:w-[300px] md:w-[320px] lg:w-[360px] xl:w-[420px] min-h-[420px] md:min-h-[480px] lg:min-h-[520px] ${
                       achieved 
                         ? 'bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border-2 border-primary/30' 
                         : 'bg-gradient-to-br from-muted/50 to-muted/30 border-2 border-border/50'
