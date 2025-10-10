@@ -50,7 +50,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1400px] h-[700px] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-3xl">
+      <DialogContent className="max-w-[1600px] h-[650px] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-3xl">
         <button
           onClick={() => onOpenChange(false)}
           className="absolute right-8 top-8 z-50 rounded-full bg-background/80 backdrop-blur p-2.5 hover:bg-background transition-colors"
@@ -58,7 +58,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           <X className="h-6 w-6" />
         </button>
 
-        <div className="p-10 space-y-8 overflow-y-auto h-full">
+        <div className="p-10 space-y-6 overflow-y-auto h-full">
           {/* Header */}
           <div className="space-y-3">
             <h2 className="text-4xl font-bold">Próximas conquistas</h2>
