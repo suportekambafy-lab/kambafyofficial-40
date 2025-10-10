@@ -1,14 +1,12 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
 import { useKambaLevels } from "@/hooks/useKambaLevels";
+import { ChevronLeft, ChevronRight, X, Lock, LockOpen, Target } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 
 interface KambaLevelsModalProps {
   open: boolean;
@@ -21,7 +19,8 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
   onOpenChange,
   totalRevenue
 }) => {
-  const { currentLevel, achievedLevels, allLevels } = useKambaLevels(totalRevenue);
+  const { currentLevel, nextLevel, progress, allLevels } = useKambaLevels(totalRevenue);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
@@ -37,129 +36,173 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
     return totalRevenue >= levelThreshold;
   };
 
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => Math.min(allLevels.length - 1, prev + 1));
+  };
+
+  const visibleLevels = allLevels.slice(currentIndex, currentIndex + 3);
+  const canGoPrev = currentIndex > 0;
+  const canGoNext = currentIndex < allLevels.length - 3;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {currentLevel ? (
-              <img 
-                src={currentLevel.badge} 
-                alt={currentLevel.name}
-                className="w-8 h-8 rounded"
-              />
-            ) : (
-              <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs">
-                ?
-              </div>
-            )}
-            Níveis de Reconhecimento Kamba
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-6xl p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
+        <button
+          onClick={() => onOpenChange(false)}
+          className="absolute right-6 top-6 z-50 rounded-full bg-background/80 backdrop-blur p-2 hover:bg-background transition-colors"
+        >
+          <X className="h-5 w-5" />
+        </button>
 
-        <div className="space-y-4">
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold">Seu Nível Atual</h3>
-              {currentLevel ? (
-                <Badge 
-                  style={{ backgroundColor: currentLevel.color, color: 'white' }}
-                  className="text-xs"
-                >
-                  {currentLevel.emoji} {currentLevel.name}
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-xs">
-                  Nenhum nível alcançado
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Faturamento total: {formatCurrency(totalRevenue)}
+        <div className="p-8 space-y-6">
+          {/* Header */}
+          <div className="space-y-3">
+            <h2 className="text-3xl font-bold">Próximas conquistas</h2>
+            <p className="text-muted-foreground">
+              Para cada marco, um prêmio para te lembrar: você faz acontecer
             </p>
-            {!currentLevel && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Próximo nível: {allLevels[0].emoji} {allLevels[0].name} - {formatCurrency(allLevels[0].threshold)}
-              </p>
-            )}
           </div>
 
-          <div className="space-y-4">
-            {allLevels.map((level, index) => {
-              const achieved = isAchieved(level.threshold);
-              const isCurrent = currentLevel && level.id === currentLevel.id;
-              
-              return (
-                <div
-                  key={level.id}
-                  className={`relative rounded-lg border p-4 transition-all ${
-                    achieved 
-                      ? 'bg-green-50 border-green-200' 
-                      : 'bg-gray-50 border-gray-200'
-                  } ${isCurrent ? 'ring-2 ring-blue-500' : ''}`}
-                >
-                  {achieved && (
-                    <div className="absolute top-2 right-2">
-                      <div className="bg-green-500 rounded-full p-1">
-                        <Check className="w-4 h-4 text-white" />
+          {/* Progress Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-primary">
+              <Target className="h-5 w-5" />
+              <p className="font-medium">Você está conseguindo!</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Progress value={progress} className="h-2" />
+              <p className="text-sm text-muted-foreground">
+                Fature <span className="font-semibold text-primary">{nextLevel ? formatCurrency(nextLevel.threshold) : formatCurrency(allLevels[allLevels.length - 1].threshold)}</span> e desbloqueie o {nextLevel ? nextLevel.name : 'nível máximo'}
+              </p>
+            </div>
+          </div>
+
+          {/* Carousel */}
+          <div className="relative">
+            <div className="flex gap-6 justify-center items-stretch min-h-[420px]">
+              {visibleLevels.map((level, index) => {
+                const achieved = isAchieved(level.threshold);
+                const isCurrent = currentLevel && level.id === currentLevel.id;
+                const globalIndex = currentIndex + index;
+                
+                return (
+                  <div
+                    key={level.id}
+                    className={`relative flex-1 rounded-2xl p-6 transition-all duration-300 ${
+                      achieved 
+                        ? 'bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border-2 border-primary/30' 
+                        : 'bg-gradient-to-br from-muted/50 to-muted/30 border-2 border-border/50'
+                    }`}
+                    style={{
+                      maxWidth: '320px',
+                      minHeight: '420px'
+                    }}
+                  >
+                    {/* Lock Icon */}
+                    <div className="absolute top-4 right-4">
+                      {achieved ? (
+                        <div className="p-2 rounded-lg bg-primary/20">
+                          <LockOpen className="h-5 w-5 text-primary" />
+                        </div>
+                      ) : (
+                        <div className="p-2 rounded-lg bg-muted">
+                          <Lock className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Badge Icon with glow effect */}
+                    <div className="flex justify-center mb-6 mt-4">
+                      <div className={`relative ${achieved ? 'animate-pulse' : ''}`}>
+                        {achieved && (
+                          <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl" />
+                        )}
+                        <img 
+                          src={level.seal} 
+                          alt={level.name}
+                          className={`relative w-32 h-32 object-contain ${!achieved ? 'opacity-30 grayscale' : ''}`}
+                        />
                       </div>
                     </div>
-                  )}
 
-                  <div className="flex items-start gap-4">
-                    <img 
-                      src={level.badge} 
-                      alt={level.name}
-                      className={`w-16 h-16 rounded-lg ${!achieved ? 'opacity-50 grayscale' : ''}`}
-                    />
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className={`font-semibold ${achieved ? 'text-green-700' : 'text-muted-foreground'}`}>
-                          {level.emoji} {level.name}
-                        </h3>
-                        {isCurrent && (
-                          <Badge variant="outline" className="text-xs">
-                            Atual
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <p className={`text-sm mb-3 ${achieved ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        Meta: {formatCurrency(level.threshold)}
+                    {/* Level Info */}
+                    <div className="text-center space-y-3">
+                      <h3 className={`text-2xl font-bold ${achieved ? 'text-primary' : 'text-muted-foreground'}`}>
+                        {level.name.replace('Kamba ', '')}
+                      </h3>
+                      <p className={`text-sm ${achieved ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {globalIndex + 1}º marco
                       </p>
 
-                      <div className="space-y-1">
-                        <p className={`text-sm font-medium ${achieved ? 'text-green-700' : 'text-muted-foreground'}`}>
-                          Recompensas:
-                        </p>
-                        <ul className="space-y-1">
-                          {level.rewards.map((reward, rewardIndex) => (
-                            <li 
-                              key={rewardIndex}
-                              className={`text-sm flex items-center gap-2 ${
-                                achieved ? 'text-green-600' : 'text-muted-foreground'
-                              }`}
-                            >
-                              {achieved ? (
-                                <Check className="w-3 h-3 text-green-500" />
-                              ) : (
-                                <div className="w-3 h-3 rounded-full border border-gray-300" />
-                              )}
-                              {reward}
-                            </li>
-                          ))}
-                        </ul>
+                      {/* Rewards or message */}
+                      <div className="pt-4 space-y-2">
+                        {achieved ? (
+                          <>
+                            <p className="text-sm font-medium">
+                              {level.rewards[0]}
+                            </p>
+                            {level.rewards.length > 1 && (
+                              <p className="text-xs text-muted-foreground">
+                                Nível desbloqueado!
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-sm">
+                            Faturamento
+                          </p>
+                        )}
                       </div>
+
+                      {/* Threshold */}
+                      <div className={`pt-2 ${achieved ? 'text-primary' : 'text-foreground'}`}>
+                        <p className="text-2xl font-bold">
+                          {formatCurrency(level.threshold)}
+                        </p>
+                      </div>
+
+                      {/* Lock Button for locked levels */}
+                      {!achieved && (
+                        <div className="pt-4">
+                          <Button
+                            variant="outline"
+                            disabled
+                            className="w-full"
+                          >
+                            <Lock className="h-4 w-4 mr-2" />
+                            Prêmio bloqueado
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          <div className="text-center text-sm text-muted-foreground mt-6">
-            Continue vendendo para desbloquear novos níveis e recompensas!
+            {/* Navigation Arrows */}
+            {canGoPrev && (
+              <button
+                onClick={handlePrevious}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-background border-2 rounded-full p-3 hover:bg-accent transition-colors shadow-lg"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            )}
+
+            {canGoNext && (
+              <button
+                onClick={handleNext}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-background border-2 rounded-full p-3 hover:bg-accent transition-colors shadow-lg"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
           </div>
         </div>
       </DialogContent>
