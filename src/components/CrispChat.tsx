@@ -62,7 +62,7 @@ export function CrispChat({ websiteId = '62ac656c-3096-4b39-bbe1-05a210b6dfc4' }
         setTimeout(() => {
           const crispChat = document.querySelector('.crisp-client') as HTMLElement;
           if (crispChat) {
-            crispChat.style.bottom = '120px';
+            crispChat.style.bottom = '150px';
           }
         }, 1000);
       }
