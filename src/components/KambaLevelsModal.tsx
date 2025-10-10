@@ -48,6 +48,9 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < allLevels.length - 3;
 
+  // Em mobile, mostrar todos os níveis para scroll horizontal
+  const displayLevels = typeof window !== 'undefined' && window.innerWidth < 768 ? allLevels : visibleLevels;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-[1900px] h-auto max-h-[90vh] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 rounded-2xl md:rounded-3xl">
@@ -84,16 +87,16 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
 
           {/* Carousel */}
           <div className="relative py-2">
-            <div className="flex gap-4 md:gap-6 justify-center items-stretch overflow-x-auto md:overflow-x-visible pb-4 md:pb-0">
-              {visibleLevels.map((level, index) => {
+            <div className="flex gap-4 md:gap-6 justify-start md:justify-center items-stretch overflow-x-auto overflow-y-hidden pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+              {displayLevels.map((level, index) => {
                 const achieved = isAchieved(level.threshold);
                 const isCurrent = currentLevel && level.id === currentLevel.id;
-                const globalIndex = currentIndex + index;
+                const globalIndex = typeof window !== 'undefined' && window.innerWidth < 768 ? index : currentIndex + index;
                 
                 return (
                   <div
                     key={level.id}
-                    className={`relative rounded-2xl md:rounded-3xl p-4 md:p-5 transition-all duration-300 flex-shrink-0 w-[calc(100vw-60px)] sm:w-[280px] md:w-[300px] lg:w-[340px] ${
+                    className={`relative rounded-2xl md:rounded-3xl p-4 md:p-5 transition-all duration-300 flex-shrink-0 snap-center w-[calc(100vw-60px)] sm:w-[280px] md:w-[300px] lg:w-[340px] ${
                       achieved 
                         ? 'bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border-2 border-primary/30' 
                         : 'bg-gradient-to-br from-muted/50 to-muted/30 border-2 border-border/50'
