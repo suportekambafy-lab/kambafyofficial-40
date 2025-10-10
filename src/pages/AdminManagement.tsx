@@ -161,6 +161,7 @@ export default function AdminManagement() {
   };
 
   const loadAdminPermissions = async (adminId: string) => {
+    console.log('📋 Carregando permissões para admin:', adminId);
     setLoadingPermissions(true);
     try {
       const { data, error } = await supabase
@@ -168,11 +169,18 @@ export default function AdminManagement() {
         .select('permission')
         .eq('admin_id', adminId);
 
-      if (error) throw error;
+      console.log('📋 Resposta das permissões:', { data, error, adminId });
 
-      setEditPermissions(data?.map(p => p.permission) || []);
+      if (error) {
+        console.error('❌ Erro ao carregar permissões:', error);
+        throw error;
+      }
+
+      const permissions = data?.map(p => p.permission) || [];
+      console.log('✅ Permissões carregadas:', permissions);
+      setEditPermissions(permissions);
     } catch (error: any) {
-      console.error('Erro ao carregar permissões:', error);
+      console.error('❌ Erro ao carregar permissões:', error);
       toast.error('Erro ao carregar permissões');
     } finally {
       setLoadingPermissions(false);
