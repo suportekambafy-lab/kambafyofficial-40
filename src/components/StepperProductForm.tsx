@@ -162,7 +162,18 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         return true;
 
       case 4:
-        // Configurações são opcionais
+        if (!formData.supportEmail.trim()) {
+          toast.error("Email de suporte é obrigatório");
+          return false;
+        }
+        if (!formData.supportWhatsapp.trim()) {
+          toast.error("WhatsApp de suporte é obrigatório");
+          return false;
+        }
+        if (!formData.category) {
+          toast.error("Categoria é obrigatória");
+          return false;
+        }
         return true;
 
       case 5:
@@ -470,12 +481,38 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
           {currentStep === 4 && (
             <>
               <div>
-                <Label htmlFor="category">Categoria</Label>
+                <Label htmlFor="category">Categoria *</Label>
+                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="E-book">E-book</SelectItem>
+                    <SelectItem value="Curso Online">Curso Online</SelectItem>
+                    <SelectItem value="Consultoria">Consultoria</SelectItem>
+                    <SelectItem value="Mentoria">Mentoria</SelectItem>
+                    <SelectItem value="Software">Software</SelectItem>
+                    <SelectItem value="Templates">Templates</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Vendas">Vendas</SelectItem>
+                    <SelectItem value="Desenvolvimento Pessoal">Desenvolvimento Pessoal</SelectItem>
+                    <SelectItem value="Negócios">Negócios</SelectItem>
+                    <SelectItem value="Design">Design</SelectItem>
+                    <SelectItem value="Tecnologia">Tecnologia</SelectItem>
+                    <SelectItem value="Saúde e Bem-estar">Saúde e Bem-estar</SelectItem>
+                    <SelectItem value="Educação">Educação</SelectItem>
+                    <SelectItem value="Outros">Outros</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="fantasyName">Nome Fantasia (opcional)</Label>
                 <Input
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  placeholder="Ex: Marketing, Vendas, etc."
+                  id="fantasyName"
+                  value={formData.fantasyName}
+                  onChange={(e) => setFormData({ ...formData, fantasyName: e.target.value })}
+                  placeholder="Nome alternativo para exibir"
                 />
               </div>
 
@@ -512,7 +549,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
               </div>
 
               <div>
-                <Label htmlFor="supportEmail">Email de Suporte</Label>
+                <Label htmlFor="supportEmail">Email de Suporte *</Label>
                 <Input
                   id="supportEmail"
                   type="email"
@@ -523,7 +560,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
               </div>
 
               <div>
-                <Label htmlFor="supportWhatsapp">WhatsApp de Suporte</Label>
+                <Label htmlFor="supportWhatsapp">WhatsApp de Suporte *</Label>
                 <Input
                   id="supportWhatsapp"
                   value={formData.supportWhatsapp}
@@ -556,6 +593,21 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                     </SelectContent>
                   </Select>
                 </div>
+              ) : formData.type === "E-book" ? (
+                <div className="max-w-md">
+                  <Label>Upload do E-book (PDF) *</Label>
+                  <ImageUploader
+                    label="Arquivo PDF do E-book"
+                    value={formData.shareLink}
+                    onChange={(url) => setFormData({ ...formData, shareLink: url || '' })}
+                    bucket="product-files"
+                    folder="ebooks"
+                    accept=".pdf,application/pdf"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Faça upload do arquivo PDF que será enviado ao cliente após a compra
+                  </p>
+                </div>
               ) : (
                 <div>
                   <Label htmlFor="shareLink">Link de Compartilhamento *</Label>
@@ -563,23 +615,13 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                     id="shareLink"
                     value={formData.shareLink}
                     onChange={(e) => setFormData({ ...formData, shareLink: e.target.value })}
-                    placeholder="https://exemplo.com/arquivo.pdf"
+                    placeholder="https://exemplo.com/arquivo"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Link do arquivo que será enviado ao cliente após a compra
                   </p>
                 </div>
               )}
-
-              <div>
-                <Label htmlFor="fantasyName">Nome Fantasia (opcional)</Label>
-                <Input
-                  id="fantasyName"
-                  value={formData.fantasyName}
-                  onChange={(e) => setFormData({ ...formData, fantasyName: e.target.value })}
-                  placeholder="Nome alternativo para exibir"
-                />
-              </div>
             </>
           )}
         </CardContent>
