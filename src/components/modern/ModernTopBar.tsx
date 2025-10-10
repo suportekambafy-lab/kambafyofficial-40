@@ -78,7 +78,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
             event: 'INSERT',
             schema: 'public',
             table: 'orders',
-            filter: `products.user_id=eq.${user.id}`
+            filter: `user_id=eq.${user.id}`
           },
           (payload) => {
             console.log('New sale detected:', payload);
