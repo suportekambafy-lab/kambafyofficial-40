@@ -8,7 +8,6 @@ import {
   RefreshCw,
   Download,
   PiggyBank,
-  Clock,
   CheckCircle,
   Shield,
   AlertCircle,
@@ -59,17 +58,13 @@ export default function Financial() {
   const [identityVerification, setIdentityVerification] = useState<IdentityVerification | null>(null);
   const [showValues, setShowValues] = useState({
     available: true,
-    pending: true,
     withdrawn: true
   });
 
-  // ✅ DADOS FINANCEIROS SIMPLIFICADOS
+  // ✅ DADOS FINANCEIROS SIMPLIFICADOS - Apenas Disponível + Sacado
   const [financialData, setFinancialData] = useState({
     availableBalance: 0,      // Do customer_balances.balance
-    pendingBalance: 0,        // Vendas <3 dias sem sale_revenue
-    withdrawnAmount: 0,       // Saques aprovados
-    nextReleaseDate: null as Date | null,
-    nextReleaseAmount: 0
+    withdrawnAmount: 0        // Saques aprovados
   });
 
   const loadUserData = useCallback(async () => {
@@ -111,78 +106,7 @@ export default function Financial() {
 
       const availableBalance = balanceData?.balance || 0;
 
-      // ✅ 2. BUSCAR PRODUTOS DO USUÁRIO
-      const { data: userProducts } = await supabase
-        .from('products')
-        .select('id')
-        .eq('user_id', user.id);
-
-      const userProductIds = userProducts?.map(p => p.id) || [];
-
-      // ✅ 3. BUSCAR VENDAS COMPLETED DOS ÚLTIMOS 3 DIAS
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-      const { data: recentOrders } = await supabase
-        .from('orders')
-        .select('order_id, amount, seller_commission, created_at')
-        .in('product_id', userProductIds)
-        .eq('status', 'completed')
-        .gte('created_at', threeDaysAgo.toISOString());
-
-      // ✅ 4. VERIFICAR QUAIS JÁ TÊM SALE_REVENUE
-      const orderIds = (recentOrders || []).map(o => o.order_id).filter(Boolean);
-      
-      let releasedTransactions: any[] = [];
-      if (orderIds.length > 0) {
-        const { data } = await supabase
-          .from('balance_transactions')
-          .select('order_id')
-          .eq('user_id', user.id)
-          .eq('type', 'sale_revenue')
-          .in('order_id', orderIds);
-        
-        releasedTransactions = data || [];
-      }
-
-      const releasedOrderIds = new Set(
-        releasedTransactions.map(t => t.order_id).filter(Boolean)
-      );
-
-      // ✅ 5. CALCULAR SALDO PENDENTE
-      let pendingBalance = 0;
-      let nextReleaseDate: Date | null = null;
-      let nextReleaseAmount = 0;
-
-      const pendingOrders: Array<{date: Date, amount: number}> = [];
-
-      (recentOrders || []).forEach(order => {
-        // Se já tem sale_revenue, pular
-        if (releasedOrderIds.has(order.order_id)) return;
-
-        // Usar seller_commission (já tem 8% descontado) ou calcular 92%
-        const netAmount = order.seller_commission 
-          ? order.seller_commission 
-          : parseFloat(order.amount) * 0.92;
-
-        pendingBalance += netAmount;
-
-        const releaseDate = new Date(order.created_at);
-        releaseDate.setDate(releaseDate.getDate() + 3);
-        
-        pendingOrders.push({ date: releaseDate, amount: netAmount });
-      });
-
-      // Encontrar próxima liberação
-      if (pendingOrders.length > 0) {
-        pendingOrders.sort((a, b) => a.date.getTime() - b.date.getTime());
-        nextReleaseDate = pendingOrders[0].date;
-        nextReleaseAmount = pendingOrders
-          .filter(o => o.date.toDateString() === nextReleaseDate!.toDateString())
-          .reduce((sum, o) => sum + o.amount, 0);
-      }
-
-      // ✅ 6. TOTAL SACADO (aprovado)
+      // ✅ 2. TOTAL SACADO (aprovado)
       const { data: withdrawals } = await supabase
         .from('withdrawal_requests')
         .select('amount, status')
@@ -192,7 +116,7 @@ export default function Financial() {
         .filter(w => w.status === 'aprovado')
         .reduce((sum, w) => sum + parseFloat(w.amount.toString()), 0);
 
-      // ✅ 7. CARREGAR HISTÓRICO DE SAQUES
+      // ✅ 3. CARREGAR HISTÓRICO DE SAQUES
       const { data: withdrawalRequestsData } = await supabase
         .from('withdrawal_requests')
         .select('*')
@@ -203,15 +127,11 @@ export default function Financial() {
 
       setFinancialData({
         availableBalance,
-        pendingBalance,
-        withdrawnAmount,
-        nextReleaseDate,
-        nextReleaseAmount
+        withdrawnAmount
       });
 
       console.log('✅ Dados financeiros carregados:', {
         availableBalance: availableBalance.toLocaleString(),
-        pendingBalance: pendingBalance.toLocaleString(),
         withdrawnAmount: withdrawnAmount.toLocaleString()
       });
 
@@ -399,7 +319,7 @@ export default function Financial() {
         )}
 
         {/* Cards de Saldo */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
           {/* Saldo Disponível */}
           <HighlightedCard>
             <HighlightedCardHeader>
@@ -439,45 +359,6 @@ export default function Financial() {
               )}
             </HighlightedCardContent>
           </HighlightedCard>
-
-          {/* Saldo Pendente */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Saldo Pendente</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowValues(prev => ({ ...prev, pending: !prev.pending }))}
-                >
-                  {showValues.pending ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/20">
-                  <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-2xl sm:text-3xl font-bold break-words">
-                    {showValues.pending ? formatCurrency(financialData.pendingBalance) : '••••••'}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Aguardando liberação (3 dias)
-                  </p>
-                </div>
-              </div>
-              {financialData.nextReleaseDate && (
-                <div className="mt-4 p-3 bg-muted rounded-lg">
-                  <p className="text-sm font-medium">Próxima Liberação</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {financialData.nextReleaseDate.toLocaleDateString('pt-PT')} - {formatCurrency(financialData.nextReleaseAmount)}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
           {/* Total Sacado */}
           <Card>
