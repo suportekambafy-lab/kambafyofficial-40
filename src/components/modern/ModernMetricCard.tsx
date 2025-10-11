@@ -43,13 +43,13 @@ export function ModernMetricCard({
         </div>
       </div>
       
-      <div className="relative">
-        <h3 className="text-2xl font-bold text-foreground mb-1">
+      <div className="space-y-3">
+        <h3 className="text-2xl font-bold text-foreground">
           {value}
         </h3>
         
         {action && (
-          <div className="absolute bottom-0 right-0">
+          <div className="w-full">
             {action}
           </div>
         )}

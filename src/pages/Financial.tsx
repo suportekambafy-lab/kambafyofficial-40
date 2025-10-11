@@ -1,20 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { HighlightedCard, HighlightedCardHeader, HighlightedCardTitle, HighlightedCardContent } from "@/components/ui/highlighted-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  DollarSign, 
-  TrendingUp, 
   RefreshCw,
   Download,
   PiggyBank,
-  Clock,
-  CheckCircle,
-  Shield,
   AlertCircle,
   Eye,
   EyeOff
 } from "lucide-react";
+import { ModernMetricCard } from "@/components/modern/ModernMetricCard";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -399,97 +394,80 @@ export default function Financial() {
         {/* Cards de Saldo */}
         <div className="grid gap-4 md:grid-cols-3">
           {/* Saldo Disponível */}
-          <HighlightedCard>
-            <HighlightedCardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <HighlightedCardTitle className="text-sm font-medium text-muted-foreground">Saldo Disponível</HighlightedCardTitle>
+          <ModernMetricCard
+            title="Saldo Disponível"
+            value={showValues.available ? formatCurrency(financialData.availableBalance) : '••••••'}
+            icon={<></>}
+            action={
+              <div className="flex flex-col gap-2 w-full">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowValues(prev => ({ ...prev, available: !prev.available }))}
-                  className="h-6 w-6 p-0"
+                  className="h-8 w-full"
                 >
-                  {showValues.available ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                  {showValues.available ? <Eye className="h-3 w-3 mr-2" /> : <EyeOff className="h-3 w-3 mr-2" />}
+                  {showValues.available ? 'Ocultar' : 'Mostrar'}
                 </Button>
+                {canWithdraw && (
+                  <Button
+                    onClick={() => setWithdrawalModalOpen(true)}
+                    className="w-full"
+                    size="sm"
+                  >
+                    <PiggyBank className="h-3 w-3 mr-2" />
+                    Solicitar Saque
+                  </Button>
+                )}
               </div>
-            </HighlightedCardHeader>
-            <HighlightedCardContent className="pt-0">
-              <div className="text-xl md:text-2xl font-bold mb-1">
-                {showValues.available ? formatCurrency(financialData.availableBalance) : '••••••'}
-              </div>
-              <p className="text-xs text-muted-foreground mb-3">
-                Pronto para saque
-              </p>
-              {canWithdraw && (
-                <Button
-                  onClick={() => setWithdrawalModalOpen(true)}
-                  className="w-full"
-                  size="sm"
-                >
-                  <PiggyBank className="h-3 w-3 mr-2" />
-                  Solicitar Saque
-                </Button>
-              )}
-            </HighlightedCardContent>
-          </HighlightedCard>
+            }
+          />
 
           {/* Saldo Pendente */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Saldo Pendente</CardTitle>
+          <ModernMetricCard
+            title="Saldo Pendente"
+            value={showValues.pending ? formatCurrency(financialData.pendingBalance) : '••••••'}
+            icon={<></>}
+            action={
+              <div className="flex flex-col gap-2 w-full">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowValues(prev => ({ ...prev, pending: !prev.pending }))}
-                  className="h-6 w-6 p-0"
+                  className="h-8 w-full"
                 >
-                  {showValues.pending ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                  {showValues.pending ? <Eye className="h-3 w-3 mr-2" /> : <EyeOff className="h-3 w-3 mr-2" />}
+                  {showValues.pending ? 'Ocultar' : 'Mostrar'}
                 </Button>
+                {financialData.nextReleaseDate && (
+                  <div className="p-2 bg-muted rounded-lg text-xs">
+                    <p className="font-medium">Próxima Liberação</p>
+                    <p className="text-muted-foreground mt-0.5">
+                      {financialData.nextReleaseDate.toLocaleDateString('pt-PT')} - {formatCurrency(financialData.nextReleaseAmount)}
+                    </p>
+                  </div>
+                )}
               </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-xl md:text-2xl font-bold mb-1">
-                {showValues.pending ? formatCurrency(financialData.pendingBalance) : '••••••'}
-              </div>
-              <p className="text-xs text-muted-foreground mb-3">
-                Aguardando liberação (3 dias)
-              </p>
-              {financialData.nextReleaseDate && (
-                <div className="p-2 bg-muted rounded-lg">
-                  <p className="text-xs font-medium">Próxima Liberação</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {financialData.nextReleaseDate.toLocaleDateString('pt-PT')} - {formatCurrency(financialData.nextReleaseAmount)}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            }
+          />
 
           {/* Total Sacado */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Sacado</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowValues(prev => ({ ...prev, withdrawn: !prev.withdrawn }))}
-                  className="h-6 w-6 p-0"
-                >
-                  {showValues.withdrawn ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-xl md:text-2xl font-bold mb-1">
-                {showValues.withdrawn ? formatCurrency(financialData.withdrawnAmount) : '••••••'}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Saques aprovados
-              </p>
-            </CardContent>
-          </Card>
+          <ModernMetricCard
+            title="Total Sacado"
+            value={showValues.withdrawn ? formatCurrency(financialData.withdrawnAmount) : '••••••'}
+            icon={<></>}
+            action={
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowValues(prev => ({ ...prev, withdrawn: !prev.withdrawn }))}
+                className="h-8 w-full"
+              >
+                {showValues.withdrawn ? <Eye className="h-3 w-3 mr-2" /> : <EyeOff className="h-3 w-3 mr-2" />}
+                {showValues.withdrawn ? 'Ocultar' : 'Mostrar'}
+              </Button>
+            }
+          />
         </div>
 
         {/* Informações Bancárias */}
