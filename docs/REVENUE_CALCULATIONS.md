@@ -43,30 +43,40 @@ lucro = affiliate_commission  // Apenas a comissão que ele recebe
 ### 3. Vendas de Módulos (Member Areas)
 
 ```typescript
-lucro = amount  // Valor total do pagamento do módulo
+// Após descontar taxa da plataforma (8%)
+lucro = amount * 0.92  // 92% do valor vai para o vendedor
 ```
 
 **Exemplo:**
 - Pagamento de módulo: 5.000 KZ
-- **Lucro do vendedor**: 5.000 KZ ← Este valor é exibido
+- Taxa da plataforma (8%): 400 KZ
+- **Lucro do vendedor**: 4.600 KZ ← Este valor é exibido
+- **Incluído no Financeiro**: ✅ SIM (após conclusão do pagamento)
 
 ## 📈 Fluxo de Dados
 
 ```
-┌─────────────────┐
-│  Orders Table   │
-│                 │
-│ • amount        │  ← Valor total da transação
-│ • seller_comm.  │  ← Lucro do vendedor (após deduzir afiliado)
-│ • affiliate_c.  │  ← Comissão do afiliado
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ useStreamingQ.  │  ← Processa e calcula stats
-│                 │
-│ stats.paidTotal │  = soma dos lucros reais
-└────────┬────────┘
+┌─────────────────────┐     ┌──────────────────────┐
+│   Orders Table      │     │  Module Payments     │
+│                     │     │                      │
+│ • amount            │     │ • amount             │
+│ • seller_comm.      │     │ • status             │
+│ • affiliate_c.      │     │ • member_area_id     │
+└──────────┬──────────┘     └──────────┬───────────┘
+           │                           │
+           │    Trigger on INSERT/UPDATE (status='completed')
+           │                           │
+           ├───────────────────────────┴─► balance_transactions
+           │                               │
+           │                               │ • platform_fee (-8%)
+           │                               │ • sale_revenue (+92%)
+           │                               │
+           ▼                               ▼
+┌─────────────────┐              ┌─────────────────┐
+│ useStreamingQ.  │◄─────────────│customer_balances│
+│                 │              │                 │
+│ stats.paidTotal │              │ balance (soma)  │
+└────────┬────────┘              └─────────────────┘
          │
          ├────────► Dashboard
          ├────────► Vendas
@@ -81,6 +91,7 @@ lucro = amount  // Valor total do pagamento do módulo
 2. **Consistência**: Todos os dashboards mostram o mesmo valor
 3. **Expectativas Corretas**: Não há surpresa ao fazer saque
 4. **Alinhamento com Financeiro**: Saldo disponível = soma dos lucros
+5. **Inclui Módulos**: Vendas de módulos pagos também aparecem no financeiro (8% de taxa)
 
 ### ❌ Se mostrássemos Valor Total
 
@@ -168,13 +179,20 @@ const totalRevenue = filteredOrders.reduce((sum, order) => {
 1. **NUNCA use `amount` direto para calcular ganhos**
    - Use `seller_commission` para vendas próprias
    - Use `affiliate_commission` para vendas como afiliado
+   - Para módulos: `amount * 0.92` (já descontados 8%)
 
 2. **Para vendas antigas sem comissões**
    - Fallback para `amount` se `seller_commission === 0`
 
-3. **Testes**
+3. **Vendas de Módulos**
+   - Trigger automático cria `balance_transactions` quando status = 'completed'
+   - Taxa de 8% aplicada automaticamente via `create_balance_transaction_on_module_payment()`
+   - Aparecem automaticamente no Financeiro
+
+4. **Testes**
    - Sempre verifique que Dashboard = Vendas = Financeiro
    - Use console.log para debug
+   - Verificar que módulos completados aparecem no saldo
 
 ## 📊 Exemplos de Casos Reais
 
@@ -209,13 +227,20 @@ const totalRevenue = filteredOrders.reduce((sum, order) => {
 - Vendas: usava `amount` direto
 - ❌ Valores diferentes
 
-### v2.0 (Agora)
+### v2.0 (2025-10-09)
 - Dashboard: usa `earning_amount`
 - Vendas: usa `seller_commission` (mesmo cálculo)
 - ✅ Valores iguais
 
+### v2.1 (2025-10-11) 
+- ✅ **Vendas de Módulos incluídas no Financeiro**
+- Trigger automático: `create_balance_transaction_on_module_payment()`
+- Taxa de 8% aplicada a módulos (consistente com vendas normais)
+- `balance_transactions` criadas automaticamente ao completar pagamento
+- Saldo disponível agora inclui lucro de módulos pagos
+
 ---
 
-**Data:** 2025-10-09  
-**Versão:** 2.0  
-**Status:** ✅ Corrigido e Testado
+**Data:** 2025-10-11  
+**Versão:** 2.1  
+**Status:** ✅ Corrigido, Testado e Documentado
