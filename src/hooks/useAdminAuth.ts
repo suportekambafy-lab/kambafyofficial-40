@@ -173,6 +173,19 @@ export const useAdminAuthHook = () => {
 
       // Se chegou aqui com sucesso e JWT, logar diretamente
       if (data?.success && data?.jwt && data?.admin) {
+        // ✅ CRÍTICO: Fazer login também no Supabase Auth para que as RLS policies funcionem
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (authError) {
+          console.error('⚠️ Erro ao autenticar no Supabase Auth:', authError);
+          // Continuar mesmo com erro, pois o admin já foi autenticado no sistema customizado
+        } else {
+          console.log('✅ Admin autenticado no Supabase Auth');
+        }
+
         const adminUser: AdminUser = {
           id: data.admin.id,
           email: data.admin.email,
@@ -218,6 +231,19 @@ export const useAdminAuthHook = () => {
       throw new Error(data?.error || 'Erro ao completar login');
     }
 
+    // ✅ CRÍTICO: Fazer login também no Supabase Auth para que as RLS policies funcionem
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: pendingLoginData.email,
+      password: pendingLoginData.password
+    });
+
+    if (authError) {
+      console.error('⚠️ Erro ao autenticar no Supabase Auth:', authError);
+      // Continuar mesmo com erro, pois o admin já foi autenticado no sistema customizado
+    } else {
+      console.log('✅ Admin autenticado no Supabase Auth após 2FA');
+    }
+
     // Criar sessão admin com dados do JWT
     const adminUser: AdminUser = {
       id: data.admin.id,
@@ -245,6 +271,9 @@ export const useAdminAuthHook = () => {
   };
 
   const logout = async () => {
+    // Fazer logout também do Supabase Auth
+    await supabase.auth.signOut();
+    
     setAdmin(null);
     localStorage.removeItem('admin_session');
     localStorage.removeItem('admin_jwt'); // Limpar JWT também
