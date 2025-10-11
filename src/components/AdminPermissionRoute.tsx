@@ -23,14 +23,18 @@ export default function AdminPermissionRoute({
 
   useEffect(() => {
     async function checkPermission() {
+      console.log('🔐 [ADMIN-PERMISSION-ROUTE] Iniciando verificação de permissões');
+      
       if (!admin) {
+        console.log('⚠️ [ADMIN-PERMISSION-ROUTE] Admin não encontrado');
         setLoading(false);
         return;
       }
 
-      console.log('🔐 Verificando permissões:', {
+      console.log('🔐 [ADMIN-PERMISSION-ROUTE] Verificando permissões:', {
         adminEmail: admin.email,
         adminRole: (admin as any).role,
+        adminId: admin.id,
         requiredPermission,
         requireSuperAdmin
       });
@@ -38,7 +42,7 @@ export default function AdminPermissionRoute({
       // CRITICAL: Super admins SEMPRE têm acesso a tudo
       const isSuperAdmin = (admin as any).role === 'super_admin';
       if (isSuperAdmin) {
-        console.log('✅ Super admin detectado - acesso total concedido');
+        console.log('✅ [ADMIN-PERMISSION-ROUTE] Super admin detectado - acesso total concedido');
         setHasPermission(true);
         setLoading(false);
         return;
@@ -46,7 +50,7 @@ export default function AdminPermissionRoute({
 
       // Se requer super admin e não é super admin, negar acesso
       if (requireSuperAdmin) {
-        console.log('❌ Página requer super admin e usuário não é super admin');
+        console.log('❌ [ADMIN-PERMISSION-ROUTE] Página requer super admin e usuário não é super admin');
         setHasPermission(false);
         setLoading(false);
         return;
@@ -54,7 +58,7 @@ export default function AdminPermissionRoute({
 
       // Se não há permissão específica requerida, permitir acesso
       if (!requiredPermission) {
-        console.log('✅ Nenhuma permissão específica requerida - acesso concedido');
+        console.log('✅ [ADMIN-PERMISSION-ROUTE] Nenhuma permissão específica requerida - acesso concedido');
         setHasPermission(true);
         setLoading(false);
         return;
@@ -62,6 +66,7 @@ export default function AdminPermissionRoute({
 
       // Verificar se o admin tem a permissão específica
       try {
+        console.log('🔍 [ADMIN-PERMISSION-ROUTE] Buscando permissões do admin no banco...');
         const { data, error } = await supabase
           .from('admin_permissions')
           .select('permission')
@@ -69,18 +74,21 @@ export default function AdminPermissionRoute({
           .eq('permission', requiredPermission)
           .maybeSingle();
 
+        console.log('📋 [ADMIN-PERMISSION-ROUTE] Resultado da busca:', { data, error });
+
         if (error) {
-          console.error('❌ Erro ao verificar permissão:', error);
+          console.error('❌ [ADMIN-PERMISSION-ROUTE] Erro ao verificar permissão:', error);
           setHasPermission(false);
         } else {
           const hasAccess = !!data;
-          console.log(hasAccess ? '✅ Permissão encontrada' : '❌ Permissão não encontrada');
+          console.log(hasAccess ? '✅ [ADMIN-PERMISSION-ROUTE] Permissão encontrada' : '❌ [ADMIN-PERMISSION-ROUTE] Permissão não encontrada');
           setHasPermission(hasAccess);
         }
       } catch (error) {
-        console.error('❌ Erro ao verificar permissão:', error);
+        console.error('❌ [ADMIN-PERMISSION-ROUTE] Erro ao verificar permissão:', error);
         setHasPermission(false);
       } finally {
+        console.log('🏁 [ADMIN-PERMISSION-ROUTE] Verificação concluída, loading = false');
         setLoading(false);
       }
     }
@@ -98,23 +106,30 @@ export default function AdminPermissionRoute({
   }
 
   // Log do estado atual para debug
-  console.log('🔍 AdminPermissionRoute - Estado atual:', {
-    admin,
+  console.log('🔍 [ADMIN-PERMISSION-ROUTE] Estado atual:', {
+    hasAdmin: !!admin,
+    adminEmail: admin?.email,
     adminRole: admin ? (admin as any).role : null,
+    adminId: admin?.id,
     hasPermission,
     requiredPermission,
     requireSuperAdmin,
-    loginStep
+    loginStep,
+    authLoading,
+    loading
   });
 
   // Redirect to login if not authenticated
   if (!admin || loginStep === 'awaiting_2fa') {
-    console.log('❌ Redirecionando para login - sem admin ou aguardando 2FA');
+    console.log('❌ [ADMIN-PERMISSION-ROUTE] Redirecionando para login:', {
+      reason: !admin ? 'sem admin' : 'aguardando 2FA'
+    });
     return <Navigate to="/admin/login" replace />;
   }
 
   // Show access denied if no permission
   if (hasPermission === false) {
+    console.log('❌ [ADMIN-PERMISSION-ROUTE] Acesso negado - exibindo tela de erro');
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
         <Card className="max-w-md w-full">

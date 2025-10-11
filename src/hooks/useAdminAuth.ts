@@ -77,10 +77,25 @@ export const useAdminAuthHook = () => {
 
   const checkAdminSession = async () => {
     try {
+      console.log('🔍 [ADMIN-AUTH] Checking admin session...');
+      
+      // Verificar sessão do Supabase Auth
+      const { data: authData } = await supabase.auth.getSession();
+      console.log('🔍 [ADMIN-AUTH] Supabase Auth session:', {
+        hasSession: !!authData.session,
+        userEmail: authData.session?.user?.email,
+        userId: authData.session?.user?.id
+      });
+      
       const adminData = localStorage.getItem('admin_session');
+      console.log('🔍 [ADMIN-AUTH] Admin session no localStorage:', {
+        hasData: !!adminData,
+        data: adminData ? JSON.parse(adminData) : null
+      });
+      
       if (adminData) {
         const parsedAdmin = JSON.parse(adminData);
-        console.log('Admin session encontrada:', parsedAdmin);
+        console.log('✅ [ADMIN-AUTH] Admin session encontrada:', parsedAdmin);
         
         // Buscar dados atualizados do banco para verificar se mudou
         const { data, error } = await supabase
@@ -89,12 +104,16 @@ export const useAdminAuthHook = () => {
           .eq('email', parsedAdmin.email)
           .single();
         
+        console.log('🔍 [ADMIN-AUTH] Dados do banco:', { data, error });
+        
         if (data && !error) {
           // Verificar se o role mudou
           if (data.role !== parsedAdmin.role || data.is_active !== parsedAdmin.is_active) {
-            console.log('🔄 Role atualizado detectado na inicialização:', {
+            console.log('🔄 [ADMIN-AUTH] Role atualizado detectado:', {
               oldRole: parsedAdmin.role,
-              newRole: data.role
+              newRole: data.role,
+              oldActive: parsedAdmin.is_active,
+              newActive: data.is_active
             });
             
             const updatedAdmin: AdminUser = {
@@ -110,16 +129,21 @@ export const useAdminAuthHook = () => {
             setAdmin(updatedAdmin);
             localStorage.setItem('admin_session', JSON.stringify(updatedAdmin));
           } else {
+            console.log('✅ [ADMIN-AUTH] Admin setado:', parsedAdmin);
             setAdmin(parsedAdmin);
           }
         } else {
+          console.log('⚠️ [ADMIN-AUTH] Erro ao buscar dados do banco, usando cache');
           setAdmin(parsedAdmin);
         }
+      } else {
+        console.log('❌ [ADMIN-AUTH] Nenhuma sessão admin encontrada');
       }
     } catch (error) {
-      console.error('Error checking admin session:', error);
+      console.error('❌ [ADMIN-AUTH] Error checking admin session:', error);
       localStorage.removeItem('admin_session');
     } finally {
+      console.log('🏁 [ADMIN-AUTH] Loading concluído');
       setLoading(false);
     }
   };
@@ -148,19 +172,22 @@ export const useAdminAuthHook = () => {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('Tentando login admin com:', { email });
+      console.log('🚀 [ADMIN-LOGIN] Tentando login admin com:', { email });
       
       // ✅ FASE 1: Autenticação via edge function (sem credenciais hardcoded)
       const { data, error } = await supabase.functions.invoke('admin-login', {
         body: { email, password }
       });
 
+      console.log('📥 [ADMIN-LOGIN] Resposta da edge function:', { data, error });
+
       if (error) {
-        console.error('Erro na edge function admin-login:', error);
+        console.error('❌ [ADMIN-LOGIN] Erro na edge function admin-login:', error);
         return { error: 'Erro ao fazer login' };
       }
 
       if (data?.requires2FA) {
+        console.log('🔐 [ADMIN-LOGIN] 2FA requerido');
         // 2FA solicitado, armazenar dados pendentes
         setPendingLoginData({ email, password });
         setLoginStep('awaiting_2fa');
@@ -168,22 +195,31 @@ export const useAdminAuthHook = () => {
       }
 
       if (data?.error) {
+        console.log('❌ [ADMIN-LOGIN] Erro retornado:', data.error);
         return { error: data.error };
       }
 
       // Se chegou aqui com sucesso e JWT, logar diretamente
       if (data?.success && data?.jwt && data?.admin) {
+        console.log('✅ [ADMIN-LOGIN] Login customizado bem-sucedido, autenticando no Supabase Auth...');
+        
         // ✅ CRÍTICO: Fazer login também no Supabase Auth para que as RLS policies funcionem
-        const { error: authError } = await supabase.auth.signInWithPassword({
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
           email,
           password
         });
 
+        console.log('🔐 [ADMIN-LOGIN] Resultado Supabase Auth:', {
+          hasSession: !!authData?.session,
+          userEmail: authData?.user?.email,
+          error: authError?.message
+        });
+
         if (authError) {
-          console.error('⚠️ Erro ao autenticar no Supabase Auth:', authError);
+          console.error('⚠️ [ADMIN-LOGIN] Erro ao autenticar no Supabase Auth:', authError);
           // Continuar mesmo com erro, pois o admin já foi autenticado no sistema customizado
         } else {
-          console.log('✅ Admin autenticado no Supabase Auth');
+          console.log('✅ [ADMIN-LOGIN] Admin autenticado no Supabase Auth com sucesso!');
         }
 
         const adminUser: AdminUser = {
@@ -196,6 +232,7 @@ export const useAdminAuthHook = () => {
           updated_at: new Date().toISOString()
         };
 
+        console.log('💾 [ADMIN-LOGIN] Salvando admin no estado e localStorage:', adminUser);
         setAdmin(adminUser);
         localStorage.setItem('admin_session', JSON.stringify(adminUser));
         localStorage.setItem('admin_jwt', data.jwt);
@@ -203,12 +240,14 @@ export const useAdminAuthHook = () => {
         setPendingLoginData(null);
         setLoginStep('credentials');
         
+        console.log('✅ [ADMIN-LOGIN] Login completo!');
         return { success: true };
       }
 
+      console.log('❌ [ADMIN-LOGIN] Resposta inválida do servidor');
       return { error: 'Resposta inválida do servidor' };
     } catch (error) {
-      console.error('Erro no login admin:', error);
+      console.error('❌ [ADMIN-LOGIN] Erro no login admin:', error);
       return { error: 'Erro interno do sistema' };
     }
   };
