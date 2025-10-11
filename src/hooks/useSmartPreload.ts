@@ -87,40 +87,8 @@ export const useSmartPreload = () => {
       preloadData();
     }
 
-    // Configurar preload inteligente baseado em navegação (otimizado)
-    let lastPreloadTime = 0;
-    
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        const now = Date.now();
-        // Throttle: só preload se passou mais de 60 segundos
-        if (now - lastPreloadTime < 60000) return;
-        
-        // Quando tab fica visível, atualizar dados stale apenas se necessário
-        const staleTime = 10 * 60 * 1000; // Aumentado para 10 minutos
-        const keys = ['profile-data', 'seller-stats', 'recent-products', 'recent-orders'];
-        
-        let needsPreload = false;
-        keys.forEach(key => {
-          const cached = sessionStorage.getItem(`preload_${key}_${user.id}`);
-          if (cached) {
-            const { timestamp } = JSON.parse(cached);
-            if (Date.now() - timestamp > staleTime) {
-              needsPreload = true;
-            }
-          }
-        });
-        
-        if (needsPreload) {
-          lastPreloadTime = now;
-          // Delay para evitar conflito com outros fetches
-          setTimeout(() => preloadData(), 1000);
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    // ✅ DESABILITADO: Com WebSockets, não precisamos preload ao voltar para a aba
+    // Os dados já estão sincronizados em tempo real via realtime subscriptions
   }, [user]);
 
   // Função utilitária para pegar dados precarregados

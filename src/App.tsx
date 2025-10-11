@@ -56,22 +56,21 @@ const TestLoginComponent = () => {
 };
 
 
-// QueryClient com cache ultra-agressivo e atualização rápida
+// QueryClient otimizado para WebSockets (sem refetch desnecessário)
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30 * 1000, // 30 segundos - dados ficam frescos por menos tempo
+      staleTime: 5 * 60 * 1000, // 5 minutos - dados ficam frescos
       gcTime: 10 * 60 * 1000, // 10 minutos - mantém em memória
-      refetchOnWindowFocus: true, // Atualiza ao focar janela
-      refetchOnReconnect: true, // Atualiza ao reconectar
-      refetchOnMount: 'always', // Sempre atualiza ao montar
-      refetchInterval: 60 * 1000, // Atualiza automaticamente a cada 60 segundos
+      refetchOnWindowFocus: false, // ❌ Desabilitado: WebSockets atualizam automaticamente
+      refetchOnReconnect: true, // ✅ Atualiza ao reconectar internet
+      refetchOnMount: false, // ❌ Desabilitado: WebSockets mantêm dados atualizados
+      refetchInterval: false, // ❌ Desabilitado: WebSockets substituem polling
       retry: (failureCount, error: any) => {
         if (error?.status >= 400 && error?.status < 500) return false;
         return failureCount < 2;
       },
       networkMode: 'online',
-      // Cache em memória para acesso instantâneo
       structuralSharing: true,
     },
     mutations: {

@@ -161,36 +161,8 @@ export function useCachedQuery<T>(
     fetchData();
   }, [fetchData, getCachedData, staleTime]);
 
-  // Detectar mudanças de foco para revalidar dados stale (otimizado)
-  useEffect(() => {
-    let lastVisibilityChange = 0;
-    
-    const handleFocus = () => {
-      const now = Date.now();
-      // Throttle: só revalidar se passou mais de 5 minutos para evitar spam
-      if (now - lastVisibilityChange < 5 * 60 * 1000) return;
-      
-      const cached = getCachedData();
-      if (cached && isStale) {
-        lastVisibilityChange = now;
-        fetchData();
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        handleFocus();
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [getCachedData, isStale, fetchData]);
+  // ✅ DESABILITADO: Com WebSockets, não precisamos revalidar ao voltar para a aba
+  // Os dados são atualizados automaticamente em tempo real via realtime subscriptions
 
   // Cleanup: remover dados expirados do cache periodicamente
   useEffect(() => {
