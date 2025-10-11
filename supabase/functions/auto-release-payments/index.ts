@@ -50,6 +50,9 @@ serve(async (req) => {
     // ============================================================
     logStep("🔍 ETAPA 1: Verificando vendas sem transações...");
     
+    // Calcular data limite: vendas com mais de 7 dias (já passaram dos 3 dias de espera)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    
     const { data: ordersWithoutTransactions } = await supabase
       .from('orders')
       .select(`
@@ -67,7 +70,8 @@ serve(async (req) => {
           user_id
         )
       `)
-      .eq('status', 'completed');
+      .eq('status', 'completed')
+      .lt('created_at', sevenDaysAgo); // Apenas vendas antigas (>7 dias)
 
     logStep(`📦 Encontradas ${ordersWithoutTransactions?.length || 0} vendas completed`);
 
