@@ -2862,6 +2862,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_recalculate_all_seller_balances: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      admin_recalculate_seller_balance: {
+        Args: {
+          delete_old_credit_transactions?: boolean
+          target_user_id: string
+        }
+        Returns: Json
+      }
       admin_update_identity_verification: {
         Args: {
           p_admin_email?: string

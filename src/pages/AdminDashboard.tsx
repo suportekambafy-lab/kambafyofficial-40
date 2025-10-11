@@ -16,6 +16,7 @@ import AdminDrawer from '@/components/admin/AdminDrawer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
 import { ResendAllAccessButton } from '@/components/admin/ResendAllAccessButton';
+import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalancesButton';
 
 interface ModernMetricCardProps {
   title: string;
@@ -261,7 +262,8 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-3">
               <NotificationCenter />
-              <ResendAllAccessButton />
+            <ResendAllAccessButton />
+            <RecalculateBalancesButton />
               <Button
                 onClick={logout}
                 variant="outline"
