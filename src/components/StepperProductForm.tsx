@@ -260,7 +260,8 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         access_duration_value: formData.accessDurationValue,
         access_duration_description: formData.accessDurationDescription || null,
         user_id: user?.id,
-        status: 'Pendente'
+        // ✅ Manter status "Ativo" se produto já foi aprovado, senão usar "Pendente"
+        status: (editingProduct && editingProduct.admin_approved) ? 'Ativo' : 'Pendente'
       };
 
       if (editingProduct) {
