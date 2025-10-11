@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0'
 import { create, verify } from 'https://deno.land/x/djwt@v2.8/mod.ts'
+import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -96,15 +97,21 @@ Deno.serve(async (req) => {
       hasPasswordHash: !!adminUser.password_hash 
     })
 
-    // 2. Verificar senha - comparação simplificada
-    // NOTA: A senha no banco está em hash, então essa comparação sempre falhará
-    // até implementarmos bcrypt.compare. Por enquanto, aceitar qualquer senha.
+    // 2. Verificar senha usando bcrypt
     if (!adminUser.password_hash) {
       console.error('❌ Admin sem senha definida')
       throw new Error('Conta admin sem senha configurada. Contate o administrador.')
     }
     
-    console.log('✅ Senha verificada (bypass temporário)')
+    // Verificar se a senha fornecida corresponde ao hash armazenado
+    const passwordMatch = await bcrypt.compare(password, adminUser.password_hash)
+    
+    if (!passwordMatch) {
+      console.error('❌ Senha incorreta')
+      throw new Error('Credenciais inválidas')
+    }
+    
+    console.log('✅ Senha verificada com sucesso')
 
     // 3. Se código não foi verificado ainda, solicitar ou verificar
     if (!codeAlreadyVerified) {
