@@ -573,80 +573,98 @@ export function AppHome() {
         salesStatusFilter
       });
 
-      // ✅ Query para orders de produtos próprios
-      let ownOrdersQuery = supabase
-        .from('orders')
-        .select('*, products(name, cover)')
-        .in('product_id', productIds)
-        .in('status', ['completed', 'pending', 'failed', 'cancelled'])
-        .order('created_at', { ascending: false });
-
-      // ✅ Query para vendas como afiliado (igual à web)
-      let affiliateOrdersQuery = affiliateCodes.length > 0
-        ? supabase
+      // ✅ BUSCAR TODAS AS VENDAS (sem limite de 1000) - igual à web
+      console.log('🔄 Buscando TODAS as vendas em batches...');
+      
+      // Buscar orders próprias em batches
+      let allOwnOrders: any[] = [];
+      if (productIds.length > 0) {
+        let offset = 0;
+        const batchSize = 1000;
+        let hasMore = true;
+        
+        // Status a buscar (considerar filtro)
+        const statusesToFetch = salesStatusFilter === 'all' 
+          ? ['completed', 'pending', 'failed', 'cancelled']
+          : salesStatusFilter === 'cancelled'
+          ? ['cancelled', 'canceled', 'failed']
+          : [salesStatusFilter];
+        
+        while (hasMore) {
+          const { data, error } = await supabase
             .from('orders')
             .select('*, products(name, cover)')
-            .in('affiliate_code', affiliateCodes)
-            .in('status', ['completed', 'pending', 'failed', 'cancelled'])
+            .in('product_id', productIds)
+            .in('status', statusesToFetch)
             .order('created_at', { ascending: false })
-        : Promise.resolve({ data: [] });
-
-      // ✅ Query para module_payments
-      let modulePaymentsQuery = memberAreaIds.length > 0
-        ? supabase
-            .from('module_payments')
-            .select('*, modules(title, cover_image_url)')
-            .in('member_area_id', memberAreaIds)
-            .in('status', ['completed', 'pending', 'failed', 'cancelled'])
-            .order('created_at', { ascending: false })
-        : Promise.resolve({ data: [] });
-
-      // Aplicar filtro de status em todas as queries
-      if (salesStatusFilter !== 'all') {
-        if (salesStatusFilter === 'cancelled') {
-          ownOrdersQuery = ownOrdersQuery.or('status.eq.cancelled,status.eq.canceled,status.eq.failed');
-          if (affiliateCodes.length > 0) {
-            affiliateOrdersQuery = supabase
-              .from('orders')
-              .select('*, products(name, cover)')
-              .in('affiliate_code', affiliateCodes)
-              .or('status.eq.cancelled,status.eq.canceled,status.eq.failed')
-              .order('created_at', { ascending: false });
+            .range(offset, offset + batchSize - 1);
+          
+          if (error) {
+            console.error('Error loading own orders batch:', error);
+            break;
           }
-          if (memberAreaIds.length > 0) {
-            modulePaymentsQuery = supabase
-              .from('module_payments')
-              .select('*, modules(title, cover_image_url)')
-              .in('member_area_id', memberAreaIds)
-              .or('status.eq.cancelled,status.eq.canceled,status.eq.failed')
-              .order('created_at', { ascending: false });
-          }
-        } else {
-          ownOrdersQuery = ownOrdersQuery.eq('status', salesStatusFilter);
-          if (affiliateCodes.length > 0) {
-            affiliateOrdersQuery = supabase
-              .from('orders')
-              .select('*, products(name, cover)')
-              .in('affiliate_code', affiliateCodes)
-              .eq('status', salesStatusFilter)
-              .order('created_at', { ascending: false });
-          }
-          if (memberAreaIds.length > 0) {
-            modulePaymentsQuery = supabase
-              .from('module_payments')
-              .select('*, modules(title, cover_image_url)')
-              .in('member_area_id', memberAreaIds)
-              .eq('status', salesStatusFilter)
-              .order('created_at', { ascending: false });
-          }
+          
+          if (!data || data.length === 0) break;
+          
+          allOwnOrders.push(...data);
+          hasMore = data.length === batchSize;
+          offset += batchSize;
+          
+          console.log(`📦 Batch carregado: ${data.length} orders | Total: ${allOwnOrders.length}`);
         }
       }
 
-      const [ownOrdersResult, affiliateOrdersResult, modulePaymentsResult] = await Promise.all([
-        productIds.length > 0 ? ownOrdersQuery : Promise.resolve({ data: [], error: null }),
-        affiliateOrdersQuery,
-        modulePaymentsQuery
-      ]);
+      // Buscar vendas como afiliado em batches
+      let allAffiliateOrders: any[] = [];
+      if (affiliateCodes.length > 0) {
+        let offset = 0;
+        const batchSize = 1000;
+        let hasMore = true;
+        
+        const statusesToFetch = salesStatusFilter === 'all' 
+          ? ['completed', 'pending', 'failed', 'cancelled']
+          : salesStatusFilter === 'cancelled'
+          ? ['cancelled', 'canceled', 'failed']
+          : [salesStatusFilter];
+        
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('orders')
+            .select('*, products(name, cover)')
+            .in('affiliate_code', affiliateCodes)
+            .in('status', statusesToFetch)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + batchSize - 1);
+          
+          if (error) {
+            console.error('Error loading affiliate orders batch:', error);
+            break;
+          }
+          
+          if (!data || data.length === 0) break;
+          
+          allAffiliateOrders.push(...data);
+          hasMore = data.length === batchSize;
+          offset += batchSize;
+        }
+      }
+
+      // Buscar module_payments (geralmente não passa de 1000)
+      const modulePaymentsResult = memberAreaIds.length > 0
+        ? await supabase
+            .from('module_payments')
+            .select('*, modules(title, cover_image_url)')
+            .in('member_area_id', memberAreaIds)
+            .in('status', salesStatusFilter === 'all' 
+              ? ['completed', 'pending', 'failed', 'cancelled']
+              : salesStatusFilter === 'cancelled'
+              ? ['cancelled', 'canceled', 'failed']
+              : [salesStatusFilter])
+            .order('created_at', { ascending: false })
+        : { data: [], error: null };
+
+      const ownOrdersResult = { data: allOwnOrders, error: null };
+      const affiliateOrdersResult = { data: allAffiliateOrders, error: null };
       
       if (ownOrdersResult.error) {
         console.error('Error loading own orders:', ownOrdersResult.error);
@@ -1268,7 +1286,9 @@ export function AppHome() {
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between px-2 mb-2">
               <h2 className="text-xl font-bold text-foreground">Histórico de Vendas</h2>
-              <span className="text-sm text-muted-foreground">{orders.length}</span>
+              <span className="text-sm text-muted-foreground">
+                {orders.reduce((sum, order) => sum + countOrderItems(order), 0)} vendas
+              </span>
             </div>
 
             {/* Filtro de Status */}
