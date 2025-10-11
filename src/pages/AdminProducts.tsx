@@ -4,8 +4,9 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, FileText, Eye, Download, Filter, Copy } from 'lucide-react';
+import { ArrowLeft, FileText, Eye, Download, Filter, Copy, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -57,6 +58,7 @@ export default function AdminProducts() {
   const [selectedProductForBan, setSelectedProductForBan] = useState<{ id: string; name: string } | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedProductForReview, setSelectedProductForReview] = useState<ProductWithProfile | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (admin) {
@@ -550,18 +552,30 @@ export default function AdminProducts() {
     );
   };
 
-  // Filtrar produtos baseado no filtro selecionado
+  // Filtrar produtos baseado no filtro selecionado e termo de pesquisa
   const filteredProducts = products.filter(product => {
-    if (statusFilter === 'todos') return true;
-    if (statusFilter === 'rascunho') return product.status === 'Rascunho';
-    if (statusFilter === 'ativo') return product.status === 'Ativo';
-    if (statusFilter === 'banido') return product.status === 'Banido';
-    if (statusFilter === 'inativo') return product.status === 'Inativo';
-    if (statusFilter === 'em_revisao') return product.status === 'Em Revisão';
-    if (statusFilter === 'revisao') return product.revision_requested === true;
-    // Filtro "pendente" = produtos não aprovados, excluindo banidos, revisão solicitada E rascunhos
-    if (statusFilter === 'pendente') return product.status === 'Pendente' || (!product.admin_approved && product.status !== 'Banido' && product.status !== 'Rascunho' && product.status !== 'Em Revisão' && !product.revision_requested);
-    return true;
+    // Filtro por status
+    let statusMatch = true;
+    if (statusFilter === 'rascunho') statusMatch = product.status === 'Rascunho';
+    else if (statusFilter === 'ativo') statusMatch = product.status === 'Ativo';
+    else if (statusFilter === 'banido') statusMatch = product.status === 'Banido';
+    else if (statusFilter === 'inativo') statusMatch = product.status === 'Inativo';
+    else if (statusFilter === 'em_revisao') statusMatch = product.status === 'Em Revisão';
+    else if (statusFilter === 'revisao') statusMatch = product.revision_requested === true;
+    else if (statusFilter === 'pendente') statusMatch = product.status === 'Pendente' || (!product.admin_approved && product.status !== 'Banido' && product.status !== 'Rascunho' && product.status !== 'Em Revisão' && !product.revision_requested);
+    
+    // Filtro por pesquisa
+    if (!searchTerm.trim()) return statusMatch;
+    
+    const search = searchTerm.toLowerCase();
+    const searchMatch = 
+      product.name.toLowerCase().includes(search) ||
+      product.description?.toLowerCase().includes(search) ||
+      product.type.toLowerCase().includes(search) ||
+      product.profiles?.full_name?.toLowerCase().includes(search) ||
+      product.profiles?.email?.toLowerCase().includes(search);
+    
+    return statusMatch && searchMatch;
   });
 
   if (loading) {
@@ -595,24 +609,39 @@ export default function AdminProducts() {
             <p className="text-sm sm:text-base text-muted-foreground mt-1">Revisar e aprovar produtos</p>
           </div>
           
-          {/* Filtros - Responsivo */}
+          {/* Pesquisa e Filtros - Responsivo */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-            <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos ({products.length})</SelectItem>
-                <SelectItem value="pendente">Aprovar Produtos ({products.filter(p => p.status === 'Pendente' || (!p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested)).length})</SelectItem>
-                <SelectItem value="rascunho">Rascunhos ({products.filter(p => p.status === 'Rascunho').length})</SelectItem>
-                <SelectItem value="ativo">Ativos ({products.filter(p => p.status === 'Ativo').length})</SelectItem>
-                <SelectItem value="banido">Banidos ({products.filter(p => p.status === 'Banido').length})</SelectItem>
-                <SelectItem value="inativo">Inativos ({products.filter(p => p.status === 'Inativo').length})</SelectItem>
-                <SelectItem value="em_revisao">Em Revisão ({products.filter(p => p.status === 'Em Revisão').length})</SelectItem>
-                <SelectItem value="revisao">Revisão Solicitada ({products.filter(p => p.revision_requested === true).length})</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Campo de pesquisa */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Pesquisar produtos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 w-full"
+              />
+            </div>
+            
+            {/* Filtro de status */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos ({products.length})</SelectItem>
+                  <SelectItem value="pendente">Aprovar Produtos ({products.filter(p => p.status === 'Pendente' || (!p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested)).length})</SelectItem>
+                  <SelectItem value="rascunho">Rascunhos ({products.filter(p => p.status === 'Rascunho').length})</SelectItem>
+                  <SelectItem value="ativo">Ativos ({products.filter(p => p.status === 'Ativo').length})</SelectItem>
+                  <SelectItem value="banido">Banidos ({products.filter(p => p.status === 'Banido').length})</SelectItem>
+                  <SelectItem value="inativo">Inativos ({products.filter(p => p.status === 'Inativo').length})</SelectItem>
+                  <SelectItem value="em_revisao">Em Revisão ({products.filter(p => p.status === 'Em Revisão').length})</SelectItem>
+                  <SelectItem value="revisao">Revisão Solicitada ({products.filter(p => p.revision_requested === true).length})</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
