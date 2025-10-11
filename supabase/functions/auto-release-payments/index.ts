@@ -181,6 +181,7 @@ serve(async (req) => {
         order_id,
         user_id,
         amount,
+        seller_commission,
         currency,
         created_at,
         customer_name,
