@@ -66,44 +66,123 @@ export default function AdminSellerReports() {
     try {
       console.log('🔄 Carregando relatórios de vendedores...');
 
-      // Buscar todos os perfis
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, email, avatar_url, banned, is_creator')
-        .order('created_at', { ascending: false });
+      // Buscar todos os perfis com paginação
+      let allProfiles: any[] = [];
+      let offset = 0;
+      const limit = 1000;
+      let hasMore = true;
 
-      if (profilesError) throw profilesError;
-      console.log(`✅ ${profiles?.length || 0} perfis carregados`);
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, email, avatar_url, banned, is_creator')
+          .range(offset, offset + limit - 1);
 
-      // Buscar todos os produtos de uma vez
-      const { data: allProducts } = await supabase
-        .from('products')
-        .select('id, user_id, status');
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allProfiles = [...allProfiles, ...data];
+          offset += limit;
+          hasMore = data.length === limit;
+        } else {
+          hasMore = false;
+        }
+      }
+      console.log(`✅ ${allProfiles.length} perfis carregados`);
 
-      console.log(`✅ ${allProducts?.length || 0} produtos carregados`);
+      // Buscar todos os produtos
+      let allProducts: any[] = [];
+      offset = 0;
+      hasMore = true;
 
-      // Buscar todas as vendas de uma vez (TODAS as vendas, incluindo member_access)
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('product_id, amount, status')
-        .eq('status', 'completed');
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, user_id, status')
+          .range(offset, offset + limit - 1);
 
-      console.log(`✅ ${allOrders?.length || 0} vendas carregadas`);
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allProducts = [...allProducts, ...data];
+          offset += limit;
+          hasMore = data.length === limit;
+        } else {
+          hasMore = false;
+        }
+      }
+      console.log(`✅ ${allProducts.length} produtos carregados`);
 
-      // Buscar todos os saques de uma vez
-      const { data: allWithdrawals } = await supabase
-        .from('withdrawal_requests')
-        .select('user_id, amount, status')
-        .eq('status', 'aprovado');
+      // Buscar todas as vendas completadas
+      let allOrders: any[] = [];
+      offset = 0;
+      hasMore = true;
 
-      console.log(`✅ ${allWithdrawals?.length || 0} saques carregados`);
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('product_id, amount, status')
+          .eq('status', 'completed')
+          .range(offset, offset + limit - 1);
 
-      // Buscar todos os saldos de uma vez
-      const { data: allBalances } = await supabase
-        .from('customer_balances')
-        .select('user_id, balance');
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allOrders = [...allOrders, ...data];
+          offset += limit;
+          hasMore = data.length === limit;
+        } else {
+          hasMore = false;
+        }
+      }
+      console.log(`✅ ${allOrders.length} vendas carregadas`);
 
-      console.log(`✅ ${allBalances?.length || 0} saldos carregados`);
+      // Buscar todos os saques aprovados
+      let allWithdrawals: any[] = [];
+      offset = 0;
+      hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('withdrawal_requests')
+          .select('user_id, amount, status')
+          .eq('status', 'aprovado')
+          .range(offset, offset + limit - 1);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allWithdrawals = [...allWithdrawals, ...data];
+          offset += limit;
+          hasMore = data.length === limit;
+        } else {
+          hasMore = false;
+        }
+      }
+      console.log(`✅ ${allWithdrawals.length} saques carregados`);
+
+      // Buscar todos os saldos
+      let allBalances: any[] = [];
+      offset = 0;
+      hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('customer_balances')
+          .select('user_id, balance')
+          .range(offset, offset + limit - 1);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allBalances = [...allBalances, ...data];
+          offset += limit;
+          hasMore = data.length === limit;
+        } else {
+          hasMore = false;
+        }
+      }
+      console.log(`✅ ${allBalances.length} saldos carregados`);
 
       // Criar mapas para lookup eficiente
       const productsByUser = new Map<string, any[]>();
@@ -139,7 +218,7 @@ export default function AdminSellerReports() {
       });
 
       // Processar dados de cada vendedor
-      const sellersData = profiles.map(profile => {
+      const sellersData = allProfiles.map(profile => {
         const userProducts = productsByUser.get(profile.user_id) || [];
         const activeProducts = userProducts.filter(p => p.status === 'Ativo').length;
         const bannedProducts = userProducts.filter(p => p.status === 'Banido').length;
