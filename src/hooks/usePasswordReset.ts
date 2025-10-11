@@ -27,6 +27,7 @@ export const usePasswordReset = () => {
     setIsLoading(true);
     
     try {
+      console.log('🔐 Resetting password via edge function...');
       const { data, error } = await supabase.functions.invoke('member-area-reset-password', {
         body: {
           studentEmail: email.trim(),
@@ -36,7 +37,7 @@ export const usePasswordReset = () => {
       });
 
       if (error) {
-        console.error('Erro ao definir nova senha:', error);
+        console.error('❌ Erro ao definir nova senha:', error);
         toast({
           title: "Erro",
           description: error.message || "Erro ao processar solicitação",
@@ -45,6 +46,7 @@ export const usePasswordReset = () => {
         return false;
       }
 
+      console.log('✅ Senha definida com sucesso:', data);
       toast({
         title: "Sucesso",
         description: "Nova senha definida com sucesso! Agora você pode fazer login.",
@@ -54,7 +56,7 @@ export const usePasswordReset = () => {
       return true;
       
     } catch (error: any) {
-      console.error('Erro inesperado:', error);
+      console.error('❌ Erro inesperado:', error);
       toast({
         title: "Erro",
         description: "Erro inesperado ao processar solicitação",

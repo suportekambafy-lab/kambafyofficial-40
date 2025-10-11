@@ -185,7 +185,17 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
         // Usar a estrutura correta de URLs para áreas de membros
         const memberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
         
-        const { error: emailError } = await supabase.functions.invoke('send-member-access-email', {
+        console.log('📧 Sending access email with data:', {
+          studentName: formData.name,
+          studentEmail: formData.email,
+          memberAreaName: memberAreaData.name,
+          memberAreaUrl: memberAreaUrl,
+          sellerName: sellerData?.full_name,
+          isNewAccount: isNewAccount,
+          hasTemporaryPassword: !!temporaryPassword
+        });
+        
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-member-access-email', {
           body: {
             studentName: formData.name,
             studentEmail: formData.email,
@@ -198,8 +208,11 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
         });
 
         if (emailError) {
-          console.error('Error sending access email:', emailError);
+          console.error('❌ Error sending access email:', emailError);
+          console.error('❌ Error details:', JSON.stringify(emailError, null, 2));
           toast.warning("Estudante adicionado, mas houve erro ao enviar email de acesso");
+        } else {
+          console.log('✅ Access email sent successfully:', emailData);
         }
       }
 
@@ -320,7 +333,17 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
       // 5. Enviar email de acesso
       const memberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
       
-      const { error: emailError } = await supabase.functions.invoke('send-member-access-email', {
+      console.log('📧 Resending access email with data:', {
+        studentName: student.student_name,
+        studentEmail: student.student_email,
+        memberAreaName: memberAreaData.name,
+        memberAreaUrl: memberAreaUrl,
+        sellerName: sellerData?.full_name,
+        isNewAccount: isNewAccount,
+        hasTemporaryPassword: !!temporaryPassword
+      });
+      
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-member-access-email', {
         body: {
           studentName: student.student_name,
           studentEmail: student.student_email,
@@ -333,9 +356,11 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
       });
 
       if (emailError) {
-        console.error('Error sending access email:', emailError);
+        console.error('❌ Error sending access email:', emailError);
+        console.error('❌ Error details:', JSON.stringify(emailError, null, 2));
         toast.error("Erro ao reenviar email de acesso");
       } else {
+        console.log('✅ Access email sent successfully:', emailData);
         toast.success(
           isNewAccount 
             ? "Conta criada e email de acesso enviado com senha temporária!"

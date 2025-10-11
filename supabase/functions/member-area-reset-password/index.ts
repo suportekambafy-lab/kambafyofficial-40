@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface ResetPasswordRequest {
@@ -18,164 +17,154 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    console.log('=== MEMBER AREA PASSWORD RESET START ===');
-    
-    const requestBody = await req.json();
-    console.log('📨 Raw request body:', requestBody);
-    
-    const { studentEmail, memberAreaId, newPassword }: ResetPasswordRequest = requestBody;
-    console.log('Reset request for:', studentEmail, 'Member Area:', memberAreaId, 'Password provided:', !!newPassword);
-    console.log('Password details:', { 
-      hasPassword: !!newPassword, 
-      passwordLength: newPassword ? newPassword.length : 0,
-      passwordType: typeof newPassword 
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { 
+      status: 405, 
+      headers: corsHeaders 
     });
+  }
+
+  try {
+    const { studentEmail, memberAreaId, newPassword }: ResetPasswordRequest = await req.json();
 
     if (!studentEmail || !memberAreaId || !newPassword) {
-      console.log('❌ Campos obrigatórios ausentes:', { studentEmail: !!studentEmail, memberAreaId: !!memberAreaId, newPassword: !!newPassword });
-      throw new Error('Email, ID da área de membros e nova senha são obrigatórios');
-    }
-
-    if (newPassword.length < 6) {
-      console.log('❌ Senha muito curta:', newPassword.length);
-      throw new Error('A nova senha deve ter pelo menos 6 caracteres');
-    }
-
-    // Criar Supabase client com service role
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    console.log('🔍 Verificando se o estudante tem acesso à área de membros...');
-
-    // Verificar se o estudante tem acesso à área de membros
-    const { data: studentAccess, error: accessError } = await supabase
-      .from('member_area_students')
-      .select('*')
-      .eq('member_area_id', memberAreaId)
-      .eq('student_email', studentEmail)
-      .single();
-
-    if (accessError || !studentAccess) {
-      console.log('❌ Estudante não encontrado na área de membros');
-      throw new Error('Email não encontrado nesta área de membros');
-    }
-
-    console.log('✅ Estudante encontrado na área de membros');
-
-    // Usar admin API para buscar ou criar usuário
-    let userId: string | null = null;
-    
-    try {
-      // Primeiro, tentar atualizar senha de usuário existente
-      const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
-      
-      if (listError) {
-        console.error('❌ Erro ao buscar usuários:', listError);
-        throw new Error('Erro ao acessar sistema de usuários');
-      }
-
-      const existingUser = users.find(u => u.email === studentEmail);
-      
-      if (existingUser) {
-        console.log('✅ Usuário encontrado, atualizando senha...');
-        userId = existingUser.id;
-        
-        // Atualizar senha do usuário existente
-        const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-          password: newPassword,
-          email_confirm: true
-        });
-
-        if (updateError) {
-          console.error('❌ Erro ao atualizar senha:', updateError);
-          throw new Error('Erro ao atualizar senha');
+      return new Response(
+        JSON.stringify({ error: "Email, memberAreaId e newPassword são obrigatórios" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         }
-
-        console.log('✅ Senha atualizada com sucesso');
-        
-      } else {
-        console.log('⚠️ Usuário não encontrado, criando nova conta...');
-        
-        // Tentar criar novo usuário
-        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-          email: studentEmail,
-          password: newPassword,
-          email_confirm: true,
-          user_metadata: {
-            full_name: studentEmail.split('@')[0] // Usar parte do email como nome
-          }
-        });
-
-        if (createError) {
-          // Se erro de email existente, buscar o usuário novamente
-          if (createError.message?.includes('already been registered') || createError.message?.includes('email_exists')) {
-            console.log('🔄 Email já existe, buscando usuário...');
-            
-            // Buscar novamente
-            const { data: { users: refreshedUsers }, error: refreshError } = await supabase.auth.admin.listUsers();
-            if (!refreshError) {
-              const foundUser = refreshedUsers.find(u => u.email === studentEmail);
-              if (foundUser) {
-                console.log('✅ Usuário encontrado após busca, atualizando senha...');
-                userId = foundUser.id;
-                
-                const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-                  password: newPassword,
-                  email_confirm: true
-                });
-
-                if (updateError) {
-                  throw new Error('Erro ao atualizar senha');
-                }
-              } else {
-                throw new Error('Não foi possível localizar conta do usuário');
-              }
-            } else {
-              throw new Error('Erro ao buscar usuários');
-            }
-          } else {
-            console.error('❌ Erro ao criar usuário:', createError);
-            throw createError;
-          }
-        } else {
-          console.log('✅ Nova conta criada com sucesso');
-          userId = newUser.user.id;
-        }
-      }
-
-    } catch (authError: any) {
-      console.error('❌ Erro de autenticação:', authError);
-      throw new Error('Erro ao processar conta: ' + authError.message);
+      );
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Nova senha definida com sucesso! Agora você pode fazer login.',
-      data: {
-        email: studentEmail,
-        member_area_id: memberAreaId,
-        password_updated: true
-      }
-    }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
+    // Normalizar email
+    const normalizedEmail = studentEmail.toLowerCase().trim();
+
+    console.log('🔐 RESET PASSWORD START:', {
+      email: normalizedEmail,
+      memberAreaId: memberAreaId
     });
 
-  } catch (error: any) {
-    console.error("=== ERRO NO RESET DE SENHA ===");
-    console.error("Error:", error);
+    // Criar cliente Supabase
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Buscar informações da área de membros e vendedor
+    const { data: memberArea, error: memberAreaError } = await supabase
+      .from('member_areas')
+      .select('id, name, url, user_id, profiles!inner(full_name, email)')
+      .eq('id', memberAreaId)
+      .single();
+
+    if (memberAreaError || !memberArea) {
+      console.error('❌ Error fetching member area:', memberAreaError);
+      return new Response(
+        JSON.stringify({ error: "Área de membros não encontrada" }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Buscar informações do estudante
+    const { data: student, error: studentError } = await supabase
+      .from('member_area_students')
+      .select('student_name, student_email')
+      .eq('member_area_id', memberAreaId)
+      .eq('student_email', normalizedEmail)
+      .single();
+
+    if (studentError || !student) {
+      console.error('❌ Error fetching student:', studentError);
+      return new Response(
+        JSON.stringify({ error: "Estudante não encontrado nesta área de membros" }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Listar usuários para encontrar o ID
+    const { data: listResponse, error: listError } = await supabase.auth.admin.listUsers();
     
+    if (listError) {
+      console.error('❌ Error listing users:', listError);
+      throw listError;
+    }
+
+    const existingUser = listResponse.users.find(user => user.email?.toLowerCase() === normalizedEmail);
+
+    if (!existingUser) {
+      console.error('❌ User not found in auth system');
+      return new Response(
+        JSON.stringify({ error: "Usuário não encontrado" }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Atualizar senha do usuário
+    console.log('🔑 Updating user password...');
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      existingUser.id,
+      { 
+        password: newPassword,
+        email_confirm: true
+      }
+    );
+
+    if (updateError) {
+      console.error('❌ Error updating password:', updateError);
+      throw updateError;
+    }
+
+    console.log('✅ Password updated successfully');
+
+    // Enviar email de notificação usando a função send-member-access-email
+    console.log('📧 Sending password reset notification email...');
+    const { error: emailError } = await supabase.functions.invoke('send-member-access-email', {
+      body: {
+        studentName: student.student_name,
+        studentEmail: normalizedEmail,
+        memberAreaName: memberArea.name,
+        memberAreaUrl: `https://membros.kambafy.com/login/${memberAreaId}`,
+        sellerName: memberArea.profiles.full_name,
+        isPasswordReset: true,
+        temporaryPassword: newPassword,
+        supportEmail: memberArea.profiles.email
+      }
+    });
+
+    if (emailError) {
+      console.error('⚠️ Warning: Failed to send email notification:', emailError);
+      // Não falhar a operação por causa do email
+    } else {
+      console.log('✅ Email notification sent successfully');
+    }
+
     return new Response(
       JSON.stringify({ 
-        success: false,
-        error: error.message,
-        details: 'Erro ao processar reset de senha'
+        success: true,
+        message: "Senha redefinida com sucesso e email enviado"
       }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+
+  } catch (error: any) {
+    console.error("❌ Error in member-area-reset-password function:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

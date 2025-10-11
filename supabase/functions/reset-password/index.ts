@@ -28,7 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email }: ResetPasswordRequest = await req.json();
+    const { email, memberAreaId }: ResetPasswordRequest & { memberAreaId?: string } = await req.json();
 
     if (!email) {
       return new Response(
@@ -40,7 +40,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log('Sending password reset email to:', email);
+    console.log('🔐 Sending password reset email to:', email);
+    console.log('📧 Member Area ID:', memberAreaId || 'none');
 
     // Criar cliente Supabase
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -70,18 +71,37 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("Password reset link generated successfully");
+    console.log("✅ Password reset link generated successfully");
 
     // Enviar email com o link de reset
     const resetLink = data.properties.action_link;
     
+    // Buscar informações do vendedor se memberAreaId fornecido
+    let sellerInfo = null;
+    if (memberAreaId) {
+      const { data: memberArea } = await supabase
+        .from('member_areas')
+        .select('name, user_id, profiles!inner(full_name, email)')
+        .eq('id', memberAreaId)
+        .single();
+      
+      if (memberArea) {
+        sellerInfo = {
+          memberAreaName: memberArea.name,
+          sellerName: memberArea.profiles.full_name,
+          sellerEmail: memberArea.profiles.email
+        };
+        console.log('✅ Seller info found:', sellerInfo);
+      }
+    }
+    
     // Log para debug
-    console.log("Reset link gerado:", resetLink);
+    console.log("🔗 Reset link gerado:", resetLink);
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "Kambafy <noreply@kambafy.com>",
       to: [email],
-      subject: "Recuperação de Senha - Kambafy",
+      subject: sellerInfo ? `Recuperação de Senha - ${sellerInfo.memberAreaName}` : "Recuperação de Senha - Kambafy",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
@@ -90,6 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <h1 style="color: #16a34a; margin-bottom: 10px;">Recuperação de Senha</h1>
             <p style="color: #666; font-size: 16px;">Recebemos uma solicitação para redefinir sua senha</p>
+            ${sellerInfo ? `<p style="color: #475569; font-size: 14px; margin-top: 10px;">Para: <strong>${sellerInfo.memberAreaName}</strong></p>` : ''}
           </div>
           
           <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
@@ -109,6 +130,26 @@ const handler = async (req: Request): Promise<Response> => {
               <span style="word-break: break-all; color: #16a34a;">${resetLink}</span>
             </p>
           </div>
+          
+          ${sellerInfo ? `
+          <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 3px solid #3b82f6;">
+            <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações de Contato</h3>
+            <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
+              <strong>Vendedor:</strong> ${sellerInfo.sellerName}
+            </p>
+            <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
+              <strong>📧 Contato do Vendedor:</strong><br>
+              <a href="mailto:${sellerInfo.sellerEmail}" style="color: #3b82f6; text-decoration: none;">${sellerInfo.sellerEmail}</a>
+            </p>
+            <p style="margin: 0; color: #475569; font-size: 14px;">
+              <strong>🏢 Suporte Kambafy:</strong><br>
+              <a href="mailto:suporte@kambafy.com" style="color: #3b82f6; text-decoration: none;">suporte@kambafy.com</a>
+            </p>
+            <p style="margin: 15px 0 0; color: #64748b; font-size: 13px; font-style: italic;">
+              💡 Para dúvidas sobre o produto, contacte o vendedor. Para questões técnicas da plataforma, contacte o suporte Kambafy.
+            </p>
+          </div>
+          ` : ''}
           
           <div style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
             <p style="color: #9ca3af; font-size: 14px; text-align: center;">
