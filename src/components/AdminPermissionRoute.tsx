@@ -76,23 +76,23 @@ export default function AdminPermissionRoute({
         return;
       }
 
-      // Verificar se o admin tem a permissão específica
+      // Verificar se o admin tem a permissão específica usando RPC para bypassar RLS
       try {
-        console.log('🔍 [ADMIN-PERMISSION-ROUTE] Buscando permissões do admin no banco...');
-        const { data, error } = await supabase
-          .from('admin_permissions')
-          .select('permission')
-          .eq('admin_id', admin.id)
-          .eq('permission', requiredPermission)
-          .maybeSingle();
+        console.log('🔍 [ADMIN-PERMISSION-ROUTE] Buscando permissões do admin usando RPC...');
+        
+        // Usar RPC function que bypassa RLS
+        const { data, error } = await supabase.rpc('admin_has_permission', {
+          admin_email: admin.email,
+          required_permission: requiredPermission
+        });
 
-        console.log('📋 [ADMIN-PERMISSION-ROUTE] Resultado da busca:', { data, error });
+        console.log('📋 [ADMIN-PERMISSION-ROUTE] Resultado da RPC:', { data, error });
 
         if (error) {
           console.error('❌ [ADMIN-PERMISSION-ROUTE] Erro ao verificar permissão:', error);
           setHasPermission(false);
         } else {
-          const hasAccess = !!data;
+          const hasAccess = data === true;
           console.log(hasAccess ? '✅ [ADMIN-PERMISSION-ROUTE] Permissão encontrada' : '❌ [ADMIN-PERMISSION-ROUTE] Permissão não encontrada');
           setHasPermission(hasAccess);
         }
