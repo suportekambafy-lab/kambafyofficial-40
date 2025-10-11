@@ -2854,20 +2854,12 @@ export type Database = {
         Returns: Json
       }
       admin_process_withdrawal_request: {
-        Args:
-          | {
-              admin_id?: string
-              new_status: string
-              notes_text?: string
-              p_jwt_token?: string
-              request_id: string
-            }
-          | {
-              admin_id?: string
-              new_status: string
-              notes_text?: string
-              request_id: string
-            }
+        Args: {
+          admin_id?: string
+          new_status: string
+          notes_text?: string
+          request_id: string
+        }
         Returns: undefined
       }
       admin_update_identity_verification: {
