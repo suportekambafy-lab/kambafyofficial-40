@@ -35,8 +35,8 @@ export default function UnifiedMembersLogin() {
             // Se tiver apenas 1 curso, redirecionar direto
             window.location.href = `${baseUrl}/area/${memberAreas[0].memberAreaId}`;
           } else {
-            // Se tiver múltiplos, ir para dashboard
-            window.location.href = `${baseUrl}/dashboard`;
+            // Se tiver múltiplos, ir para dashboard do hub
+            window.location.href = `${baseUrl}/hub/dashboard`;
           }
         }, 500);
       }

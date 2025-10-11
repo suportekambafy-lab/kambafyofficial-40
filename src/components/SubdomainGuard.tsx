@@ -104,13 +104,19 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     }
     
     // QUINTA VERIFICAÇÃO: ÁREA DE MEMBROS - SEMPRE redirecionar para membros.kambafy.com
+    // Áreas específicas: /login/:id, /area/:id
+    // Hub geral: /hub, /hub/dashboard
     if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/') || 
-        currentPath === '/dashboard' || currentPath === '/members/dashboard' ||
-        currentPath.startsWith('/members/login') || currentPath.startsWith('/members/area')) {
+        currentPath.startsWith('/hub') || 
+        currentPath.startsWith('/members/hub') || 
+        currentPath.startsWith('/members/login') || 
+        currentPath.startsWith('/members/area')) {
       console.log('🎓 SubdomainGuard: DETECTADA rota de área de membros em PRODUÇÃO', {
         currentPath,
         currentSubdomain,
         hostname,
+        isSpecificArea: currentPath.includes('/login/') || currentPath.includes('/area/'),
+        isGeneralHub: currentPath.includes('/hub'),
         message: 'Verificando se deve redirecionar para subdomínio membros'
       });
       
@@ -118,18 +124,20 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       if (currentSubdomain !== 'membros') {
         // Remover prefixo /members se existir
         let cleanPath = currentPath;
-        if (currentPath.startsWith('/members/login')) {
+        if (currentPath.startsWith('/members/hub')) {
+          cleanPath = currentPath.replace('/members/hub', '/hub');
+        } else if (currentPath.startsWith('/members/login')) {
           cleanPath = currentPath.replace('/members/login', '/login');
         } else if (currentPath.startsWith('/members/area')) {
           cleanPath = currentPath.replace('/members/area', '/area');
-        } else if (currentPath === '/members/dashboard') {
-          cleanPath = '/dashboard';
         }
         
         const targetUrl = `${window.location.protocol}//membros.kambafy.com${cleanPath}`;
         console.log('🔄 SubdomainGuard: REDIRECIONANDO área de membros para subdomínio correto', {
           from: window.location.href,
           to: targetUrl,
+          isSpecificArea: cleanPath.includes('/login/') || cleanPath.includes('/area/'),
+          isGeneralHub: cleanPath.includes('/hub'),
           reason: 'Área de membros SEMPRE usa membros.kambafy.com em produção'
         });
         window.location.href = targetUrl;
@@ -138,10 +146,10 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     }
     
     // Define quais rotas são RESTRITAS de cada subdomínio (não permitidas)
-    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/login/', '/area/']; 
-    const restrictedFromApp = ['/checkout', '/obrigado', '/admin', '/area/', '/login/']; 
-    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/area/', '/login/']; 
-    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/minhas-compras', '/area/', '/login/']; 
+    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/login/', '/area/', '/hub']; 
+    const restrictedFromApp = ['/checkout', '/obrigado', '/admin', '/area/', '/login/', '/hub']; 
+    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/area/', '/login/', '/hub']; 
+    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/minhas-compras', '/area/', '/login/', '/hub'];
     
     // Verifica se a rota atual é restrita do subdomínio atual
     let shouldRedirect = false;
@@ -167,7 +175,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         shouldRedirect = true;
         if (currentPath.startsWith('/admin')) {
           targetSubdomain = 'admin';
-        } else if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/')) {
+        } else if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/') || currentPath.startsWith('/hub')) {
           targetSubdomain = 'membros';
         } else {
           targetSubdomain = 'app';
@@ -185,31 +193,38 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
           targetSubdomain = 'admin';
         } else if (currentPath.startsWith('/checkout') || currentPath.startsWith('/obrigado')) {
           targetSubdomain = 'pay';
-        } else if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/')) {
+        } else if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/') || currentPath.startsWith('/hub')) {
           targetSubdomain = 'membros';
         }
       }
     } else if (currentSubdomain === 'membros') {
-      // membros.kambafy.com: permitir rotas de área de membros (/login, /dashboard, /login/:id, /area/:id)
+      // membros.kambafy.com: permitir APENAS rotas de área de membros
+      // ✅ Áreas específicas: /login/:id, /area/:id
+      // ✅ Hub geral: /hub, /hub/dashboard
       // NUNCA redirecionar para kambafy.com - manter sempre em membros.kambafy.com
+      const isSpecificArea = currentPath.match(/^\/(login|area)\/[^/]+/);
+      const isGeneralHub = currentPath.startsWith('/hub');
+      
       console.log('🎓 SubdomainGuard: Verificando subdomínio MEMBROS', {
         currentPath,
-        isLoginRoute: currentPath.startsWith('/login'),
-        isAreaRoute: currentPath.startsWith('/area'),
-        isDashboard: currentPath === '/dashboard',
-        isValidMemberRoute: (currentPath.startsWith('/login') || currentPath.startsWith('/area') || currentPath === '/dashboard')
+        isSpecificArea: !!isSpecificArea,
+        isGeneralHub: isGeneralHub,
+        isValidMemberRoute: !!(isSpecificArea || isGeneralHub)
       });
       
-      if (!(currentPath.startsWith('/login') || currentPath.startsWith('/area') || currentPath === '/dashboard')) {
+      if (!isSpecificArea && !isGeneralHub) {
         console.log('❌ SubdomainGuard: Rota inválida para subdomínio membros', {
           currentPath,
-          message: 'Redirecionando para /login dentro de membros.kambafy.com'
+          message: 'Redirecionando para /hub dentro de membros.kambafy.com'
         });
-        // NUNCA redirecionar para kambafy.com - redirecionar para /login dentro do mesmo subdomínio
-        window.location.href = window.location.protocol + '//' + window.location.host + '/login';
+        // NUNCA redirecionar para kambafy.com - redirecionar para /hub dentro do mesmo subdomínio
+        window.location.href = window.location.protocol + '//' + window.location.host + '/hub';
         return;
       } else {
-        console.log('✅ SubdomainGuard: Rota válida para área de membros', currentPath);
+        console.log('✅ SubdomainGuard: Rota válida para área de membros', {
+          currentPath,
+          type: isSpecificArea ? 'área específica' : 'hub geral'
+        });
       }
     } else if (currentSubdomain === 'pay') {
       // pay.kambafy.com: permitir apenas checkout e obrigado
@@ -218,7 +233,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         if (restrictedFromPay.some(route => currentPath.startsWith(route))) {
           if (currentPath.startsWith('/admin')) {
             targetSubdomain = 'admin';
-          } else if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/')) {
+          } else if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/') || currentPath.startsWith('/hub')) {
             targetSubdomain = 'membros';
           } else if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || 
               currentPath.startsWith('/apps') || currentPath.startsWith('/minhas-compras')) {

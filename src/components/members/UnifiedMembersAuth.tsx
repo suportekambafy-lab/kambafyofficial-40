@@ -272,8 +272,8 @@ export function UnifiedMembersAuthProvider({ children }: UnifiedMembersAuthProvi
     
     // Redirecionar IMEDIATAMENTE sem atualizar estados (evita flash de conteúdo)
     const loginUrl = window.location.hostname.includes('localhost')
-      ? `${window.location.origin}/login`
-      : 'https://membros.kambafy.com/login';
+      ? `${window.location.origin}/hub`
+      : 'https://membros.kambafy.com/hub';
     
     // Usar replace para não deixar na história do navegador
     window.location.replace(loginUrl);

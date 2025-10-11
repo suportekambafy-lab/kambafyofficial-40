@@ -29,7 +29,7 @@ export default function UnifiedMembersHub() {
 
   useEffect(() => {
     if (!isLoading && !studentEmail) {
-      navigate('/members/login');
+      navigate('/hub');
     }
   }, [isLoading, studentEmail, navigate]);
 

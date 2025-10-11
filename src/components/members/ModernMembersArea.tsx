@@ -726,7 +726,7 @@ export default function ModernMembersArea() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => window.location.href = '/members/dashboard'}
+                  onClick={() => window.location.href = '/hub/dashboard'}
                   className="text-white/80 hover:text-white hover:bg-white/10"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
