@@ -15,9 +15,11 @@ export const useOptimizedQuery = (
   return useQuery({
     queryKey,
     queryFn,
-    gcTime: options.gcTime || 5 * 60 * 1000, // 5 minutos default
-    staleTime: options.staleTime || 2 * 60 * 1000, // 2 minutos default
-    refetchOnWindowFocus: options.refetchOnWindowFocus || false,
+    gcTime: options.gcTime || 10 * 60 * 1000, // ✅ 10 minutos
+    staleTime: options.staleTime || 5 * 60 * 1000, // ✅ 5 minutos
+    refetchOnWindowFocus: false, // ✅ Nunca refetch ao voltar
+    refetchOnMount: false, // ✅ Usar cache
+    refetchOnReconnect: false, // ✅ WebSockets cuidam disso
     retry: 1,
   });
 };
@@ -55,8 +57,8 @@ export const useFinancialData = (userId: string) => {
       };
     },
     {
-      staleTime: 3 * 60 * 1000, // 3 minutos
-      gcTime: 5 * 60 * 1000  // 5 minutos
+      staleTime: 10 * 60 * 1000, // ✅ 10 minutos
+      gcTime: 15 * 60 * 1000  // ✅ 15 minutos
     }
   );
 };

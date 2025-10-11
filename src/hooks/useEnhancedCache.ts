@@ -95,10 +95,10 @@ export function useEnhancedCache<T>(
     queryFn: enhancedQueryFn,
     staleTime,
     gcTime: cacheTime,
-    refetchInterval,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMount: 'always',
+    refetchInterval: false, // ✅ Desabilitar refetch automático
+    refetchOnWindowFocus: false, // ✅ Não refetch ao voltar para a aba
+    refetchOnReconnect: false, // ✅ WebSockets cuidam da reconexão
+    refetchOnMount: false, // ✅ Usar cache existente
     // Usar dados em memória como placeholder
     placeholderData: () => getFromMemoryCache(),
   });
