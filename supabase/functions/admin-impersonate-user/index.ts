@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { targetUserId, adminEmail, twoFactorCode } = await req.json()
+    const { targetUserId, adminEmail } = await req.json()
 
     if (!targetUserId || !adminEmail) {
       throw new Error('targetUserId and adminEmail são obrigatórios')
@@ -46,50 +46,7 @@ Deno.serve(async (req) => {
       throw new Error('Acesso negado: Privilégios de admin necessários')
     }
 
-    // 1.5 Exigir 2FA antes de impersonation
-    if (!twoFactorCode) {
-      // Enviar código 2FA
-      const { error: twoFAError } = await supabaseAdmin.functions.invoke('send-2fa-code', {
-        body: {
-          email: adminEmail,
-          event_type: 'admin_impersonation',
-          user_email: adminEmail
-        }
-      })
-
-      if (twoFAError) {
-        console.error('❌ Erro ao enviar 2FA:', twoFAError)
-        throw new Error('Erro ao enviar código de verificação')
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: false,
-          requires2FA: true,
-          message: 'Código de verificação necessário para impersonation'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200
-        }
-      )
-    }
-
-    // 1.6 Verificar código 2FA
-    const { data: verifyData, error: verifyError } = await supabaseAdmin.functions.invoke('verify-2fa-code', {
-      body: {
-        email: adminEmail,
-        code: twoFactorCode,
-        event_type: 'admin_impersonation'
-      }
-    })
-
-    if (verifyError || !verifyData?.valid) {
-      console.error('❌ Código 2FA inválido')
-      throw new Error('Código de verificação inválido para impersonation')
-    }
-
-    console.log('✅ 2FA verificado, prosseguindo com impersonation')
+    console.log('✅ Admin verificado, prosseguindo com impersonation')
 
     // 2. Buscar dados do usuário alvo
     const { data: targetUser, error: userError } = await supabaseAdmin.auth.admin.getUserById(targetUserId)

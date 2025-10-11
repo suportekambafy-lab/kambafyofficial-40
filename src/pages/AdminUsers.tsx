@@ -10,7 +10,6 @@ import { ArrowLeft, UserX, UserCheck, User, Calendar, Mail, Shield, Search, LogI
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { BanUserDialog } from '@/components/BanUserDialog';
-import { TwoFactorDialog } from '@/components/TwoFactorDialog';
 import { Send } from 'lucide-react';
 
 interface UserProfile {
@@ -38,8 +37,6 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [sendingEmails, setSendingEmails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
-  const [pendingImpersonation, setPendingImpersonation] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     if (admin) {
@@ -240,7 +237,6 @@ export default function AdminUsers() {
     try {
       console.log('🎭 Iniciando impersonation para:', user.email);
       
-      // Primeira chamada sem código 2FA
       const { data, error } = await supabase.functions.invoke('admin-impersonate-user', {
         body: {
           targetUserId: user.user_id,
@@ -253,19 +249,6 @@ export default function AdminUsers() {
         throw error;
       }
 
-      // Se requer 2FA, abrir dialog
-      if (data?.requires2FA) {
-        console.log('🔐 2FA necessário, abrindo dialog...');
-        setPendingImpersonation(user);
-        setTwoFactorDialogOpen(true);
-        toast({
-          title: 'Código Enviado',
-          description: 'Verifique seu email para o código de verificação',
-        });
-        return;
-      }
-
-      // Se não requer 2FA (não deveria acontecer, mas por segurança)
       if (!data?.success || !data?.magicLink) {
         throw new Error('Dados de impersonation inválidos');
       }
@@ -277,49 +260,6 @@ export default function AdminUsers() {
       toast({
         title: 'Erro',
         description: error.message || 'Erro ao entrar como usuário',
-        variant: 'destructive'
-      });
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const handleTwoFactorSubmit = async (code: string) => {
-    if (!pendingImpersonation || !admin?.email) return;
-
-    setProcessingId(pendingImpersonation.id);
-
-    try {
-      console.log('🔐 Verificando código 2FA...');
-
-      // Segunda chamada com código 2FA
-      const { data, error } = await supabase.functions.invoke('admin-impersonate-user', {
-        body: {
-          targetUserId: pendingImpersonation.user_id,
-          adminEmail: admin.email,
-          twoFactorCode: code
-        }
-      });
-
-      if (error) {
-        console.error('Erro na verificação 2FA:', error);
-        throw error;
-      }
-
-      if (!data?.success || !data?.magicLink) {
-        throw new Error('Código inválido ou dados de impersonation inválidos');
-      }
-
-      console.log('✅ 2FA verificado com sucesso');
-      
-      setTwoFactorDialogOpen(false);
-      await completeImpersonation(data, pendingImpersonation);
-
-    } catch (error) {
-      console.error('Error verifying 2FA:', error);
-      toast({
-        title: 'Erro',
-        description: error.message || 'Código inválido',
         variant: 'destructive'
       });
     } finally {
@@ -561,17 +501,6 @@ export default function AdminUsers() {
           onConfirm={handleConfirmBan}
           userName={selectedUser?.full_name || 'Usuário'}
           isLoading={processingId === selectedUser?.id}
-        />
-
-        <TwoFactorDialog
-          open={twoFactorDialogOpen}
-          onClose={() => {
-            setTwoFactorDialogOpen(false);
-            setPendingImpersonation(null);
-            setProcessingId(null);
-          }}
-          onSubmit={handleTwoFactorSubmit}
-          loading={!!processingId}
         />
       </div>
     </div>
