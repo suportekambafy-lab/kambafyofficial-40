@@ -64,7 +64,7 @@ serve(async (req) => {
     const { data: product, error: productError } = await supabase
       .from('products')
       .select('*')
-      .eq('id', productId)
+      .eq('slug', productId)
       .single();
 
     if (productError || !product) {
