@@ -8,16 +8,15 @@ import {
   RefreshCw,
   Download,
   PiggyBank,
-  Calendar,
-  Eye,
-  EyeOff,
   Clock,
   CheckCircle,
   Shield,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -25,8 +24,6 @@ import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import { BankingInfo } from "@/components/BankingInfo";
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { WithdrawalModal } from "@/components/WithdrawalModal";
-import { useTabVisibilityOptimizer } from "@/hooks/useTabVisibilityOptimizer";
-
 import {
   Table,
   TableBody,
@@ -55,7 +52,6 @@ interface IdentityVerification {
 export default function Financial() {
   const { user } = useAuth();
   const { toast } = useCustomToast();
-  const { shouldSkipUpdate } = useTabVisibilityOptimizer();
   const [loading, setLoading] = useState(true);
   const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
@@ -66,405 +62,56 @@ export default function Financial() {
     pending: true,
     withdrawn: true
   });
-  const [lastDataUpdate, setLastDataUpdate] = useState(0);
+
+  // ✅ DADOS FINANCEIROS SIMPLIFICADOS
   const [financialData, setFinancialData] = useState({
-    availableBalance: 0,
-    monthlyRevenue: 0,
-    commissionsPaid: 0,
-    pendingWithdrawal: 0,
-    totalRevenue: 0,
-    totalOrders: 0,
+    availableBalance: 0,      // Do customer_balances.balance
+    pendingBalance: 0,        // Vendas <3 dias sem sale_revenue
+    withdrawnAmount: 0,       // Saques aprovados
     nextReleaseDate: null as Date | null,
-    nextReleaseAmount: 0,
-    pendingOrders: [] as Array<{date: Date, amount: number}>,
-    withdrawnAmount: 0
+    nextReleaseAmount: 0
   });
 
-  // ✅ Remover cache automático - sempre carregar dados frescos
-
-  const loadWithdrawalRequests = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      const { data: requests, error } = await supabase
-        .from('withdrawal_requests')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Erro ao carregar solicitações de saque:', error);
-        return;
-      }
-
-      setWithdrawalRequests(requests || []);
-    } catch (error) {
-      console.error('Erro ao carregar solicitações de saque:', error);
-    }
-  }, [user]);
-
-  
   const loadUserData = useCallback(async () => {
     if (!user) return;
 
     try {
-      // Carregar perfil do usuário
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('iban')
         .eq('user_id', user.id)
         .single();
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Erro ao carregar perfil:', profileError);
-      } else {
-        setUserProfile(profile);
-      }
+      setUserProfile(profile);
 
-      // Carregar verificação de identidade
-      const { data: verification, error: verificationError } = await supabase
+      const { data: verification } = await supabase
         .from('identity_verification')
         .select('status')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (verificationError) {
-        console.error('Erro ao carregar verificação:', verificationError);
-      } else {
-        setIdentityVerification(verification as IdentityVerification);
-      }
+      setIdentityVerification(verification as IdentityVerification);
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
     }
   }, [user]);
 
-  const loadFinancialData = useCallback(async (forceRefresh = false) => {
+  const loadFinancialData = useCallback(async () => {
     if (!user) return;
-
-    // ✅ OTIMIZAÇÃO: Skip apenas se foi atualização muito recente E não for refresh forçado
-    if (!forceRefresh && shouldSkipUpdate(lastDataUpdate, 30000)) {
-      console.log('📊 Financial data update skipped - too recent');
-      return;
-    }
 
     try {
       setLoading(true);
 
-      // Primeiro, buscar códigos de afiliação do usuário
-      const { data: affiliateCodes, error: affiliateError } = await supabase
-        .from('affiliates')
-        .select('affiliate_code')
-        .eq('affiliate_user_id', user.id)
-        .eq('status', 'ativo');
-
-      if (affiliateError) throw affiliateError;
-
-      const userAffiliateCodes = affiliateCodes?.map(a => a.affiliate_code) || [];
-
-      // Buscar produtos do usuário primeiro
-      const { data: userProducts, error: productsError } = await supabase
-        .from('products')
-        .select('id')
-        .eq('user_id', user.id);
-
-      if (productsError) throw productsError;
-
-      const userProductIds = userProducts?.map(p => p.id) || [];
-
-      // ✅ BUSCAR TODAS AS VENDAS (sem filtro de data)
-      // Vamos usar balance_transactions como fonte de verdade para saber quais foram liberadas
-      const { data: ownOrders, error: ordersError } = await supabase
-        .from('orders')
-        .select('order_id, amount, currency, created_at, status, affiliate_commission, seller_commission, product_id')
-        .in('product_id', userProductIds)
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false });
-
-      // Vendas recuperadas removidas - sistema de recuperação desabilitado
-      const recoveredOrderIds = new Set();
-
-      // Buscar saldo real do customer_balances (fonte de verdade)
-      const { data: balanceData, error: balanceError } = await supabase
+      // ✅ 1. SALDO DISPONÍVEL - Fonte única de verdade
+      const { data: balanceData } = await supabase
         .from('customer_balances')
         .select('balance')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (balanceError) {
-        console.error('Error loading balance:', balanceError);
-      }
+      const availableBalance = balanceData?.balance || 0;
 
-      const currentBalance = balanceData?.balance || 0;
-
-      // Buscar solicitações de saque
-      const { data: withdrawalRequestsData, error: withdrawalsError } = await supabase
-        .from('withdrawal_requests')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      // ✅ Buscar TODAS balance_transactions de crédito do usuário
-      // Isso nos diz quais vendas já foram liberadas (credit = sistema antigo, sale_revenue = sistema novo)
-      const { data: balanceTransactions, error: transactionsError } = await supabase
-        .from('balance_transactions')
-        .select('order_id, amount, type, created_at')
-        .eq('user_id', user.id)
-        .in('type', ['credit', 'sale_revenue']);
-
-      if (transactionsError) {
-        console.error('Error loading balance transactions:', transactionsError);
-      }
-
-      console.log('🔍 [FINANCIAL] Total de transações encontradas:', balanceTransactions?.length);
-      console.log('🔍 [FINANCIAL] Tipos de transações:', balanceTransactions?.map(t => t.type));
-
-      // Criar set de order_ids que já têm transação de crédito (já foram liberados)
-      const releasedOrderIds = new Set(
-        (balanceTransactions || []).map(t => t.order_id).filter(Boolean)
-      );
-
-      console.log('🔥 [FINANCIAL] TRANSAÇÕES ENCONTRADAS:', {
-        total: releasedOrderIds.size,
-        orderIds: Array.from(releasedOrderIds).slice(0, 5)
-      });
-
-      // Buscar vendas como afiliado (TODAS) se houver códigos
-      let affiliateOrders: any[] = [];
-      if (userAffiliateCodes.length > 0) {
-        const { data: affiliateData, error: affiliateError } = await supabase
-          .from('orders')
-          .select('order_id, amount, currency, created_at, status, affiliate_commission, seller_commission, affiliate_code')
-          .in('affiliate_code', userAffiliateCodes)
-          .not('affiliate_commission', 'is', null)
-          .eq('status', 'completed')
-          .order('created_at', { ascending: false});
-        
-        if (!affiliateError) {
-          affiliateOrders = affiliateData || [];
-        }
-      }
-
-
-      if (ordersError) {
-        console.error('Error loading orders:', ordersError);
-      } else {
-        // Combinar vendas próprias e comissões de afiliado
-        const allOrders = [
-          // Vendas próprias - usar valor total ou comissão do vendedor (com desconto de 20% se recuperada)
-          ...(ownOrders || []).map(order => {
-            const isRecovered = recoveredOrderIds.has(order.order_id);
-            let earning = parseFloat(order.seller_commission?.toString() || order.amount || '0');
-            
-            // Converter para KZ se necessário
-            if (order.currency && order.currency !== 'KZ') {
-              const exchangeRates: Record<string, number> = {
-                'EUR': 1053, // 1 EUR = ~1053 KZ
-                'MZN': 14.3  // 1 MZN = ~14.3 KZ
-              };
-              const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-              earning = Math.round(earning * rate);
-            }
-            
-            // Aplicar desconto de 20% se for venda recuperada
-            if (isRecovered) {
-              earning = earning * 0.8;
-            }
-            
-            return {
-              ...order,
-              earning_amount: earning,
-              order_type: 'own'
-            };
-          }),
-          // Vendas como afiliado - usar apenas comissão do afiliado
-          ...(affiliateOrders || []).map(order => ({
-            ...order,
-            earning_amount: parseFloat(order.affiliate_commission?.toString() || '0'),
-            order_type: 'affiliate'
-          }))
-        ];
-
-        console.log(`📊 Financial: carregou ${ownOrders?.length || 0} vendas próprias e ${affiliateOrders?.length || 0} comissões para usuário ${user.id}`);
-        console.log('📋 Primeiras 3 vendas/comissões financeiro:', allOrders.slice(0, 3));
-        
-        const totalRevenue = allOrders.reduce((sum, order) => {
-          return sum + order.earning_amount;
-        }, 0);
-
-        // Calculate monthly revenue (current month)
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-        const monthlyRevenue = allOrders.filter(order => {
-          const orderDate = new Date(order.created_at);
-          return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
-        }).reduce((sum, order) => {
-          return sum + order.earning_amount;
-        }, 0);
-
-        // ✅ Calcular total sacado APROVADO (apenas para exibição, não descontar do saldo)
-        const totalWithdrawnAmount = withdrawalRequestsData?.reduce((sum, withdrawal) => {
-          // Incluir APENAS saques APROVADOS para exibição
-          if (withdrawal.status === 'aprovado') {
-            const finalAmount = parseFloat(withdrawal.amount?.toString() || '0');
-            return sum + finalAmount;
-          }
-          return sum;
-        }, 0) || 0;
-
-        // ✅ USAR o saldo real do customer_balances como fonte de verdade
-        // O saldo já reflete os débitos de saques pendentes via trigger
-        const finalAvailableBalance = Math.max(0, currentBalance);
-
-      // ✅ CALCULAR SALDO PENDENTE usando balance_transactions como fonte de verdade
-      const now = new Date();
-      let pendingBalance = 0;
-      const pendingOrdersData: Array<{date: Date, amount: number}> = [];
-
-      console.log('🔥 [FINANCIAL] CALCULANDO SALDO PENDENTE para', allOrders.length, 'vendas');
-      console.log('🔥 [FINANCIAL] Vendas com transação (liberadas):', releasedOrderIds.size);
-      console.log('🔥 [FINANCIAL] Saldo disponível (balance):', currentBalance.toLocaleString(), 'KZ');
-      
-      // Debug: mostrar primeiros 10 order_ids de vendas vs transações
-      console.log('🔥 [FINANCIAL] Order IDs das vendas:', allOrders.slice(0, 10).map(o => o.order_id));
-      console.log('🔥 [FINANCIAL] Order IDs das transações:', Array.from(releasedOrderIds).slice(0, 10));
-
-      console.error(`🔥 CALCULANDO SALDO PENDENTE para ${allOrders.length} vendas`);
-      console.error(`🔥 Vendas com transação de crédito (liberadas): ${releasedOrderIds.size}`);
-      console.error(`🔥 Saldo disponível atual (customer_balances): ${currentBalance.toLocaleString()} KZ`);
-      console.error(`🔥 Order IDs das vendas:`, allOrders.slice(0, 10).map(o => o.order_id));
-      console.error(`🔥 Order IDs das transações:`, Array.from(releasedOrderIds).slice(0, 10));
-
-        let releasedCount = 0;
-        let pendingCount = 0;
-        let totalReleased = 0;
-
-        allOrders.forEach(order => {
-          const orderDate = new Date(order.created_at);
-          const releaseDate = new Date(orderDate);
-          releaseDate.setDate(orderDate.getDate() + 3); // 3 dias corridos
-          
-          // ✅ USAR SELLER_COMMISSION (já tem 8% descontado) ou calcular 92% do amount
-          let netAmount = order.earning_amount;
-          
-          // Se não tem seller_commission, aplicar desconto de 8%
-          if (!order.seller_commission || parseFloat(order.seller_commission) === 0) {
-            netAmount = netAmount * 0.92;
-          }
-          
-          // ✅ VERIFICAR SE JÁ TEM BALANCE_TRANSACTION (fonte de verdade)
-          const hasTransaction = releasedOrderIds.has(order.order_id);
-          
-          if (hasTransaction) {
-            // ✅ Tem transação = já foi liberada
-            releasedCount++;
-            totalReleased += netAmount;
-            
-            if (releasedCount <= 5) {
-              console.error(`🟢 LIBERADA (tem transação): ${order.order_id} - ${netAmount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()}`);
-            }
-          } else {
-            // ❌ Sem transação = ainda está pendente
-            pendingBalance += netAmount;
-            pendingCount++;
-            pendingOrdersData.push({
-              date: releaseDate,
-              amount: netAmount
-            });
-            
-            if (pendingCount <= 5) {
-              console.error(`🟡 PENDENTE (sem transação): ${order.order_id} - ${netAmount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()} - libera em ${releaseDate.toLocaleDateString()}`);
-            }
-          }
-        });
-
-        console.error(`🔥 RESULTADO FINAL (baseado em balance_transactions):`);
-        console.error(`   ✅ ${releasedCount} vendas JÁ LIBERADAS (com transação) = ${totalReleased.toLocaleString()} KZ`);
-        console.error(`   🟡 ${pendingCount} vendas PENDENTES (sem transação) = ${pendingBalance.toLocaleString()} KZ`);
-        console.error(`   💰 Saldo disponível (balance): ${currentBalance.toLocaleString()} KZ`);
-
-        // Encontrar próxima liberação
-        let nextReleaseDate = null;
-        let nextReleaseAmount = 0;
-        
-        if (pendingOrdersData.length > 0) {
-          pendingOrdersData.sort((a, b) => a.date.getTime() - b.date.getTime());
-          nextReleaseDate = pendingOrdersData[0].date;
-          nextReleaseAmount = pendingOrdersData
-            .filter(order => order.date.toDateString() === nextReleaseDate!.toDateString())
-            .reduce((sum, order) => sum + order.amount, 0);
-        }
-
-        const newFinancialData = {
-          availableBalance: finalAvailableBalance,  // ✅ Saldo disponível para saque (do banco)
-          monthlyRevenue,
-          commissionsPaid: 0,
-          pendingWithdrawal: pendingBalance,        // ✅ Vendas aguardando liberação (3 dias)
-          totalRevenue,
-          totalOrders: allOrders.length,
-          nextReleaseDate,
-          nextReleaseAmount,
-          pendingOrders: pendingOrdersData,
-          withdrawnAmount: totalWithdrawnAmount     // ✅ Total já aprovado (valor original antes do desconto)
-        };
-
-        setFinancialData(newFinancialData);
-        setWithdrawalRequests((withdrawalRequestsData as WithdrawalRequest[]) || []);
-        setLastDataUpdate(Date.now()); // ✅ Atualizar timestamp
-
-        console.log(`✅ Dados financeiros atualizados para usuário ${user.id}:`, {
-          saldoDisponivel: finalAvailableBalance,
-          saldoPendente: pendingBalance,
-          totalSacado: totalWithdrawnAmount
-        });
-      }
-    } catch (error) {
-      console.error('Error loading financial data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, loadWithdrawalRequests]);
-
-  useEffect(() => {
-    if (user) {
-      console.log(`📊 Carregando dados do usuário: ${user.id}`);
-      loadUserData();
-      // ✅ Sempre carregar dados frescos na primeira carga
-      loadFinancialData(true);
-      
-      // ✅ Configurar escuta em tempo real para mudanças nos saques do usuário
-      const withdrawalChannel = supabase
-        .channel(`withdrawal_changes_financial_${user.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*', // Escutar todos os eventos (INSERT, UPDATE, DELETE)
-            schema: 'public',
-            table: 'withdrawal_requests',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('💰 [FINANCIAL] Mudança detectada em saques do usuário:', payload);
-            // Recarregar dados financeiros com delay para garantir consistência
-            setTimeout(() => {
-              console.log('📊 [FINANCIAL] Recarregando dados após mudança em saque...');
-              loadFinancialData(true);
-            }, 1000);
-          }
-        )
-        .subscribe();
-
-      return () => {
-        console.log('🔌 [FINANCIAL] Desconectando escuta de saques');
-        supabase.removeChannel(withdrawalChannel);
-      };
-    }
-  }, [user, loadUserData, loadFinancialData]);
-
-  const handleGenerateReport = async () => {
-    if (!user) return;
-
-    try {
-      // Buscar produtos do usuário primeiro
+      // ✅ 2. BUSCAR PRODUTOS DO USUÁRIO
       const { data: userProducts } = await supabase
         .from('products')
         .select('id')
@@ -472,562 +119,457 @@ export default function Financial() {
 
       const userProductIds = userProducts?.map(p => p.id) || [];
 
-      // ✅ QUERY CORRIGIDA - Buscar vendas pelos produtos do usuário para relatório
-      const promises = [
-        supabase
-          .from('orders')
-          .select(`
-            *,
-            products (
-              id,
-              name,
-              type
-            )
-          `)
-          .in('product_id', userProductIds)
-          .eq('status', 'completed')
-          .order('created_at', { ascending: false })
-      ];
+      // ✅ 3. BUSCAR VENDAS COMPLETED DOS ÚLTIMOS 3 DIAS
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-      // Adicionar vendas como afiliado se houver códigos
-      const { data: affiliateCodes } = await supabase
-        .from('affiliates')
-        .select('affiliate_code')
-        .eq('affiliate_user_id', user.id)
-        .eq('status', 'ativo');
+      const { data: recentOrders } = await supabase
+        .from('orders')
+        .select('order_id, amount, seller_commission, created_at')
+        .in('product_id', userProductIds)
+        .eq('status', 'completed')
+        .gte('created_at', threeDaysAgo.toISOString());
 
-      const userAffiliateCodes = affiliateCodes?.map(a => a.affiliate_code) || [];
-
-      if (userAffiliateCodes.length > 0) {
-        promises.push(
-          supabase
-            .from('orders')
-            .select(`
-              *,
-              products (
-                id,
-                name,
-                type
-              )
-            `)
-            .in('affiliate_code', userAffiliateCodes)
-            .not('affiliate_commission', 'is', null)
-            .eq('status', 'completed')
-            .order('created_at', { ascending: false })
-        );
+      // ✅ 4. VERIFICAR QUAIS JÁ TÊM SALE_REVENUE
+      const orderIds = (recentOrders || []).map(o => o.order_id).filter(Boolean);
+      
+      let releasedTransactions: any[] = [];
+      if (orderIds.length > 0) {
+        const { data } = await supabase
+          .from('balance_transactions')
+          .select('order_id')
+          .eq('user_id', user.id)
+          .eq('type', 'sale_revenue')
+          .in('order_id', orderIds);
+        
+        releasedTransactions = data || [];
       }
 
-      const results = await Promise.all(promises);
-      const [ownOrdersData, affiliateOrdersData] = results;
+      const releasedOrderIds = new Set(
+        releasedTransactions.map(t => t.order_id).filter(Boolean)
+      );
 
-      const { data: ownOrders, error } = ownOrdersData;
-      const affiliateOrders = affiliateOrdersData ? affiliateOrdersData.data : [];
+      // ✅ 5. CALCULAR SALDO PENDENTE
+      let pendingBalance = 0;
+      let nextReleaseDate: Date | null = null;
+      let nextReleaseAmount = 0;
 
-      if (error) {
-        console.error('Error generating report:', error);
-        toast({
-          title: 'Erro',
-          message: 'Erro ao gerar relatório',
-          variant: 'error'
-        });
-        return;
+      const pendingOrders: Array<{date: Date, amount: number}> = [];
+
+      (recentOrders || []).forEach(order => {
+        // Se já tem sale_revenue, pular
+        if (releasedOrderIds.has(order.order_id)) return;
+
+        // Usar seller_commission (já tem 8% descontado) ou calcular 92%
+        const netAmount = order.seller_commission 
+          ? order.seller_commission 
+          : parseFloat(order.amount) * 0.92;
+
+        pendingBalance += netAmount;
+
+        const releaseDate = new Date(order.created_at);
+        releaseDate.setDate(releaseDate.getDate() + 3);
+        
+        pendingOrders.push({ date: releaseDate, amount: netAmount });
+      });
+
+      // Encontrar próxima liberação
+      if (pendingOrders.length > 0) {
+        pendingOrders.sort((a, b) => a.date.getTime() - b.date.getTime());
+        nextReleaseDate = pendingOrders[0].date;
+        nextReleaseAmount = pendingOrders
+          .filter(o => o.date.toDateString() === nextReleaseDate!.toDateString())
+          .reduce((sum, o) => sum + o.amount, 0);
       }
 
-      // Buscar histórico de saques
-      const { data: withdrawals, error: withdrawalsError } = await supabase
+      // ✅ 6. TOTAL SACADO (aprovado)
+      const { data: withdrawals } = await supabase
+        .from('withdrawal_requests')
+        .select('amount, status')
+        .eq('user_id', user.id);
+
+      const withdrawnAmount = (withdrawals || [])
+        .filter(w => w.status === 'aprovado')
+        .reduce((sum, w) => sum + parseFloat(w.amount.toString()), 0);
+
+      // ✅ 7. CARREGAR HISTÓRICO DE SAQUES
+      const { data: withdrawalRequestsData } = await supabase
         .from('withdrawal_requests')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (withdrawalsError) {
-        console.error('Error loading withdrawals:', withdrawalsError);
-      }
+      setWithdrawalRequests((withdrawalRequestsData as WithdrawalRequest[]) || []);
 
-      // Combinar vendas próprias e comissões
-      const allOrdersForReport = [
-        ...(ownOrders || []).map(order => ({ ...order, order_type: 'own' })),
-        ...(affiliateOrders || []).map(order => ({ ...order, order_type: 'affiliate' }))
-      ];
+      setFinancialData({
+        availableBalance,
+        pendingBalance,
+        withdrawnAmount,
+        nextReleaseDate,
+        nextReleaseAmount
+      });
 
-      // Criar conteúdo CSV expandido com histórico de saques
-      const csvContent = [
-        // Seção de vendas
-        ['HISTÓRICO DE VENDAS E COMISSÕES'],
-        ['Data', 'Pedido ID', 'Cliente', 'Email', 'Produto', 'Valor Total (KZ)', 'Ganho (KZ)', 'Tipo', 'Status'].join(','),
-        ...allOrdersForReport.map(order => [
-          new Date(order.created_at).toLocaleDateString('pt-BR'),
-          order.order_id,
-          order.customer_name,
-          order.customer_email,
-          order.products?.name || 'Produto',
-          order.amount,
-          order.order_type === 'affiliate' 
-            ? parseFloat(order.affiliate_commission?.toString() || '0').toFixed(0)
-            : parseFloat(order.seller_commission?.toString() || order.amount || '0').toFixed(0),
-          order.order_type === 'affiliate' ? 'Comissão Afiliado' : 'Venda Própria',
-          order.status === 'completed' ? 'Concluído' : 'Pendente'
-        ].join(',')),
-        [''],
-        // Seção de saques
-        ['HISTÓRICO DE SAQUES'],
-        ['Data Solicitação', 'Valor a Receber (KZ)', 'Valor Original (KZ)', 'Taxa (KZ)', 'Status', 'Data Atualização'].join(','),
-        ...(withdrawals || []).map(withdrawal => {
-          // amount já é o valor BRUTO (antes da taxa de 8%)
-          const originalAmount = parseFloat(withdrawal.amount?.toString() || '0');
-          const feeAmount = originalAmount * 0.08; // 8% de taxa
-          const receivedAmount = originalAmount * 0.92; // valor líquido que o vendedor recebe
-          return [
-            new Date(withdrawal.created_at).toLocaleDateString('pt-BR'),
-            receivedAmount.toFixed(0),           // Valor a receber (já com desconto)
-            originalAmount.toFixed(0),          // Valor original solicitado
-            feeAmount.toFixed(0),               // Taxa de 8%
-            withdrawal.status === 'pendente' ? 'Aguardando aprovação' : 
-            withdrawal.status === 'aprovado' ? 'Aprovado' : 
-            withdrawal.status === 'pago' ? 'Pago' :
-            withdrawal.status === 'concluido' ? 'Concluído' : 'Rejeitado',
-            new Date(withdrawal.updated_at).toLocaleDateString('pt-BR')
-          ].join(',');
-        })
-      ].join('\n');
-
-      // Baixar arquivo
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `relatorio_completo_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast({
-        title: 'Sucesso',
-        message: 'Relatório completo gerado com sucesso!',
-        variant: 'success'
+      console.log('✅ Dados financeiros carregados:', {
+        availableBalance: availableBalance.toLocaleString(),
+        pendingBalance: pendingBalance.toLocaleString(),
+        withdrawnAmount: withdrawnAmount.toLocaleString()
       });
 
     } catch (error) {
-      console.error('Error generating report:', error);
+      console.error('Erro ao carregar dados financeiros:', error);
       toast({
-        title: 'Erro',
-        message: 'Erro inesperado ao gerar relatório',
-        variant: 'error'
+        title: "Erro ao carregar dados",
+        message: "Não foi possível carregar os dados financeiros. Tente novamente.",
+        variant: "error"
       });
+    } finally {
+      setLoading(false);
     }
+  }, [user, toast]);
+
+  useEffect(() => {
+    if (user) {
+      loadUserData();
+      loadFinancialData();
+
+      // ✅ Escutar mudanças em saques
+      const withdrawalChannel = supabase
+        .channel(`withdrawal_changes_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'withdrawal_requests',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            setTimeout(() => loadFinancialData(), 1000);
+          }
+        )
+        .subscribe();
+
+      // ✅ Escutar mudanças em balance_transactions
+      const balanceChannel = supabase
+        .channel(`balance_changes_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'balance_transactions',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            setTimeout(() => loadFinancialData(), 1000);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(withdrawalChannel);
+        supabase.removeChannel(balanceChannel);
+      };
+    }
+  }, [user, loadUserData, loadFinancialData]);
+
+  const handleGenerateReport = async () => {
+    toast({
+      title: "Relatório em desenvolvimento",
+      message: "Funcionalidade de relatórios será disponibilizada em breve.",
+      variant: "warning"
+    });
   };
 
-  const handleTestAutoRelease = async () => {
-    if (!user) return;
-
-    try {
-      toast({
-        title: 'Liberação automática',
-        message: '🔄 Executando liberação automática...',
-        variant: 'default'
-      });
-      
-      const { data, error } = await supabase.functions.invoke('auto-release-payments', {
-        body: { 
-          manual: true,
-          userId: user.id,
-          timestamp: new Date().toISOString()
-        }
-      });
-
-      if (error) {
-        console.error('Erro na liberação automática:', error);
-        toast({
-          title: 'Erro',
-          message: 'Erro ao executar liberação automática',
-          variant: 'error'
-        });
-        return;
-      }
-
-      console.log('Resultado da liberação automática:', data);
-      
-      if (data.success) {
-        toast({
-          title: 'Sucesso',
-          message: `✅ ${data.message}`,
-          variant: 'success'
-        });
-        if (data.summary?.ordersReleased > 0) {
-          toast({
-            title: 'Vendas liberadas',
-            message: `💰 ${data.summary.ordersReleased} vendas liberadas: ${data.summary.totalAmountReleased.toLocaleString()} KZ`,
-            variant: 'success'
-          });
-        }
-        // Recarregar dados financeiros
-        loadFinancialData(false);
-      } else {
-        toast({
-          title: 'Erro',
-          message: `Erro: ${data.error}`,
-          variant: 'error'
-        });
-      }
-
-    } catch (error) {
-      console.error('Erro ao executar liberação automática:', error);
-      toast({
-        title: 'Erro',
-        message: 'Erro inesperado ao executar liberação',
-        variant: 'error'
-      });
-    }
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-AO', {
+      style: 'currency',
+      currency: 'AOA',
+      minimumFractionDigits: 2
+    }).format(value);
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pendente':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Aguardando aprovação</Badge>;
-      case 'aprovado':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Aprovado</Badge>;
-      case 'pago':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800"><CheckCircle className="h-3 w-3 mr-1" />Pago</Badge>;
-      case 'concluido':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Concluído</Badge>;
-      case 'rejeitado':
-        return <Badge variant="destructive">Rejeitado</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
+    const statusConfig = {
+      'pendente': { color: 'bg-yellow-500', text: 'Pendente' },
+      'aprovado': { color: 'bg-green-500', text: 'Aprovado' },
+      'rejeitado': { color: 'bg-red-500', text: 'Rejeitado' }
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig['pendente'];
+    
+    return (
+      <Badge className={`${config.color} text-white`}>
+        {config.text}
+      </Badge>
+    );
   };
 
+  if (loading) {
+    return (
+      <OptimizedPageWrapper>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <LoadingSpinner />
+        </div>
+      </OptimizedPageWrapper>
+    );
+  }
+
+  const isVerified = identityVerification?.status === 'aprovado';
+  const hasIban = !!userProfile?.iban;
+  const canWithdraw = isVerified && hasIban && financialData.availableBalance > 0;
+
   return (
-    <OptimizedPageWrapper skeletonVariant="dashboard">
-      {loading ? (
-        <div className="p-3 md:p-6 flex items-center justify-center min-h-96">
-          <LoadingSpinner text="Carregando dados financeiros..." />
-        </div>
-      ) : (
-      <div className="p-3 md:p-6 space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 md:gap-4">
-        <div className="flex items-center justify-between">
+    <OptimizedPageWrapper>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-foreground">Financeiro</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Gerencie suas finanças e pagamentos</p>
+            <h1 className="text-3xl font-bold">Financeiro</h1>
+            <p className="text-muted-foreground mt-2">
+              Gerencie seus ganhos e saques
+            </p>
           </div>
-          
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={() => loadFinancialData(false)} className="text-xs md:text-sm text-foreground">
-            <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-            Atualizar
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleGenerateReport} className="text-xs md:text-sm text-foreground">
-            <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-            Relatório
-          </Button>
-          <Button 
-            onClick={() => setWithdrawalModalOpen(true)} 
-            size="sm" 
-            className="text-xs md:text-sm"
-          >
-            <PiggyBank className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-            Solicitar Saque
-          </Button>
-        </div>
-      </div>
-
-      {financialData.availableBalance === 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 md:p-4">
-          <p className="text-amber-800 text-xs md:text-sm">
-            <strong>Informação:</strong> Cada venda fica disponível para saque 3 dias úteis após a data da venda para garantir a segurança das transações.
-          </p>
-        </div>
-      )}
-
-      {/* Identity Verification Info - Only show if IBAN exists and verification is not approved */}
-      {userProfile?.iban && identityVerification?.status !== 'aprovado' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="font-medium text-blue-900 text-sm md:text-base mb-2">
-                Verificação de Identidade Necessária
-              </h3>
-              <p className="text-blue-800 text-xs md:text-sm mb-3">
-                {identityVerification?.status === 'pendente' 
-                  ? 'Sua verificação de identidade está sendo analisada. Aguarde a aprovação para habilitar saques.'
-                  : identityVerification?.status === 'rejeitado'
-                  ? 'Sua verificação de identidade foi rejeitada. Complete o processo novamente para habilitar saques.'
-                  : 'Para processar saques, precisamos verificar sua identidade. Complete o processo de verificação para habilitar esta funcionalidade.'
-                }
-              </p>
-              <Link to="/identidade">
-                <Button variant="outline" size="sm" className="text-xs md:text-sm">
-                  <Shield className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                  {identityVerification?.status === 'pendente' 
-                    ? 'Ver Status da Verificação' 
-                    : 'Completar Verificação'
-                  }
-                </Button>
-              </Link>
-            </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => loadFinancialData()}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Atualizar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleGenerateReport}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Relatório
+            </Button>
           </div>
         </div>
-      )}
 
-      {/* Main Balance Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <HighlightedCard highlightColor="green">
-          <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <HighlightedCardTitle className="text-sm font-medium">Saldo Disponível</HighlightedCardTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowValues(prev => ({ ...prev, available: !prev.available }))}
-                className="h-6 w-6 p-0"
-              >
-                {showValues.available ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-              </Button>
-              <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-            </div>
-          </HighlightedCardHeader>
-          <HighlightedCardContent>
-            <div className="text-2xl md:text-3xl font-bold mb-2">
-              {showValues.available 
-                ? `${financialData.availableBalance.toLocaleString()} KZ`
-                : "••••••••"
-              }
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {financialData.availableBalance === 0 ? 'Nenhum saldo disponível' : 'Disponível para saque'}
-            </p>
-          </HighlightedCardContent>
-        </HighlightedCard>
-        
-        <HighlightedCard highlightColor="yellow">
-          <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <HighlightedCardTitle className="text-sm font-medium">Saldo Pendente</HighlightedCardTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowValues(prev => ({ ...prev, pending: !prev.pending }))}
-                className="h-6 w-6 p-0"
-              >
-                {showValues.pending ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-              </Button>
-              <RefreshCw className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-            </div>
-          </HighlightedCardHeader>
-          <HighlightedCardContent>
-            <div className="text-2xl md:text-3xl font-bold mb-2">
-              {showValues.pending 
-                ? `${financialData.pendingWithdrawal.toLocaleString()} KZ`
-                : "••••••••"
-              }
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {financialData.pendingWithdrawal === 0 
-                ? 'Nenhum valor pendente' 
-                : (financialData.nextReleaseDate && financialData.nextReleaseDate instanceof Date)
-                  ? `Próxima liberação: ${financialData.nextReleaseDate.toLocaleDateString('pt-BR')}`
-                  : 'Aguardando liberação'
-              }
-            </p>
-          </HighlightedCardContent>
-        </HighlightedCard>
-
-        <HighlightedCard highlightColor="blue">
-          <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <HighlightedCardTitle className="text-sm font-medium">Total Sacado</HighlightedCardTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowValues(prev => ({ ...prev, withdrawn: !prev.withdrawn }))}
-                className="h-6 w-6 p-0"
-              >
-                {showValues.withdrawn ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-              </Button>
-              <PiggyBank className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-            </div>
-          </HighlightedCardHeader>
-          <HighlightedCardContent>
-            <div className="text-2xl md:text-3xl font-bold mb-2">
-              {showValues.withdrawn 
-                ? `${financialData.withdrawnAmount.toLocaleString()} KZ`
-                : "••••••••"
-              }
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Saques aprovados (valor líquido recebido)
-            </p>
-          </HighlightedCardContent>
-        </HighlightedCard>
-      </div>
-
-      {/* Payment Methods and Next Release - Stack on mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <BankingInfo />
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <Calendar className="h-4 w-4 md:h-5 md:w-5" />
-              Próxima Liberação
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 md:space-y-4">
-            {financialData.nextReleaseDate && financialData.nextReleaseDate instanceof Date && financialData.nextReleaseAmount > 0 ? (
-              <div className="p-4 border rounded-lg bg-blue-50">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-sm md:text-base">Próxima Liberação</p>
-                    <p className="text-xs md:text-sm text-muted-foreground">
-                      {financialData.nextReleaseDate instanceof Date ? financialData.nextReleaseDate.toLocaleDateString('pt-BR') : 'Data inválida'}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-lg md:text-xl">{financialData.nextReleaseAmount.toLocaleString()} KZ</p>
-                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">Em breve</Badge>
-                  </div>
+        {/* Alertas de Verificação */}
+        {!isVerified && (
+          <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-yellow-900 dark:text-yellow-100">
+                    Verificação de Identidade Pendente
+                  </h3>
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
+                    Complete a verificação de identidade para solicitar saques.
+                  </p>
+                  <Link to="/settings?tab=verification">
+                    <Button variant="outline" size="sm" className="mt-3">
+                      Verificar Agora
+                    </Button>
+                  </Link>
                 </div>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-sm text-muted-foreground">Nenhuma liberação agendada</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {isVerified && !hasIban && (
+          <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-yellow-900 dark:text-yellow-100">
+                    Adicione suas Informações Bancárias
+                  </h3>
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
+                    Configure seu IBAN para receber saques.
+                  </p>
+                  <Link to="/settings?tab=banking">
+                    <Button variant="outline" size="sm" className="mt-3">
+                      Adicionar IBAN
+                    </Button>
+                  </Link>
+                </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Cards de Saldo */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Saldo Disponível */}
+          <HighlightedCard>
+            <HighlightedCardHeader>
+              <div className="flex items-center justify-between">
+                <HighlightedCardTitle>Saldo Disponível</HighlightedCardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowValues(prev => ({ ...prev, available: !prev.available }))}
+                >
+                  {showValues.available ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </Button>
+              </div>
+            </HighlightedCardHeader>
+            <HighlightedCardContent>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/20">
+                  <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <div className="text-3xl font-bold">
+                    {showValues.available ? formatCurrency(financialData.availableBalance) : '••••••'}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Pronto para saque
+                  </p>
+                </div>
+              </div>
+              {canWithdraw && (
+                <Button
+                  onClick={() => setWithdrawalModalOpen(true)}
+                  className="w-full mt-4"
+                >
+                  <PiggyBank className="h-4 w-4 mr-2" />
+                  Solicitar Saque
+                </Button>
+              )}
+            </HighlightedCardContent>
+          </HighlightedCard>
+
+          {/* Saldo Pendente */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Saldo Pendente</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowValues(prev => ({ ...prev, pending: !prev.pending }))}
+                >
+                  {showValues.pending ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/20">
+                  <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <div>
+                  <div className="text-3xl font-bold">
+                    {showValues.pending ? formatCurrency(financialData.pendingBalance) : '••••••'}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Aguardando liberação (3 dias)
+                  </p>
+                </div>
+              </div>
+              {financialData.nextReleaseDate && (
+                <div className="mt-4 p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium">Próxima Liberação</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {financialData.nextReleaseDate.toLocaleDateString('pt-PT')} - {formatCurrency(financialData.nextReleaseAmount)}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Total Sacado */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Total Sacado</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowValues(prev => ({ ...prev, withdrawn: !prev.withdrawn }))}
+                >
+                  {showValues.withdrawn ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20">
+                  <CheckCircle className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <div className="text-3xl font-bold">
+                    {showValues.withdrawn ? formatCurrency(financialData.withdrawnAmount) : '••••••'}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Saques aprovados
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Informações Bancárias */}
+        <BankingInfo />
+
+        {/* Histórico de Saques */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Histórico de Saques</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {withdrawalRequests.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <PiggyBank className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>Nenhum saque solicitado ainda</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Atualizado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {withdrawalRequests.map((request) => (
+                    <TableRow key={request.id}>
+                      <TableCell>
+                        {new Date(request.created_at).toLocaleDateString('pt-PT')}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {formatCurrency(request.amount)}
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(request.status)}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(request.updated_at).toLocaleDateString('pt-PT')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Histórico de Solicitações de Saque */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-            <PiggyBank className="h-4 w-4 md:h-5 md:w-5" />
-            Histórico de Saques
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {withdrawalRequests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 md:py-16 px-4">
-              <div className="text-center space-y-3 md:space-y-4">
-                <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-muted rounded-full flex items-center justify-center">
-                  <PiggyBank className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="text-base md:text-lg font-semibold">Nenhuma solicitação de saque</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    Suas solicitações de saque aparecerão aqui.
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Mobile Cards View */}
-              <div className="block md:hidden space-y-3">
-                {withdrawalRequests.map((request) => (
-                  <div key={request.id} className="border rounded-lg p-3 space-y-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Data</p>
-                        <p className="text-sm font-medium">
-                          {new Date(request.created_at).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Valor Solicitado</p>
-                        <p className="text-sm font-bold">
-                          {parseFloat(request.amount.toString()).toLocaleString()} KZ
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Taxa (8%): {(parseFloat(request.amount.toString()) * 0.08).toFixed(0)} KZ
-                        </p>
-                        <p className="text-xs text-success font-semibold">
-                          A Receber: {(parseFloat(request.amount.toString()) * 0.92).toFixed(0)} KZ
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Status</p>
-                        {getStatusBadge(request.status)}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Atualizado</p>
-                        <p className="text-xs">
-                          {new Date(request.updated_at).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
-                <Table>
-                   <TableHeader>
-                      <TableRow>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Valor a Receber</TableHead>
-                        <TableHead>Valor Original</TableHead>
-                        <TableHead>Taxa (8%)</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Atualizado</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {withdrawalRequests.map((request) => {
-                      // amount já é o valor BRUTO (antes da taxa de 8%)
-                      const originalAmount = parseFloat(request.amount.toString());
-                      const feeAmount = originalAmount * 0.08; // 8% de taxa
-                      const receivedAmount = originalAmount * 0.92; // valor líquido que o vendedor recebe
-                      
-                      return (
-                        <TableRow key={request.id}>
-                          <TableCell>
-                            {new Date(request.created_at).toLocaleDateString('pt-BR')}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {receivedAmount.toLocaleString()} KZ
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {originalAmount.toFixed(0).toLocaleString()} KZ
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {feeAmount.toFixed(0).toLocaleString()} KZ
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(request.status)}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {new Date(request.updated_at).toLocaleDateString('pt-BR')}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-        {/* Modal de Saque */}
-        <WithdrawalModal 
-          open={withdrawalModalOpen}
-          onOpenChange={setWithdrawalModalOpen}
-          availableBalance={financialData.availableBalance}
-          onWithdrawalSuccess={() => loadFinancialData(false)}
-        />
-        </div>
-      )}
+      <WithdrawalModal
+        open={withdrawalModalOpen}
+        onOpenChange={setWithdrawalModalOpen}
+        availableBalance={financialData.availableBalance}
+        onWithdrawalSuccess={() => {
+          loadFinancialData();
+          toast({
+            title: "Saque solicitado",
+            message: "Sua solicitação de saque foi enviada com sucesso.",
+            variant: "success"
+          });
+        }}
+      />
     </OptimizedPageWrapper>
   );
 }
