@@ -107,13 +107,20 @@ export const useAdminAuthHook = () => {
         console.log('🔍 [ADMIN-AUTH] Dados do banco:', { data, error });
         
         if (data && !error) {
+          // Verificar se admin está ativo
+          if (!data.is_active) {
+            console.log('⚠️ [ADMIN-AUTH] Admin desativado, fazendo logout');
+            localStorage.removeItem('admin_session');
+            localStorage.removeItem('admin_jwt');
+            setAdmin(null);
+            return;
+          }
+          
           // Verificar se o role mudou
-          if (data.role !== parsedAdmin.role || data.is_active !== parsedAdmin.is_active) {
+          if (data.role !== parsedAdmin.role) {
             console.log('🔄 [ADMIN-AUTH] Role atualizado detectado:', {
               oldRole: parsedAdmin.role,
-              newRole: data.role,
-              oldActive: parsedAdmin.is_active,
-              newActive: data.is_active
+              newRole: data.role
             });
             
             const updatedAdmin: AdminUser = {
@@ -133,8 +140,11 @@ export const useAdminAuthHook = () => {
             setAdmin(parsedAdmin);
           }
         } else {
-          console.log('⚠️ [ADMIN-AUTH] Erro ao buscar dados do banco, usando cache');
-          setAdmin(parsedAdmin);
+          // Admin não existe mais no banco - fazer logout
+          console.log('❌ [ADMIN-AUTH] Admin não existe mais no banco, fazendo logout');
+          localStorage.removeItem('admin_session');
+          localStorage.removeItem('admin_jwt');
+          setAdmin(null);
         }
       } else {
         console.log('❌ [ADMIN-AUTH] Nenhuma sessão admin encontrada');
