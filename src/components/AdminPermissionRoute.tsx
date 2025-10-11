@@ -20,6 +20,18 @@ export default function AdminPermissionRoute({
   const { admin, loading: authLoading, loginStep } = useAdminAuth();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [permissionsTimestamp, setPermissionsTimestamp] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Verificar timestamp para forçar revalidação
+    const timestamp = localStorage.getItem('admin_permissions_timestamp');
+    if (timestamp !== permissionsTimestamp) {
+      console.log('🔄 [ADMIN-PERMISSION-ROUTE] Novo timestamp detectado, forçando revalidação');
+      setPermissionsTimestamp(timestamp);
+      setHasPermission(null);
+      setLoading(true);
+    }
+  }, [admin]);
 
   useEffect(() => {
     async function checkPermission() {
@@ -94,7 +106,7 @@ export default function AdminPermissionRoute({
     }
 
     checkPermission();
-  }, [admin, requiredPermission, requireSuperAdmin]);
+  }, [admin, requiredPermission, requireSuperAdmin, permissionsTimestamp]);
 
   // Loading states
   if (authLoading || loading) {

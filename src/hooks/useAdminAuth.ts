@@ -246,6 +246,8 @@ export const useAdminAuthHook = () => {
         setAdmin(adminUser);
         localStorage.setItem('admin_session', JSON.stringify(adminUser));
         localStorage.setItem('admin_jwt', data.jwt);
+        // Adicionar timestamp para forçar revalidação de permissões
+        localStorage.setItem('admin_permissions_timestamp', Date.now().toString());
         
         setPendingLoginData(null);
         setLoginStep('credentials');
@@ -308,6 +310,8 @@ export const useAdminAuthHook = () => {
     setAdmin(adminUser);
     localStorage.setItem('admin_session', JSON.stringify(adminUser));
     localStorage.setItem('admin_jwt', data.jwt);
+    // Adicionar timestamp para forçar revalidação de permissões
+    localStorage.setItem('admin_permissions_timestamp', Date.now().toString());
     
     // Limpar dados pendentes
     setPendingLoginData(null);
@@ -326,6 +330,7 @@ export const useAdminAuthHook = () => {
     setAdmin(null);
     localStorage.removeItem('admin_session');
     localStorage.removeItem('admin_jwt'); // Limpar JWT também
+    localStorage.removeItem('admin_permissions_timestamp'); // Limpar timestamp de permissões
     localStorage.removeItem('impersonation_data'); // Limpar impersonation
     setPendingLoginData(null);
     setLoginStep('credentials');
