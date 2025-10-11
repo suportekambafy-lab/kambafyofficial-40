@@ -128,10 +128,14 @@ export default function AdminManagement() {
     if (!confirm('Tem certeza que deseja remover este administrador?')) return;
 
     try {
-      const { error } = await supabase
-        .from('admin_users')
-        .delete()
-        .eq('id', adminId);
+      const adminToDelete = admins.find(a => a.id === adminId);
+      
+      const { data, error } = await supabase.functions.invoke('admin-delete-admin', {
+        body: { 
+          adminId,
+          adminEmail: adminToDelete?.email 
+        }
+      });
 
       if (error) throw error;
 
