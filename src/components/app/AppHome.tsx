@@ -547,18 +547,21 @@ export function AppHome() {
   const loadSalesHistory = async () => {
     if (!user) return;
     
+    setLoadingSalesHistory(true);
+    
     // ✅ Verificar cache e mostrar imediatamente se disponível
     if (hasCachedData && cachedSales) {
       console.log('⚡ Carregando vendas do CACHE (instantâneo)');
       setOrders(cachedSales);
-      setLoadingSalesHistory(false);
+      
+      // Manter loading por 300ms para feedback visual
+      setTimeout(() => setLoadingSalesHistory(false), 300);
       
       // Refetch em background para atualizar
-      setTimeout(() => fetchSalesFromDatabase(), 100);
+      setTimeout(() => fetchSalesFromDatabase(), 500);
       return;
     }
     
-    setLoadingSalesHistory(true);
     await fetchSalesFromDatabase();
   };
 
