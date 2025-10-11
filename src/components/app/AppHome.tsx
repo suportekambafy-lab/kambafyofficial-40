@@ -541,6 +541,7 @@ export function AppHome() {
     if (!user) return;
 
     try {
+      // ✅ 1. Buscar produtos do usuário
       const { data: products } = await supabase
         .from('products')
         .select('id')
@@ -548,7 +549,16 @@ export function AppHome() {
 
       const productIds = products?.map(p => p.id) || [];
 
-      // Buscar member_areas do usuário para pegar module_payments
+      // ✅ 2. Buscar códigos de afiliado (igual à web)
+      const { data: userAffiliateCodes } = await supabase
+        .from('affiliates')
+        .select('affiliate_code')
+        .eq('affiliate_user_id', user.id)
+        .eq('status', 'aprovado');
+
+      const affiliateCodes = userAffiliateCodes?.map(a => a.affiliate_code).filter(Boolean) || [];
+
+      // ✅ 3. Buscar member_areas do usuário
       const { data: memberAreas } = await supabase
         .from('member_areas')
         .select('id')
@@ -556,53 +566,108 @@ export function AppHome() {
 
       const memberAreaIds = memberAreas?.map(ma => ma.id) || [];
 
-      // Query para orders normais
-      let ordersQuery = supabase
+      // ✅ Query para orders de produtos próprios
+      let ownOrdersQuery = supabase
         .from('orders')
         .select('*, products(name, cover)')
         .in('product_id', productIds)
         .in('status', ['completed', 'pending', 'failed', 'cancelled'])
         .order('created_at', { ascending: false });
 
-      // Query para module_payments
-      let modulePaymentsQuery = supabase
-        .from('module_payments')
-        .select('*, modules(title, cover_image_url)')
-        .in('member_area_id', memberAreaIds)
-        .in('status', ['completed', 'pending', 'failed', 'cancelled'])
-        .order('created_at', { ascending: false });
+      // ✅ Query para vendas como afiliado (igual à web)
+      let affiliateOrdersQuery = affiliateCodes.length > 0
+        ? supabase
+            .from('orders')
+            .select('*, products(name, cover)')
+            .in('affiliate_code', affiliateCodes)
+            .in('status', ['completed', 'pending', 'failed', 'cancelled'])
+            .order('created_at', { ascending: false })
+        : Promise.resolve({ data: [] });
 
-      // Aplicar filtro de status em ambas queries
+      // ✅ Query para module_payments
+      let modulePaymentsQuery = memberAreaIds.length > 0
+        ? supabase
+            .from('module_payments')
+            .select('*, modules(title, cover_image_url)')
+            .in('member_area_id', memberAreaIds)
+            .in('status', ['completed', 'pending', 'failed', 'cancelled'])
+            .order('created_at', { ascending: false })
+        : Promise.resolve({ data: [] });
+
+      // Aplicar filtro de status em todas as queries
       if (salesStatusFilter !== 'all') {
-        // Suportar ambos os formatos: 'cancelled' e 'canceled'
         if (salesStatusFilter === 'cancelled') {
-          ordersQuery = ordersQuery.or('status.eq.cancelled,status.eq.canceled,status.eq.failed');
-          modulePaymentsQuery = modulePaymentsQuery.or('status.eq.cancelled,status.eq.canceled,status.eq.failed');
+          ownOrdersQuery = ownOrdersQuery.or('status.eq.cancelled,status.eq.canceled,status.eq.failed');
+          if (affiliateCodes.length > 0) {
+            affiliateOrdersQuery = supabase
+              .from('orders')
+              .select('*, products(name, cover)')
+              .in('affiliate_code', affiliateCodes)
+              .or('status.eq.cancelled,status.eq.canceled,status.eq.failed')
+              .order('created_at', { ascending: false });
+          }
+          if (memberAreaIds.length > 0) {
+            modulePaymentsQuery = supabase
+              .from('module_payments')
+              .select('*, modules(title, cover_image_url)')
+              .in('member_area_id', memberAreaIds)
+              .or('status.eq.cancelled,status.eq.canceled,status.eq.failed')
+              .order('created_at', { ascending: false });
+          }
         } else {
-          ordersQuery = ordersQuery.eq('status', salesStatusFilter);
-          modulePaymentsQuery = modulePaymentsQuery.eq('status', salesStatusFilter);
+          ownOrdersQuery = ownOrdersQuery.eq('status', salesStatusFilter);
+          if (affiliateCodes.length > 0) {
+            affiliateOrdersQuery = supabase
+              .from('orders')
+              .select('*, products(name, cover)')
+              .in('affiliate_code', affiliateCodes)
+              .eq('status', salesStatusFilter)
+              .order('created_at', { ascending: false });
+          }
+          if (memberAreaIds.length > 0) {
+            modulePaymentsQuery = supabase
+              .from('module_payments')
+              .select('*, modules(title, cover_image_url)')
+              .in('member_area_id', memberAreaIds)
+              .eq('status', salesStatusFilter)
+              .order('created_at', { ascending: false });
+          }
         }
       }
 
-      const [ordersResult, modulePaymentsResult] = await Promise.all([
-        ordersQuery,
+      const [ownOrdersResult, affiliateOrdersResult, modulePaymentsResult] = await Promise.all([
+        productIds.length > 0 ? ownOrdersQuery : Promise.resolve({ data: [], error: null }),
+        affiliateOrdersQuery,
         modulePaymentsQuery
       ]);
       
-      if (ordersResult.error) {
-        console.error('Error loading orders:', ordersResult.error);
+      if (ownOrdersResult.error) {
+        console.error('Error loading own orders:', ownOrdersResult.error);
       }
 
-      if (modulePaymentsResult.error) {
+      if ('error' in affiliateOrdersResult && affiliateOrdersResult.error) {
+        console.error('Error loading affiliate orders:', affiliateOrdersResult.error);
+      }
+
+      if ('error' in modulePaymentsResult && modulePaymentsResult.error) {
         console.error('Error loading module payments:', modulePaymentsResult.error);
       }
 
-      // Combinar orders e module_payments em formato unificado
-      const regularOrders = (ordersResult.data || []).map(order => ({
+      // ✅ Combinar orders próprias
+      const ownOrders = (ownOrdersResult.data || []).map(order => ({
         ...order,
-        source: 'product' // Marcar como venda de produto normal
+        source: 'product',
+        sale_type: 'own'
       }));
 
+      // ✅ Combinar vendas como afiliado
+      const affiliateOrders = (affiliateOrdersResult.data || []).map(order => ({
+        ...order,
+        source: 'product',
+        sale_type: 'affiliate'
+      }));
+
+      // ✅ Combinar module_payments
       const moduleOrders = (modulePaymentsResult.data || []).map(payment => ({
         id: payment.id,
         order_id: payment.order_id,
@@ -619,16 +684,24 @@ export function AppHome() {
           name: payment.modules.title,
           cover: payment.modules.cover_image_url
         } : null,
-        source: 'module', // Marcar como venda de módulo
+        source: 'module',
+        sale_type: 'module',
         reference_number: payment.reference_number,
         entity: payment.entity,
         due_date: payment.due_date
       }));
 
-      // Combinar e ordenar por data
-      const allOrders = [...regularOrders, ...moduleOrders].sort(
+      // ✅ Combinar TODAS as vendas e ordenar por data
+      const allOrders = [...ownOrders, ...affiliateOrders, ...moduleOrders].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
+
+      console.log('📊 Histórico de Vendas carregado:', {
+        ownOrders: ownOrders.length,
+        affiliateOrders: affiliateOrders.length,
+        moduleOrders: moduleOrders.length,
+        total: allOrders.length
+      });
 
       setOrders(allOrders);
     } catch (error) {
