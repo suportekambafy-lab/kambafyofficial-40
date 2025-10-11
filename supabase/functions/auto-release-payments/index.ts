@@ -45,68 +45,96 @@ serve(async (req) => {
     logStep("✅ Cliente Supabase configurado com service role");
 
     // ============================================================
-    // ETAPA 1: Processar liberações pendentes (já registradas mas sem crédito)
+    // ETAPA 1: Verificar se há vendas completed sem transações sale_revenue
+    // (vendas antigas antes da correção do trigger)
     // ============================================================
-    logStep("🔍 ETAPA 1: Verificando liberações pendentes...");
+    logStep("🔍 ETAPA 1: Verificando vendas sem transações...");
     
-    const { data: pendingReleases } = await supabase
-      .from('payment_releases')
+    const { data: ordersWithoutTransactions } = await supabase
+      .from('orders')
       .select(`
         id,
         order_id,
         user_id,
         amount,
+        seller_commission,
         currency,
-        release_date,
-        orders!inner(
-          customer_name,
-          customer_email
+        created_at,
+        customer_name,
+        products!inner(
+          id,
+          name,
+          user_id
         )
       `)
-      .lte('release_date', new Date().toISOString());
+      .eq('status', 'completed');
 
-    logStep(`📦 Encontradas ${pendingReleases?.length || 0} liberações registradas`);
+    logStep(`📦 Encontradas ${ordersWithoutTransactions?.length || 0} vendas completed`);
 
-    let creditedPending = 0;
+    let fixedOldSales = 0;
     
-    // Para cada liberação pendente, verificar se já tem crédito
-    for (const release of pendingReleases || []) {
-      // Verificar se já existe transação de crédito para esta ordem
-      const { data: existingCredit } = await supabase
+    // Para cada venda, verificar se já tem transação sale_revenue
+    for (const order of ordersWithoutTransactions || []) {
+      // Verificar se já existe transação sale_revenue para esta ordem
+      const { data: existingTransaction } = await supabase
         .from('balance_transactions')
         .select('id')
-        .eq('order_id', release.order_id)
-        .eq('type', 'credit')
+        .eq('order_id', order.order_id)
+        .eq('type', 'sale_revenue')
         .maybeSingle();
 
-      if (!existingCredit) {
-        // Criar transação de crédito para esta liberação pendente
-        const netAmount = release.amount * 0.92; // 92% após taxa de 8%
+      if (!existingTransaction) {
+        // Criar transações retroativas para venda antiga
+        const grossAmount = parseFloat(order.seller_commission || order.amount || '0');
+        const netAmount = grossAmount * 0.92; // 92%
+        const feeAmount = grossAmount * 0.08; // 8%
         
-        const { error: creditError } = await supabase
+        const sellerId = order.products?.user_id || order.user_id;
+        
+        // Criar taxa da plataforma (negativa)
+        const { error: feeError } = await supabase
           .from('balance_transactions')
           .insert({
-            user_id: release.user_id,
-            type: 'credit',
-            amount: netAmount,
-            currency: release.currency,
-            description: `Crédito de liberação automática (3 dias) - ${release.orders?.customer_name || 'Cliente'}`,
-            order_id: release.order_id
+            user_id: sellerId,
+            type: 'platform_fee',
+            amount: -feeAmount,
+            currency: 'KZ',
+            description: `Taxa da plataforma Kambafy (8%) - Correção automática`,
+            order_id: order.order_id,
+            created_at: order.created_at
           });
 
-        if (creditError) {
-          logStep(`⚠️ Erro ao creditar liberação pendente ${release.order_id}:`, creditError);
+        if (feeError) {
+          logStep(`⚠️ Erro ao criar taxa para ${order.order_id}:`, feeError);
+          continue;
+        }
+
+        // Criar receita líquida (positiva)
+        const { error: revenueError } = await supabase
+          .from('balance_transactions')
+          .insert({
+            user_id: sellerId,
+            type: 'sale_revenue',
+            amount: netAmount,
+            currency: 'KZ',
+            description: `Receita de venda (valor líquido) - ${order.products?.name || 'Produto'} - Correção automática`,
+            order_id: order.order_id,
+            created_at: order.created_at
+          });
+
+        if (revenueError) {
+          logStep(`⚠️ Erro ao criar receita para ${order.order_id}:`, revenueError);
         } else {
-          creditedPending++;
-          logStep(`✅ Creditada liberação pendente: ${release.order_id} - ${netAmount} KZ`);
+          fixedOldSales++;
+          logStep(`✅ Corrigida venda antiga: ${order.order_id} - Bruto: ${grossAmount} KZ, Líquido: ${netAmount} KZ`);
         }
       }
     }
 
-    if (creditedPending > 0) {
-      logStep(`💰 ETAPA 1 CONCLUÍDA: ${creditedPending} liberações pendentes creditadas`);
+    if (fixedOldSales > 0) {
+      logStep(`💰 ETAPA 1 CONCLUÍDA: ${fixedOldSales} vendas antigas corrigidas`);
     } else {
-      logStep(`ℹ️ ETAPA 1 CONCLUÍDA: Nenhuma liberação pendente para creditar`);
+      logStep(`ℹ️ ETAPA 1 CONCLUÍDA: Todas as vendas já têm transações`);
     }
 
     // ============================================================
@@ -234,26 +262,8 @@ serve(async (req) => {
         logStep("⚠️ Aviso: Erro ao registrar liberações no histórico:", insertError);
       } else {
         logStep(`✅ ${newReleasesToRecord.length} novas liberações registradas no histórico`);
-        
-        // ✅ NOVO: Criar transações de crédito para creditar o saldo após 3 dias
-        const balanceTransactions = newReleasesToRecord.map(order => ({
-          user_id: order.userId,
-          type: 'credit',
-          amount: order.amount,
-          currency: 'KZ',
-          description: `Venda liberada após 3 dias - ${order.customerName}`,
-          order_id: order.orderId
-        }));
-        
-        const { error: transactionError } = await supabase
-          .from('balance_transactions')
-          .insert(balanceTransactions);
-        
-        if (transactionError) {
-          logStep("⚠️ Aviso: Erro ao criar transações de crédito:", transactionError);
-        } else {
-          logStep(`💰 ${newReleasesToRecord.length} transações de crédito criadas`);
-        }
+        // ✅ Não criar mais transações aqui - o trigger já fez isso quando a venda foi completed
+        logStep(`ℹ️ Transações já foram criadas pelo trigger quando a venda foi completed`);
       }
     } else {
       logStep("ℹ️ Nenhuma nova liberação para registrar");
@@ -267,7 +277,7 @@ serve(async (req) => {
     // Resposta com resumo
     const summary = {
       processedAt: now.toISOString(),
-      step1PendingCredited: creditedPending,
+      step1OldSalesFixed: fixedOldSales,
       step2NewReleasesFound: orders?.length || 0,
       step2NewReleasesProcessed: releasedOrders.length,
       step2NewReleasesRecorded: newReleasesToRecord.length,
@@ -285,7 +295,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      message: `Liberação automática concluída - Etapa 1: ${creditedPending} pendentes creditados | Etapa 2: ${newReleasesToRecord.length} novas vendas liberadas`,
+      message: `Liberação automática concluída - Etapa 1: ${fixedOldSales} vendas antigas corrigidas | Etapa 2: ${newReleasesToRecord.length} novas vendas liberadas`,
       summary
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

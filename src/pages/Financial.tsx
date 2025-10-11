@@ -327,7 +327,13 @@ export default function Financial() {
           const releaseDate = new Date(orderDate);
           releaseDate.setDate(orderDate.getDate() + 3); // 3 dias corridos
           
-          const amount = order.earning_amount;
+          // ✅ USAR SELLER_COMMISSION (já tem 8% descontado) ou calcular 92% do amount
+          let netAmount = order.earning_amount;
+          
+          // Se não tem seller_commission, aplicar desconto de 8%
+          if (!order.seller_commission || parseFloat(order.seller_commission) === 0) {
+            netAmount = netAmount * 0.92;
+          }
           
           // ✅ VERIFICAR SE JÁ TEM BALANCE_TRANSACTION (fonte de verdade)
           const hasTransaction = releasedOrderIds.has(order.order_id);
@@ -335,22 +341,22 @@ export default function Financial() {
           if (hasTransaction) {
             // ✅ Tem transação = já foi liberada
             releasedCount++;
-            totalReleased += amount;
+            totalReleased += netAmount;
             
             if (releasedCount <= 5) {
-              console.error(`🟢 LIBERADA (tem transação): ${order.order_id} - ${amount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()}`);
+              console.error(`🟢 LIBERADA (tem transação): ${order.order_id} - ${netAmount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()}`);
             }
           } else {
             // ❌ Sem transação = ainda está pendente
-            pendingBalance += amount;
+            pendingBalance += netAmount;
             pendingCount++;
             pendingOrdersData.push({
               date: releaseDate,
-              amount: amount
+              amount: netAmount
             });
             
             if (pendingCount <= 5) {
-              console.error(`🟡 PENDENTE (sem transação): ${order.order_id} - ${amount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()} - libera em ${releaseDate.toLocaleDateString()}`);
+              console.error(`🟡 PENDENTE (sem transação): ${order.order_id} - ${netAmount.toLocaleString()} KZ - criada em ${orderDate.toLocaleDateString()} - libera em ${releaseDate.toLocaleDateString()}`);
             }
           }
         });
