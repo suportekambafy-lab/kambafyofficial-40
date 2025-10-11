@@ -373,10 +373,48 @@ export function useSellerNotifications() {
     if (user) {
       loadNotifications();
       
-      // Configurar atualização automática a cada 5 minutos
-      const interval = setInterval(loadNotifications, 5 * 60 * 1000);
+      // ✅ WebSocket: Escutar mudanças em tempo real nas tabelas relevantes
+      console.log('🔔 [Seller Notifications] Conectando ao realtime...');
       
-      return () => clearInterval(interval);
+      const ordersChannel = supabase
+        .channel(`seller_orders_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            console.log('🔔 [Seller Notifications] Nova venda detectada');
+            loadNotifications();
+          }
+        )
+        .subscribe();
+
+      const withdrawalsChannel = supabase
+        .channel(`seller_withdrawals_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'withdrawal_requests',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            console.log('🔔 [Seller Notifications] Mudança em saque detectada');
+            loadNotifications();
+          }
+        )
+        .subscribe();
+      
+      return () => {
+        console.log('🔔 [Seller Notifications] Desconectando...');
+        supabase.removeChannel(ordersChannel);
+        supabase.removeChannel(withdrawalsChannel);
+      };
     }
   }, [user]);
 

@@ -63,11 +63,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
       checkNotifications();
       loadRecentSales();
       
-      // Real-time updates for notifications
-      const interval = setInterval(() => {
-        loadRecentSales();
-        loadDashboardData();
-      }, 30000);
+      // ✅ WebSocket já configurado abaixo, removendo polling desnecessário
 
       // Set up real-time subscription for new orders
       const channel = supabase
@@ -89,7 +85,6 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
         .subscribe();
       
       return () => {
-        clearInterval(interval);
         supabase.removeChannel(channel);
       };
     }

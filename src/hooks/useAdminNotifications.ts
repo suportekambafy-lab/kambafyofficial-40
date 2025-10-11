@@ -132,10 +132,31 @@ export function useAdminNotifications() {
   useEffect(() => {
     loadNotifications();
     
-    // Configurar atualização automática a cada 2 minutos para admin
-    const interval = setInterval(loadNotifications, 2 * 60 * 1000);
+    // ✅ WebSocket: Escutar mudanças em tempo real
+    console.log('🔔 [Admin Notifications] Conectando ao realtime...');
     
-    return () => clearInterval(interval);
+    const channel = supabase
+      .channel('admin_notifications_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'admin_notifications'
+        },
+        (payload) => {
+          console.log('🔔 [Admin Notifications] Mudança detectada:', payload);
+          loadNotifications();
+        }
+      )
+      .subscribe((status) => {
+        console.log('🔔 [Admin Notifications] Status da conexão:', status);
+      });
+    
+    return () => {
+      console.log('🔔 [Admin Notifications] Desconectando...');
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {

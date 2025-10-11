@@ -180,9 +180,33 @@ export function SellerSidebar() {
   useEffect(() => {
     if (user) {
       loadTotalSales();
-      // Update every 30 seconds
-      const interval = setInterval(loadTotalSales, 30000);
-      return () => clearInterval(interval);
+      
+      // ✅ WebSocket: Escutar mudanças em tempo real
+      console.log('📦 [Seller Sidebar] Conectando ao realtime...');
+      
+      const channel = supabase
+        .channel(`orders_seller_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('📦 [Seller Sidebar] Nova venda detectada:', payload);
+            loadTotalSales();
+          }
+        )
+        .subscribe((status) => {
+          console.log('📦 [Seller Sidebar] Status da conexão:', status);
+        });
+      
+      return () => {
+        console.log('📦 [Seller Sidebar] Desconectando...');
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 

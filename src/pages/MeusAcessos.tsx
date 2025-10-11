@@ -106,12 +106,32 @@ export default function MeusAcessos() {
     if (user) {
       fetchAccesses();
       
-      // Configurar atualização automática dos dados
-      const interval = setInterval(() => {
-        fetchAccesses();
-      }, 60000); // Atualizar a cada 1 minuto
+      // ✅ WebSocket: Escutar mudanças em tempo real
+      console.log('🔑 [Meus Acessos] Conectando ao realtime...');
       
-      return () => clearInterval(interval);
+      const channel = supabase
+        .channel(`customer_access_${user.email}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'customer_access',
+            filter: `customer_email=eq.${user.email}`
+          },
+          (payload) => {
+            console.log('🔑 [Meus Acessos] Mudança detectada:', payload);
+            fetchAccesses();
+          }
+        )
+        .subscribe((status) => {
+          console.log('🔑 [Meus Acessos] Status da conexão:', status);
+        });
+      
+      return () => {
+        console.log('🔑 [Meus Acessos] Desconectando...');
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
