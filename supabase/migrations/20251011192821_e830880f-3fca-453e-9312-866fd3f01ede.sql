@@ -1,0 +1,66 @@
+-- ============================================
+-- CORREÇÃO: IGNORAR PLATFORM_FEE NO SALDO
+-- Apenas sale_revenue (92%) afeta o saldo disponível
+-- platform_fee mantido apenas como registro contábil
+-- ============================================
+
+-- 1. Atualizar sync_customer_balance para IGNORAR platform_fee
+CREATE OR REPLACE FUNCTION public.sync_customer_balance()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  current_balance NUMERIC;
+BEGIN
+  -- ✅ ATUALIZAR SALDO APENAS PARA TIPOS QUE AFETAM O SALDO REAL
+  -- IGNORAR platform_fee (apenas registro contábil)
+  
+  IF NEW.user_id IS NOT NULL AND NEW.type != 'platform_fee' THEN
+    SELECT balance INTO current_balance
+    FROM public.customer_balances
+    WHERE user_id = NEW.user_id;
+    
+    IF current_balance IS NULL THEN
+      INSERT INTO public.customer_balances (user_id, balance, currency)
+      VALUES (NEW.user_id, NEW.amount, NEW.currency);
+    ELSE
+      UPDATE public.customer_balances
+      SET 
+        balance = balance + NEW.amount,
+        updated_at = now()
+      WHERE user_id = NEW.user_id;
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$;
+
+-- 2. Recalcular TODOS os saldos ignorando platform_fee
+DO $$
+DECLARE
+  user_record RECORD;
+  correct_balance NUMERIC;
+BEGIN
+  FOR user_record IN 
+    SELECT DISTINCT user_id 
+    FROM balance_transactions 
+    WHERE user_id IS NOT NULL
+  LOOP
+    -- Calcular saldo correto (ignorando platform_fee)
+    SELECT COALESCE(SUM(amount), 0) INTO correct_balance
+    FROM balance_transactions
+    WHERE user_id = user_record.user_id
+      AND type != 'platform_fee';  -- ✅ Ignorar taxas
+    
+    -- Atualizar saldo
+    INSERT INTO customer_balances (user_id, balance, currency)
+    VALUES (user_record.user_id, correct_balance, 'KZ')
+    ON CONFLICT (user_id) DO UPDATE
+    SET balance = correct_balance, updated_at = NOW();
+  END LOOP;
+  
+  RAISE NOTICE 'Saldos recalculados ignorando platform_fee para % usuários', (SELECT COUNT(DISTINCT user_id) FROM balance_transactions WHERE user_id IS NOT NULL);
+END $$;
