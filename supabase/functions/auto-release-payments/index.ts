@@ -27,8 +27,29 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  logStep("🚀 Iniciando processo de liberação automática de pagamentos");
-
+  // ============================================
+  // ⚠️ FUNÇÃO DESABILITADA - CRÉDITO IMEDIATO
+  // ============================================
+  // Esta função foi desabilitada porque o sistema agora
+  // credita o saldo IMEDIATAMENTE após a venda, sem período de espera.
+  // Mantida apenas para histórico.
+  
+  logStep("⚠️ Função desabilitada - crédito imediato implementado");
+  
+  return new Response(
+    JSON.stringify({
+      success: true,
+      message: 'Função desabilitada - crédito imediato implementado',
+      disabled_at: new Date().toISOString()
+    }),
+    { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
+    }
+  );
+  
+  /* CÓDIGO ORIGINAL COMENTADO:
+  
   try {
     // Criar cliente Supabase com service role key para operações administrativas
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -389,4 +410,6 @@ serve(async (req) => {
       status: 500,
     });
   }
+  
+  FIM DO CÓDIGO ORIGINAL COMENTADO */
 });
