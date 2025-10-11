@@ -13,7 +13,7 @@ import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, Ch
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
-import { countTotalSales } from '@/utils/orderUtils';
+import { countTotalSales, countOrderItems } from '@/utils/orderUtils';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
 import { useKambaLevels } from '@/hooks/useKambaLevels';
@@ -703,11 +703,16 @@ export function AppHome() {
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
+      // ✅ Contar ITEMS (incluindo order bumps) igual à web
+      const totalItems = allOrders.reduce((sum, order) => sum + countOrderItems(order), 0);
+
       console.log('📊 Histórico de Vendas carregado:', {
         ownOrders: ownOrders.length,
         affiliateOrders: affiliateOrders.length,
         moduleOrders: moduleOrders.length,
-        total: allOrders.length
+        totalOrders: allOrders.length,
+        totalItems: totalItems,
+        nota: 'totalItems conta order principal + order bumps'
       });
 
       setOrders(allOrders);
