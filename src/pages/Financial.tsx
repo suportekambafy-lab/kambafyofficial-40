@@ -321,7 +321,7 @@ export default function Financial() {
 
   return (
     <OptimizedPageWrapper>
-      <div className="space-y-6 p-4 md:p-6 lg:p-8">
+      <div className="space-y-6 p-4 md:p-6 lg:p-8 max-w-full overflow-x-hidden">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Financeiro</h1>
@@ -419,8 +419,8 @@ export default function Financial() {
                 <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/20">
                   <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
-                <div>
-                  <div className="text-3xl font-bold">
+                <div className="flex-1 min-w-0">
+                  <div className="text-2xl sm:text-3xl font-bold break-words">
                     {showValues.available ? formatCurrency(financialData.availableBalance) : '••••••'}
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -459,8 +459,8 @@ export default function Financial() {
                 <div className="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/20">
                   <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
-                <div>
-                  <div className="text-3xl font-bold">
+                <div className="flex-1 min-w-0">
+                  <div className="text-2xl sm:text-3xl font-bold break-words">
                     {showValues.pending ? formatCurrency(financialData.pendingBalance) : '••••••'}
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -498,8 +498,8 @@ export default function Financial() {
                 <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20">
                   <CheckCircle className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div>
-                  <div className="text-3xl font-bold">
+                <div className="flex-1 min-w-0">
+                  <div className="text-2xl sm:text-3xl font-bold break-words">
                     {showValues.withdrawn ? formatCurrency(financialData.withdrawnAmount) : '••••••'}
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -526,7 +526,8 @@ export default function Financial() {
                 <p className="text-sm sm:text-base">Nenhum saque solicitado ainda</p>
               </div>
             ) : (
-              <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="overflow-x-auto">
+                <div className="min-w-[320px]">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -555,6 +556,7 @@ export default function Financial() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </div>
             )}
           </CardContent>
