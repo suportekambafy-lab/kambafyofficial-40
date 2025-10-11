@@ -106,16 +106,21 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      // Usar função do banco com SECURITY DEFINER para obter estatísticas
-      const { data: dashboardStatsArray, error: statsError } = await supabase
-        .rpc('get_admin_dashboard_stats');
+      // Buscar todas as withdrawal_requests usando a função admin
+      const { data: allWithdrawals, error: withdrawalsError } = await supabase
+        .rpc('get_all_withdrawal_requests_for_admin');
 
-      if (statsError) {
-        console.error('Error loading dashboard stats:', statsError);
-        throw statsError;
+      if (withdrawalsError) {
+        console.error('Error loading withdrawals:', withdrawalsError);
       }
 
-      const dashboardStats = dashboardStatsArray?.[0];
+      // Contar saques pendentes
+      const pendingWithdrawals = allWithdrawals?.filter(w => w.status === 'pendente').length || 0;
+      
+      // Calcular total pago
+      const totalPaidOut = allWithdrawals
+        ?.filter(w => w.status === 'aprovado')
+        .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
       // Dados por país
       const { data: profilesData } = await supabase
@@ -152,6 +157,15 @@ export default function AdminDashboard() {
 
       setUsersByCountry(formattedCountryStats);
 
+      // Buscar estatísticas básicas
+      const [usersRes, productsRes, ordersRes] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('products').select('*', { count: 'exact', head: true }),
+        supabase.from('orders').select('*', { count: 'exact', head: true })
+          .eq('status', 'completed')
+          .neq('payment_method', 'member_access')
+      ]);
+
       // Métricas financeiras
       const { data: allOrders } = await supabase
         .from('orders')
@@ -170,11 +184,11 @@ export default function AdminDashboard() {
       });
 
       setStats({
-        total_users: Number(dashboardStats?.total_users) || 0,
-        total_products: Number(dashboardStats?.total_products) || 0,
-        total_transactions: Number(dashboardStats?.total_transactions) || 0,
-        pending_withdrawals: Number(dashboardStats?.pending_withdrawals) || 0,
-        total_paid_out: Number(dashboardStats?.total_paid_out) || 0
+        total_users: usersRes.count || 0,
+        total_products: productsRes.count || 0,
+        total_transactions: ordersRes.count || 0,
+        pending_withdrawals: pendingWithdrawals,
+        total_paid_out: totalPaidOut
       });
     } catch (error) {
       console.error('Error loading admin stats:', error);
