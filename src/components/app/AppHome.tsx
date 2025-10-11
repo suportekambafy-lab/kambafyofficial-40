@@ -341,23 +341,23 @@ export function AppHome() {
       // ✅ SEGUNDO: Buscar vendas COM FILTROS (produtos próprios + afiliados + módulos)
       let ownOrdersQuery = supabase
         .from('orders')
-        .select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id, order_bump_data')
+        .select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id, order_bump_data, status')
         .in('product_id', productIds)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'pending', 'failed', 'cancelled'])
         .neq('payment_method', 'member_access');
 
       let affiliateOrdersQuery = supabase
         .from('orders')
-        .select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data')
+        .select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data, status')
         .in('affiliate_code', affiliateCodes)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'pending', 'failed', 'cancelled'])
         .neq('payment_method', 'member_access');
 
       let modulePaymentsQuery = supabase
         .from('module_payments')
-        .select('amount, currency, created_at, payment_method, order_id, member_area_id')
+        .select('amount, currency, created_at, payment_method, order_id, member_area_id, status')
         .in('member_area_id', memberAreaIds)
-        .eq('status', 'completed');
+        .in('status', ['completed', 'pending', 'failed', 'cancelled']);
 
       // Aplicar filtros de tempo em todas as queries
       if (timeFilter === 'today') {
@@ -561,6 +561,7 @@ export function AppHome() {
         .from('orders')
         .select('*, products(name, cover)')
         .in('product_id', productIds)
+        .in('status', ['completed', 'pending', 'failed', 'cancelled'])
         .order('created_at', { ascending: false });
 
       // Query para module_payments
@@ -568,6 +569,7 @@ export function AppHome() {
         .from('module_payments')
         .select('*, modules(title, cover_image_url)')
         .in('member_area_id', memberAreaIds)
+        .in('status', ['completed', 'pending', 'failed', 'cancelled'])
         .order('created_at', { ascending: false });
 
       // Aplicar filtro de status em ambas queries
