@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Download, Filter, ShoppingCart, DollarSign, TrendingUp, Eye, CheckCircle } from 'lucide-react';
+import { Search, Download, Filter, ShoppingCart, DollarSign, TrendingUp, Eye, CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
 import {
   Select,
@@ -81,6 +81,7 @@ const formatCurrency = (amount: number, currencyCode: string) => {
 
 export default function AdminSales() {
   const { admin } = useAdminAuth();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,20 +99,39 @@ export default function AdminSales() {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          products (
-            name
-          )
-        `)
-        .order('created_at', { ascending: false });
+      // Buscar todas as vendas (SEM LIMITE)
+      let allOrders: any[] = [];
+      let offset = 0;
+      const limit = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            products (
+              name
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + limit - 1);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allOrders = [...allOrders, ...data];
+          offset += limit;
+          hasMore = data.length === limit;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      console.log(`✅ Admin Sales: Carregadas ${allOrders.length} vendas totais`);
       
       // Obter IDs únicos de usuários/vendedores
-      const userIds = [...new Set(data?.map(order => order.user_id).filter(Boolean))];
+      const userIds = [...new Set(allOrders.map(order => order.user_id).filter(Boolean))];
       
       // Buscar profiles dos vendedores
       const { data: profiles } = await supabase
@@ -123,14 +143,25 @@ export default function AdminSales() {
       const profilesMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
       
       // Adicionar informação do vendedor a cada pedido
-      const ordersWithSeller = data?.map(order => ({
+      const ordersWithSeller = allOrders.map(order => ({
         ...order,
         seller: order.user_id ? { full_name: profilesMap.get(order.user_id) || 'N/A' } : null
-      })) || [];
+      }));
       
       setOrders(ordersWithSeller);
+      
+      console.log(`📊 Estatísticas:`, {
+        total: ordersWithSeller.length,
+        completed: ordersWithSeller.filter(o => o.status === 'completed').length,
+        pending: ordersWithSeller.filter(o => o.status === 'pending').length,
+      });
     } catch (error) {
       console.error('Erro ao carregar vendas:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar as vendas.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -299,13 +330,22 @@ export default function AdminSales() {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <div className="mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/admin')}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar ao Dashboard
+          </Button>
           <div className="flex items-center gap-3 mb-2">
             <div className="h-12 w-12 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
               <ShoppingCart className="text-white h-6 w-6" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Vendas da Plataforma</h1>
-              <p className="text-sm text-gray-600">Todas as transações realizadas</p>
+              <p className="text-sm text-gray-600">Todas as transações realizadas - {orders.length} vendas</p>
             </div>
           </div>
         </div>
