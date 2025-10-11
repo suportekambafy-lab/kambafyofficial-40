@@ -322,29 +322,31 @@ export default function Financial() {
   return (
     <OptimizedPageWrapper>
       <div className="space-y-6 p-4 md:p-6 lg:p-8">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Financeiro</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-2xl sm:text-3xl font-bold">Financeiro</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
               Gerencie seus ganhos e saques
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <Button
               variant="outline"
               onClick={() => loadFinancialData()}
               className="flex items-center gap-2"
+              size="sm"
             >
               <RefreshCw className="h-4 w-4" />
-              Atualizar
+              <span className="hidden sm:inline">Atualizar</span>
             </Button>
             <Button
               variant="outline"
               onClick={handleGenerateReport}
               className="flex items-center gap-2"
+              size="sm"
             >
               <Download className="h-4 w-4" />
-              Relatório
+              <span className="hidden sm:inline">Relatório</span>
             </Button>
           </div>
         </div>
@@ -397,7 +399,7 @@ export default function Financial() {
         )}
 
         {/* Cards de Saldo */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {/* Saldo Disponível */}
           <HighlightedCard>
             <HighlightedCardHeader>
@@ -515,43 +517,45 @@ export default function Financial() {
         {/* Histórico de Saques */}
         <Card>
           <CardHeader>
-            <CardTitle>Histórico de Saques</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Histórico de Saques</CardTitle>
           </CardHeader>
           <CardContent>
             {withdrawalRequests.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <PiggyBank className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>Nenhum saque solicitado ainda</p>
+                <p className="text-sm sm:text-base">Nenhum saque solicitado ainda</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Atualizado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {withdrawalRequests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell>
-                        {new Date(request.created_at).toLocaleDateString('pt-PT')}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {formatCurrency(request.amount)}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(request.status)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(request.updated_at).toLocaleDateString('pt-PT')}
-                      </TableCell>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs sm:text-sm">Data</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Valor</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                      <TableHead className="hidden sm:table-cell text-xs sm:text-sm">Atualizado</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {withdrawalRequests.map((request) => (
+                      <TableRow key={request.id}>
+                        <TableCell className="text-xs sm:text-sm">
+                          {new Date(request.created_at).toLocaleDateString('pt-PT')}
+                        </TableCell>
+                        <TableCell className="font-medium text-xs sm:text-sm">
+                          {formatCurrency(request.amount)}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(request.status)}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
+                          {new Date(request.updated_at).toLocaleDateString('pt-PT')}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
