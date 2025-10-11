@@ -323,9 +323,56 @@ serve(async (req) => {
     // Determinar status do pedido baseado na resposta v2.0
     let orderStatus = 'pending';
     
-    // Para AppyPay, referências são sempre 'pending' inicialmente
-    // Mesmo que successful=true, se status='Pending', é uma referência que precisa ser paga depois
-    if (chargeResult.responseStatus?.status === 'Success') {
+    // Para AppyPay Express, adicionar validação extra
+    if (paymentMethod === 'express' && chargeResult.responseStatus?.status === 'Success') {
+      logStep('Validação adicional para Express - aguardando 2 segundos...', {
+        transactionId: chargeResult.id
+      });
+      
+      // Aguardar 2 segundos para AppyPay processar
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      try {
+        // Verificar status atualizado da transação
+        const verifyResponse = await fetch(
+          `${APPYPAY_API_BASE_URL}/v2.0/transactions/${chargeResult.id}`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        if (verifyResponse.ok) {
+          const verifyResult = await verifyResponse.json();
+          
+          logStep('Verificação adicional do Express', {
+            status: verifyResult.responseStatus?.status,
+            successful: verifyResult.responseStatus?.successful
+          });
+          
+          if (verifyResult.responseStatus?.status === 'Success') {
+            orderStatus = 'completed';
+          } else if (verifyResult.responseStatus?.status === 'Failed') {
+            orderStatus = 'failed';
+          } else {
+            orderStatus = 'pending'; // Ainda em processamento
+          }
+        } else {
+          logStep('Erro na verificação adicional, usando status inicial', {
+            status: chargeResult.responseStatus?.status
+          });
+          orderStatus = 'completed'; // Fallback para status inicial
+        }
+      } catch (verifyError) {
+        console.error('Erro na verificação adicional:', verifyError);
+        orderStatus = 'completed'; // Fallback para status inicial
+      }
+    }
+    // Para referências e outros casos
+    else if (chargeResult.responseStatus?.status === 'Success') {
       orderStatus = 'completed';
     } else if (chargeResult.responseStatus?.status === 'Pending') {
       orderStatus = 'pending'; // Referências são pagas posteriormente

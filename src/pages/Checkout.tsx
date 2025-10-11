@@ -1717,7 +1717,7 @@ const Checkout = () => {
               }).catch(err => console.error('Error sending Facebook conversion:', err));
               
               // Redirecionar normalmente (toast já está visível)
-              params.append('express_confirmed', 'true');
+              // Validação será feita na página de sucesso
               console.log('🚀 Redirect URL:', `/obrigado?${params.toString()}`);
               navigate(`/obrigado?${params.toString()}`);
             } else if (pollAttempts >= maxPollAttempts) {

@@ -38,14 +38,12 @@ const ThankYou = () => {
     setTheme('light');
   }, [setTheme]);
   const orderDetails = useMemo(() => {
-    const expressConfirmed = searchParams.get('express_confirmed') === 'true';
     const urlStatus = searchParams.get('status') || 'pending';
     
-    // Se veio de Express confirmado, forçar status completed
-    const finalStatus = expressConfirmed ? 'completed' : urlStatus;
+    // Não confiar mais em URL parameters, validação será feita via check-order-status
+    const finalStatus = urlStatus;
     
     console.log('🔍 ThankYou URL Params:', {
-      expressConfirmed,
       urlStatus,
       finalStatus,
       allParams: Object.fromEntries(searchParams.entries())
@@ -65,7 +63,6 @@ const ThankYou = () => {
       paymentMethod: searchParams.get('payment_method') || '',
       paymentIntentId: searchParams.get('payment_intent_id') || '',
       status: finalStatus,
-      expressConfirmed,
       baseProductPrice: searchParams.get('base_product_price') || searchParams.get('amount') || '0',
       // Order Bump data
       orderBumpName: searchParams.get('order_bump_name') || '',
@@ -94,12 +91,6 @@ const ThankYou = () => {
 
   // Função para verificar o status do pedido no banco de dados
   const checkOrderStatus = useCallback(async () => {
-    // Se for Express confirmado, não fazer polling - já sabemos que está completed
-    if (orderDetails.expressConfirmed) {
-      console.log('⏭️ Skipping order status check - Express payment already confirmed');
-      return;
-    }
-    
     const orderId = orderDetails.orderId;
     if (!orderId) return;
     
@@ -127,7 +118,7 @@ const ThankYou = () => {
     } catch (error) {
       console.error('❌ Erro na verificação do status:', error);
     }
-  }, [orderDetails.orderId, orderDetails.expressConfirmed, orderStatus]);
+  }, [orderDetails.orderId, orderStatus]);
 
   // Verificar se chegamos de uma página de upsell
   useEffect(() => {
@@ -144,16 +135,10 @@ const ThankYou = () => {
     const loadProduct = async () => {
       console.log('🔍 ThankYou: ==> CARREGANDO PRODUTO <==');
       console.log('📋 Detalhes do pedido:', orderDetails);
-      console.log('🎯 Express Confirmed:', orderDetails.expressConfirmed);
       console.log('📊 Final Status:', orderDetails.status);
 
-      // Definir status inicial - se for Express confirmado, já é completed
-      if (orderDetails.expressConfirmed) {
-        console.log('✅ EXPRESS PAYMENT CONFIRMED - Status is COMPLETED');
-        setOrderStatus('completed');
-      } else {
-        setOrderStatus(orderDetails.status);
-      }
+      // Definir status inicial baseado nos parâmetros da URL
+      setOrderStatus(orderDetails.status);
 
       // Se não temos customer_name nos parâmetros, buscar do banco usando order_id
       if (orderDetails.customerName === 'Cliente' && orderDetails.orderId) {
