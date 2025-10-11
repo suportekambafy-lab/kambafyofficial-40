@@ -2846,7 +2846,7 @@ export type Database = {
         Returns: undefined
       }
       admin_has_permission: {
-        Args: { _admin_email: string; _permission: string }
+        Args: { admin_email: string; required_permission: string }
         Returns: boolean
       }
       admin_process_transfer_request: {
