@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { PiggyBank, AlertCircle } from "lucide-react";
@@ -26,14 +26,35 @@ export function WithdrawalModal({
   const { useBalance } = useCustomerBalance();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [withdrawalAmount, setWithdrawalAmount] = useState<string>("");
 
   // ✅ Saldo disponível já tem 8% descontado (seller_commission)
-  // O vendedor receberá exatamente este valor quando o saque for aprovado
-  const withdrawalValue = availableBalance;
+  // O vendedor receberá exatamente este valor escolhido quando o saque for aprovado
+
+  // Limpar input quando o modal fechar
+  useEffect(() => {
+    if (!open) {
+      setWithdrawalAmount("");
+      setError("");
+    }
+  }, [open]);
 
   const handleSubmit = async () => {
     if (!user) {
       setError("Usuário não autenticado");
+      return;
+    }
+
+    // Validar valor escolhido
+    const amount = parseFloat(withdrawalAmount);
+    
+    if (!withdrawalAmount || isNaN(amount) || amount <= 0) {
+      setError("Digite um valor válido para saque");
+      return;
+    }
+
+    if (amount > availableBalance) {
+      setError(`Valor máximo disponível: ${availableBalance.toLocaleString()} KZ`);
       return;
     }
 
@@ -58,13 +79,6 @@ export function WithdrawalModal({
 
     if (identityError || !identity || identity.status !== 'aprovado') {
       setError("Para solicitar um saque, você precisa ter sua identidade verificada e aprovada. Acesse as configurações para enviar seus documentos.");
-      return;
-    }
-
-    const amount = availableBalance;
-    
-    if (!amount || amount <= 0) {
-      setError("Não há saldo disponível para saque");
       return;
     }
 
@@ -138,15 +152,58 @@ export function WithdrawalModal({
         
         <div className="space-y-4 p-4">
           <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
-            <p className="text-sm text-muted-foreground mb-1">Saldo Disponível para Saque</p>
-            <p className="text-3xl font-bold text-primary mb-3">
+            <p className="text-sm text-muted-foreground mb-1">Saldo Disponível</p>
+            <p className="text-2xl font-bold text-primary mb-3">
               {availableBalance.toLocaleString()} KZ
             </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Este é o valor líquido que você receberá após aprovação
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="withdrawal-amount" className="text-sm font-medium">
+              Valor a Sacar (KZ)
+            </label>
+            <input
+              id="withdrawal-amount"
+              type="number"
+              min="0"
+              max={availableBalance}
+              step="0.01"
+              value={withdrawalAmount}
+              onChange={(e) => {
+                setWithdrawalAmount(e.target.value);
+                setError("");
+              }}
+              placeholder={`Máximo: ${availableBalance.toLocaleString()} KZ`}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={loading}
+            />
+            
+            {/* Botões de atalho para valores */}
+            <div className="flex gap-2 flex-wrap">
+              {[25, 50, 75, 100].map((percentage) => (
+                <Button
+                  key={percentage}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const value = (availableBalance * percentage) / 100;
+                    setWithdrawalAmount(value.toFixed(2));
+                    setError("");
+                  }}
+                  disabled={loading}
+                  className="text-xs"
+                >
+                  {percentage}%
+                </Button>
+              ))}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Digite o valor que deseja sacar (será descontado do seu saldo disponível)
             </p>
             {error && (
-              <div className="flex items-center gap-2 text-sm text-red-600 mt-2">
+              <div className="flex items-center gap-2 text-sm text-red-600">
                 <AlertCircle className="h-4 w-4" />
                 {error}
               </div>
@@ -171,7 +228,7 @@ export function WithdrawalModal({
             <Button 
               onClick={handleSubmit} 
               className="flex-1"
-              disabled={loading || availableBalance === 0}
+              disabled={loading || availableBalance === 0 || !withdrawalAmount || parseFloat(withdrawalAmount) <= 0}
             >
               {loading ? "Processando..." : "Solicitar Saque"}
             </Button>
