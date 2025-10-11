@@ -724,7 +724,57 @@ const handler = async (req: Request): Promise<Response> => {
           `;
         }
 
-        // Send the customer email
+        // ✅ CREATE KAMBAFY ACCOUNT FOR EVERY PURCHASE
+        console.log('=== CREATING KAMBAFY ACCOUNT ===');
+        let isNewAccount = false;
+        let temporaryPassword = '';
+        
+        try {
+          // Check if user already exists
+          const { data: listResponse, error: listError } = await supabase.auth.admin.listUsers();
+          
+          if (listError) {
+            console.error('❌ Error listing users:', listError);
+          } else {
+            const existingUser = listResponse.users.find(user => user.email?.toLowerCase() === normalizedEmail);
+            
+            if (!existingUser) {
+              // Generate temporary password
+              const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+              temporaryPassword = '';
+              for (let i = 0; i < 10; i++) {
+                temporaryPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+              }
+              
+              console.log('👤 Creating new Kambafy account for:', normalizedEmail);
+              
+              // Create new user with temporary password
+              const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+                email: normalizedEmail,
+                password: temporaryPassword,
+                email_confirm: true,
+                user_metadata: {
+                  full_name: customerName
+                }
+              });
+
+              if (createError) {
+                console.error('❌ Error creating Kambafy account:', createError);
+              } else {
+                console.log('✅ Kambafy account created successfully');
+                isNewAccount = true;
+              }
+            } else {
+              console.log('ℹ️ User already has a Kambafy account');
+              isNewAccount = false;
+            }
+          }
+        } catch (accountError) {
+          console.error('❌ Error in account creation process:', accountError);
+        }
+
+        console.log('Account creation result:', { isNewAccount, hasPassword: !!temporaryPassword });
+
         const { data: emailResponse, error: emailError } = await resend.emails.send({
           from: "Kambafy <noreply@kambafy.com>",
           to: [normalizedEmail],
@@ -818,6 +868,29 @@ const handler = async (req: Request): Promise<Response> => {
                 </p>
               </div>
 
+              ${sellerProfile ? `
+              <!-- Seller Info -->
+              <div style="padding: 30px; border-top: 1px solid #e2e8f0;">
+                <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações do Vendedor</h3>
+                <p style="margin: 0 0 15px; color: #475569; font-size: 14px;">
+                  <strong>Vendedor:</strong> ${sellerProfile.full_name}
+                </p>
+                <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #3b82f6;">
+                  <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
+                    <strong>📧 Contato do Vendedor:</strong><br>
+                    <a href="mailto:${sellerProfile.email}" style="color: #3b82f6; text-decoration: none;">${sellerProfile.email}</a>
+                  </p>
+                  <p style="margin: 0; color: #475569; font-size: 14px;">
+                    <strong>🏢 Suporte Kambafy:</strong><br>
+                    <a href="mailto:suporte@kambafy.com" style="color: #3b82f6; text-decoration: none;">suporte@kambafy.com</a>
+                  </p>
+                </div>
+                <p style="margin: 15px 0 0; color: #64748b; font-size: 13px; font-style: italic;">
+                  💡 Para dúvidas sobre o produto, contacte o vendedor. Para questões técnicas da plataforma, contacte o suporte Kambafy.
+                </p>
+              </div>
+              ` : ''}
+
               <!-- Footer -->
               <div style="text-align: center; padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
                 <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #1e293b;">KAMBAFY</h3>
@@ -831,18 +904,19 @@ const handler = async (req: Request): Promise<Response> => {
           </html>
           `;
 
+          console.log('📧 Sending panel access email to:', normalizedEmail);
           const { error: panelEmailError } = await resend.emails.send({
             from: "Kambafy <noreply@kambafy.com>",
             to: [normalizedEmail],
             subject: `🔑 Acesso ao Painel Kambafy - ${customerName}`,
             html: panelAccessEmailHtml,
           });
-
+          
           if (panelEmailError) {
-            console.error('Error sending panel access email:', panelEmailError);
-            // Não lançar erro aqui para não bloquear o fluxo principal
+            console.error('❌ Error sending panel access email:', panelEmailError);
+            console.error('❌ Panel email error details:', JSON.stringify(panelEmailError, null, 2));
           } else {
-            console.log('Panel access email sent successfully');
+            console.log('✅ Panel access email sent successfully');
           }
         }
 
@@ -875,19 +949,24 @@ const handler = async (req: Request): Promise<Response> => {
               .single();
             
             if (!memberAreaError && memberArea) {
-              const mainMemberAreaUrl = `https://kambafy.com/members/login/${memberAreaId}`;
+              const mainMemberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
               
-              // Generate temporary password for main product access
-              function generateTemporaryPassword(): string {
+              // Use the same temporary password that was created for Kambafy account
+              const passwordToUse = isNewAccount && temporaryPassword ? temporaryPassword : (() => {
+                // If no password was created (existing user), generate one for member area
                 const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-                let password = '';
+                let pass = '';
                 for (let i = 0; i < 10; i++) {
-                  password += chars.charAt(Math.floor(Math.random() * chars.length));
+                  pass += chars.charAt(Math.floor(Math.random() * chars.length));
                 }
-                return password;
-              }
+                return pass;
+              })();
               
-              const mainTemporaryPassword = generateTemporaryPassword();
+              console.log('📧 Using password for member area:', { 
+                isNewAccount, 
+                hasPassword: !!temporaryPassword,
+                willUseSamePassword: isNewAccount && !!temporaryPassword
+              });
               
               // Send member access email for main product
               const mainMemberAccessPayload = {
@@ -896,20 +975,24 @@ const handler = async (req: Request): Promise<Response> => {
                 memberAreaName: memberArea.name,
                 memberAreaUrl: mainMemberAreaUrl,
                 sellerName: sellerProfile?.full_name || 'Kambafy',
-                isNewAccount: !!isNewAccount,
-                temporaryPassword: mainTemporaryPassword
+                isNewAccount: isNewAccount,
+                temporaryPassword: passwordToUse
               };
               
-              console.log('Sending main product member access email:', mainMemberAccessPayload);
+              console.log('📧 Sending main product member access email with payload:', {
+                ...mainMemberAccessPayload,
+                temporaryPassword: '***'
+              });
               
-              const { error: mainAccessEmailError } = await supabase.functions.invoke('send-member-access-email', {
+              const { data: memberAccessData, error: mainAccessEmailError } = await supabase.functions.invoke('send-member-access-email', {
                 body: mainMemberAccessPayload
               });
               
               if (mainAccessEmailError) {
-                console.error('Error sending main product access email:', mainAccessEmailError);
+                console.error('❌ Error sending main product access email:', mainAccessEmailError);
+                console.error('❌ Error details:', JSON.stringify(mainAccessEmailError, null, 2));
               } else {
-                console.log('✅ Main product access email sent successfully');
+                console.log('✅ Main product access email sent successfully:', memberAccessData);
               }
             }
           } catch (mainAccessError) {
