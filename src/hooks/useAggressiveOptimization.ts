@@ -12,7 +12,7 @@ export const useAggressiveOptimization = () => {
     const clearOldCache = () => {
       const keys = Object.keys(sessionStorage);
       const now = Date.now();
-      const maxAge = 10 * 60 * 1000; // 10 minutos
+      const maxAge = 60 * 60 * 1000; // 60 minutos - cache mais duradouro
 
       keys.forEach(key => {
         if (key.startsWith('cache_') || key.startsWith('preload_') || key.startsWith('aggressive_')) {
@@ -59,7 +59,7 @@ export const useAggressiveOptimization = () => {
           }
         }, 100));
       },
-      get: (key: string, maxAge = 60000) => { // 60 segundos default (aumentado)
+      get: (key: string, maxAge = 30 * 60 * 1000) => { // 30 minutos default
         try {
           const cached = sessionStorage.getItem(`aggressive_${key}`);
           if (!cached) return null;

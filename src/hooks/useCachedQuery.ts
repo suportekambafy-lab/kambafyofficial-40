@@ -17,10 +17,8 @@ interface CachedQueryOptions {
 
 const cache = new Map<string, CacheEntry<any>>();
 
-// Versão da aplicação para cache busting
-const APP_VERSION = import.meta.env.MODE === 'development' 
-  ? `dev-${Date.now()}` 
-  : `v${new Date().getTime()}`;
+// Versão da aplicação para cache busting (estática)
+const APP_VERSION = '1.1.0'; // Mantém cache estável entre reloads
 
 // Detectar mudanças de versão e limpar cache
 const CACHE_VERSION_KEY = 'kambafy_cache_version';
@@ -36,8 +34,8 @@ export function useCachedQuery<T>(
   options: CachedQueryOptions = {}
 ) {
   const {
-    staleTime = 5 * 60 * 1000, // 5 minutos - valores mais conservadores
-    cacheTime = 10 * 60 * 1000, // 10 minutos
+    staleTime = 30 * 60 * 1000, // 30 minutos - cache mais duradouro
+    cacheTime = 60 * 60 * 1000, // 60 minutos - mantém dados por 1 hora
     enabled = true,
     version = APP_VERSION
   } = options;
@@ -169,8 +167,8 @@ export function useCachedQuery<T>(
     
     const handleFocus = () => {
       const now = Date.now();
-      // Throttle: só revalidar se passou mais de 60 segundos para evitar spam
-      if (now - lastVisibilityChange < 60000) return;
+      // Throttle: só revalidar se passou mais de 5 minutos para evitar spam
+      if (now - lastVisibilityChange < 5 * 60 * 1000) return;
       
       const cached = getCachedData();
       if (cached && isStale) {
