@@ -272,7 +272,7 @@ export function AppHome() {
             .from('orders')
             .select('amount, seller_commission, currency, created_at, payment_method, order_id, order_bump_data')
             .in('product_id', productIds)
-            .eq('status', 'completed')
+            .in('status', ['completed', 'pending', 'failed', 'cancelled'])
             .neq('payment_method', 'member_access')
             .order('created_at', { ascending: true })
         : Promise.resolve({ data: [] });
@@ -282,7 +282,7 @@ export function AppHome() {
             .from('orders')
             .select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data')
             .in('affiliate_code', affiliateCodes)
-            .eq('status', 'completed')
+            .in('status', ['completed', 'pending', 'failed', 'cancelled'])
             .neq('payment_method', 'member_access')
             .order('created_at', { ascending: true })
         : Promise.resolve({ data: [] });
@@ -292,7 +292,7 @@ export function AppHome() {
             .from('module_payments')
             .select('amount, currency, created_at, payment_method, order_id')
             .in('member_area_id', memberAreaIds)
-            .eq('status', 'completed')
+            .in('status', ['completed', 'pending', 'failed', 'cancelled'])
             .order('created_at', { ascending: true })
         : Promise.resolve({ data: [] });
 
@@ -343,21 +343,21 @@ export function AppHome() {
         .from('orders')
         .select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id, order_bump_data')
         .in('product_id', productIds)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'pending', 'failed', 'cancelled'])
         .neq('payment_method', 'member_access');
 
       let affiliateOrdersQuery = supabase
         .from('orders')
         .select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data')
         .in('affiliate_code', affiliateCodes)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'pending', 'failed', 'cancelled'])
         .neq('payment_method', 'member_access');
 
       let modulePaymentsQuery = supabase
         .from('module_payments')
         .select('amount, currency, created_at, payment_method, order_id, member_area_id')
         .in('member_area_id', memberAreaIds)
-        .eq('status', 'completed');
+        .in('status', ['completed', 'pending', 'failed', 'cancelled']);
 
       // Aplicar filtros de tempo em todas as queries
       if (timeFilter === 'today') {
