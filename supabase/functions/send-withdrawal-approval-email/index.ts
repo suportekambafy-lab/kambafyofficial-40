@@ -296,10 +296,6 @@ const handler = async (req: Request): Promise<Response> => {
                 <span class="info-label">Data da Solicitação:</span>
                 <span class="info-value">${new Date(withdrawalData.created_at).toLocaleDateString('pt-BR')}</span>
               </div>
-              <div class="info-row">
-                <span class="info-label">Aprovado por:</span>
-                <span class="info-value">${adminName}</span>
-              </div>
               ${notes ? `<div class="info-row"><span class="info-label">Observações:</span><span class="info-value">${notes}</span></div>` : ''}
             </div>
             
