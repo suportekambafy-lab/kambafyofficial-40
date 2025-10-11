@@ -205,9 +205,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const sellerEmail = profileData.email;
     const sellerName = profileData.full_name || 'Vendedor';
-    const grossAmount = withdrawalData.amount; // Valor bruto (antes da taxa)
-    const feeAmount = grossAmount * 0.08; // 8% de taxa da plataforma
-    const netAmount = grossAmount * 0.92; // Valor líquido que o vendedor recebe
+    const withdrawalAmount = withdrawalData.amount; // Valor líquido já com desconto aplicado
     const iban = profileData.iban;
     const accountHolder = profileData.account_holder;
 
@@ -234,7 +232,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Preparar conteúdo do email
-    const emailSubject = '✅ Saque Aprovado - Kambafy';
+    const emailSubject = 'Saque Aprovado - Kambafy';
     
     const emailHTML = `
       <!DOCTYPE html>
@@ -244,67 +242,82 @@ const handler = async (req: Request): Promise<Response> => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Saque Aprovado</title>
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
-          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
-          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-          .content { padding: 30px; }
-          .highlight { background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; }
-          .amount { font-size: 2em; font-weight: bold; color: #28a745; text-align: center; margin: 20px 0; }
-          .details { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 0.9em; color: #666; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
+          .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; }
+          .header { background-color: #ffffff; padding: 32px 32px 24px; border-bottom: 1px solid #e5e7eb; }
+          .header h1 { margin: 0 0 8px; font-size: 24px; color: #1f2937; font-weight: 600; }
+          .header p { margin: 0; color: #6b7280; font-size: 14px; }
+          .content { padding: 32px; }
+          .content p { margin: 0 0 16px; color: #374151; }
+          .amount-box { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 24px; margin: 24px 0; text-align: center; }
+          .amount-box .label { font-size: 14px; color: #6b7280; margin-bottom: 8px; }
+          .amount-box .value { font-size: 32px; font-weight: 700; color: #059669; }
+          .info-box { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 20px; margin: 20px 0; }
+          .info-box h3 { margin: 0 0 16px; font-size: 16px; color: #1f2937; font-weight: 600; }
+          .info-row { margin-bottom: 12px; }
+          .info-row:last-child { margin-bottom: 0; }
+          .info-label { display: inline-block; color: #6b7280; font-size: 14px; min-width: 140px; }
+          .info-value { color: #1f2937; font-size: 14px; font-weight: 500; }
+          .steps { margin: 20px 0; }
+          .steps ul { margin: 8px 0; padding-left: 20px; }
+          .steps li { margin-bottom: 8px; color: #374151; font-size: 14px; }
+          .footer { background-color: #f9fafb; padding: 24px 32px; text-align: center; border-top: 1px solid #e5e7eb; border-radius: 0 0 8px 8px; }
+          .footer p { margin: 4px 0; font-size: 13px; color: #6b7280; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>🎉 Saque Aprovado!</h1>
+            <h1>Saque Aprovado</h1>
             <p>Sua solicitação foi processada com sucesso</p>
           </div>
           
           <div class="content">
             <p>Olá <strong>${sellerName}</strong>,</p>
             
-            <p>Temos uma excelente notícia! Sua solicitação de saque foi <strong>aprovada</strong> e será processada em breve.</p>
+            <p>Sua solicitação de saque foi aprovada e será processada em breve.</p>
             
-            <div class="highlight">
-              <h3>💰 Valores do Saque:</h3>
-              <div class="details">
-                <p><strong>Valor Solicitado:</strong> ${Number(grossAmount).toLocaleString('pt-AO')} KZ</p>
-                <p><strong>Taxa da Plataforma (8%):</strong> - ${Number(feeAmount).toLocaleString('pt-AO')} KZ</p>
-                <hr style="margin: 10px 0; border: 1px solid #ddd;">
-                <p style="font-size: 1.3em; color: #28a745;"><strong>💵 Valor a Receber:</strong> ${Number(netAmount).toLocaleString('pt-AO')} KZ</p>
-              </div>
+            <div class="amount-box">
+              <div class="label">Valor a Receber</div>
+              <div class="value">${Number(withdrawalAmount).toLocaleString('pt-AO')} KZ</div>
             </div>
             
-            <div class="highlight">
-              <h3>📋 Detalhes da Conta:</h3>
-              <div class="details">
-                <p><strong>💳 Conta Destino:</strong> ${iban || 'Não informado'}</p>
-                <p><strong>👤 Titular:</strong> ${accountHolder || sellerName}</p>
-                <p><strong>📅 Data da Solicitação:</strong> ${new Date(withdrawalData.created_at).toLocaleDateString('pt-BR')}</p>
-                <p><strong>✅ Aprovado por:</strong> ${adminName}</p>
-                ${notes ? `<p><strong>📝 Observações:</strong> ${notes}</p>` : ''}
+            <div class="info-box">
+              <h3>Detalhes da Transferência</h3>
+              <div class="info-row">
+                <span class="info-label">Conta Destino:</span>
+                <span class="info-value">${iban || 'Não informado'}</span>
               </div>
+              <div class="info-row">
+                <span class="info-label">Titular:</span>
+                <span class="info-value">${accountHolder || sellerName}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Data da Solicitação:</span>
+                <span class="info-value">${new Date(withdrawalData.created_at).toLocaleDateString('pt-BR')}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Aprovado por:</span>
+                <span class="info-value">${adminName}</span>
+              </div>
+              ${notes ? `<div class="info-row"><span class="info-label">Observações:</span><span class="info-value">${notes}</span></div>` : ''}
             </div>
             
-            <div class="highlight">
-              <h3>⏰ Próximos Passos:</h3>
+            <div class="steps">
+              <h3 style="font-size: 16px; color: #1f2937; font-weight: 600; margin: 0 0 12px;">Próximos Passos</h3>
               <ul>
-                <li>✅ Saque aprovado e em processamento</li>
-                <li>🏦 Transferência será realizada em até 2 dias úteis</li>
-                <li>📧 Você receberá uma confirmação quando o pagamento for efetuado</li>
-                <li>💼 Continue vendendo para gerar mais receita!</li>
+                <li>A transferência será realizada em até 2 dias úteis</li>
+                <li>Você receberá uma confirmação quando o pagamento for efetuado</li>
+                <li>Em caso de dúvidas, entre em contato com nosso suporte</li>
               </ul>
             </div>
             
-            <p><strong>Parabéns pelo seu sucesso!</strong> Continue assim e gere ainda mais vendas na nossa plataforma.</p>
-            
-            <p>Se tiver alguma dúvida, não hesite em entrar em contato conosco.</p>
+            <p>Parabéns pelo seu sucesso na plataforma!</p>
           </div>
           
           <div class="footer">
-            <p><strong>Kambafy</strong> - Plataforma de Vendas Digitais</p>
-            <p>📧 suporte@kambafy.com | 🌐 kambafy.com</p>
+            <p><strong>Kambafy</strong></p>
+            <p>suporte@kambafy.com</p>
           </div>
         </div>
       </body>
