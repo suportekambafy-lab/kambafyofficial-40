@@ -30,6 +30,7 @@ import { useAppState } from '@/hooks/useAppState';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
 import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
+import { useSalesCache } from '@/hooks/useSalesCache';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -85,6 +86,11 @@ export function AppHome() {
   const [totalRevenueUnfiltered, setTotalRevenueUnfiltered] = useState(0); // Para a meta Kamba
   const [orders, setOrders] = useState<any[]>([]);
   const [salesStatusFilter, setSalesStatusFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>('all');
+  
+  // ✅ Cache de vendas (declarado após salesStatusFilter)
+  const { cachedSales, hasCachedData, saveSalesToCache } = user?.id 
+    ? useSalesCache(user.id, salesStatusFilter)
+    : { cachedSales: null, hasCachedData: false, saveSalesToCache: () => {} };
   
   // Sistema de conquistas Kamba - metas dinâmicas (baseado no total sem filtros)
   const { currentLevel, nextLevel, progress: kambaProgress } = useKambaLevels(totalRevenueUnfiltered);
@@ -541,33 +547,45 @@ export function AppHome() {
   const loadSalesHistory = async () => {
     if (!user) return;
     
+    // ✅ Verificar cache e mostrar imediatamente se disponível
+    if (hasCachedData && cachedSales) {
+      console.log('⚡ Carregando vendas do CACHE (instantâneo)');
+      setOrders(cachedSales);
+      setLoadingSalesHistory(false);
+      
+      // Refetch em background para atualizar
+      setTimeout(() => fetchSalesFromDatabase(), 100);
+      return;
+    }
+    
     setLoadingSalesHistory(true);
+    await fetchSalesFromDatabase();
+  };
+
+  const fetchSalesFromDatabase = async () => {
+    if (!user) return;
 
     try {
-      // ✅ 1. Buscar produtos do usuário
-      const { data: products } = await supabase
-        .from('products')
-        .select('id')
-        .eq('user_id', user.id);
+      // ✅ QUERIES PARALELAS - Buscar products, affiliate codes e member areas simultaneamente
+      const [productsResult, affiliateCodesResult, memberAreasResult] = await Promise.all([
+        supabase
+          .from('products')
+          .select('id')
+          .eq('user_id', user.id),
+        supabase
+          .from('affiliates')
+          .select('affiliate_code')
+          .eq('affiliate_user_id', user.id)
+          .eq('status', 'ativo'),
+        supabase
+          .from('member_areas')
+          .select('id')
+          .eq('user_id', user.id)
+      ]);
 
-      const productIds = products?.map(p => p.id) || [];
-
-      // ✅ 2. Buscar códigos de afiliado (igual à web) - STATUS CORRETO: 'ativo'
-      const { data: userAffiliateCodes } = await supabase
-        .from('affiliates')
-        .select('affiliate_code')
-        .eq('affiliate_user_id', user.id)
-        .eq('status', 'ativo');
-
-      const affiliateCodes = userAffiliateCodes?.map(a => a.affiliate_code).filter(Boolean) || [];
-
-      // ✅ 3. Buscar member_areas do usuário
-      const { data: memberAreas } = await supabase
-        .from('member_areas')
-        .select('id')
-        .eq('user_id', user.id);
-
-      const memberAreaIds = memberAreas?.map(ma => ma.id) || [];
+      const productIds = productsResult.data?.map(p => p.id) || [];
+      const affiliateCodes = affiliateCodesResult.data?.map(a => a.affiliate_code).filter(Boolean) || [];
+      const memberAreaIds = memberAreasResult.data?.map(ma => ma.id) || [];
 
       console.log('📊 [AppHome] IDs encontrados:', {
         products: productIds.length,
@@ -576,22 +594,23 @@ export function AppHome() {
         salesStatusFilter
       });
 
-      // ✅ BUSCAR TODAS AS VENDAS (sem limite de 1000) - igual à web
-      console.log('🔄 Buscando TODAS as vendas em batches...');
+      // ✅ BUSCAR TODAS AS VENDAS PARALELAMENTE
+      console.log('🔄 Buscando TODAS as vendas em paralelo...');
       
-      // Buscar orders próprias em batches
-      let allOwnOrders: any[] = [];
-      if (productIds.length > 0) {
+      const statusesToFetch = salesStatusFilter === 'all' 
+        ? ['completed', 'pending', 'failed', 'cancelled']
+        : salesStatusFilter === 'cancelled'
+        ? ['cancelled', 'canceled', 'failed']
+        : [salesStatusFilter];
+
+      // ✅ FETCH PARALELO: Buscar own orders, affiliate orders e module payments simultaneamente
+      const fetchOwnOrders = async () => {
+        if (productIds.length === 0) return [];
+        
+        let allOrders: any[] = [];
         let offset = 0;
         const batchSize = 1000;
         let hasMore = true;
-        
-        // Status a buscar (considerar filtro)
-        const statusesToFetch = salesStatusFilter === 'all' 
-          ? ['completed', 'pending', 'failed', 'cancelled']
-          : salesStatusFilter === 'cancelled'
-          ? ['cancelled', 'canceled', 'failed']
-          : [salesStatusFilter];
         
         while (hasMore) {
           const { data, error } = await supabase
@@ -602,33 +621,23 @@ export function AppHome() {
             .order('created_at', { ascending: false })
             .range(offset, offset + batchSize - 1);
           
-          if (error) {
-            console.error('Error loading own orders batch:', error);
-            break;
-          }
+          if (error || !data || data.length === 0) break;
           
-          if (!data || data.length === 0) break;
-          
-          allOwnOrders.push(...data);
+          allOrders.push(...data);
           hasMore = data.length === batchSize;
           offset += batchSize;
-          
-          console.log(`📦 Batch carregado: ${data.length} orders | Total: ${allOwnOrders.length}`);
         }
-      }
+        
+        return allOrders;
+      };
 
-      // Buscar vendas como afiliado em batches
-      let allAffiliateOrders: any[] = [];
-      if (affiliateCodes.length > 0) {
+      const fetchAffiliateOrders = async () => {
+        if (affiliateCodes.length === 0) return [];
+        
+        let allOrders: any[] = [];
         let offset = 0;
         const batchSize = 1000;
         let hasMore = true;
-        
-        const statusesToFetch = salesStatusFilter === 'all' 
-          ? ['completed', 'pending', 'failed', 'cancelled']
-          : salesStatusFilter === 'cancelled'
-          ? ['cancelled', 'canceled', 'failed']
-          : [salesStatusFilter];
         
         while (hasMore) {
           const { data, error } = await supabase
@@ -639,35 +648,39 @@ export function AppHome() {
             .order('created_at', { ascending: false })
             .range(offset, offset + batchSize - 1);
           
-          if (error) {
-            console.error('Error loading affiliate orders batch:', error);
-            break;
-          }
+          if (error || !data || data.length === 0) break;
           
-          if (!data || data.length === 0) break;
-          
-          allAffiliateOrders.push(...data);
+          allOrders.push(...data);
           hasMore = data.length === batchSize;
           offset += batchSize;
         }
-      }
+        
+        return allOrders;
+      };
 
-      // Buscar module_payments (geralmente não passa de 1000)
-      const modulePaymentsResult = memberAreaIds.length > 0
-        ? await supabase
-            .from('module_payments')
-            .select('*, modules(title, cover_image_url)')
-            .in('member_area_id', memberAreaIds)
-            .in('status', salesStatusFilter === 'all' 
-              ? ['completed', 'pending', 'failed', 'cancelled']
-              : salesStatusFilter === 'cancelled'
-              ? ['cancelled', 'canceled', 'failed']
-              : [salesStatusFilter])
-            .order('created_at', { ascending: false })
-        : { data: [], error: null };
+      const fetchModulePayments = async () => {
+        if (memberAreaIds.length === 0) return [];
+        
+        const { data, error } = await supabase
+          .from('module_payments')
+          .select('*, modules(title, cover_image_url)')
+          .in('member_area_id', memberAreaIds)
+          .in('status', statusesToFetch)
+          .order('created_at', { ascending: false });
+        
+        return data || [];
+      };
+
+      // ✅ Executar todas as queries em paralelo
+      const [allOwnOrders, allAffiliateOrders, modulePayments] = await Promise.all([
+        fetchOwnOrders(),
+        fetchAffiliateOrders(),
+        fetchModulePayments()
+      ]);
 
       const ownOrdersResult = { data: allOwnOrders, error: null };
       const affiliateOrdersResult = { data: allAffiliateOrders, error: null };
+      const modulePaymentsResult = { data: modulePayments, error: null };
       
       if (ownOrdersResult.error) {
         console.error('Error loading own orders:', ownOrdersResult.error);
@@ -737,6 +750,9 @@ export function AppHome() {
       });
 
       setOrders(allOrders);
+      
+      // ✅ Salvar no cache para próxima visita
+      saveSalesToCache(allOrders);
     } catch (error) {
       console.error('Error loading sales history:', error);
       setOrders([]);
