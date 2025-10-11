@@ -178,24 +178,23 @@ const App = () => {
                         <Route path="/minhas-compras" element={<OptimizedRoutes.MeusAcessos />} />
                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                         
-                        {/* Member Area Routes - Unified Authentication System */}
+                        {/* Member Area Routes - SISTEMAS SEPARADOS */}
                             
-                            {/* ⚡ HUB GERAL - Área unificada com TODOS os cursos do aluno */}
+                            {/* ⚡ HUB GERAL - Sistema unificado (acesso a TODOS os cursos) */}
                             <Route path="/members/hub" element={<OptimizedRoutes.UnifiedMembersLogin />} />
                             <Route path="/members/hub/dashboard" element={<OptimizedRoutes.UnifiedMembersHub />} />
                             
-                            {/* 🎓 ÁREAS ESPECÍFICAS - Área individual de cada vendedor (com ID) */}
-                            {/* TODAS as rotas de áreas específicas usam o sistema unificado */}
-                            <Route path="/members/login/:id" element={<OptimizedRoutes.UnifiedMembersLogin />} />
+                            {/* 🎓 ÁREAS ESPECÍFICAS - Sistema individual (login simples por email) */}
+                            <Route path="/members/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
                             <Route path="/members/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
                             
                             {/* Rotas para subdomínio membros.kambafy.com (sem prefixo /members) */}
-                            {/* HUB GERAL */}
+                            {/* HUB GERAL - Sistema unificado */}
                             <Route path="/hub" element={<OptimizedRoutes.UnifiedMembersLogin />} />
                             <Route path="/hub/dashboard" element={<OptimizedRoutes.UnifiedMembersHub />} />
                             
-                            {/* ÁREAS ESPECÍFICAS - Login e área usam sistema unificado */}
-                            <Route path="/login/:id" element={<OptimizedRoutes.UnifiedMembersLogin />} />
+                            {/* ÁREAS ESPECÍFICAS - Sistema individual (NUNCA redireciona para hub) */}
+                            <Route path="/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
                             <Route path="/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
                         <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                         <Route path="/app" element={<OptimizedRoutes.AppMobile />} />
