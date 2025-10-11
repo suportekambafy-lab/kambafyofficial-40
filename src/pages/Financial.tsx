@@ -296,7 +296,7 @@ export default function Financial() {
                   <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
                     Complete a verificação de identidade para solicitar saques.
                   </p>
-                  <Link to="/settings?tab=verification">
+                  <Link to="/identidade">
                     <Button variant="outline" size="sm" className="mt-3">
                       Verificar Agora
                     </Button>
