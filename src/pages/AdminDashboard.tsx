@@ -454,7 +454,10 @@ export default function AdminDashboard() {
 
         {/* Withdrawals Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-500">
+          <Card 
+            className="border-0 shadow-md hover:shadow-xl transition-all duration-500 cursor-pointer hover:scale-[1.02]"
+            onClick={() => setDrawerOpen(true)}
+          >
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -477,12 +480,15 @@ export default function AdminDashboard() {
                 {stats?.pending_withdrawals || 0}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Solicitações aguardando processamento
+                Clique para gerenciar solicitações
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-500">
+          <Card 
+            className="border-0 shadow-md hover:shadow-xl transition-all duration-500 cursor-pointer hover:scale-[1.02]"
+            onClick={() => setDrawerOpen(true)}
+          >
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -502,7 +508,7 @@ export default function AdminDashboard() {
                 }) || 'KZ 0'}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Valor total repassado aos vendedores
+                Clique para ver histórico completo
               </p>
             </CardContent>
           </Card>
