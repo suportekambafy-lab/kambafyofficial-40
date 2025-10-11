@@ -262,7 +262,7 @@ export function AppHome() {
       const ownOrdersMetaPromise = productIds.length > 0 
         ? supabase
             .from('orders')
-            .select('amount, seller_commission, currency, created_at, payment_method, order_id')
+            .select('amount, seller_commission, currency, created_at, payment_method, order_id, order_bump_data')
             .in('product_id', productIds)
             .eq('status', 'completed')
             .neq('payment_method', 'member_access')
@@ -272,7 +272,7 @@ export function AppHome() {
       const affiliateOrdersMetaPromise = affiliateCodes.length > 0
         ? supabase
             .from('orders')
-            .select('amount, affiliate_commission, currency, created_at, payment_method, order_id')
+            .select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data')
             .in('affiliate_code', affiliateCodes)
             .eq('status', 'completed')
             .neq('payment_method', 'member_access')
@@ -322,14 +322,14 @@ export function AppHome() {
       // ✅ SEGUNDO: Buscar vendas COM FILTROS (produtos próprios + afiliados)
       let ownOrdersQuery = supabase
         .from('orders')
-        .select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id')
+        .select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id, order_bump_data')
         .in('product_id', productIds)
         .eq('status', 'completed')
         .neq('payment_method', 'member_access');
 
       let affiliateOrdersQuery = supabase
         .from('orders')
-        .select('amount, affiliate_commission, currency, created_at, payment_method, order_id')
+        .select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data')
         .in('affiliate_code', affiliateCodes)
         .eq('status', 'completed')
         .neq('payment_method', 'member_access');
