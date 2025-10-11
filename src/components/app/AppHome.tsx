@@ -1205,7 +1205,12 @@ export function AppHome() {
                     }
                   };
 
-                  const status = statusConfig[order.status as keyof typeof statusConfig] || statusConfig.pending;
+                  // Normalizar status para suportar variações de cancelamento
+                  const normalizedStatus = order.status === 'canceled' || order.status === 'failed' 
+                    ? 'cancelled' 
+                    : order.status;
+                  
+                  const status = statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.pending;
 
                   return (
                     <Card key={order.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
