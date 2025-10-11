@@ -521,12 +521,12 @@ export function AppHome() {
       const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
 
       // ✅ CALCULAR SALDO PENDENTE baseado em balance_transactions (igual ao Financial.tsx)
-      // Buscar transações de crédito de vendas (sale_revenue)
+      // Buscar transações de crédito de vendas (credit = sistema antigo, sale_revenue = sistema novo)
       const { data: balanceTransactions } = await supabase
         .from('balance_transactions')
         .select('order_id')
         .eq('user_id', user.id)
-        .eq('type', 'sale_revenue');
+        .in('type', ['credit', 'sale_revenue']);
 
       console.log('🔍 [AppHome] Transações encontradas:', balanceTransactions?.length || 0);
 

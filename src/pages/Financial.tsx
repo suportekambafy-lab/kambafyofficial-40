@@ -204,12 +204,12 @@ export default function Financial() {
         .order('created_at', { ascending: false });
 
       // ✅ Buscar TODAS balance_transactions de crédito do usuário
-      // Isso nos diz quais vendas já foram liberadas
+      // Isso nos diz quais vendas já foram liberadas (credit = sistema antigo, sale_revenue = sistema novo)
       const { data: balanceTransactions, error: transactionsError } = await supabase
         .from('balance_transactions')
         .select('order_id, amount, type, created_at')
         .eq('user_id', user.id)
-        .eq('type', 'credit');
+        .in('type', ['credit', 'sale_revenue']);
 
       if (transactionsError) {
         console.error('Error loading balance transactions:', transactionsError);
