@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ export default function UnifiedMembersLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const { login, memberAreas } = useUnifiedMembersAuth();
   const navigate = useNavigate();
+  const { id: memberAreaId } = useParams(); // Captura ID da URL se for login de área específica
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,11 +32,19 @@ export default function UnifiedMembersLogin() {
             ? window.location.origin 
             : 'https://membros.kambafy.com';
             
-          if (memberAreas.length === 1) {
-            // Se tiver apenas 1 curso, redirecionar direto
+          // PRIORIDADE 1: Se veio de URL específica (/login/:id), redirecionar para essa área
+          if (memberAreaId) {
+            console.log('🎯 Redirecionando para área específica:', memberAreaId);
+            window.location.href = `${baseUrl}/area/${memberAreaId}`;
+          } 
+          // PRIORIDADE 2: Se tiver apenas 1 curso, redirecionar direto
+          else if (memberAreas.length === 1) {
+            console.log('📚 Redirecionando para única área:', memberAreas[0].memberAreaId);
             window.location.href = `${baseUrl}/area/${memberAreas[0].memberAreaId}`;
-          } else {
-            // Se tiver múltiplos, ir para dashboard do hub
+          } 
+          // PRIORIDADE 3: Se tiver múltiplos, ir para dashboard do hub
+          else {
+            console.log('🏠 Redirecionando para hub com múltiplas áreas');
             window.location.href = `${baseUrl}/hub/dashboard`;
           }
         }, 500);
