@@ -540,8 +540,14 @@ export function AppHome() {
 
       // Aplicar filtro de status em ambas queries
       if (salesStatusFilter !== 'all') {
-        ordersQuery = ordersQuery.eq('status', salesStatusFilter);
-        modulePaymentsQuery = modulePaymentsQuery.eq('status', salesStatusFilter);
+        // Suportar ambos os formatos: 'cancelled' e 'canceled'
+        if (salesStatusFilter === 'cancelled') {
+          ordersQuery = ordersQuery.or('status.eq.cancelled,status.eq.canceled,status.eq.failed');
+          modulePaymentsQuery = modulePaymentsQuery.or('status.eq.cancelled,status.eq.canceled,status.eq.failed');
+        } else {
+          ordersQuery = ordersQuery.eq('status', salesStatusFilter);
+          modulePaymentsQuery = modulePaymentsQuery.eq('status', salesStatusFilter);
+        }
       }
 
       const [ordersResult, modulePaymentsResult] = await Promise.all([
