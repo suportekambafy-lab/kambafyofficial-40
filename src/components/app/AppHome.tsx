@@ -338,26 +338,26 @@ export function AppHome() {
         totalRevenue: totalRevenueForMeta
       });
 
-      // ✅ SEGUNDO: Buscar vendas COM FILTROS (produtos próprios + afiliados + módulos)
+      // ✅ SEGUNDO: Buscar vendas COM FILTROS (produtos próprios + afiliados + módulos) - APENAS COMPLETED
       let ownOrdersQuery = supabase
         .from('orders')
-        .select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id, order_bump_data, status')
+        .select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id, order_bump_data')
         .in('product_id', productIds)
-        .in('status', ['completed', 'pending', 'failed', 'cancelled'])
+        .eq('status', 'completed')
         .neq('payment_method', 'member_access');
 
       let affiliateOrdersQuery = supabase
         .from('orders')
-        .select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data, status')
+        .select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data')
         .in('affiliate_code', affiliateCodes)
-        .in('status', ['completed', 'pending', 'failed', 'cancelled'])
+        .eq('status', 'completed')
         .neq('payment_method', 'member_access');
 
       let modulePaymentsQuery = supabase
         .from('module_payments')
-        .select('amount, currency, created_at, payment_method, order_id, member_area_id, status')
+        .select('amount, currency, created_at, payment_method, order_id, member_area_id')
         .in('member_area_id', memberAreaIds)
-        .in('status', ['completed', 'pending', 'failed', 'cancelled']);
+        .eq('status', 'completed');
 
       // Aplicar filtros de tempo em todas as queries
       if (timeFilter === 'today') {
