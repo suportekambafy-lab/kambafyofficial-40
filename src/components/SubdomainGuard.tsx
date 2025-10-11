@@ -146,10 +146,11 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     }
     
     // Define quais rotas são RESTRITAS de cada subdomínio (não permitidas)
-    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/login/', '/area/', '/hub']; 
-    const restrictedFromApp = ['/checkout', '/obrigado', '/admin', '/area/', '/login/', '/hub']; 
-    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/area/', '/login/', '/hub']; 
-    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/minhas-compras', '/area/', '/login/', '/hub'];
+    // NOTA: /login/:id e /area/:id são tratadas separadamente (linhas 109-146 e 200-228)
+    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/hub']; 
+    const restrictedFromApp = ['/checkout', '/obrigado', '/admin', '/hub']; 
+    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/hub']; 
+    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/minhas-compras', '/hub'];
     
     // Verifica se a rota atual é restrita do subdomínio atual
     let shouldRedirect = false;
@@ -175,7 +176,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         shouldRedirect = true;
         if (currentPath.startsWith('/admin')) {
           targetSubdomain = 'admin';
-        } else if (currentPath.startsWith('/login/') || currentPath.startsWith('/area/') || currentPath.startsWith('/hub')) {
+        } else if (currentPath.startsWith('/hub')) {
           targetSubdomain = 'membros';
         } else {
           targetSubdomain = 'app';
@@ -193,7 +194,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
           targetSubdomain = 'admin';
         } else if (currentPath.startsWith('/checkout') || currentPath.startsWith('/obrigado')) {
           targetSubdomain = 'pay';
-        } else if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/') || currentPath.startsWith('/hub')) {
+        } else if (currentPath.startsWith('/hub')) {
           targetSubdomain = 'membros';
         }
       }
@@ -233,7 +234,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         if (restrictedFromPay.some(route => currentPath.startsWith(route))) {
           if (currentPath.startsWith('/admin')) {
             targetSubdomain = 'admin';
-          } else if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/') || currentPath.startsWith('/hub')) {
+          } else if (currentPath.startsWith('/hub')) {
             targetSubdomain = 'membros';
           } else if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || 
               currentPath.startsWith('/apps') || currentPath.startsWith('/minhas-compras')) {
