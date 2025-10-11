@@ -215,12 +215,18 @@ export default function Financial() {
         console.error('Error loading balance transactions:', transactionsError);
       }
 
+      console.log('🔍 [FINANCIAL] Total de transações encontradas:', balanceTransactions?.length);
+      console.log('🔍 [FINANCIAL] Tipos de transações:', balanceTransactions?.map(t => t.type));
+
       // Criar set de order_ids que já têm transação de crédito (já foram liberados)
       const releasedOrderIds = new Set(
         (balanceTransactions || []).map(t => t.order_id).filter(Boolean)
       );
 
-      console.error(`🔥 TRANSAÇÕES DE CRÉDITO ENCONTRADAS: ${releasedOrderIds.size} vendas já liberadas`);
+      console.log('🔥 [FINANCIAL] TRANSAÇÕES ENCONTRADAS:', {
+        total: releasedOrderIds.size,
+        orderIds: Array.from(releasedOrderIds).slice(0, 5)
+      });
 
       // Buscar vendas como afiliado (TODAS) se houver códigos
       let affiliateOrders: any[] = [];
@@ -309,14 +315,24 @@ export default function Financial() {
         // O saldo já reflete os débitos de saques pendentes via trigger
         const finalAvailableBalance = Math.max(0, currentBalance);
 
-        // ✅ CALCULAR SALDO PENDENTE usando balance_transactions como fonte de verdade
-        const now = new Date();
-        let pendingBalance = 0;
-        const pendingOrdersData: Array<{date: Date, amount: number}> = [];
+      // ✅ CALCULAR SALDO PENDENTE usando balance_transactions como fonte de verdade
+      const now = new Date();
+      let pendingBalance = 0;
+      const pendingOrdersData: Array<{date: Date, amount: number}> = [];
 
-        console.error(`🔥 CALCULANDO SALDO PENDENTE para ${allOrders.length} vendas`);
-        console.error(`🔥 Vendas com transação de crédito (liberadas): ${releasedOrderIds.size}`);
-        console.error(`🔥 Saldo disponível atual (customer_balances): ${currentBalance.toLocaleString()} KZ`);
+      console.log('🔥 [FINANCIAL] CALCULANDO SALDO PENDENTE para', allOrders.length, 'vendas');
+      console.log('🔥 [FINANCIAL] Vendas com transação (liberadas):', releasedOrderIds.size);
+      console.log('🔥 [FINANCIAL] Saldo disponível (balance):', currentBalance.toLocaleString(), 'KZ');
+      
+      // Debug: mostrar primeiros 10 order_ids de vendas vs transações
+      console.log('🔥 [FINANCIAL] Order IDs das vendas:', allOrders.slice(0, 10).map(o => o.order_id));
+      console.log('🔥 [FINANCIAL] Order IDs das transações:', Array.from(releasedOrderIds).slice(0, 10));
+
+      console.error(`🔥 CALCULANDO SALDO PENDENTE para ${allOrders.length} vendas`);
+      console.error(`🔥 Vendas com transação de crédito (liberadas): ${releasedOrderIds.size}`);
+      console.error(`🔥 Saldo disponível atual (customer_balances): ${currentBalance.toLocaleString()} KZ`);
+      console.error(`🔥 Order IDs das vendas:`, allOrders.slice(0, 10).map(o => o.order_id));
+      console.error(`🔥 Order IDs das transações:`, Array.from(releasedOrderIds).slice(0, 10));
 
         let releasedCount = 0;
         let pendingCount = 0;

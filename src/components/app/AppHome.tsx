@@ -529,6 +529,7 @@ export function AppHome() {
         .in('type', ['credit', 'sale_revenue']);
 
       console.log('🔍 [AppHome] Transações encontradas:', balanceTransactions?.length || 0);
+      console.log('🔍 [AppHome] Order IDs das transações:', balanceTransactions?.map(t => t.order_id).slice(0, 10));
 
       const releasedOrderIds = new Set(
         (balanceTransactions || [])

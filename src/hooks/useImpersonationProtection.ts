@@ -35,56 +35,69 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
       if (impersonationData) {
         try {
           const data = JSON.parse(impersonationData);
-          setSession(data);
           
           // Calcular tempo restante
           const expiresAt = new Date(data.expiresAt).getTime();
           const now = Date.now();
           const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
-          setTimeRemaining(remaining);
 
           // Se expirou, limpar sessão
           if (remaining <= 0) {
             handleSessionExpired();
+            return null;
           }
+          
+          return { data, remaining };
         } catch (error) {
           console.error('Erro ao parsear dados de impersonation:', error);
           localStorage.removeItem('impersonation_data');
+          return null;
         }
       }
+      return null;
     };
 
-    checkSession();
+    const sessionCheck = checkSession();
+    if (sessionCheck) {
+      setSession(sessionCheck.data);
+      setTimeRemaining(sessionCheck.remaining);
+    }
 
     // Atualizar contador a cada segundo
     const interval = setInterval(() => {
-      if (session) {
-        const expiresAt = new Date(session.expiresAt).getTime();
-        const now = Date.now();
-        const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
-        setTimeRemaining(remaining);
+      const currentData = localStorage.getItem('impersonation_data');
+      if (currentData) {
+        try {
+          const data = JSON.parse(currentData);
+          const expiresAt = new Date(data.expiresAt).getTime();
+          const now = Date.now();
+          const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
+          setTimeRemaining(remaining);
 
-        // Avisos de tempo
-        if (remaining === 300) { // 5 minutos
-          toast({
-            title: '⏰ Sessão de Impersonation',
-            description: 'Restam 5 minutos antes da sessão expirar',
-            variant: 'default'
-          });
-        } else if (remaining === 60) { // 1 minuto
-          toast({
-            title: '⚠️ Sessão Expirando',
-            description: 'Restam 60 segundos antes da sessão expirar',
-            variant: 'destructive'
-          });
-        } else if (remaining === 0) {
-          handleSessionExpired();
+          // Avisos de tempo
+          if (remaining === 300) { // 5 minutos
+            toast({
+              title: '⏰ Sessão de Impersonation',
+              description: 'Restam 5 minutos antes da sessão expirar',
+              variant: 'default'
+            });
+          } else if (remaining === 60) { // 1 minuto
+            toast({
+              title: '⚠️ Sessão Expirando',
+              description: 'Restam 60 segundos antes da sessão expirar',
+              variant: 'destructive'
+            });
+          } else if (remaining === 0) {
+            handleSessionExpired();
+          }
+        } catch (error) {
+          console.error('Erro ao atualizar contador:', error);
         }
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [session]);
+  }, []); // ✅ Sem dependências para evitar loop infinito
 
   const handleSessionExpired = async () => {
     toast({
