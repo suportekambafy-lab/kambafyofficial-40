@@ -101,61 +101,11 @@ serve(async (req) => {
       if (productError) {
         console.error('Error fetching product:', productError);
       } else {
-        // 1. PROCESSAR COMISSÕES E SALDO
-        console.log('💵 Processing commissions and balance...');
-        const orderAmount = parseFloat(orderData.amount);
-        const hasAffiliate = orderData.affiliate_code ? true : false;
-        
-        if (hasAffiliate && orderData.affiliate_code) {
-          // Buscar dados do afiliado
-          const { data: affiliate } = await supabase
-            .from('affiliates')
-            .select('*')
-            .eq('affiliate_code', orderData.affiliate_code)
-            .eq('status', 'ativo')
-            .single();
-            
-          if (affiliate) {
-            // Calcular comissão do afiliado
-            const commissionRate = parseFloat(affiliate.commission_rate.replace('%', '')) / 100;
-            const affiliateCommission = orderAmount * commissionRate;
-            const sellerCommission = (orderAmount - affiliateCommission) * 0.92; // 8% platform fee
-            
-            console.log(`💰 Affiliate commission: ${affiliateCommission}, Seller commission: ${sellerCommission}`);
-            
-            // Criar transação para o afiliado
-            await supabase.from('balance_transactions').insert({
-              user_id: affiliate.affiliate_user_id,
-              type: 'affiliate_commission',
-              amount: affiliateCommission,
-              currency: orderData.currency || 'KZ',
-              description: `Comissão de afiliado - Pedido ${orderId}`,
-              order_id: orderId
-            });
-            
-            // Criar transação para o vendedor (valor líquido)
-            await supabase.from('balance_transactions').insert({
-              user_id: product.user_id,
-              type: 'sale_revenue',
-              amount: sellerCommission,
-              currency: orderData.currency || 'KZ',
-              description: `Receita de venda - Pedido ${orderId}`,
-              order_id: orderId
-            });
-          }
-        } else {
-          // Sem afiliado - vendedor recebe com 8% de taxa descontado
-          const netAmount = orderAmount * 0.92; // 8% platform fee
-          console.log(`💰 No affiliate - seller gets net amount: ${netAmount} (8% platform fee applied)`);
-          await supabase.from('balance_transactions').insert({
-            user_id: product.user_id,
-            type: 'sale_revenue',
-            amount: netAmount,
-            currency: orderData.currency || 'KZ',
-            description: `Receita de venda - Pedido ${orderId}`,
-            order_id: orderId
-          });
-        }
+        // ✅ SALDO E TRANSAÇÕES SÃO GERENCIADOS AUTOMATICAMENTE PELO TRIGGER
+        // O trigger create_balance_transaction_on_sale() no banco de dados
+        // automaticamente cria as transações (platform_fee + sale_revenue)
+        // para vendas normais e affiliate_commission para vendas com afiliados
+        console.log('✅ Balance and transactions managed by database trigger');
         
         // 2. CRIAR ACESSO PARA O CLIENTE
         console.log('🔓 Creating customer access...');

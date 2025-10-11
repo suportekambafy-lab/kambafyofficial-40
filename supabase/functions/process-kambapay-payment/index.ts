@@ -153,44 +153,11 @@ serve(async (req) => {
       console.error('Error creating transaction:', transactionError);
     }
 
-    // 6. Adicionar saldo ao vendedor (se aplicável)
-    if (product.user_id) {
-      // Buscar ou criar saldo do vendedor
-      const { data: sellerBalance } = await supabaseAdmin
-        .from('customer_balances')
-        .select('*')
-        .eq('user_id', product.user_id)
-        .maybeSingle();
-
-      if (sellerBalance) {
-        // Atualizar saldo existente
-        await supabaseAdmin
-          .from('customer_balances')
-          .update({ balance: sellerBalance.balance + productPrice })
-          .eq('user_id', product.user_id);
-      } else {
-        // Criar novo saldo para o vendedor
-        await supabaseAdmin
-          .from('customer_balances')
-          .insert([{
-            user_id: product.user_id,
-            balance: productPrice,
-            currency: 'KZ'
-          }]);
-      }
-
-      // Criar transação de crédito para o vendedor
-      await supabaseAdmin
-        .from('balance_transactions')
-        .insert([{
-          user_id: product.user_id,
-          type: 'credit',
-          amount: productPrice,
-          description: `Venda de ${product.name} via KambaPay`,
-          order_id: orderId,
-          currency: 'KZ'
-        }]);
-    }
+    // ✅ SALDO E TRANSAÇÕES SÃO GERENCIADOS AUTOMATICAMENTE PELO TRIGGER
+    // O trigger create_balance_transaction_on_sale() no banco de dados
+    // automaticamente cria as transações (platform_fee + sale_revenue) 
+    // e atualiza o saldo via sync_customer_balance()
+    console.log('✅ Balance and transactions will be managed by database trigger');
 
     console.log('KambaPay payment processed successfully:', orderId);
 
