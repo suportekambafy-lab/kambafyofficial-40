@@ -460,49 +460,45 @@ export function AppHome() {
     if (!user) return;
 
     try {
-      console.log('💰 [AppHome] Calculando saldos simplificados (sem sistema de 3 dias)');
+      console.log('💰 [AppHome] Calculando saldos IDÊNTICOS ao Financial.tsx');
 
-      // ✅ FONTE ÚNICA DE VERDADE: Buscar saldo real do customer_balances
-      const { data: balanceData, error: balanceError } = await supabase
+      // ✅ 1. SALDO DISPONÍVEL - Fonte única de verdade
+      const { data: balanceData } = await supabase
         .from('customer_balances')
         .select('balance')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (balanceError) {
-        console.error('Error loading balance:', balanceError);
-      }
+      const availableBalance = balanceData?.balance || 0;
 
-      const currentBalance = balanceData?.balance || 0;
-
-      // Buscar withdrawal_requests
+      // ✅ 2. TOTAL SACADO (aprovado)
       const { data: withdrawals } = await supabase
         .from('withdrawal_requests')
-        .select('id, amount, status, created_at')
+        .select('amount, status')
+        .eq('user_id', user.id);
+
+      const withdrawnAmount = (withdrawals || [])
+        .filter(w => w.status === 'aprovado')
+        .reduce((sum, w) => sum + parseFloat(w.amount.toString()), 0);
+
+      // ✅ 3. CARREGAR HISTÓRICO DE SAQUES
+      const { data: withdrawalRequestsData } = await supabase
+        .from('withdrawal_requests')
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      // Calcular total de saques aprovados e pendentes (deduzir imediatamente do saldo)
-      const totalWithdrawnAmount = withdrawals
-        ?.filter(w => w.status === 'aprovado' || w.status === 'pendente')
-        .reduce((sum, w) => sum + (parseFloat(w.amount?.toString() || '0')), 0) || 0;
-
-      // ✅ USAR o saldo real do customer_balances como fonte de verdade
-      const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
-      
-      console.log('💵 [AppHome] Saldos calculados (fonte: customer_balances):', {
-        disponivel: finalAvailableBalance,
-        totalSacado: totalWithdrawnAmount,
-        balanceReal: currentBalance
-      });
+      setWithdrawalHistory(withdrawalRequestsData || []);
 
       setFinancialData({
-        availableBalance: finalAvailableBalance,
-        totalWithdrawn: totalWithdrawnAmount
+        availableBalance,
+        totalWithdrawn: withdrawnAmount
       });
 
-      // Buscar histórico de saques
-      setWithdrawalHistory(withdrawals || []);
+      console.log('✅ [AppHome] Dados financeiros carregados:', {
+        availableBalance: availableBalance.toLocaleString(),
+        withdrawnAmount: withdrawnAmount.toLocaleString()
+      });
 
     } catch (error) {
       console.error('Error loading financial data:', error);
