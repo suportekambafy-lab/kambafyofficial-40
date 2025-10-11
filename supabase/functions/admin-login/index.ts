@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0'
 import { create, verify } from 'https://deno.land/x/djwt@v2.8/mod.ts'
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts'
+import { compareSync } from 'https://deno.land/x/bcrypt@v0.2.4/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
     }
     
     // Verificar se a senha fornecida corresponde ao hash armazenado
-    const passwordMatch = await bcrypt.compare(password, adminUser.password_hash)
+    const passwordMatch = compareSync(password, adminUser.password_hash)
     
     if (!passwordMatch) {
       console.error('❌ Senha incorreta')
