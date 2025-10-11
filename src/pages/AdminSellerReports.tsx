@@ -449,7 +449,7 @@ export default function AdminSellerReports() {
         </Card>
 
         {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -495,40 +495,6 @@ export default function AdminSellerReports() {
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Valor bruto gerado
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                Total de Saques
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {sellers.reduce((sum, s) => sum + s.total_withdrawals, 0).toLocaleString('pt-AO')} KZ
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Saques aprovados
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Wallet className="h-4 w-4" />
-                Saldo Disponível
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {sellers.reduce((sum, s) => sum + s.available_balance, 0).toLocaleString('pt-AO')} KZ
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Total em carteira
               </p>
             </CardContent>
           </Card>
