@@ -113,24 +113,12 @@ export function WithdrawalModal({
 
       console.log('✅ Solicitação de saque criada com sucesso:', insertData);
 
-      toast({
-        title: 'Sucesso',
-        message: "Solicitação de saque criada com sucesso! Seu saldo será atualizado em instantes.",
-        variant: 'success'
-      });
       onOpenChange(false);
       
-      // Chamar callback para atualizar dados na página pai
+      // Chamar callback UMA VEZ para atualizar dados na página pai
       if (onWithdrawalSuccess) {
         onWithdrawalSuccess();
       }
-      
-      // Aguardar um pouco para garantir que o trigger foi executado
-      setTimeout(() => {
-        if (onWithdrawalSuccess) {
-          onWithdrawalSuccess();
-        }
-      }, 500);
       
     } catch (error) {
       console.error('💥 Erro inesperado:', error);

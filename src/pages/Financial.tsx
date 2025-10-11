@@ -152,6 +152,19 @@ export default function Financial() {
       loadUserData();
       loadFinancialData();
 
+      // ✅ Debounce para evitar múltiplos refreshes
+      let refreshTimeout: NodeJS.Timeout | null = null;
+      
+      const debouncedRefresh = () => {
+        if (refreshTimeout) {
+          clearTimeout(refreshTimeout);
+        }
+        refreshTimeout = setTimeout(() => {
+          loadFinancialData();
+          refreshTimeout = null;
+        }, 1500);
+      };
+
       // ✅ Escutar mudanças em saques
       const withdrawalChannel = supabase
         .channel(`withdrawal_changes_${user.id}`)
@@ -163,9 +176,7 @@ export default function Financial() {
             table: 'withdrawal_requests',
             filter: `user_id=eq.${user.id}`
           },
-          () => {
-            setTimeout(() => loadFinancialData(), 1000);
-          }
+          debouncedRefresh
         )
         .subscribe();
 
@@ -180,13 +191,14 @@ export default function Financial() {
             table: 'balance_transactions',
             filter: `user_id=eq.${user.id}`
           },
-          () => {
-            setTimeout(() => loadFinancialData(), 1000);
-          }
+          debouncedRefresh
         )
         .subscribe();
 
       return () => {
+        if (refreshTimeout) {
+          clearTimeout(refreshTimeout);
+        }
         supabase.removeChannel(withdrawalChannel);
         supabase.removeChannel(balanceChannel);
       };
