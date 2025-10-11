@@ -64,6 +64,7 @@ export function AppHome() {
   });
   const [withdrawalHistory, setWithdrawalHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingSalesHistory, setLoadingSalesHistory] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [salesData, setSalesData] = useState<any[]>([]);
   const [profileAvatar, setProfileAvatar] = useState<string>('');
@@ -539,6 +540,8 @@ export function AppHome() {
 
   const loadSalesHistory = async () => {
     if (!user) return;
+    
+    setLoadingSalesHistory(true);
 
     try {
       // ✅ 1. Buscar produtos do usuário
@@ -737,6 +740,8 @@ export function AppHome() {
     } catch (error) {
       console.error('Error loading sales history:', error);
       setOrders([]);
+    } finally {
+      setLoadingSalesHistory(false);
     }
   };
 
@@ -1308,10 +1313,10 @@ export function AppHome() {
               </CardContent>
             </Card>
 
-            {loading ? (
+            {loadingSalesHistory ? (
               <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
                 <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">Carregando...</p>
+                  <p className="text-muted-foreground">Carregando vendas...</p>
                 </CardContent>
               </Card>
             ) : orders.length === 0 ? (
