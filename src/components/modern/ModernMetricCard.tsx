@@ -23,10 +23,10 @@ export function ModernMetricCard({
 }: ModernMetricCardProps) {
   return (
     <div className={cn(
-      "bg-card rounded-xl p-4 shadow-sm border border-primary/20",
+      "bg-card rounded-lg p-3 shadow-sm border border-primary/20",
       className
     )}>
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1.5">
         <p className="text-muted-foreground text-xs">
           {title}
         </p>
@@ -44,12 +44,12 @@ export function ModernMetricCard({
       </div>
       
       <div className="relative">
-        <h3 className="text-xl font-bold text-foreground">
+        <h3 className="text-lg font-bold text-foreground">
           {value}
         </h3>
         
         {action && (
-          <div className="mt-3">
+          <div className="mt-2">
             {action}
           </div>
         )}
