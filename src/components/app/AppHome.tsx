@@ -251,14 +251,22 @@ export function AppHome() {
 
       const affiliateCodes = userAffiliateCodes?.map(a => a.affiliate_code).filter(Boolean) || [];
 
-      if (productIds.length === 0 && affiliateCodes.length === 0) {
+      // Buscar member_areas para module_payments
+      const { data: memberAreas } = await supabase
+        .from('member_areas')
+        .select('id')
+        .eq('user_id', user.id);
+
+      const memberAreaIds = memberAreas?.map(ma => ma.id) || [];
+
+      if (productIds.length === 0 && affiliateCodes.length === 0 && memberAreaIds.length === 0) {
         setStats({ totalSales: 0, totalRevenue: 0, totalProducts: 0 });
         setTotalRevenueUnfiltered(0);
         setLoading(false);
         return;
       }
 
-      // ✅ PRIMEIRO: Buscar TODAS as vendas (produtos próprios + afiliados) para Meta Kamba
+      // ✅ PRIMEIRO: Buscar TODAS as vendas (produtos próprios + afiliados + módulos) para Meta Kamba
       const ownOrdersMetaPromise = productIds.length > 0 
         ? supabase
             .from('orders')
@@ -279,15 +287,26 @@ export function AppHome() {
             .order('created_at', { ascending: true })
         : Promise.resolve({ data: [] });
 
-      const [ownOrdersMeta, affiliateOrdersMeta] = await Promise.all([
+      const modulePaymentsMetaPromise = memberAreaIds.length > 0
+        ? supabase
+            .from('module_payments')
+            .select('amount, currency, created_at, payment_method, order_id')
+            .in('member_area_id', memberAreaIds)
+            .eq('status', 'completed')
+            .order('created_at', { ascending: true })
+        : Promise.resolve({ data: [] });
+
+      const [ownOrdersMeta, affiliateOrdersMeta, modulePaymentsMeta] = await Promise.all([
         ownOrdersMetaPromise,
-        affiliateOrdersMetaPromise
+        affiliateOrdersMetaPromise,
+        modulePaymentsMetaPromise
       ]);
 
-      // ✅ Combinar vendas próprias + comissões de afiliado
+      // ✅ Combinar vendas próprias + comissões de afiliado + módulos
       const allOrdersForMeta = [
         ...(ownOrdersMeta.data || []),
-        ...(affiliateOrdersMeta.data || [])
+        ...(affiliateOrdersMeta.data || []),
+        ...(modulePaymentsMeta.data || [])
       ];
 
       let totalRevenueForMeta = 0;
@@ -319,7 +338,7 @@ export function AppHome() {
         totalRevenue: totalRevenueForMeta
       });
 
-      // ✅ SEGUNDO: Buscar vendas COM FILTROS (produtos próprios + afiliados)
+      // ✅ SEGUNDO: Buscar vendas COM FILTROS (produtos próprios + afiliados + módulos)
       let ownOrdersQuery = supabase
         .from('orders')
         .select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id, order_bump_data')
@@ -334,12 +353,19 @@ export function AppHome() {
         .eq('status', 'completed')
         .neq('payment_method', 'member_access');
 
-      // Aplicar filtros de tempo em ambas as queries
+      let modulePaymentsQuery = supabase
+        .from('module_payments')
+        .select('amount, currency, created_at, payment_method, order_id, member_area_id')
+        .in('member_area_id', memberAreaIds)
+        .eq('status', 'completed');
+
+      // Aplicar filtros de tempo em todas as queries
       if (timeFilter === 'today') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         ownOrdersQuery = ownOrdersQuery.gte('created_at', today.toISOString());
         affiliateOrdersQuery = affiliateOrdersQuery.gte('created_at', today.toISOString());
+        modulePaymentsQuery = modulePaymentsQuery.gte('created_at', today.toISOString());
       } else if (timeFilter === 'yesterday') {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -348,17 +374,20 @@ export function AppHome() {
         today.setHours(0, 0, 0, 0);
         ownOrdersQuery = ownOrdersQuery.gte('created_at', yesterday.toISOString()).lt('created_at', today.toISOString());
         affiliateOrdersQuery = affiliateOrdersQuery.gte('created_at', yesterday.toISOString()).lt('created_at', today.toISOString());
+        modulePaymentsQuery = modulePaymentsQuery.gte('created_at', yesterday.toISOString()).lt('created_at', today.toISOString());
       } else if (timeFilter === 'custom' && customDateRange.from) {
         const fromDate = new Date(customDateRange.from);
         fromDate.setHours(0, 0, 0, 0);
         ownOrdersQuery = ownOrdersQuery.gte('created_at', fromDate.toISOString());
         affiliateOrdersQuery = affiliateOrdersQuery.gte('created_at', fromDate.toISOString());
+        modulePaymentsQuery = modulePaymentsQuery.gte('created_at', fromDate.toISOString());
         
         if (customDateRange.to) {
           const toDate = new Date(customDateRange.to);
           toDate.setHours(23, 59, 59, 999);
           ownOrdersQuery = ownOrdersQuery.lte('created_at', toDate.toISOString());
           affiliateOrdersQuery = affiliateOrdersQuery.lte('created_at', toDate.toISOString());
+          modulePaymentsQuery = modulePaymentsQuery.lte('created_at', toDate.toISOString());
         }
       } else if (timeFilter !== 'all') {
         const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
@@ -367,6 +396,7 @@ export function AppHome() {
         startDate.setDate(startDate.getDate() - days);
         ownOrdersQuery = ownOrdersQuery.gte('created_at', startDate.toISOString());
         affiliateOrdersQuery = affiliateOrdersQuery.gte('created_at', startDate.toISOString());
+        modulePaymentsQuery = modulePaymentsQuery.gte('created_at', startDate.toISOString());
       }
 
       // Filtro de produto (só para vendas próprias)
@@ -374,14 +404,16 @@ export function AppHome() {
         ownOrdersQuery = ownOrdersQuery.eq('product_id', productFilter);
       }
 
-      const [ownOrdersResult, affiliateOrdersResult] = await Promise.all([
+      const [ownOrdersResult, affiliateOrdersResult, modulePaymentsResult] = await Promise.all([
         productIds.length > 0 ? ownOrdersQuery.order('created_at', { ascending: true }) : Promise.resolve({ data: [] }),
-        affiliateCodes.length > 0 ? affiliateOrdersQuery.order('created_at', { ascending: true }) : Promise.resolve({ data: [] })
+        affiliateCodes.length > 0 ? affiliateOrdersQuery.order('created_at', { ascending: true }) : Promise.resolve({ data: [] }),
+        memberAreaIds.length > 0 ? modulePaymentsQuery.order('created_at', { ascending: true }) : Promise.resolve({ data: [] })
       ]);
 
       const orders = [
         ...(ownOrdersResult.data || []),
-        ...(affiliateOrdersResult.data || [])
+        ...(affiliateOrdersResult.data || []),
+        ...(modulePaymentsResult.data || [])
       ];
 
       let totalRevenue = 0;
