@@ -81,16 +81,10 @@ const menuItems = [
     description: 'Verificar identidades'
   },
   {
-    href: '/admin/teste-kyc',
-    label: '🧪 Teste KYC',
-    icon: UserCheck,
-    description: 'Testar upload/visualização'
-  },
-  {
     href: '/admin/seller-reports',
     label: 'Relatórios',
     icon: Calendar,
-    description: 'Relatórios detalhados'
+    description: 'Análises de vendedores'
   },
   {
     href: '/admin/payment-approvals',

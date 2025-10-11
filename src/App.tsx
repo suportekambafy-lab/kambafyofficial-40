@@ -210,9 +210,8 @@ const App = () => {
                        <Route path="/admin/logs" element={<AdminPermissionRoute requiredPermission="view_analytics"><OptimizedRoutes.AdminLogs /></AdminPermissionRoute>} />
                         <Route path="/admin/sellers" element={<AdminPermissionRoute requiredPermission="manage_users"><OptimizedRoutes.AdminSellers /></AdminPermissionRoute>} />
                          <Route path="/admin/identity" element={<AdminPermissionRoute requiredPermission="manage_verifications"><OptimizedRoutes.AdminIdentityVerification /></AdminPermissionRoute>} />
-                         <Route path="/admin/management" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminManagement /></AdminPermissionRoute>} />
-                         <Route path="/admin/teste-kyc" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminKYCTest /></AdminPermissionRoute>} />
-                         <Route path="/admin/partners" element={<AdminPermissionRoute requiredPermission="manage_products"><OptimizedRoutes.AdminPartners /></AdminPermissionRoute>} />
+                          <Route path="/admin/management" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminManagement /></AdminPermissionRoute>} />
+                          <Route path="/admin/partners" element={<AdminPermissionRoute requiredPermission="manage_products"><OptimizedRoutes.AdminPartners /></AdminPermissionRoute>} />
                         <Route path="/admin/seller-reports" element={<AdminPermissionRoute requiredPermission="view_analytics"><OptimizedRoutes.AdminSellerReports /></AdminPermissionRoute>} />
                         <Route path="/admin/payment-approvals" element={<AdminPermissionRoute requiredPermission="manage_transfers"><OptimizedRoutes.AdminPaymentApprovals /></AdminPermissionRoute>} />
                       

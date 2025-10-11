@@ -91,7 +91,6 @@ const AdminSellers = createLazyWithRetry(() => import('@/pages/AdminSellers'), "
 const AdminSellerReports = createLazyWithRetry(() => import('@/pages/AdminSellerReports'), "AdminSellerReports");
 const AdminIdentityVerification = createLazyWithRetry(() => import('@/pages/AdminIdentityVerification'), "AdminIdentityVerification");
 const AdminPaymentApprovals = createLazyWithRetry(() => import('@/pages/AdminPaymentApprovals'), "AdminPaymentApprovals");
-const AdminKYCTest = createLazyWithRetry(() => import('@/pages/AdminKYCTest'), "AdminKYCTest");
 const AdminManagement = createLazyWithRetry(() => import('@/pages/AdminManagement'), "AdminManagement");
 
 // Partner pages - lazy load with retry
@@ -178,7 +177,6 @@ export const OptimizedRoutes = {
   AdminSellerReports: withLazyLoading(AdminSellerReports, 'dashboard'),
   AdminIdentityVerification: withLazyLoading(AdminIdentityVerification, 'dashboard'),
   AdminPaymentApprovals: withLazyLoading(AdminPaymentApprovals, 'financial'),
-  AdminKYCTest: withLazyLoading(AdminKYCTest, 'dashboard'),
   AdminManagement: withLazyLoading(AdminManagement, 'settings'),
   
   // Partner routes
