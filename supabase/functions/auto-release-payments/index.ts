@@ -89,7 +89,9 @@ serve(async (req) => {
         const netAmount = grossAmount * 0.92; // 92%
         const feeAmount = grossAmount * 0.08; // 8%
         
-        const sellerId = order.products?.user_id || order.user_id;
+        // Acessar products corretamente (é um objeto, não array, quando usa !inner)
+        const sellerId = (order.products as any)?.user_id || order.user_id;
+        const productName = (order.products as any)?.name || 'Produto';
         
         // Criar taxa da plataforma (negativa)
         const { error: feeError } = await supabase
@@ -117,7 +119,7 @@ serve(async (req) => {
             type: 'sale_revenue',
             amount: netAmount,
             currency: 'KZ',
-            description: `Receita de venda (valor líquido) - ${order.products?.name || 'Produto'} - Correção automática`,
+            description: `Receita de venda (valor líquido) - ${productName} - Correção automática`,
             order_id: order.order_id,
             created_at: order.created_at
           });
