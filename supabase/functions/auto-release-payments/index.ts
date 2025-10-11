@@ -206,6 +206,42 @@ serve(async (req) => {
       nowStart.setHours(0, 0, 0, 0);
 
       if (nowStart >= releaseStart) {
+        // Verificar se já tem sale_revenue para esta venda
+        const { data: existingRevenue } = await supabase
+          .from('balance_transactions')
+          .select('id')
+          .eq('order_id', order.order_id)
+          .eq('type', 'sale_revenue')
+          .maybeSingle();
+
+        // Se não tem sale_revenue, criar agora (após 3 dias)
+        if (!existingRevenue) {
+          const grossAmount = parseFloat(order.amount || '0');
+          const netAmount = grossAmount * 0.92; // 92% do valor
+          
+          const sellerId = order.products?.[0]?.user_id || order.user_id;
+          const productName = order.products?.[0]?.name || 'Produto';
+          
+          // Criar transação sale_revenue (positiva)
+          const { error: revenueError } = await supabase
+            .from('balance_transactions')
+            .insert({
+              user_id: sellerId,
+              type: 'sale_revenue',
+              amount: netAmount,
+              currency: 'KZ',
+              description: `Receita de venda liberada após 3 dias - ${productName}`,
+              order_id: order.order_id
+            });
+
+          if (revenueError) {
+            logStep(`⚠️ Erro ao criar sale_revenue para ${order.order_id}:`, revenueError);
+            continue;
+          }
+          
+          logStep(`✅ Transação sale_revenue criada: ${order.order_id} - ${netAmount} KZ`);
+        }
+
         const amount = parseFloat(order.amount || '0');
         
         releasedOrders.push({
@@ -263,9 +299,7 @@ serve(async (req) => {
       if (insertError) {
         logStep("⚠️ Aviso: Erro ao registrar liberações no histórico:", insertError);
       } else {
-        logStep(`✅ ${newReleasesToRecord.length} novas liberações registradas no histórico`);
-        // ✅ Não criar mais transações aqui - o trigger já fez isso quando a venda foi completed
-        logStep(`ℹ️ Transações já foram criadas pelo trigger quando a venda foi completed`);
+        logStep(`✅ ${newReleasesToRecord.length} novas liberações registradas e creditadas no saldo disponível`);
       }
     } else {
       logStep("ℹ️ Nenhuma nova liberação para registrar");
