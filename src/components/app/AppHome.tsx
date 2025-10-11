@@ -549,12 +549,12 @@ export function AppHome() {
 
       const productIds = products?.map(p => p.id) || [];
 
-      // ✅ 2. Buscar códigos de afiliado (igual à web)
+      // ✅ 2. Buscar códigos de afiliado (igual à web) - STATUS CORRETO: 'ativo'
       const { data: userAffiliateCodes } = await supabase
         .from('affiliates')
         .select('affiliate_code')
         .eq('affiliate_user_id', user.id)
-        .eq('status', 'aprovado');
+        .eq('status', 'ativo');
 
       const affiliateCodes = userAffiliateCodes?.map(a => a.affiliate_code).filter(Boolean) || [];
 
@@ -565,6 +565,13 @@ export function AppHome() {
         .eq('user_id', user.id);
 
       const memberAreaIds = memberAreas?.map(ma => ma.id) || [];
+
+      console.log('📊 [AppHome] IDs encontrados:', {
+        products: productIds.length,
+        affiliateCodes: affiliateCodes.length,
+        memberAreas: memberAreaIds.length,
+        salesStatusFilter
+      });
 
       // ✅ Query para orders de produtos próprios
       let ownOrdersQuery = supabase
