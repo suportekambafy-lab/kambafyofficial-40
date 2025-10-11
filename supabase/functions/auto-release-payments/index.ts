@@ -84,31 +84,52 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!existingTransaction) {
-        // Criar transações retroativas para venda antiga
-        const grossAmount = parseFloat(order.seller_commission || order.amount || '0');
-        const netAmount = grossAmount * 0.92; // 92%
-        const feeAmount = grossAmount * 0.08; // 8%
+        // Verificar se tem platform_fee
+        const { data: existingFee } = await supabase
+          .from('balance_transactions')
+          .select('id')
+          .eq('order_id', order.order_id)
+          .eq('type', 'platform_fee')
+          .maybeSingle();
         
         // Acessar products corretamente (é um objeto, não array, quando usa !inner)
         const sellerId = (order.products as any)?.user_id || order.user_id;
         const productName = (order.products as any)?.name || 'Produto';
         
-        // Criar taxa da plataforma (negativa)
-        const { error: feeError } = await supabase
-          .from('balance_transactions')
-          .insert({
-            user_id: sellerId,
-            type: 'platform_fee',
-            amount: -feeAmount,
-            currency: 'KZ',
-            description: `Taxa da plataforma Kambafy (8%) - Correção automática`,
-            order_id: order.order_id,
-            created_at: order.created_at
-          });
+        // Usar seller_commission se disponível (já tem valor líquido 92%)
+        // Senão usar amount e calcular 92%
+        let netAmount: number;
+        let feeAmount: number;
+        
+        if (order.seller_commission) {
+          // seller_commission = valor líquido (já descontado 8%)
+          netAmount = parseFloat(order.seller_commission);
+          feeAmount = netAmount * 0.08 / 0.92; // Calcular fee a partir do líquido
+        } else {
+          // amount = valor bruto (precisa descontar 8%)
+          const grossAmount = parseFloat(order.amount || '0');
+          feeAmount = grossAmount * 0.08;
+          netAmount = grossAmount * 0.92;
+        }
+        
+        // Criar taxa da plataforma (negativa) se não existir
+        if (!existingFee) {
+          const { error: feeError } = await supabase
+            .from('balance_transactions')
+            .insert({
+              user_id: sellerId,
+              type: 'platform_fee',
+              amount: -feeAmount,
+              currency: order.currency || 'KZ',
+              description: `Taxa da plataforma Kambafy (8%) - Correção automática`,
+              order_id: order.order_id,
+              created_at: order.created_at
+            });
 
-        if (feeError) {
-          logStep(`⚠️ Erro ao criar taxa para ${order.order_id}:`, feeError);
-          continue;
+          if (feeError) {
+            logStep(`⚠️ Erro ao criar taxa para ${order.order_id}:`, feeError);
+            continue;
+          }
         }
 
         // Criar receita líquida (positiva)
@@ -118,7 +139,7 @@ serve(async (req) => {
             user_id: sellerId,
             type: 'sale_revenue',
             amount: netAmount,
-            currency: 'KZ',
+            currency: order.currency || 'KZ',
             description: `Receita de venda (valor líquido) - ${productName} - Correção automática`,
             order_id: order.order_id,
             created_at: order.created_at
@@ -128,7 +149,7 @@ serve(async (req) => {
           logStep(`⚠️ Erro ao criar receita para ${order.order_id}:`, revenueError);
         } else {
           fixedOldSales++;
-          logStep(`✅ Corrigida venda antiga: ${order.order_id} - Bruto: ${grossAmount} KZ, Líquido: ${netAmount} KZ`);
+          logStep(`✅ Corrigida venda antiga: ${order.order_id} - Líquido: ${netAmount} KZ, Taxa: ${feeAmount} KZ`);
         }
       }
     }
@@ -206,6 +227,10 @@ serve(async (req) => {
       nowStart.setHours(0, 0, 0, 0);
 
       if (nowStart >= releaseStart) {
+        // Buscar dados do produto
+        const sellerId = order.products?.[0]?.user_id || order.user_id;
+        const productName = order.products?.[0]?.name || 'Produto';
+        
         // Verificar se já tem sale_revenue para esta venda
         const { data: existingRevenue } = await supabase
           .from('balance_transactions')
@@ -214,13 +239,18 @@ serve(async (req) => {
           .eq('type', 'sale_revenue')
           .maybeSingle();
 
-        // Se não tem sale_revenue, criar agora (após 3 dias)
+        // Calcular valores (usar seller_commission quando disponível, senão amount * 0.92)
+        const grossAmount = parseFloat(order.seller_commission || order.amount || '0');
+        const netAmount = grossAmount; // seller_commission já tem o valor líquido (92%)
+        
+        // ⚠️ CRÍTICO: SEMPRE criar sale_revenue se não existir
         if (!existingRevenue) {
-          const grossAmount = parseFloat(order.amount || '0');
-          const netAmount = grossAmount * 0.92; // 92% do valor
-          
-          const sellerId = order.products?.[0]?.user_id || order.user_id;
-          const productName = order.products?.[0]?.name || 'Produto';
+          logStep(`🔄 Criando sale_revenue para ${order.order_id}...`, {
+            grossAmount,
+            netAmount,
+            sellerId,
+            orderDate: order.created_at
+          });
           
           // Criar transação sale_revenue (positiva)
           const { error: revenueError } = await supabase
@@ -229,17 +259,20 @@ serve(async (req) => {
               user_id: sellerId,
               type: 'sale_revenue',
               amount: netAmount,
-              currency: 'KZ',
+              currency: order.currency || 'KZ',
               description: `Receita de venda liberada após 3 dias - ${productName}`,
               order_id: order.order_id
             });
 
           if (revenueError) {
-            logStep(`⚠️ Erro ao criar sale_revenue para ${order.order_id}:`, revenueError);
+            logStep(`❌ ERRO ao criar sale_revenue para ${order.order_id}:`, revenueError);
+            // NÃO continuar - se falhou, não registrar em payment_releases
             continue;
           }
           
-          logStep(`✅ Transação sale_revenue criada: ${order.order_id} - ${netAmount} KZ`);
+          logStep(`✅ Sale_revenue criado com sucesso: ${order.order_id} = ${netAmount} KZ`);
+        } else {
+          logStep(`ℹ️ Sale_revenue já existe para ${order.order_id}, pulando criação`);
         }
 
         const amount = parseFloat(order.amount || '0');
