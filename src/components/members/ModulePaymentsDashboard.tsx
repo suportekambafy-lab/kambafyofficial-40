@@ -38,13 +38,50 @@ export const ModulePaymentsDashboard = () => {
   const [selectedPayment, setSelectedPayment] = useState<ModulePayment | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [isGrantingAccess, setIsGrantingAccess] = useState(false);
+  const [lastLoadTime, setLastLoadTime] = useState(0);
+
   useEffect(() => {
     if (user) {
+      // Debounce: só carregar se passou mais de 2 segundos da última carga
+      const now = Date.now();
+      if (now - lastLoadTime < 2000) {
+        console.log('⏱️ [Module Payments] Debounce: ignorando reload rápido demais');
+        return;
+      }
+      
       loadPayments();
+      
+      // ✅ WebSocket: Escutar mudanças em tempo real
+      console.log('🔌 [Module Payments] Conectando ao realtime...');
+      
+      const channel = supabase
+        .channel(`module_payments_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'module_payments'
+          },
+          (payload) => {
+            console.log('💰 [Module Payments] Mudança detectada:', payload);
+            loadPayments();
+          }
+        )
+        .subscribe((status) => {
+          console.log('🔌 [Module Payments] Status da conexão:', status);
+        });
+      
+      return () => {
+        console.log('🔌 [Module Payments] Desconectando...');
+        supabase.removeChannel(channel);
+      };
     }
   }, [user, filter]);
   const loadPayments = async () => {
     if (!user) return;
+    
+    setLastLoadTime(Date.now());
     setIsLoading(true);
     try {
       let query = supabase.from('module_payments').select(`

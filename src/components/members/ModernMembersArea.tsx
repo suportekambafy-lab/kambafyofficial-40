@@ -391,9 +391,10 @@ export default function ModernMembersArea() {
   };
 
   const handlePaymentSuccess = () => {
-    console.log('✅ [handlePaymentSuccess] Pagamento bem-sucedido - recarregando módulos');
-    // Recarregar módulos para atualizar o estado
-    window.location.reload();
+    console.log('✅ [handlePaymentSuccess] Pagamento bem-sucedido - atualizando dados');
+    // ✅ Recarregar dados via WebSocket (sem reload da página)
+    setSelectedModule(null);
+    // Os dados serão atualizados automaticamente via realtime subscription
   };
   const handleBackToModules = () => {
     setSelectedModule(null);
