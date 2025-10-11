@@ -306,8 +306,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="steps">
               <h3 style="font-size: 16px; color: #1f2937; font-weight: 600; margin: 0 0 12px;">Próximos Passos</h3>
               <ul>
-                <li>A transferência será realizada em até 2 dias úteis</li>
-                <li>Você receberá uma confirmação quando o pagamento for efetuado</li>
+                <li>A transferência foi efetuada e irá refletir em sua conta em até 3 dias úteis</li>
                 <li>Em caso de dúvidas, entre em contato com nosso suporte</li>
               </ul>
             </div>
