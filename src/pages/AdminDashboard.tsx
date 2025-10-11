@@ -262,7 +262,10 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-3">
               <NotificationCenter />
-            <ResendAllAccessButton />
+            <div className="flex gap-2">
+              <ResendAllAccessButton />
+              <RecalculateBalancesButton />
+            </div>
             <RecalculateBalancesButton />
               <Button
                 onClick={logout}
