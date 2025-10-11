@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, Clock, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -60,7 +60,6 @@ export function AppHome() {
   });
   const [financialData, setFinancialData] = useState({
     availableBalance: 0,
-    pendingBalance: 0,
     totalWithdrawn: 0
   });
   const [withdrawalHistory, setWithdrawalHistory] = useState<any[]>([]);
@@ -461,7 +460,7 @@ export function AppHome() {
     if (!user) return;
 
     try {
-      console.log('💰 [AppHome] Calculando saldos IDÊNTICOS ao Financial.tsx');
+      console.log('💰 [AppHome] Calculando saldos simplificados (sem sistema de 3 dias)');
 
       // ✅ FONTE ÚNICA DE VERDADE: Buscar saldo real do customer_balances
       const { data: balanceData, error: balanceError } = await supabase
@@ -483,35 +482,6 @@ export function AppHome() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      // Vendas recuperadas removidas - sistema de recuperação desabilitado
-      const recoveredOrderIds = new Set();
-
-      // ✅ Processar orders para calcular earning_amount (igual ao Financial.tsx)
-      const processedOrders = orders.map(order => {
-        const isRecovered = recoveredOrderIds.has(order.order_id);
-        let earning = parseFloat(order.seller_commission?.toString() || order.amount || '0');
-        
-        // Converter para KZ se necessário
-        if (order.currency && order.currency !== 'KZ') {
-          const exchangeRates: Record<string, number> = {
-            'EUR': 1053, // 1 EUR = ~1053 KZ
-            'MZN': 14.3  // 1 MZN = ~14.3 KZ
-          };
-          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-          earning = Math.round(earning * rate);
-        }
-        
-        // Aplicar desconto de 20% se for venda recuperada
-        if (isRecovered) {
-          earning = earning * 0.8;
-        }
-        
-        return {
-          ...order,
-          earning_amount: earning
-        };
-      });
-
       // Calcular total de saques aprovados e pendentes (deduzir imediatamente do saldo)
       const totalWithdrawnAmount = withdrawals
         ?.filter(w => w.status === 'aprovado' || w.status === 'pendente')
@@ -519,68 +489,15 @@ export function AppHome() {
 
       // ✅ USAR o saldo real do customer_balances como fonte de verdade
       const finalAvailableBalance = Math.max(0, currentBalance - totalWithdrawnAmount);
-
-      // ✅ CALCULAR SALDO PENDENTE baseado em balance_transactions (igual ao Financial.tsx)
-      // Buscar transações de crédito de vendas (credit = sistema antigo, sale_revenue = sistema novo)
-      const { data: balanceTransactions } = await supabase
-        .from('balance_transactions')
-        .select('order_id')
-        .eq('user_id', user.id)
-        .in('type', ['credit', 'sale_revenue']);
-
-      console.log('🔍 [AppHome] Transações encontradas:', balanceTransactions?.length || 0);
-      console.log('🔍 [AppHome] Order IDs das transações:', balanceTransactions?.map(t => t.order_id).slice(0, 10));
-
-      const releasedOrderIds = new Set(
-        (balanceTransactions || [])
-          .map(t => t.order_id)
-          .filter((id): id is string => id !== null)
-      );
-
-      console.log('🔍 [AppHome] Orders com transação (liberados):', releasedOrderIds.size);
-
-      let pendingBalance = 0;
-      let pendingCount = 0;
-      let releasedCount = 0;
-
-      processedOrders.forEach(order => {
-        // ✅ USAR SELLER_COMMISSION (já tem 8% descontado) ou calcular 92% do amount
-        let netAmount = order.earning_amount;
-        
-        // Se não tem seller_commission, aplicar desconto de 8%
-        if (!order.seller_commission || parseFloat(order.seller_commission) === 0) {
-          netAmount = netAmount * 0.92;
-        }
-        
-        // ✅ VERIFICAR SE JÁ TEM BALANCE_TRANSACTION (fonte de verdade)
-        const hasTransaction = releasedOrderIds.has(order.order_id);
-        
-        if (!hasTransaction) {
-          // ❌ Sem transação = ainda está pendente
-          pendingBalance += netAmount;
-          pendingCount++;
-        } else {
-          releasedCount++;
-        }
-      });
-
-      console.log('🔍 [AppHome] Contagem:', {
-        totalOrders: processedOrders.length,
-        liberados: releasedCount,
-        pendentes: pendingCount,
-        saldoPendente: pendingBalance
-      });
       
       console.log('💵 [AppHome] Saldos calculados (fonte: customer_balances):', {
         disponivel: finalAvailableBalance,
-        pendente: pendingBalance,
         totalSacado: totalWithdrawnAmount,
         balanceReal: currentBalance
       });
 
       setFinancialData({
         availableBalance: finalAvailableBalance,
-        pendingBalance,
         totalWithdrawn: totalWithdrawnAmount
       });
 
@@ -981,24 +898,6 @@ export function AppHome() {
                   <ArrowDownToLine className="h-4 w-4 mr-2" />
                   Solicitar Saque
                 </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="overflow-hidden rounded-xl border-l-[6px] shadow-sm bg-card" style={{ borderLeftColor: 'hsl(45, 93%, 58%)' }}>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                          <Clock className="h-5 w-5 text-orange-600 dark:text-orange-500" />
-                        </div>
-                        <p className="text-sm font-medium text-muted-foreground">Saldo Pendente</p>
-                      </div>
-                    </div>
-                    <div className="text-3xl font-bold tracking-tight text-foreground">
-                      {formatPriceForSeller(financialData.pendingBalance, 'KZ')}
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1644,17 +1543,6 @@ export function AppHome() {
                 </div>
                 <span className="font-bold text-sm text-foreground">
                   {formatPriceForSeller(financialData.availableBalance, 'KZ')}
-                </span>
-              </div>
-
-              {/* Saldo Pendente */}
-              <div className="flex items-center justify-between p-3 bg-orange-500/10 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                  <span className="text-xs text-muted-foreground">Pendente</span>
-                </div>
-                <span className="font-bold text-sm text-foreground">
-                  {formatPriceForSeller(financialData.pendingBalance, 'KZ')}
                 </span>
               </div>
 
