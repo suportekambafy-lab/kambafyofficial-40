@@ -64,75 +64,123 @@ export default function AdminSellerReports() {
   const loadSellersReport = async () => {
     setLoading(true);
     try {
+      console.log('🔄 Carregando relatórios de vendedores...');
+
+      // Buscar todos os perfis
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, full_name, email, avatar_url, banned, is_creator')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
+      console.log(`✅ ${profiles?.length || 0} perfis carregados`);
 
-      const sellersData = await Promise.all(
-        (profiles || []).map(async (profile) => {
-          const { data: products } = await supabase
-            .from('products')
-            .select('id, status')
-            .eq('user_id', profile.user_id);
+      // Buscar todos os produtos de uma vez
+      const { data: allProducts } = await supabase
+        .from('products')
+        .select('id, user_id, status');
 
-          const productIds = products?.map(p => p.id) || [];
+      console.log(`✅ ${allProducts?.length || 0} produtos carregados`);
 
-          let orders: any[] = [];
-          if (productIds.length > 0) {
-            const { data: ordersData } = await supabase
-              .from('orders')
-              .select('amount, currency')
-              .in('product_id', productIds)
-              .eq('status', 'completed')
-              .neq('payment_method', 'member_access');
-            
-            orders = ordersData || [];
-          }
+      // Buscar todas as vendas de uma vez (TODAS as vendas, incluindo member_access)
+      const { data: allOrders } = await supabase
+        .from('orders')
+        .select('product_id, amount, status')
+        .eq('status', 'completed');
 
-          const { data: withdrawals } = await supabase
-            .from('withdrawal_requests')
-            .select('amount')
-            .eq('user_id', profile.user_id)
-            .eq('status', 'aprovado');
+      console.log(`✅ ${allOrders?.length || 0} vendas carregadas`);
 
-          const { data: balanceData } = await supabase
-            .from('customer_balances')
-            .select('balance')
-            .eq('user_id', profile.user_id)
-            .maybeSingle();
+      // Buscar todos os saques de uma vez
+      const { data: allWithdrawals } = await supabase
+        .from('withdrawal_requests')
+        .select('user_id, amount, status')
+        .eq('status', 'aprovado');
 
-          const activeProducts = products?.filter(p => p.status === 'Ativo').length || 0;
-          const bannedProducts = products?.filter(p => p.status === 'Banido').length || 0;
-          const totalSales = orders?.length || 0;
-          const totalRevenue = orders?.reduce((sum, order) => sum + parseFloat(order.amount), 0) || 0;
-          const totalWithdrawals = withdrawals?.reduce((sum, w) => sum + w.amount, 0) || 0;
-          const totalFees = totalRevenue * 0.08;
-          const availableBalance = balanceData?.balance || 0;
+      console.log(`✅ ${allWithdrawals?.length || 0} saques carregados`);
 
-          return {
-            user_id: profile.user_id,
-            full_name: profile.full_name,
-            email: profile.email,
-            avatar_url: profile.avatar_url,
-            banned: profile.banned,
-            is_creator: profile.is_creator,
-            total_sales: totalSales,
-            total_revenue: totalRevenue,
-            total_withdrawals: totalWithdrawals,
-            total_fees: totalFees,
-            available_balance: availableBalance,
-            active_products: activeProducts,
-            banned_products: bannedProducts,
-          };
-        })
-      );
+      // Buscar todos os saldos de uma vez
+      const { data: allBalances } = await supabase
+        .from('customer_balances')
+        .select('user_id, balance');
 
+      console.log(`✅ ${allBalances?.length || 0} saldos carregados`);
+
+      // Criar mapas para lookup eficiente
+      const productsByUser = new Map<string, any[]>();
+      const ordersByProduct = new Map<string, any[]>();
+      const withdrawalsByUser = new Map<string, number>();
+      const balanceByUser = new Map<string, number>();
+
+      // Organizar produtos por usuário
+      allProducts?.forEach(product => {
+        if (!productsByUser.has(product.user_id)) {
+          productsByUser.set(product.user_id, []);
+        }
+        productsByUser.get(product.user_id)!.push(product);
+      });
+
+      // Organizar vendas por produto
+      allOrders?.forEach(order => {
+        if (!ordersByProduct.has(order.product_id)) {
+          ordersByProduct.set(order.product_id, []);
+        }
+        ordersByProduct.get(order.product_id)!.push(order);
+      });
+
+      // Organizar saques por usuário
+      allWithdrawals?.forEach(withdrawal => {
+        const current = withdrawalsByUser.get(withdrawal.user_id) || 0;
+        withdrawalsByUser.set(withdrawal.user_id, current + withdrawal.amount);
+      });
+
+      // Organizar saldos por usuário
+      allBalances?.forEach(balance => {
+        balanceByUser.set(balance.user_id, balance.balance);
+      });
+
+      // Processar dados de cada vendedor
+      const sellersData = profiles.map(profile => {
+        const userProducts = productsByUser.get(profile.user_id) || [];
+        const activeProducts = userProducts.filter(p => p.status === 'Ativo').length;
+        const bannedProducts = userProducts.filter(p => p.status === 'Banido').length;
+
+        // Buscar todas as vendas dos produtos deste usuário
+        let totalSales = 0;
+        let totalRevenue = 0;
+
+        userProducts.forEach(product => {
+          const productOrders = ordersByProduct.get(product.id) || [];
+          totalSales += productOrders.length;
+          totalRevenue += productOrders.reduce((sum, order) => 
+            sum + parseFloat(order.amount || '0'), 0
+          );
+        });
+
+        const totalWithdrawals = withdrawalsByUser.get(profile.user_id) || 0;
+        const availableBalance = balanceByUser.get(profile.user_id) || 0;
+        const totalFees = totalRevenue * 0.08;
+
+        return {
+          user_id: profile.user_id,
+          full_name: profile.full_name,
+          email: profile.email,
+          avatar_url: profile.avatar_url,
+          banned: profile.banned,
+          is_creator: profile.is_creator,
+          total_sales: totalSales,
+          total_revenue: totalRevenue,
+          total_withdrawals: totalWithdrawals,
+          total_fees: totalFees,
+          available_balance: availableBalance,
+          active_products: activeProducts,
+          banned_products: bannedProducts,
+        };
+      });
+
+      console.log(`✅ Relatório processado: ${sellersData.length} vendedores`);
       setSellers(sellersData.sort((a, b) => b.total_revenue - a.total_revenue));
     } catch (error) {
-      console.error('Erro ao carregar relatório:', error);
+      console.error('❌ Erro ao carregar relatório:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os relatórios',
