@@ -225,12 +225,13 @@ export const useStreamingQuery = () => {
           orderValue = parseFloat(order.affiliate_commission?.toString() || '0');
         } else {
           // Para vendas próprias - usar seller_commission (lucro após descontar comissão do afiliado)
-          // Se não tiver seller_commission, usar amount (vendas antigas)
+          // Se não tiver seller_commission, usar amount * 0.92 (vendas antigas já descontando 8%)
           let sellerEarning = parseFloat(order.seller_commission?.toString() || '0');
           
           if (sellerEarning === 0) {
-            // Venda antiga sem comissão registrada - usar valor total
-            sellerEarning = parseFloat(order.amount || '0');
+            // ✅ Venda antiga sem comissão registrada - descontar 8% da plataforma
+            const grossAmount = parseFloat(order.amount || '0');
+            sellerEarning = grossAmount * 0.92;
           }
           
           orderValue = sellerEarning;

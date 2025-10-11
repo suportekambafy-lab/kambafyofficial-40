@@ -74,19 +74,24 @@ export const useSellerData = () => {
           .maybeSingle()
       ]);
 
-      // Combinar orders normais + module_payments
+      // Combinar orders normais + module_payments (com 8% descontado)
       const allOrders = [
         ...(ordersData.data || []),
-        ...(modulePaymentsData.data || []).map(mp => ({
-          id: mp.id,
-          amount: mp.amount?.toString() || '0',
-          created_at: mp.created_at,
-          status: mp.status,
-          product_id: mp.module_id,
-          customer_name: mp.student_name,
-          customer_email: mp.student_email,
-          order_bump_data: null
-        }))
+        ...(modulePaymentsData.data || []).map(mp => {
+          const grossAmount = parseFloat(mp.amount?.toString() || '0');
+          const netAmount = grossAmount * 0.92; // ✅ Descontar 8% da plataforma
+          
+          return {
+            id: mp.id,
+            amount: netAmount.toString(), // Valor líquido
+            created_at: mp.created_at,
+            status: mp.status,
+            product_id: mp.module_id,
+            customer_name: mp.student_name,
+            customer_email: mp.student_email,
+            order_bump_data: null
+          };
+        })
       ];
 
       return {

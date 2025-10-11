@@ -50,8 +50,12 @@ const OptimizedSellerDashboard = memo(() => {
       return sum + countOrderItems(order); // ✅ Conta produto principal + order bumps
     }, 0) || 0,
     totalRevenue: sellerData?.orders?.reduce((sum: number, order: any) => {
-      const amount = parseFloat(order.amount) || 0;
-      // NÃO converter moeda - usar valor bruto do banco
+      // ✅ Usar seller_commission se disponível, senão descontar 8% do amount
+      let amount = parseFloat(order.seller_commission?.toString() || '0');
+      if (amount === 0) {
+        const grossAmount = parseFloat(order.amount || '0');
+        amount = grossAmount * 0.92; // Descontar 8% da plataforma
+      }
       return sum + amount;
     }, 0) || 0,
     totalProducts: sellerData?.products?.length || 0,
@@ -135,8 +139,13 @@ const OptimizedSellerDashboard = memo(() => {
       <AnimatedWrapper delay={300}>
         <OptimizedVirtualTable
           items={sellerData?.orders?.map((order: any) => {
-            const amount = parseFloat(order.amount) || 0;
-            // NÃO converter moeda - usar valor bruto do banco
+            // ✅ Calcular valor líquido do vendedor (já descontado 8%)
+            let amount = parseFloat(order.seller_commission?.toString() || '0');
+            if (amount === 0) {
+              const grossAmount = parseFloat(order.amount || '0');
+              amount = grossAmount * 0.92; // Descontar 8% da plataforma
+            }
+            
             return {
               id: order.id,
               name: `Pedido #${order.id.slice(0, 8)}`,

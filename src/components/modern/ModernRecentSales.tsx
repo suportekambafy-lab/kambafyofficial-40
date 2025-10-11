@@ -205,10 +205,18 @@ export function ModernRecentSales() {
         // Vendas próprias - verificar se são recuperadas
         ...(ownOrders || []).map((order: any) => {
           const isRecovered = recoveredOrderIds.has(order.order_id);
+          
+          // ✅ Calcular valor líquido do vendedor (descontar 8% se não tiver seller_commission)
+          let earning_amount = parseFloat(order.seller_commission?.toString() || '0');
+          if (earning_amount === 0) {
+            const grossAmount = parseFloat(order.amount || '0');
+            earning_amount = grossAmount * 0.92; // Descontar 8% da plataforma
+          }
+          
           return {
             ...order,
             sale_type: isRecovered ? 'recovered' : 'own',
-            earning_amount: parseFloat(order.seller_commission?.toString() || order.amount || '0')
+            earning_amount
           };
         }),
         // Vendas como afiliado

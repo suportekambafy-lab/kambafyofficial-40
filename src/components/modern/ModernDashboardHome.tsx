@@ -191,8 +191,9 @@ export function ModernDashboardHome() {
           let earning_currency = 'KZ'; // seller_commission sempre está em KZ
           
           if (earning_amount === 0) {
-            // Venda antiga sem comissão registrada - usar valor original
-            earning_amount = parseFloat(order.amount || '0');
+            // ✅ Venda antiga sem comissão registrada - descontar 8% da plataforma
+            const grossAmount = parseFloat(order.amount || '0');
+            earning_amount = grossAmount * 0.92;
             earning_currency = order.currency;
           }
           
@@ -209,22 +210,27 @@ export function ModernDashboardHome() {
           earning_amount: parseFloat(order.affiliate_commission?.toString() || '0'),
           order_type: 'affiliate'
         })),
-        // ✅ Pagamentos de módulos - converter para formato compatível
-        ...(modulePayments || []).map((mp: any) => ({
-          id: mp.id,
-          order_id: mp.order_id,
-          amount: mp.amount?.toString() || '0',
-          currency: mp.currency || 'KZ',
-          created_at: mp.created_at,
-          status: mp.status,
-          product_id: mp.module_id,
-          customer_name: mp.student_name,
-          customer_email: mp.student_email,
-          order_bump_data: null, // Módulos não têm order bumps
-          earning_amount: parseFloat(mp.amount?.toString() || '0'),
-          earning_currency: mp.currency || 'KZ',
-          order_type: 'module'
-        }))
+        // ✅ Pagamentos de módulos - converter para formato compatível (descontando 8%)
+        ...(modulePayments || []).map((mp: any) => {
+          const grossAmount = parseFloat(mp.amount?.toString() || '0');
+          const netAmount = grossAmount * 0.92; // Descontar 8% da plataforma
+          
+          return {
+            id: mp.id,
+            order_id: mp.order_id,
+            amount: netAmount.toString(), // Valor líquido
+            currency: mp.currency || 'KZ',
+            created_at: mp.created_at,
+            status: mp.status,
+            product_id: mp.module_id,
+            customer_name: mp.student_name,
+            customer_email: mp.student_email,
+            order_bump_data: null, // Módulos não têm order bumps
+            earning_amount: netAmount, // ✅ Valor líquido (já descontado 8%)
+            earning_currency: mp.currency || 'KZ',
+            order_type: 'module'
+          };
+        })
       ];
 
       // Ordenar por data

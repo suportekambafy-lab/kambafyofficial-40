@@ -75,7 +75,7 @@ export function ModernSalesChart() {
 
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('created_at, amount, currency, product_id, order_id')
+        .select('created_at, amount, seller_commission, currency, product_id, order_id')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', sevenDaysAgo.toISOString())
@@ -104,7 +104,13 @@ export function ModernSalesChart() {
         const orderDate = new Date(order.created_at);
         const dayKey = orderDate.toISOString().split('T')[0];
         
-        let amount = parseFloat(order.amount || '0');
+        // ✅ Usar seller_commission se disponível, senão descontar 8% do amount
+        let amount = parseFloat(order.seller_commission?.toString() || '0');
+        if (amount === 0) {
+          const grossAmount = parseFloat(order.amount || '0');
+          amount = grossAmount * 0.92; // Descontar 8% da plataforma
+        }
+        
         // Converter para KZ se necessário
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {

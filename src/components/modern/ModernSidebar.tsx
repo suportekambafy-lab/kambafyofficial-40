@@ -112,8 +112,13 @@ export function ModernSidebar({
       }
 
       const totalRevenue = allOrders?.reduce((sum, order) => {
-        // Usar seller_commission se disponível, senão usar amount
-        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        // ✅ Usar seller_commission se disponível, senão descontar 8% do amount
+        let amount = parseFloat(order.seller_commission?.toString() || '0');
+        if (amount === 0) {
+          const grossAmount = parseFloat(order.amount || '0');
+          amount = grossAmount * 0.92; // Descontar 8% da plataforma
+        }
+        
         // Converter para KZ se necessário
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
