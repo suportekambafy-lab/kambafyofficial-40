@@ -10,6 +10,7 @@ import { SkeletonPage } from '@/components/ui/skeleton-page';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { CrispChat } from '@/components/CrispChat';
+import { UpgradeBanner } from '@/components/ui/upgrade-banner';
 
 // Lazy load páginas para melhor performance com retry logic
 const createLazyWithRetry = (importFn: () => Promise<any>, name: string) => {
@@ -98,6 +99,14 @@ function SellerDashboardContent() {
               onToggleSidebar={toggleSidebarOpen}
               isMobile={isMobile}
             />
+
+            {/* Banner de Manutenção */}
+            <div className="border-b bg-background py-3">
+              <UpgradeBanner
+                buttonText="Manutenção em Andamento"
+                description="Sistema de saques temporariamente indisponível. Seu saldo está seguro! 🔒"
+              />
+            </div>
           
           {/* Main content */}
           <main className="flex-1 overflow-y-auto">

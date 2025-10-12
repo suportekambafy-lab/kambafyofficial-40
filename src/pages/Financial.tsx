@@ -23,7 +23,6 @@ import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import { BankingInfo } from "@/components/BankingInfo";
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { WithdrawalModal } from "@/components/WithdrawalModal";
-import { UpgradeBanner } from "@/components/ui/upgrade-banner";
 import {
   Table,
   TableBody,
@@ -255,12 +254,6 @@ export default function Financial() {
   return (
     <OptimizedPageWrapper>
       <div className="space-y-6 p-4 md:p-6 lg:p-8 max-w-full overflow-x-hidden">
-        <UpgradeBanner
-          buttonText="Manutenção em Andamento"
-          description="Sistema de saques temporariamente indisponível. Seu saldo está seguro! 🔒"
-          className="mb-6"
-        />
-        
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Financeiro</h1>
