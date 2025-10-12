@@ -71,7 +71,7 @@ function SellerDashboardContent() {
         
         {/* Banner de Manutenção - Fixed no Topo Acima de Tudo */}
         {bannerVisible && (
-          <div className="fixed top-0 left-0 right-0 w-full border-b bg-background py-2 z-[60]">
+          <div className="fixed top-0 left-0 right-0 w-full border-b bg-background py-2 z-[100]">
             <UpgradeBanner
               buttonText="Correção de Dados em Andamento"
               description="Detectamos inconsistências nos cálculos financeiros. Estamos corrigindo para garantir precisão. Seu saldo real está seguro! 🔒"
@@ -81,7 +81,7 @@ function SellerDashboardContent() {
         )}
         
         {/* Espaçamento para o banner quando visível */}
-        {bannerVisible && <div className="h-[51px]" />}
+        {bannerVisible && <div className="h-[59px]" />}
         
         <div className="flex flex-1 min-h-0">
           {/* Backdrop para mobile */}
