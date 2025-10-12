@@ -61,7 +61,7 @@ export function UpgradeBanner({
   } as any;
 
   return (
-    <div className={cn("w-full px-2 sm:px-4 flex items-center justify-center", className)}>
+    <div className={cn("mx-auto flex items-center justify-center", className)}>
       <AnimatePresence>
         <motion.div
           className="relative"
@@ -87,7 +87,7 @@ export function UpgradeBanner({
           >
             <SettingsFilled className="text-[#005FF2] dark:text-[#006EFE]" />
           </motion.div>
-          <div className="relative flex min-h-[35px] w-full max-w-4xl flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-1 rounded-[6px] border border-[#CBE7FF] bg-[#F0F7FF] p-2 sm:pl-2.5 sm:pr-1 sm:py-0 text-xs sm:text-sm dark:border-[#003674] dark:bg-[#06193A]">
+          <div className="relative flex min-h-[35px] flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-1 rounded-[6px] border border-[#CBE7FF] bg-[#F0F7FF] p-2 sm:pl-2.5 sm:pr-1 sm:py-0 text-xs sm:text-sm dark:border-[#003674] dark:bg-[#06193A]">
             <button
               className="focus-visible:shadow-focus-ring rounded-xs cursor-pointer border-none bg-transparent px-0 py-1 font-sans text-xs sm:text-[13px] font-medium text-[#002359] underline decoration-[#CAE7FF] underline-offset-[5px] outline-none hover:text-[#005FF2] hover:decoration-[#94CCFF] focus-visible:!shadow-[#008FFF] dark:text-[#EAF5FF] dark:decoration-[#003674] dark:hover:text-[#44A7FF] dark:hover:decoration-[#00408A] whitespace-normal text-left"
               onMouseEnter={() => setIsHovered(true)}
