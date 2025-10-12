@@ -66,12 +66,12 @@ function SellerDashboardContent() {
   const [bannerVisible, setBannerVisible] = useState(true);
 
   return (
-    <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
+    <div className={`min-h-screen bg-background seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
         <CrispChat />
         
-        {/* Banner de Manutenção - Antes de Tudo */}
+        {/* Banner de Manutenção - Fixed no Topo Acima de Tudo */}
         {bannerVisible && (
-          <div className="w-full border-b bg-background py-2">
+          <div className="fixed top-0 left-0 right-0 w-full border-b bg-background py-2 z-[60]">
             <UpgradeBanner
               buttonText="Manutenção em Andamento"
               description="Sistema de saques temporariamente indisponível. Seu saldo está seguro! 🔒"
@@ -79,6 +79,9 @@ function SellerDashboardContent() {
             />
           </div>
         )}
+        
+        {/* Espaçamento para o banner quando visível */}
+        {bannerVisible && <div className="h-[51px]" />}
         
         <div className="flex flex-1 min-h-0">
           {/* Backdrop para mobile */}
