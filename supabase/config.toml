@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.add-member-area-student]
 verify_jwt = false
+
+[functions.cloudflare-r2-upload]
+verify_jwt = false
+
+[functions.cloudflare-stream-upload]
+verify_jwt = false

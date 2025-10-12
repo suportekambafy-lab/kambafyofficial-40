@@ -103,6 +103,7 @@ const DevRoutes = createLazyWithRetry(() => import('@/pages/DevRoutes'), "DevRou
 
 // Test Routes
 const BunnyStorageTest = createLazyWithRetry(() => import('@/pages/BunnyStorageTest'), "BunnyStorageTest");
+const CloudflareStorageTest = createLazyWithRetry(() => import('@/pages/CloudflareStorageTest'), "CloudflareStorageTest");
 
 // Fallback component otimizado
 const PageFallback = ({ variant = 'dashboard' }: { variant?: 'dashboard' | 'settings' | 'financial' | 'sales' }) => (
@@ -189,6 +190,7 @@ export const OptimizedRoutes = {
   
   // Test routes
   BunnyStorageTest: withLazyLoading(BunnyStorageTest, 'settings'),
+  CloudflareStorageTest: withLazyLoading(CloudflareStorageTest, 'settings'),
   
   // Nova estrutura moderna de área de membros
   MembersLogin: withLazyLoading(MembersLogin, 'member-area'),

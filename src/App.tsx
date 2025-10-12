@@ -226,6 +226,7 @@ const App = () => {
                        <Route path="/area/teste" element={<TestAreaComponent />} />
                        <Route path="/login/teste" element={<TestLoginComponent />} />
                        <Route path="/bunny-storage-test" element={<OptimizedRoutes.BunnyStorageTest />} />
+                       <Route path="/cloudflare-storage-test" element={<OptimizedRoutes.CloudflareStorageTest />} />
                        <Route path="/test-facebook" element={<TestFacebookIntegration />} />
                        
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
