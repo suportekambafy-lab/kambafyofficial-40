@@ -195,7 +195,7 @@ export function ModernSidebar({
               animate={{ x: 0 }}
               exit={{ x: -320 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="fixed left-0 top-[51px] h-[calc(100vh-51px)] w-80 bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-xl"
+              className="fixed left-0 top-0 h-screen w-80 bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-xl"
             >
               {/* Header */}
               <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
@@ -265,7 +265,7 @@ export function ModernSidebar({
         width: collapsed ? 80 : 320
       }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed left-0 top-[51px] h-[calc(100vh-51px)] bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-sm"
+      className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-sm"
     >
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
