@@ -127,14 +127,14 @@ serve(async (req) => {
         let feeAmount: number;
         
         if (order.seller_commission) {
-          // seller_commission = valor líquido (já descontado 8%)
+          // seller_commission = valor líquido (já descontado 8.99%)
           netAmount = parseFloat(order.seller_commission);
-          feeAmount = netAmount * 0.08 / 0.92; // Calcular fee a partir do líquido
+          feeAmount = netAmount * 0.0899 / 0.9101; // Calcular fee a partir do líquido
         } else {
-          // amount = valor bruto (precisa descontar 8%)
+          // amount = valor bruto (precisa descontar 8.99%)
           const grossAmount = parseFloat(order.amount || '0');
-          feeAmount = grossAmount * 0.08;
-          netAmount = grossAmount * 0.92;
+          feeAmount = grossAmount * 0.0899;
+          netAmount = grossAmount * 0.9101;
         }
         
         // Criar taxa da plataforma (negativa) se não existir

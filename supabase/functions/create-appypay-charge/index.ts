@@ -384,7 +384,7 @@ serve(async (req) => {
     if (!skipOrderSave) {
       // Calcular seller_commission PRIMEIRO
       const grossAmount = parseFloat(originalAmount?.toString() || amount.toString());
-      const sellerCommission = grossAmount * 0.92; // 8% platform fee
+      const sellerCommission = grossAmount * 0.9101; // 8.99% platform fee
       
       // Calcular expires_at baseado no método de pagamento
       let expiresAt = null;

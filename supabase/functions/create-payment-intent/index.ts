@@ -245,8 +245,8 @@ serve(async (req) => {
       status: orderStatus,
       user_id: product.user_id,
       stripe_payment_intent_id: paymentIntent.id,
-      // Popular seller_commission com 8% de taxa descontado
-      seller_commission: parseFloat(finalAmount) * 0.92 // 8% platform fee
+      // Popular seller_commission com 8.99% de taxa descontado
+      seller_commission: parseFloat(finalAmount) * 0.9101 // 8.99% platform fee
     };
 
     console.log('Saving order with corrected data:', orderData);
