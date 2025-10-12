@@ -261,8 +261,8 @@ serve(async (req) => {
           .update({ 
             status: 'completed',
             updated_at: new Date().toISOString(),
-            // SEMPRE salvar em KZ para vendedores angolanos com 8% de taxa descontado
-            seller_commission: sellerCommissionInKZ * 0.92, // 8% platform fee
+            // SEMPRE salvar em KZ para vendedores angolanos com 8.99% de taxa descontado
+            seller_commission: sellerCommissionInKZ * 0.9101, // 8.99% platform fee
             amount: amountInKZ.toString(), // Valor convertido para KZ
             currency: 'KZ' // Sempre KZ no banco
           })

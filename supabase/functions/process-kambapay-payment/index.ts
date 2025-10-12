@@ -78,9 +78,9 @@ serve(async (req) => {
     // 3. Criar o pedido
     const orderId = `KAMBAPAY_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
     
-    // Calcular seller_commission com desconto de 8%
+    // Calcular seller_commission com desconto de 8.99%
     const grossAmount = productPrice;
-    const sellerCommission = grossAmount * 0.92; // 8% platform fee
+    const sellerCommission = grossAmount * 0.9101; // 8.99% platform fee
     
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
