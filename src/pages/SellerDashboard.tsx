@@ -68,6 +68,14 @@ function SellerDashboardContent() {
     <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
         <CrispChat />
         
+        {/* Banner de Manutenção - Topo Absoluto */}
+        <div className="border-b bg-background py-3 sticky top-0 z-50">
+          <UpgradeBanner
+            buttonText="Manutenção em Andamento"
+            description="Sistema de saques temporariamente indisponível. Seu saldo está seguro! 🔒"
+          />
+        </div>
+        
         <div className="flex flex-1">
           {/* Backdrop para mobile */}
           {isMobile && sidebarOpen && (
@@ -99,14 +107,6 @@ function SellerDashboardContent() {
               onToggleSidebar={toggleSidebarOpen}
               isMobile={isMobile}
             />
-
-            {/* Banner de Manutenção */}
-            <div className="border-b bg-background py-3">
-              <UpgradeBanner
-                buttonText="Manutenção em Andamento"
-                description="Sistema de saques temporariamente indisponível. Seu saldo está seguro! 🔒"
-              />
-            </div>
           
           {/* Main content */}
           <main className="flex-1 overflow-y-auto">
