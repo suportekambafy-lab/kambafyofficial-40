@@ -2,3 +2,33 @@ project_id = "hcbkqygdtzpxvctfdqbd"
 
 [functions.appypay-webhook]
 verify_jwt = false
+
+[functions.create-appypay-charge]
+verify_jwt = false
+
+[functions.create-payment-intent]
+verify_jwt = false
+
+[functions.create-stripe-payment]
+verify_jwt = false
+
+[functions.send-purchase-confirmation]
+verify_jwt = false
+
+[functions.send-member-access-email]
+verify_jwt = false
+
+[functions.trigger-webhooks]
+verify_jwt = false
+
+[functions.verify-appypay-order]
+verify_jwt = false
+
+[functions.process-module-payment]
+verify_jwt = false
+
+[functions.verify-module-payment]
+verify_jwt = false
+
+[functions.add-member-area-student]
+verify_jwt = false
