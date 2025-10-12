@@ -39,7 +39,15 @@ export function WithdrawalModal({
     }
   }, [open]);
 
+  // 🚨 SISTEMA DE SAQUES TEMPORARIAMENTE EM MANUTENÇÃO
+  const WITHDRAWALS_MAINTENANCE = true;
+
   const handleSubmit = async () => {
+    if (WITHDRAWALS_MAINTENANCE) {
+      setError("Sistema de saques temporariamente em manutenção. Por favor, tente novamente em breve.");
+      return;
+    }
+
     if (!user) {
       setError("Usuário não autenticado");
       return;
@@ -139,14 +147,31 @@ export function WithdrawalModal({
         </DrawerHeader>
         
         <div className="space-y-4 p-4">
-          <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
+          {/* 🚨 AVISO DE MANUTENÇÃO */}
+          <div className="bg-amber-50 border-2 border-amber-400 p-4 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-amber-900 mb-2">Sistema de Saques em Manutenção</p>
+                <p className="text-sm text-amber-800 leading-relaxed">
+                  Estamos realizando uma manutenção programada no sistema de saques para melhorar a segurança e precisão dos cálculos. 
+                  <strong className="block mt-2">Fique tranquilo: seu saldo está seguro e protegido.</strong>
+                </p>
+                <p className="text-sm text-amber-800 mt-2">
+                  Os saques serão liberados em breve. Agradecemos pela compreensão! 🙏
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg opacity-60">
             <p className="text-sm text-muted-foreground mb-1">Saldo Disponível</p>
             <p className="text-2xl font-bold text-primary mb-3">
               {availableBalance.toLocaleString()} KZ
             </p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 opacity-60">
             <label htmlFor="withdrawal-amount" className="text-sm font-medium">
               Valor a Sacar (KZ)
             </label>
@@ -163,11 +188,11 @@ export function WithdrawalModal({
               }}
               placeholder={`Máximo: ${availableBalance.toLocaleString()} KZ`}
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              disabled={loading}
+              disabled={true}
             />
             
             {/* Botões de atalho para valores */}
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap opacity-60">
               {[25, 50, 75, 100].map((percentage) => (
                 <Button
                   key={percentage}
@@ -179,7 +204,7 @@ export function WithdrawalModal({
                     setWithdrawalAmount(value.toFixed(2));
                     setError("");
                   }}
-                  disabled={loading}
+                  disabled={true}
                   className="text-xs"
                 >
                   {percentage}%
@@ -216,9 +241,9 @@ export function WithdrawalModal({
             <Button 
               onClick={handleSubmit} 
               className="flex-1"
-              disabled={loading || availableBalance === 0 || !withdrawalAmount || parseFloat(withdrawalAmount) <= 0}
+              disabled={true}
             >
-              {loading ? "Processando..." : "Solicitar Saque"}
+              Sistema em Manutenção
             </Button>
           </div>
         </div>

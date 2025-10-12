@@ -10,6 +10,7 @@ import { SkeletonPage } from '@/components/ui/skeleton-page';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { CrispChat } from '@/components/CrispChat';
+import { UpgradeBanner } from '@/components/ui/upgrade-banner';
 
 // Lazy load páginas para melhor performance com retry logic
 const createLazyWithRetry = (importFn: () => Promise<any>, name: string) => {
@@ -62,12 +63,27 @@ function SellerDashboardContent() {
   const navigate = useNavigate();
   const { collapsed, isMobile, sidebarOpen, toggleSidebarOpen, closeSidebar } = useSidebar();
   const { theme } = useSellerTheme();
+  const [bannerVisible, setBannerVisible] = useState(true);
 
   return (
-    <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
+    <div className={`min-h-screen bg-background seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
         <CrispChat />
         
-        <div className="flex flex-1">
+        {/* Banner de Manutenção - Fixed no Topo Acima de Tudo */}
+        {bannerVisible && (
+          <div className="fixed top-0 left-0 right-0 w-full border-b bg-background py-2 z-[60]">
+            <UpgradeBanner
+              buttonText="Correção de Dados em Andamento"
+              description="Detectamos inconsistências nos cálculos financeiros. Estamos corrigindo para garantir precisão. Seu saldo real está seguro! 🔒"
+              onClose={() => setBannerVisible(false)}
+            />
+          </div>
+        )}
+        
+        {/* Espaçamento para o banner quando visível */}
+        {bannerVisible && <div className="h-[51px]" />}
+        
+        <div className="flex flex-1 min-h-0">
           {/* Backdrop para mobile */}
           {isMobile && sidebarOpen && (
             <div 
