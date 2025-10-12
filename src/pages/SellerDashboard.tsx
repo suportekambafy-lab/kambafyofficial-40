@@ -73,8 +73,8 @@ function SellerDashboardContent() {
         {bannerVisible && (
           <div className="fixed top-0 left-0 right-0 w-full border-b bg-background py-2 z-[60]">
             <UpgradeBanner
-              buttonText="Manutenção em Andamento"
-              description="Sistema de saques temporariamente indisponível. Seu saldo está seguro! 🔒"
+              buttonText="Correção de Dados em Andamento"
+              description="Detectamos inconsistências nos cálculos financeiros. Estamos corrigindo para garantir precisão. Seu saldo real está seguro! 🔒"
               onClose={() => setBannerVisible(false)}
             />
           </div>
