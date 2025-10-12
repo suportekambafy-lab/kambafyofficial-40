@@ -55,10 +55,9 @@ export const useSellerData = () => {
         
         supabase
           .from('orders')
-          .select('id, amount, created_at, status, product_id, customer_name, customer_email, order_bump_data, seller_commission')
+          .select('id, amount, created_at, status, product_id, customer_name, customer_email, order_bump_data')
           .eq('user_id', user.id)
           .eq('status', 'completed')
-          .neq('payment_method', 'member_access')
           .order('created_at', { ascending: false }),
         
         memberAreaIds.length > 0 ? supabase
