@@ -69,9 +69,9 @@ function SellerDashboardContent() {
     <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
         <CrispChat />
         
-        {/* Banner de Manutenção - Topo Absoluto de Tudo */}
+        {/* Banner de Manutenção - Antes de Tudo */}
         {bannerVisible && (
-          <div className="w-full border-b bg-background py-3 sticky top-0 z-[100]">
+          <div className="w-full border-b bg-background py-2">
             <UpgradeBanner
               buttonText="Manutenção em Andamento"
               description="Sistema de saques temporariamente indisponível. Seu saldo está seguro! 🔒"
@@ -80,7 +80,7 @@ function SellerDashboardContent() {
           </div>
         )}
         
-        <div className="flex flex-1">
+        <div className="flex flex-1 min-h-0">
           {/* Backdrop para mobile */}
           {isMobile && sidebarOpen && (
             <div 
