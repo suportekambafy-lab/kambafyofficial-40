@@ -63,18 +63,22 @@ function SellerDashboardContent() {
   const navigate = useNavigate();
   const { collapsed, isMobile, sidebarOpen, toggleSidebarOpen, closeSidebar } = useSidebar();
   const { theme } = useSellerTheme();
+  const [bannerVisible, setBannerVisible] = useState(true);
 
   return (
     <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
         <CrispChat />
         
-        {/* Banner de Manutenção - Topo Absoluto */}
-        <div className="border-b bg-background py-3 sticky top-0 z-50">
-          <UpgradeBanner
-            buttonText="Manutenção em Andamento"
-            description="Sistema de saques temporariamente indisponível. Seu saldo está seguro! 🔒"
-          />
-        </div>
+        {/* Banner de Manutenção - Topo Absoluto de Tudo */}
+        {bannerVisible && (
+          <div className="w-full border-b bg-background py-3 sticky top-0 z-[100]">
+            <UpgradeBanner
+              buttonText="Manutenção em Andamento"
+              description="Sistema de saques temporariamente indisponível. Seu saldo está seguro! 🔒"
+              onClose={() => setBannerVisible(false)}
+            />
+          </div>
+        )}
         
         <div className="flex flex-1">
           {/* Backdrop para mobile */}
