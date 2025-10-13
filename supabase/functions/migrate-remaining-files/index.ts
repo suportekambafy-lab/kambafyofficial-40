@@ -334,11 +334,17 @@ Deno.serve(async (req) => {
       .from('lessons')
       .select('lesson_materials');
     
-    const remainingMaterialsCount = (allLessons || []).filter(lesson => {
-      if (!lesson.lesson_materials) return false;
-      const materials = JSON.stringify(lesson.lesson_materials);
-      return materials.includes('b-cdn.net') || materials.includes('bunnycdn.net');
-    }).length;
+    // Contar ARQUIVOS individuais, não lessons
+    let remainingMaterialsCount = 0;
+    (allLessons || []).forEach(lesson => {
+      if (!lesson.lesson_materials || !Array.isArray(lesson.lesson_materials)) return;
+      const materials = lesson.lesson_materials as any[];
+      materials.forEach(material => {
+        if (material.url && (material.url.includes('b-cdn.net') || material.url.includes('bunnycdn.net'))) {
+          remainingMaterialsCount++;
+        }
+      });
+    });
 
     const { data: allIdentityDocs } = await supabase
       .from('identity_verification')
