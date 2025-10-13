@@ -44,22 +44,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('🚀 Iniciando migração completa do Bunny CDN para Cloudflare R2');
-    console.log('📊 Buscando arquivos para migrar...');
-    console.log('🔄 Versão: 2.0 - Filtro JavaScript');
-
-    const results: MigrationResult[] = [];
-    const stats = {
-      total: 0,
-      success: 0,
-      failed: 0,
-      byCategory: {
-        product_covers: { success: 0, failed: 0 },
-        ebooks: { success: 0, failed: 0 },
-        member_area_logos: { success: 0, failed: 0 },
-        hero_images: { success: 0, failed: 0 },
-      }
-    };
+    console.log('🚀 Iniciando migração - versão 3.0 (processamento em lotes)');
 
     // Helper: Upload para Cloudflare R2
     async function uploadToCloudflare(fileData: Uint8Array, fileName: string, fileType: string): Promise<string> {
@@ -101,277 +86,187 @@ serve(async (req) => {
       };
     }
 
-    // Helper: Migrar arquivo com retry
-    async function migrateFile(
-      url: string,
-      id: string,
-      type: string,
-      maxRetries = 3
-    ): Promise<MigrationResult> {
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          console.log(`  📥 [${type}] Baixando: ${url.substring(0, 80)}...`);
-          
-          const { data, type: fileType } = await downloadFile(url);
-          const fileName = url.split('/').pop() || `file_${Date.now()}`;
-          
-          console.log(`  ☁️ [${type}] Enviando para Cloudflare R2...`);
-          const newUrl = await uploadToCloudflare(data, fileName, fileType);
-          
-          console.log(`  ✅ [${type}] Migrado com sucesso! Nova URL: ${newUrl.substring(0, 60)}...`);
-          
-          return {
-            type,
-            id,
-            oldUrl: url,
-            newUrl,
-            status: 'success'
-          };
-        } catch (error) {
-          if (attempt === maxRetries) {
-            console.error(`  ❌ [${type}] Falha após ${maxRetries} tentativas: ${error.message}`);
-            return {
-              type,
-              id,
-              oldUrl: url,
-              status: 'failed',
-              error: error.message
-            };
-          }
-          console.warn(`  ⚠️ [${type}] Tentativa ${attempt} falhou, tentando novamente...`);
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-        }
+    // Helper: Migrar arquivo
+    async function migrateFile(url: string, id: string, type: string): Promise<MigrationResult> {
+      try {
+        const { data, type: fileType } = await downloadFile(url);
+        const fileName = url.split('/').pop() || `file_${Date.now()}`;
+        const newUrl = await uploadToCloudflare(data, fileName, fileType);
+        
+        console.log(`  ✅ [${type}] ${id} migrado`);
+        
+        return {
+          type,
+          id,
+          oldUrl: url,
+          newUrl,
+          status: 'success'
+        };
+      } catch (error) {
+        console.error(`  ❌ [${type}] ${id}: ${error.message}`);
+        return {
+          type,
+          id,
+          oldUrl: url,
+          status: 'failed',
+          error: error.message
+        };
       }
-      
-      return {
-        type,
-        id,
-        oldUrl: url,
-        status: 'failed',
-        error: 'Max retries exceeded'
-      };
     }
 
-    // CATEGORIA 1: Capas de Produtos
-    console.log('\n📸 CATEGORIA 1: Capas de Produtos');
+    // Buscar arquivos
+    console.log('📊 Buscando arquivos...');
     
-    // Buscar TODOS os produtos e filtrar no código
-    const { data: allProducts, error: coversError } = await supabase
+    const { data: allProducts } = await supabase
       .from('products')
-      .select('id, cover')
+      .select('id, cover, share_link, type')
       .not('cover', 'is', null);
     
-    if (coversError) {
-      console.error('❌ Erro ao buscar capas:', coversError);
-    }
+    const { data: allMemberAreas } = await supabase
+      .from('member_areas')
+      .select('id, logo_url, hero_image_url');
     
-    // Filtrar apenas os que têm Bunny CDN
     const productsWithCovers = allProducts?.filter(p => 
       p.cover?.includes('bunny') || p.cover?.includes('b-cdn')
     ) || [];
     
-    console.log(`📊 Total de produtos: ${allProducts?.length || 0}`);
-    console.log(`📋 Produtos com Bunny CDN: ${productsWithCovers.length}`);
+    const ebooks = allProducts?.filter(e => 
+      e.type === 'E-book' && (e.share_link?.includes('bunny') || e.share_link?.includes('b-cdn'))
+    ) || [];
+    
+    const logosWithBunny = allMemberAreas?.filter(ma => 
+      ma.logo_url && (ma.logo_url.includes('bunny') || ma.logo_url.includes('b-cdn'))
+    ) || [];
+    
+    const heroWithBunny = allMemberAreas?.filter(ma => 
+      ma.hero_image_url && (ma.hero_image_url.includes('bunny') || ma.hero_image_url.includes('b-cdn'))
+    ) || [];
 
-    if (productsWithCovers && productsWithCovers.length > 0) {
-      console.log(`  📋 Encontrados ${productsWithCovers.length} produtos com capas no Bunny`);
+    const totalFiles = productsWithCovers.length + ebooks.length + logosWithBunny.length + heroWithBunny.length;
+    
+    console.log(`📋 Encontrados ${totalFiles} arquivos:`);
+    console.log(`  - ${productsWithCovers.length} capas de produtos`);
+    console.log(`  - ${ebooks.length} e-books`);
+    console.log(`  - ${logosWithBunny.length} logos`);
+    console.log(`  - ${heroWithBunny.length} hero images`);
+
+    if (totalFiles === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Nenhum arquivo do Bunny CDN encontrado para migrar',
+          stats: { total: 0, success: 0, failed: 0 }
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Processar em lotes de 5 arquivos
+    const BATCH_SIZE = 5;
+    let processed = 0;
+    let success = 0;
+    let failed = 0;
+
+    // Processar capas
+    console.log('\n📸 Migrando capas de produtos...');
+    for (let i = 0; i < productsWithCovers.length; i += BATCH_SIZE) {
+      const batch = productsWithCovers.slice(i, i + BATCH_SIZE);
       
-      for (const product of productsWithCovers) {
-        stats.total++;
+      for (const product of batch) {
         const result = await migrateFile(product.cover, product.id, 'product_cover');
-        results.push(result);
+        processed++;
         
         if (result.status === 'success' && result.newUrl) {
-          // Atualizar banco com nova URL (sem salvar antiga em metadata)
-          await supabase
-            .from('products')
-            .update({ cover: result.newUrl })
-            .eq('id', product.id);
-          
-          stats.success++;
-          stats.byCategory.product_covers.success++;
+          await supabase.from('products').update({ cover: result.newUrl }).eq('id', product.id);
+          success++;
         } else {
-          stats.failed++;
-          stats.byCategory.product_covers.failed++;
+          failed++;
         }
+        
+        console.log(`  Progresso: ${processed}/${totalFiles}`);
       }
     }
 
-    // CATEGORIA 2: E-books
-    console.log('\n📚 CATEGORIA 2: E-books');
-    
-    const { data: allEbooks, error: ebooksError } = await supabase
-      .from('products')
-      .select('id, share_link, type')
-      .eq('type', 'E-book')
-      .not('share_link', 'is', null);
-    
-    if (ebooksError) {
-      console.error('❌ Erro ao buscar e-books:', ebooksError);
-    }
-    
-    const ebooks = allEbooks?.filter(e => 
-      e.share_link?.includes('bunny') || e.share_link?.includes('b-cdn')
-    ) || [];
-    
-    console.log(`📊 Total de e-books: ${allEbooks?.length || 0}`);
-    console.log(`📋 E-books com Bunny CDN: ${ebooks.length}`);
-
-    if (ebooks && ebooks.length > 0) {
-      console.log(`  📋 Encontrados ${ebooks.length} e-books no Bunny`);
+    // Processar e-books
+    console.log('\n📚 Migrando e-books...');
+    for (let i = 0; i < ebooks.length; i += BATCH_SIZE) {
+      const batch = ebooks.slice(i, i + BATCH_SIZE);
       
-      for (const ebook of ebooks) {
-        stats.total++;
+      for (const ebook of batch) {
         const result = await migrateFile(ebook.share_link, ebook.id, 'ebook');
-        results.push(result);
+        processed++;
         
         if (result.status === 'success' && result.newUrl) {
-          // Atualizar banco com nova URL
-          await supabase
-            .from('products')
-            .update({ share_link: result.newUrl })
-            .eq('id', ebook.id);
-          
-          stats.success++;
-          stats.byCategory.ebooks.success++;
+          await supabase.from('products').update({ share_link: result.newUrl }).eq('id', ebook.id);
+          success++;
         } else {
-          stats.failed++;
-          stats.byCategory.ebooks.failed++;
+          failed++;
         }
+        
+        console.log(`  Progresso: ${processed}/${totalFiles}`);
       }
     }
 
-    // CATEGORIA 3: Logos de Áreas de Membros
-    console.log('\n🎨 CATEGORIA 3: Logos de Áreas de Membros');
-    
-    const { data: allMemberAreasLogos, error: logosError } = await supabase
-      .from('member_areas')
-      .select('id, logo_url')
-      .not('logo_url', 'is', null);
-    
-    if (logosError) {
-      console.error('❌ Erro ao buscar logos:', logosError);
-    }
-    
-    const memberAreasWithLogos = allMemberAreasLogos?.filter(ma => 
-      ma.logo_url?.includes('bunny') || ma.logo_url?.includes('b-cdn')
-    ) || [];
-    
-    console.log(`📊 Total de logos: ${allMemberAreasLogos?.length || 0}`);
-    console.log(`📋 Logos com Bunny CDN: ${memberAreasWithLogos.length}`);
-
-    if (memberAreasWithLogos && memberAreasWithLogos.length > 0) {
-      console.log(`  📋 Encontrados ${memberAreasWithLogos.length} logos no Bunny`);
+    // Processar logos
+    console.log('\n🎨 Migrando logos...');
+    for (const area of logosWithBunny) {
+      const result = await migrateFile(area.logo_url, area.id, 'logo');
+      processed++;
       
-      for (const area of memberAreasWithLogos) {
-        stats.total++;
-        const result = await migrateFile(area.logo_url, area.id, 'member_area_logo');
-        results.push(result);
-        
-        if (result.status === 'success' && result.newUrl) {
-          // Atualizar banco com nova URL
-          await supabase
-            .from('member_areas')
-            .update({ logo_url: result.newUrl })
-            .eq('id', area.id);
-          
-          stats.success++;
-          stats.byCategory.member_area_logos.success++;
-        } else {
-          stats.failed++;
-          stats.byCategory.member_area_logos.failed++;
-        }
+      if (result.status === 'success' && result.newUrl) {
+        await supabase.from('member_areas').update({ logo_url: result.newUrl }).eq('id', area.id);
+        success++;
+      } else {
+        failed++;
       }
-    }
-
-    // CATEGORIA 4: Hero Images
-    console.log('\n🖼️ CATEGORIA 4: Hero Images de Áreas de Membros');
-    
-    const { data: allMemberAreasHero, error: heroError } = await supabase
-      .from('member_areas')
-      .select('id, hero_image_url')
-      .not('hero_image_url', 'is', null);
-    
-    if (heroError) {
-      console.error('❌ Erro ao buscar hero images:', heroError);
-    }
-    
-    const memberAreasWithHero = allMemberAreasHero?.filter(ma => 
-      ma.hero_image_url?.includes('bunny') || ma.hero_image_url?.includes('b-cdn')
-    ) || [];
-    
-    console.log(`📊 Total de hero images: ${allMemberAreasHero?.length || 0}`);
-    console.log(`📋 Hero images com Bunny CDN: ${memberAreasWithHero.length}`);
-
-    if (memberAreasWithHero && memberAreasWithHero.length > 0) {
-      console.log(`  📋 Encontrados ${memberAreasWithHero.length} hero images no Bunny`);
       
-      for (const area of memberAreasWithHero) {
-        stats.total++;
-        const result = await migrateFile(area.hero_image_url, area.id, 'hero_image');
-        results.push(result);
-        
-        if (result.status === 'success' && result.newUrl) {
-          // Atualizar banco com nova URL
-          await supabase
-            .from('member_areas')
-            .update({ hero_image_url: result.newUrl })
-            .eq('id', area.id);
-          
-          stats.success++;
-          stats.byCategory.hero_images.success++;
-        } else {
-          stats.failed++;
-          stats.byCategory.hero_images.failed++;
-        }
+      console.log(`  Progresso: ${processed}/${totalFiles}`);
+    }
+
+    // Processar hero images
+    console.log('\n🖼️ Migrando hero images...');
+    for (const area of heroWithBunny) {
+      const result = await migrateFile(area.hero_image_url, area.id, 'hero');
+      processed++;
+      
+      if (result.status === 'success' && result.newUrl) {
+        await supabase.from('member_areas').update({ hero_image_url: result.newUrl }).eq('id', area.id);
+        success++;
+      } else {
+        failed++;
       }
+      
+      console.log(`  Progresso: ${processed}/${totalFiles}`);
     }
 
-    // RESULTADO FINAL
-    console.log('\n🎉 MIGRAÇÃO CONCLUÍDA!');
-    console.log(`📊 Estatísticas Finais:`);
-    console.log(`  ✅ Total de arquivos: ${stats.total}`);
-    console.log(`  ✅ Sucessos: ${stats.success}`);
-    console.log(`  ❌ Falhas: ${stats.failed}`);
-    console.log('\n📂 Por Categoria:');
-    console.log(`  📸 Capas de Produtos: ${stats.byCategory.product_covers.success}✅ / ${stats.byCategory.product_covers.failed}❌`);
-    console.log(`  📚 E-books: ${stats.byCategory.ebooks.success}✅ / ${stats.byCategory.ebooks.failed}❌`);
-    console.log(`  🎨 Logos: ${stats.byCategory.member_area_logos.success}✅ / ${stats.byCategory.member_area_logos.failed}❌`);
-    console.log(`  🖼️ Hero Images: ${stats.byCategory.hero_images.success}✅ / ${stats.byCategory.hero_images.failed}❌`);
-
-    const failedResults = results.filter(r => r.status === 'failed');
-    if (failedResults.length > 0) {
-      console.log('\n❌ Arquivos com falha:');
-      failedResults.forEach(r => {
-        console.log(`  - [${r.type}] ${r.id}: ${r.error}`);
-      });
-    }
+    console.log('\n🎉 Migração concluída!');
+    console.log(`✅ Sucesso: ${success}/${totalFiles}`);
+    console.log(`❌ Falhas: ${failed}/${totalFiles}`);
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Migração concluída!',
-        stats,
-        results,
-        failedResults
+        stats: {
+          total: totalFiles,
+          success,
+          failed,
+          byCategory: {
+            product_covers: productsWithCovers.length,
+            ebooks: ebooks.length,
+            logos: logosWithBunny.length,
+            hero_images: heroWithBunny.length
+          }
+        }
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('❌ Erro fatal na migração:', error);
+    console.error('❌ Erro fatal:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        stack: error.stack 
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
