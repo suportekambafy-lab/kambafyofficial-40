@@ -81,13 +81,32 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Step 2: Upload using HLS playlist (maximum quality)
+        // Step 2: Find highest quality MP4 available
         const bunnyVideoId = lesson.bunny_video_id;
         
-        // ✅ Use complete HLS playlist URL (contains all qualities)
-        const hlsUrl = `https://vz-5c879716-268.b-cdn.net/${bunnyVideoId}/playlist.m3u8`;
+        // ✅ Try different qualities until we find one that exists
+        const qualities = ['2160p', '1440p', '1080p', '720p', '480p', '360p'];
+        let videoUrl = null;
         
-        console.log(`📤 Uploading from HLS: ${hlsUrl}`);
+        for (const quality of qualities) {
+          const testUrl = `https://vz-5c879716-268.b-cdn.net/${bunnyVideoId}/play_${quality}.mp4`;
+          try {
+            const headResponse = await fetch(testUrl, { method: 'HEAD' });
+            if (headResponse.ok) {
+              videoUrl = testUrl;
+              console.log(`✅ Found ${quality} quality: ${videoUrl}`);
+              break;
+            }
+          } catch (e) {
+            console.log(`❌ Quality ${quality} not available`);
+          }
+        }
+        
+        if (!videoUrl) {
+          throw new Error(`No video quality found for bunny video ID: ${bunnyVideoId}`);
+        }
+        
+        console.log(`📤 Uploading from URL: ${videoUrl}`);
 
         const uploadResponse = await fetch(
           `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/copy`,
@@ -98,12 +117,13 @@ Deno.serve(async (req) => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              url: hlsUrl,
+              url: videoUrl,
               meta: {
                 name: lesson.title,
-                migrated_from: 'bunny_hls',
+                migrated_from: 'bunny_mp4',
                 migration_date: new Date().toISOString(),
                 original_bunny_id: bunnyVideoId,
+                source_quality: videoUrl.match(/play_(\w+)\.mp4/)?.[1] || 'unknown',
               },
               requireSignedURLs: false,
             }),
@@ -134,8 +154,9 @@ Deno.serve(async (req) => {
           stream_id: streamId,
           migrated_from_bunny: true,
           migration_date: new Date().toISOString(),
-          migration_type: 'hls_full_quality',
-          original_bunny_url: lesson.video_data?.original_bunny_url || `https://vz-5c879716-268.b-cdn.net/${bunnyVideoId}/playlist.m3u8`,
+          migration_type: 'high_quality_mp4',
+          source_quality: videoUrl.match(/play_(\w+)\.mp4/)?.[1] || 'unknown',
+          original_bunny_url: videoUrl,
           original_bunny_id: bunnyVideoId,
           cloudflare_status: 'processing',
         };
