@@ -15,8 +15,8 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const CLOUDFLARE_ACCOUNT_ID = Deno.env.get('CLOUDFLARE_ACCOUNT_ID');
-    const CLOUDFLARE_API_TOKEN = Deno.env.get('CLOUDFLARE_API_TOKEN');
+    const CLOUDFLARE_ACCOUNT_ID = Deno.env.get('CLOUDFLARE_STREAM_ACCOUNT_ID');
+    const CLOUDFLARE_API_TOKEN = Deno.env.get('CLOUDFLARE_STREAM_API_TOKEN');
 
     console.log('🔍 Verificando credenciais Cloudflare...');
     console.log('Account ID presente:', !!CLOUDFLARE_ACCOUNT_ID);
@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
         has_account_id: !!CLOUDFLARE_ACCOUNT_ID,
         has_api_token: !!CLOUDFLARE_API_TOKEN
       });
-      throw new Error('Cloudflare credentials not configured. Verifique as secrets CLOUDFLARE_ACCOUNT_ID e CLOUDFLARE_API_TOKEN no Supabase.');
+      throw new Error('Cloudflare Stream credentials not configured. Verifique as secrets CLOUDFLARE_STREAM_ACCOUNT_ID e CLOUDFLARE_STREAM_API_TOKEN no Supabase.');
     }
 
     const { lesson_ids } = await req.json();
