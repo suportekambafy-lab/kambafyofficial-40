@@ -1,6 +1,7 @@
 import { corsHeaders } from "../_shared/cors.ts";
 
-console.log("🚀 Cloudflare R2 Upload Function initialized");
+// Version 2.0 - Native implementation without AWS SDK
+console.log("🚀 Cloudflare R2 Upload Function v2.0 (Native Implementation) initialized");
 
 // Helper para criar assinatura AWS V4
 async function createSignature(
