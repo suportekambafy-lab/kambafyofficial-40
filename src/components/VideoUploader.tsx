@@ -75,9 +75,11 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('✅ URL de upload obtida:', uid);
       setUploadProgress(10);
 
-      // Step 2: Upload file directly to Cloudflare
+      // Step 2: Upload file directly to Cloudflare using FormData
       await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append('file', selectedFile);
 
         // Track upload progress
         xhr.upload.onprogress = (e) => {
@@ -141,8 +143,8 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
           reject(new Error('Upload cancelado'));
         };
 
-        xhr.open('PUT', uploadURL);
-        xhr.send(selectedFile);
+        xhr.open('POST', uploadURL);
+        xhr.send(formData);
       });
 
     } catch (error: any) {
