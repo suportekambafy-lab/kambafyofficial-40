@@ -75,23 +75,27 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('✅ URL de upload obtida:', uid);
       setUploadProgress(10);
 
-      // Step 2: Upload file directly to Cloudflare using TUS protocol
-      return new Promise((resolve, reject) => {
+      // Step 2: Upload file directly to Cloudflare
+      await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
 
         // Track upload progress
-        xhr.upload.addEventListener('progress', (e) => {
+        xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
-            const percentComplete = Math.round((e.loaded / e.total) * 85) + 10; // 10-95%
+            const percentComplete = Math.round((e.loaded / e.total) * 90) + 10; // 10-100%
             setUploadProgress(percentComplete);
-            console.log(`📤 Upload progress: ${percentComplete}%`);
+            console.log(`📤 Upload progress: ${percentComplete}%`, {
+              loaded: e.loaded,
+              total: e.total,
+              percent: percentComplete
+            });
           }
-        });
+        };
 
-        xhr.addEventListener('load', async () => {
+        xhr.onload = async () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             console.log('✅ Upload concluído, processando...');
-            setUploadProgress(95);
+            setUploadProgress(100);
 
             // Step 3: Generate video URLs
             const videoId = uid;
@@ -108,7 +112,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
               stream_id: videoId
             };
 
-            setUploadProgress(100);
             console.log('🎉 Upload bem-sucedido:', videoData);
 
             onVideoUploaded(hlsUrl, videoData);
@@ -126,18 +129,19 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
           } else {
             reject(new Error(`Upload falhou com status: ${xhr.status}`));
           }
-        });
+        };
 
-        xhr.addEventListener('error', () => {
+        xhr.onerror = () => {
+          console.error('❌ Erro de rede durante upload');
           reject(new Error('Erro de rede durante upload'));
-        });
+        };
 
-        xhr.addEventListener('abort', () => {
+        xhr.onabort = () => {
+          console.error('❌ Upload cancelado');
           reject(new Error('Upload cancelado'));
-        });
+        };
 
         xhr.open('PUT', uploadURL);
-        xhr.setRequestHeader('Content-Type', selectedFile.type);
         xhr.send(selectedFile);
       });
 
