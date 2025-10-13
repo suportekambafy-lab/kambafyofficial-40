@@ -54,6 +54,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
+  // NUNCA interceptar uploads do Cloudflare (Stream e R2)
+  if (url.hostname.includes('cloudflarestream.com') || 
+      url.hostname.includes('r2.cloudflarestorage.com') ||
+      url.hostname.includes('b-cdn.net')) {
+    return; // Deixa o navegador lidar diretamente
+  }
+  
   // NUNCA cachear HTML e rotas principais
   if (NEVER_CACHE.some(path => url.pathname === path || url.pathname.startsWith(path))) {
     event.respondWith(
