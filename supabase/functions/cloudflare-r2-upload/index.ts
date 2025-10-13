@@ -280,8 +280,17 @@ Deno.serve(async (req) => {
     }
 
     // Generate public URL
-    // Note: R2 bucket must have public access enabled in Cloudflare dashboard
-    // Go to: R2 > {bucket} > Settings > Public Access > Allow Access
+    // 
+    // IMPORTANT: For images to load in browser, configure CORS in R2:
+    // 1. Go to Cloudflare Dashboard > R2 > kambafy bucket
+    // 2. Settings > CORS Policy > Add CORS Policy
+    // 3. Add this policy:
+    //    {
+    //      "AllowedOrigins": ["*"],
+    //      "AllowedMethods": ["GET", "HEAD"],
+    //      "AllowedHeaders": ["*"],
+    //      "MaxAgeSeconds": 3000
+    //    }
     const publicUrl = `https://pub-${accountId}.r2.dev/${uniqueFileName}`;
 
     console.log("✅ Upload successful:", publicUrl);
