@@ -44,12 +44,21 @@ serve(async (req) => {
       );
     }
 
-    console.log('🚀 Versão 3.0 - Processamento limitado (máx 10 arquivos/execução)');
+    console.log('🚀 Versão 3.1 - Conversão base64 otimizada para arquivos grandes');
 
     const MAX_FILES_PER_RUN = 10;
 
     // Helper: Upload para Cloudflare R2
     async function uploadToCloudflare(fileData: Uint8Array, fileName: string, fileType: string): Promise<string> {
+      // Converter Uint8Array para base64 de forma eficiente (sem causar stack overflow)
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < fileData.length; i += chunkSize) {
+        const chunk = fileData.slice(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, Array.from(chunk));
+      }
+      const base64Data = btoa(binary);
+      
       const uploadResponse = await fetch(`${supabaseUrl}/functions/v1/cloudflare-r2-upload`, {
         method: 'POST',
         headers: {
@@ -59,7 +68,7 @@ serve(async (req) => {
         body: JSON.stringify({
           fileName,
           fileType,
-          fileData: btoa(String.fromCharCode(...fileData))
+          fileData: base64Data
         })
       });
 
