@@ -587,6 +587,75 @@ const VideoPlayer = ({
             </div>
           </div>
         )}
+
+        {/* Botão de Qualidade Sempre Visível (canto superior direito) */}
+        <div className="absolute top-4 right-4 z-50">
+          <Popover open={showQualityMenu} onOpenChange={setShowQualityMenu}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white border border-white/20 gap-2 h-9 px-3 transition-all hover:scale-105"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="text-xs font-medium">
+                  {currentQuality === 'auto' ? 'Auto' : `${currentQuality}p`}
+                </span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-3 bg-black/95 backdrop-blur-md border-white/20 z-[200]" side="bottom" align="end">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+                  <Settings className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold text-white">Qualidade do Vídeo</p>
+                </div>
+                
+                <button
+                  onClick={() => changeQuality('auto')}
+                  className={cn(
+                    "w-full text-left px-3 py-2 text-sm rounded-md transition-all flex items-center justify-between",
+                    currentQuality === 'auto' 
+                      ? "bg-primary/20 text-primary border border-primary/50" 
+                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                    Automática
+                  </span>
+                  {currentQuality === 'auto' && <span className="text-primary">✓</span>}
+                </button>
+
+                {availableQualities.length > 0 ? (
+                  <>
+                    <div className="pt-1 pb-1">
+                      <p className="text-xs text-white/50 px-1">Qualidade Manual</p>
+                    </div>
+                    {availableQualities.map((quality) => (
+                      <button
+                        key={quality.height}
+                        onClick={() => changeQuality(quality.height.toString())}
+                        className={cn(
+                          "w-full text-left px-3 py-2 text-sm rounded-md transition-all flex items-center justify-between",
+                          currentQuality === quality.height.toString()
+                            ? "bg-primary/20 text-primary border border-primary/50" 
+                            : "text-white/80 hover:bg-white/10 hover:text-white"
+                        )}
+                      >
+                        <span>{quality.label}</span>
+                        {currentQuality === quality.height.toString() && <span className="text-primary">✓</span>}
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  <div className="px-3 py-2 text-xs text-white/40 text-center border border-white/5 rounded-md bg-white/5">
+                    🔍 Detectando qualidades disponíveis...
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
         
         <video
           ref={videoRef}
@@ -643,44 +712,6 @@ const VideoPlayer = ({
                 </div>
 
                 <div className="flex items-center gap-1">
-                  {/* Sempre mostrar botão de qualidade quando HLS estiver ativo */}
-                  <Popover open={showQualityMenu} onOpenChange={setShowQualityMenu}>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="relative text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                        <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
-                        {currentQuality !== 'auto' && (
-                          <span className="absolute -top-0.5 -right-0.5 text-[9px] bg-primary rounded px-1 leading-none py-0.5">
-                            {currentQuality}p
-                          </span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10 z-[200]" side="top" align="end">
-                      <div className="space-y-1">
-                        <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
-                        <button
-                          onClick={() => changeQuality('auto')}
-                          className={cn("w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors", currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70")}
-                        >
-                          Automática {currentQuality === 'auto' && '✓'}
-                        </button>
-                        {availableQualities.length > 0 ? (
-                          availableQualities.map((quality) => (
-                            <button
-                              key={quality.height}
-                              onClick={() => changeQuality(quality.height.toString())}
-                              className={cn("w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors", currentQuality === quality.height.toString() ? "text-white bg-white/10" : "text-white/70")}
-                            >
-                              {quality.label} {currentQuality === quality.height.toString() && '✓'}
-                            </button>
-                          ))
-                        ) : (
-                          <p className="text-xs text-white/50 px-2 py-1">Qualidades não detectadas</p>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  
                   <div className="hidden md:flex items-center gap-1">
                     {[0.5, 1, 1.5, 2].map((speed) => (
                       <Button
