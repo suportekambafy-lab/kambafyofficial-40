@@ -279,19 +279,9 @@ Deno.serve(async (req) => {
       throw new Error(`R2 upload failed: ${uploadResponse.statusText} - ${errorText}`);
     }
 
-    // Generate public URL
-    // 
-    // IMPORTANT: For images to load in browser, configure CORS in R2:
-    // 1. Go to Cloudflare Dashboard > R2 > kambafy bucket
-    // 2. Settings > CORS Policy > Add CORS Policy
-    // 3. Add this policy:
-    //    {
-    //      "AllowedOrigins": ["*"],
-    //      "AllowedMethods": ["GET", "HEAD"],
-    //      "AllowedHeaders": ["*"],
-    //      "MaxAgeSeconds": 3000
-    //    }
-    const publicUrl = `https://pub-${accountId}.r2.dev/${uniqueFileName}`;
+    // Generate public URL using the correct R2 public domain
+    // Format: https://pub-{subdomain_hash}.r2.dev/{filename}
+    const publicUrl = `https://pub-b5914a93ed33480dba157a5f46c57749.r2.dev/${uniqueFileName}`;
 
     console.log("✅ Upload successful:", publicUrl);
 
