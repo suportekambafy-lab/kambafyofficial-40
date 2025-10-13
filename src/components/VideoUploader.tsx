@@ -9,6 +9,7 @@ import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import * as tus from "tus-js-client";
 
 interface VideoUploaderProps {
   onVideoUploaded: (videoUrl: string, videoData?: any) => void;
@@ -59,7 +60,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     try {
       const fileName = selectedFile.name;
       
-      console.log('🚀 Iniciando upload direto para Cloudflare Stream:', fileName);
+      console.log('🚀 Iniciando upload TUS para Cloudflare Stream:', fileName);
       setUploadProgress(5);
 
       // Step 1: Get direct upload URL from edge function
@@ -72,31 +73,32 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       }
 
       const { uploadURL, uid } = urlData;
-      console.log('✅ URL de upload obtida:', uid);
+      console.log('✅ URL TUS obtida:', uid);
       setUploadProgress(10);
 
-      // Step 2: Upload file directly to Cloudflare using FormData
+      // Step 2: Upload usando TUS protocol (resumível, com chunks automáticos)
       await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-
-        // Track upload progress
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const percentComplete = Math.round((e.loaded / e.total) * 90) + 10; // 10-100%
+        const upload = new tus.Upload(selectedFile, {
+          endpoint: uploadURL,
+          retryDelays: [0, 3000, 5000, 10000, 20000], // Retry automático
+          metadata: {
+            filename: fileName,
+            filetype: selectedFile.type
+          },
+          onError: (error) => {
+            console.error('❌ Erro TUS durante upload:', error);
+            reject(error);
+          },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const percentComplete = Math.round((bytesUploaded / bytesTotal) * 90) + 10; // 10-100%
             setUploadProgress(percentComplete);
-            console.log(`📤 Upload progress: ${percentComplete}%`, {
-              loaded: e.loaded,
-              total: e.total,
-              percent: percentComplete
+            console.log(`📤 Upload TUS: ${percentComplete}%`, {
+              uploaded: bytesUploaded,
+              total: bytesTotal
             });
-          }
-        };
-
-        xhr.onload = async () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            console.log('✅ Upload concluído, processando...');
+          },
+          onSuccess: async () => {
+            console.log('✅ Upload TUS concluído, processando...');
             setUploadProgress(100);
 
             // Step 3: Generate video URLs
@@ -114,7 +116,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
               stream_id: videoId
             };
 
-            console.log('🎉 Upload bem-sucedido:', videoData);
+            console.log('🎉 Upload TUS bem-sucedido:', videoData);
 
             onVideoUploaded(hlsUrl, videoData);
             
@@ -128,23 +130,11 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
             });
 
             resolve(videoData);
-          } else {
-            reject(new Error(`Upload falhou com status: ${xhr.status}`));
           }
-        };
+        });
 
-        xhr.onerror = () => {
-          console.error('❌ Erro de rede durante upload');
-          reject(new Error('Erro de rede durante upload'));
-        };
-
-        xhr.onabort = () => {
-          console.error('❌ Upload cancelado');
-          reject(new Error('Upload cancelado'));
-        };
-
-        xhr.open('POST', uploadURL);
-        xhr.send(formData);
+        // Iniciar upload TUS
+        upload.start();
       });
 
     } catch (error: any) {
