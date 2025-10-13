@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     // Fetch all lessons with Bunny URLs
     console.log("📊 Fetching lessons with Bunny videos...");
     const fetchResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/lessons?select=id,title,video_url,user_id&video_url=like.*b-cdn.net*`,
+      `${SUPABASE_URL}/rest/v1/lessons?select=id,title,video_url,hls_url,user_id&or=(hls_url.like.*b-cdn.net*,video_url.like.*mediadelivery.net*)`,
       {
         headers: {
           "apikey": SUPABASE_SERVICE_ROLE_KEY,
@@ -73,11 +73,16 @@ Deno.serve(async (req) => {
       console.log(`\n🎥 Migrating: "${lesson.title}"`);
 
       try {
-        // Extract Bunny video ID from URL
+        // Extract Bunny video ID from URL (prioritize hls_url)
         // URL format: https://vz-5c879716-268.b-cdn.net/{video-id}/playlist.m3u8
-        const videoIdMatch = lesson.video_url.match(/\/([a-f0-9-]{36})\//);
+        const videoUrl = lesson.hls_url || lesson.video_url;
+        if (!videoUrl) {
+          throw new Error("No video URL found");
+        }
+
+        const videoIdMatch = videoUrl.match(/\/([a-f0-9-]{36})\//);
         if (!videoIdMatch) {
-          throw new Error("Could not extract Bunny video ID from URL");
+          throw new Error(`Could not extract Bunny video ID from URL: ${videoUrl}`);
         }
         const bunnyVideoId = videoIdMatch[1];
 
