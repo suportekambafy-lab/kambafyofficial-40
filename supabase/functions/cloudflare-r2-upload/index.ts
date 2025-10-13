@@ -88,10 +88,17 @@ async function createSignature(
     .join('');
 }
 
-async function sha256Hash(message: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+async function sha256Hash(data: string | Uint8Array): Promise<string> {
+  let buffer: ArrayBuffer;
+  
+  if (typeof data === 'string') {
+    const encoder = new TextEncoder();
+    buffer = encoder.encode(data);
+  } else {
+    buffer = data;
+  }
+  
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
   return Array.from(new Uint8Array(hashBuffer))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
@@ -145,6 +152,19 @@ Deno.serve(async (req) => {
 
     // Convert base64 to binary
     const binaryData = Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0));
+    
+    console.log("🔐 Computing payload hash...", {
+      binaryDataLength: binaryData.length,
+      binaryDataType: binaryData.constructor.name
+    });
+
+    // Calculate SHA256 hash of the binary data (NOT the decoded string)
+    const payloadHash = await sha256Hash(binaryData);
+    
+    console.log("✅ Payload hash computed:", {
+      payloadHash,
+      payloadHashLength: payloadHash.length
+    });
 
     // Generate unique filename
     const timestamp = Date.now();
@@ -160,13 +180,17 @@ Deno.serve(async (req) => {
     const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
     const dateStamp = amzDate.slice(0, 8);
     
+    console.log("📅 Timestamp info:", {
+      amzDate,
+      dateStamp,
+      isoString: now.toISOString()
+    });
+    
     // Create canonical request
     const method = 'PUT';
     const canonicalUri = `/${bucketName}/${uniqueFileName}`;
     const canonicalQueryString = '';
     const host = `${accountId}.r2.cloudflarestorage.com`;
-    
-    const payloadHash = await sha256Hash(new TextDecoder().decode(binaryData));
     
     const canonicalHeaders = 
       `host:${host}\n` +
@@ -178,12 +202,28 @@ Deno.serve(async (req) => {
     const canonicalRequest = 
       `${method}\n${canonicalUri}\n${canonicalQueryString}\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
     
+    console.log("📋 Canonical Request:", {
+      method,
+      canonicalUri,
+      host,
+      payloadHash,
+      canonicalRequestPreview: canonicalRequest.substring(0, 200)
+    });
+    
     const canonicalRequestHash = await sha256Hash(canonicalRequest);
+    
+    console.log("🔐 Canonical Request Hash:", canonicalRequestHash);
     
     // Create string to sign
     const algorithm = 'AWS4-HMAC-SHA256';
     const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
     const stringToSign = `${algorithm}\n${amzDate}\n${credentialScope}\n${canonicalRequestHash}`;
+    
+    console.log("📝 String to Sign:", {
+      algorithm,
+      credentialScope,
+      stringToSign
+    });
     
     // Calculate signature
     const signature = await createSignature(
@@ -194,6 +234,11 @@ Deno.serve(async (req) => {
       stringToSign
     );
     
+    console.log("✍️ Signature calculated:", {
+      signature,
+      signatureLength: signature.length
+    });
+    
     // Create authorization header
     const authorizationHeader = 
       `${algorithm} Credential=${accessKeyId}/${credentialScope}, ` +
@@ -203,6 +248,7 @@ Deno.serve(async (req) => {
       uniqueFileName,
       bucketName,
       url,
+      authorizationHeader: authorizationHeader.substring(0, 100) + "..."
     });
 
     // Make the PUT request
