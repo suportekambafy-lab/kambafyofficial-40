@@ -42,6 +42,9 @@ verify_jwt = false
 [functions.migrate-videos-to-stream]
 verify_jwt = false
 
+[functions.re-migrate-high-quality]
+verify_jwt = false
+
 [functions.migrate-remaining-files]
 verify_jwt = false
 

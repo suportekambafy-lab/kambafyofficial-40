@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
 
 export default function VideoMigration() {
   const [loading, setLoading] = useState(false);
+  const [remigrating, setRemigrating] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +36,34 @@ export default function VideoMigration() {
     }
   };
 
+  const executeHighQualityRemigration = async () => {
+    try {
+      setRemigrating(true);
+      setError(null);
+      setResult(null);
+
+      console.log('🔄 Iniciando re-migração com qualidade máxima...');
+
+      const { data, error: invokeError } = await supabase.functions.invoke('re-migrate-high-quality', {
+        body: {
+          lesson_ids: [] // Empty array = migrate all lessons
+        }
+      });
+
+      if (invokeError) {
+        throw new Error(invokeError.message);
+      }
+
+      console.log('✅ Re-migração concluída:', data);
+      setResult(data.results || data);
+    } catch (err: any) {
+      console.error('❌ Erro na re-migração:', err);
+      setError(err.message || 'Erro desconhecido');
+    } finally {
+      setRemigrating(false);
+    }
+  };
+
   return (
     <Card className="w-full max-w-2xl mx-auto mt-8">
       <CardHeader>
@@ -44,26 +73,53 @@ export default function VideoMigration() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button 
-          onClick={executeMigration} 
-          disabled={loading}
-          className="w-full"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Migrando vídeos...
-            </>
-          ) : (
-            'Executar Migração'
-          )}
-        </Button>
+        <div className="grid gap-3">
+          <Button 
+            onClick={executeMigration} 
+            disabled={loading || remigrating}
+            className="w-full"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Migrando vídeos...
+              </>
+            ) : (
+              'Executar Migração Inicial'
+            )}
+          </Button>
 
-        {loading && (
+          <Button 
+            onClick={executeHighQualityRemigration} 
+            disabled={loading || remigrating}
+            variant="outline"
+            className="w-full"
+          >
+            {remigrating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Re-migrando com qualidade máxima...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Re-migrar com Qualidade Máxima (HLS Completo)
+              </>
+            )}
+          </Button>
+        </div>
+
+        {(loading || remigrating) && (
           <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
             <p className="text-sm text-blue-900 dark:text-blue-100">
-              ⏳ Migração em andamento... Isso pode levar 10-15 minutos.
+              {loading && '⏳ Migração em andamento... Isso pode levar 10-15 minutos.'}
+              {remigrating && '🔄 Re-migrando vídeos com qualidade máxima (4K). Isso pode levar 15-20 minutos.'}
             </p>
+            {remigrating && (
+              <p className="text-xs text-blue-800 dark:text-blue-200 mt-2">
+                ✨ Usando HLS completo do Bunny para preservar todas as qualidades originais
+              </p>
+            )}
           </div>
         )}
 
