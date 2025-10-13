@@ -44,7 +44,9 @@ serve(async (req) => {
       );
     }
 
-    console.log('🚀 Iniciando migração - versão 3.0 (processamento em lotes)');
+    console.log('🚀 Versão 3.0 - Processamento limitado (máx 10 arquivos/execução)');
+
+    const MAX_FILES_PER_RUN = 10;
 
     // Helper: Upload para Cloudflare R2
     async function uploadToCloudflare(fileData: Uint8Array, fileName: string, fileType: string): Promise<string> {
@@ -89,11 +91,14 @@ serve(async (req) => {
     // Helper: Migrar arquivo
     async function migrateFile(url: string, id: string, type: string): Promise<MigrationResult> {
       try {
+        console.log(`  📥 [${type}] Baixando: ${url.substring(0, 80)}...`);
         const { data, type: fileType } = await downloadFile(url);
+        
         const fileName = url.split('/').pop() || `file_${Date.now()}`;
+        console.log(`  ☁️ [${type}] Enviando para Cloudflare R2...`);
         const newUrl = await uploadToCloudflare(data, fileName, fileType);
         
-        console.log(`  ✅ [${type}] ${id} migrado`);
+        console.log(`  ✅ [${type}] ${id} migrado com sucesso`);
         
         return {
           type,
@@ -144,119 +149,70 @@ serve(async (req) => {
 
     const totalFiles = productsWithCovers.length + ebooks.length + logosWithBunny.length + heroWithBunny.length;
     
-    console.log(`📋 Encontrados ${totalFiles} arquivos:`);
-    console.log(`  - ${productsWithCovers.length} capas de produtos`);
+    console.log(`📋 Total encontrados: ${totalFiles} arquivos`);
+    console.log(`  - ${productsWithCovers.length} capas`);
     console.log(`  - ${ebooks.length} e-books`);
     console.log(`  - ${logosWithBunny.length} logos`);
     console.log(`  - ${heroWithBunny.length} hero images`);
+    console.log(`⚠️ Processando máximo de ${MAX_FILES_PER_RUN} arquivos por execução`);
 
     if (totalFiles === 0) {
       return new Response(
         JSON.stringify({
           success: true,
           message: 'Nenhum arquivo do Bunny CDN encontrado para migrar',
-          stats: { total: 0, success: 0, failed: 0 }
+          stats: { total: 0, success: 0, failed: 0, remaining: 0 }
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Processar em lotes de 5 arquivos
-    const BATCH_SIZE = 5;
-    let processed = 0;
+    // Coletar todos os arquivos em uma única lista
+    const allFilesToMigrate = [
+      ...productsWithCovers.map(p => ({ type: 'product_cover', id: p.id, url: p.cover, table: 'products', column: 'cover' })),
+      ...ebooks.map(e => ({ type: 'ebook', id: e.id, url: e.share_link, table: 'products', column: 'share_link' })),
+      ...logosWithBunny.map(ma => ({ type: 'logo', id: ma.id, url: ma.logo_url, table: 'member_areas', column: 'logo_url' })),
+      ...heroWithBunny.map(ma => ({ type: 'hero', id: ma.id, url: ma.hero_image_url, table: 'member_areas', column: 'hero_image_url' }))
+    ];
+
+    // Processar apenas os primeiros MAX_FILES_PER_RUN arquivos
+    const filesToProcess = allFilesToMigrate.slice(0, MAX_FILES_PER_RUN);
+    const remaining = allFilesToMigrate.length - filesToProcess.length;
+
     let success = 0;
     let failed = 0;
 
-    // Processar capas
-    console.log('\n📸 Migrando capas de produtos...');
-    for (let i = 0; i < productsWithCovers.length; i += BATCH_SIZE) {
-      const batch = productsWithCovers.slice(i, i + BATCH_SIZE);
-      
-      for (const product of batch) {
-        const result = await migrateFile(product.cover, product.id, 'product_cover');
-        processed++;
-        
-        if (result.status === 'success' && result.newUrl) {
-          await supabase.from('products').update({ cover: result.newUrl }).eq('id', product.id);
-          success++;
-        } else {
-          failed++;
-        }
-        
-        console.log(`  Progresso: ${processed}/${totalFiles}`);
-      }
-    }
+    console.log(`\n🔄 Processando ${filesToProcess.length} de ${allFilesToMigrate.length} arquivos...`);
 
-    // Processar e-books
-    console.log('\n📚 Migrando e-books...');
-    for (let i = 0; i < ebooks.length; i += BATCH_SIZE) {
-      const batch = ebooks.slice(i, i + BATCH_SIZE);
-      
-      for (const ebook of batch) {
-        const result = await migrateFile(ebook.share_link, ebook.id, 'ebook');
-        processed++;
-        
-        if (result.status === 'success' && result.newUrl) {
-          await supabase.from('products').update({ share_link: result.newUrl }).eq('id', ebook.id);
-          success++;
-        } else {
-          failed++;
-        }
-        
-        console.log(`  Progresso: ${processed}/${totalFiles}`);
-      }
-    }
-
-    // Processar logos
-    console.log('\n🎨 Migrando logos...');
-    for (const area of logosWithBunny) {
-      const result = await migrateFile(area.logo_url, area.id, 'logo');
-      processed++;
+    for (const file of filesToProcess) {
+      const result = await migrateFile(file.url, file.id, file.type);
       
       if (result.status === 'success' && result.newUrl) {
-        await supabase.from('member_areas').update({ logo_url: result.newUrl }).eq('id', area.id);
+        await supabase.from(file.table).update({ [file.column]: result.newUrl }).eq('id', file.id);
         success++;
       } else {
         failed++;
       }
-      
-      console.log(`  Progresso: ${processed}/${totalFiles}`);
     }
 
-    // Processar hero images
-    console.log('\n🖼️ Migrando hero images...');
-    for (const area of heroWithBunny) {
-      const result = await migrateFile(area.hero_image_url, area.id, 'hero');
-      processed++;
-      
-      if (result.status === 'success' && result.newUrl) {
-        await supabase.from('member_areas').update({ hero_image_url: result.newUrl }).eq('id', area.id);
-        success++;
-      } else {
-        failed++;
-      }
-      
-      console.log(`  Progresso: ${processed}/${totalFiles}`);
-    }
-
-    console.log('\n🎉 Migração concluída!');
-    console.log(`✅ Sucesso: ${success}/${totalFiles}`);
-    console.log(`❌ Falhas: ${failed}/${totalFiles}`);
+    console.log('\n✅ Lote concluído!');
+    console.log(`✅ Sucesso: ${success}`);
+    console.log(`❌ Falhas: ${failed}`);
+    console.log(`📋 Restam: ${remaining} arquivos`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Migração concluída!',
+        message: remaining > 0 
+          ? `Lote processado! Restam ${remaining} arquivos. Execute novamente para continuar.`
+          : 'Migração concluída!',
         stats: {
           total: totalFiles,
+          processed: filesToProcess.length,
           success,
           failed,
-          byCategory: {
-            product_covers: productsWithCovers.length,
-            ebooks: ebooks.length,
-            logos: logosWithBunny.length,
-            hero_images: heroWithBunny.length
-          }
+          remaining,
+          percentComplete: Math.round((allFilesToMigrate.length - remaining) / allFilesToMigrate.length * 100)
         }
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
