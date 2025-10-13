@@ -153,12 +153,16 @@ serve(async (req) => {
 
     // CATEGORIA 1: Capas de Produtos
     console.log('\n📸 CATEGORIA 1: Capas de Produtos');
-    const { data: productsWithCovers } = await supabase
+    const { data: productsWithCovers, error: coversError } = await supabase
       .from('products')
       .select('id, cover, metadata')
       .not('cover', 'is', null)
-      .neq('cover', '')
-      .filter('cover', 'ilike', '%bunny%');
+      .ilike('cover', '%bunny%');
+    
+    if (coversError) {
+      console.error('❌ Erro ao buscar capas:', coversError);
+    }
+    console.log(`📋 Query retornou: ${productsWithCovers?.length || 0} capas`);
 
     if (productsWithCovers && productsWithCovers.length > 0) {
       console.log(`  📋 Encontrados ${productsWithCovers.length} produtos com capas no Bunny`);
@@ -195,13 +199,17 @@ serve(async (req) => {
 
     // CATEGORIA 2: E-books
     console.log('\n📚 CATEGORIA 2: E-books');
-    const { data: ebooks } = await supabase
+    const { data: ebooks, error: ebooksError } = await supabase
       .from('products')
       .select('id, share_link, metadata, type')
       .eq('type', 'E-book')
       .not('share_link', 'is', null)
-      .neq('share_link', '')
-      .filter('share_link', 'ilike', '%bunny%');
+      .ilike('share_link', '%bunny%');
+    
+    if (ebooksError) {
+      console.error('❌ Erro ao buscar e-books:', ebooksError);
+    }
+    console.log(`📋 Query retornou: ${ebooks?.length || 0} e-books`);
 
     if (ebooks && ebooks.length > 0) {
       console.log(`  📋 Encontrados ${ebooks.length} e-books no Bunny`);
@@ -237,12 +245,16 @@ serve(async (req) => {
 
     // CATEGORIA 3: Logos de Áreas de Membros
     console.log('\n🎨 CATEGORIA 3: Logos de Áreas de Membros');
-    const { data: memberAreasWithLogos } = await supabase
+    const { data: memberAreasWithLogos, error: logosError } = await supabase
       .from('member_areas')
       .select('id, logo_url, metadata')
       .not('logo_url', 'is', null)
-      .neq('logo_url', '')
-      .filter('logo_url', 'ilike', '%bunny%');
+      .ilike('logo_url', '%bunny%');
+    
+    if (logosError) {
+      console.error('❌ Erro ao buscar logos:', logosError);
+    }
+    console.log(`📋 Query retornou: ${memberAreasWithLogos?.length || 0} logos`);
 
     if (memberAreasWithLogos && memberAreasWithLogos.length > 0) {
       console.log(`  📋 Encontrados ${memberAreasWithLogos.length} logos no Bunny`);
@@ -278,12 +290,16 @@ serve(async (req) => {
 
     // CATEGORIA 4: Hero Images
     console.log('\n🖼️ CATEGORIA 4: Hero Images de Áreas de Membros');
-    const { data: memberAreasWithHero } = await supabase
+    const { data: memberAreasWithHero, error: heroError } = await supabase
       .from('member_areas')
       .select('id, hero_image_url, metadata')
       .not('hero_image_url', 'is', null)
-      .neq('hero_image_url', '')
-      .filter('hero_image_url', 'ilike', '%bunny%');
+      .ilike('hero_image_url', '%bunny%');
+    
+    if (heroError) {
+      console.error('❌ Erro ao buscar hero images:', heroError);
+    }
+    console.log(`📋 Query retornou: ${memberAreasWithHero?.length || 0} hero images`);
 
     if (memberAreasWithHero && memberAreasWithHero.length > 0) {
       console.log(`  📋 Encontrados ${memberAreasWithHero.length} hero images no Bunny`);
