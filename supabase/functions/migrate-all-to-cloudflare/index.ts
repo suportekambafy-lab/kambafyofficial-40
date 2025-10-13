@@ -156,7 +156,9 @@ serve(async (req) => {
     const { data: productsWithCovers } = await supabase
       .from('products')
       .select('id, cover, metadata')
-      .or('cover.ilike.%bunny%,cover.ilike.%b-cdn%');
+      .not('cover', 'is', null)
+      .neq('cover', '')
+      .filter('cover', 'ilike', '%bunny%');
 
     if (productsWithCovers && productsWithCovers.length > 0) {
       console.log(`  📋 Encontrados ${productsWithCovers.length} produtos com capas no Bunny`);
@@ -197,7 +199,9 @@ serve(async (req) => {
       .from('products')
       .select('id, share_link, metadata, type')
       .eq('type', 'E-book')
-      .or('share_link.ilike.%bunny%,share_link.ilike.%b-cdn%');
+      .not('share_link', 'is', null)
+      .neq('share_link', '')
+      .filter('share_link', 'ilike', '%bunny%');
 
     if (ebooks && ebooks.length > 0) {
       console.log(`  📋 Encontrados ${ebooks.length} e-books no Bunny`);
@@ -236,8 +240,9 @@ serve(async (req) => {
     const { data: memberAreasWithLogos } = await supabase
       .from('member_areas')
       .select('id, logo_url, metadata')
-      .or('logo_url.ilike.%bunny%,logo_url.ilike.%b-cdn%')
-      .not('logo_url', 'is', null);
+      .not('logo_url', 'is', null)
+      .neq('logo_url', '')
+      .filter('logo_url', 'ilike', '%bunny%');
 
     if (memberAreasWithLogos && memberAreasWithLogos.length > 0) {
       console.log(`  📋 Encontrados ${memberAreasWithLogos.length} logos no Bunny`);
@@ -276,8 +281,9 @@ serve(async (req) => {
     const { data: memberAreasWithHero } = await supabase
       .from('member_areas')
       .select('id, hero_image_url, metadata')
-      .or('hero_image_url.ilike.%bunny%,hero_image_url.ilike.%b-cdn%')
-      .not('hero_image_url', 'is', null);
+      .not('hero_image_url', 'is', null)
+      .neq('hero_image_url', '')
+      .filter('hero_image_url', 'ilike', '%bunny%');
 
     if (memberAreasWithHero && memberAreasWithHero.length > 0) {
       console.log(`  📋 Encontrados ${memberAreasWithHero.length} hero images no Bunny`);
