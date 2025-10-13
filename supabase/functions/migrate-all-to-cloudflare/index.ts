@@ -155,7 +155,7 @@ serve(async (req) => {
     console.log('\n📸 CATEGORIA 1: Capas de Produtos');
     const { data: productsWithCovers, error: coversError } = await supabase
       .from('products')
-      .select('id, cover, metadata')
+      .select('id, cover')
       .ilike('cover', '%bunny%');
     
     if (coversError) {
@@ -172,19 +172,10 @@ serve(async (req) => {
         results.push(result);
         
         if (result.status === 'success' && result.newUrl) {
-          // Atualizar banco com nova URL e salvar antiga em metadata
-          const updatedMetadata = {
-            ...(product.metadata || {}),
-            old_bunny_cover_url: product.cover,
-            migrated_at: new Date().toISOString()
-          };
-          
+          // Atualizar banco com nova URL (sem salvar antiga em metadata)
           await supabase
             .from('products')
-            .update({
-              cover: result.newUrl,
-              metadata: updatedMetadata
-            })
+            .update({ cover: result.newUrl })
             .eq('id', product.id);
           
           stats.success++;
@@ -200,7 +191,7 @@ serve(async (req) => {
     console.log('\n📚 CATEGORIA 2: E-books');
     const { data: ebooks, error: ebooksError } = await supabase
       .from('products')
-      .select('id, share_link, metadata, type')
+      .select('id, share_link, type')
       .eq('type', 'E-book')
       .ilike('share_link', '%bunny%');
     
@@ -218,18 +209,10 @@ serve(async (req) => {
         results.push(result);
         
         if (result.status === 'success' && result.newUrl) {
-          const updatedMetadata = {
-            ...(ebook.metadata || {}),
-            old_bunny_ebook_url: ebook.share_link,
-            migrated_at: new Date().toISOString()
-          };
-          
+          // Atualizar banco com nova URL
           await supabase
             .from('products')
-            .update({
-              share_link: result.newUrl,
-              metadata: updatedMetadata
-            })
+            .update({ share_link: result.newUrl })
             .eq('id', ebook.id);
           
           stats.success++;
@@ -245,7 +228,7 @@ serve(async (req) => {
     console.log('\n🎨 CATEGORIA 3: Logos de Áreas de Membros');
     const { data: memberAreasWithLogos, error: logosError } = await supabase
       .from('member_areas')
-      .select('id, logo_url, metadata')
+      .select('id, logo_url')
       .ilike('logo_url', '%bunny%');
     
     if (logosError) {
@@ -262,18 +245,10 @@ serve(async (req) => {
         results.push(result);
         
         if (result.status === 'success' && result.newUrl) {
-          const updatedMetadata = {
-            ...(area.metadata || {}),
-            old_bunny_logo_url: area.logo_url,
-            migrated_at: new Date().toISOString()
-          };
-          
+          // Atualizar banco com nova URL
           await supabase
             .from('member_areas')
-            .update({
-              logo_url: result.newUrl,
-              metadata: updatedMetadata
-            })
+            .update({ logo_url: result.newUrl })
             .eq('id', area.id);
           
           stats.success++;
@@ -289,7 +264,7 @@ serve(async (req) => {
     console.log('\n🖼️ CATEGORIA 4: Hero Images de Áreas de Membros');
     const { data: memberAreasWithHero, error: heroError } = await supabase
       .from('member_areas')
-      .select('id, hero_image_url, metadata')
+      .select('id, hero_image_url')
       .ilike('hero_image_url', '%bunny%');
     
     if (heroError) {
@@ -306,18 +281,10 @@ serve(async (req) => {
         results.push(result);
         
         if (result.status === 'success' && result.newUrl) {
-          const updatedMetadata = {
-            ...(area.metadata || {}),
-            old_bunny_hero_url: area.hero_image_url,
-            migrated_at: new Date().toISOString()
-          };
-          
+          // Atualizar banco com nova URL
           await supabase
             .from('member_areas')
-            .update({
-              hero_image_url: result.newUrl,
-              metadata: updatedMetadata
-            })
+            .update({ hero_image_url: result.newUrl })
             .eq('id', area.id);
           
           stats.success++;
