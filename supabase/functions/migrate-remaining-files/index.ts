@@ -33,15 +33,22 @@ Deno.serve(async (req) => {
     console.log('📚 Fetching lessons with Bunny CDN materials...');
     const { data: lessons, error: lessonsError } = await supabase
       .from('lessons')
-      .select('id, title, lesson_materials')
-      .not('lesson_materials', 'is', null);
+      .select('id, title, lesson_materials');
 
     if (lessonsError) {
       throw new Error(`Error fetching lessons: ${lessonsError.message}`);
     }
 
+    // Filtrar apenas lessons com URLs do Bunny no lesson_materials
+    const lessonsWithBunny = (lessons || []).filter(lesson => {
+      if (!lesson.lesson_materials) return false;
+      const materials = JSON.stringify(lesson.lesson_materials);
+      return materials.includes('b-cdn.net') || materials.includes('bunnycdn.net');
+    });
+
     // Processar materiais de aula
-    for (const lesson of lessons || []) {
+    console.log(`  ↳ Found ${lessonsWithBunny.length} lessons with Bunny CDN materials`);
+    for (const lesson of lessonsWithBunny) {
       if (filesProcessed >= MAX_FILES_PER_RUN) break;
 
       const materials = lesson.lesson_materials as any[];
@@ -144,15 +151,23 @@ Deno.serve(async (req) => {
     // 2. Buscar documentos de verificação de identidade com URLs do Bunny CDN
     if (filesProcessed < MAX_FILES_PER_RUN) {
       console.log('\n🆔 Fetching identity verification documents...');
-      const { data: identityDocs, error: docsError } = await supabase
+      const { data: allDocs, error: docsError } = await supabase
         .from('identity_verification')
-        .select('id, full_name, document_front_url, document_back_url')
-        .or('document_front_url.like.%b-cdn.net%,document_back_url.like.%b-cdn.net%,document_front_url.like.%bunnycdn.net%,document_back_url.like.%bunnycdn.net%')
-        .limit(MAX_FILES_PER_RUN - filesProcessed);
+        .select('id, full_name, document_front_url, document_back_url');
 
       if (docsError) {
         throw new Error(`Error fetching identity docs: ${docsError.message}`);
       }
+
+      // Filtrar documentos com URLs do Bunny
+      const identityDocs = (allDocs || [])
+        .filter(doc => 
+          (doc.document_front_url && (doc.document_front_url.includes('b-cdn.net') || doc.document_front_url.includes('bunnycdn.net'))) ||
+          (doc.document_back_url && (doc.document_back_url.includes('b-cdn.net') || doc.document_back_url.includes('bunnycdn.net')))
+        )
+        .slice(0, MAX_FILES_PER_RUN - filesProcessed);
+
+      console.log(`  ↳ Found ${identityDocs.length} identity documents with Bunny CDN URLs`);
 
       // Processar documentos de identidade
       for (const doc of identityDocs || []) {
@@ -304,18 +319,33 @@ Deno.serve(async (req) => {
     }
 
     // Contar arquivos restantes
-    const { count: remainingMaterialsCount } = await supabase
+    console.log('\n📊 Counting remaining Bunny CDN files...');
+    
+    const { data: allLessons } = await supabase
       .from('lessons')
-      .select('id', { count: 'exact', head: true })
-      .not('lesson_materials', 'is', null)
-      .textSearch('lesson_materials', 'b-cdn.net | bunnycdn.net');
+      .select('lesson_materials');
+    
+    const remainingMaterialsCount = (allLessons || []).filter(lesson => {
+      if (!lesson.lesson_materials) return false;
+      const materials = JSON.stringify(lesson.lesson_materials);
+      return materials.includes('b-cdn.net') || materials.includes('bunnycdn.net');
+    }).length;
 
-    const { count: remainingDocsCount } = await supabase
+    const { data: allIdentityDocs } = await supabase
       .from('identity_verification')
-      .select('id', { count: 'exact', head: true })
-      .or('document_front_url.like.%b-cdn.net%,document_back_url.like.%b-cdn.net%,document_front_url.like.%bunnycdn.net%,document_back_url.like.%bunnycdn.net%');
+      .select('document_front_url, document_back_url');
+    
+    let remainingDocsCount = 0;
+    (allIdentityDocs || []).forEach(doc => {
+      if (doc.document_front_url && (doc.document_front_url.includes('b-cdn.net') || doc.document_front_url.includes('bunnycdn.net'))) {
+        remainingDocsCount++;
+      }
+      if (doc.document_back_url && (doc.document_back_url.includes('b-cdn.net') || doc.document_back_url.includes('bunnycdn.net'))) {
+        remainingDocsCount++;
+      }
+    });
 
-    const totalRemaining = (remainingMaterialsCount || 0) + (remainingDocsCount || 0);
+    const totalRemaining = remainingMaterialsCount + remainingDocsCount;
 
     console.log('\n🎉 Migration batch completed!');
     console.log(`  ✅ Success: ${results.filter(r => r.status === 'success').length}/${filesProcessed}`);
