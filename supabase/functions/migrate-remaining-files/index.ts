@@ -13,6 +13,17 @@ interface MigrationResult {
   error?: string;
 }
 
+// Função eficiente para converter Uint8Array para base64 (evita stack overflow)
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+    binary += String.fromCharCode.apply(null, Array.from(chunk));
+  }
+  return btoa(binary);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -76,8 +87,8 @@ Deno.serve(async (req) => {
             const arrayBuffer = await fileBlob.arrayBuffer();
             const uint8Array = new Uint8Array(arrayBuffer);
 
-            // Converter para base64
-            const base64Data = btoa(String.fromCharCode(...uint8Array));
+            // Converter para base64 (método eficiente para arquivos grandes)
+            const base64Data = uint8ArrayToBase64(uint8Array);
 
             // Extrair nome do arquivo
             const urlParts = material.url.split('/');
@@ -187,7 +198,7 @@ Deno.serve(async (req) => {
             const fileBlob = await fileResponse.blob();
             const arrayBuffer = await fileBlob.arrayBuffer();
             const uint8Array = new Uint8Array(arrayBuffer);
-            const base64Data = btoa(String.fromCharCode(...uint8Array));
+            const base64Data = uint8ArrayToBase64(uint8Array);
 
             const urlParts = doc.document_front_url.split('/');
             const fileName = urlParts[urlParts.length - 1] || `doc_front_${Date.now()}.jpg`;
@@ -260,7 +271,7 @@ Deno.serve(async (req) => {
             const fileBlob = await fileResponse.blob();
             const arrayBuffer = await fileBlob.arrayBuffer();
             const uint8Array = new Uint8Array(arrayBuffer);
-            const base64Data = btoa(String.fromCharCode(...uint8Array));
+            const base64Data = uint8ArrayToBase64(uint8Array);
 
             const urlParts = doc.document_back_url.split('/');
             const fileName = urlParts[urlParts.length - 1] || `doc_back_${Date.now()}.jpg`;
