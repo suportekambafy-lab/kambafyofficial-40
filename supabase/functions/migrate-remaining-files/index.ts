@@ -13,13 +13,11 @@ interface MigrationResult {
   error?: string;
 }
 
-// Função eficiente para converter Uint8Array para base64 (evita stack overflow)
+// Função segura para converter Uint8Array para base64 (byte-por-byte, sem stack overflow)
 function uint8ArrayToBase64(bytes: Uint8Array): string {
   let binary = '';
-  const chunkSize = 8192;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
-    binary += String.fromCharCode.apply(null, Array.from(chunk));
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary);
 }
