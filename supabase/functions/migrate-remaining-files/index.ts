@@ -66,8 +66,21 @@ Deno.serve(async (req) => {
     for (const lesson of lessonsWithBunny) {
       if (filesProcessed >= MAX_FILES_PER_RUN) break;
 
-      const materials = lesson.lesson_materials as any[];
-      if (!materials || !Array.isArray(materials)) continue;
+      // Parse materials se for string JSON
+      let materials = lesson.lesson_materials;
+      if (typeof materials === 'string') {
+        try {
+          materials = JSON.parse(materials);
+        } catch (e) {
+          console.error(`  ❌ Failed to parse lesson_materials for lesson ${lesson.id}:`, e);
+          continue;
+        }
+      }
+      
+      if (!materials || !Array.isArray(materials)) {
+        console.log(`  ↳ Skipping lesson ${lesson.id}: materials is not an array (type: ${typeof materials})`);
+        continue;
+      }
 
       let materialsUpdated = false;
 
@@ -150,9 +163,15 @@ Deno.serve(async (req) => {
       // Atualizar lesson_materials se houve mudanças
       if (materialsUpdated) {
         console.log(`  ↳ Updating lesson materials in database...`);
+        
+        // Se materials era string originalmente, converter de volta para string
+        const materialsToSave = typeof lesson.lesson_materials === 'string'
+          ? JSON.stringify(materials)
+          : materials;
+        
         const { error: updateError } = await supabase
           .from('lessons')
-          .update({ lesson_materials: materials })
+          .update({ lesson_materials: materialsToSave })
           .eq('id', lesson.id);
 
         if (updateError) {
