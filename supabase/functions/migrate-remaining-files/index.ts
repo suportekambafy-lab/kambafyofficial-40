@@ -48,15 +48,21 @@ Deno.serve(async (req) => {
       throw new Error(`Error fetching lessons: ${lessonsError.message}`);
     }
 
+    console.log(`  ↳ Total lessons fetched: ${(lessons || []).length}`);
+
     // Filtrar apenas lessons com URLs do Bunny no lesson_materials
     const lessonsWithBunny = (lessons || []).filter(lesson => {
       if (!lesson.lesson_materials) return false;
       const materials = JSON.stringify(lesson.lesson_materials);
-      return materials.includes('b-cdn.net') || materials.includes('bunnycdn.net');
+      const hasBunny = materials.includes('b-cdn.net') || materials.includes('bunnycdn.net');
+      if (hasBunny) {
+        console.log(`  ↳ Lesson "${lesson.title}" (${lesson.id}) has Bunny CDN URLs`);
+      }
+      return hasBunny;
     });
 
     // Processar materiais de aula
-    console.log(`  ↳ Found ${lessonsWithBunny.length} lessons with Bunny CDN materials`);
+    console.log(`  ↳ Found ${lessonsWithBunny.length} lessons with Bunny CDN materials to process`);
     for (const lesson of lessonsWithBunny) {
       if (filesProcessed >= MAX_FILES_PER_RUN) break;
 
