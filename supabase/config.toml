@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.cloudflare-stream-upload]
 verify_jwt = false
+
+[functions.migrate-videos-to-stream]
+verify_jwt = false
