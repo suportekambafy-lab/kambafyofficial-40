@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.cleanup-broken-bunny-urls]
 verify_jwt = false
+
+[functions.get-cloudflare-upload-url]
+verify_jwt = false

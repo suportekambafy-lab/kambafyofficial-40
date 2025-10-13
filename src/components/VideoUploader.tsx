@@ -59,60 +59,90 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     try {
       const fileName = selectedFile.name;
       
-      console.log('Uploading video to Cloudflare Stream:', fileName);
+      console.log('🚀 Iniciando upload direto para Cloudflare Stream:', fileName);
+      setUploadProgress(5);
+
+      // Step 1: Get direct upload URL from edge function
+      const { data: urlData, error: urlError } = await supabase.functions.invoke('get-cloudflare-upload-url', {
+        body: { fileName }
+      });
+
+      if (urlError || !urlData?.success) {
+        throw new Error('Falha ao gerar URL de upload');
+      }
+
+      const { uploadURL, uid } = urlData;
+      console.log('✅ URL de upload obtida:', uid);
       setUploadProgress(10);
 
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          const base64 = result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(selectedFile);
+      // Step 2: Upload file directly to Cloudflare using TUS protocol
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        // Track upload progress
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 85) + 10; // 10-95%
+            setUploadProgress(percentComplete);
+            console.log(`📤 Upload progress: ${percentComplete}%`);
+          }
+        });
+
+        xhr.addEventListener('load', async () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log('✅ Upload concluído, processando...');
+            setUploadProgress(95);
+
+            // Step 3: Generate video URLs
+            const videoId = uid;
+            const hlsUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/manifest/video.m3u8`;
+            const embedUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/iframe`;
+            const thumbnailUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/thumbnails/thumbnail.jpg`;
+
+            const videoData = {
+              success: true,
+              videoId,
+              hlsUrl,
+              embedUrl,
+              thumbnailUrl,
+              stream_id: videoId
+            };
+
+            setUploadProgress(100);
+            console.log('🎉 Upload bem-sucedido:', videoData);
+
+            onVideoUploaded(hlsUrl, videoData);
+            
+            setSelectedFile(null);
+            setUploadProgress(0);
+            onOpenChange(false);
+
+            toast({
+              title: "Sucesso",
+              description: "Vídeo enviado com sucesso para Cloudflare Stream"
+            });
+
+            resolve(videoData);
+          } else {
+            reject(new Error(`Upload falhou com status: ${xhr.status}`));
+          }
+        });
+
+        xhr.addEventListener('error', () => {
+          reject(new Error('Erro de rede durante upload'));
+        });
+
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Upload cancelado'));
+        });
+
+        xhr.open('PUT', uploadURL);
+        xhr.setRequestHeader('Content-Type', selectedFile.type);
+        xhr.send(selectedFile);
       });
 
-      setUploadProgress(30);
-
-      // Upload to Cloudflare Stream
-      const { data: videoData, error: uploadError } = await supabase.functions.invoke('cloudflare-stream-upload', {
-        body: {
-          fileName: fileName,
-          fileType: selectedFile.type,
-          fileData: base64Data
-        }
-      });
-
-      if (uploadError) {
-        console.error('Error uploading video:', uploadError);
-        throw new Error('Falha ao enviar vídeo para Cloudflare Stream');
-      }
-
-      if (!videoData.success) {
-        throw new Error(videoData.error || 'Falha no upload');
-      }
-
-      setUploadProgress(100);
-      console.log('Upload successful to Cloudflare Stream:', videoData);
-
-      // Chamar callback com HLS URL como prioridade e passar dados completos
-      onVideoUploaded(videoData.hlsUrl, videoData);
-      
-      // Resetar estados
-      setSelectedFile(null);
-      setUploadProgress(0);
-      
-      // Fechar modal
-      onOpenChange(false);
-
-      toast({
-        title: "Sucesso",
-        description: "Vídeo enviado com sucesso para Cloudflare Stream"
-      });
     } catch (error: any) {
-      console.error('Erro ao fazer upload:', error);
+      console.error('❌ Erro ao fazer upload:', error);
       toast({
         title: "Erro",
         description: `Não foi possível enviar o vídeo: ${error.message}`,
