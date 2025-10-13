@@ -166,17 +166,18 @@ Deno.serve(async (req) => {
       payloadHashLength: payloadHash.length
     });
 
-    // Generate unique filename
+    // Generate unique filename - sanitize to avoid signature issues
     const timestamp = Date.now();
-    const uniqueFileName = `${timestamp}-${fileName}`;
-    
-    // URL encode the filename for canonical URI and URL (S3 requires this)
-    const encodedFileName = encodeURIComponent(uniqueFileName)
-      .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+    // Remove special characters and replace spaces with hyphens
+    const sanitizedFileName = fileName
+      .replace(/[^\w\s.-]/g, '') // Remove special chars except alphanumeric, spaces, dots, hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-'); // Replace multiple hyphens with single
+    const uniqueFileName = `${timestamp}-${sanitizedFileName}`;
     
     // Prepare AWS signature V4
     const endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
-    const url = `${endpoint}/${bucketName}/${encodedFileName}`;
+    const url = `${endpoint}/${bucketName}/${uniqueFileName}`;
     const service = 's3';
     const region = 'auto';
     
@@ -192,7 +193,7 @@ Deno.serve(async (req) => {
     
     // Create canonical request
     const method = 'PUT';
-    const canonicalUri = `/${bucketName}/${encodedFileName}`;
+    const canonicalUri = `/${bucketName}/${uniqueFileName}`;
     const canonicalQueryString = '';
     const host = `${accountId}.r2.cloudflarestorage.com`;
     
