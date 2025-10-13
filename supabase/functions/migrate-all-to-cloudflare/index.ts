@@ -156,7 +156,6 @@ serve(async (req) => {
     const { data: productsWithCovers, error: coversError } = await supabase
       .from('products')
       .select('id, cover, metadata')
-      .not('cover', 'is', null)
       .ilike('cover', '%bunny%');
     
     if (coversError) {
@@ -203,7 +202,6 @@ serve(async (req) => {
       .from('products')
       .select('id, share_link, metadata, type')
       .eq('type', 'E-book')
-      .not('share_link', 'is', null)
       .ilike('share_link', '%bunny%');
     
     if (ebooksError) {
@@ -248,7 +246,6 @@ serve(async (req) => {
     const { data: memberAreasWithLogos, error: logosError } = await supabase
       .from('member_areas')
       .select('id, logo_url, metadata')
-      .not('logo_url', 'is', null)
       .ilike('logo_url', '%bunny%');
     
     if (logosError) {
@@ -293,7 +290,6 @@ serve(async (req) => {
     const { data: memberAreasWithHero, error: heroError } = await supabase
       .from('member_areas')
       .select('id, hero_image_url, metadata')
-      .not('hero_image_url', 'is', null)
       .ilike('hero_image_url', '%bunny%');
     
     if (heroError) {
