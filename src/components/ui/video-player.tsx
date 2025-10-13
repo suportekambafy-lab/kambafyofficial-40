@@ -260,6 +260,12 @@ const VideoPlayer = ({
         levelLoadingMaxRetry: 3,
         fragLoadingTimeOut: 20000,
         fragLoadingMaxRetry: 4,
+        // 🎯 Configurações para começar em qualidade alta
+        startLevel: -1, // Auto, mas otimizado com abrEwmaDefaultEstimate
+        abrEwmaDefaultEstimate: 5000000, // Assumir 5Mbps (boa conexão) no início
+        abrBandWidthFactor: 0.95, // Usar 95% da banda estimada
+        abrBandWidthUpFactor: 0.7, // Subir qualidade mais rapidamente
+        abrMaxWithRealBitrate: true, // Usar bitrate real dos fragmentos
       });
       
       hlsRef.current = hls;
@@ -270,6 +276,13 @@ const VideoPlayer = ({
         if (!mounted) return;
         
         console.log('✅ HLS manifest carregado');
+        console.log('📊 Níveis disponíveis:', hls.levels.map(l => ({
+          height: l.height,
+          width: l.width,
+          bitrate: l.bitrate,
+          name: l.name
+        })));
+        
         setIsLoading(false);
         setErrorMessage(null);
         
@@ -288,7 +301,26 @@ const VideoPlayer = ({
           new Map(levels.map(item => [item.height, item])).values()
         ).sort((a, b) => b.height - a.height);
         
+        console.log('🎯 Qualidades únicas detectadas:', uniqueQualities);
         setAvailableQualities(uniqueQualities);
+        
+        // 🚀 Forçar qualidade inicial em 720p ou superior se disponível
+        if (uniqueQualities.length > 0) {
+          const preferred720p = hls.levels.findIndex(l => l.height >= 720);
+          if (preferred720p !== -1) {
+            hls.nextLevel = preferred720p;
+            console.log(`🎯 Qualidade inicial definida: ${hls.levels[preferred720p].height}p`);
+          } else if (hls.levels.length > 0) {
+            // Se não tem 720p, começar na melhor disponível
+            const bestLevel = hls.levels.reduce((best, current, idx) => 
+              current.height > hls.levels[best].height ? idx : best, 0
+            );
+            hls.nextLevel = bestLevel;
+            console.log(`🎯 Qualidade inicial (melhor disponível): ${hls.levels[bestLevel].height}p`);
+          }
+        } else {
+          console.warn('⚠️ Nenhuma qualidade detectada no manifest');
+        }
         
         if (startTime > 0) video.currentTime = startTime;
       });
@@ -611,35 +643,43 @@ const VideoPlayer = ({
                 </div>
 
                 <div className="flex items-center gap-1">
-                  {availableQualities.length > 0 && (
-                    <Popover open={showQualityMenu} onOpenChange={setShowQualityMenu}>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
-                          <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10 z-[200]" side="top" align="end">
-                        <div className="space-y-1">
-                          <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
-                          <button
-                            onClick={() => changeQuality('auto')}
-                            className={cn("w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors", currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70")}
-                          >
-                            Automática
-                          </button>
-                          {availableQualities.map((quality) => (
+                  {/* Sempre mostrar botão de qualidade quando HLS estiver ativo */}
+                  <Popover open={showQualityMenu} onOpenChange={setShowQualityMenu}>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="relative text-white hover:bg-[#111111d1] h-8 w-8 sm:h-10 sm:w-10">
+                        <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
+                        {currentQuality !== 'auto' && (
+                          <span className="absolute -top-0.5 -right-0.5 text-[9px] bg-primary rounded px-1 leading-none py-0.5">
+                            {currentQuality}p
+                          </span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2 bg-[#111111f0] backdrop-blur-md border-white/10 z-[200]" side="top" align="end">
+                      <div className="space-y-1">
+                        <p className="text-xs text-white/70 px-2 py-1">Qualidade</p>
+                        <button
+                          onClick={() => changeQuality('auto')}
+                          className={cn("w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors", currentQuality === 'auto' ? "text-white bg-white/10" : "text-white/70")}
+                        >
+                          Automática {currentQuality === 'auto' && '✓'}
+                        </button>
+                        {availableQualities.length > 0 ? (
+                          availableQualities.map((quality) => (
                             <button
                               key={quality.height}
                               onClick={() => changeQuality(quality.height.toString())}
                               className={cn("w-full text-left px-2 py-1.5 text-sm rounded hover:bg-white/10 transition-colors", currentQuality === quality.height.toString() ? "text-white bg-white/10" : "text-white/70")}
                             >
-                              {quality.label}
+                              {quality.label} {currentQuality === quality.height.toString() && '✓'}
                             </button>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
+                          ))
+                        ) : (
+                          <p className="text-xs text-white/50 px-2 py-1">Qualidades não detectadas</p>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   
                   <div className="hidden md:flex items-center gap-1">
                     {[0.5, 1, 1.5, 2].map((speed) => (
