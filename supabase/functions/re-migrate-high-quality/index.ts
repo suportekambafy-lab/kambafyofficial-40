@@ -17,17 +17,21 @@ Deno.serve(async (req) => {
 
     const CLOUDFLARE_ACCOUNT_ID = Deno.env.get('CLOUDFLARE_STREAM_ACCOUNT_ID');
     const CLOUDFLARE_API_TOKEN = Deno.env.get('CLOUDFLARE_STREAM_API_TOKEN');
+    const BUNNY_API_KEY = Deno.env.get('BUNNY_API_KEY');
+    const BUNNY_LIBRARY_ID = Deno.env.get('BUNNY_LIBRARY_ID');
 
-    console.log('🔍 Verificando credenciais Cloudflare...');
-    console.log('Account ID presente:', !!CLOUDFLARE_ACCOUNT_ID);
-    console.log('API Token presente:', !!CLOUDFLARE_API_TOKEN);
+    console.log('🔍 Verificando credenciais...');
+    console.log('Cloudflare Account ID:', !!CLOUDFLARE_ACCOUNT_ID);
+    console.log('Cloudflare API Token:', !!CLOUDFLARE_API_TOKEN);
+    console.log('Bunny API Key:', !!BUNNY_API_KEY);
+    console.log('Bunny Library ID:', !!BUNNY_LIBRARY_ID);
 
     if (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN) {
-      console.error('❌ Credenciais ausentes:', {
-        has_account_id: !!CLOUDFLARE_ACCOUNT_ID,
-        has_api_token: !!CLOUDFLARE_API_TOKEN
-      });
-      throw new Error('Cloudflare Stream credentials not configured. Verifique as secrets CLOUDFLARE_STREAM_ACCOUNT_ID e CLOUDFLARE_STREAM_API_TOKEN no Supabase.');
+      throw new Error('Cloudflare Stream credentials not configured');
+    }
+
+    if (!BUNNY_API_KEY || !BUNNY_LIBRARY_ID) {
+      throw new Error('Bunny credentials not configured');
     }
 
     const { lesson_ids } = await req.json();
@@ -81,32 +85,44 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Step 2: Find highest quality MP4 available
+        // Step 2: Query Bunny API to get available resolutions
         const bunnyVideoId = lesson.bunny_video_id;
         
-        // ✅ Try different qualities until we find one that exists
-        const qualities = ['2160p', '1440p', '1080p', '720p', '480p', '360p'];
-        let videoUrl = null;
-        
-        for (const quality of qualities) {
-          const testUrl = `https://vz-5c879716-268.b-cdn.net/${bunnyVideoId}/play_${quality}.mp4`;
-          try {
-            const headResponse = await fetch(testUrl, { method: 'HEAD' });
-            if (headResponse.ok) {
-              videoUrl = testUrl;
-              console.log(`✅ Found ${quality} quality: ${videoUrl}`);
-              break;
+        console.log(`📡 Querying Bunny API for video: ${bunnyVideoId}`);
+        const bunnyResponse = await fetch(
+          `https://video.bunnycdn.com/library/${BUNNY_LIBRARY_ID}/videos/${bunnyVideoId}`,
+          {
+            headers: {
+              'AccessKey': BUNNY_API_KEY,
             }
-          } catch (e) {
-            console.log(`❌ Quality ${quality} not available`);
           }
+        );
+
+        if (!bunnyResponse.ok) {
+          throw new Error(`Bunny API error: ${bunnyResponse.status} ${bunnyResponse.statusText}`);
+        }
+
+        const videoInfo = await bunnyResponse.json();
+        const availableResolutions = videoInfo.availableResolutions?.split(',') || [];
+        
+        console.log(`📊 Available resolutions: ${availableResolutions.join(', ')}`);
+        
+        // Select highest quality available (prefer 4K/2K/1080p)
+        const preferredOrder = ['2160p', '1440p', '1080p', '720p', '480p', '360p', '240p'];
+        let bestResolution = availableResolutions.find((res: string) =>
+          preferredOrder.includes(res)
+        );
+        
+        if (!bestResolution && availableResolutions.length > 0) {
+          bestResolution = availableResolutions[availableResolutions.length - 1];
         }
         
-        if (!videoUrl) {
-          throw new Error(`No video quality found for bunny video ID: ${bunnyVideoId}`);
+        if (!bestResolution) {
+          throw new Error(`No resolutions available for video: ${bunnyVideoId}`);
         }
         
-        console.log(`📤 Uploading from URL: ${videoUrl}`);
+        const videoUrl = `https://vz-5c879716-268.b-cdn.net/${bunnyVideoId}/play_${bestResolution}.mp4`;
+        console.log(`✅ Selected ${bestResolution}: ${videoUrl}`);
 
         const uploadResponse = await fetch(
           `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/copy`,
