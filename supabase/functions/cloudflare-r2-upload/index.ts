@@ -279,7 +279,9 @@ Deno.serve(async (req) => {
       throw new Error(`R2 upload failed: ${uploadResponse.statusText} - ${errorText}`);
     }
 
-    // Generate public URL (use your custom domain if configured)
+    // Generate public URL
+    // Note: R2 bucket must have public access enabled in Cloudflare dashboard
+    // Go to: R2 > {bucket} > Settings > Public Access > Allow Access
     const publicUrl = `https://pub-${accountId}.r2.dev/${uniqueFileName}`;
 
     console.log("✅ Upload successful:", publicUrl);
