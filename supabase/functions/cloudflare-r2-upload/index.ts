@@ -1,7 +1,100 @@
-import { S3Client, PutObjectCommand } from "https://esm.sh/@aws-sdk/client-s3@3.515.0";
 import { corsHeaders } from "../_shared/cors.ts";
 
 console.log("🚀 Cloudflare R2 Upload Function initialized");
+
+// Helper para criar assinatura AWS V4
+async function createSignature(
+  secretKey: string,
+  dateStamp: string,
+  regionName: string,
+  serviceName: string,
+  stringToSign: string
+): Promise<string> {
+  const encoder = new TextEncoder();
+  
+  const kDate = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(`AWS4${secretKey}`),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  
+  const dateKey = await crypto.subtle.sign(
+    "HMAC",
+    kDate,
+    encoder.encode(dateStamp)
+  );
+  
+  const kRegion = await crypto.subtle.importKey(
+    "raw",
+    dateKey,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  
+  const regionKey = await crypto.subtle.sign(
+    "HMAC",
+    kRegion,
+    encoder.encode(regionName)
+  );
+  
+  const kService = await crypto.subtle.importKey(
+    "raw",
+    regionKey,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  
+  const serviceKey = await crypto.subtle.sign(
+    "HMAC",
+    kService,
+    encoder.encode(serviceName)
+  );
+  
+  const kSigning = await crypto.subtle.importKey(
+    "raw",
+    serviceKey,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  
+  const signingKey = await crypto.subtle.sign(
+    "HMAC",
+    kSigning,
+    encoder.encode("aws4_request")
+  );
+  
+  const finalKey = await crypto.subtle.importKey(
+    "raw",
+    signingKey,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    finalKey,
+    encoder.encode(stringToSign)
+  );
+  
+  return Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function sha256Hash(message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -23,10 +116,6 @@ Deno.serve(async (req) => {
       hasAccessKeyId: !!accessKeyId,
       hasSecretAccessKey: !!secretAccessKey,
       hasBucketName: !!bucketName,
-      accountIdLength: accountId?.length,
-      accessKeyIdLength: accessKeyId?.length,
-      secretAccessKeyLength: secretAccessKey?.length,
-      bucketNameValue: bucketName,
     });
 
     if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
@@ -56,43 +145,86 @@ Deno.serve(async (req) => {
     // Convert base64 to binary
     const binaryData = Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0));
 
-    // Configure S3 client for R2
-    const s3Client = new S3Client({
-      region: "auto",
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-      forcePathStyle: false,
-      // Prevent SDK from trying to load credentials from files
-      credentialDefaultProvider: () => async () => ({
-        accessKeyId,
-        secretAccessKey,
-      }),
-    });
-
     // Generate unique filename
     const timestamp = Date.now();
     const uniqueFileName = `${timestamp}-${fileName}`;
+    
+    // Prepare AWS signature V4
+    const endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
+    const url = `${endpoint}/${bucketName}/${uniqueFileName}`;
+    const service = 's3';
+    const region = 'auto';
+    
+    const now = new Date();
+    const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
+    const dateStamp = amzDate.slice(0, 8);
+    
+    // Create canonical request
+    const method = 'PUT';
+    const canonicalUri = `/${bucketName}/${uniqueFileName}`;
+    const canonicalQueryString = '';
+    const host = `${accountId}.r2.cloudflarestorage.com`;
+    
+    const payloadHash = await sha256Hash(new TextDecoder().decode(binaryData));
+    
+    const canonicalHeaders = 
+      `host:${host}\n` +
+      `x-amz-content-sha256:${payloadHash}\n` +
+      `x-amz-date:${amzDate}\n`;
+    
+    const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+    
+    const canonicalRequest = 
+      `${method}\n${canonicalUri}\n${canonicalQueryString}\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
+    
+    const canonicalRequestHash = await sha256Hash(canonicalRequest);
+    
+    // Create string to sign
+    const algorithm = 'AWS4-HMAC-SHA256';
+    const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+    const stringToSign = `${algorithm}\n${amzDate}\n${credentialScope}\n${canonicalRequestHash}`;
+    
+    // Calculate signature
+    const signature = await createSignature(
+      secretAccessKey,
+      dateStamp,
+      region,
+      service,
+      stringToSign
+    );
+    
+    // Create authorization header
+    const authorizationHeader = 
+      `${algorithm} Credential=${accessKeyId}/${credentialScope}, ` +
+      `SignedHeaders=${signedHeaders}, Signature=${signature}`;
 
     console.log("☁️ Uploading to R2:", {
       uniqueFileName,
       bucketName,
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      fileSize: binaryData.length,
+      url,
     });
 
-    // Upload to R2
-    const uploadCommand = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: uniqueFileName,
-      Body: binaryData,
-      ContentType: fileType,
+    // Make the PUT request
+    const uploadResponse = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': authorizationHeader,
+        'x-amz-date': amzDate,
+        'x-amz-content-sha256': payloadHash,
+        'Content-Type': fileType,
+      },
+      body: binaryData,
     });
 
-    const uploadResponse = await s3Client.send(uploadCommand);
-    console.log("📤 Upload response:", uploadResponse);
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error("❌ R2 upload failed:", {
+        status: uploadResponse.status,
+        statusText: uploadResponse.statusText,
+        error: errorText,
+      });
+      throw new Error(`R2 upload failed: ${uploadResponse.statusText} - ${errorText}`);
+    }
 
     // Generate public URL (use your custom domain if configured)
     const publicUrl = `https://pub-${accountId}.r2.dev/${uniqueFileName}`;
