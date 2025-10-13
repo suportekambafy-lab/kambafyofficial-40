@@ -320,9 +320,49 @@ const VideoPlayer = ({
           }
         } else {
           console.warn('⚠️ Nenhuma qualidade detectada no manifest');
+          console.warn('⚠️ Cloudflare Stream pode não expor níveis via HLS');
+          // 📋 Adicionar qualidades padrão do Cloudflare como fallback
+          const cloudflareDefaults = [
+            { label: '1080p', height: 1080, index: 0 },
+            { label: '720p', height: 720, index: 1 },
+            { label: '480p', height: 480, index: 2 },
+            { label: '360p', height: 360, index: 3 }
+          ];
+          setAvailableQualities(cloudflareDefaults);
+          console.log('📋 Usando qualidades padrão do Cloudflare:', cloudflareDefaults);
         }
         
         if (startTime > 0) video.currentTime = startTime;
+      });
+      
+      // 🔍 Evento adicional: detecção quando níveis carregam
+      hls.on(Hls.Events.LEVEL_LOADED, () => {
+        if (!mounted || availableQualities.length > 0) return;
+        
+        console.log('🎬 LEVEL_LOADED - Tentando detectar qualidades novamente...');
+        console.log('🎬 Total de níveis agora:', hls.levels?.length || 0);
+        
+        if (hls.levels && hls.levels.length > 0) {
+          const levels = hls.levels.map((level, index) => ({
+            label: level.height >= 2160 ? '4K' : 
+                   level.height >= 1080 ? '1080p' : 
+                   level.height >= 720 ? '720p' : 
+                   level.height >= 480 ? '480p' : 
+                   level.height >= 360 ? '360p' : 
+                   `${level.height}p`,
+            height: level.height,
+            index
+          }));
+          
+          const uniqueQualities = Array.from(
+            new Map(levels.map(item => [item.height, item])).values()
+          ).sort((a, b) => b.height - a.height);
+          
+          if (uniqueQualities.length > 0) {
+            console.log('✅ Qualidades detectadas via LEVEL_LOADED:', uniqueQualities);
+            setAvailableQualities(uniqueQualities);
+          }
+        }
       });
       
       hls.on(Hls.Events.ERROR, (_event, data) => {
