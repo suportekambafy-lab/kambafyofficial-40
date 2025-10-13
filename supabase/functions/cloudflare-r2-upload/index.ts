@@ -168,11 +168,12 @@ Deno.serve(async (req) => {
 
     // Generate unique filename - sanitize to avoid signature issues
     const timestamp = Date.now();
-    // Remove special characters and replace spaces with hyphens
+    // Remove ALL special characters, keep only alphanumeric, dots, and hyphens
     const sanitizedFileName = fileName
-      .replace(/[^\w\s.-]/g, '') // Remove special chars except alphanumeric, spaces, dots, hyphens
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-'); // Replace multiple hyphens with single
+      .toLowerCase()
+      .replace(/[^a-z0-9.-]/g, '-') // Replace ANY non-alphanumeric (except . and -) with hyphen
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
     const uniqueFileName = `${timestamp}-${sanitizedFileName}`;
     
     // Prepare AWS signature V4
