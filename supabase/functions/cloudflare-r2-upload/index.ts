@@ -53,6 +53,12 @@ Deno.serve(async (req) => {
         accessKeyId,
         secretAccessKey,
       },
+      forcePathStyle: false,
+      // Prevent SDK from trying to load credentials from files
+      credentialDefaultProvider: () => async () => ({
+        accessKeyId,
+        secretAccessKey,
+      }),
     });
 
     // Generate unique filename
