@@ -44,18 +44,17 @@ serve(async (req) => {
       );
     }
 
-    console.log('🚀 Versão 3.2 - Base64 com chunks de 32KB (spread operator)');
+    console.log('🚀 Versão 3.3 - Base64 loop simples (sem spread/apply)');
 
     const MAX_FILES_PER_RUN = 10;
 
     // Helper: Converter Uint8Array para base64 sem causar stack overflow
     function uint8ArrayToBase64(bytes: Uint8Array): string {
-      const CHUNK_SIZE = 0x8000; // 32KB chunks
       let binary = '';
+      const len = bytes.length;
       
-      for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-        const chunk = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
-        binary += String.fromCharCode(...chunk);
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
       }
       
       return btoa(binary);
