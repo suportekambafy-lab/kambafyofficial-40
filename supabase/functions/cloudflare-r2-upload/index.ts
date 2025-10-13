@@ -23,10 +23,21 @@ Deno.serve(async (req) => {
       hasAccessKeyId: !!accessKeyId,
       hasSecretAccessKey: !!secretAccessKey,
       hasBucketName: !!bucketName,
+      accountIdLength: accountId?.length,
+      accessKeyIdLength: accessKeyId?.length,
+      secretAccessKeyLength: secretAccessKey?.length,
+      bucketNameValue: bucketName,
     });
 
     if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
-      throw new Error("Missing Cloudflare R2 credentials");
+      const missing = [];
+      if (!accountId) missing.push("CLOUDFLARE_R2_ACCOUNT_ID");
+      if (!accessKeyId) missing.push("CLOUDFLARE_R2_ACCESS_KEY_ID");
+      if (!secretAccessKey) missing.push("CLOUDFLARE_R2_SECRET_ACCESS_KEY");
+      if (!bucketName) missing.push("CLOUDFLARE_R2_BUCKET_NAME");
+      
+      console.error("❌ Missing credentials:", missing);
+      throw new Error(`Missing Cloudflare R2 credentials: ${missing.join(", ")}`);
     }
 
     // Parse request body
@@ -65,7 +76,12 @@ Deno.serve(async (req) => {
     const timestamp = Date.now();
     const uniqueFileName = `${timestamp}-${fileName}`;
 
-    console.log("☁️ Uploading to R2:", uniqueFileName);
+    console.log("☁️ Uploading to R2:", {
+      uniqueFileName,
+      bucketName,
+      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      fileSize: binaryData.length,
+    });
 
     // Upload to R2
     const uploadCommand = new PutObjectCommand({
@@ -75,9 +91,10 @@ Deno.serve(async (req) => {
       ContentType: fileType,
     });
 
-    await s3Client.send(uploadCommand);
+    const uploadResponse = await s3Client.send(uploadCommand);
+    console.log("📤 Upload response:", uploadResponse);
 
-    // Generate public URL
+    // Generate public URL (use your custom domain if configured)
     const publicUrl = `https://pub-${accountId}.r2.dev/${uniqueFileName}`;
 
     console.log("✅ Upload successful:", publicUrl);
