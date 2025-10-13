@@ -1,16 +1,16 @@
 /**
  * File utility functions for handling files from different storage providers
- * Maintains backward compatibility with Supabase Storage while supporting Bunny CDN
+ * Supports Cloudflare R2 (current), Bunny CDN (legacy), and Supabase Storage (legacy)
  */
 
 /**
  * Get the correct URL for any file (images, ebooks, materials, videos)
- * Works with both Bunny CDN (new) and Supabase Storage (legacy)
+ * Works with Cloudflare R2 (current), Bunny CDN and Supabase Storage (legacy)
  */
 export const getFileUrl = (url: string | null | undefined, fallback?: string): string => {
   if (!url) return fallback || "";
   
-  // Already a complete URL - works for both Bunny CDN and Supabase Storage
+  // Already a complete URL - works for all storage providers
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
@@ -18,6 +18,11 @@ export const getFileUrl = (url: string | null | undefined, fallback?: string): s
   // Data URLs (base64)
   if (url.startsWith('data:')) {
     return url;
+  }
+  
+  // Check if it's a Cloudflare R2 URL without protocol and add https://
+  if (url.includes('r2.dev') || url.includes('r2.cloudflarestorage.com')) {
+    return `https://${url}`;
   }
   
   // Check if it's a Bunny CDN URL without protocol and add https://
@@ -42,16 +47,24 @@ export const isLegacySupabaseUrl = (url: string): boolean => {
 };
 
 /**
- * Check if a URL is from Bunny CDN (new system)
+ * Check if a URL is from Bunny CDN (legacy system)
  */
 export const isBunnyUrl = (url: string): boolean => {
   return url.includes('bunnycdn.net') || url.includes('b-cdn.net') || url.includes('bunny.net');
 };
 
 /**
+ * Check if a URL is from Cloudflare R2 (current system)
+ */
+export const isCloudflareR2Url = (url: string): boolean => {
+  return url.includes('r2.dev') || url.includes('r2.cloudflarestorage.com');
+};
+
+/**
  * Get storage provider from URL
  */
-export const getStorageProvider = (url: string): 'bunny' | 'supabase' | 'other' => {
+export const getStorageProvider = (url: string): 'cloudflare' | 'bunny' | 'supabase' | 'other' => {
+  if (isCloudflareR2Url(url)) return 'cloudflare';
   if (isBunnyUrl(url)) return 'bunny';
   if (isLegacySupabaseUrl(url)) return 'supabase';
   return 'other';

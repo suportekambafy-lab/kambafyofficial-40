@@ -1,7 +1,7 @@
 /**
  * Utility function to get the correct product image URL
- * Handles Bunny CDN, Supabase Storage URLs, data URLs, and Unsplash IDs
- * Backward compatible with old Supabase Storage URLs
+ * Handles Cloudflare R2, Bunny CDN, Supabase Storage URLs, data URLs, and Unsplash IDs
+ * Backward compatible with old Supabase Storage URLs and Bunny CDN
  */
 export const getProductImageUrl = (cover: string, fallback?: string): string => {
   if (!cover) return fallback || "/placeholder.svg";
@@ -11,8 +11,8 @@ export const getProductImageUrl = (cover: string, fallback?: string): string => 
     return cover;
   }
   
-  // Bunny CDN URLs, Supabase Storage URLs or any complete HTTP URLs
-  if (cover.includes('supabase') || cover.includes('bunnycdn') || cover.includes('b-cdn.net') || cover.startsWith('http')) {
+  // Cloudflare R2, Bunny CDN URLs, Supabase Storage URLs or any complete HTTP URLs
+  if (cover.includes('supabase') || cover.includes('bunnycdn') || cover.includes('b-cdn.net') || cover.includes('r2.dev') || cover.includes('r2.cloudflarestorage.com') || cover.startsWith('http')) {
     return cover;
   }
   
@@ -48,4 +48,11 @@ export const isSupabaseStorageUrl = (url: string): boolean => {
  */
 export const isBunnyCdnUrl = (url: string): boolean => {
   return url.includes('bunnycdn.net') || url.includes('b-cdn.net');
+};
+
+/**
+ * Check if a URL is from Cloudflare R2
+ */
+export const isCloudflareR2Url = (url: string): boolean => {
+  return url.includes('r2.dev') || url.includes('r2.cloudflarestorage.com');
 };

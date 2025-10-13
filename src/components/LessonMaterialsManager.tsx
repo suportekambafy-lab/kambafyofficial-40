@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, Upload, File, FileText, Image, Download } from 'lucide-react';
 import { LessonMaterial } from '@/types/memberArea';
 import { toast } from '@/hooks/use-toast';
-import { useBunnyUpload } from '@/hooks/useBunnyUpload';
+import { useCloudflareUpload } from '@/hooks/useCloudflareUpload';
 import { openFile } from '@/utils/fileUtils';
 
 interface LessonMaterialsManagerProps {
@@ -14,7 +14,7 @@ interface LessonMaterialsManagerProps {
 }
 
 export function LessonMaterialsManager({ materials, onChange }: LessonMaterialsManagerProps) {
-  const { uploadFile, uploading: isUploading } = useBunnyUpload();
+  const { uploadFile, uploading: isUploading } = useCloudflareUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getFileIcon = (type: string) => {

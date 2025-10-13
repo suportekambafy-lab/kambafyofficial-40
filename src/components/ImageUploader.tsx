@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useBunnyUpload } from '@/hooks/useBunnyUpload';
+import { useCloudflareUpload } from '@/hooks/useCloudflareUpload';
 
 interface ImageUploaderProps {
   label: string;
@@ -43,7 +43,7 @@ export function ImageUploader({
   recommendedDimensions
 }: ImageUploaderProps) {
   const { toast } = useToast();
-  const { uploadFile, uploading } = useBunnyUpload();
+  const { uploadFile, uploading } = useCloudflareUpload();
 
   const uploadImage = async (file: File) => {
     const url = await uploadFile(file);

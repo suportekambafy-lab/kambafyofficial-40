@@ -59,40 +59,43 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     try {
       const fileName = selectedFile.name;
       
-      console.log('Creating video in Bunny.net:', fileName);
-
-      // Primeiro, criar o vídeo na Bunny.net
-      const { data: videoData, error: createError } = await supabase.functions.invoke('bunny-video-upload', {
-        body: {
-          fileName: fileName,
-          title: fileName.split('.')[0] // Remove extensão para o título
-        }
-      });
-
-      if (createError) {
-        console.error('Error creating video:', createError);
-        throw new Error('Falha ao criar vídeo na Bunny.net');
-      }
-
-      console.log('Video created, starting upload:', videoData);
+      console.log('Uploading video to Cloudflare Stream:', fileName);
       setUploadProgress(10);
 
-      // Fazer upload do arquivo para a Bunny.net usando o access key retornado
-      const uploadResponse = await fetch(videoData.uploadUrl, {
-        method: 'PUT',
-        body: selectedFile,
-        headers: {
-          'AccessKey': videoData.accessKey,
-          'Content-Type': 'application/octet-stream'
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedFile);
+      });
+
+      setUploadProgress(30);
+
+      // Upload to Cloudflare Stream
+      const { data: videoData, error: uploadError } = await supabase.functions.invoke('cloudflare-stream-upload', {
+        body: {
+          fileName: fileName,
+          fileType: selectedFile.type,
+          fileData: base64Data
         }
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error('Falha no upload do arquivo');
+      if (uploadError) {
+        console.error('Error uploading video:', uploadError);
+        throw new Error('Falha ao enviar vídeo para Cloudflare Stream');
+      }
+
+      if (!videoData.success) {
+        throw new Error(videoData.error || 'Falha no upload');
       }
 
       setUploadProgress(100);
-      console.log('Upload successful to Bunny.net:', uploadResponse);
+      console.log('Upload successful to Cloudflare Stream:', videoData);
 
       // Chamar callback com HLS URL como prioridade e passar dados completos
       onVideoUploaded(videoData.hlsUrl, videoData);
@@ -106,9 +109,9 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       toast({
         title: "Sucesso",
-        description: "Vídeo enviado com sucesso para Bunny.net"
+        description: "Vídeo enviado com sucesso para Cloudflare Stream"
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao fazer upload:', error);
       toast({
         title: "Erro",
