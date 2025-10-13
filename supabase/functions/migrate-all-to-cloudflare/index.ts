@@ -154,23 +154,23 @@ serve(async (req) => {
     // CATEGORIA 1: Capas de Produtos
     console.log('\n📸 CATEGORIA 1: Capas de Produtos');
     
-    // Primeiro verificar quantos produtos existem no total
-    const { count: totalProducts } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true });
-    console.log(`📊 Total de produtos no banco: ${totalProducts}`);
-    
-    // Agora buscar produtos com Bunny CDN
-    const { data: productsWithCovers, error: coversError } = await supabase
+    // Buscar TODOS os produtos e filtrar no código
+    const { data: allProducts, error: coversError } = await supabase
       .from('products')
       .select('id, cover')
-      .not('cover', 'is', null)
-      .or('cover.ilike.%bunny%,cover.ilike.%b-cdn%');
+      .not('cover', 'is', null);
     
     if (coversError) {
       console.error('❌ Erro ao buscar capas:', coversError);
     }
-    console.log(`📋 Query retornou: ${productsWithCovers?.length || 0} capas com Bunny CDN`);
+    
+    // Filtrar apenas os que têm Bunny CDN
+    const productsWithCovers = allProducts?.filter(p => 
+      p.cover?.includes('bunny') || p.cover?.includes('b-cdn')
+    ) || [];
+    
+    console.log(`📊 Total de produtos: ${allProducts?.length || 0}`);
+    console.log(`📋 Produtos com Bunny CDN: ${productsWithCovers.length}`);
 
     if (productsWithCovers && productsWithCovers.length > 0) {
       console.log(`  📋 Encontrados ${productsWithCovers.length} produtos com capas no Bunny`);
@@ -199,23 +199,22 @@ serve(async (req) => {
     // CATEGORIA 2: E-books
     console.log('\n📚 CATEGORIA 2: E-books');
     
-    const { count: totalEbooks } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('type', 'E-book');
-    console.log(`📊 Total de e-books no banco: ${totalEbooks}`);
-    
-    const { data: ebooks, error: ebooksError } = await supabase
+    const { data: allEbooks, error: ebooksError } = await supabase
       .from('products')
       .select('id, share_link, type')
       .eq('type', 'E-book')
-      .not('share_link', 'is', null)
-      .or('share_link.ilike.%bunny%,share_link.ilike.%b-cdn%');
+      .not('share_link', 'is', null);
     
     if (ebooksError) {
       console.error('❌ Erro ao buscar e-books:', ebooksError);
     }
-    console.log(`📋 Query retornou: ${ebooks?.length || 0} e-books com Bunny CDN`);
+    
+    const ebooks = allEbooks?.filter(e => 
+      e.share_link?.includes('bunny') || e.share_link?.includes('b-cdn')
+    ) || [];
+    
+    console.log(`📊 Total de e-books: ${allEbooks?.length || 0}`);
+    console.log(`📋 E-books com Bunny CDN: ${ebooks.length}`);
 
     if (ebooks && ebooks.length > 0) {
       console.log(`  📋 Encontrados ${ebooks.length} e-books no Bunny`);
@@ -244,21 +243,21 @@ serve(async (req) => {
     // CATEGORIA 3: Logos de Áreas de Membros
     console.log('\n🎨 CATEGORIA 3: Logos de Áreas de Membros');
     
-    const { count: totalAreas } = await supabase
-      .from('member_areas')
-      .select('*', { count: 'exact', head: true });
-    console.log(`📊 Total de áreas de membros no banco: ${totalAreas}`);
-    
-    const { data: memberAreasWithLogos, error: logosError } = await supabase
+    const { data: allMemberAreasLogos, error: logosError } = await supabase
       .from('member_areas')
       .select('id, logo_url')
-      .not('logo_url', 'is', null)
-      .or('logo_url.ilike.%bunny%,logo_url.ilike.%b-cdn%');
+      .not('logo_url', 'is', null);
     
     if (logosError) {
       console.error('❌ Erro ao buscar logos:', logosError);
     }
-    console.log(`📋 Query retornou: ${memberAreasWithLogos?.length || 0} logos com Bunny CDN`);
+    
+    const memberAreasWithLogos = allMemberAreasLogos?.filter(ma => 
+      ma.logo_url?.includes('bunny') || ma.logo_url?.includes('b-cdn')
+    ) || [];
+    
+    console.log(`📊 Total de logos: ${allMemberAreasLogos?.length || 0}`);
+    console.log(`📋 Logos com Bunny CDN: ${memberAreasWithLogos.length}`);
 
     if (memberAreasWithLogos && memberAreasWithLogos.length > 0) {
       console.log(`  📋 Encontrados ${memberAreasWithLogos.length} logos no Bunny`);
@@ -287,16 +286,21 @@ serve(async (req) => {
     // CATEGORIA 4: Hero Images
     console.log('\n🖼️ CATEGORIA 4: Hero Images de Áreas de Membros');
     
-    const { data: memberAreasWithHero, error: heroError } = await supabase
+    const { data: allMemberAreasHero, error: heroError } = await supabase
       .from('member_areas')
       .select('id, hero_image_url')
-      .not('hero_image_url', 'is', null)
-      .or('hero_image_url.ilike.%bunny%,hero_image_url.ilike.%b-cdn%');
+      .not('hero_image_url', 'is', null);
     
     if (heroError) {
       console.error('❌ Erro ao buscar hero images:', heroError);
     }
-    console.log(`📋 Query retornou: ${memberAreasWithHero?.length || 0} hero images com Bunny CDN`);
+    
+    const memberAreasWithHero = allMemberAreasHero?.filter(ma => 
+      ma.hero_image_url?.includes('bunny') || ma.hero_image_url?.includes('b-cdn')
+    ) || [];
+    
+    console.log(`📊 Total de hero images: ${allMemberAreasHero?.length || 0}`);
+    console.log(`📋 Hero images com Bunny CDN: ${memberAreasWithHero.length}`);
 
     if (memberAreasWithHero && memberAreasWithHero.length > 0) {
       console.log(`  📋 Encontrados ${memberAreasWithHero.length} hero images no Bunny`);
