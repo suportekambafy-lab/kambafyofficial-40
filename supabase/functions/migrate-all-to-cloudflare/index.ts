@@ -31,7 +31,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const cloudflareAccountId = Deno.env.get('CLOUDFLARE_ACCOUNT_ID');
+    const cloudflareAccountId = Deno.env.get('CLOUDFLARE_R2_ACCOUNT_ID');
     const cloudflareAccessKeyId = Deno.env.get('CLOUDFLARE_R2_ACCESS_KEY_ID');
     const cloudflareSecretAccessKey = Deno.env.get('CLOUDFLARE_R2_SECRET_ACCESS_KEY');
     const cloudflareBucketName = Deno.env.get('CLOUDFLARE_R2_BUCKET_NAME');
