@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.migrate-remaining-files]
 verify_jwt = false
+
+[functions.cleanup-broken-bunny-urls]
+verify_jwt = false
