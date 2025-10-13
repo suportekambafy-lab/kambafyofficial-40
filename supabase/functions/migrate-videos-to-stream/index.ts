@@ -74,13 +74,15 @@ Deno.serve(async (req) => {
 
       try {
         // Extract Bunny video ID from URL (prioritize hls_url)
-        // URL format: https://vz-5c879716-268.b-cdn.net/{video-id}/playlist.m3u8
+        // URL formats: 
+        // - https://vz-5c879716-268.b-cdn.net/{video-id}/playlist.m3u8
+        // - https://iframe.mediadelivery.net/embed/500107/{video-id}
         const videoUrl = lesson.hls_url || lesson.video_url;
         if (!videoUrl) {
           throw new Error("No video URL found");
         }
 
-        const videoIdMatch = videoUrl.match(/\/([a-f0-9-]{36})\//);
+        const videoIdMatch = videoUrl.match(/([a-f0-9-]{36})/);
         if (!videoIdMatch) {
           throw new Error(`Could not extract Bunny video ID from URL: ${videoUrl}`);
         }
