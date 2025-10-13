@@ -46,6 +46,7 @@ serve(async (req) => {
 
     console.log('🚀 Iniciando migração completa do Bunny CDN para Cloudflare R2');
     console.log('📊 Buscando arquivos para migrar...');
+    console.log('🔄 Versão: 2.0 - Filtro JavaScript');
 
     const results: MigrationResult[] = [];
     const stats = {
