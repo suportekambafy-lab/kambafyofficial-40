@@ -1,7 +1,7 @@
 /**
  * Utility function to get the correct product image URL
  * Handles Cloudflare R2, Bunny CDN, Supabase Storage URLs, data URLs, and Unsplash IDs
- * Backward compatible with old Supabase Storage URLs and Bunny CDN
+ * Priority: Cloudflare R2 > Bunny CDN (legacy) > Supabase Storage (legacy) > Unsplash (fallback)
  */
 export const getProductImageUrl = (cover: string, fallback?: string): string => {
   if (!cover) return fallback || "/placeholder.svg";
@@ -11,12 +11,27 @@ export const getProductImageUrl = (cover: string, fallback?: string): string => 
     return cover;
   }
   
-  // Cloudflare R2, Bunny CDN URLs, Supabase Storage URLs or any complete HTTP URLs
-  if (cover.includes('supabase') || cover.includes('bunnycdn') || cover.includes('b-cdn.net') || cover.includes('r2.dev') || cover.includes('r2.cloudflarestorage.com') || cover.startsWith('http')) {
+  // Priority 1: Cloudflare R2 (current standard)
+  if (cover.includes('r2.dev') || cover.includes('r2.cloudflarestorage.com')) {
     return cover;
   }
   
-  // Legacy Unsplash IDs - maintain backward compatibility
+  // Priority 2: Bunny CDN (legacy - backward compatibility)
+  if (cover.includes('bunnycdn') || cover.includes('b-cdn.net')) {
+    return cover;
+  }
+  
+  // Priority 3: Supabase Storage (legacy)
+  if (cover.includes('supabase')) {
+    return cover;
+  }
+  
+  // Priority 4: Any other HTTP URLs
+  if (cover.startsWith('http')) {
+    return cover;
+  }
+  
+  // Fallback: Legacy Unsplash IDs
   return `https://images.unsplash.com/${cover}`;
 };
 
@@ -55,4 +70,14 @@ export const isBunnyCdnUrl = (url: string): boolean => {
  */
 export const isCloudflareR2Url = (url: string): boolean => {
   return url.includes('r2.dev') || url.includes('r2.cloudflarestorage.com');
+};
+
+/**
+ * Get the storage provider from a URL
+ */
+export const getStorageProvider = (url: string): 'cloudflare' | 'bunny' | 'supabase' | 'other' => {
+  if (isCloudflareR2Url(url)) return 'cloudflare';
+  if (isBunnyCdnUrl(url)) return 'bunny';
+  if (isSupabaseStorageUrl(url)) return 'supabase';
+  return 'other';
 };

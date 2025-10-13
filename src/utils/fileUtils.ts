@@ -1,11 +1,11 @@
 /**
  * File utility functions for handling files from different storage providers
- * Supports Cloudflare R2 (current), Bunny CDN (legacy), and Supabase Storage (legacy)
+ * Priority: Cloudflare R2 (current) > Bunny CDN (legacy) > Supabase Storage (legacy)
  */
 
 /**
  * Get the correct URL for any file (images, ebooks, materials, videos)
- * Works with Cloudflare R2 (current), Bunny CDN and Supabase Storage (legacy)
+ * Priority handling: Cloudflare R2 (current) > Bunny CDN (legacy) > Supabase Storage (legacy)
  */
 export const getFileUrl = (url: string | null | undefined, fallback?: string): string => {
   if (!url) return fallback || "";
@@ -20,17 +20,17 @@ export const getFileUrl = (url: string | null | undefined, fallback?: string): s
     return url;
   }
   
-  // Check if it's a Cloudflare R2 URL without protocol and add https://
+  // Priority 1: Cloudflare R2 URL without protocol
   if (url.includes('r2.dev') || url.includes('r2.cloudflarestorage.com')) {
     return `https://${url}`;
   }
   
-  // Check if it's a Bunny CDN URL without protocol and add https://
+  // Priority 2: Bunny CDN URL without protocol (legacy backward compatibility)
   if (url.includes('bunnycdn.net') || url.includes('b-cdn.net') || url.includes('bunny.net')) {
     return `https://${url}`;
   }
   
-  // Check if it's a Supabase URL without protocol and add https://
+  // Priority 3: Supabase URL without protocol (legacy backward compatibility)
   if (url.includes('supabase.co')) {
     return `https://${url}`;
   }
