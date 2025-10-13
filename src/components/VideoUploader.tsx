@@ -80,11 +80,8 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       await new Promise((resolve, reject) => {
         const upload = new tus.Upload(selectedFile, {
           endpoint: uploadURL,
+          chunkSize: 50 * 1024 * 1024, // 50MB chunks para arquivos grandes
           retryDelays: [0, 3000, 5000, 10000, 20000], // Retry automático
-          metadata: {
-            filename: fileName,
-            filetype: selectedFile.type
-          },
           onError: (error) => {
             console.error('❌ Erro TUS durante upload:', error);
             reject(error);
