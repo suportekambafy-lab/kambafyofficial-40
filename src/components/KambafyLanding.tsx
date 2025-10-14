@@ -574,65 +574,63 @@ const FAQSection = () => {
   return (
     <section id="faqs" className="py-24 bg-background">
       <div className="mx-auto max-w-4xl px-6">
-        <AnimatedGroup preset="slide">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-checkout-green/10 rounded-2xl mb-6">
-              <HelpCircle className="w-8 h-8 text-checkout-green" />
-            </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
-              Perguntas <span className="text-checkout-green">Frequentes</span>
-            </h2>
-            <p className="text-base sm:text-lg text-muted-foreground">
-              Encontre respostas para as dúvidas mais comuns
-            </p>
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-checkout-green/10 rounded-2xl mb-6">
+            <HelpCircle className="w-8 h-8 text-checkout-green" />
           </div>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
+            Perguntas <span className="text-checkout-green">Frequentes</span>
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground">
+            Encontre respostas para as dúvidas mais comuns
+          </p>
+        </div>
 
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-2xl overflow-hidden transition-all duration-300 hover:border-checkout-green/50"
-              >
-                <button
-                  onClick={() => toggleFAQ(index)}
-                  className="w-full flex items-center justify-between p-6 text-left bg-white hover:bg-checkout-green/5 transition-colors"
-                >
-                  <h3 className="text-base sm:text-lg font-semibold pr-4">
-                    {faq.question}
-                  </h3>
-                  {openIndex === index ? (
-                    <ChevronUp className="w-5 h-5 text-checkout-green flex-shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                  )}
-                </button>
-                
-                {openIndex === index && (
-                  <div className="px-6 pb-6 bg-white">
-                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                      {faq.answer}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 text-center">
-            <p className="text-muted-foreground mb-4">
-              Não encontrou a resposta que procurava?
-            </p>
-            <Button
-              variant="outline"
-              className="border-checkout-green text-checkout-green hover:bg-checkout-green/10"
-              asChild
+        <div className="space-y-4">
+          {faqs.map((faq, index) => (
+            <div
+              key={index}
+              className="border border-gray-200 rounded-2xl overflow-hidden transition-all duration-300 hover:border-checkout-green/50"
             >
-              <SubdomainLink to="/ajuda">
-                Ir para Central de Ajuda
-              </SubdomainLink>
-            </Button>
-          </div>
-        </AnimatedGroup>
+              <button
+                onClick={() => toggleFAQ(index)}
+                className="w-full flex items-center justify-between p-6 text-left bg-white hover:bg-checkout-green/5 transition-colors"
+              >
+                <h3 className="text-base sm:text-lg font-semibold pr-4">
+                  {faq.question}
+                </h3>
+                {openIndex === index ? (
+                  <ChevronUp className="w-5 h-5 text-checkout-green flex-shrink-0" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                )}
+              </button>
+              
+              {openIndex === index && (
+                <div className="px-6 pb-6 bg-white animate-accordion-down">
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                    {faq.answer}
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-muted-foreground mb-4">
+            Não encontrou a resposta que procurava?
+          </p>
+          <Button
+            variant="outline"
+            className="border-checkout-green text-checkout-green hover:bg-checkout-green/10"
+            asChild
+          >
+            <SubdomainLink to="/ajuda">
+              Ir para Central de Ajuda
+            </SubdomainLink>
+          </Button>
+        </div>
       </div>
     </section>
   );
