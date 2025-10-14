@@ -13,7 +13,7 @@ const Pricing = () => {
       description: "Pague apenas quando vender",
       features: [
         "Produtos ilimitados",
-        "Apenas 8% por transação",
+        "Apenas 8,99% por transação",
         "Suporte por email",
         "Pagamentos em Kwanza",
         "Dashboard completo",
@@ -101,7 +101,7 @@ const Pricing = () => {
             <h3 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6">Taxas por Transação</h3>
             <div className="max-w-md mx-auto text-center">
               <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200">
-                <div className="text-2xl sm:text-3xl font-bold text-checkout-green mb-2">8%</div>
+                <div className="text-2xl sm:text-3xl font-bold text-checkout-green mb-2">8,99%</div>
                 <p className="text-sm sm:text-base text-gray-600">Por cada venda realizada</p>
                 <p className="text-xs sm:text-sm text-gray-500 mt-2">
                   Taxa aplicada apenas sobre vendas concluídas

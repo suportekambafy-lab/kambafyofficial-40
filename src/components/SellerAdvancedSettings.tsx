@@ -171,7 +171,7 @@ export function SellerAdvancedSettings() {
           <div className="bg-muted p-4 rounded-lg">
             <h4 className="font-medium mb-2">Comissões</h4>
             <p className="text-sm text-muted-foreground">
-              As comissões são calculadas automaticamente (8% por venda). Sem mensalidades ou custos fixos.
+              As comissões são calculadas automaticamente (8,99% por venda). Sem mensalidades ou custos fixos.
             </p>
           </div>
 

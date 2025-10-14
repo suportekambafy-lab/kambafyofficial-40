@@ -150,9 +150,9 @@ export const pageSEO = {
   },
   
   pricing: {
-    title: 'Preços da Kambafy - Apenas 8% por Transação',
-    description: 'Conheça a precificação da Kambafy. Apenas 8% por transação, sem taxas ocultas ou mensalidades. Você paga apenas quando vende.',
-    keywords: 'preços kambafy, 8% por transação, sem mensalidade, custos plataforma vendas, taxa única'
+    title: 'Preços da Kambafy - Apenas 8,99% por Transação',
+    description: 'Conheça a precificação da Kambafy. Apenas 8,99% por transação, sem taxas ocultas ou mensalidades. Você paga apenas quando vende.',
+    keywords: 'preços kambafy, 8,99% por transação, sem mensalidade, custos plataforma vendas, taxa única'
   },
   
   howItWorks: {

@@ -440,7 +440,7 @@ export default function AdminDashboard() {
                     currency: 'AOA' 
                   }) || 'KZ 0'}
                 </h3>
-                <CardDescription>8% sobre vendas (receita líquida)</CardDescription>
+                <CardDescription>8,99% sobre vendas (receita líquida)</CardDescription>
               </div>
             </CardContent>
           </Card>

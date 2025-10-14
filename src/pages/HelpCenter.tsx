@@ -29,7 +29,7 @@ const HelpCenter = () => {
     answer: "Para começar, crie sua conta gratuita, configure seu perfil de criador e publique seu primeiro produto. Nossa equipe está disponível para ajudar em cada passo."
   }, {
     question: "Como funciona a comissão da plataforma?",
-    answer: "A Kambafy cobra apenas 8% por cada venda realizada. Não há planos ou mensalidades - você paga apenas quando vende."
+    answer: "A Kambafy cobra apenas 8,99% por cada venda realizada. Não há planos ou mensalidades - você paga apenas quando vende."
   }, {
     question: "Posso personalizar minha página de criador?",
     answer: "Sim! Você pode personalizar cores, logos, descrições e até usar seu próprio domínio no plano profissional."
