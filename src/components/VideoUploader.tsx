@@ -58,64 +58,63 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
     try {
       const fileName = selectedFile.name;
+      const fileType = selectedFile.type;
       
-      console.log('🚀 Iniciando upload TUS para Cloudflare Stream:', fileName);
+      console.log('🚀 Iniciando estratégia R2 → Stream:', fileName);
       setUploadProgress(5);
 
-      // Step 1: Get direct upload URL from edge function
-      const { data: urlData, error: urlError } = await supabase.functions.invoke('get-cloudflare-upload-url', {
-        body: { fileName }
+      // Step 1: Upload para R2 Storage (aceita arquivos grandes)
+      console.log('📤 Passo 1: Enviando para R2 Storage...');
+      
+      // Converter arquivo para base64
+      const reader = new FileReader();
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedFile);
       });
 
-      if (urlError || !urlData?.success) {
-        throw new Error('Falha ao gerar URL de upload');
-      }
+      setUploadProgress(20);
 
-      const { uploadURL, uid } = urlData;
-      console.log('✅ URL de upload obtida:', uid);
-      setUploadProgress(10);
-
-      // Step 2: Upload direto via POST (método básico do Cloudflare)
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
-      const xhr = new XMLHttpRequest();
-      
-      // Monitor de progresso
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const percentage = Math.round((e.loaded / e.total) * 90) + 10;
-          setUploadProgress(percentage);
-          console.log(`📤 Upload: ${percentage}% (${e.loaded}/${e.total} bytes)`);
+      // Upload para R2
+      const { data: r2Data, error: r2Error } = await supabase.functions.invoke('cloudflare-r2-upload', {
+        body: {
+          fileName,
+          fileType,
+          fileData: base64Data
         }
       });
 
-      await new Promise((resolve, reject) => {
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            console.log('✅ Upload concluído');
-            resolve(xhr.response);
-          } else {
-            reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
-          }
-        });
-        
-        xhr.addEventListener('error', () => {
-          reject(new Error('Erro de rede durante upload'));
-        });
-        
-        xhr.open('POST', uploadURL);
-        xhr.send(formData);
+      if (r2Error || !r2Data?.success) {
+        throw new Error(r2Error?.message || r2Data?.error || 'Falha ao fazer upload para R2');
+      }
+
+      const r2Url = r2Data.url;
+      console.log('✅ Upload para R2 concluído:', r2Url);
+      setUploadProgress(50);
+
+      // Step 2: Importar do R2 para Cloudflare Stream
+      console.log('📹 Passo 2: Importando do R2 para Stream...');
+      
+      const { data: streamData, error: streamError } = await supabase.functions.invoke('import-r2-to-stream', {
+        body: {
+          videoUrl: r2Url,
+          fileName
+        }
       });
 
-      console.log('✅ Upload concluído, processando...');
+      if (streamError || !streamData?.success) {
+        throw new Error(streamError?.message || streamData?.error || 'Falha ao importar para Stream');
+      }
+
+      console.log('✅ Importação para Stream concluída');
       setUploadProgress(100);
 
-      // Step 3: Generate video URLs
-      const videoId = uid;
-      const hlsUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/manifest/video.m3u8`;
-      const embedUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/iframe`;
-      const thumbnailUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/thumbnails/thumbnail.jpg`;
+      const { videoId, hlsUrl, embedUrl, thumbnailUrl } = streamData;
 
       const videoData = {
         success: true,
@@ -126,7 +125,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         stream_id: videoId
       };
 
-      console.log('🎉 Upload bem-sucedido:', videoData);
+      console.log('🎉 Upload completo (R2 → Stream):', videoData);
 
       onVideoUploaded(hlsUrl, videoData);
       
