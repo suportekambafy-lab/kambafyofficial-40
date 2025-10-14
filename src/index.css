@@ -9,131 +9,143 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 99%;
-    --foreground: 0 0% 10%;
+    /* Base colors from palette - #eaeeec for background */
+    --background: 150 10% 92%;
+    --foreground: 60 5% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 60 5% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 60 5% 9%;
 
-    --primary: 120 100% 25%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary - Bright Green #81e76a */
+    --primary: 110 71% 66%;
+    --primary-foreground: 116 40% 14%;
 
-    --secondary: 0 0% 98%;
-    --secondary-foreground: 0 0% 10%;
+    /* Secondary - Light gray tones */
+    --secondary: 150 10% 92%;
+    --secondary-foreground: 60 5% 9%;
 
-    --muted: 0 0% 97%;
-    --muted-foreground: 0 0% 40%;
+    /* Muted - Gray #666964 */
+    --muted: 150 10% 88%;
+    --muted-foreground: 75 4% 40%;
 
-    --accent: 0 0% 98%;
-    --accent-foreground: 0 0% 10%;
+    /* Accent - Yellow #faea4e */
+    --accent: 55 94% 65%;
+    --accent-foreground: 60 5% 9%;
 
     --destructive: 0 90% 68%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 92%;
-    --input: 0 0% 96%;
-    --ring: 120 100% 25%;
+    /* Borders and inputs */
+    --border: 150 10% 85%;
+    --input: 150 10% 90%;
+    --ring: 110 71% 66%;
 
-    /* New Kambafy colors - priorizando o segundo verde */
-    --checkout-green: 120 100% 25%;  /* Segundo verde (mais escuro) como principal */
-    --checkout-green-light: 120 100% 75%;  /* Primeiro verde (mais claro) como secundário */
-    --checkout-secure: 121 26% 22%; /* #1b2f1a mais claro - cor para compra 100% segura */
-    --checkout-orange: 25 95% 53%;
-    --checkout-gray: 0 0% 45%;  /* Gray from the palette */
-    --checkout-text: 0 0% 5%;  /* Very dark/black from the palette */
+    /* Kambafy brand colors from palette */
+    --checkout-green: 110 71% 66%;  /* Bright green #81e76a */
+    --checkout-green-light: 110 71% 80%;
+    --checkout-secure: 116 40% 14%; /* Dark green #1b2f1a */
+    --checkout-orange: 55 94% 65%; /* Yellow #faea4e as accent */
+    --checkout-gray: 75 4% 40%;  /* Gray #666964 */
+    --checkout-text: 60 5% 9%;  /* Dark #161614 */
     
-    --mobile-nav: 120 100% 90%;
-    --mobile-nav-foreground: 0 0% 15%;
+    --mobile-nav: 110 71% 90%;
+    --mobile-nav-foreground: 116 40% 14%;
 
     /* Video player and member area optimizations */
-    --video-bg: 0 0% 0%;
+    --video-bg: 60 5% 9%;
     --video-overlay: 0 0% 100% / 0.2;
     --video-controls: 0 0% 100% / 0.3;
 
     /* Accessibility improvements */
-    --focus-ring: 120 100% 25%;
+    --focus-ring: 110 71% 66%;
     --error: 0 84.2% 60.2%;
-    --success: 120 60% 50%;
-    --warning: 45 93% 58%;
+    --success: 110 71% 66%;
+    --warning: 55 94% 65%;
 
     --radius: 0.5rem;
 
-    /* Sidebar colors using darker green as primary */
+    /* Sidebar colors using bright green */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 5%;
-    --sidebar-primary: 120 100% 25%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 120 50% 96%;
-    --sidebar-accent-foreground: 0 0% 15%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 120 100% 25%;
+    --sidebar-foreground: 60 5% 9%;
+    --sidebar-primary: 110 71% 66%;
+    --sidebar-primary-foreground: 116 40% 14%;
+    --sidebar-accent: 110 71% 95%;
+    --sidebar-accent-foreground: 60 5% 9%;
+    --sidebar-border: 150 10% 85%;
+    --sidebar-ring: 110 71% 66%;
     
     /* Animation-specific variables */
-    --skeleton: 0 0% 94%;
-    --btn-border: 0 0% 90%;
+    --skeleton: 150 10% 88%;
+    --btn-border: 150 10% 85%;
     
-    /* Card border colors - mantêm-se vibrantes em qualquer modo */
-    --card-border-green: 142 76% 36%;
-    --card-border-yellow: 45 93% 58%;
+    /* Card border colors */
+    --card-border-green: 110 71% 66%;
+    --card-border-yellow: 55 94% 65%;
   }
 
   .dark {
-    --background: 220 25% 8%;
-    --foreground: 220 5% 98%;
+    /* Dark mode - using #161614 as base */
+    --background: 60 5% 9%;
+    --foreground: 150 10% 92%;
 
-    --card: 220 20% 12%;
-    --card-foreground: 220 5% 95%;
+    --card: 60 5% 12%;
+    --card-foreground: 150 10% 92%;
 
-    --popover: 220 20% 12%;
-    --popover-foreground: 220 5% 95%;
+    --popover: 60 5% 12%;
+    --popover-foreground: 150 10% 92%;
 
-    --primary: 120 100% 25%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary - Bright Green maintains vibrancy in dark mode */
+    --primary: 110 71% 66%;
+    --primary-foreground: 116 40% 14%;
 
-    --secondary: 220 15% 15%;
-    --secondary-foreground: 220 5% 92%;
+    /* Secondary - Dark tones */
+    --secondary: 60 5% 15%;
+    --secondary-foreground: 150 10% 92%;
 
-    --muted: 220 10% 18%;
-    --muted-foreground: 220 5% 75%;
+    /* Muted - Gray adjusted for dark mode */
+    --muted: 60 5% 18%;
+    --muted-foreground: 75 4% 60%;
 
-    --accent: 220 20% 20%;
-    --accent-foreground: 220 5% 90%;
+    /* Accent - Yellow slightly adjusted for dark mode */
+    --accent: 55 94% 70%;
+    --accent-foreground: 60 5% 9%;
 
     --destructive: 0 90% 65%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 20%;
-    --ring: 120 100% 25%;
+    /* Borders and inputs for dark mode */
+    --border: 60 5% 18%;
+    --input: 60 5% 20%;
+    --ring: 110 71% 66%;
     
-    /* Dark mode versions - verde escuro como base */
-    --checkout-green: 120 100% 25%;  /* Verde escuro nos cards */
-    --checkout-green-light: 120 100% 75%;
-    --checkout-secure: 121 26% 22%; /* #1b2f1a mais claro - cor para compra 100% segura */
-    --checkout-orange: 25 85% 50%;
-    --checkout-gray: 220 10% 40%;
-    --checkout-text: 220 10% 90%;
+    /* Dark mode Kambafy colors */
+    --checkout-green: 110 71% 66%;  /* Bright green stays vibrant */
+    --checkout-green-light: 110 71% 80%;
+    --checkout-secure: 116 40% 20%; /* Dark green slightly lighter */
+    --checkout-orange: 55 94% 70%; /* Yellow adjusted for dark */
+    --checkout-gray: 75 4% 50%;
+    --checkout-text: 150 10% 92%;
     
-    /* Dark mode sidebar - harmonia com verde */
-    --sidebar-background: 220 25% 10%;
-    --sidebar-foreground: 220 10% 90%;
-    --sidebar-primary: 120 100% 25%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 18%;
-    --sidebar-accent-foreground: 220 8% 85%;
-    --sidebar-border: 220 20% 22%;
-    --sidebar-ring: 120 100% 25%;
+    /* Dark mode sidebar */
+    --sidebar-background: 60 5% 10%;
+    --sidebar-foreground: 150 10% 90%;
+    --sidebar-primary: 110 71% 66%;
+    --sidebar-primary-foreground: 116 40% 14%;
+    --sidebar-accent: 60 5% 18%;
+    --sidebar-accent-foreground: 150 10% 85%;
+    --sidebar-border: 60 5% 22%;
+    --sidebar-ring: 110 71% 66%;
     
     /* Animation-specific variables for dark mode */
-    --skeleton: 220 15% 16%;
-    --btn-border: 220 15% 25%;
+    --skeleton: 60 5% 16%;
+    --btn-border: 60 5% 25%;
     
-    /* Card border colors - mantêm-se vibrantes no modo escuro */
-    --card-border-green: 142 76% 45%;
-    --card-border-yellow: 45 93% 65%;
+    /* Card border colors - vibrant in dark mode */
+    --card-border-green: 110 71% 66%;
+    --card-border-yellow: 55 94% 70%;
   }
 }
 
