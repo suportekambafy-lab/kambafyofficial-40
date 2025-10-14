@@ -17,21 +17,25 @@ if ('serviceWorker' in navigator) {
       .then((registration) => {
         console.log('✅ Service Worker registrado com sucesso');
         
-        // Verificar atualizações a cada 60 segundos
+        // Verificar atualizações apenas uma vez a cada 5 minutos (não infinito)
+        let lastUpdate = Date.now();
         setInterval(() => {
-          registration.update();
-        }, 60000);
+          const now = Date.now();
+          if (now - lastUpdate > 300000) { // 5 minutos
+            lastUpdate = now;
+            registration.update();
+          }
+        }, 300000);
         
-        // Detectar nova versão e forçar atualização
+        // Detectar nova versão mas NÃO forçar reload automático
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // Nova versão disponível - recarregar página
-                console.log('🔄 Nova versão disponível - recarregando...');
-                window.location.reload();
+                // Nova versão disponível - apenas logar, SEM reload
+                console.log('ℹ️ Nova versão disponível - recarregue manualmente se necessário');
               }
             });
           }
