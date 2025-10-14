@@ -862,6 +862,76 @@ const InteractiveHero: React.FC = () => {
               </div>
           </section>
 
+          {/* FAQ Section */}
+          <section className="py-24 px-6 relative z-10">
+              <div className="mx-auto max-w-4xl">
+                  <div className="text-center mb-16">
+                      <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
+                          Perguntas{' '}
+                          <span className="text-[#0CF2A0]">Frequentes</span>
+                      </h2>
+                      <p className="text-lg text-gray-400">
+                          Tire suas dúvidas sobre a plataforma
+                      </p>
+                  </div>
+                  <div className="space-y-4">
+                      {[
+                          {
+                              question: "Como começar a vender na Kambafy?",
+                              answer: "Para começar, crie sua conta gratuita, configure seu perfil de criador e publique seu primeiro produto. Nossa equipe está disponível para ajudar em cada passo."
+                          },
+                          {
+                              question: "Como funciona a comissão da plataforma?",
+                              answer: "Trabalhamos com um modelo justo: cobramos apenas 8% de comissão sobre cada venda realizada. Sem mensalidades, sem custos fixos."
+                          },
+                          {
+                              question: "Posso vender diferentes tipos de produtos?",
+                              answer: "Sim! Você pode vender cursos online, e-books, mentorias, templates, consultorias e muito mais. A plataforma é flexível para diversos tipos de infoprodutos."
+                          },
+                          {
+                              question: "Como recebo meus pagamentos?",
+                              answer: "Os pagamentos são processados automaticamente e transferidos para sua conta bancária de acordo com o cronograma escolhido. Suportamos múltiplas moedas e métodos de pagamento."
+                          },
+                          {
+                              question: "Preciso de conhecimentos técnicos?",
+                              answer: "Não! Nossa plataforma foi desenvolvida para ser intuitiva e fácil de usar. Qualquer pessoa pode criar e vender seus produtos digitais sem precisar de conhecimentos técnicos."
+                          }
+                      ].map((faq, index) => (
+                          <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg overflow-hidden">
+                              <button 
+                                  className="w-full text-left p-6 text-white font-semibold hover:bg-[#0CF2A0]/5 transition-colors"
+                                  onClick={(e) => {
+                                      const content = e.currentTarget.nextElementSibling as HTMLElement;
+                                      if (content.style.maxHeight) {
+                                          content.style.maxHeight = '';
+                                      } else {
+                                          content.style.maxHeight = content.scrollHeight + "px";
+                                      }
+                                  }}
+                              >
+                                  {faq.question}
+                              </button>
+                              <div className="overflow-hidden transition-all duration-300" style={{maxHeight: '0'}}>
+                                  <div className="p-6 pt-0 text-gray-400">
+                                      {faq.answer}
+                                  </div>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+                  <div className="mt-8 text-center">
+                      <p className="text-gray-400 mb-4">
+                          Não encontrou a resposta que procurava?
+                      </p>
+                      <Button variant="outline" className="border-[#0CF2A0] text-[#0CF2A0] hover:bg-[#0CF2A0]/10" asChild>
+                          <SubdomainLink to="/ajuda">
+                              Ir para Central de Ajuda
+                          </SubdomainLink>
+                      </Button>
+                  </div>
+              </div>
+          </section>
+
           {/* CTA Section */}
           <section className="py-24 px-6 relative z-10">
               <div className="mx-auto max-w-4xl text-center">
@@ -891,6 +961,7 @@ const InteractiveHero: React.FC = () => {
           {/* Footer */}
           <footer className="bg-[#0a0a0a] text-gray-300 py-16 px-6 relative z-10 border-t border-gray-800">
               <div className="mx-auto max-w-7xl">
+                  <TopSellersRanking />
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                       <div>
                           <img src={kambafy_icon} alt="Kambafy" className="h-12 w-auto mb-4" />
