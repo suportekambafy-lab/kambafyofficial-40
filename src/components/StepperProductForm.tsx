@@ -478,21 +478,48 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                 </p>
               </div>
 
-              <div>
-                <Label htmlFor="commission">Taxa de Comissão para Afiliados</Label>
-                <Select value={formData.commission} onValueChange={(value) => setFormData({ ...formData, commission: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5%">5%</SelectItem>
-                    <SelectItem value="10%">10%</SelectItem>
-                    <SelectItem value="15%">15%</SelectItem>
-                    <SelectItem value="20%">20%</SelectItem>
-                    <SelectItem value="25%">25%</SelectItem>
-                    <SelectItem value="30%">30%</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="allowAffiliates" className="text-base">Sistema de Afiliados</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Permita que outros usuários promovam seu produto e ganhem comissão
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="allowAffiliates"
+                      checked={formData.allowAffiliates}
+                      onChange={(e) => setFormData({ ...formData, allowAffiliates: e.target.checked })}
+                      className="w-11 h-6 rounded-full appearance-none bg-gray-300 checked:bg-primary relative cursor-pointer transition-colors
+                      after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full 
+                      after:h-5 after:w-5 after:transition-transform checked:after:translate-x-5"
+                    />
+                  </div>
+                </div>
+                
+                {formData.allowAffiliates && (
+                  <div className="space-y-2 pt-2 border-t">
+                    <Label htmlFor="commission">Taxa de Comissão para Afiliados</Label>
+                    <Select value={formData.commission} onValueChange={(value) => setFormData({ ...formData, commission: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5%">5%</SelectItem>
+                        <SelectItem value="10%">10%</SelectItem>
+                        <SelectItem value="15%">15%</SelectItem>
+                        <SelectItem value="20%">20%</SelectItem>
+                        <SelectItem value="25%">25%</SelectItem>
+                        <SelectItem value="30%">30%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">
+                      Porcentagem que será paga aos afiliados por cada venda
+                    </p>
+                  </div>
+                )}
               </div>
 
               <CountryPriceConfig
