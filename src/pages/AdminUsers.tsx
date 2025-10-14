@@ -51,7 +51,8 @@ export default function AdminUsers() {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, user_id, full_name, email, banned, is_creator, avatar_url, bio, account_holder, ban_reason, created_at')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(0, 100000); // Buscar até 100k usuários
 
       console.log('Resultado dos usuários:', { data, error });
 
