@@ -79,8 +79,8 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       // Step 2: Upload usando TUS protocol (resumível, com chunks automáticos)
       await new Promise((resolve, reject) => {
         const upload = new tus.Upload(selectedFile, {
-          uploadUrl: uploadURL, // uploadUrl para usar URL pré-criada (não endpoint!)
-          uploadSize: selectedFile.size, // Evita HEAD request - informa tamanho direto
+          endpoint: uploadURL, // Usar endpoint para que o TUS trate como novo upload
+          removeFingerprintOnSuccess: true, // Limpar fingerprint após sucesso
           chunkSize: 50 * 1024 * 1024, // 50MB chunks para arquivos grandes
           retryDelays: [0, 3000, 5000, 10000, 20000], // Retry automático
           onError: (error) => {
