@@ -60,7 +60,9 @@ const CheckoutSuccess = () => {
           // Só considerar 'completed' se TANTO o status quanto a verificação forem verdadeiros
           if (data.order.status === 'completed' && data.paymentVerified === true) {
             console.log('✅ Pagamento confirmado! Verificando upsell...');
-            setOrderStatus('completed');
+            
+            // ✅ Disparar evento APENAS se o status mudou (evitar duplicatas)
+            const statusChanged = orderStatus !== 'completed';
             
             // Calcular valor total incluindo order bumps
             let totalAmount = parseFloat(data.order.amount) || 0;
@@ -94,17 +96,23 @@ const CheckoutSuccess = () => {
               }
             }
             
-            // ✅ CHECKOUT SUCCESS: Disparar evento do Facebook Pixel SOMENTE quando pagamento confirmado
-            // (status === 'completed' AND paymentVerified === true)
-            console.log('✅ Payment confirmed and verified, dispatching Facebook Pixel purchase event');
-            window.dispatchEvent(new CustomEvent('purchase-completed', {
-              detail: {
-                amount: totalAmount,
-                currency: data.order.currency || 'KZ',
-                orderId: data.order.order_id,
-                productId: data.order.product_id
-              }
-            }));
+            // ✅ Disparar evento do Facebook Pixel APENAS se status mudou para 'completed'
+            // Isso captura pagamentos por referência confirmados via polling
+            if (statusChanged) {
+              console.log('✅ Status mudou para completed durante polling - disparando evento Facebook Pixel');
+              window.dispatchEvent(new CustomEvent('purchase-completed', {
+                detail: {
+                  amount: totalAmount,
+                  currency: data.order.currency || 'KZ',
+                  orderId: data.order.order_id,
+                  productId: data.order.product_id
+                }
+              }));
+            } else {
+              console.log('ℹ️ Status já era completed - evento não será disparado (já foi disparado antes)');
+            }
+            
+            setOrderStatus('completed');
             
             // Agora SIM podemos verificar o upsell
             if (data.order.product_id) {

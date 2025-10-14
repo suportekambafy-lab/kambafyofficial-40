@@ -242,6 +242,27 @@ const handler = async (req: Request): Promise<Response> => {
         });
 
         console.log('[VERIFY-APPYPAY-ORDER] Confirmation sent');
+
+        // ✅ Enviar evento para Facebook Conversions API
+        try {
+          console.log('[VERIFY-APPYPAY-ORDER] Sending Facebook Conversion event...');
+          await supabase.functions.invoke('send-facebook-conversion', {
+            body: {
+              productId: order.product_id,
+              orderId: order.order_id,
+              amount: parseFloat(order.amount),
+              currency: order.currency,
+              customerEmail: order.customer_email,
+              customerName: order.customer_name,
+              customerPhone: order.customer_phone,
+              eventSourceUrl: `https://kambafy.com/produto/${order.product_id}`
+            }
+          });
+          console.log('[VERIFY-APPYPAY-ORDER] ✅ Facebook Conversion event sent successfully');
+        } catch (fbError) {
+          console.error('[VERIFY-APPYPAY-ORDER] ❌ Error sending Facebook conversion:', fbError);
+          // Não falhar a operação principal por erro no Facebook
+        }
       }
 
       return new Response(JSON.stringify({
