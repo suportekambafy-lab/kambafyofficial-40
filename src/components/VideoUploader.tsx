@@ -75,33 +75,38 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('✅ URL de upload obtida:', uid);
       setUploadProgress(10);
 
-      // Step 2: Upload via protocolo TUS manual (sem biblioteca)
-      const chunkSize = 50 * 1024 * 1024; // 50MB chunks
-      let offset = 0;
+      // Step 2: Upload direto via POST (método básico do Cloudflare)
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      const xhr = new XMLHttpRequest();
       
-      while (offset < selectedFile.size) {
-        const chunk = selectedFile.slice(offset, offset + chunkSize);
-        
-        const response = await fetch(uploadURL, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/offset+octet-stream',
-            'Upload-Offset': offset.toString(),
-            'Tus-Resumable': '1.0.0',
-          },
-          body: chunk,
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+      // Monitor de progresso
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentage = Math.round((e.loaded / e.total) * 90) + 10;
+          setUploadProgress(percentage);
+          console.log(`📤 Upload: ${percentage}% (${e.loaded}/${e.total} bytes)`);
         }
+      });
 
-        offset += chunk.size;
-        const percentage = Math.round((offset / selectedFile.size) * 90) + 10;
-        setUploadProgress(percentage);
-        console.log(`📤 Upload: ${percentage}% (${offset}/${selectedFile.size} bytes)`);
-      }
+      await new Promise((resolve, reject) => {
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log('✅ Upload concluído');
+            resolve(xhr.response);
+          } else {
+            reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          reject(new Error('Erro de rede durante upload'));
+        });
+        
+        xhr.open('POST', uploadURL);
+        xhr.send(formData);
+      });
 
       console.log('✅ Upload concluído, processando...');
       setUploadProgress(100);
