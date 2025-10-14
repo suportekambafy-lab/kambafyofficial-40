@@ -60,49 +60,69 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       const fileName = selectedFile.name;
       const fileType = selectedFile.type;
       
-      console.log('🚀 Iniciando estratégia R2 → Stream:', fileName);
+      console.log('🚀 Iniciando estratégia R2 → Stream (upload direto):', fileName);
+      console.log('📦 Tamanho do arquivo:', (selectedFile.size / (1024 * 1024 * 1024)).toFixed(2), 'GB');
       setUploadProgress(5);
 
-      // Step 1: Upload para R2 Storage (aceita arquivos grandes)
-      console.log('📤 Passo 1: Enviando para R2 Storage...');
+      // Step 1: Obter URL presignada do R2
+      console.log('🔐 Passo 1: Obtendo URL presignada do R2...');
       
-      // Converter arquivo para base64
-      const reader = new FileReader();
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          const base64 = result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(selectedFile);
+      const { data: urlData, error: urlError } = await supabase.functions.invoke('get-r2-upload-url', {
+        body: { fileName, fileType }
       });
 
-      setUploadProgress(20);
+      if (urlError || !urlData?.success) {
+        throw new Error(urlError?.message || urlData?.error || 'Falha ao obter URL de upload');
+      }
 
-      // Upload para R2
-      const { data: r2Data, error: r2Error } = await supabase.functions.invoke('cloudflare-r2-upload', {
-        body: {
-          fileName,
-          fileType,
-          fileData: base64Data
+      const { uploadUrl, publicUrl } = urlData;
+      console.log('✅ URL presignada obtida');
+      setUploadProgress(10);
+
+      // Step 2: Upload DIRETO do browser para R2 via presigned URL
+      console.log('📤 Passo 2: Upload direto para R2...');
+      
+      const xhr = new XMLHttpRequest();
+      
+      // Monitor de progresso
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentage = Math.round((e.loaded / e.total) * 70) + 10; // 10-80%
+          setUploadProgress(percentage);
+          const mbLoaded = (e.loaded / (1024 * 1024)).toFixed(2);
+          const mbTotal = (e.total / (1024 * 1024)).toFixed(2);
+          console.log(`📤 Upload R2: ${percentage}% (${mbLoaded}MB/${mbTotal}MB)`);
         }
       });
 
-      if (r2Error || !r2Data?.success) {
-        throw new Error(r2Error?.message || r2Data?.error || 'Falha ao fazer upload para R2');
-      }
+      await new Promise((resolve, reject) => {
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log('✅ Upload para R2 concluído');
+            resolve(xhr.response);
+          } else {
+            reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          reject(new Error('Erro de rede durante upload para R2'));
+        });
+        
+        xhr.open('PUT', uploadUrl);
+        xhr.setRequestHeader('Content-Type', fileType);
+        xhr.send(selectedFile);
+      });
 
-      const r2Url = r2Data.url;
-      console.log('✅ Upload para R2 concluído:', r2Url);
-      setUploadProgress(50);
+      console.log('✅ Arquivo enviado para R2:', publicUrl);
+      setUploadProgress(80);
 
-      // Step 2: Importar do R2 para Cloudflare Stream
-      console.log('📹 Passo 2: Importando do R2 para Stream...');
+      // Step 3: Importar do R2 para Cloudflare Stream
+      console.log('📹 Passo 3: Importando do R2 para Stream...');
       
       const { data: streamData, error: streamError } = await supabase.functions.invoke('import-r2-to-stream', {
         body: {
-          videoUrl: r2Url,
+          videoUrl: publicUrl,
           fileName
         }
       });
