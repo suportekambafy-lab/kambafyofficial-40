@@ -72,38 +72,18 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       }
 
       const { uploadURL, uid } = urlData;
-      console.log('✅ URL TUS obtida:', uid);
+      console.log('✅ URL de upload obtida:', uid);
       setUploadProgress(10);
 
-      // Step 2: Upload direto via PATCH (TUS protocol manual)
-      const uploadChunkSize = 50 * 1024 * 1024; // 50MB por chunk
-      let uploadedBytes = 0;
+      // Step 2: Upload direto via POST (método básico do Cloudflare)
+      const uploadResponse = await fetch(uploadURL, {
+        method: 'POST',
+        body: selectedFile,
+      });
 
-      while (uploadedBytes < selectedFile.size) {
-        const chunk = selectedFile.slice(uploadedBytes, uploadedBytes + uploadChunkSize);
-        
-        const uploadResponse = await fetch(uploadURL, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/offset+octet-stream',
-            'Upload-Offset': uploadedBytes.toString(),
-            'Tus-Resumable': '1.0.0',
-          },
-          body: chunk,
-        });
-
-        if (!uploadResponse.ok) {
-          const errorText = await uploadResponse.text();
-          throw new Error(`Falha no upload: ${uploadResponse.status} - ${errorText}`);
-        }
-
-        uploadedBytes += chunk.size;
-        const percentComplete = Math.round((uploadedBytes / selectedFile.size) * 90) + 10; // 10-100%
-        setUploadProgress(percentComplete);
-        console.log(`📤 Upload: ${percentComplete}%`, {
-          uploaded: uploadedBytes,
-          total: selectedFile.size
-        });
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        throw new Error(`Falha no upload: ${uploadResponse.status} - ${errorText}`);
       }
 
       console.log('✅ Upload concluído, processando...');
