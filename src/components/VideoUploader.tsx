@@ -60,65 +60,65 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       const fileName = selectedFile.name;
       const fileType = selectedFile.type;
       
-      console.log('🚀 Iniciando estratégia R2 → Stream (upload direto):', fileName);
-      console.log('📦 Tamanho do arquivo:', (selectedFile.size / (1024 * 1024 * 1024)).toFixed(2), 'GB');
+      console.log('🚀 Upload em chunks via edge function:', fileName);
+      console.log('📦 Tamanho:', (selectedFile.size / (1024 * 1024 * 1024)).toFixed(2), 'GB');
+      
+      // Step 1: Dividir arquivo em chunks de 10MB
+      const chunkSize = 10 * 1024 * 1024; // 10MB por chunk
+      const totalChunks = Math.ceil(selectedFile.size / chunkSize);
+      console.log(`📦 Total de chunks: ${totalChunks}`);
+      
       setUploadProgress(5);
+      let publicUrl = '';
 
-      // Step 1: Obter URL presignada do R2
-      console.log('🔐 Passo 1: Obtendo URL presignada do R2...');
-      
-      const { data: urlData, error: urlError } = await supabase.functions.invoke('get-r2-upload-url', {
-        body: { fileName, fileType }
-      });
+      // Step 2: Upload cada chunk
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, selectedFile.size);
+        const chunk = selectedFile.slice(start, end);
+        
+        console.log(`📤 Enviando chunk ${i + 1}/${totalChunks}...`);
+        
+        // Converter chunk para base64
+        const reader = new FileReader();
+        const base64Data = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const result = reader.result as string;
+            const base64 = result.split(',')[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(chunk);
+        });
 
-      if (urlError || !urlData?.success) {
-        throw new Error(urlError?.message || urlData?.error || 'Falha ao obter URL de upload');
-      }
-
-      const { uploadUrl, publicUrl } = urlData;
-      console.log('✅ URL presignada obtida');
-      setUploadProgress(10);
-
-      // Step 2: Upload DIRETO do browser para R2 via presigned URL
-      console.log('📤 Passo 2: Upload direto para R2...');
-      
-      const xhr = new XMLHttpRequest();
-      
-      // Monitor de progresso
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const percentage = Math.round((e.loaded / e.total) * 70) + 10; // 10-80%
-          setUploadProgress(percentage);
-          const mbLoaded = (e.loaded / (1024 * 1024)).toFixed(2);
-          const mbTotal = (e.total / (1024 * 1024)).toFixed(2);
-          console.log(`📤 Upload R2: ${percentage}% (${mbLoaded}MB/${mbTotal}MB)`);
-        }
-      });
-
-      await new Promise((resolve, reject) => {
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            console.log('✅ Upload para R2 concluído');
-            resolve(xhr.response);
-          } else {
-            reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
+        // Upload do chunk
+        const { data, error } = await supabase.functions.invoke('upload-video-chunk', {
+          body: {
+            fileName,
+            chunkData: base64Data,
+            chunkIndex: i,
+            totalChunks,
           }
         });
-        
-        xhr.addEventListener('error', () => {
-          reject(new Error('Erro de rede durante upload para R2'));
-        });
-        
-        xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('Content-Type', fileType);
-        xhr.send(selectedFile);
-      });
 
-      console.log('✅ Arquivo enviado para R2:', publicUrl);
-      setUploadProgress(80);
+        if (error || !data?.success) {
+          throw new Error(error?.message || data?.error || `Falha ao enviar chunk ${i + 1}`);
+        }
 
-      // Step 3: Importar do R2 para Cloudflare Stream
-      console.log('📹 Passo 3: Importando do R2 para Stream...');
+        // Atualizar progresso (5-75% para upload de chunks)
+        const progress = Math.round((i + 1) / totalChunks * 70) + 5;
+        setUploadProgress(progress);
+        
+        if (data.complete && data.publicUrl) {
+          publicUrl = data.publicUrl;
+          console.log('✅ Todos os chunks enviados:', publicUrl);
+        }
+      }
+
+      setUploadProgress(75);
+
+      // Step 3: Importar do R2 para Stream
+      console.log('📹 Importando para Stream...');
       
       const { data: streamData, error: streamError } = await supabase.functions.invoke('import-r2-to-stream', {
         body: {
@@ -131,23 +131,19 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         throw new Error(streamError?.message || streamData?.error || 'Falha ao importar para Stream');
       }
 
-      console.log('✅ Importação para Stream concluída');
+      console.log('✅ Importação concluída');
       setUploadProgress(100);
 
       const { videoId, hlsUrl, embedUrl, thumbnailUrl } = streamData;
 
-      const videoData = {
+      onVideoUploaded(hlsUrl, {
         success: true,
         videoId,
         hlsUrl,
         embedUrl,
         thumbnailUrl,
         stream_id: videoId
-      };
-
-      console.log('🎉 Upload completo (R2 → Stream):', videoData);
-
-      onVideoUploaded(hlsUrl, videoData);
+      });
       
       setSelectedFile(null);
       setUploadProgress(0);
