@@ -231,9 +231,9 @@ const Header = ({
                     <div className="p-6 space-y-6">
                       <ul className="space-y-6 text-base">
                         {menuItems.map((item, index) => <li key={index}>
-                            <SubdomainLink to={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                            <Link to={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150">
                               <span>{item.name}</span>
-                            </SubdomainLink>
+                            </Link>
                           </li>)}
                       </ul>
                       <div className="flex flex-col space-y-3">
@@ -256,9 +256,9 @@ const Header = ({
             <div className="absolute inset-0 m-auto hidden size-fit lg:block">
               <ul className="flex gap-8 text-sm">
                 {menuItems.map((item, index) => <li key={index}>
-                    <SubdomainLink to={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                    <Link to={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150">
                       <span>{item.name}</span>
-                    </SubdomainLink>
+                    </Link>
                   </li>)}
               </ul>
             </div>
