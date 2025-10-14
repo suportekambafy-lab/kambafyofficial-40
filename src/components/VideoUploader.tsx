@@ -9,7 +9,6 @@ import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import * as tus from "tus-js-client";
 
 interface VideoUploaderProps {
   onVideoUploaded: (videoUrl: string, videoData?: any) => void;
@@ -76,28 +75,41 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('✅ URL de upload obtida:', uid);
       setUploadProgress(10);
 
-      // Step 2: Upload via TUS com chunks (protocolo correto do Cloudflare Stream)
+      // Step 2: Upload com XMLHttpRequest para monitorar progresso
       await new Promise((resolve, reject) => {
-        const upload = new tus.Upload(selectedFile, {
-          uploadUrl: uploadURL, // URL já criada pelo Cloudflare
-          chunkSize: 50 * 1024 * 1024, // 50MB chunks
-          retryDelays: [0, 3000, 5000, 10000],
-          onError: (error) => {
-            console.error('❌ Erro TUS durante upload:', error);
-            reject(error);
-          },
-          onProgress: (bytesUploaded, bytesTotal) => {
-            const percentage = Math.round((bytesUploaded / bytesTotal) * 90) + 10;
-            setUploadProgress(percentage);
-            console.log(`📤 Upload: ${percentage}% (${bytesUploaded}/${bytesTotal} bytes)`);
-          },
-          onSuccess: () => {
-            console.log('✅ Upload TUS concluído com sucesso');
-            resolve(true);
-          },
+        const xhr = new XMLHttpRequest();
+        
+        // Timeout de 10 minutos
+        xhr.timeout = 600000;
+        
+        // Monitor de progresso
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 90) + 10;
+            setUploadProgress(percentComplete);
+            console.log(`📤 Upload: ${percentComplete}% (${e.loaded}/${e.total} bytes)`);
+          }
         });
-
-        upload.start();
+        
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log('✅ Upload concluído');
+            resolve(xhr.response);
+          } else {
+            reject(new Error(`Falha no upload: ${xhr.status} - ${xhr.responseText}`));
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          reject(new Error('Erro de rede durante upload'));
+        });
+        
+        xhr.addEventListener('timeout', () => {
+          reject(new Error('Upload timeout - arquivo muito grande ou conexão lenta'));
+        });
+        
+        xhr.open('POST', uploadURL);
+        xhr.send(selectedFile);
       });
 
       console.log('✅ Upload concluído, processando...');
