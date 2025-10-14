@@ -164,6 +164,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
           currentPath.startsWith('/recursos') ||
           currentPath.startsWith('/ajuda') ||
           currentPath.startsWith('/contato') ||
+          currentPath.startsWith('/denuncie') ||
           currentPath.startsWith('/status') ||
           currentPath.startsWith('/privacidade') ||
           currentPath.startsWith('/termos') ||
