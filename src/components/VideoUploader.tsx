@@ -79,13 +79,9 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       // Step 2: Upload via TUS com chunks (protocolo correto do Cloudflare Stream)
       await new Promise((resolve, reject) => {
         const upload = new tus.Upload(selectedFile, {
-          endpoint: uploadURL,
+          uploadUrl: uploadURL, // URL já criada pelo Cloudflare
           chunkSize: 50 * 1024 * 1024, // 50MB chunks
           retryDelays: [0, 3000, 5000, 10000],
-          metadata: {
-            filename: selectedFile.name,
-            filetype: selectedFile.type,
-          },
           onError: (error) => {
             console.error('❌ Erro TUS durante upload:', error);
             reject(error);
