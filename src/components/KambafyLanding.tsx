@@ -5,6 +5,7 @@ import { ArrowRight, Menu, X, Play, Star, Users, BookOpen, DollarSign, Shield, C
 import { cn } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { SubdomainLink } from './SubdomainLink';
+import { TopSellersRanking } from './TopSellersRanking';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 const professionalWoman = '/lovable-uploads/09933f06-0001-46b9-9e43-62a0ebdd9868.png';
@@ -854,6 +855,7 @@ const CTASection = () => {
 const Footer = () => {
   return <footer className="bg-checkout-text dark:bg-background text-white dark:text-foreground py-16">
       <div className="mx-auto max-w-7xl px-6">
+        <TopSellersRanking />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <KambafyLogo className="text-white dark:text-foreground mb-4" />

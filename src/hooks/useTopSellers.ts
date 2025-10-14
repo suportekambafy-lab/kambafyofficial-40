@@ -12,11 +12,63 @@ export const useTopSellers = () => {
   return useQuery({
     queryKey: ['top-sellers', new Date().getMonth()],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .rpc('get_top_sellers_of_month');
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
       
-      if (error) throw error;
-      return data as TopSeller[];
+      const endOfMonth = new Date();
+      endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+      endOfMonth.setDate(1);
+      endOfMonth.setHours(0, 0, 0, 0);
+
+      const { data: orders, error: ordersError } = await supabase
+        .from('orders')
+        .select('user_id, amount')
+        .eq('status', 'completed')
+        .gte('created_at', startOfMonth.toISOString())
+        .lt('created_at', endOfMonth.toISOString());
+
+      if (ordersError) throw ordersError;
+
+      // Agrupar vendas por vendedor
+      const salesByUser = orders?.reduce((acc, order) => {
+        if (!acc[order.user_id]) {
+          acc[order.user_id] = {
+            total_sales: 0,
+            total_revenue: 0,
+          };
+        }
+        acc[order.user_id].total_sales += 1;
+        acc[order.user_id].total_revenue += parseFloat(order.amount);
+        return acc;
+      }, {} as Record<string, { total_sales: number; total_revenue: number }>);
+
+      if (!salesByUser) return [];
+
+      // Pegar os IDs dos top 3 vendedores
+      const topUserIds = Object.entries(salesByUser)
+        .sort((a, b) => b[1].total_sales - a[1].total_sales)
+        .slice(0, 3)
+        .map(([userId]) => userId);
+
+      // Buscar perfis dos vendedores
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', topUserIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combinar dados
+      const result: TopSeller[] = profiles?.map(profile => ({
+        full_name: profile.full_name || 'Vendedor',
+        avatar_url: profile.avatar_url,
+        total_sales: salesByUser[profile.user_id].total_sales,
+        total_revenue: salesByUser[profile.user_id].total_revenue,
+      })) || [];
+
+      // Ordenar por vendas
+      return result.sort((a, b) => b.total_sales - a.total_sales);
     },
     staleTime: 1000 * 60 * 60, // 1 hour
   });

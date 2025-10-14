@@ -3086,6 +3086,15 @@ export type Database = {
         Args: { seller_id: string }
         Returns: Json
       }
+      get_top_sellers_of_month: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          full_name: string
+          total_revenue: number
+          total_sales: number
+        }[]
+      }
       is_admin_session: {
         Args: Record<PropertyKey, never>
         Returns: boolean
