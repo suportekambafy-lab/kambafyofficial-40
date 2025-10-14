@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { AnimatedGroup } from "@/components/ui/animated-group";
-import { ArrowRight, Menu, X, Play, Star, Users, BookOpen, DollarSign, Shield, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowRight, Menu, X, Play, Star, Users, BookOpen, DollarSign, Shield, ChevronRight, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { SubdomainLink } from './SubdomainLink';
@@ -164,6 +164,7 @@ export function KambafyLanding() {
         <StatsSection />
         <TestimonialsSection />
         <AboutSection />
+        <FAQSection />
         <CTASection />
       </main>
       <Footer />
@@ -535,6 +536,108 @@ const AboutSection = () => {
       </div>
     </section>;
 };
+
+const FAQSection = () => {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const faqs = [
+    {
+      question: "Como começar a vender na Kambafy?",
+      answer: "Para começar, crie sua conta gratuita, configure seu perfil de criador e publique seu primeiro produto. Nossa equipe está disponível para ajudar em cada passo."
+    },
+    {
+      question: "Como funciona a comissão da plataforma?",
+      answer: "A Kambafy cobra apenas 8,99% por cada venda realizada. Não há planos ou mensalidades - você paga apenas quando vende."
+    },
+    {
+      question: "Quais métodos de pagamento são aceitos?",
+      answer: "Aceitamos Multicaixa Express, pagamento por referência e transferência bancária. Os vendedores recebem via IBAN diretamente em sua conta."
+    },
+    {
+      question: "Como proteger meu conteúdo contra pirataria?",
+      answer: "Usamos tecnologia avançada de proteção, incluindo marca d'água em vídeos, acesso restrito e monitoramento contínuo para proteger seu conteúdo."
+    },
+    {
+      question: "Quanto tempo demora para receber meus pagamentos?",
+      answer: "Oferecemos duas opções: Levantamento Normal (gratuito, 3 dias úteis) e Levantamento Instantâneo (taxa de 10%, imediato)."
+    },
+    {
+      question: "Posso personalizar minha página de criador?",
+      answer: "Sim! Você pode personalizar cores, logos, descrições e criar uma experiência única para seus alunos e clientes."
+    }
+  ];
+
+  const toggleFAQ = (index: number) => {
+    setOpenIndex(openIndex === index ? null : index);
+  };
+
+  return (
+    <section id="faqs" className="py-24 bg-background">
+      <div className="mx-auto max-w-4xl px-6">
+        <AnimatedGroup preset="slide">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-checkout-green/10 rounded-2xl mb-6">
+              <HelpCircle className="w-8 h-8 text-checkout-green" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
+              Perguntas <span className="text-checkout-green">Frequentes</span>
+            </h2>
+            <p className="text-base sm:text-lg text-muted-foreground">
+              Encontre respostas para as dúvidas mais comuns
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-2xl overflow-hidden transition-all duration-300 hover:border-checkout-green/50"
+              >
+                <button
+                  onClick={() => toggleFAQ(index)}
+                  className="w-full flex items-center justify-between p-6 text-left bg-white hover:bg-checkout-green/5 transition-colors"
+                >
+                  <h3 className="text-base sm:text-lg font-semibold pr-4">
+                    {faq.question}
+                  </h3>
+                  {openIndex === index ? (
+                    <ChevronUp className="w-5 h-5 text-checkout-green flex-shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  )}
+                </button>
+                
+                {openIndex === index && (
+                  <div className="px-6 pb-6 bg-white">
+                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                      {faq.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-muted-foreground mb-4">
+              Não encontrou a resposta que procurava?
+            </p>
+            <Button
+              variant="outline"
+              className="border-checkout-green text-checkout-green hover:bg-checkout-green/10"
+              asChild
+            >
+              <SubdomainLink to="/ajuda">
+                Ir para Central de Ajuda
+              </SubdomainLink>
+            </Button>
+          </div>
+        </AnimatedGroup>
+      </div>
+    </section>
+  );
+};
+
 const CTASection = () => {
   const navigate = useNavigate();
   const handleGetStarted = () => {
