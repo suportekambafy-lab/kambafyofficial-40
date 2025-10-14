@@ -94,8 +94,9 @@ const CheckoutSuccess = () => {
               }
             }
             
-            // Disparar evento de Purchase para Facebook Pixel
-            console.log('📤 Dispatching purchase-completed event for Facebook Pixel');
+            // ✅ CHECKOUT SUCCESS: Disparar evento do Facebook Pixel SOMENTE quando pagamento confirmado
+            // (status === 'completed' AND paymentVerified === true)
+            console.log('✅ Payment confirmed and verified, dispatching Facebook Pixel purchase event');
             window.dispatchEvent(new CustomEvent('purchase-completed', {
               detail: {
                 amount: totalAmount,

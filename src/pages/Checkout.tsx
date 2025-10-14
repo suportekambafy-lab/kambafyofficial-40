@@ -394,11 +394,12 @@ const Checkout = () => {
           payment_intent_id: paymentIntentId || '',
           status: 'completed'
         });
-        // Disparar evento para Facebook Pixel
+        // ✅ STRIPE/KLARNA: Disparar evento do Facebook Pixel (pagamento já confirmado pelo gateway)
         const currentParams = new URLSearchParams(window.location.search);
         const purchaseAmount = parseFloat(currentParams.get('amount') || '0');
         const purchaseCurrency = currentParams.get('currency') || 'EUR';
         
+        console.log('✅ Stripe/Klarna payment confirmed, dispatching Facebook Pixel purchase event');
         window.dispatchEvent(new CustomEvent('purchase-completed', {
           detail: {
             productId,
@@ -963,7 +964,8 @@ const Checkout = () => {
 
       // Não marcar como recuperado aqui - será feito na seção de transferência bancária se necessário
 
-      // Disparar evento para Facebook Pixel
+      // ✅ STRIPE: Disparar evento do Facebook Pixel (Stripe já confirmou o pagamento)
+      console.log('✅ Stripe payment confirmed, dispatching Facebook Pixel purchase event');
       window.dispatchEvent(new CustomEvent('purchase-completed', {
         detail: {
           productId,
@@ -1168,15 +1170,10 @@ const Checkout = () => {
         })
       });
 
-      // Disparar evento para Facebook Pixel
-      window.dispatchEvent(new CustomEvent('purchase-completed', {
-        detail: {
-          productId,
-          orderId,
-          amount: totalAmount,
-          currency: userCountry.currency
-        }
-      }));
+      // ❌ TRANSFER: NÃO disparar evento aqui - transferência bancária sempre começa como 'pending'
+      // O evento será disparado apenas quando o webhook confirmar o pagamento
+      console.log('🏦 Bank transfer order created as pending - Facebook Pixel event will be triggered by webhook upon payment confirmation');
+      
       navigate(`/obrigado?${params.toString()}`);
     } catch (error) {
       console.error('❌ Bank transfer purchase error:', error);
@@ -1692,7 +1689,8 @@ const Checkout = () => {
                 duration: 3000
               });
               
-              // Disparar evento para Facebook Pixel
+              // ✅ EXPRESS: Disparar evento do Facebook Pixel (polling confirmou status 'completed')
+              console.log('✅ Express payment confirmed via polling (status: completed), dispatching Facebook Pixel purchase event');
               window.dispatchEvent(new CustomEvent('purchase-completed', {
                 detail: {
                   productId,
@@ -1769,29 +1767,50 @@ const Checkout = () => {
         }
       } else {
         console.log('🏠 Redirecionando para página de agradecimento');
-        // Disparar evento para Facebook Pixel
-        window.dispatchEvent(new CustomEvent('purchase-completed', {
-          detail: {
-            productId,
-            orderId,
-            amount: totalAmount,
-            currency: userCountry.currency
-          }
-        }));
+        
+        // ✅ CRITICAL: Só disparar evento de Purchase quando pagamento REALMENTE confirmado
+        // - Express: Após polling confirmar status 'completed'
+        // - Reference: NÃO disparar aqui (será disparado quando webhook confirmar pagamento)
+        // - Stripe: Após redirect de sucesso do Stripe Checkout
+        // - Transfer/Outros: NÃO disparar automaticamente
+        const shouldDispatchPixelEvent = insertedOrder?.payment_status === 'completed';
+        
+        console.log('📊 Facebook Pixel Purchase Event Check:', {
+          orderId,
+          paymentStatus: insertedOrder?.payment_status,
+          paymentMethod: selectedPayment,
+          shouldDispatch: shouldDispatchPixelEvent
+        });
+        
+        if (shouldDispatchPixelEvent) {
+          console.log('✅ Payment confirmed (status: completed), dispatching Facebook Pixel purchase event');
+          // Disparar evento para Facebook Pixel
+          window.dispatchEvent(new CustomEvent('purchase-completed', {
+            detail: {
+              productId,
+              orderId,
+              amount: totalAmount,
+              currency: userCountry.currency
+            }
+          }));
 
-        // Enviar evento para Facebook Conversions API
-        supabase.functions.invoke('send-facebook-conversion', {
-          body: {
-            productId,
-            orderId,
-            amount: totalAmount,
-            currency: userCountry.currency,
-            customerEmail: formData.email,
-            customerName: formData.fullName,
-            customerPhone: formData.phone,
-            eventSourceUrl: window.location.href
-          }
-        }).catch(err => console.error('Error sending Facebook conversion:', err));
+          // Enviar evento para Facebook Conversions API
+          supabase.functions.invoke('send-facebook-conversion', {
+            body: {
+              productId,
+              orderId,
+              amount: totalAmount,
+              currency: userCountry.currency,
+              customerEmail: formData.email,
+              customerName: formData.fullName,
+              customerPhone: formData.phone,
+              eventSourceUrl: window.location.href
+            }
+          }).catch(err => console.error('Error sending Facebook conversion:', err));
+        } else {
+          console.log('⚠️ Payment not confirmed yet (status: ' + insertedOrder?.payment_status + '), skipping Facebook Pixel event');
+        }
+        
         navigate(`/obrigado?${params.toString()}`);
       }
     } catch (error) {
