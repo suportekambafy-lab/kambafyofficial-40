@@ -75,16 +75,42 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('✅ URL de upload obtida:', uid);
       setUploadProgress(10);
 
-      // Step 2: Upload direto via POST (método básico do Cloudflare)
-      const uploadResponse = await fetch(uploadURL, {
-        method: 'POST',
-        body: selectedFile,
+      // Step 2: Upload com XMLHttpRequest para monitorar progresso
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        // Timeout de 10 minutos
+        xhr.timeout = 600000;
+        
+        // Monitor de progresso
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 90) + 10;
+            setUploadProgress(percentComplete);
+            console.log(`📤 Upload: ${percentComplete}% (${e.loaded}/${e.total} bytes)`);
+          }
+        });
+        
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log('✅ Upload concluído');
+            resolve(xhr.response);
+          } else {
+            reject(new Error(`Falha no upload: ${xhr.status} - ${xhr.responseText}`));
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          reject(new Error('Erro de rede durante upload'));
+        });
+        
+        xhr.addEventListener('timeout', () => {
+          reject(new Error('Upload timeout - arquivo muito grande ou conexão lenta'));
+        });
+        
+        xhr.open('POST', uploadURL);
+        xhr.send(selectedFile);
       });
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        throw new Error(`Falha no upload: ${uploadResponse.status} - ${errorText}`);
-      }
 
       console.log('✅ Upload concluído, processando...');
       setUploadProgress(100);
