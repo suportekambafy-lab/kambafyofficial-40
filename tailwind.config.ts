@@ -83,7 +83,7 @@ export default {
 				'card-border': {
 					green: 'hsl(var(--card-border-green))',
 					yellow: 'hsl(var(--card-border-yellow))'
-				},
+				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
