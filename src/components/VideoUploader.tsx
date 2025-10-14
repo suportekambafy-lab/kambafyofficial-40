@@ -90,12 +90,10 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       await new Promise<void>((resolve, reject) => {
         const upload = new Upload(selectedFile, {
-          uploadUrl: uploadUrl, // URL completa retornada pelo Cloudflare
+          endpoint: uploadUrl, // URL completa do Cloudflare Stream
           chunkSize: 50 * 1024 * 1024, // 50MB chunks
           retryDelays: [0, 3000, 5000, 10000],
-          headers: {
-            'Tus-Resumable': '1.0.0',
-          },
+          removeFingerprintOnSuccess: true,
           metadata: {
             filename: fileName,
             filetype: selectedFile.type,
