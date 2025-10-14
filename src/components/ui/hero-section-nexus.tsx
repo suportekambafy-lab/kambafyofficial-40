@@ -890,7 +890,7 @@ const InteractiveHero: React.FC = () => {
                           },
                           {
                               question: "Como recebo meus pagamentos?",
-                              answer: "Os pagamentos são processados automaticamente e transferidos para sua conta bancária de acordo com o cronograma escolhido. Suportamos múltiplas moedas e métodos de pagamento."
+                              answer: "Os pagamentos são processados automaticamente e transferidos para sua conta bancária em até 3 dias úteis. Suportamos múltiplas moedas e métodos de pagamento."
                           },
                           {
                               question: "Preciso de conhecimentos técnicos?",
