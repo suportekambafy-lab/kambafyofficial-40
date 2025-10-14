@@ -882,7 +882,7 @@ const InteractiveHero: React.FC = () => {
                           },
                           {
                               question: "Como funciona a comissão da plataforma?",
-                              answer: "Trabalhamos com um modelo justo: cobramos apenas 8% de comissão sobre cada venda realizada. Sem mensalidades, sem custos fixos."
+                              answer: "Trabalhamos com um modelo justo: cobramos apenas 8,99% de comissão sobre cada venda realizada. Sem mensalidades, sem custos fixos."
                           },
                           {
                               question: "Posso vender diferentes tipos de produtos?",
