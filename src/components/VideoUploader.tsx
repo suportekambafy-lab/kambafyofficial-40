@@ -84,6 +84,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
           retryDelays: [0, 1000, 3000, 5000],
           parallelUploads: 1,
           removeFingerprintOnSuccess: true,
+          storeFingerprintForResuming: false, // Desabilitar tentativa de resumir
           onError: (error) => {
             console.error('❌ Erro TUS durante upload:', error);
             reject(error);
