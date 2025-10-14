@@ -9,7 +9,6 @@ import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import * as tus from "tus-js-client";
 
 interface VideoUploaderProps {
   onVideoUploaded: (videoUrl: string, videoData?: any) => void;
@@ -76,32 +75,33 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('✅ URL de upload obtida:', uid);
       setUploadProgress(10);
 
-      // Step 2: Upload via protocolo TUS (requerido pelo Cloudflare Stream)
-      await new Promise((resolve, reject) => {
-        const upload = new tus.Upload(selectedFile, {
-          uploadUrl: uploadURL, // URL TUS pré-criada
-          chunkSize: 50 * 1024 * 1024, // 50MB chunks
-          retryDelays: [0, 1000, 3000, 5000],
-          parallelUploads: 1,
-          removeFingerprintOnSuccess: true,
-          storeFingerprintForResuming: false, // Desabilitar tentativa de resumir
-          onError: (error) => {
-            console.error('❌ Erro TUS durante upload:', error);
-            reject(error);
+      // Step 2: Upload via protocolo TUS manual (sem biblioteca)
+      const chunkSize = 50 * 1024 * 1024; // 50MB chunks
+      let offset = 0;
+      
+      while (offset < selectedFile.size) {
+        const chunk = selectedFile.slice(offset, offset + chunkSize);
+        
+        const response = await fetch(uploadURL, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/offset+octet-stream',
+            'Upload-Offset': offset.toString(),
+            'Tus-Resumable': '1.0.0',
           },
-          onProgress: (bytesUploaded, bytesTotal) => {
-            const percentage = Math.round((bytesUploaded / bytesTotal) * 90) + 10;
-            setUploadProgress(percentage);
-            console.log(`📤 Upload TUS: ${percentage}% (${bytesUploaded}/${bytesTotal} bytes)`);
-          },
-          onSuccess: () => {
-            console.log('✅ Upload TUS concluído com sucesso');
-            resolve(true);
-          },
+          body: chunk,
         });
 
-        upload.start();
-      });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+        }
+
+        offset += chunk.size;
+        const percentage = Math.round((offset / selectedFile.size) * 90) + 10;
+        setUploadProgress(percentage);
+        console.log(`📤 Upload: ${percentage}% (${offset}/${selectedFile.size} bytes)`);
+      }
 
       console.log('✅ Upload concluído, processando...');
       setUploadProgress(100);
