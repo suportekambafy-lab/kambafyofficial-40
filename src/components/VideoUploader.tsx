@@ -58,83 +58,74 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
     try {
       const fileName = selectedFile.name;
-      const fileType = selectedFile.type;
       
-      console.log('🚀 Upload em chunks via edge function:', fileName);
+      console.log('🚀 Upload direto para Cloudflare Stream via TUS:', fileName);
       console.log('📦 Tamanho:', (selectedFile.size / (1024 * 1024 * 1024)).toFixed(2), 'GB');
       
-      // Step 1: Dividir arquivo em chunks de 10MB
-      const chunkSize = 10 * 1024 * 1024; // 10MB por chunk
-      const totalChunks = Math.ceil(selectedFile.size / chunkSize);
-      console.log(`📦 Total de chunks: ${totalChunks}`);
-      
       setUploadProgress(5);
-      let publicUrl = '';
 
-      // Step 2: Upload cada chunk
-      for (let i = 0; i < totalChunks; i++) {
-        const start = i * chunkSize;
-        const end = Math.min(start + chunkSize, selectedFile.size);
-        const chunk = selectedFile.slice(start, end);
-        
-        console.log(`📤 Enviando chunk ${i + 1}/${totalChunks}...`);
-        
-        // Converter chunk para base64
-        const reader = new FileReader();
-        const base64Data = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => {
-            const result = reader.result as string;
-            const base64 = result.split(',')[1];
-            resolve(base64);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(chunk);
-        });
-
-        // Upload do chunk
-        const { data, error } = await supabase.functions.invoke('upload-video-chunk', {
-          body: {
-            fileName,
-            chunkData: base64Data,
-            chunkIndex: i,
-            totalChunks,
-          }
-        });
-
-        if (error || !data?.success) {
-          throw new Error(error?.message || data?.error || `Falha ao enviar chunk ${i + 1}`);
-        }
-
-        // Atualizar progresso (5-75% para upload de chunks)
-        const progress = Math.round((i + 1) / totalChunks * 70) + 5;
-        setUploadProgress(progress);
-        
-        if (data.complete && data.publicUrl) {
-          publicUrl = data.publicUrl;
-          console.log('✅ Todos os chunks enviados:', publicUrl);
-        }
-      }
-
-      setUploadProgress(75);
-
-      // Step 3: Importar do R2 para Stream
-      console.log('📹 Importando para Stream...');
+      // Step 1: Obter upload URL do Cloudflare Stream
+      console.log('🔐 Obtendo URL de upload do Stream...');
       
-      const { data: streamData, error: streamError } = await supabase.functions.invoke('import-r2-to-stream', {
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('create-stream-upload', {
         body: {
-          videoUrl: publicUrl,
-          fileName
+          fileName,
+          fileSize: selectedFile.size
         }
       });
 
-      if (streamError || !streamData?.success) {
-        throw new Error(streamError?.message || streamData?.error || 'Falha ao importar para Stream');
+      if (uploadError || !uploadData?.success) {
+        throw new Error(uploadError?.message || uploadData?.error || 'Falha ao criar upload no Stream');
       }
 
-      console.log('✅ Importação concluída');
-      setUploadProgress(100);
+      console.log('✅ URL de upload obtida');
+      setUploadProgress(10);
 
-      const { videoId, hlsUrl, embedUrl, thumbnailUrl } = streamData;
+      const { uploadUrl, videoId } = uploadData;
+
+      // Step 2: Upload usando TUS protocol
+      console.log('📤 Iniciando upload TUS...');
+      
+      const { Upload } = await import('tus-js-client');
+
+      await new Promise<void>((resolve, reject) => {
+        const upload = new Upload(selectedFile, {
+          endpoint: uploadUrl,
+          chunkSize: 50 * 1024 * 1024, // 50MB chunks
+          retryDelays: [0, 3000, 5000, 10000],
+          metadata: {
+            filename: fileName,
+            filetype: selectedFile.type,
+          },
+          onError: (error) => {
+            console.error('❌ Erro TUS:', error);
+            reject(error);
+          },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const percentage = Math.round((bytesUploaded / bytesTotal) * 85) + 10;
+            setUploadProgress(percentage);
+            console.log(`📊 Progresso: ${percentage}%`);
+          },
+          onSuccess: () => {
+            console.log('✅ Upload TUS concluído');
+            setUploadProgress(95);
+            resolve();
+          },
+        });
+
+        upload.start();
+      });
+
+      // Step 3: Aguardar processamento e obter URLs
+      console.log('⏳ Aguardando processamento do Stream...');
+      setUploadProgress(98);
+
+      const hlsUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/manifest/video.m3u8`;
+      const embedUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/iframe`;
+      const thumbnailUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/thumbnails/thumbnail.jpg`;
+
+      console.log('✅ Upload concluído com sucesso');
+      setUploadProgress(100);
 
       onVideoUploaded(hlsUrl, {
         success: true,
