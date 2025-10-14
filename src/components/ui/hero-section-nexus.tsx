@@ -301,7 +301,7 @@ const NavLink: React.FC<NavLinkProps> = ({ href = "#", children, className = "",
      className={cn("relative group text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200 flex items-center py-1", className)}
    >
      {children}
-     <span className="absolute bottom-[-2px] left-0 right-0 h-[1px] bg-[#0CF2A0] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+     <span className="absolute bottom-[-2px] left-0 right-0 h-[1px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
    </a>
 );
 
@@ -577,10 +577,10 @@ const InteractiveHero: React.FC = () => {
     };
 
   return (
-    <div className="relative bg-[#111111] text-gray-300 overflow-x-hidden">
+    <div className="relative bg-checkout-secure text-foreground overflow-x-hidden">
         <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none opacity-80" />
         <div className="fixed inset-0 z-1 pointer-events-none" style={{
-            background: 'linear-gradient(to bottom, transparent 0%, #111111 90%), radial-gradient(ellipse at center, transparent 40%, #111111 95%)'
+            background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--checkout-secure)) 90%), radial-gradient(ellipse at center, transparent 40%, hsl(var(--checkout-secure)) 95%)'
         }}></div>
 
         {/* Header */}
@@ -612,7 +612,7 @@ const InteractiveHero: React.FC = () => {
 
                     <motion.button
                         onClick={() => handleAuthNavigation('signup')}
-                        className="bg-[#0CF2A0] text-[#111111] px-4 py-[6px] rounded-md text-sm font-semibold hover:bg-opacity-90 transition-colors duration-200 whitespace-nowrap shadow-sm hover:shadow-md"
+                        className="bg-primary text-primary-foreground px-4 py-[6px] rounded-md text-sm font-semibold hover:bg-opacity-90 transition-colors duration-200 whitespace-nowrap shadow-sm hover:shadow-md"
                         whileHover={{ scale: 1.03, y: -1 }}
                         whileTap={{ scale: 0.97 }}
                         transition={{ type: "spring", stiffness: 400, damping: 15 }}
@@ -636,7 +636,7 @@ const InteractiveHero: React.FC = () => {
                     <motion.div
                         key="mobile-menu"
                         variants={mobileMenuVariants} initial="hidden" animate="visible" exit="exit"
-                        className="md:hidden absolute top-full left-0 right-0 bg-[#111111]/95 backdrop-blur-sm shadow-lg py-4 border-t border-gray-800/50"
+                        className="md:hidden absolute top-full left-0 right-0 bg-checkout-secure/95 backdrop-blur-sm shadow-lg py-4 border-t border-border"
                     >
                         <div className="flex flex-col items-center space-y-4 px-6">
                             <a href="#recursos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Recursos</a>
@@ -660,7 +660,7 @@ const InteractiveHero: React.FC = () => {
                 animate="visible"
                 className="mb-6"
             >
-                <ShinyText text="Plataforma #1 para Criadores Digitais" className="bg-[#1a1a1a] border border-gray-700 text-[#0CF2A0] px-4 py-1 rounded-full text-xs sm:text-sm font-medium cursor-pointer hover:border-[#0CF2A0]/50 transition-colors" />
+                <ShinyText text="Plataforma #1 para Criadores Digitais" className="bg-card border border-border text-primary px-4 py-1 rounded-full text-xs sm:text-sm font-medium cursor-pointer hover:border-primary/50 transition-colors" />
             </motion.div>
 
             <motion.h1
@@ -673,7 +673,7 @@ const InteractiveHero: React.FC = () => {
                 <span className="inline-block h-[1.2em] overflow-hidden align-bottom">
                     <RotatingText
                         texts={['digitais', 'criativos', 'exclusivos', 'incríveis', 'únicos']}
-                        mainClassName="text-[#0CF2A0] mx-1"
+                        mainClassName="text-primary mx-1"
                         staggerFrom={"last"}
                         initial={{ y: "-100%", opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -705,7 +705,7 @@ const InteractiveHero: React.FC = () => {
             >
                 <motion.button
                     onClick={() => handleAuthNavigation('signup')}
-                    className="w-full sm:w-auto bg-[#0CF2A0] text-[#111111] px-8 py-3 rounded-md text-base font-semibold hover:bg-opacity-90 transition-colors duration-200 shadow-lg hover:shadow-xl flex-shrink-0"
+                    className="w-full sm:w-auto bg-primary text-primary-foreground px-8 py-3 rounded-md text-base font-semibold hover:bg-opacity-90 transition-colors duration-200 shadow-lg hover:shadow-xl flex-shrink-0"
                     whileHover={{ scale: 1.03, y: -1 }}
                     whileTap={{ scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 400, damping: 15 }}
@@ -713,7 +713,7 @@ const InteractiveHero: React.FC = () => {
                     Começar a Vender
                 </motion.button>
                 <motion.button
-                    className="w-full sm:w-auto bg-transparent border border-[#0CF2A0] text-[#0CF2A0] px-8 py-3 rounded-md text-base font-semibold hover:bg-[#0CF2A0]/10 transition-colors duration-200 flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto bg-transparent border border-primary text-primary px-8 py-3 rounded-md text-base font-semibold hover:bg-primary/10 transition-colors duration-200 flex items-center justify-center gap-2"
                     whileHover={{ scale: 1.03, y: -1 }}
                     whileTap={{ scale: 0.97 }}
                 >
@@ -739,7 +739,7 @@ const InteractiveHero: React.FC = () => {
                       <div className="text-center lg:text-left">
                           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
                               Tudo que Você Precisa para{' '}
-                              <span className="text-[#0CF2A0]">Ter Sucesso</span>
+                              <span className="text-primary">Ter Sucesso</span>
                           </h2>
                           <p className="text-lg text-gray-400">
                               Ferramentas poderosas e simples para transformar seu conhecimento em um negócio próspero
@@ -751,7 +751,7 @@ const InteractiveHero: React.FC = () => {
                               alt="Profissionais colaborando" 
                               className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#0CF2A0]/20 to-transparent rounded-2xl"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent rounded-2xl"></div>
                       </div>
                   </div>
 
@@ -762,8 +762,8 @@ const InteractiveHero: React.FC = () => {
                           { icon: <Users className="w-8 h-8" />, title: "Pixel", description: "Integre Facebook Pixel e outras ferramentas de tracking para otimizar campanhas." },
                           { icon: <Shield className="w-8 h-8" />, title: "Afiliação", description: "Sistema completo de afiliados para expandir suas vendas através de parceiros." }
                       ].map((feature, index) => (
-                          <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-6 hover:border-[#0CF2A0]/50 transition-all duration-300">
-                              <div className="text-[#0CF2A0] mb-4">{feature.icon}</div>
+                          <div key={index} className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition-all duration-300">
+                              <div className="text-primary mb-4">{feature.icon}</div>
                               <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
                               <p className="text-gray-400">{feature.description}</p>
                           </div>
@@ -773,7 +773,7 @@ const InteractiveHero: React.FC = () => {
           </section>
 
           {/* Stats Section */}
-          <section className="py-16 px-6 bg-[#0CF2A0]/5 relative z-10">
+          <section className="py-16 px-6 bg-primary/5 relative z-10">
               <div className="mx-auto max-w-7xl">
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
                       {[
@@ -783,7 +783,7 @@ const InteractiveHero: React.FC = () => {
                           { number: "98%", label: "Satisfação dos Usuários" }
                       ].map((stat, index) => (
                           <div key={index}>
-                              <div className="text-4xl font-bold text-[#0CF2A0] mb-2">{stat.number}</div>
+                              <div className="text-4xl font-bold text-primary mb-2">{stat.number}</div>
                               <div className="text-gray-400">{stat.label}</div>
                           </div>
                       ))}
@@ -797,7 +797,7 @@ const InteractiveHero: React.FC = () => {
                   <div className="text-center mb-16">
                       <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
                           Como{' '}
-                          <span className="text-[#0CF2A0]">Funciona</span>
+                          <span className="text-primary">Funciona</span>
                       </h2>
                       <p className="text-lg text-gray-400">
                           Comece a vender seus produtos digitais em 3 passos simples
@@ -823,14 +823,14 @@ const InteractiveHero: React.FC = () => {
                           }
                       ].map((step, index) => (
                           <div key={index} className="relative">
-                              <div className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-8 hover:border-[#0CF2A0]/50 transition-all duration-300">
-                                  <div className="text-6xl font-bold text-[#0CF2A0]/20 mb-4">{step.number}</div>
+                              <div className="bg-card border border-border rounded-lg p-8 hover:border-primary/50 transition-all duration-300">
+                                  <div className="text-6xl font-bold text-primary/20 mb-4">{step.number}</div>
                                   <h3 className="text-2xl font-semibold text-white mb-4">{step.title}</h3>
                                   <p className="text-gray-400">{step.description}</p>
                               </div>
                               {index < 2 && (
                                   <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                                      <ArrowRight className="w-8 h-8 text-[#0CF2A0]/50" />
+                                      <ArrowRight className="w-8 h-8 text-primary/50" />
                                   </div>
                               )}
                           </div>
@@ -845,7 +845,7 @@ const InteractiveHero: React.FC = () => {
                   <div className="text-center mb-16">
                       <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
                           O que Dizem Nossos{' '}
-                          <span className="text-[#0CF2A0]">Criadores</span>
+                          <span className="text-primary">Criadores</span>
                       </h2>
                       <p className="text-lg text-gray-400">
                           Histórias reais de pessoas que transformaram suas vidas com a Kambafy
@@ -858,11 +858,13 @@ const InteractiveHero: React.FC = () => {
                           { name: "Carlos Santos", role: "@carlostech", content: "Este serviço transformou minha forma de trabalhar. Design limpo, recursos poderosos e excelente suporte.", image: "https://randomuser.me/api/portraits/men/64.jpg" },
                           { name: "Ricardo Lima", role: "@ricardocria", content: "Já testei muitas plataformas, mas esta se destaca. Intuitiva, confiável e genuinamente útil para produtividade.", image: "https://randomuser.me/api/portraits/men/32.jpg" }
                       ].map((testimonial, index) => (
-                          <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-6">
-                              <div className="flex items-center mb-4">
-                                  <img src={testimonial.image} alt={testimonial.name} className="w-12 h-12 rounded-full object-cover mr-4" />
-                                  <div className="flex">
-                                      {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-[#0CF2A0] fill-current" />)}
+                          <div key={index} className="bg-card border border-border rounded-lg p-6">
+                              <div className="flex items-center gap-4 mb-4">
+                                  <img src={testimonial.image} alt={testimonial.name} className="w-12 h-12 rounded-full" />
+                                  <div className="flex-1">
+                                      <div className="flex mb-1">
+                                          {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-primary fill-current" />)}
+                                      </div>
                                   </div>
                               </div>
                               <p className="text-gray-400 mb-4 italic">"{testimonial.content}"</p>
@@ -882,7 +884,7 @@ const InteractiveHero: React.FC = () => {
                   <div className="text-center mb-16">
                       <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
                           Preços{' '}
-                          <span className="text-[#0CF2A0]">Transparentes</span>
+                          <span className="text-primary">Transparentes</span>
                       </h2>
                       <p className="text-lg text-gray-400">
                           Sem mensalidades, sem custos fixos. Pague apenas quando vender.
@@ -890,11 +892,10 @@ const InteractiveHero: React.FC = () => {
                   </div>
 
                   <div className="max-w-3xl mx-auto">
-                      <div className="bg-[#1a1a1a] border border-gray-700/50 rounded-2xl p-8 md:p-12 hover:border-[#0CF2A0]/50 transition-all duration-300">
+                      <div className="bg-card border border-border rounded-2xl p-8 md:p-12 hover:border-primary/50 transition-all duration-300">
                           <div className="text-center mb-8">
-                              <h3 className="text-2xl font-bold text-white mb-4">Plano Comissão</h3>
-                              <div className="flex items-baseline justify-center gap-2 mb-4">
-                                  <span className="text-5xl font-bold text-[#0CF2A0]">8,99%</span>
+                              <div className="flex items-baseline justify-center gap-2 mb-2">
+                                  <span className="text-5xl font-bold text-primary">8,99%</span>
                                   <span className="text-gray-400">por venda</span>
                               </div>
                               <p className="text-gray-400">Comece gratuitamente, pague apenas quando vender</p>
@@ -912,8 +913,8 @@ const InteractiveHero: React.FC = () => {
                                   "Suporte prioritário"
                               ].map((feature, index) => (
                                   <div key={index} className="flex items-center gap-3">
-                                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#0CF2A0]/20 flex items-center justify-center">
-                                          <div className="w-2 h-2 bg-[#0CF2A0] rounded-full"></div>
+                                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                                          <div className="w-2 h-2 bg-primary rounded-full"></div>
                                       </div>
                                       <span className="text-gray-300">{feature}</span>
                                   </div>
@@ -922,7 +923,7 @@ const InteractiveHero: React.FC = () => {
 
                           <Button 
                               size="lg" 
-                              className="w-full bg-[#0CF2A0] hover:bg-[#0CF2A0]/90 text-[#111111] text-lg font-semibold"
+                              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg font-semibold"
                               onClick={() => handleAuthNavigation('signup')}
                           >
                               Começar Agora Grátis
@@ -934,13 +935,13 @@ const InteractiveHero: React.FC = () => {
           </section>
 
           {/* About Section */}
-          <section id="sobre" className="py-24 px-6 bg-[#0CF2A0]/5 relative z-10">
+          <section id="sobre" className="py-24 px-6 bg-primary/5 relative z-10">
               <div className="mx-auto max-w-7xl">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                       <div>
                           <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
                               Sobre a{' '}
-                              <span className="text-[#0CF2A0]">Kambafy</span>
+                              <span className="text-primary">Kambafy</span>
                           </h2>
                           <p className="text-lg text-gray-400 mb-6">
                               Somos uma startup angolana dedicada a democratizar o acesso ao conhecimento e 
@@ -953,7 +954,7 @@ const InteractiveHero: React.FC = () => {
                           <div className="space-y-4">
                               {["Plataforma 100% nacional", "Pagamentos em multimoedas"].map((item, index) => (
                                   <div key={index} className="flex items-center space-x-3">
-                                      <div className="w-2 h-2 bg-[#0CF2A0] rounded-full"></div>
+                                      <div className="w-2 h-2 bg-primary rounded-full"></div>
                                       <span className="text-gray-300">{item}</span>
                                   </div>
                               ))}
@@ -961,7 +962,7 @@ const InteractiveHero: React.FC = () => {
                       </div>
                       <div className="relative">
                           <img src={aboutSectionImage} alt="Equipe profissional" className="rounded-lg shadow-xl object-cover w-full h-96" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#0CF2A0]/30 to-transparent rounded-lg"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent rounded-lg"></div>
                       </div>
                   </div>
               </div>
@@ -973,7 +974,7 @@ const InteractiveHero: React.FC = () => {
                   <div className="text-center mb-16">
                       <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
                           Perguntas{' '}
-                          <span className="text-[#0CF2A0]">Frequentes</span>
+                          <span className="text-primary">Frequentes</span>
                       </h2>
                       <p className="text-lg text-gray-400">
                           Tire suas dúvidas sobre a plataforma
@@ -1002,9 +1003,9 @@ const InteractiveHero: React.FC = () => {
                               answer: "Não! Nossa plataforma foi desenvolvida para ser intuitiva e fácil de usar. Qualquer pessoa pode criar e vender seus produtos digitais sem precisar de conhecimentos técnicos."
                           }
                       ].map((faq, index) => (
-                          <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg overflow-hidden">
+                          <div key={index} className="bg-card border border-border rounded-lg overflow-hidden">
                               <button 
-                                  className="w-full text-left p-6 text-white font-semibold hover:bg-[#0CF2A0]/5 transition-colors"
+                                  className="w-full text-left p-6 text-white font-semibold hover:bg-primary/5 transition-colors"
                                   onClick={(e) => {
                                       const content = e.currentTarget.nextElementSibling as HTMLElement;
                                       if (content.style.maxHeight) {
@@ -1028,7 +1029,7 @@ const InteractiveHero: React.FC = () => {
                       <p className="text-gray-400 mb-4">
                           Não encontrou a resposta que procurava?
                       </p>
-                      <Button variant="outline" className="border-[#0CF2A0] text-[#0CF2A0] hover:bg-[#0CF2A0]/10" asChild>
+                      <Button variant="outline" className="border-primary text-primary hover:bg-primary/10" asChild>
                           <SubdomainLink to="/ajuda">
                               Ir para Central de Ajuda
                           </SubdomainLink>
@@ -1042,7 +1043,7 @@ const InteractiveHero: React.FC = () => {
               <div className="mx-auto max-w-4xl text-center">
                   <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
                       Pronto para{' '}
-                      <span className="text-[#0CF2A0]">Começar?</span>
+                      <span className="text-primary">Começar?</span>
                   </h2>
                   <p className="text-lg text-gray-400 mb-8">
                       Cadastre-se gratuitamente e comece a monetizar seu conhecimento hoje mesmo
@@ -1050,13 +1051,13 @@ const InteractiveHero: React.FC = () => {
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                       <Button 
                           size="lg" 
-                          className="bg-[#0CF2A0] hover:bg-[#0CF2A0]/90 text-[#111111] px-8 text-lg"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 text-lg"
                           onClick={() => handleAuthNavigation('signup')}
                       >
                           Criar Conta Grátis
                           <ArrowRight className="ml-2 w-5 h-5" />
                       </Button>
-                      <Button size="lg" variant="outline" className="border-[#0CF2A0] text-[#0CF2A0] hover:bg-[#0CF2A0]/10 px-8 text-lg">
+                      <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 px-8 text-lg">
                           Falar com Especialista
                       </Button>
                   </div>
@@ -1064,7 +1065,7 @@ const InteractiveHero: React.FC = () => {
           </section>
 
           {/* Footer */}
-          <footer className="bg-[#0a0a0a] text-gray-300 py-16 px-6 relative z-10 border-t border-gray-800">
+          <footer className="bg-checkout-secure/50 text-gray-300 py-16 px-6 relative z-10 border-t border-border">
               <div className="mx-auto max-w-7xl">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                       <div>
