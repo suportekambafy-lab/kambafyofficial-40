@@ -51,7 +51,8 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
     memberAreaId: "",
     paymentMethods: [] as PaymentMethod[],
     fantasyName: "",
-    customPrices: {} as Record<string, string>
+    customPrices: {} as Record<string, string>,
+    allowsAffiliates: false
   });
 
   const [newTag, setNewTag] = useState("");
@@ -104,7 +105,8 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         memberAreaId: editingProduct.member_area_id || "",
         paymentMethods: editingProduct.payment_methods || [],
         fantasyName: editingProduct.fantasy_name || "",
-        customPrices: editingProduct.custom_prices || {}
+        customPrices: editingProduct.custom_prices || {},
+        allowsAffiliates: editingProduct.allows_affiliates || false
       });
     } else {
       const defaultPaymentMethods = getAllPaymentMethods().filter(m => m.enabled);
@@ -120,7 +122,8 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         memberAreaId: "",
         paymentMethods: defaultPaymentMethods,
         fantasyName: "",
-        customPrices: {}
+        customPrices: {},
+        allowsAffiliates: false
       });
     }
   }, [editingProduct, selectedType]);
@@ -132,7 +135,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
     open: open
   });
 
-  const handleInputChange = (field: string, value: string | Record<string, string>) => {
+  const handleInputChange = (field: string, value: string | Record<string, string> | boolean) => {
     console.log('🔄 ProductForm handleInputChange:', { field, value });
     setFormData(prev => ({
       ...prev,
@@ -259,6 +262,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         payment_methods: formData.paymentMethods as any,
         fantasy_name: formData.fantasyName || null,
         custom_prices: formData.customPrices,
+        allows_affiliates: formData.allowsAffiliates,
         user_id: user.id,
         status: "Ativo"
       };
@@ -312,7 +316,8 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
             memberAreaId: "",
             paymentMethods: [],
             fantasyName: "",
-            customPrices: {}
+            customPrices: {},
+            allowsAffiliates: false
           });
         }
       }
@@ -488,14 +493,41 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
               disabled={editingProduct?.revision_requested}
             />
 
-            <div className="space-y-2">
-              <Label htmlFor="commission">Comissão (%)</Label>
-              <Input
-                id="commission"
-                value={formData.commission}
-                onChange={(e) => handleInputChange("commission", e.target.value)}
-                placeholder="10%"
-              />
+            <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="allowsAffiliates" className="text-base">Sistema de Afiliados</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Permita que outros usuários promovam seu produto e ganhem comissão
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="allowsAffiliates"
+                    checked={formData.allowsAffiliates}
+                    onChange={(e) => handleInputChange("allowsAffiliates", e.target.checked)}
+                    className="w-11 h-6 rounded-full appearance-none bg-gray-300 checked:bg-primary relative cursor-pointer transition-colors
+                    after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full 
+                    after:h-5 after:w-5 after:transition-transform checked:after:translate-x-5"
+                  />
+                </div>
+              </div>
+              
+              {formData.allowsAffiliates && (
+                <div className="space-y-2 pt-2 border-t">
+                  <Label htmlFor="commission">Comissão para Afiliados (%)</Label>
+                  <Input
+                    id="commission"
+                    value={formData.commission}
+                    onChange={(e) => handleInputChange("commission", e.target.value)}
+                    placeholder="10%"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Porcentagem que será paga aos afiliados por cada venda
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
