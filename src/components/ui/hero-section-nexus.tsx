@@ -791,6 +791,54 @@ const InteractiveHero: React.FC = () => {
               </div>
           </section>
 
+          {/* How It Works Section */}
+          <section id="como-funciona" className="py-24 px-6 relative z-10">
+              <div className="mx-auto max-w-7xl">
+                  <div className="text-center mb-16">
+                      <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
+                          Como{' '}
+                          <span className="text-[#0CF2A0]">Funciona</span>
+                      </h2>
+                      <p className="text-lg text-gray-400">
+                          Comece a vender seus produtos digitais em 3 passos simples
+                      </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      {[
+                          { 
+                              number: "01", 
+                              title: "Crie sua Conta", 
+                              description: "Cadastre-se gratuitamente e configure seu perfil de criador em minutos. Sem burocracias, sem complicações." 
+                          },
+                          { 
+                              number: "02", 
+                              title: "Configure seu Produto", 
+                              description: "Adicione seus cursos, e-books ou produtos digitais. Personalize seu checkout e defina seus preços." 
+                          },
+                          { 
+                              number: "03", 
+                              title: "Comece a Vender", 
+                              description: "Compartilhe seu link e comece a receber pagamentos. Receba em até 3 dias úteis após cada venda." 
+                          }
+                      ].map((step, index) => (
+                          <div key={index} className="relative">
+                              <div className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-8 hover:border-[#0CF2A0]/50 transition-all duration-300">
+                                  <div className="text-6xl font-bold text-[#0CF2A0]/20 mb-4">{step.number}</div>
+                                  <h3 className="text-2xl font-semibold text-white mb-4">{step.title}</h3>
+                                  <p className="text-gray-400">{step.description}</p>
+                              </div>
+                              {index < 2 && (
+                                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
+                                      <ArrowRight className="w-8 h-8 text-[#0CF2A0]/50" />
+                                  </div>
+                              )}
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </section>
+
           {/* Testimonials Section */}
           <section className="py-24 px-6 relative z-10">
               <div className="mx-auto max-w-7xl">
@@ -824,6 +872,63 @@ const InteractiveHero: React.FC = () => {
                               </div>
                           </div>
                       ))}
+                  </div>
+              </div>
+          </section>
+
+          {/* Pricing Section */}
+          <section id="precos" className="py-24 px-6 relative z-10">
+              <div className="mx-auto max-w-7xl">
+                  <div className="text-center mb-16">
+                      <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
+                          Preços{' '}
+                          <span className="text-[#0CF2A0]">Transparentes</span>
+                      </h2>
+                      <p className="text-lg text-gray-400">
+                          Sem mensalidades, sem custos fixos. Pague apenas quando vender.
+                      </p>
+                  </div>
+
+                  <div className="max-w-3xl mx-auto">
+                      <div className="bg-[#1a1a1a] border border-gray-700/50 rounded-2xl p-8 md:p-12 hover:border-[#0CF2A0]/50 transition-all duration-300">
+                          <div className="text-center mb-8">
+                              <h3 className="text-2xl font-bold text-white mb-4">Plano Comissão</h3>
+                              <div className="flex items-baseline justify-center gap-2 mb-4">
+                                  <span className="text-5xl font-bold text-[#0CF2A0]">8,99%</span>
+                                  <span className="text-gray-400">por venda</span>
+                              </div>
+                              <p className="text-gray-400">Comece gratuitamente, pague apenas quando vender</p>
+                          </div>
+
+                          <div className="space-y-4 mb-8">
+                              {[
+                                  "Sem mensalidade ou taxa de adesão",
+                                  "Checkout personalizado e profissional",
+                                  "Sistema completo de afiliados",
+                                  "Order Bump para aumentar vendas",
+                                  "Integração com Facebook Pixel",
+                                  "Área de membros ilimitada",
+                                  "Pagamento em até 3 dias úteis",
+                                  "Suporte prioritário"
+                              ].map((feature, index) => (
+                                  <div key={index} className="flex items-center gap-3">
+                                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#0CF2A0]/20 flex items-center justify-center">
+                                          <div className="w-2 h-2 bg-[#0CF2A0] rounded-full"></div>
+                                      </div>
+                                      <span className="text-gray-300">{feature}</span>
+                                  </div>
+                              ))}
+                          </div>
+
+                          <Button 
+                              size="lg" 
+                              className="w-full bg-[#0CF2A0] hover:bg-[#0CF2A0]/90 text-[#111111] text-lg font-semibold"
+                              onClick={() => handleAuthNavigation('signup')}
+                          >
+                              Começar Agora Grátis
+                              <ArrowRight className="ml-2 w-5 h-5" />
+                          </Button>
+                      </div>
                   </div>
               </div>
           </section>
