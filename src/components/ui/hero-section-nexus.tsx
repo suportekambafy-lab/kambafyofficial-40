@@ -961,7 +961,6 @@ const InteractiveHero: React.FC = () => {
           {/* Footer */}
           <footer className="bg-[#0a0a0a] text-gray-300 py-16 px-6 relative z-10 border-t border-gray-800">
               <div className="mx-auto max-w-7xl">
-                  <TopSellersRanking />
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                       <div>
                           <img src={kambafy_icon} alt="Kambafy" className="h-12 w-auto mb-4" />
