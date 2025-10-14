@@ -83,6 +83,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
           uploadSize: selectedFile.size, // Tamanho do arquivo (evita HEAD request)
           chunkSize: 50 * 1024 * 1024, // 50MB chunks para arquivos grandes
           retryDelays: [0, 3000, 5000, 10000, 20000], // Retry automático
+          metadata: {}, // Sem metadata adicional para evitar erros de decodificação
           removeFingerprintOnSuccess: true, // Limpar fingerprint após sucesso
           onError: (error) => {
             console.error('❌ Erro TUS durante upload:', error);
