@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, DollarSign, Users, Shield, Star, Play, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SubdomainLink } from "@/components/SubdomainLink";
+import { TopSellersRanking } from "@/components/TopSellersRanking";
 import kambafy_icon from "@/assets/kambafy-icon-gray.png";
 import teamImage from "@/assets/team-collaboration.jpg";
 import aboutSectionImage from "@/assets/about-section-team.jpg";
