@@ -62,11 +62,43 @@ const CheckoutSuccess = () => {
             console.log('✅ Pagamento confirmado! Verificando upsell...');
             setOrderStatus('completed');
             
+            // Calcular valor total incluindo order bumps
+            let totalAmount = parseFloat(data.order.amount) || 0;
+            
+            if (data.order.order_bump_data) {
+              try {
+                const bumpData = typeof data.order.order_bump_data === 'string' 
+                  ? JSON.parse(data.order.order_bump_data) 
+                  : data.order.order_bump_data;
+                
+                if (bumpData) {
+                  // Se tem múltiplos itens
+                  if (Array.isArray(bumpData.items)) {
+                    bumpData.items.forEach((item: any) => {
+                      totalAmount += parseFloat(item.bump_product_price || 0);
+                    });
+                  }
+                  // Se é um único item (formato antigo)
+                  else if (bumpData.bump_product_price) {
+                    totalAmount += parseFloat(bumpData.bump_product_price);
+                  }
+                }
+                
+                console.log('💰 Valor calculado com upsells:', { 
+                  baseAmount: data.order.amount, 
+                  totalAmount,
+                  orderBumpData: bumpData 
+                });
+              } catch (error) {
+                console.error('❌ Erro ao processar order_bump_data:', error);
+              }
+            }
+            
             // Disparar evento de Purchase para Facebook Pixel
             console.log('📤 Dispatching purchase-completed event for Facebook Pixel');
             window.dispatchEvent(new CustomEvent('purchase-completed', {
               detail: {
-                amount: parseFloat(data.order.amount) || 0,
+                amount: totalAmount,
                 currency: data.order.currency || 'KZ',
                 orderId: data.order.order_id,
                 productId: data.order.product_id
