@@ -879,6 +879,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><SubdomainLink to="/ajuda" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Central de Ajuda</SubdomainLink></li>
               <li><SubdomainLink to="/contato" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Contacto</SubdomainLink></li>
+              <li><SubdomainLink to="/denuncie" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Denuncie</SubdomainLink></li>
               <li><SubdomainLink to="/status" className="text-white/70 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors">Status</SubdomainLink></li>
             </ul>
           </div>
