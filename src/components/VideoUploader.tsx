@@ -9,7 +9,6 @@ import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import * as tus from "tus-js-client";
 
 interface VideoUploaderProps {
   onVideoUploaded: (videoUrl: string, videoData?: any) => void;
@@ -76,65 +75,66 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('✅ URL TUS obtida:', uid);
       setUploadProgress(10);
 
-      // Step 2: Upload usando TUS protocol (resumível, com chunks automáticos)
-      await new Promise((resolve, reject) => {
-        const upload = new tus.Upload(selectedFile, {
-          uploadUrl: uploadURL, // URL pré-criada do Cloudflare Stream
-          uploadSize: selectedFile.size, // Tamanho do arquivo (evita HEAD request)
-          chunkSize: 50 * 1024 * 1024, // 50MB chunks para arquivos grandes
-          retryDelays: [0, 3000, 5000, 10000, 20000], // Retry automático
-          metadata: {}, // Sem metadata adicional para evitar erros de decodificação
-          removeFingerprintOnSuccess: true, // Limpar fingerprint após sucesso
-          onError: (error) => {
-            console.error('❌ Erro TUS durante upload:', error);
-            reject(error);
+      // Step 2: Upload direto via PATCH (TUS protocol manual)
+      const uploadChunkSize = 50 * 1024 * 1024; // 50MB por chunk
+      let uploadedBytes = 0;
+
+      while (uploadedBytes < selectedFile.size) {
+        const chunk = selectedFile.slice(uploadedBytes, uploadedBytes + uploadChunkSize);
+        
+        const uploadResponse = await fetch(uploadURL, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/offset+octet-stream',
+            'Upload-Offset': uploadedBytes.toString(),
+            'Tus-Resumable': '1.0.0',
           },
-          onProgress: (bytesUploaded, bytesTotal) => {
-            const percentComplete = Math.round((bytesUploaded / bytesTotal) * 90) + 10; // 10-100%
-            setUploadProgress(percentComplete);
-            console.log(`📤 Upload TUS: ${percentComplete}%`, {
-              uploaded: bytesUploaded,
-              total: bytesTotal
-            });
-          },
-          onSuccess: async () => {
-            console.log('✅ Upload TUS concluído, processando...');
-            setUploadProgress(100);
-
-            // Step 3: Generate video URLs
-            const videoId = uid;
-            const hlsUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/manifest/video.m3u8`;
-            const embedUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/iframe`;
-            const thumbnailUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/thumbnails/thumbnail.jpg`;
-
-            const videoData = {
-              success: true,
-              videoId,
-              hlsUrl,
-              embedUrl,
-              thumbnailUrl,
-              stream_id: videoId
-            };
-
-            console.log('🎉 Upload TUS bem-sucedido:', videoData);
-
-            onVideoUploaded(hlsUrl, videoData);
-            
-            setSelectedFile(null);
-            setUploadProgress(0);
-            onOpenChange(false);
-
-            toast({
-              title: "Sucesso",
-              description: "Vídeo enviado com sucesso para Cloudflare Stream"
-            });
-
-            resolve(videoData);
-          }
+          body: chunk,
         });
 
-        // Iniciar upload TUS
-        upload.start();
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          throw new Error(`Falha no upload: ${uploadResponse.status} - ${errorText}`);
+        }
+
+        uploadedBytes += chunk.size;
+        const percentComplete = Math.round((uploadedBytes / selectedFile.size) * 90) + 10; // 10-100%
+        setUploadProgress(percentComplete);
+        console.log(`📤 Upload: ${percentComplete}%`, {
+          uploaded: uploadedBytes,
+          total: selectedFile.size
+        });
+      }
+
+      console.log('✅ Upload concluído, processando...');
+      setUploadProgress(100);
+
+      // Step 3: Generate video URLs
+      const videoId = uid;
+      const hlsUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/manifest/video.m3u8`;
+      const embedUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/iframe`;
+      const thumbnailUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/thumbnails/thumbnail.jpg`;
+
+      const videoData = {
+        success: true,
+        videoId,
+        hlsUrl,
+        embedUrl,
+        thumbnailUrl,
+        stream_id: videoId
+      };
+
+      console.log('🎉 Upload bem-sucedido:', videoData);
+
+      onVideoUploaded(hlsUrl, videoData);
+      
+      setSelectedFile(null);
+      setUploadProgress(0);
+      onOpenChange(false);
+
+      toast({
+        title: "Sucesso",
+        description: "Vídeo enviado com sucesso para Cloudflare Stream"
       });
 
     } catch (error: any) {
