@@ -1,4 +1,4 @@
-import { KambafyLanding } from "@/components/KambafyLanding";
+import InteractiveHero from "@/components/ui/hero-section-nexus";
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useSubdomain } from '@/hooks/useSubdomain';
@@ -29,7 +29,7 @@ const Index = () => {
   return (
     <>
       <SEO {...pageSEO.home} />
-      <KambafyLanding />
+      <InteractiveHero />
     </>
   );
 };

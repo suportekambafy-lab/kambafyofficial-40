@@ -1084,6 +1084,7 @@ const InteractiveHero: React.FC = () => {
                           <ul className="space-y-2 text-sm">
                               <li><SubdomainLink to="/ajuda" className="text-gray-500 hover:text-white transition-colors">Central de Ajuda</SubdomainLink></li>
                               <li><SubdomainLink to="/contato" className="text-gray-500 hover:text-white transition-colors">Contacto</SubdomainLink></li>
+                              <li><SubdomainLink to="/denuncie" className="text-gray-500 hover:text-white transition-colors">Denuncie</SubdomainLink></li>
                               <li><SubdomainLink to="/status" className="text-gray-500 hover:text-white transition-colors">Status</SubdomainLink></li>
                           </ul>
                       </div>
