@@ -155,7 +155,8 @@ function AnimatedGroup({
   return (
     <motion.div
       initial="hidden"
-      animate="visible"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-100px" }}
       variants={containerVariants}
       className={cn(className)}
     >
