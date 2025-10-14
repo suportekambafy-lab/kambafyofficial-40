@@ -70,6 +70,10 @@ export const OptimizedSocialProof = memo(({ settings }: { settings: any }) => (
       totalSales={settings?.totalSales}
       position={settings?.position}
       enabled={settings?.enabled}
+      displayDuration={settings?.displayDuration}
+      intervalBetween={settings?.intervalBetween}
+      pauseAfterDismiss={settings?.pauseAfterDismiss}
+      maxNotificationsPerSession={settings?.maxNotificationsPerSession}
     />
   </OptimizedSuspenseWrapper>
 ));

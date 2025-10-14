@@ -36,6 +36,10 @@ export interface CheckoutCustomizationSettings {
     totalSales: number;
     recentPurchases: string[];
     position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    displayDuration: number; // em segundos
+    intervalBetween: number; // em segundos
+    pauseAfterDismiss: number; // em segundos
+    maxNotificationsPerSession: number;
   };
   spotsCounter: {
     enabled: boolean;
@@ -94,7 +98,11 @@ const defaultSettings: CheckoutCustomizationSettings = {
       'Ricardo Sousa acabou de comprar há 7 min',
       'Beatriz Ferreira acabou de comprar há 12 min'
     ],
-    position: 'bottom-right'
+    position: 'bottom-right',
+    displayDuration: 8, // 8 segundos
+    intervalBetween: 25, // 25 segundos
+    pauseAfterDismiss: 60, // 60 segundos (1 minuto)
+    maxNotificationsPerSession: 5 // máximo 5 notificações
   },
   spotsCounter: {
     enabled: false,

@@ -427,6 +427,76 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
                       min="100"
                     />
                   </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Duração de Exibição (segundos)</Label>
+                      <Input
+                        type="number"
+                        value={settings.socialProof.displayDuration || 8}
+                        onChange={(e) => updateSocialProofSetting('displayDuration', parseInt(e.target.value))}
+                        min="3"
+                        max="20"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Tempo que a notificação fica visível
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label>Intervalo entre Notificações (segundos)</Label>
+                      <Input
+                        type="number"
+                        value={settings.socialProof.intervalBetween || 25}
+                        onChange={(e) => updateSocialProofSetting('intervalBetween', parseInt(e.target.value))}
+                        min="10"
+                        max="120"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Tempo entre cada notificação
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Pausa após Dispensar (segundos)</Label>
+                      <Input
+                        type="number"
+                        value={settings.socialProof.pauseAfterDismiss || 60}
+                        onChange={(e) => updateSocialProofSetting('pauseAfterDismiss', parseInt(e.target.value))}
+                        min="30"
+                        max="300"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Tempo de pausa ao clicar no X
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label>Máximo por Sessão</Label>
+                      <Input
+                        type="number"
+                        value={settings.socialProof.maxNotificationsPerSession || 5}
+                        onChange={(e) => updateSocialProofSetting('maxNotificationsPerSession', parseInt(e.target.value))}
+                        min="1"
+                        max="20"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Limite de notificações por sessão
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-muted/30">
+                    <p className="text-sm font-medium mb-2">⚙️ Configuração Recomendada</p>
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      <li>• Duração: 8 segundos (tempo suficiente para ler)</li>
+                      <li>• Intervalo: 25 segundos (não parece spam)</li>
+                      <li>• Pausa após dispensar: 60 segundos</li>
+                      <li>• Máximo por sessão: 5 notificações</li>
+                    </ul>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -616,6 +686,10 @@ export function CheckoutCustomizer({ productId, onSaveSuccess }: CheckoutCustomi
               totalSales={settings.socialProof.totalSales}
               position={settings.socialProof.position}
               enabled={settings.socialProof.enabled}
+              displayDuration={settings.socialProof.displayDuration || 8}
+              intervalBetween={settings.socialProof.intervalBetween || 25}
+              pauseAfterDismiss={settings.socialProof.pauseAfterDismiss || 60}
+              maxNotificationsPerSession={settings.socialProof.maxNotificationsPerSession || 5}
             />
           )}
 

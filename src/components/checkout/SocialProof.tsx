@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ShoppingCart, X } from 'lucide-react';
 import { useGeoLocation } from '@/hooks/useGeoLocation';
 import { createPortal } from 'react-dom';
@@ -8,6 +8,10 @@ interface SocialProofProps {
   totalSales?: number;
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   enabled?: boolean;
+  displayDuration?: number; // em segundos
+  intervalBetween?: number; // em segundos
+  pauseAfterDismiss?: number; // em segundos
+  maxNotificationsPerSession?: number;
 }
 
 // Dados das cidades por país
@@ -63,31 +67,41 @@ const getPositionClasses = (position: string) => {
 };
 
 const getAnimationClasses = (position: string, isVisible: boolean) => {
-  if (!isVisible) return 'opacity-0 scale-95 translate-y-2';
+  const baseTransition = 'transition-all duration-500 ease-in-out';
   
-  switch (position) {
-    case 'top-left':
-    case 'top-right':
-      return 'opacity-100 scale-100 translate-y-0 animate-slide-in-top';
-    case 'bottom-left':
-    case 'bottom-right':
-    default:
-      return 'opacity-100 scale-100 translate-y-0 animate-slide-in-bottom';
+  if (!isVisible) {
+    return `opacity-0 scale-95 ${position.includes('bottom') ? 'translate-y-4' : '-translate-y-4'} ${baseTransition}`;
   }
+  
+  return `opacity-100 scale-100 translate-y-0 ${baseTransition}`;
 };
 
 const SocialProof: React.FC<SocialProofProps> = ({ 
   totalSales = 1247, 
   position = 'bottom-right',
-  enabled = true 
+  enabled = true,
+  displayDuration = 8, // 8 segundos por padrão
+  intervalBetween = 25, // 25 segundos entre notificações
+  pauseAfterDismiss = 60, // 1 minuto de pausa após dismiss
+  maxNotificationsPerSession = 5 // máximo 5 notificações por sessão
 }) => {
   const { userCountry } = useGeoLocation();
   const [currentNotification, setCurrentNotification] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
+  // Limpar todos os timeouts ao desmontar
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    };
+  }, []);
 
   // Função para gerar notificação de venda
-  const generateSaleNotification = () => {
+  const generateSaleNotification = useCallback(() => {
     const countryCode = userCountry.code;
     const cities = CITIES_BY_COUNTRY[countryCode as keyof typeof CITIES_BY_COUNTRY] || CITIES_BY_COUNTRY.AO;
     const names = NAMES_BY_COUNTRY[countryCode as keyof typeof NAMES_BY_COUNTRY] || NAMES_BY_COUNTRY.AO;
@@ -97,49 +111,122 @@ const SocialProof: React.FC<SocialProofProps> = ({
     const timeAgo = Math.floor(Math.random() * 15) + 1; // 1-15 minutos
     
     return `${randomName} comprou a partir de ${randomCity} há ${timeAgo} min`;
-  };
+  }, [userCountry.code]);
 
-  const handleDismiss = () => {
+  // Função para mostrar notificação com animação suave
+  const showNotification = useCallback(async () => {
+    if (isProcessing || isDismissed || notificationCount >= maxNotificationsPerSession) {
+      console.log('🔔 Social Proof: Não pode mostrar notificação', {
+        isProcessing,
+        isDismissed,
+        notificationCount,
+        maxNotificationsPerSession
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    // Gerar e mostrar notificação
+    const notification = generateSaleNotification();
+    setCurrentNotification(notification);
+    setNotificationCount(prev => prev + 1);
+    
+    console.log('✅ Social Proof: Mostrando notificação', {
+      notification,
+      count: notificationCount + 1,
+      max: maxNotificationsPerSession
+    });
+    
+    // Fade in
+    await new Promise(resolve => {
+      const timeout = setTimeout(() => {
+        setIsVisible(true);
+        resolve(true);
+      }, 100);
+      timeoutsRef.current.push(timeout);
+    });
+    
+    // Manter visível pelo tempo configurado
+    await new Promise(resolve => {
+      const timeout = setTimeout(resolve, displayDuration * 1000);
+      timeoutsRef.current.push(timeout);
+    });
+    
+    // Fade out
     setIsVisible(false);
-    setTimeout(() => {
+    
+    await new Promise(resolve => {
+      const timeout = setTimeout(() => {
+        setCurrentNotification(null);
+        setIsProcessing(false);
+        resolve(true);
+      }, 500);
+      timeoutsRef.current.push(timeout);
+    });
+    
+    // Pausa entre notificações (2 segundos extras)
+    await new Promise(resolve => {
+      const timeout = setTimeout(resolve, 2000);
+      timeoutsRef.current.push(timeout);
+    });
+  }, [isProcessing, isDismissed, notificationCount, maxNotificationsPerSession, generateSaleNotification, displayDuration]);
+
+  // Implementar snooze ao invés de dismiss permanente
+  const handleDismiss = useCallback(() => {
+    console.log('🔕 Social Proof: Notificação dispensada, pausando por', pauseAfterDismiss, 'segundos');
+    
+    setIsVisible(false);
+    
+    const hideTimeout = setTimeout(() => {
       setCurrentNotification(null);
       setIsDismissed(true);
-    }, 300);
-  };
-
-  useEffect(() => {
-    if (!enabled || isDismissed) return;
-
-    // Função para mostrar notificação
-    const showNotification = () => {
-      const notification = generateSaleNotification();
-      setCurrentNotification(notification);
-      setIsVisible(true);
+      setIsProcessing(false);
       
-      // Esconder automaticamente após 10 segundos (mais tempo)
-      setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(() => {
-          setCurrentNotification(null);
-        }, 300);
-      }, 10000);
-    };
-
-    // Primeira notificação após 2 segundos (mais rápido)
-    const initialTimeout = setTimeout(showNotification, 2000);
+      // Reativar após tempo de pausa
+      const snoozeTimeout = setTimeout(() => {
+        console.log('🔔 Social Proof: Reativando notificações');
+        setIsDismissed(false);
+      }, pauseAfterDismiss * 1000);
+      
+      timeoutsRef.current.push(snoozeTimeout);
+    }, 500);
     
-    // Notificações subsequentes a cada 10-15 segundos (mais frequente)
+    timeoutsRef.current.push(hideTimeout);
+  }, [pauseAfterDismiss]);
+
+  // Sistema de notificações com timing otimizado
+  useEffect(() => {
+    if (!enabled) {
+      console.log('🔔 Social Proof: Desabilitado');
+      return;
+    }
+
+    console.log('🔔 Social Proof: Iniciando sistema', {
+      displayDuration,
+      intervalBetween,
+      maxNotificationsPerSession
+    });
+
+    // Primeira notificação após 5 segundos (dar tempo do usuário ver o checkout)
+    const initialTimeout = setTimeout(() => {
+      showNotification();
+    }, 5000);
+    
+    timeoutsRef.current.push(initialTimeout);
+    
+    // Notificações subsequentes no intervalo configurado
     const interval = setInterval(() => {
-      if (!currentNotification && !isDismissed) {
+      if (!isProcessing && !isDismissed && notificationCount < maxNotificationsPerSession) {
         showNotification();
       }
-    }, Math.random() * 5000 + 10000); // 10-15 segundos
+    }, intervalBetween * 1000);
 
     return () => {
       clearTimeout(initialTimeout);
       clearInterval(interval);
     };
-  }, [currentNotification, userCountry, enabled, isDismissed]);
+  }, [enabled, isProcessing, isDismissed, notificationCount, maxNotificationsPerSession, intervalBetween, showNotification]);
 
   if (!enabled || !currentNotification) return null;
 
@@ -152,9 +239,9 @@ const SocialProof: React.FC<SocialProofProps> = ({
         ${getAnimationClasses(position, isVisible)}
       `}
     >
-      <div className="bg-white border border-green-200 rounded-lg shadow-lg p-4 flex items-center gap-3 group hover:shadow-xl transition-shadow">
+      <div className="bg-white border border-green-200 rounded-lg shadow-lg p-4 flex items-center gap-3 group hover:shadow-xl transition-all duration-300">
         <div className="flex-shrink-0">
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
             <ShoppingCart className="w-5 h-5 text-green-600" />
           </div>
         </div>
@@ -167,7 +254,8 @@ const SocialProof: React.FC<SocialProofProps> = ({
         
         <button
           onClick={handleDismiss}
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+          className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+          aria-label="Dispensar notificação"
         >
           <X className="w-4 h-4" />
         </button>
