@@ -12,6 +12,8 @@ export const useTopSellers = () => {
   return useQuery({
     queryKey: ['top-sellers', new Date().getMonth()],
     queryFn: async () => {
+      console.log('🔍 useTopSellers: Iniciando busca...');
+      
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
@@ -21,6 +23,8 @@ export const useTopSellers = () => {
       endOfMonth.setDate(1);
       endOfMonth.setHours(0, 0, 0, 0);
 
+      console.log('🔍 useTopSellers: Período:', { startOfMonth, endOfMonth });
+
       const { data: orders, error: ordersError } = await supabase
         .from('orders')
         .select('user_id, amount')
@@ -28,7 +32,12 @@ export const useTopSellers = () => {
         .gte('created_at', startOfMonth.toISOString())
         .lt('created_at', endOfMonth.toISOString());
 
-      if (ordersError) throw ordersError;
+      console.log('🔍 useTopSellers: Orders encontradas:', orders?.length);
+
+      if (ordersError) {
+        console.error('❌ useTopSellers: Erro ao buscar orders:', ordersError);
+        throw ordersError;
+      }
 
       // Agrupar vendas por vendedor
       const salesByUser = orders?.reduce((acc, order) => {
@@ -45,11 +54,15 @@ export const useTopSellers = () => {
 
       if (!salesByUser) return [];
 
+      console.log('🔍 useTopSellers: Vendedores agrupados:', Object.keys(salesByUser).length);
+
       // Pegar os IDs dos top 3 vendedores
       const topUserIds = Object.entries(salesByUser)
         .sort((a, b) => b[1].total_sales - a[1].total_sales)
         .slice(0, 3)
         .map(([userId]) => userId);
+
+      console.log('🔍 useTopSellers: Top 3 IDs:', topUserIds);
 
       // Buscar perfis dos vendedores
       const { data: profiles, error: profilesError } = await supabase
@@ -57,7 +70,12 @@ export const useTopSellers = () => {
         .select('user_id, full_name, avatar_url')
         .in('user_id', topUserIds);
 
-      if (profilesError) throw profilesError;
+      console.log('🔍 useTopSellers: Perfis encontrados:', profiles?.length);
+
+      if (profilesError) {
+        console.error('❌ useTopSellers: Erro ao buscar perfis:', profilesError);
+        throw profilesError;
+      }
 
       // Combinar dados
       const result: TopSeller[] = profiles?.map(profile => ({
@@ -68,7 +86,11 @@ export const useTopSellers = () => {
       })) || [];
 
       // Ordenar por vendas
-      return result.sort((a, b) => b.total_sales - a.total_sales);
+      const sortedResult = result.sort((a, b) => b.total_sales - a.total_sales);
+      
+      console.log('✅ useTopSellers: Resultado final:', sortedResult);
+      
+      return sortedResult;
     },
     staleTime: 1000 * 60 * 60, // 1 hour
   });

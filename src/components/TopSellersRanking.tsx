@@ -13,8 +13,10 @@ const getMedalColor = (position: number) => {
 };
 
 export const TopSellersRanking = () => {
-  const { data: sellers, isLoading } = useTopSellers();
+  const { data: sellers, isLoading, error } = useTopSellers();
   const currentMonth = new Date().toLocaleDateString('pt-AO', { month: 'long', year: 'numeric' });
+
+  console.log('🏆 TopSellersRanking:', { sellers, isLoading, error });
 
   if (isLoading) {
     return (
@@ -32,7 +34,21 @@ export const TopSellersRanking = () => {
     );
   }
 
-  if (!sellers || sellers.length === 0) return null;
+  if (!sellers || sellers.length === 0) {
+    return (
+      <div className="mb-12">
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <Trophy className="w-6 h-6 text-yellow-400" />
+          <h3 className="text-xl md:text-2xl font-bold text-center">
+            Top 3 Vendedores de {currentMonth}
+          </h3>
+        </div>
+        <p className="text-center text-white/70 dark:text-muted-foreground">
+          Ainda não há vendas este mês. Seja o primeiro!
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-12">
