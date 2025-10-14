@@ -33,6 +33,11 @@ export function KambafyLanding() {
   const [isLoginDrawerOpen, setIsLoginDrawerOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Expor navigate globalmente para uso em seções
+  useEffect(() => {
+    (window as any).__navigate = navigate;
+  }, [navigate]);
+
   // Função de teste para navegação
   const testMemberAreaNavigation = () => {
     console.log('🧪 TESTE: Tentando navegar para /area/teste');
@@ -164,6 +169,8 @@ export function KambafyLanding() {
         <StatsSection />
         <TestimonialsSection />
         <AboutSection />
+        <HowItWorksSection />
+        <PricingSection />
         <FAQSection />
         <CTASection />
       </main>
@@ -172,13 +179,13 @@ export function KambafyLanding() {
 }
 const menuItems = [{
   name: 'Recursos',
-  href: '/recursos'
+  href: '#recursos'
 }, {
   name: 'Como Funciona',
-  href: '/como-funciona'
+  href: '#como-funciona'
 }, {
   name: 'Preços',
-  href: '/precos'
+  href: '#precos'
 }, {
   name: 'Contacto',
   href: '/contato'
@@ -231,9 +238,14 @@ const Header = ({
                     <div className="p-6 space-y-6">
                       <ul className="space-y-6 text-base">
                         {menuItems.map((item, index) => <li key={index}>
-                            <Link to={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                            <a href={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150" onClick={() => {
+                              if (item.href.startsWith('#')) {
+                                const element = document.getElementById(item.href.substring(1));
+                                element?.scrollIntoView({ behavior: 'smooth' });
+                              }
+                            }}>
                               <span>{item.name}</span>
-                            </Link>
+                            </a>
                           </li>)}
                       </ul>
                       <div className="flex flex-col space-y-3">
@@ -256,9 +268,15 @@ const Header = ({
             <div className="absolute inset-0 m-auto hidden size-fit lg:block">
               <ul className="flex gap-8 text-sm">
                 {menuItems.map((item, index) => <li key={index}>
-                    <Link to={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                    <a href={item.href} className="text-muted-foreground hover:text-accent-foreground block duration-150" onClick={(e) => {
+                      if (item.href.startsWith('#')) {
+                        e.preventDefault();
+                        const element = document.getElementById(item.href.substring(1));
+                        element?.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}>
                       <span>{item.name}</span>
-                    </Link>
+                    </a>
                   </li>)}
               </ul>
             </div>
@@ -535,6 +553,171 @@ const AboutSection = () => {
         </div>
       </div>
     </section>;
+};
+
+const HowItWorksSection = () => {
+  const steps = [
+    {
+      number: "01",
+      title: "Cadastre-se Gratuitamente",
+      description: "Crie sua conta em poucos minutos e configure seu perfil de criador"
+    },
+    {
+      number: "02",
+      title: "Crie Seu Produto",
+      description: "Adicione cursos, e-books, mentorias ou qualquer tipo de conteúdo digital"
+    },
+    {
+      number: "03",
+      title: "Configure Sua Página",
+      description: "Personalize seu checkout e configure métodos de pagamento"
+    },
+    {
+      number: "04",
+      title: "Comece a Vender",
+      description: "Compartilhe seu link e comece a receber pagamentos imediatamente"
+    }
+  ];
+
+  return (
+    <section id="como-funciona" className="py-24 bg-background">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="text-center mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
+            Como <span className="text-checkout-green">Funciona?</span>
+          </h2>
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+            Em apenas 4 passos simples você estará pronto para vender seus produtos digitais
+          </p>
+        </div>
+
+        <AnimatedGroup preset="blur-slide" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {steps.map((step, index) => (
+            <div key={index} className="relative">
+              <div className="bg-background border border-checkout-green/20 rounded-2xl p-6 hover:shadow-lg hover:shadow-checkout-green/10 transition-all duration-300 h-full">
+                <div className="text-6xl font-bold text-checkout-green/20 mb-4">
+                  {step.number}
+                </div>
+                <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+                <p className="text-muted-foreground">{step.description}</p>
+              </div>
+              {index < steps.length - 1 && (
+                <ChevronRight className="hidden lg:block absolute -right-4 top-1/2 -translate-y-1/2 text-checkout-green/30 w-8 h-8" />
+              )}
+            </div>
+          ))}
+        </AnimatedGroup>
+      </div>
+    </section>
+  );
+};
+
+const PricingSection = () => {
+  return (
+    <section id="precos" className="py-24 bg-checkout-green/5">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="text-center mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
+            Planos <span className="text-checkout-green">Transparentes</span>
+          </h2>
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+            Sem surpresas. Pague apenas quando vender.
+          </p>
+        </div>
+
+        <div className="max-w-4xl mx-auto">
+          <AnimatedGroup preset="scale">
+            <div className="bg-background border-2 border-checkout-green rounded-3xl p-8 md:p-12 shadow-2xl shadow-checkout-green/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-checkout-green text-white px-6 py-2 rounded-bl-2xl font-semibold">
+                Mais Popular
+              </div>
+              
+              <div className="mb-8">
+                <h3 className="text-3xl font-bold mb-4">Plano Comissão</h3>
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-5xl font-bold text-checkout-green">8,99%</span>
+                  <span className="text-xl text-muted-foreground">por venda</span>
+                </div>
+                <p className="text-muted-foreground text-lg">
+                  Zero mensalidades. Você paga apenas quando vende.
+                </p>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-checkout-green/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-2 h-2 bg-checkout-green rounded-full"></div>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Checkout Personalizado</p>
+                    <p className="text-sm text-muted-foreground">Customize completamente suas páginas de venda</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-checkout-green/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-2 h-2 bg-checkout-green rounded-full"></div>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Sistema de Afiliados</p>
+                    <p className="text-sm text-muted-foreground">Expanda suas vendas com parceiros</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-checkout-green/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-2 h-2 bg-checkout-green rounded-full"></div>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Área de Membros</p>
+                    <p className="text-sm text-muted-foreground">Plataforma completa para seus alunos</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-checkout-green/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-2 h-2 bg-checkout-green rounded-full"></div>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Pagamentos Multimoeda</p>
+                    <p className="text-sm text-muted-foreground">Receba em Kwanza, USD, EUR e mais</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-checkout-green/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-2 h-2 bg-checkout-green rounded-full"></div>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Suporte Prioritário</p>
+                    <p className="text-sm text-muted-foreground">Atendimento rápido em português</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h4 className="font-semibold mb-3">Opções de Levantamento:</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-checkout-green/5 rounded-xl p-4">
+                    <p className="font-semibold text-checkout-green mb-1">Normal (Grátis)</p>
+                    <p className="text-sm text-muted-foreground">Receba em 3 dias úteis</p>
+                  </div>
+                  <div className="bg-checkout-green/5 rounded-xl p-4">
+                    <p className="font-semibold text-checkout-green mb-1">Instantâneo (10%)</p>
+                    <p className="text-sm text-muted-foreground">Receba imediatamente</p>
+                  </div>
+                </div>
+              </div>
+
+              <Button className="w-full mt-8 bg-checkout-green hover:bg-checkout-green/90 text-white py-6 text-lg" onClick={() => {
+                const navigate = (window as any).__navigate;
+                if (navigate) navigate('/auth?mode=signup');
+              }}>
+                Começar Agora Grátis
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </div>
+          </AnimatedGroup>
+        </div>
+      </div>
+    </section>
+  );
 };
 
 const FAQSection = () => {
