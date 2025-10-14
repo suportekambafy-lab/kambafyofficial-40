@@ -7,12 +7,50 @@ import MeusAcessos from './MeusAcessos';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { SEO } from '@/components/SEO';
 
 const Mobile = () => {
   const [userType, setUserType] = useState<'customer' | 'seller' | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const { user, loading } = useAuth();
   const { authReady, isAuthenticated } = useAuthGuard();
+
+  return (
+    <>
+      <SEO noIndex={true} />
+      <MobileContent 
+        userType={userType}
+        setUserType={setUserType}
+        showAuth={showAuth}
+        setShowAuth={setShowAuth}
+        loading={loading}
+        authReady={authReady}
+        isAuthenticated={isAuthenticated}
+        user={user}
+      />
+    </>
+  );
+};
+
+const MobileContent = ({ 
+  userType, 
+  setUserType, 
+  showAuth, 
+  setShowAuth, 
+  loading, 
+  authReady, 
+  isAuthenticated,
+  user 
+}: {
+  userType: 'customer' | 'seller' | null;
+  setUserType: (type: 'customer' | 'seller' | null) => void;
+  showAuth: boolean;
+  setShowAuth: (show: boolean) => void;
+  loading: boolean;
+  authReady: boolean;
+  isAuthenticated: boolean;
+  user: any;
+}) => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -23,7 +61,7 @@ const Mobile = () => {
         setUserType('customer');
       }
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, setUserType]);
 
   // Loading enquanto verifica autenticação
   if (loading || !authReady) {

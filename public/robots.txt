@@ -6,6 +6,9 @@ Disallow: /vendedor/
 Disallow: /*?*
 Disallow: /auth
 Disallow: /404
+Disallow: /app
+Disallow: /app/
+Disallow: /app/*
 
 User-agent: Bingbot
 Allow: /
@@ -15,6 +18,9 @@ Disallow: /vendedor/
 Disallow: /*?*
 Disallow: /auth
 Disallow: /404
+Disallow: /app
+Disallow: /app/
+Disallow: /app/*
 
 User-agent: Twitterbot
 Allow: /
@@ -52,6 +58,9 @@ Disallow: /apps
 Disallow: /members
 Disallow: /checkout
 Disallow: /thank-you
+Disallow: /app
+Disallow: /app/
+Disallow: /app/*
 
 # Crawl-delay for general bots
 Crawl-delay: 1

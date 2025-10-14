@@ -6,6 +6,7 @@ import { AppOnboarding } from '@/components/app/AppOnboarding';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
 import { initializeNativeFeatures } from '@/utils/nativeService';
+import { SEO } from '@/components/SEO';
 
 const ONBOARDING_KEY = 'kambafy_onboarding_completed';
 
@@ -55,8 +56,11 @@ export default function AppMobile() {
   }
 
   return (
-    <SellerThemeProvider>
-      {!user ? <AppLogin /> : <AppHome />}
-    </SellerThemeProvider>
+    <>
+      <SEO noIndex={true} />
+      <SellerThemeProvider>
+        {!user ? <AppLogin /> : <AppHome />}
+      </SellerThemeProvider>
+    </>
   );
 }

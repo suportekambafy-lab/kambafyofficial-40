@@ -17,3 +17,9 @@
 
 /api/*
   Cache-Control: no-cache, no-store, must-revalidate
+
+/app/*
+  X-Robots-Tag: noindex, nofollow
+
+/mobile/*
+  X-Robots-Tag: noindex, nofollow
