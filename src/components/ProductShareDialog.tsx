@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { X, Copy, Share, Link, Users, Check } from "lucide-react";
-import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
+import { X, Copy, Share, Link, Check } from "lucide-react";
 
 interface ProductShareDialogProps {
   product: any;
@@ -15,7 +14,6 @@ interface ProductShareDialogProps {
 
 export default function ProductShareDialog({ product, open, onOpenChange }: ProductShareDialogProps) {
   const { toast } = useToast();
-  const memberAreaLinks = createMemberAreaLinks();
   const [copiedLinks, setCopiedLinks] = useState<Record<string, boolean>>({});
 
   // Reset copied state when dialog closes
@@ -48,26 +46,6 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
     }, 2000);
   };
 
-  // Função para obter o link correto da área de membros - sempre usar membros.kambafy.com
-  const getMemberAreaLink = () => {
-    const memberAreaId = product.member_area_id || product.member_areas?.id;
-    if (memberAreaId) {
-      const url = memberAreaLinks.getMemberAreaUrl(memberAreaId);
-      console.log('🔗 ProductShareDialog - Gerando URL da área de membros:', {
-        memberAreaId,
-        generatedUrl: url,
-        product
-      });
-      return url;
-    }
-    console.log('❌ ProductShareDialog - Não foi possível gerar URL da área de membros:', {
-      product,
-      member_area_id: product.member_area_id,
-      member_areas: product.member_areas
-    });
-    return '';
-  };
-
   // Use pay.kambafy.com for checkout links
   const checkoutBaseUrl = window.location.origin.includes('localhost') 
     ? 'http://localhost:3000' // Local development should use port 3000
@@ -78,19 +56,13 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
   // Use the same checkout link for preview to maintain consistency
   const previewLink = checkoutLink;
   console.log('Generated checkout link:', checkoutLink);
-  
-  // Cache-bust preview for WhatsApp to force re-scrape
-  const whatsappPreview = `${previewLink}?v=${Date.now()}`;
-  
-  const shareLinks = {
-    checkout: checkoutLink,
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(whatsappPreview)}`,
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewLink)}`,
-    telegram: `https://t.me/share/url?url=${encodeURIComponent(previewLink)}&text=${encodeURIComponent(product.name)}`
-  };
 
   const openCheckoutInNewTab = () => {
     window.open(checkoutLink, '_blank');
+  };
+
+  const openSalesPageInNewTab = () => {
+    window.open(salesPageLink, '_blank');
   };
 
   // Verificar se o produto é um rascunho
@@ -125,42 +97,10 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
             <p className="text-sm text-muted-foreground">
               Preço: {product.price} KZ
             </p>
-            {(product.member_area_id || product.member_areas?.id) && (
-              <p className="text-sm text-blue-600 mt-1 flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                Inclui acesso à área de membros
-              </p>
-            )}
           </div>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Página de Vendas</Label>
-              <div className="flex gap-2">
-                <Input 
-                  value={isRascunho ? "Link indisponível para rascunhos" : salesPageLink} 
-                  readOnly 
-                  className="font-mono text-xs"
-                  disabled={isRascunho}
-                />
-                <Button 
-                  size="sm" 
-                  onClick={() => copyToClipboard(salesPageLink, "Link da página de vendas", "sales-page")}
-                  disabled={isRascunho}
-                >
-                  {copiedLinks["sales-page"] ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Página completa com descrição, FAQ e botão de compra. Ideal para campanhas.
-              </p>
-            </div>
-
-            <div className="space-y-2 border-t pt-4">
               <Label>Link Direto de Checkout</Label>
               <div className="flex gap-2">
                 <Input 
@@ -191,7 +131,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
                 disabled={isRascunho}
               >
                 <Link className="h-4 w-4 mr-2" />
-                Testar Checkout
+                Ver Checkout
               </Button>
               {window.location.origin.includes('localhost') && (
                 <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
@@ -202,57 +142,39 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
               )}
             </div>
 
-            {(product.member_area_id || product.member_areas?.id) && (
-              <div className="border-t pt-4">
-                <Label className="mb-2 block">Link da Área de Membros</Label>
-                <div className="flex gap-2 mb-2">
-                  <Input 
-                    value={getMemberAreaLink()} 
-                    readOnly 
-                    className="font-mono text-xs"
-                  />
-                  <Button 
-                    size="sm" 
-                    onClick={() => copyToClipboard(getMemberAreaLink(), "Link da área de membros", "member-area")}
-                  >
-                    {copiedLinks["member-area"] ? (
-                      <Check className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Link direto para acessar a área de membros após a compra.
-                </p>
-              </div>
-            )}
-
-            <div className="border-t pt-4">
-              <Label className="mb-3 block">Compartilhar nas Redes Sociais</Label>
-              <div className="grid grid-cols-1 gap-2">
+            <div className="space-y-2 border-t pt-4">
+              <Label>Página de Vendas</Label>
+              <div className="flex gap-2">
+                <Input 
+                  value={isRascunho ? "Link indisponível para rascunhos" : salesPageLink} 
+                  readOnly 
+                  className="font-mono text-xs"
+                  disabled={isRascunho}
+                />
                 <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => window.open(shareLinks.whatsapp, '_blank')}
+                  size="sm" 
+                  onClick={() => copyToClipboard(salesPageLink, "Link da página de vendas", "sales-page")}
+                  disabled={isRascunho}
                 >
-                  WhatsApp
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => window.open(shareLinks.facebook, '_blank')}
-                >
-                  Facebook
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => window.open(shareLinks.telegram, '_blank')}
-                >
-                  Telegram
+                  {copiedLinks["sales-page"] ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Página completa com descrição, FAQ e botão de compra. Ideal para campanhas.
+              </p>
+              <Button 
+                onClick={openSalesPageInNewTab}
+                className="w-full mt-2"
+                variant="outline"
+                disabled={isRascunho}
+              >
+                <Link className="h-4 w-4 mr-2" />
+                Ver Página de Vendas
+              </Button>
             </div>
           </div>
 
