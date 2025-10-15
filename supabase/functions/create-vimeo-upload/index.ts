@@ -124,7 +124,26 @@ Deno.serve(async (req) => {
         data: whitelistData
       });
     } else {
-      console.log('✅ Domain whitelist configured successfully:', whitelistData);
+      console.log('✅ Domain whitelist configured successfully');
+      console.log('📋 Whitelist response embed settings:', JSON.stringify(whitelistData.embed, null, 2));
+      console.log('🔐 Privacy settings:', JSON.stringify(whitelistData.privacy, null, 2));
+    }
+
+    // Fazer uma segunda verificação para confirmar que o whitelist foi aplicado
+    console.log('🔍 Verificando se whitelist foi realmente aplicado...');
+    
+    const verifyResponse = await fetch(`https://api.vimeo.com${videoUri}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${vimeoToken}`,
+        'Accept': 'application/vnd.vimeo.*+json;version=3.4',
+      },
+    });
+
+    if (verifyResponse.ok) {
+      const verifyData = await verifyResponse.json();
+      console.log('✅ Whitelist atual no vídeo:', verifyData.embed?.whitelist || 'Nenhum whitelist encontrado');
+      console.log('🔐 Privacy atual:', verifyData.privacy);
     }
 
     return new Response(
