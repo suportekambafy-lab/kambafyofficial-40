@@ -11,6 +11,7 @@ import { Loader2, ShoppingCart, CheckCircle2, Star, Menu, ChevronRight, HelpCirc
 import { Helmet } from "react-helmet-async";
 import useEmblaCarousel from "embla-carousel-react";
 import { useGeoLocation } from "@/hooks/useGeoLocation";
+import { formatPrice } from "@/utils/priceFormatting";
 import kambaFyLogo from "@/assets/kambafy-logo.png";
 
 interface Product {
@@ -26,6 +27,7 @@ interface Product {
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string[];
+  custom_prices?: Record<string, string>;
   profiles?: {
     full_name: string;
     business_name?: string;
@@ -49,7 +51,7 @@ export default function ProductSalesPage() {
   const [faqOpen, setFaqOpen] = useState(false);
   const [reviewsEmblaRef] = useEmblaCarousel({ loop: true, align: 'start' });
   const [productsEmblaRef] = useEmblaCarousel({ loop: false, align: 'start' });
-  const { userCountry, convertPrice } = useGeoLocation();
+  const { userCountry } = useGeoLocation();
   
   const reviews = [
     {
@@ -129,6 +131,7 @@ export default function ProductSalesPage() {
         .from('products')
         .select(`
           *,
+          custom_prices,
           profiles:user_id (
             full_name,
             business_name,
@@ -142,20 +145,31 @@ export default function ProductSalesPage() {
 
       if (error) throw error;
       
-      setProduct(data);
+      // Cast custom_prices para o tipo correto
+      const productData = {
+        ...data,
+        custom_prices: data.custom_prices as unknown as Record<string, string>
+      } as Product;
+      
+      setProduct(productData);
       
       // Carregar outros produtos do mesmo vendedor
-      if (data?.user_id) {
+      if (productData?.user_id) {
         const { data: related } = await supabase
           .from('products')
-          .select('id, name, description, price, cover, type, slug, user_id')
-          .eq('user_id', data.user_id)
+          .select('id, name, description, price, cover, type, slug, user_id, custom_prices')
+          .eq('user_id', productData.user_id)
           .eq('status', 'Ativo')
-          .neq('id', data.id)
+          .neq('id', productData.id)
           .limit(3);
         
         if (related) {
-          setRelatedProducts(related);
+          // Cast custom_prices para o tipo correto
+          const relatedWithCorrectTypes = related.map(p => ({
+            ...p,
+            custom_prices: p.custom_prices as unknown as Record<string, string>
+          }));
+          setRelatedProducts(relatedWithCorrectTypes);
         }
       }
     } catch (error) {
@@ -192,8 +206,7 @@ export default function ProductSalesPage() {
   }
 
   const priceInKZ = parseFloat(product.price);
-  const convertedPriceValue = convertPrice(priceInKZ);
-  const priceFormatted = convertedPriceValue.toLocaleString('pt-BR');
+  const priceFormatted = formatPrice(priceInKZ, userCountry, true, product.custom_prices);
 
   return (
     <>
@@ -462,7 +475,7 @@ export default function ProductSalesPage() {
                                 </h3>
                                 <div className="flex items-center justify-between">
                                   <span className="text-sm font-bold text-primary">
-                                    {convertPrice(parseFloat(relatedProduct.price)).toLocaleString('pt-BR')} {userCountry.currency}
+                                    {formatPrice(parseFloat(relatedProduct.price), userCountry, true, relatedProduct.custom_prices)}
                                   </span>
                                   <Badge variant="secondary" className="text-xs">
                                     {relatedProduct.type}
@@ -557,7 +570,7 @@ export default function ProductSalesPage() {
                   <CardContent className="p-6 space-y-6">
                     <div>
                       <div className="text-3xl font-bold text-primary mb-1">
-                        {priceFormatted} {userCountry.currency}
+                        {priceFormatted}
                       </div>
                       {product.profiles && (
                         <div className="text-sm text-muted-foreground">
@@ -598,7 +611,7 @@ export default function ProductSalesPage() {
               <div>
                 <div className="text-xs text-muted-foreground">Preço</div>
                 <div className="text-xl font-bold text-primary">
-                  {priceFormatted} {userCountry.currency}
+                  {priceFormatted}
                 </div>
               </div>
               <Button 
