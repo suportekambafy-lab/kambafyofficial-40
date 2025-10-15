@@ -41,6 +41,7 @@ interface Product {
     business_name?: string;
     avatar_url?: string;
     bio?: string;
+    created_at?: string;
   };
 }
 
@@ -144,7 +145,8 @@ export default function ProductSalesPage() {
             full_name,
             business_name,
             avatar_url,
-            bio
+            bio,
+            created_at
           )
         `)
         .eq(isUUID ? 'id' : 'slug', productId)
@@ -215,6 +217,17 @@ export default function ProductSalesPage() {
 
   const priceInKZ = parseFloat(product.price);
   const priceFormatted = formatPrice(priceInKZ, userCountry, true, product.custom_prices);
+  
+  // Calcular tempo de cadastro no Kambafy
+  const getYearsOnPlatform = () => {
+    if (!product.profiles?.created_at) return 0;
+    const createdDate = new Date(product.profiles.created_at);
+    const now = new Date();
+    const years = now.getFullYear() - createdDate.getFullYear();
+    return years;
+  };
+  
+  const yearsOnPlatform = getYearsOnPlatform();
 
   return (
     <>
@@ -397,15 +410,11 @@ export default function ProductSalesPage() {
                   </div>
                 </div>
 
-                {/* Desktop Title & Share */}
-                <div className="hidden md:flex items-start justify-between mb-6">
-                  <h1 className="text-3xl font-bold flex-1">
+                {/* Desktop Title */}
+                <div className="hidden md:block mb-6">
+                  <h1 className="text-3xl font-bold">
                     {product.name}
                   </h1>
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <Share2 className="w-4 h-4" />
-                    Compartilhar
-                  </Button>
                 </div>
 
                 {/* Desktop: Image + Description Side by Side */}
@@ -726,7 +735,7 @@ export default function ProductSalesPage() {
 
                     {/* Creator Profile */}
                     {product.profiles && (
-                      <div className="space-y-3">
+                      <div>
                         <div className="flex items-center gap-3">
                           {product.profiles.avatar_url && (
                             <img
@@ -739,13 +748,11 @@ export default function ProductSalesPage() {
                             <h3 className="text-sm font-semibold">
                               {product.profiles.business_name || product.profiles.full_name}
                             </h3>
-                            <p className="text-xs text-muted-foreground">4 Anos Hotmarter</p>
+                            <p className="text-xs text-muted-foreground">
+                              {yearsOnPlatform} {yearsOnPlatform === 1 ? 'Ano' : 'Anos'} Kambafy
+                            </p>
                           </div>
                         </div>
-                        <Button variant="outline" className="w-full" size="sm">
-                          Acessar produto comprado
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
                       </div>
                     )}
 
