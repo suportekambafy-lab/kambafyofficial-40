@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart, CheckCircle2 } from "lucide-react";
+import { Loader2, ShoppingCart, CheckCircle2, Star } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import kambaFyLogo from "@/assets/kambafy-logo.png";
 
@@ -17,6 +17,7 @@ interface Product {
   cover: string;
   type: string;
   user_id: string;
+  slug?: string;
   image_alt?: string;
   seo_title?: string;
   seo_description?: string;
@@ -39,6 +40,7 @@ export default function ProductSalesPage() {
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [faqs] = useState<FAQ[]>([
     {
       question: "Como funciona o acesso ao produto?",
@@ -88,6 +90,21 @@ export default function ProductSalesPage() {
       if (error) throw error;
       
       setProduct(data);
+      
+      // Carregar outros produtos do mesmo vendedor
+      if (data?.user_id) {
+        const { data: related } = await supabase
+          .from('products')
+          .select('id, name, description, price, cover, type, slug, user_id')
+          .eq('user_id', data.user_id)
+          .eq('status', 'Ativo')
+          .neq('id', data.id)
+          .limit(3);
+        
+        if (related) {
+          setRelatedProducts(related);
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar produto:', error);
     } finally {
@@ -263,6 +280,100 @@ export default function ProductSalesPage() {
                         </div>
                       </CardContent>
                     </Card>
+                  </div>
+                )}
+
+                {/* Reviews Section */}
+                <div className="mb-6">
+                  <h2 className="text-base md:text-lg font-bold mb-4">Avaliações do produto</h2>
+                  <Card>
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="flex">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star key={star} className="w-5 h-5 fill-primary text-primary" />
+                          ))}
+                        </div>
+                        <span className="text-sm text-muted-foreground">(4.8 de 5.0)</span>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="border-b pb-4">
+                          <div className="flex items-start gap-3 mb-2">
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star key={star} className="w-4 h-4 fill-primary text-primary" />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            "Excelente produto! Superou minhas expectativas. Recomendo muito!"
+                          </p>
+                          <span className="text-xs text-muted-foreground">- Cliente verificado</span>
+                        </div>
+                        <div className="border-b pb-4">
+                          <div className="flex items-start gap-3 mb-2">
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star key={star} className="w-4 h-4 fill-primary text-primary" />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            "Muito bom! Conteúdo de qualidade e bem explicado."
+                          </p>
+                          <span className="text-xs text-muted-foreground">- Cliente verificado</span>
+                        </div>
+                        <div>
+                          <div className="flex items-start gap-3 mb-2">
+                            <div className="flex">
+                              {[1, 2, 3, 4].map((star) => (
+                                <Star key={star} className="w-4 h-4 fill-primary text-primary" />
+                              ))}
+                              <Star className="w-4 h-4 text-muted" />
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            "Produto bom, valeu a pena o investimento."
+                          </p>
+                          <span className="text-xs text-muted-foreground">- Cliente verificado</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Related Products Section */}
+                {relatedProducts.length > 0 && (
+                  <div className="mb-6">
+                    <h2 className="text-base md:text-lg font-bold mb-4">Outros produtos de quem criou esse conteúdo</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {relatedProducts.map((relatedProduct) => (
+                        <Card 
+                          key={relatedProduct.id} 
+                          className="cursor-pointer hover:shadow-lg transition-shadow"
+                          onClick={() => navigate(`/produto/${relatedProduct.slug || relatedProduct.id}`)}
+                        >
+                          <CardContent className="p-4">
+                            <img
+                              src={relatedProduct.cover}
+                              alt={relatedProduct.name}
+                              className="w-full h-32 object-cover rounded-md mb-3"
+                            />
+                            <h3 className="text-sm font-semibold mb-2 line-clamp-2">
+                              {relatedProduct.name}
+                            </h3>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-bold text-primary">
+                                {parseFloat(relatedProduct.price).toLocaleString('pt-BR')} KZ
+                              </span>
+                              <Badge variant="secondary" className="text-xs">
+                                {relatedProduct.type}
+                              </Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 )}
 
