@@ -9,6 +9,7 @@ import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import * as tus from "tus-js-client";
 
 interface VideoUploaderProps {
   onVideoUploaded: (videoUrl: string, videoData?: any) => void;
@@ -59,15 +60,15 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     try {
       const fileName = selectedFile.name;
       
-      console.log('🚀 Upload para Cloudflare Stream via TUS:', fileName);
+      console.log('🚀 Upload para Vimeo Pro via TUS:', fileName);
       console.log('📦 Tamanho:', (selectedFile.size / (1024 * 1024 * 1024)).toFixed(2), 'GB');
       
       setUploadProgress(5);
 
-      // Obter URL de upload do Cloudflare Stream
-      console.log('🔐 Obtendo URL de upload...');
+      // Obter URL de upload do Vimeo
+      console.log('🔐 Obtendo URL de upload do Vimeo...');
       
-      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('create-stream-upload', {
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('create-vimeo-upload', {
         body: {
           fileName,
           fileSize: selectedFile.size
@@ -75,70 +76,68 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       });
 
       if (uploadError || !uploadData?.success) {
-        throw new Error(uploadError?.message || uploadData?.error || 'Falha ao criar upload');
+        throw new Error(uploadError?.message || uploadData?.error || 'Falha ao criar upload no Vimeo');
       }
 
-      console.log('✅ URL obtida, iniciando upload...');
+      console.log('✅ URL obtida, iniciando upload TUS...');
       setUploadProgress(10);
 
-      const { uploadUrl, videoId } = uploadData;
+      const { uploadUrl, videoId, videoUri } = uploadData;
 
-      // Upload direto via HTTP com FormData multipart
-      console.log('📤 Iniciando upload HTTP direto com FormData...');
-      
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      
-      const xhr = new XMLHttpRequest();
-
-      // Configurar progresso
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const percentage = Math.round((e.loaded / e.total) * 85) + 10;
-          setUploadProgress(percentage);
-        }
-      });
-
-      // Promessa para aguardar o upload
+      // Upload via TUS (resumível)
       await new Promise<void>((resolve, reject) => {
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            console.log('✅ Upload concluído');
+        const upload = new tus.Upload(selectedFile, {
+          uploadUrl: uploadUrl,
+          retryDelays: [0, 3000, 5000, 10000, 20000], // Retry automático
+          metadata: {
+            filename: fileName,
+            filetype: selectedFile.type,
+          },
+          onError: (error) => {
+            console.error('❌ Erro no upload TUS:', error);
+            reject(error);
+          },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const percentage = Math.round((bytesUploaded / bytesTotal) * 85) + 10;
+            setUploadProgress(percentage);
+            console.log(`📊 Progresso: ${percentage}% (${bytesUploaded}/${bytesTotal} bytes)`);
+          },
+          onSuccess: () => {
+            console.log('✅ Upload TUS concluído');
             setUploadProgress(95);
             resolve();
-          } else {
-            reject(new Error(`Upload falhou com status ${xhr.status}: ${xhr.responseText}`));
-          }
+          },
         });
 
-        xhr.addEventListener('error', () => {
-          reject(new Error('Erro de rede durante upload'));
-        });
-
-        xhr.addEventListener('abort', () => {
-          reject(new Error('Upload cancelado'));
-        });
-
-        xhr.open('POST', uploadUrl);
-        // NÃO definir Content-Type manualmente - o browser define automaticamente com o boundary correto
-        xhr.send(formData);
+        upload.start();
       });
 
       setUploadProgress(98);
 
-      const hlsUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/manifest/video.m3u8`;
-      const embedUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/iframe`;
-      const thumbnailUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/thumbnails/thumbnail.jpg`;
+      // Aguardar processamento do Vimeo (necessário para obter URLs)
+      console.log('⏳ Aguardando processamento do Vimeo...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // URLs do Vimeo
+      const hlsUrl = `https://player.vimeo.com/video/${videoId}`;
+      const embedUrl = `https://player.vimeo.com/video/${videoId}`;
+      const thumbnailUrl = `https://i.vimeocdn.com/video/${videoId}_640.jpg`;
 
       setUploadProgress(100);
 
       onVideoUploaded(hlsUrl, {
         success: true,
+        platform: 'vimeo',
         videoId,
+        videoUri,
         hlsUrl,
         embedUrl,
         thumbnailUrl,
-        stream_id: videoId
+        privacy: {
+          view: 'disable',
+          embed: 'whitelist',
+          domains: ['app.kambafy.com', 'membros.kambafy.com', '*.kambafy.com'],
+        },
       });
       
       setSelectedFile(null);
@@ -147,7 +146,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       toast({
         title: "Sucesso",
-        description: "Vídeo enviado com sucesso para Cloudflare Stream"
+        description: "Vídeo enviado com sucesso para Vimeo Pro (protegido com domain whitelist)"
       });
 
     } catch (error: any) {

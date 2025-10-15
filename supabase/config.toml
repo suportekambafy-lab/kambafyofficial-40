@@ -56,3 +56,9 @@ verify_jwt = false
 
 [functions.create-stream-upload]
 verify_jwt = false
+
+[functions.create-vimeo-upload]
+verify_jwt = false
+
+[functions.migrate-to-vimeo]
+verify_jwt = false
