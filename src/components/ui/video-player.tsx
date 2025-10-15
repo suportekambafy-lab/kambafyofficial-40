@@ -6,6 +6,7 @@ import { Play, Pause, Volume2, Volume1, VolumeX, SkipForward, SkipBack, Settings
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Hls from 'hls.js';
+import Player from '@vimeo/player';
 import {
   Popover,
   PopoverContent,
@@ -85,6 +86,7 @@ const VideoPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const vimeoPlayerRef = useRef<Player | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -781,6 +783,96 @@ const VideoPlayer = ({
     );
   }
   
+  // Vimeo Player API integration
+  useEffect(() => {
+    if (currentSource !== 'iframe' || !embedUrl || !isVimeoVideo || !iframeRef.current) return;
+
+    let mounted = true;
+    
+    const initVimeoPlayer = async () => {
+      try {
+        console.log('🎬 Inicializando Vimeo Player API...');
+        
+        const player = new Player(iframeRef.current!);
+        vimeoPlayerRef.current = player;
+
+        // Aguardar player estar pronto
+        await player.ready();
+        console.log('✅ Vimeo Player pronto');
+
+        // Definir tempo inicial se fornecido
+        if (startTime > 0) {
+          console.log('⏱️ Definindo tempo inicial:', startTime);
+          await player.setCurrentTime(startTime);
+        }
+
+        // Obter duração
+        const videoDuration = await player.getDuration();
+        if (mounted) {
+          setDuration(videoDuration);
+          console.log('📏 Duração do vídeo:', videoDuration);
+        }
+
+        // Rastrear progresso a cada segundo
+        player.on('timeupdate', async (data: { seconds: number; duration: number }) => {
+          if (!mounted) return;
+          
+          const currentTime = data.seconds;
+          const duration = data.duration;
+          const progress = (currentTime / duration) * 100;
+          
+          setCurrentTime(currentTime);
+          setProgress(progress);
+          
+          // Chamar callbacks
+          onProgress?.(progress);
+          onTimeUpdate?.(currentTime, duration);
+        });
+
+        // Eventos de play/pause
+        player.on('play', () => {
+          if (mounted) {
+            setIsPlaying(true);
+            onPlay?.();
+          }
+        });
+
+        player.on('pause', () => {
+          if (mounted) {
+            setIsPlaying(false);
+            onPause?.();
+          }
+        });
+
+        // Evento de fim
+        player.on('ended', () => {
+          if (mounted) {
+            setIsPlaying(false);
+            onEnded?.();
+          }
+        });
+
+        setIsLoading(false);
+        
+      } catch (error) {
+        console.error('❌ Erro ao inicializar Vimeo Player:', error);
+        if (mounted) {
+          handleSourceFailure('iframe', 'Erro ao inicializar player');
+        }
+      }
+    };
+
+    initVimeoPlayer();
+
+    return () => {
+      mounted = false;
+      if (vimeoPlayerRef.current) {
+        vimeoPlayerRef.current.destroy();
+        vimeoPlayerRef.current = null;
+      }
+    };
+  }, [currentSource, embedUrl, isVimeoVideo, startTime]);
+
   // Iframe Player
   if (currentSource === 'iframe' && embedUrl) {
     // Processar URL para remover branding do Vimeo
@@ -830,8 +922,7 @@ const VideoPlayer = ({
           title="Player de vídeo"
           onLoad={() => {
             console.log('✅ Iframe carregado');
-            setIsLoading(false);
-            setErrorMessage(null);
+            // Loading será desativado quando Vimeo Player estiver pronto
           }}
           onError={() => {
             console.error('❌ Erro ao carregar iframe');
