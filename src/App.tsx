@@ -173,12 +173,13 @@ const App = () => {
                       <Route path="/termos" element={<OptimizedRoutes.Terms />} />
                       <Route path="/cookies" element={<OptimizedRoutes.Cookies />} />
                       <Route path="/apps/*" element={<OptimizedRoutes.Apps />} />
-                       <Route path="/vendedor/*" element={<OptimizedRoutes.SellerDashboard />} />
-                        <Route path="/meus-afiliados" element={<OptimizedRoutes.MeusAfiliados />} />
-                        <Route path="/minhas-compras" element={<OptimizedRoutes.MeusAcessos />} />
-                        <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
-                        
-                        {/* Member Area Routes - SISTEMAS SEPARADOS */}
+                        <Route path="/vendedor/*" element={<OptimizedRoutes.SellerDashboard />} />
+                         <Route path="/meus-afiliados" element={<OptimizedRoutes.MeusAfiliados />} />
+                         <Route path="/minhas-compras" element={<OptimizedRoutes.MeusAcessos />} />
+                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
+                         <Route path="/vimeo-settings" element={<OptimizedRoutes.VimeoSettings />} />
+                         
+                         {/* Member Area Routes - SISTEMAS SEPARADOS */}
                             
                             {/* ⚡ HUB GERAL - Sistema unificado (acesso a TODOS os cursos) */}
                             <Route path="/members/hub" element={<OptimizedRoutes.UnifiedMembersLogin />} />

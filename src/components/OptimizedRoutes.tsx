@@ -56,6 +56,7 @@ const ResetPassword = createLazyWithRetry(() => import('@/pages/ResetPassword'),
 const MeusAcessos = createLazyWithRetry(() => import('@/pages/MeusAcessos'), "MeusAcessos");
 const MeusAfiliados = createLazyWithRetry(() => import('@/pages/MeusAfiliados'), "MeusAfiliados");
 const UserIdentity = createLazyWithRetry(() => import('@/pages/UserIdentity'), "UserIdentity");
+const VimeoSettings = createLazyWithRetry(() => import('@/pages/VimeoSettings'), "VimeoSettings");
 const Mobile = createLazyWithRetry(() => import('@/pages/Mobile'), "Mobile");
 const AppMobile = createLazyWithRetry(() => import('@/pages/AppMobile'), "AppMobile");
 const KambaPay = createLazyWithRetry(() => import('@/pages/KambaPay'), "KambaPay");
@@ -189,6 +190,9 @@ export const OptimizedRoutes = {
   
   // Developer routes
   DevRoutes: withLazyLoading(DevRoutes, 'dashboard'),
+  
+  // Vimeo settings
+  VimeoSettings: withLazyLoading(VimeoSettings, 'settings'),
   
   // Test routes
   BunnyStorageTest: withLazyLoading(BunnyStorageTest, 'settings'),
