@@ -53,11 +53,14 @@ const detectAndUpdateVideoDuration = async (lesson: Lesson) => {
       resolve();
     };
 
-    // Para vídeos Bunny.net embed não conseguimos detectar automaticamente
-    if (lesson.video_url && !lesson.video_url.includes('mediadelivery.net/embed')) {
+    // Pular vídeos do Vimeo e Bunny.net embed (não podem ser carregados como <video>)
+    if (lesson.video_url && 
+        !lesson.video_url.includes('mediadelivery.net/embed') &&
+        !lesson.video_url.includes('player.vimeo.com') &&
+        !lesson.video_url.includes('vimeo.com')) {
       video.src = lesson.video_url;
     } else {
-      console.log(`⚠️ Vídeo embed detectado (${lesson.title}) - duração deve ser inserida manualmente`);
+      console.log(`⚠️ Vídeo embed detectado (${lesson.title}) - duração já deve estar salva`);
       resolve();
     }
   });
