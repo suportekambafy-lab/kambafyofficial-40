@@ -215,7 +215,32 @@ export default function ProductSalesPage() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80">
-                  <SheetTitle className="text-lg font-bold mb-6">Categorias</SheetTitle>
+                  <SheetTitle className="text-lg font-bold mb-6">Menu</SheetTitle>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 mb-6 px-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 text-sm"
+                      onClick={() => {
+                        navigate('/'); // Navegar para página de cursos
+                        setMenuOpen(false);
+                      }}
+                    >
+                      Acessar meu curso
+                    </Button>
+                    <Button 
+                      className="flex-1 text-sm"
+                      onClick={() => {
+                        navigate('/'); // Navegar para página de criar curso
+                        setMenuOpen(false);
+                      }}
+                    >
+                      Criar um curso
+                    </Button>
+                  </div>
+
+                  {/* Categories */}
                   <nav className="space-y-1">
                     {categories.map((category) => (
                       <button
