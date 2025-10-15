@@ -12,7 +12,7 @@ import { Helmet } from "react-helmet-async";
 import useEmblaCarousel from "embla-carousel-react";
 import { useGeoLocation } from "@/hooks/useGeoLocation";
 import { formatPrice } from "@/utils/priceFormatting";
-import kambaFyLogo from "@/assets/kambafy-logo.png";
+import kambaFyLogo from "@/assets/kambafy-marketplace-logo.png";
 
 interface Product {
   id: string;
@@ -280,8 +280,8 @@ export default function ProductSalesPage() {
               <div className="absolute left-1/2 transform -translate-x-1/2">
                 <img 
                   src={kambaFyLogo}
-                  alt="Kambafy" 
-                  className="h-6 md:h-8"
+                  alt="Kambafy Marketplace" 
+                  className="h-8 md:h-12"
                 />
               </div>
 
