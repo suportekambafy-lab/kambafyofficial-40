@@ -218,21 +218,21 @@ export default function ProductSalesPage() {
                   <SheetTitle className="text-lg font-bold mb-6">Menu</SheetTitle>
                   
                   {/* Action Buttons */}
-                  <div className="flex gap-3 mb-6 px-2">
+                  <div className="flex flex-col gap-3 mb-6 px-2">
                     <Button 
                       variant="outline" 
-                      className="flex-1 text-sm"
+                      className="w-full text-xs md:text-sm whitespace-normal h-auto py-3"
                       onClick={() => {
-                        navigate('/'); // Navegar para página de cursos
+                        navigate('/cliente/meus-produtos');
                         setMenuOpen(false);
                       }}
                     >
                       Acessar meu curso
                     </Button>
                     <Button 
-                      className="flex-1 text-sm"
+                      className="w-full text-xs md:text-sm whitespace-normal h-auto py-3"
                       onClick={() => {
-                        navigate('/'); // Navegar para página de criar curso
+                        navigate('/vendedor/produtos');
                         setMenuOpen(false);
                       }}
                     >
