@@ -179,11 +179,6 @@ export default function MarketplacePage() {
                           <span className="text-4xl">📚</span>
                         </div>
                       )}
-                      {product.sales > 0 && (
-                        <Badge className="absolute top-2 right-2 bg-green-500">
-                          {product.sales} vendas
-                        </Badge>
-                      )}
                     </div>
                     <CardContent className="p-4">
                       <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
@@ -302,11 +297,7 @@ export default function MarketplacePage() {
                         <span className="text-lg font-bold text-primary">
                           {formatPrice(product.price)}
                         </span>
-                        {product.sales > 0 && (
-                          <span className="text-xs text-muted-foreground">
-                            {product.sales} vendas
-                          </span>
-                        )}
+                        <Badge variant="outline">{product.type}</Badge>
                       </div>
                     </CardContent>
                   </Card>
