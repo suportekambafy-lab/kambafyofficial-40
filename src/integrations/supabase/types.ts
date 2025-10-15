@@ -2088,6 +2088,7 @@ export type Database = {
           ban_reason: string | null
           banned: boolean | null
           bio: string | null
+          business_name: string | null
           country: string | null
           created_at: string
           email: string | null
@@ -2105,6 +2106,7 @@ export type Database = {
           ban_reason?: string | null
           banned?: boolean | null
           bio?: string | null
+          business_name?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
@@ -2122,6 +2124,7 @@ export type Database = {
           ban_reason?: string | null
           banned?: boolean | null
           bio?: string | null
+          business_name?: string | null
           country?: string | null
           created_at?: string
           email?: string | null

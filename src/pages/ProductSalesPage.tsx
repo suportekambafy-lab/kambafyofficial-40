@@ -23,6 +23,7 @@ interface Product {
   seo_keywords?: string[];
   profiles?: {
     full_name: string;
+    business_name?: string;
     avatar_url?: string;
   };
 }
@@ -74,6 +75,7 @@ export default function ProductSalesPage() {
           *,
           profiles:user_id (
             full_name,
+            business_name,
             avatar_url
           )
         `)
@@ -194,14 +196,14 @@ export default function ProductSalesPage() {
                   <div className="flex items-center gap-3 pt-4 border-t">
                     <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                       {product.profiles.avatar_url ? (
-                        <img src={product.profiles.avatar_url} alt={product.profiles.full_name} className="w-full h-full object-cover" />
+                        <img src={product.profiles.avatar_url} alt={product.profiles.business_name || product.profiles.full_name} className="w-full h-full object-cover" />
                       ) : (
                         <User className="w-6 h-6 text-muted-foreground" />
                       )}
                     </div>
                     <div>
                       <div className="text-sm text-muted-foreground">Vendido por</div>
-                      <div className="font-semibold">{product.profiles.full_name}</div>
+                      <div className="font-semibold">{product.profiles.business_name || product.profiles.full_name}</div>
                     </div>
                   </div>
                 )}
