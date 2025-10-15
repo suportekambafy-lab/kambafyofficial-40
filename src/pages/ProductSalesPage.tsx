@@ -216,14 +216,14 @@ export default function ProductSalesPage() {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-80">
+                <SheetContent side="left" className="w-full">
                   <SheetTitle className="text-lg font-bold mb-6">Menu</SheetTitle>
                   
                   {/* Action Buttons */}
-                  <div className="flex flex-col gap-3 mb-6 px-2">
+                  <div className="flex gap-3 mb-6 px-2">
                     <Button 
                       variant="outline" 
-                      className="w-full text-xs md:text-sm whitespace-normal h-auto py-3"
+                      className="flex-1 text-xs whitespace-normal h-auto py-3"
                       onClick={() => {
                         navigate('/cliente/meus-produtos');
                         setMenuOpen(false);
@@ -232,7 +232,7 @@ export default function ProductSalesPage() {
                       Acessar meu curso
                     </Button>
                     <Button 
-                      className="w-full text-xs md:text-sm whitespace-normal h-auto py-3"
+                      className="flex-1 text-xs whitespace-normal h-auto py-3"
                       onClick={() => {
                         navigate('/vendedor/produtos');
                         setMenuOpen(false);
