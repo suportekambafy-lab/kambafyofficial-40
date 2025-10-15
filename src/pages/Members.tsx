@@ -902,9 +902,9 @@ export default function Members() {
     setFormData(prev => {
       const newFormData = {
         ...prev,
-        video_url: videoData?.hlsUrl || videoUrl,
+        video_url: videoData?.embedUrl || videoUrl,
         bunny_embed_url: videoData?.embedUrl || videoUrl,
-        hls_url: videoData?.hlsUrl || null,
+        hls_url: videoData?.hlsUrl || null, // null para Vimeo
         duration: videoData?.duration || 0,
       };
       console.log('Updated formData with video:', newFormData);

@@ -114,8 +114,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       setUploadProgress(98);
 
-      // URLs do Vimeo
-      const hlsUrl = `https://player.vimeo.com/video/${videoId}`;
+      // URLs do Vimeo - usar apenas embedUrl para iframes
       const embedUrl = `https://player.vimeo.com/video/${videoId}`;
       const thumbnailUrl = `https://i.vimeocdn.com/video/${videoId}_640.jpg`;
       const duration = uploadData.duration || 0;
@@ -124,12 +123,12 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       setUploadProgress(100);
 
-      onVideoUploaded(hlsUrl, {
+      onVideoUploaded(embedUrl, {
         success: true,
         platform: 'vimeo',
         videoId,
         videoUri,
-        hlsUrl,
+        hlsUrl: null, // Vimeo não usa HLS direto, usa iframe
         embedUrl,
         thumbnailUrl,
         duration,
