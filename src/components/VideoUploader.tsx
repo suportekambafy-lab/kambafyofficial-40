@@ -59,55 +59,75 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     try {
       const fileName = selectedFile.name;
       
-      console.log('🚀 Upload direto para Cloudflare Stream:', fileName);
+      console.log('🚀 Upload para Cloudflare Stream via TUS:', fileName);
       console.log('📦 Tamanho:', (selectedFile.size / (1024 * 1024 * 1024)).toFixed(2), 'GB');
       
       setUploadProgress(5);
 
-      // Converter arquivo para base64
-      const reader = new FileReader();
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          const base64 = result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(selectedFile);
-      });
-
-      setUploadProgress(30);
+      // Obter URL de upload do Cloudflare Stream
+      console.log('🔐 Obtendo URL de upload...');
       
-      console.log('📤 Enviando vídeo para Cloudflare Stream...');
-
-      // Upload direto via edge function
-      const { data, error } = await supabase.functions.invoke('cloudflare-stream-upload', {
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('create-stream-upload', {
         body: {
           fileName,
-          fileType: selectedFile.type,
-          fileData: base64Data
+          fileSize: selectedFile.size
         }
       });
 
-      if (error) {
-        console.error('Upload error:', error);
-        throw new Error(error.message || 'Erro ao fazer upload');
+      if (uploadError || !uploadData?.success) {
+        throw new Error(uploadError?.message || uploadData?.error || 'Falha ao criar upload');
       }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Erro ao fazer upload');
-      }
+      console.log('✅ URL obtida, iniciando upload...');
+      setUploadProgress(10);
+
+      const { uploadUrl, videoId } = uploadData;
+
+      // Upload direto para Stream via TUS
+      const { Upload } = await import('tus-js-client');
+
+      await new Promise<void>((resolve, reject) => {
+        const upload = new Upload(selectedFile, {
+          endpoint: uploadUrl,
+          chunkSize: 50 * 1024 * 1024, // 50MB
+          retryDelays: [0, 3000, 5000],
+          metadata: {
+            filename: fileName,
+            filetype: selectedFile.type,
+          },
+          onError: (error) => {
+            console.error('❌ Erro TUS:', error);
+            reject(error);
+          },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const percentage = Math.round((bytesUploaded / bytesTotal) * 85) + 10;
+            setUploadProgress(percentage);
+          },
+          onSuccess: () => {
+            console.log('✅ Upload concluído');
+            setUploadProgress(95);
+            resolve();
+          },
+        });
+
+        upload.start();
+      });
+
+      setUploadProgress(98);
+
+      const hlsUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/manifest/video.m3u8`;
+      const embedUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/iframe`;
+      const thumbnailUrl = `https://customer-eo1cg0hi2jratohi.cloudflarestream.com/${videoId}/thumbnails/thumbnail.jpg`;
 
       setUploadProgress(100);
-      console.log('✅ Upload concluído com sucesso:', data.hlsUrl);
 
-      onVideoUploaded(data.hlsUrl, {
+      onVideoUploaded(hlsUrl, {
         success: true,
-        videoId: data.videoId,
-        hlsUrl: data.hlsUrl,
-        embedUrl: data.embedUrl,
-        thumbnailUrl: data.thumbnailUrl,
-        stream_id: data.videoId
+        videoId,
+        hlsUrl,
+        embedUrl,
+        thumbnailUrl,
+        stream_id: videoId
       });
       
       setSelectedFile(null);
