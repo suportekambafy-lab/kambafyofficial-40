@@ -83,8 +83,11 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       const { uploadUrl, videoId } = uploadData;
 
-      // Upload direto via HTTP com progresso
-      console.log('📤 Iniciando upload HTTP direto...');
+      // Upload direto via HTTP com FormData multipart
+      console.log('📤 Iniciando upload HTTP direto com FormData...');
+      
+      const formData = new FormData();
+      formData.append('file', selectedFile);
       
       const xhr = new XMLHttpRequest();
 
@@ -117,7 +120,8 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         });
 
         xhr.open('POST', uploadUrl);
-        xhr.send(selectedFile);
+        // NÃO definir Content-Type manualmente - o browser define automaticamente com o boundary correto
+        xhr.send(formData);
       });
 
       setUploadProgress(98);
