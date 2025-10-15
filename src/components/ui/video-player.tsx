@@ -86,6 +86,7 @@ const VideoPlayer = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
@@ -781,6 +782,115 @@ const VideoPlayer = ({
     );
   }
   
+  // Vimeo postMessage API para rastrear progresso
+  useEffect(() => {
+    if (currentSource !== 'iframe' || !embedUrl || !isVimeoVideo || !iframeRef.current) return;
+
+    const iframe = iframeRef.current;
+    let mounted = true;
+
+    const handleMessage = (event: MessageEvent) => {
+      // Verificar origem do Vimeo
+      if (!event.origin.includes('vimeo.com')) return;
+
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (!mounted) return;
+
+        switch (data.event) {
+          case 'ready':
+            console.log('🎬 Vimeo player pronto via postMessage');
+            setIsLoading(false);
+            setErrorMessage(null);
+            
+            // Solicitar duração
+            iframe.contentWindow?.postMessage(JSON.stringify({
+              method: 'getDuration'
+            }), '*');
+            
+            // Definir tempo inicial se fornecido
+            if (startTime > 0) {
+              console.log('⏱️ Definindo tempo inicial:', startTime);
+              iframe.contentWindow?.postMessage(JSON.stringify({
+                method: 'setCurrentTime',
+                value: startTime
+              }), '*');
+            }
+            
+            // Habilitar eventos de progresso
+            iframe.contentWindow?.postMessage(JSON.stringify({
+              method: 'addEventListener',
+              value: 'timeupdate'
+            }), '*');
+            
+            iframe.contentWindow?.postMessage(JSON.stringify({
+              method: 'addEventListener',
+              value: 'play'
+            }), '*');
+            
+            iframe.contentWindow?.postMessage(JSON.stringify({
+              method: 'addEventListener',
+              value: 'pause'
+            }), '*');
+            
+            iframe.contentWindow?.postMessage(JSON.stringify({
+              method: 'addEventListener',
+              value: 'ended'
+            }), '*');
+            break;
+
+          case 'timeupdate':
+            if (data.data) {
+              const currentTime = data.data.seconds;
+              const videoDuration = data.data.duration;
+              const progress = (currentTime / videoDuration) * 100;
+              
+              setCurrentTime(currentTime);
+              setDuration(videoDuration);
+              setProgress(progress);
+              
+              onProgress?.(progress);
+              onTimeUpdate?.(currentTime, videoDuration);
+            }
+            break;
+
+          case 'play':
+            setIsPlaying(true);
+            onPlay?.();
+            break;
+
+          case 'pause':
+            setIsPlaying(false);
+            onPause?.();
+            break;
+
+          case 'ended':
+            setIsPlaying(false);
+            onEnded?.();
+            break;
+        }
+
+        // Resposta para getDuration
+        if (data.method === 'getDuration' && data.value) {
+          console.log('📏 Duração do vídeo:', data.value);
+          setDuration(data.value);
+        }
+      } catch (error) {
+        // Ignorar erros de parse de mensagens que não são JSON
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener('message', handleMessage);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, [currentSource, embedUrl, isVimeoVideo, startTime, onProgress, onTimeUpdate, onPlay, onPause, onEnded]);
 
   // Iframe Player
   if (currentSource === 'iframe' && embedUrl) {
@@ -796,6 +906,8 @@ const VideoPlayer = ({
           url.searchParams.set('badge', '0');
           url.searchParams.set('controls', '1');
           url.searchParams.set('transparent', '0');
+          // Habilitar API do player via postMessage
+          url.searchParams.set('api', '1');
           return url.toString();
         } catch (e) {
           console.warn('Erro ao processar URL do Vimeo:', e);
