@@ -2124,15 +2124,22 @@ export default function Members() {
               
               <div className="space-y-2">
                 <Label htmlFor="duration">Duração (em minutos)</Label>
-                <Input id="duration" type="number" min="0" step="0.5" value={formData.duration / 60} // Converter segundos para minutos
-              onChange={e => {
-                const minutes = parseFloat(e.target.value) || 0;
-                const seconds = Math.round(minutes * 60);
-                setFormData(prev => ({
-                  ...prev,
-                  duration: seconds
-                }));
-              }} placeholder="Ex: 15 (minutos)" />
+                <Input 
+                  id="duration" 
+                  type="number" 
+                  min="0" 
+                  step="0.1" 
+                  value={(formData.duration / 60).toFixed(1)} // Sempre 1 casa decimal
+                  onChange={e => {
+                    const minutes = parseFloat(e.target.value) || 0;
+                    const seconds = Math.round(minutes * 60);
+                    setFormData(prev => ({
+                      ...prev,
+                      duration: seconds
+                    }));
+                  }} 
+                  placeholder="Ex: 15 (minutos)" 
+                />
                 <p className="text-sm text-muted-foreground">
                   Para vídeos Bunny.net, insira a duração manualmente. Para outros vídeos, será detectado automaticamente.
                 </p>
