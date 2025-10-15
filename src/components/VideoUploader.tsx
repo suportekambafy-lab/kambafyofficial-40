@@ -112,16 +112,20 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         upload.start();
       });
 
-      setUploadProgress(98);
+      // Obter informações do vídeo APÓS upload
+      console.log('📊 Obtendo informações do vídeo...');
+      const { data: videoInfo, error: infoError } = await supabase.functions.invoke('get-vimeo-info', {
+        body: { videoId }
+      });
+
+      const duration = videoInfo?.duration || 0;
+      console.log(`✅ Upload concluído - Duração: ${duration > 0 ? `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}` : 'processando...'}`);
+
+      setUploadProgress(100);
 
       // URLs do Vimeo - usar apenas embedUrl para iframes
       const embedUrl = `https://player.vimeo.com/video/${videoId}`;
       const thumbnailUrl = `https://i.vimeocdn.com/video/${videoId}_640.jpg`;
-      const duration = uploadData.duration || 0;
-
-      console.log(`✅ Upload concluído - Duração: ${duration > 0 ? `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}` : 'não disponível'}`);
-
-      setUploadProgress(100);
 
       onVideoUploaded(embedUrl, {
         success: true,

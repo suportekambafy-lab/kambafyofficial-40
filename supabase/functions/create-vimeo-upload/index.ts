@@ -108,52 +108,12 @@ Deno.serve(async (req) => {
       console.log('✅ Domain whitelist configured successfully');
     }
 
-    // Aguardar processamento e obter duração
-    console.log('⏳ Aguardando processamento do Vimeo para obter duração...');
-    
-    let duration = 0;
-    let attempts = 0;
-    const maxAttempts = 12; // 12 tentativas × 5s = 60s máximo
-    
-    while (attempts < maxAttempts && duration === 0) {
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Esperar 5s
-      
-      try {
-        const videoInfoResponse = await fetch(`https://api.vimeo.com${videoUri}`, {
-          headers: {
-            'Authorization': `Bearer ${vimeoToken}`,
-            'Accept': 'application/vnd.vimeo.*+json;version=3.4',
-          },
-        });
-        
-        if (videoInfoResponse.ok) {
-          const videoInfo = await videoInfoResponse.json();
-          duration = videoInfo.duration || 0;
-          
-          if (duration > 0) {
-            console.log(`✅ Duração obtida: ${duration}s (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')})`);
-            break;
-          }
-        }
-      } catch (error) {
-        console.warn('⚠️ Erro ao obter duração, tentando novamente...', error);
-      }
-      
-      attempts++;
-      console.log(`⏳ Tentativa ${attempts}/${maxAttempts} - aguardando processamento...`);
-    }
-    
-    if (duration === 0) {
-      console.warn('⚠️ Não foi possível obter duração após 60s. Salvando com duration: 0');
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
         videoId,
         uploadUrl,
         videoUri,
-        duration,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

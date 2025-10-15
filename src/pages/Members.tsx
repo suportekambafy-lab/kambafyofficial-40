@@ -629,7 +629,7 @@ export default function Members() {
         description: formData.description?.trim() || null,
         video_url: formData.video_url?.trim() || null,
         bunny_embed_url: formData.bunny_embed_url?.trim() || null,
-        hls_url: formData.hls_url?.trim() || null,
+        hls_url: formData.hls_url ? formData.hls_url.trim() : null,
         duration: formData.duration,
         // Already in seconds from form
         status: formData.status,
