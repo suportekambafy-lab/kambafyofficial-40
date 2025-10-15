@@ -73,10 +73,19 @@ export function ModernLessonViewer({
 
   // Derivar HLS URL do embed URL do Bunny se necessário
   const getHlsUrl = () => {
-    if (lesson.hls_url) return lesson.hls_url;
+    // Se já tem hls_url e NÃO é Vimeo, retornar
+    if (lesson.hls_url && !lesson.hls_url.includes('vimeo.com') && !lesson.hls_url.includes('player.vimeo.com')) {
+      return lesson.hls_url;
+    }
     
     // Se temos um embed URL do Bunny, derivar o HLS URL
     const embedUrl = lesson.bunny_embed_url || lesson.video_url;
+    
+    // ❌ NÃO processar URLs do Vimeo como HLS
+    if (embedUrl?.includes('vimeo.com') || embedUrl?.includes('player.vimeo.com')) {
+      return null;
+    }
+    
     if (embedUrl?.includes('iframe.mediadelivery.net/embed/')) {
       const videoId = embedUrl.split('/').pop();
       return `https://vz-5c879716-268.b-cdn.net/${videoId}/playlist.m3u8`;
@@ -156,8 +165,8 @@ export function ModernLessonViewer({
             <div className="w-full aspect-video bg-black relative">
               <VideoPlayer
                 key={`${lesson.id}-${videoKey}`}
-                hlsUrl={hlsUrl}
-                embedUrl={!hlsUrl ? (lesson.bunny_embed_url || lesson.video_url) : undefined}
+                hlsUrl={hlsUrl || undefined}
+                embedUrl={lesson.bunny_embed_url || lesson.video_url || undefined}
                 startTime={startTime}
                 onTimeUpdate={onUpdateProgress && !isReplayMode ? (currentTime, duration) => {
                   onUpdateProgress(lesson.id, currentTime, duration);
