@@ -25,6 +25,7 @@ interface Product {
     full_name: string;
     business_name?: string;
     avatar_url?: string;
+    bio?: string;
   };
 }
 
@@ -76,7 +77,8 @@ export default function ProductSalesPage() {
           profiles:user_id (
             full_name,
             business_name,
-            avatar_url
+            avatar_url,
+            bio
           )
         `)
         .eq(isUUID ? 'id' : 'slug', productId)
@@ -231,6 +233,38 @@ export default function ProductSalesPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* About the Creator Section */}
+                {product.profiles && (
+                  <div className="mb-6">
+                    <h2 className="text-base md:text-lg font-bold mb-4">Saiba mais sobre quem criou o conteúdo</h2>
+                    <Card>
+                      <CardContent className="p-4 md:p-6">
+                        <div className="flex items-start gap-4">
+                          {product.profiles.avatar_url && (
+                            <div className="flex-shrink-0">
+                              <img
+                                src={product.profiles.avatar_url}
+                                alt={product.profiles.business_name || product.profiles.full_name}
+                                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base md:text-lg font-semibold mb-2">
+                              {product.profiles.business_name || product.profiles.full_name}
+                            </h3>
+                            {product.profiles.bio && (
+                              <p className="text-sm md:text-base text-muted-foreground whitespace-pre-wrap">
+                                {product.profiles.bio}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
 
                 {/* FAQ Section */}
                 <div className="mb-4">
