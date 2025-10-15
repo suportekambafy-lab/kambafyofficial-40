@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { Loader2, ShoppingCart, CheckCircle2, Star, Menu, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Loader2, ShoppingCart, CheckCircle2, Star, Menu, ChevronRight, HelpCircle } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import useEmblaCarousel from "embla-carousel-react";
 import kambaFyLogo from "@/assets/kambafy-logo.png";
@@ -44,6 +45,7 @@ export default function ProductSalesPage() {
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [faqOpen, setFaqOpen] = useState(false);
   const [reviewsEmblaRef] = useEmblaCarousel({ loop: true, align: 'start' });
   const [productsEmblaRef] = useEmblaCarousel({ loop: false, align: 'start' });
   
@@ -473,21 +475,76 @@ export default function ProductSalesPage() {
                   </div>
                 )}
 
-                {/* FAQ Section */}
+                {/* FAQ Section - Mobile Modal / Desktop Accordion */}
                 <div className="mb-4">
-                  <h2 className="text-base md:text-lg font-bold mb-3">Perguntas Frequentes</h2>
-                  <Accordion type="single" collapsible className="w-full">
-                    {faqs.map((faq, index) => (
-                      <AccordionItem key={index} value={`item-${index}`}>
-                        <AccordionTrigger className="text-left text-xs md:text-sm py-3">
-                          {faq.question}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-xs md:text-sm text-muted-foreground">
-                          {faq.answer}
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
+                  {/* Mobile: Button to open modal */}
+                  <Dialog open={faqOpen} onOpenChange={setFaqOpen}>
+                    <DialogTrigger asChild className="md:hidden">
+                      <button className="w-full">
+                        <Card className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <HelpCircle className="w-5 h-5 text-primary" />
+                              <span className="font-semibold">Dúvidas frequentes</span>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                          </CardContent>
+                        </Card>
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[90vw] max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-lg">
+                          <HelpCircle className="w-5 h-5" />
+                          Dúvidas frequentes
+                        </DialogTitle>
+                      </DialogHeader>
+                      <Accordion type="single" collapsible className="w-full">
+                        {faqs.map((faq, index) => (
+                          <AccordionItem key={index} value={`item-${index}`}>
+                            <AccordionTrigger className="text-left text-sm py-3">
+                              {faq.question}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-sm text-muted-foreground">
+                              {faq.answer}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                      <div className="mt-4 pt-4 border-t text-center text-xs text-muted-foreground">
+                        <p>O conteúdo deste produto não representa a opinião da Kambafy.</p>
+                        <p>
+                          Se você vir informações inadequadas,{' '}
+                          <button
+                            onClick={() => {
+                              navigate('/denuncia');
+                              setFaqOpen(false);
+                            }}
+                            className="text-primary underline hover:text-primary/80"
+                          >
+                            denuncie aqui
+                          </button>
+                        </p>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Desktop: Regular Accordion */}
+                  <div className="hidden md:block">
+                    <h2 className="text-base md:text-lg font-bold mb-3">Perguntas Frequentes</h2>
+                    <Accordion type="single" collapsible className="w-full">
+                      {faqs.map((faq, index) => (
+                        <AccordionItem key={index} value={`item-${index}`}>
+                          <AccordionTrigger className="text-left text-xs md:text-sm py-3">
+                            {faq.question}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-xs md:text-sm text-muted-foreground">
+                            {faq.answer}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </div>
                 </div>
               </div>
 
