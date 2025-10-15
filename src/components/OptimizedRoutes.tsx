@@ -61,6 +61,7 @@ const VimeoSettings = createLazyWithRetry(() => import('@/pages/VimeoSettings'),
 const Mobile = createLazyWithRetry(() => import('@/pages/Mobile'), "Mobile");
 const AppMobile = createLazyWithRetry(() => import('@/pages/AppMobile'), "AppMobile");
 const KambaPay = createLazyWithRetry(() => import('@/pages/KambaPay'), "KambaPay");
+const MarketplacePage = createLazyWithRetry(() => import('@/pages/MarketplacePage'), "MarketplacePage");
 
 
 // Nova estrutura moderna de área de membros
@@ -169,6 +170,7 @@ export const OptimizedRoutes = {
   Mobile: withLazyLoading(Mobile, 'minimal'),
   AppMobile: withLazyLoading(AppMobile, 'minimal'),
   KambaPay: withLazyLoading(KambaPay, 'settings'),
+  MarketplacePage: withLazyLoading(MarketplacePage),
   
   
   SellerDashboard: withLazyLoading(SellerDashboard, 'dashboard'),
