@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2, ShoppingCart, CheckCircle2, Star, Menu, ChevronRight, HelpCircle } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import useEmblaCarousel from "embla-carousel-react";
+import { useGeoLocation } from "@/hooks/useGeoLocation";
 import kambaFyLogo from "@/assets/kambafy-logo.png";
 
 interface Product {
@@ -48,6 +49,7 @@ export default function ProductSalesPage() {
   const [faqOpen, setFaqOpen] = useState(false);
   const [reviewsEmblaRef] = useEmblaCarousel({ loop: true, align: 'start' });
   const [productsEmblaRef] = useEmblaCarousel({ loop: false, align: 'start' });
+  const { userCountry, convertPrice } = useGeoLocation();
   
   const reviews = [
     {
@@ -189,7 +191,9 @@ export default function ProductSalesPage() {
     );
   }
 
-  const priceFormatted = parseFloat(product.price).toLocaleString('pt-BR');
+  const priceInKZ = parseFloat(product.price);
+  const convertedPriceValue = convertPrice(priceInKZ);
+  const priceFormatted = convertedPriceValue.toLocaleString('pt-BR');
 
   return (
     <>
@@ -217,10 +221,8 @@ export default function ProductSalesPage() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-full">
-                  <SheetTitle className="text-lg font-bold mb-6">Menu</SheetTitle>
-                  
                   {/* Action Buttons */}
-                  <div className="flex gap-3 mb-6 px-2">
+                  <div className="flex gap-3 mb-6 px-2 pt-6">
                     <Button 
                       variant="outline" 
                       className="flex-1 text-xs whitespace-normal h-auto py-3"
@@ -460,7 +462,7 @@ export default function ProductSalesPage() {
                                 </h3>
                                 <div className="flex items-center justify-between">
                                   <span className="text-sm font-bold text-primary">
-                                    {parseFloat(relatedProduct.price).toLocaleString('pt-BR')} KZ
+                                    {convertPrice(parseFloat(relatedProduct.price)).toLocaleString('pt-BR')} {userCountry.currency}
                                   </span>
                                   <Badge variant="secondary" className="text-xs">
                                     {relatedProduct.type}
@@ -555,7 +557,7 @@ export default function ProductSalesPage() {
                   <CardContent className="p-6 space-y-6">
                     <div>
                       <div className="text-3xl font-bold text-primary mb-1">
-                        {priceFormatted} KZ
+                        {priceFormatted} {userCountry.currency}
                       </div>
                       {product.profiles && (
                         <div className="text-sm text-muted-foreground">
@@ -596,7 +598,7 @@ export default function ProductSalesPage() {
               <div>
                 <div className="text-xs text-muted-foreground">Preço</div>
                 <div className="text-xl font-bold text-primary">
-                  {priceFormatted} KZ
+                  {priceFormatted} {userCountry.currency}
                 </div>
               </div>
               <Button 
