@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ShoppingCart, CheckCircle2, User } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import kambaFyLogo from "@/assets/kambafy-logo.png";
 
 interface Product {
   id: string;
@@ -136,7 +137,7 @@ export default function ProductSalesPage() {
         <header className="border-b bg-card sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
             <img 
-              src="https://hcbkqygdtzpxvctfdqbd.supabase.co/storage/v1/object/public/assets/logo.png" 
+              src={kambaFyLogo}
               alt="Kambafy" 
               className="h-8"
             />
