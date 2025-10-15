@@ -176,25 +176,6 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    const salesPageUrl = `https://pay.kambafy.com/produto/${product.id}`;
-                    navigator.clipboard.writeText(salesPageUrl).then(() => {
-                      toast({
-                        title: "Link copiado!",
-                        message: "Link da página de vendas copiado!",
-                        variant: "success"
-                      });
-                    });
-                  }}
-                  className="flex-1 text-xs h-8"
-                  disabled={product.status === 'Rascunho'}
-                >
-                  <Share className="w-3 h-3 mr-1" />
-                  <span>Página</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
                   onClick={() => onEdit(product)}
                   className="flex-1 text-xs h-8"
                 >
@@ -227,7 +208,7 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                 )}
               </div>
               
-              {/* Second row - Checkout and Delete OR Request Revision */}
+              {/* Second row - Share and Delete OR Request Revision */}
               <div className="flex gap-2">
                 {product.status === 'Banido' && !product.revision_requested ? (
                   // Produto banido - mostrar botão de solicitar revisão
@@ -246,21 +227,12 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        const checkoutUrl = `https://pay.kambafy.com/checkout/${product.id}`;
-                        navigator.clipboard.writeText(checkoutUrl).then(() => {
-                          toast({
-                            title: "Link copiado!",
-                            message: "Link do checkout copiado!",
-                            variant: "success"
-                          });
-                        });
-                      }}
+                      onClick={() => onShare(product)}
                       className="flex-1 text-xs h-8"
                       disabled={product.status === 'Rascunho'}
                     >
                       <Share className="w-3 h-3 mr-1" />
-                      <span>{product.status === 'Rascunho' ? 'Indisponível' : 'Checkout'}</span>
+                      <span>{product.status === 'Rascunho' ? 'Indisponível' : 'Partilhar'}</span>
                     </Button>
                     <Button
                       variant="outline"

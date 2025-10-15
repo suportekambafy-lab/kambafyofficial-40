@@ -74,6 +74,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
     : 'https://pay.kambafy.com';
     
   const checkoutLink = `${checkoutBaseUrl}/checkout/${product.id}`;
+  const salesPageLink = `${checkoutBaseUrl}/produto/${product.id}`;
   // Use the same checkout link for preview to maintain consistency
   const previewLink = checkoutLink;
   console.log('Generated checkout link:', checkoutLink);
@@ -134,7 +135,33 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Link do Produto</Label>
+              <Label>Página de Vendas</Label>
+              <div className="flex gap-2">
+                <Input 
+                  value={isRascunho ? "Link indisponível para rascunhos" : salesPageLink} 
+                  readOnly 
+                  className="font-mono text-xs"
+                  disabled={isRascunho}
+                />
+                <Button 
+                  size="sm" 
+                  onClick={() => copyToClipboard(salesPageLink, "Link da página de vendas", "sales-page")}
+                  disabled={isRascunho}
+                >
+                  {copiedLinks["sales-page"] ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Página completa com descrição, FAQ e botão de compra. Ideal para campanhas.
+              </p>
+            </div>
+
+            <div className="space-y-2 border-t pt-4">
+              <Label>Link Direto de Checkout</Label>
               <div className="flex gap-2">
                 <Input 
                   value={isRascunho ? "Link indisponível para rascunhos" : previewLink} 
@@ -144,7 +171,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
                 />
                 <Button 
                   size="sm" 
-                  onClick={() => copyToClipboard(previewLink, "Link com preview", "checkout")}
+                  onClick={() => copyToClipboard(previewLink, "Link do checkout", "checkout")}
                   disabled={isRascunho}
                 >
                   {copiedLinks.checkout ? (
@@ -155,7 +182,7 @@ export default function ProductShareDialog({ product, open, onOpenChange }: Prod
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Link para compartilhar o produto. Funciona em todas as redes sociais e aplicativos de mensagem.
+                Vai direto para o checkout sem passar pela página de vendas.
               </p>
               <Button 
                 onClick={openCheckoutInNewTab}
