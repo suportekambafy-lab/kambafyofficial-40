@@ -783,6 +783,27 @@ const VideoPlayer = ({
   
   // Iframe Player
   if (currentSource === 'iframe' && embedUrl) {
+    // Processar URL para remover branding do Vimeo
+    const processedEmbedUrl = (() => {
+      if (isVimeoVideo) {
+        try {
+          const url = new URL(embedUrl);
+          // Adicionar parâmetros para remover branding
+          url.searchParams.set('title', '0');
+          url.searchParams.set('byline', '0');
+          url.searchParams.set('portrait', '0');
+          url.searchParams.set('badge', '0');
+          url.searchParams.set('controls', '1');
+          url.searchParams.set('transparent', '0');
+          return url.toString();
+        } catch (e) {
+          console.warn('Erro ao processar URL do Vimeo:', e);
+          return embedUrl;
+        }
+      }
+      return embedUrl;
+    })();
+    
     return (
       <motion.div 
         className="relative w-full overflow-hidden bg-black"
@@ -801,7 +822,7 @@ const VideoPlayer = ({
         
         <iframe
           ref={iframeRef}
-          src={embedUrl}
+          src={processedEmbedUrl}
           className="w-full aspect-video border-0"
           frameBorder="0"
           allowFullScreen
@@ -817,16 +838,6 @@ const VideoPlayer = ({
             handleSourceFailure('iframe', 'Erro ao carregar iframe');
           }}
         />
-        
-        {/* Vimeo Protection Badge */}
-        {isVimeoVideo && (
-          <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-white/90 flex items-center gap-2 pointer-events-none z-10">
-            <svg className="w-3.5 h-3.5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-            </svg>
-            <span>Protegido por Vimeo Pro</span>
-          </div>
-        )}
       </motion.div>
     );
   }
