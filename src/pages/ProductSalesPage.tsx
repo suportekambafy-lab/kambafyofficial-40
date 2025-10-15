@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart, CheckCircle2, Star } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { Loader2, ShoppingCart, CheckCircle2, Star, Menu, ChevronRight } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import kambaFyLogo from "@/assets/kambafy-logo.png";
 
@@ -41,6 +42,23 @@ export default function ProductSalesPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  
+  const categories = [
+    "Animais e Pets",
+    "Autoconhecimento e espiritualidade",
+    "Carreira e desenvolvimento pessoal",
+    "Culinária e gastronomia",
+    "Design e fotografia",
+    "Educação infantil e família",
+    "Engenharia e arquitetura",
+    "Ensino e estudo académico",
+    "Finanças e negócios",
+    "Hobbies e Lazer",
+    "Manutenção de equipamentos",
+    "Marketing e vendas"
+  ];
+  
   const [faqs] = useState<FAQ[]>([
     {
       question: "Como funciona o acesso ao produto?",
@@ -156,15 +174,52 @@ export default function ProductSalesPage() {
       <div className="min-h-screen bg-background pb-24 md:pb-0">
         {/* Header */}
         <header className="border-b bg-card sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-            <img 
-              src={kambaFyLogo}
-              alt="Kambafy" 
-              className="h-6 md:h-8"
-            />
-            <Button onClick={handleGoToCheckout} size="sm" variant="ghost" className="md:hidden">
-              <ShoppingCart className="w-4 h-4" />
-            </Button>
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              {/* Menu Button - Left */}
+              <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:flex">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80">
+                  <SheetTitle className="text-lg font-bold mb-6">Categorias</SheetTitle>
+                  <nav className="space-y-1">
+                    {categories.map((category) => (
+                      <button
+                        key={category}
+                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted rounded-lg transition-colors"
+                        onClick={() => {
+                          // Navegação futura para categorias
+                          setMenuOpen(false);
+                        }}
+                      >
+                        <span className="text-sm">{category}</span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    ))}
+                  </nav>
+                </SheetContent>
+              </Sheet>
+
+              {/* Logo - Center */}
+              <div className="absolute left-1/2 transform -translate-x-1/2">
+                <img 
+                  src={kambaFyLogo}
+                  alt="Kambafy" 
+                  className="h-6 md:h-8"
+                />
+              </div>
+
+              {/* Cart Button - Right (Mobile) */}
+              <Button onClick={handleGoToCheckout} size="sm" variant="ghost" className="md:hidden">
+                <ShoppingCart className="w-4 h-4" />
+              </Button>
+              
+              {/* Empty div for layout balance on desktop */}
+              <div className="hidden md:block w-10"></div>
+            </div>
           </div>
         </header>
 
