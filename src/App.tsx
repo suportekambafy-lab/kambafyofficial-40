@@ -5,6 +5,7 @@ import { useRef, useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { ImpersonationBanner } from "@/components/ImpersonationBanner";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
@@ -130,12 +131,13 @@ const App = () => {
 
   return (
     <EnhancedErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="kambafy-ui-theme" forceLightMode={true}>
-          <AuthProvider>
-            <AdminAuthProvider>
-              <NotificationProvider>
-            <TooltipProvider>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="light" storageKey="kambafy-ui-theme" forceLightMode={true}>
+            <AuthProvider>
+              <AdminAuthProvider>
+                <NotificationProvider>
+              <TooltipProvider>
               <CustomToaster ref={toasterRef} />
                <BrowserRouter>
                  {impersonationData && (
@@ -244,6 +246,7 @@ const App = () => {
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
+  </HelmetProvider>
   </EnhancedErrorBoundary>
   );
 };
