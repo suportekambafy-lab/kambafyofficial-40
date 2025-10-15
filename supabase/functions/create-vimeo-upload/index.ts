@@ -22,7 +22,44 @@ Deno.serve(async (req) => {
 
     console.log('📦 Creating Vimeo upload for:', { fileName, fileSize });
 
-    // Create upload on Vimeo with privacy settings
+    // Create upload on Vimeo with ALL privacy and embed settings
+    const createPayload = {
+      upload: {
+        approach: 'tus',
+        size: fileSize,
+      },
+      name: fileName,
+      privacy: {
+        view: 'disable',           // Private - not visible on Vimeo.com
+        embed: 'whitelist',         // Only works on whitelisted domains
+        download: false,
+        add: false,
+        comments: 'nobody',
+      },
+      embed: {
+        buttons: {
+          like: false,
+          watchlater: false,
+          share: false,
+          embed: false,
+        },
+        logos: {
+          vimeo: false,             // Remove Vimeo branding (Pro feature)
+        },
+        title: {
+          name: 'hide',
+          owner: 'hide',
+          portrait: 'hide',
+        },
+        color: '#000000',
+        playbar: true,
+        volume: true,
+        speed: false,
+      },
+    };
+
+    console.log('📤 Sending to Vimeo:', JSON.stringify(createPayload, null, 2));
+
     const vimeoResponse = await fetch('https://api.vimeo.com/me/videos', {
       method: 'POST',
       headers: {
@@ -30,36 +67,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
         'Accept': 'application/vnd.vimeo.*+json;version=3.4',
       },
-      body: JSON.stringify({
-        upload: {
-          approach: 'tus',
-          size: fileSize,
-        },
-        name: fileName,
-        privacy: {
-          view: 'disable',           // Private - not visible on Vimeo.com
-          embed: 'whitelist',         // Only works on whitelisted domains
-          download: false,
-          add: false,
-          comments: 'nobody',
-        },
-        embed: {
-          buttons: {
-            like: false,
-            watchlater: false,
-            share: false,
-            embed: false,
-          },
-          logos: {
-            vimeo: false,             // Remove Vimeo branding (Pro feature)
-          },
-          title: {
-            name: 'hide',
-            owner: 'hide',
-            portrait: 'hide',
-          },
-        },
-      }),
+      body: JSON.stringify(createPayload),
     });
 
     const vimeoData = await vimeoResponse.json();
@@ -75,9 +83,28 @@ Deno.serve(async (req) => {
 
     console.log('✅ Vimeo upload created:', { videoId, uploadUrl });
 
-    // Configure domain whitelist
-    console.log('🔐 Configuring domain whitelist...');
+    // Configure domain whitelist with detailed logging
+    console.log('🔐 Configuring domain whitelist for:', videoUri);
     
+    const whitelistPayload = {
+      privacy: {
+        embed: 'whitelist',
+      },
+      embed: {
+        whitelist: [
+          'kambafy.com',
+          'app.kambafy.com',
+          'membros.kambafy.com',
+          '*.kambafy.com',
+          'localhost',
+          '*.lovable.app',
+          '*.lovableproject.com',
+        ],
+      },
+    };
+
+    console.log('📤 Whitelist payload:', JSON.stringify(whitelistPayload, null, 2));
+
     const whitelistResponse = await fetch(`https://api.vimeo.com${videoUri}`, {
       method: 'PATCH',
       headers: {
@@ -85,28 +112,19 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
         'Accept': 'application/vnd.vimeo.*+json;version=3.4',
       },
-      body: JSON.stringify({
-        privacy: {
-          embed: 'whitelist',
-        },
-        embed: {
-          whitelist: [
-            'kambafy.com',
-            'app.kambafy.com',
-            'membros.kambafy.com',
-            '*.kambafy.com',
-            'localhost',
-            '*.lovable.app',
-            '*.lovableproject.com',
-          ],
-        },
-      }),
+      body: JSON.stringify(whitelistPayload),
     });
 
+    const whitelistData = await whitelistResponse.json();
+    
     if (!whitelistResponse.ok) {
-      console.warn('⚠️ Failed to set whitelist, but continuing...');
+      console.error('❌ Failed to set whitelist:', {
+        status: whitelistResponse.status,
+        statusText: whitelistResponse.statusText,
+        data: whitelistData
+      });
     } else {
-      console.log('✅ Domain whitelist configured successfully');
+      console.log('✅ Domain whitelist configured successfully:', whitelistData);
     }
 
     return new Response(
