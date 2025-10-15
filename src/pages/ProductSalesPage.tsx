@@ -149,101 +149,154 @@ export default function ProductSalesPage() {
           </div>
         </header>
 
-        {/* Main Content */}
+        {/* Main Content - Two Column Layout on Desktop */}
         <section className="py-4 md:py-8">
-          <div className="container mx-auto px-4 max-w-4xl">
-            {/* Product Header - Compact */}
-            <div className="flex gap-3 md:gap-4 items-start mb-4">
-              {/* Product Image - Smaller */}
-              <div className="flex-shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-lg overflow-hidden shadow-md">
-                <img
-                  src={product.cover}
-                  alt={product.image_alt || product.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="md:grid md:grid-cols-[1fr_400px] md:gap-8">
+              {/* Left Column - Product Info */}
+              <div>
+                {/* Product Header - Mobile Only */}
+                <div className="flex gap-3 items-start mb-4 md:hidden">
+                  <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden shadow-md">
+                    <img
+                      src={product.cover}
+                      alt={product.image_alt || product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-lg font-bold leading-tight mb-1">
+                      {product.name}
+                    </h1>
+                    {product.profiles && (
+                      <div className="text-xs text-muted-foreground">
+                        {product.profiles.business_name || product.profiles.full_name}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-              {/* Product Info - Beside Image */}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-lg md:text-xl font-bold leading-tight mb-1">
+                {/* Desktop Title */}
+                <h1 className="hidden md:block text-3xl font-bold mb-6">
                   {product.name}
                 </h1>
-                {product.profiles && (
-                  <div className="text-xs md:text-sm text-muted-foreground">
-                    {product.profiles.business_name || product.profiles.full_name}
+
+                {/* Desktop Product Image */}
+                <div className="hidden md:block mb-6">
+                  <img
+                    src={product.cover}
+                    alt={product.image_alt || product.name}
+                    className="w-full max-w-md rounded-lg shadow-md"
+                  />
+                </div>
+
+                {/* Product Details Card */}
+                <Card className="mb-4">
+                  <CardContent className="p-3 md:p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-xs md:text-sm">
+                      <span className="text-muted-foreground">Formato:</span>
+                      <span className="font-medium">{product.type}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Description */}
+                <div className="mb-6">
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                    {product.description}
+                  </p>
+                </div>
+
+                {/* Benefits */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-xs md:text-sm font-semibold">Acesso Imediato</h3>
+                      <p className="text-xs text-muted-foreground">Receba acesso após confirmação</p>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Product Details Card */}
-            <Card className="mb-4">
-              <CardContent className="p-3 md:p-4 space-y-2">
-                <div className="flex items-center gap-2 text-xs md:text-sm">
-                  <span className="text-muted-foreground">Formato:</span>
-                  <span className="font-medium">{product.type}</span>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-xs md:text-sm font-semibold">Suporte Dedicado</h3>
+                      <p className="text-xs text-muted-foreground">Tire dúvidas com o vendedor</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-xs md:text-sm font-semibold">Garantia de Qualidade</h3>
+                      <p className="text-xs text-muted-foreground">Produto verificado pela Kambafy</p>
+                    </div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Description */}
-            <div className="mb-4">
-              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                {product.description}
-              </p>
-            </div>
-
-            {/* Benefits - Compact */}
-            <div className="space-y-2 md:space-y-3 mb-4">
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-xs md:text-sm font-semibold">Acesso Imediato</h3>
-                  <p className="text-xs text-muted-foreground">Receba acesso após confirmação</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-xs md:text-sm font-semibold">Suporte Dedicado</h3>
-                  <p className="text-xs text-muted-foreground">Tire dúvidas com o vendedor</p>
+                {/* FAQ Section */}
+                <div className="mb-4">
+                  <h2 className="text-base md:text-lg font-bold mb-3">Perguntas Frequentes</h2>
+                  <Accordion type="single" collapsible className="w-full">
+                    {faqs.map((faq, index) => (
+                      <AccordionItem key={index} value={`item-${index}`}>
+                        <AccordionTrigger className="text-left text-xs md:text-sm py-3">
+                          {faq.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-xs md:text-sm text-muted-foreground">
+                          {faq.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
                 </div>
               </div>
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-xs md:text-sm font-semibold">Garantia de Qualidade</h3>
-                  <p className="text-xs text-muted-foreground">Produto verificado pela Kambafy</p>
-                </div>
-              </div>
-            </div>
 
-            {/* FAQ Section - Compact */}
-            <div className="mb-4">
-              <h2 className="text-base md:text-lg font-bold mb-3">Perguntas Frequentes</h2>
-              <Accordion type="single" collapsible className="w-full">
-                {faqs.map((faq, index) => (
-                  <AccordionItem key={index} value={`item-${index}`}>
-                    <AccordionTrigger className="text-left text-xs md:text-sm py-3">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-xs md:text-sm text-muted-foreground">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+              {/* Right Column - Purchase Card (Desktop Only) */}
+              <div className="hidden md:block">
+                <Card className="sticky top-24">
+                  <CardContent className="p-6 space-y-6">
+                    <div>
+                      <div className="text-3xl font-bold text-primary mb-1">
+                        {priceFormatted} KZ
+                      </div>
+                      {product.profiles && (
+                        <div className="text-sm text-muted-foreground">
+                          Vendido por: {product.profiles.business_name || product.profiles.full_name}
+                        </div>
+                      )}
+                    </div>
+
+                    <Button 
+                      onClick={handleGoToCheckout} 
+                      size="lg"
+                      className="w-full"
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Ir para o carrinho
+                    </Button>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                        <span>Garantia de 7 dias</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Ao comprar o produto, as instruções de acesso serão enviadas para o seu email.
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Price and CTA - Sticky Bottom on Mobile */}
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg md:static md:border-0 md:shadow-none z-40">
-          <div className="container mx-auto px-4 py-3 md:py-6 max-w-4xl">
-            <div className="flex items-center justify-between gap-3 md:gap-4">
+        {/* Price and CTA - Sticky Bottom on Mobile Only */}
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg md:hidden z-40">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-xs text-muted-foreground">Preço</div>
-                <div className="text-xl md:text-2xl font-bold text-primary">
+                <div className="text-xl font-bold text-primary">
                   {priceFormatted} KZ
                 </div>
               </div>
