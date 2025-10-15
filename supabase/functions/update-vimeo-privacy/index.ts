@@ -47,14 +47,35 @@ Deno.serve(async (req) => {
         console.log(`🎥 Updating video ${videoId}...`);
 
         const updateData: any = {
-          privacy: defaultPrivacy
+          privacy: defaultPrivacy,
+          // Remover branding "Protegido por Vimeo"
+          embed: {
+            title: {
+              name: 'hide',
+              owner: 'hide',
+              portrait: 'hide'
+            },
+            buttons: {
+              like: false,
+              watchlater: false,
+              share: false,
+              embed: false
+            },
+            logos: {
+              vimeo: false, // Remove logo do Vimeo
+              custom: {
+                active: false
+              }
+            },
+            playbar: true,
+            volume: true,
+            color: 'ffffff'
+          }
         };
 
         // Se especificou domínios para whitelist
         if (embedDomains && embedDomains.length > 0 && defaultPrivacy.embed === 'whitelist') {
-          updateData.embed = {
-            domains: embedDomains
-          };
+          updateData.embed.domains = embedDomains;
         }
 
         const response = await fetch(`https://api.vimeo.com/videos/${videoId}`, {
