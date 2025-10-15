@@ -7,7 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, ShoppingCart, CheckCircle2, Star, Menu, ChevronRight, HelpCircle, Search, ChevronDown } from "lucide-react";
+import { Loader2, ShoppingCart, CheckCircle2, Star, Menu, ChevronRight, HelpCircle, Search, ChevronDown, Home, Share2, Smartphone } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
   DropdownMenu, 
@@ -15,6 +15,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import { Helmet } from "react-helmet-async";
 import useEmblaCarousel from "embla-carousel-react";
 import { useGeoLocation } from "@/hooks/useGeoLocation";
@@ -364,7 +365,15 @@ export default function ProductSalesPage() {
         {/* Main Content - Two Column Layout on Desktop */}
         <section className="py-4 md:py-8">
           <div className="container mx-auto px-4 max-w-6xl">
-            <div className="md:grid md:grid-cols-[1fr_400px] md:gap-8">
+            {/* Breadcrumb - Desktop Only */}
+            <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground mb-6">
+              <Home className="w-4 h-4" />
+              <span>Home</span>
+              <ChevronRight className="w-4 h-4" />
+              <span className="text-foreground line-clamp-1">{product.name}</span>
+            </div>
+
+            <div className="md:grid md:grid-cols-[1fr_350px] md:gap-8">
               {/* Left Column - Product Info */}
               <div>
                 {/* Product Header - Mobile Only */}
@@ -388,57 +397,92 @@ export default function ProductSalesPage() {
                   </div>
                 </div>
 
-                {/* Desktop Title */}
-                <h1 className="hidden md:block text-3xl font-bold mb-6">
-                  {product.name}
-                </h1>
-
-                {/* Desktop Product Image */}
-                <div className="hidden md:block mb-6">
-                  <img
-                    src={product.cover}
-                    alt={product.image_alt || product.name}
-                    className="w-full max-w-md rounded-lg shadow-md"
-                  />
+                {/* Desktop Title & Share */}
+                <div className="hidden md:flex items-start justify-between mb-6">
+                  <h1 className="text-3xl font-bold flex-1">
+                    {product.name}
+                  </h1>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <Share2 className="w-4 h-4" />
+                    Compartilhar
+                  </Button>
                 </div>
 
-                {/* Product Details Card */}
-                <Card className="mb-4">
-                  <CardContent className="p-3 md:p-4 space-y-2">
-                    <div className="flex items-center gap-2 text-xs md:text-sm">
+                {/* Desktop: Image + Description Side by Side */}
+                <div className="hidden md:grid md:grid-cols-[240px_1fr] md:gap-6 md:mb-6">
+                  {/* Product Image - Smaller */}
+                  <div className="flex-shrink-0">
+                    <img
+                      src={product.cover}
+                      alt={product.image_alt || product.name}
+                      className="w-full rounded-lg shadow-md"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <p className="text-base text-muted-foreground leading-relaxed">
+                      {product.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mobile Product Details Card */}
+                <Card className="mb-4 md:hidden">
+                  <CardContent className="p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-xs">
                       <span className="text-muted-foreground">Formato:</span>
                       <span className="font-medium">{product.type}</span>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Description */}
-                <div className="mb-6">
-                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                {/* Mobile Description */}
+                <div className="mb-6 md:hidden">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {product.description}
                   </p>
                 </div>
 
-                {/* Benefits */}
-                <div className="space-y-3 mb-6">
+                {/* Detalhes Section - Desktop */}
+                <div className="hidden md:block mb-6">
+                  <h2 className="text-xl font-bold mb-4">Detalhes</h2>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h3 className="text-sm font-semibold">Garantia de 15 dias</h3>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Smartphone className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h3 className="text-sm font-semibold">Estude do seu jeito e em qualquer dispositivo</h3>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Benefits - Mobile Only */}
+                <div className="space-y-3 mb-6 md:hidden">
                   <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="text-xs md:text-sm font-semibold">Acesso Imediato</h3>
+                      <h3 className="text-xs font-semibold">Acesso Imediato</h3>
                       <p className="text-xs text-muted-foreground">Receba acesso após confirmação</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="text-xs md:text-sm font-semibold">Suporte Dedicado</h3>
+                      <h3 className="text-xs font-semibold">Suporte Dedicado</h3>
                       <p className="text-xs text-muted-foreground">Tire dúvidas com o vendedor</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="text-xs md:text-sm font-semibold">Garantia de Qualidade</h3>
+                      <h3 className="text-xs font-semibold">Garantia de Qualidade</h3>
                       <p className="text-xs text-muted-foreground">Produto verificado pela Kambafy</p>
                     </div>
                   </div>
@@ -632,35 +676,84 @@ export default function ProductSalesPage() {
               {/* Right Column - Purchase Card (Desktop Only) */}
               <div className="hidden md:block">
                 <Card className="sticky top-24">
-                  <CardContent className="p-6 space-y-6">
+                  <CardContent className="p-6 space-y-4">
+                    {/* Price */}
                     <div>
                       <div className="text-3xl font-bold text-primary mb-1">
                         {priceFormatted}
                       </div>
-                      {product.profiles && (
-                        <div className="text-sm text-muted-foreground">
-                          Vendido por: {product.profiles.business_name || product.profiles.full_name}
-                        </div>
-                      )}
+                      <div className="text-sm text-muted-foreground">
+                        por mês
+                      </div>
                     </div>
 
+                    {/* CTA Button */}
                     <Button 
                       onClick={handleGoToCheckout} 
                       size="lg"
                       className="w-full"
                     >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
                       Ir para o carrinho
                     </Button>
 
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-primary" />
-                        <span>Garantia de 7 dias</span>
+                    {/* Features */}
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-sm">Garantia de 15 dias</span>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        Ao comprar o produto, as instruções de acesso serão enviadas para o seu email.
+                      <div className="flex items-start gap-2">
+                        <Smartphone className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-sm">Estude do seu jeito e em qualquer dispositivo</span>
                       </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Format & Category */}
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-sm text-muted-foreground">Formato: </span>
+                        <span className="text-sm font-medium">{product.type}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">Categoria: </span>
+                        <span className="text-sm font-medium">Finanças e Investimentos</span>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Creator Profile */}
+                    {product.profiles && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          {product.profiles.avatar_url && (
+                            <img
+                              src={product.profiles.avatar_url}
+                              alt={product.profiles.business_name || product.profiles.full_name}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-semibold">
+                              {product.profiles.business_name || product.profiles.full_name}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">4 Anos Hotmarter</p>
+                          </div>
+                        </div>
+                        <Button variant="outline" className="w-full" size="sm">
+                          Acessar produto comprado
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
+                    )}
+
+                    <Separator />
+
+                    {/* Disclaimer */}
+                    <div className="text-xs text-muted-foreground">
+                      Ao comprar o produto, as instruções de acesso serão enviadas para o seu email.
                     </div>
                   </CardContent>
                 </Card>
