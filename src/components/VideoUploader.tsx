@@ -83,35 +83,41 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       const { uploadUrl, videoId } = uploadData;
 
-      // Upload direto para Stream via TUS
-      const { Upload } = await import('tus-js-client');
+      // Upload direto via HTTP com progresso
+      console.log('📤 Iniciando upload HTTP direto...');
+      
+      const xhr = new XMLHttpRequest();
 
+      // Configurar progresso
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentage = Math.round((e.loaded / e.total) * 85) + 10;
+          setUploadProgress(percentage);
+        }
+      });
+
+      // Promessa para aguardar o upload
       await new Promise<void>((resolve, reject) => {
-        const upload = new Upload(selectedFile, {
-          endpoint: uploadUrl, // URL do Cloudflare Stream (usar endpoint, não uploadUrl)
-          chunkSize: 50 * 1024 * 1024, // 50MB
-          retryDelays: [0, 3000, 5000],
-          removeFingerprintOnSuccess: true, // Não tentar retomar este upload depois
-          metadata: {
-            filename: fileName,
-            filetype: selectedFile.type,
-          },
-          onError: (error) => {
-            console.error('❌ Erro TUS:', error);
-            reject(error);
-          },
-          onProgress: (bytesUploaded, bytesTotal) => {
-            const percentage = Math.round((bytesUploaded / bytesTotal) * 85) + 10;
-            setUploadProgress(percentage);
-          },
-          onSuccess: () => {
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
             console.log('✅ Upload concluído');
             setUploadProgress(95);
             resolve();
-          },
+          } else {
+            reject(new Error(`Upload falhou com status ${xhr.status}: ${xhr.responseText}`));
+          }
         });
 
-        upload.start();
+        xhr.addEventListener('error', () => {
+          reject(new Error('Erro de rede durante upload'));
+        });
+
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Upload cancelado'));
+        });
+
+        xhr.open('POST', uploadUrl);
+        xhr.send(selectedFile);
       });
 
       setUploadProgress(98);
