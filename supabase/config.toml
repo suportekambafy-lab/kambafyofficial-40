@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.migrate-to-vimeo]
 verify_jwt = false
+
+[functions.migrate-bunny-to-vimeo]
+verify_jwt = false
