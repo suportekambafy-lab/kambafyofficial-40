@@ -846,26 +846,38 @@ const VideoPlayer = ({
               const videoDuration = data.data.duration;
               const progress = (currentTime / videoDuration) * 100;
               
+              console.log('⏰ Video timeupdate:', { currentTime, videoDuration, progress });
+              
               setCurrentTime(currentTime);
               setDuration(videoDuration);
               setProgress(progress);
               
-              onProgress?.(progress);
-              onTimeUpdate?.(currentTime, videoDuration);
+              // Chamar callbacks
+              if (onProgress) {
+                console.log('📊 Chamando onProgress callback');
+                onProgress(progress);
+              }
+              if (onTimeUpdate) {
+                console.log('📹 Chamando onTimeUpdate callback:', { currentTime, videoDuration });
+                onTimeUpdate(currentTime, videoDuration);
+              }
             }
             break;
 
           case 'play':
+            console.log('▶️ Video play');
             setIsPlaying(true);
             onPlay?.();
             break;
 
           case 'pause':
+            console.log('⏸️ Video pause');
             setIsPlaying(false);
             onPause?.();
             break;
 
           case 'ended':
+            console.log('🏁 Video ended');
             setIsPlaying(false);
             onEnded?.();
             break;
@@ -881,10 +893,12 @@ const VideoPlayer = ({
       }
     };
 
+    console.log('🎬 Iniciando listener de postMessage do Vimeo');
     window.addEventListener('message', handleMessage);
 
     return () => {
       mounted = false;
+      console.log('🛑 Removendo listener de postMessage do Vimeo');
       window.removeEventListener('message', handleMessage);
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
