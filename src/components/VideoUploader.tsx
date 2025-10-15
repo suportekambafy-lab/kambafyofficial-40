@@ -114,14 +114,13 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       setUploadProgress(98);
 
-      // Aguardar processamento do Vimeo (necessário para obter URLs)
-      console.log('⏳ Aguardando processamento do Vimeo...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
       // URLs do Vimeo
       const hlsUrl = `https://player.vimeo.com/video/${videoId}`;
       const embedUrl = `https://player.vimeo.com/video/${videoId}`;
       const thumbnailUrl = `https://i.vimeocdn.com/video/${videoId}_640.jpg`;
+      const duration = uploadData.duration || 0;
+
+      console.log(`✅ Upload concluído - Duração: ${duration > 0 ? `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}` : 'não disponível'}`);
 
       setUploadProgress(100);
 
@@ -133,6 +132,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         hlsUrl,
         embedUrl,
         thumbnailUrl,
+        duration,
         privacy: {
           view: 'disable',
           embed: 'whitelist',
@@ -144,9 +144,13 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       setUploadProgress(0);
       onOpenChange(false);
 
+      const durationText = duration > 0 
+        ? `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}` 
+        : 'processando...';
+      
       toast({
         title: "Sucesso",
-        description: "Vídeo enviado com sucesso para Vimeo Pro (protegido com domain whitelist)"
+        description: `Vídeo enviado com sucesso! Duração: ${durationText}`
       });
 
     } catch (error: any) {

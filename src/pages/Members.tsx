@@ -902,18 +902,23 @@ export default function Members() {
     setFormData(prev => {
       const newFormData = {
         ...prev,
-        video_url: videoData?.hlsUrl || videoUrl, // Priorizar HLS URL para video_url
-        bunny_embed_url: videoData?.embedUrl || videoUrl, // Guardar embed como fallback
-        hls_url: videoData?.hlsUrl || null // Guardar HLS URL explicitamente
+        video_url: videoData?.hlsUrl || videoUrl,
+        bunny_embed_url: videoData?.embedUrl || videoUrl,
+        hls_url: videoData?.hlsUrl || null,
+        duration: videoData?.duration || 0,
       };
       console.log('Updated formData with video:', newFormData);
       return newFormData;
     });
-    // Fechar o modal do video uploader automaticamente
     setVideoUploaderOpen(false);
+    
+    const durationText = videoData?.duration > 0 
+      ? `${Math.floor(videoData.duration / 60)}:${(videoData.duration % 60).toString().padStart(2, '0')}` 
+      : 'processando...';
+    
     toast({
       title: "Sucesso",
-      description: "Vídeo enviado com sucesso! HLS ativado automaticamente."
+      description: `Vídeo enviado com sucesso! Duração: ${durationText}`
     });
   };
   const handlePreview = () => {
