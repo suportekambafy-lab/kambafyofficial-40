@@ -90,7 +90,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       await new Promise<void>((resolve, reject) => {
         const upload = new Upload(selectedFile, {
-          endpoint: uploadUrl, // URL completa do Cloudflare Stream
+          uploadUrl: uploadUrl, // ✅ Usar uploadUrl ao invés de endpoint
           chunkSize: 50 * 1024 * 1024, // 50MB chunks
           retryDelays: [0, 3000, 5000, 10000],
           removeFingerprintOnSuccess: true,
@@ -98,6 +98,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
             filename: fileName,
             filetype: selectedFile.type,
           },
+          headers: {}, // Headers vazios - Cloudflare gerencia autenticação via URL
           onError: (error) => {
             console.error('❌ Erro TUS:', error);
             reject(error);
