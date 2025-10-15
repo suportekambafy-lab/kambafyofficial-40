@@ -219,15 +219,28 @@ export default function ProductSalesPage() {
   const priceFormatted = formatPrice(priceInKZ, userCountry, true, product.custom_prices);
   
   // Calcular tempo de cadastro no Kambafy
-  const getYearsOnPlatform = () => {
-    if (!product.profiles?.created_at) return 0;
+  const getTimeOnPlatform = () => {
+    if (!product.profiles?.created_at) return { value: 0, unit: 'Dias' };
     const createdDate = new Date(product.profiles.created_at);
     const now = new Date();
-    const years = now.getFullYear() - createdDate.getFullYear();
-    return years;
+    const diffMs = now.getTime() - createdDate.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 7) {
+      return { value: Math.max(1, diffDays), unit: diffDays === 1 ? 'Dia' : 'Dias' };
+    } else if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return { value: weeks, unit: weeks === 1 ? 'Semana' : 'Semanas' };
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return { value: months, unit: months === 1 ? 'Mês' : 'Meses' };
+    } else {
+      const years = Math.floor(diffDays / 365);
+      return { value: years, unit: years === 1 ? 'Ano' : 'Anos' };
+    }
   };
   
-  const yearsOnPlatform = getYearsOnPlatform();
+  const timeOnPlatform = getTimeOnPlatform();
 
   return (
     <>
@@ -749,7 +762,7 @@ export default function ProductSalesPage() {
                               {product.profiles.business_name || product.profiles.full_name}
                             </h3>
                             <p className="text-xs text-muted-foreground">
-                              {yearsOnPlatform} {yearsOnPlatform === 1 ? 'Ano' : 'Anos'} Kambafy
+                              {timeOnPlatform.value} {timeOnPlatform.unit} Kambafy
                             </p>
                           </div>
                         </div>
