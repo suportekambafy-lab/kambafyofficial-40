@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart, CheckCircle2, User } from "lucide-react";
+import { Loader2, ShoppingCart, CheckCircle2 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import kambaFyLogo from "@/assets/kambafy-logo.png";
 
@@ -134,157 +134,134 @@ export default function ProductSalesPage() {
         {product.cover && <meta property="og:image" content={product.cover} />}
       </Helmet>
 
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-24 md:pb-0">
         {/* Header */}
         <header className="border-b bg-card sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="container mx-auto px-4 py-3 flex justify-between items-center">
             <img 
               src={kambaFyLogo}
               alt="Kambafy" 
-              className="h-8"
+              className="h-6 md:h-8"
             />
-            <Button onClick={handleGoToCheckout} size="sm">
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Ir para Checkout
+            <Button onClick={handleGoToCheckout} size="sm" variant="ghost" className="md:hidden">
+              <ShoppingCart className="w-4 h-4" />
             </Button>
           </div>
         </header>
 
-        {/* Hero Section */}
-        <section className="py-12 md:py-20 bg-gradient-to-b from-background to-muted/20">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-8 items-center max-w-6xl mx-auto">
-              {/* Product Image */}
-              <div className="order-2 md:order-1">
-                <div className="aspect-square rounded-xl overflow-hidden shadow-2xl">
-                  <img
-                    src={product.cover}
-                    alt={product.image_alt || product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+        {/* Main Content */}
+        <section className="py-4 md:py-8">
+          <div className="container mx-auto px-4 max-w-4xl">
+            {/* Product Header - Compact */}
+            <div className="flex gap-3 md:gap-4 items-start mb-4">
+              {/* Product Image - Smaller */}
+              <div className="flex-shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-lg overflow-hidden shadow-md">
+                <img
+                  src={product.cover}
+                  alt={product.image_alt || product.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
 
-              {/* Product Info */}
-              <div className="order-1 md:order-2 space-y-6">
-                <Badge className="text-sm">{product.type}</Badge>
-                <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+              {/* Product Info - Beside Image */}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg md:text-xl font-bold leading-tight mb-1">
                   {product.name}
                 </h1>
-                <p className="text-xl text-muted-foreground leading-relaxed">
-                  {product.description}
-                </p>
-                
-                {/* Price */}
-                <div className="bg-card border rounded-lg p-6">
-                  <div className="text-sm text-muted-foreground mb-2">Preço</div>
-                  <div className="text-4xl font-bold text-primary mb-4">
-                    {priceFormatted} KZ
-                  </div>
-                  <Button 
-                    onClick={handleGoToCheckout} 
-                    size="lg" 
-                    className="w-full text-lg h-14"
-                  >
-                    <ShoppingCart className="w-5 h-5 mr-2" />
-                    Comprar Agora
-                  </Button>
-                </div>
-
-                {/* Seller Info */}
                 {product.profiles && (
-                  <div className="flex items-center gap-3 pt-4 border-t">
-                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                      {product.profiles.avatar_url ? (
-                        <img src={product.profiles.avatar_url} alt={product.profiles.business_name || product.profiles.full_name} className="w-full h-full object-cover" />
-                      ) : (
-                        <User className="w-6 h-6 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Vendido por</div>
-                      <div className="font-semibold">{product.profiles.business_name || product.profiles.full_name}</div>
-                    </div>
+                  <div className="text-xs md:text-sm text-muted-foreground">
+                    {product.profiles.business_name || product.profiles.full_name}
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* Benefits Section */}
-        <section className="py-16 bg-card">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <h2 className="text-3xl font-bold text-center mb-12">O que você vai receber</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center space-y-3">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8 text-primary" />
+            {/* Product Details Card */}
+            <Card className="mb-4">
+              <CardContent className="p-3 md:p-4 space-y-2">
+                <div className="flex items-center gap-2 text-xs md:text-sm">
+                  <span className="text-muted-foreground">Formato:</span>
+                  <span className="font-medium">{product.type}</span>
                 </div>
-                <h3 className="text-xl font-semibold">Acesso Imediato</h3>
-                <p className="text-muted-foreground">Receba acesso ao produto assim que o pagamento for confirmado</p>
-              </div>
-              <div className="text-center space-y-3">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8 text-primary" />
+              </CardContent>
+            </Card>
+
+            {/* Description */}
+            <div className="mb-4">
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                {product.description}
+              </p>
+            </div>
+
+            {/* Benefits - Compact */}
+            <div className="space-y-2 md:space-y-3 mb-4">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-xs md:text-sm font-semibold">Acesso Imediato</h3>
+                  <p className="text-xs text-muted-foreground">Receba acesso após confirmação</p>
                 </div>
-                <h3 className="text-xl font-semibold">Suporte Dedicado</h3>
-                <p className="text-muted-foreground">Tire suas dúvidas diretamente com o vendedor</p>
               </div>
-              <div className="text-center space-y-3">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8 text-primary" />
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-xs md:text-sm font-semibold">Suporte Dedicado</h3>
+                  <p className="text-xs text-muted-foreground">Tire dúvidas com o vendedor</p>
                 </div>
-                <h3 className="text-xl font-semibold">Garantia de Qualidade</h3>
-                <p className="text-muted-foreground">Produto verificado pela plataforma Kambafy</p>
               </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-xs md:text-sm font-semibold">Garantia de Qualidade</h3>
+                  <p className="text-xs text-muted-foreground">Produto verificado pela Kambafy</p>
+                </div>
+              </div>
+            </div>
+
+            {/* FAQ Section - Compact */}
+            <div className="mb-4">
+              <h2 className="text-base md:text-lg font-bold mb-3">Perguntas Frequentes</h2>
+              <Accordion type="single" collapsible className="w-full">
+                {faqs.map((faq, index) => (
+                  <AccordionItem key={index} value={`item-${index}`}>
+                    <AccordionTrigger className="text-left text-xs md:text-sm py-3">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-xs md:text-sm text-muted-foreground">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           </div>
         </section>
 
-        {/* FAQ Section */}
-        <section className="py-16 bg-background">
-          <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-3xl font-bold text-center mb-12">Perguntas Frequentes</h2>
-            <Accordion type="single" collapsible className="w-full">
-              {faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-left">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+        {/* Price and CTA - Sticky Bottom on Mobile */}
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg md:static md:border-0 md:shadow-none z-40">
+          <div className="container mx-auto px-4 py-3 md:py-6 max-w-4xl">
+            <div className="flex items-center justify-between gap-3 md:gap-4">
+              <div>
+                <div className="text-xs text-muted-foreground">Preço</div>
+                <div className="text-xl md:text-2xl font-bold text-primary">
+                  {priceFormatted} KZ
+                </div>
+              </div>
+              <Button 
+                onClick={handleGoToCheckout} 
+                size="lg"
+                className="flex-shrink-0"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Comprar
+              </Button>
+            </div>
           </div>
-        </section>
+        </div>
 
-        {/* CTA Section */}
-        <section className="py-16 bg-primary text-primary-foreground">
-          <div className="container mx-auto px-4 text-center max-w-2xl">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Pronto para começar?
-            </h2>
-            <p className="text-xl mb-8 opacity-90">
-              Garanta seu acesso agora por apenas {priceFormatted} KZ
-            </p>
-            <Button 
-              onClick={handleGoToCheckout} 
-              size="lg" 
-              variant="secondary"
-              className="text-lg h-14 px-8"
-            >
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              Comprar Agora
-            </Button>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="border-t bg-card py-8">
-          <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+        {/* Footer - Hidden on mobile due to sticky bottom */}
+        <footer className="border-t bg-card py-4 mt-8 hidden md:block">
+          <div className="container mx-auto px-4 text-center text-xs text-muted-foreground">
             <p>© 2025 Kambafy. Todos os direitos reservados.</p>
           </div>
         </footer>
