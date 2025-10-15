@@ -7,7 +7,14 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, ShoppingCart, CheckCircle2, Star, Menu, ChevronRight, HelpCircle } from "lucide-react";
+import { Loader2, ShoppingCart, CheckCircle2, Star, Menu, ChevronRight, HelpCircle, Search, ChevronDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { Helmet } from "react-helmet-async";
 import useEmblaCarousel from "embla-carousel-react";
 import { useGeoLocation } from "@/hooks/useGeoLocation";
@@ -225,11 +232,12 @@ export default function ProductSalesPage() {
         {/* Header */}
         <header className="border-b bg-card sticky top-0 z-50">
           <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
+            {/* Mobile Header */}
+            <div className="flex items-center justify-between md:hidden">
               {/* Menu Button - Left */}
               <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="md:flex">
+                  <Button variant="ghost" size="icon">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
@@ -281,17 +289,74 @@ export default function ProductSalesPage() {
                 <img 
                   src={kambaFyLogo}
                   alt="Kambafy Marketplace" 
-                  className="h-10 md:h-16"
+                  className="h-10"
                 />
               </div>
 
-              {/* Cart Button - Right (Mobile) */}
-              <Button onClick={handleGoToCheckout} size="sm" variant="ghost" className="md:hidden">
+              {/* Cart Button - Right */}
+              <Button onClick={handleGoToCheckout} size="sm" variant="ghost">
                 <ShoppingCart className="w-4 h-4" />
               </Button>
-              
-              {/* Empty div for layout balance on desktop */}
-              <div className="hidden md:block w-10"></div>
+            </div>
+
+            {/* Desktop Header */}
+            <div className="hidden md:flex items-center gap-6">
+              {/* Logo */}
+              <div className="flex-shrink-0">
+                <img 
+                  src={kambaFyLogo}
+                  alt="Kambafy Marketplace" 
+                  className="h-10"
+                />
+              </div>
+
+              {/* Categories Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="gap-2">
+                    Categorias
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  {categories.map((category) => (
+                    <DropdownMenuItem key={category}>
+                      {category}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Search Bar */}
+              <div className="flex-1 max-w-xl relative">
+                <Input 
+                  type="text"
+                  placeholder="O que você quer aprender?"
+                  className="w-full pr-10"
+                />
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="absolute right-0 top-0 h-full"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/cliente/meus-produtos')}
+                >
+                  Acessar meu curso
+                </Button>
+                <Button 
+                  onClick={() => navigate('/vendedor/produtos')}
+                >
+                  Criar um curso
+                </Button>
+              </div>
             </div>
           </div>
         </header>
