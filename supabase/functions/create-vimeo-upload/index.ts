@@ -90,17 +90,15 @@ Deno.serve(async (req) => {
       privacy: {
         embed: 'whitelist',
       },
-      embed: {
-        whitelist: [
-          'kambafy.com',
-          'app.kambafy.com',
-          'membros.kambafy.com',
-          '*.kambafy.com',
-          'localhost',
-          '*.lovable.app',
-          '*.lovableproject.com',
-        ],
-      },
+      embed_domains: [  // ✅ FORMATO CORRETO: embed_domains no root
+        'kambafy.com',
+        'app.kambafy.com',
+        'membros.kambafy.com',
+        '*.kambafy.com',
+        'localhost',
+        '*.lovable.app',
+        '*.lovableproject.com',
+      ],
     };
 
     console.log('📤 Whitelist payload:', JSON.stringify(whitelistPayload, null, 2));
