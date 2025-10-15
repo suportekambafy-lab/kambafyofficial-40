@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SEO } from '@/components/SEO';
 import { ResendAllAccessButton } from '@/components/admin/ResendAllAccessButton';
 import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalancesButton';
+import BunnyToVimeoMigration from '@/components/admin/BunnyToVimeoMigration';
 
 interface ModernMetricCardProps {
   title: string;
@@ -526,6 +527,16 @@ export default function AdminDashboard() {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* System Tools Section */}
+        <div className="mt-8">
+          <div className="flex items-center gap-3 mb-6">
+            <Sparkles className="h-6 w-6 text-indigo-600" />
+            <h2 className="text-2xl font-bold text-foreground">Ferramentas do Sistema</h2>
+          </div>
+          
+          <BunnyToVimeoMigration />
         </div>
       </div>
     </div>
