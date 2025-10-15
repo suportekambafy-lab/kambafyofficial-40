@@ -91,6 +91,7 @@ Deno.serve(async (req) => {
         },
         embed: {
           whitelist: [
+            'kambafy.com',
             'app.kambafy.com',
             'membros.kambafy.com',
             '*.kambafy.com',
