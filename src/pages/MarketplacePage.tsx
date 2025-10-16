@@ -146,7 +146,7 @@ export default function MarketplacePage() {
                     <img 
                       src={marketplaceLogo} 
                       alt="Kambafy Marketplace" 
-                      className="h-6 w-auto"
+                      className="h-8 w-auto"
                     />
                   </div>
                   
@@ -182,7 +182,7 @@ export default function MarketplacePage() {
                     <img 
                       src={marketplaceLogo} 
                       alt="Kambafy Marketplace" 
-                      className="h-8 w-auto"
+                      className="h-10 w-auto"
                     />
                   </div>
 
