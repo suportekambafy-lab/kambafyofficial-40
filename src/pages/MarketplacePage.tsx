@@ -248,7 +248,7 @@ export default function MarketplacePage() {
               </div>
 
               {/* Right Side - Image */}
-              <div className="relative">
+              <div className="relative max-w-md mx-auto">
                 <img
                   src={marketplaceHeroImage}
                   alt="Estudante aprendendo"
