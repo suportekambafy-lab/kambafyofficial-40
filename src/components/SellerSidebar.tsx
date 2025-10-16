@@ -14,7 +14,8 @@ import {
   Settings,
   LogOut,
   Bell,
-  ChevronDown
+  ChevronDown,
+  Search
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -462,35 +463,34 @@ export function TopBar() {
 
   return (
     <div className="fixed top-0 left-0 right-0 h-16 bg-checkout-green z-20 flex items-center justify-between px-6">
-      {/* Desktop: Logo à esquerda */}
-      {!isMobile && (
-        <div className="flex items-center">
-          <KambafyLogo />
-        </div>
-      )}
-
-      {/* Mobile: Meta à esquerda */}
-      {isMobile && (
-        <div className="flex items-center gap-2 text-white text-sm">
-          <span>Meta: 1M KZ</span>
-          <div className="w-24 h-2 bg-white/20 rounded-full">
-            <div className="h-full bg-yellow-400 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
+      {isMobile ? (
+        <>
+          {/* Mobile: Logo centralizado */}
+          <div className="flex-1 flex justify-center">
+            <KambafyLogo />
           </div>
-          <span className="text-yellow-400 font-medium">{progressPercent.toFixed(0)}%</span>
-        </div>
-      )}
-      
-      <div className="flex items-center gap-4">
-        {/* Desktop: Barra de progresso da meta */}
-        {!isMobile && (
-          <div className="flex items-center gap-2 text-white text-sm">
-            <span>Meta: 1M KZ</span>
-            <div className="w-32 h-2 bg-white/20 rounded-full">
-              <div className="h-full bg-yellow-400 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
+          
+          {/* Mobile: Ícone de lupa à direita */}
+          <Button variant="ghost" className="text-white hover:bg-white/10 p-2">
+            <Search className="h-5 w-5" />
+          </Button>
+        </>
+      ) : (
+        <>
+          {/* Desktop: Logo à esquerda */}
+          <div className="flex items-center">
+            <KambafyLogo />
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {/* Desktop: Barra de progresso da meta */}
+            <div className="flex items-center gap-2 text-white text-sm">
+              <span>Meta: 1M KZ</span>
+              <div className="w-32 h-2 bg-white/20 rounded-full">
+                <div className="h-full bg-yellow-400 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
+              </div>
+              <span className="text-yellow-400 font-medium">{progressPercent.toFixed(0)}%</span>
             </div>
-            <span className="text-yellow-400 font-medium">{progressPercent.toFixed(0)}%</span>
-          </div>
-        )}
 
         {/* Sino de notificações */}
         <DropdownMenu>
@@ -600,7 +600,9 @@ export function TopBar() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
