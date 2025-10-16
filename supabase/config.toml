@@ -1,5 +1,8 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.admin-toggle-marketplace]
+verify_jwt = false
+
 [functions.appypay-webhook]
 verify_jwt = false
 
