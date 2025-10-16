@@ -241,7 +241,7 @@ export default function MarketplacePage() {
               </p>
 
               {/* Hero Image with Overlapping Search */}
-              <div className="relative w-full -mx-4 px-4 mb-4">
+              <div className="relative w-full mb-4">
                 <img
                   src={marketplaceHeroImage}
                   alt="Estudante aprendendo"
@@ -249,7 +249,7 @@ export default function MarketplacePage() {
                 />
                 
                 {/* Search Bar with Button - Positioned over image */}
-                <div className="absolute -bottom-6 left-0 right-0 px-8">
+                <div className="absolute -bottom-6 left-4 right-4">
                   <div className="relative">
                     <Input
                       placeholder='Tente "marketing" ou "culinária"'
