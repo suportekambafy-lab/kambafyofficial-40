@@ -16,7 +16,8 @@ import {
   Eye,
   TrendingUp,
   UserCheck,
-  Calendar
+  Calendar,
+  Store
 } from 'lucide-react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 
@@ -52,6 +53,12 @@ const menuItems = [
     icon: TrendingUp,
     description: 'Todas as transações',
     badge: 'transactions'
+  },
+  {
+    href: '/admin/marketplace',
+    label: 'Marketplace',
+    icon: Store,
+    description: 'Controlar produtos visíveis'
   },
   {
     href: '/admin/users',
