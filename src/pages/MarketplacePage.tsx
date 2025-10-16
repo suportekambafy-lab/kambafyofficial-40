@@ -12,6 +12,7 @@ import marketplaceHeroImage from "@/assets/marketplace-hero.png";
 import marketplaceLogo from "@/assets/marketplace-logo.png";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface Product {
   id: string;
@@ -444,12 +445,17 @@ export default function MarketplacePage() {
           {categories.length > 0 && (
             <section className="mb-16">
               <h2 className="text-3xl font-bold mb-8">Categorias</h2>
-              <div className="relative -mx-4 md:mx-0">
-                <div className="overflow-x-auto scrollbar-hide px-4 md:px-0">
-                  <div className="flex gap-6 pb-4 md:flex-wrap md:justify-start">
-                    {categories.map((category) => (
+              <Carousel
+                opts={{
+                  align: "start",
+                  loop: false,
+                }}
+                className="w-full"
+              >
+                <CarouselContent className="-ml-4">
+                  {categories.map((category) => (
+                    <CarouselItem key={category} className="pl-4 basis-auto">
                       <button
-                        key={category}
                         onClick={() => setSelectedCategory(category)}
                         className="flex flex-col items-center gap-3 min-w-[120px] group transition-transform hover:scale-105"
                       >
@@ -470,10 +476,12 @@ export default function MarketplacePage() {
                           {category}
                         </span>
                       </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden md:flex -left-4" />
+                <CarouselNext className="hidden md:flex -right-4" />
+              </Carousel>
               {selectedCategory && (
                 <div className="mt-6">
                   <Button
