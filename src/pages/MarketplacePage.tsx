@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet-async";
-import { Search, Filter, TrendingUp, Clock, Star } from "lucide-react";
+import { Search, Filter, TrendingUp, Clock, Star, User, GraduationCap, DollarSign, UtensilsCrossed, Briefcase, Heart, Dumbbell, Palette, Code, Music } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,6 +29,20 @@ interface Product {
     avatar_url: string | null;
   };
 }
+
+// Mapeamento de categorias para ícones
+const categoryIcons: Record<string, React.ReactNode> = {
+  "Desenvolvimento Pessoal": <User className="w-8 h-8" />,
+  "Educacional": <GraduationCap className="w-8 h-8" />,
+  "Finanças e Investimentos": <DollarSign className="w-8 h-8" />,
+  "Culinária e Gastronomia": <UtensilsCrossed className="w-8 h-8" />,
+  "Negócios e Carreira": <Briefcase className="w-8 h-8" />,
+  "Saúde e Bem-estar": <Heart className="w-8 h-8" />,
+  "Fitness e Exercícios": <Dumbbell className="w-8 h-8" />,
+  "Arte e Design": <Palette className="w-8 h-8" />,
+  "Tecnologia": <Code className="w-8 h-8" />,
+  "Música": <Music className="w-8 h-8" />,
+};
 
 export default function MarketplacePage() {
   const navigate = useNavigate();
@@ -383,23 +397,47 @@ export default function MarketplacePage() {
           {categories.length > 0 && (
             <section className="mb-16">
               <h2 className="text-3xl font-bold mb-8">Categorias</h2>
-              <div className="flex flex-wrap gap-3 mb-8">
-                <Button
-                  variant={selectedCategory === null ? "default" : "outline"}
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  Todas
-                </Button>
-                {categories.map((category) => (
-                  <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    {category}
-                  </Button>
-                ))}
+              <div className="relative -mx-4 md:mx-0">
+                <div className="overflow-x-auto scrollbar-hide px-4 md:px-0">
+                  <div className="flex gap-6 pb-4 md:flex-wrap md:justify-start">
+                    {categories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        className="flex flex-col items-center gap-3 min-w-[120px] group transition-transform hover:scale-105"
+                      >
+                        <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                          selectedCategory === category 
+                            ? 'bg-primary scale-110' 
+                            : 'bg-primary/90 hover:bg-primary'
+                        }`}>
+                          <div className="text-primary-foreground">
+                            {categoryIcons[category] || <Star className="w-8 h-8" />}
+                          </div>
+                        </div>
+                        <span className={`text-sm font-medium text-center max-w-[120px] transition-colors ${
+                          selectedCategory === category 
+                            ? 'text-primary' 
+                            : 'text-foreground group-hover:text-primary'
+                        }`}>
+                          {category}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
+              {selectedCategory && (
+                <div className="mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedCategory(null)}
+                    size="sm"
+                  >
+                    Limpar filtro
+                  </Button>
+                </div>
+              )}
             </section>
           )}
 
