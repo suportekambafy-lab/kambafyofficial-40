@@ -225,13 +225,54 @@ export default function MarketplacePage() {
         </header>
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 pt-20 pb-16">
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5">
           <div className="container mx-auto px-4 max-w-7xl">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Mobile Layout */}
+            <div className="md:hidden pt-6 pb-8">
+              {/* Title */}
+              <h1 className="text-3xl font-bold mb-3">
+                O que você quer{" "}
+                <span className="text-primary">aprender</span> hoje?
+              </h1>
+              
+              {/* Subtitle */}
+              <p className="text-base text-muted-foreground mb-6">
+                Pesquise um tema e escolha cursos perfeitos para você
+              </p>
+
+              {/* Hero Image */}
+              <div className="relative w-full mb-6 -mx-4 px-4">
+                <img
+                  src={marketplaceHeroImage}
+                  alt="Estudante aprendendo"
+                  className="w-full h-auto"
+                />
+              </div>
+
+              {/* Search Bar with Button */}
+              <div className="relative">
+                <Input
+                  placeholder='Tente "marketing" ou "culinária"'
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-14 py-6 text-base rounded-full shadow-lg"
+                />
+                <Button 
+                  size="icon"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-10 w-10"
+                >
+                  <Search className="w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Desktop Layout */}
+            <div className="hidden md:grid md:grid-cols-2 gap-8 items-center pt-20 pb-16">
               {/* Left Side - Text and Search */}
               <div className="space-y-6">
-                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  O que você quer aprender hoje?
+                <h1 className="text-4xl md:text-5xl font-bold">
+                  O que você quer{" "}
+                  <span className="text-primary">aprender</span> hoje?
                 </h1>
                 <p className="text-lg text-muted-foreground">
                   Descubra cursos, ebooks e conteúdos exclusivos para acelerar seu aprendizado
@@ -264,21 +305,18 @@ export default function MarketplacePage() {
         <div className="container mx-auto px-4 max-w-7xl py-12">
           {/* Conteúdos mais acessados */}
           <section className="mb-16">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-bold mb-2">
-                  Os melhores conteúdos da Kambafy na palma da mão
-                </h2>
-                <p className="text-muted-foreground">Mais populares</p>
-              </div>
-              <Button variant="ghost" className="gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Ver mais
-              </Button>
+            <div className="mb-8">
+              <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-2">
+                SÃO MAIS DE {products?.length || 0} PRODUTOS
+              </p>
+              <h2 className="text-2xl md:text-3xl font-bold mb-2">
+                Os melhores conteúdos da Kambafy na palma da mão
+              </h2>
+              <p className="text-muted-foreground hidden md:block">Mais populares</p>
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {[...Array(8)].map((_, i) => (
                   <Card key={i} className="overflow-hidden animate-pulse">
                     <div className="aspect-square bg-muted" />
@@ -290,7 +328,7 @@ export default function MarketplacePage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {topProducts.map((product) => (
                   <Card
                     key={product.id}
@@ -377,7 +415,7 @@ export default function MarketplacePage() {
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {[...Array(12)].map((_, i) => (
                   <Card key={i} className="overflow-hidden animate-pulse">
                     <div className="aspect-square bg-muted" />
@@ -389,7 +427,7 @@ export default function MarketplacePage() {
                 ))}
               </div>
             ) : filteredProducts && filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {(showAllProducts ? filteredProducts : filteredProducts.slice(0, 8)).map((product) => (
                   <Card
                     key={product.id}
