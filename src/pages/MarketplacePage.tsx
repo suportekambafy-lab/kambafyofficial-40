@@ -58,6 +58,7 @@ export default function MarketplacePage() {
           )
         `)
         .eq("status", "Ativo")
+        .neq("type", "Link de Pagamento")
         .order("sales", { ascending: false })
         .order("created_at", { ascending: false });
 
