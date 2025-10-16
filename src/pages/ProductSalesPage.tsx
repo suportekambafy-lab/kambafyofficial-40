@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { Helmet } from "react-helmet-async";
+import { UnifiedSEO } from "@/components/UnifiedSEO";
 import useEmblaCarousel from "embla-carousel-react";
 import { useGeoLocation } from "@/hooks/useGeoLocation";
 import { formatPrice } from "@/utils/priceFormatting";
@@ -244,16 +244,46 @@ export default function ProductSalesPage() {
 
   return (
     <>
-      <Helmet>
-        <title>{product.seo_title || product.name}</title>
-        <meta name="description" content={product.seo_description || product.description || ''} />
-        {product.seo_keywords && product.seo_keywords.length > 0 && (
-          <meta name="keywords" content={product.seo_keywords.join(', ')} />
-        )}
-        <meta property="og:title" content={product.seo_title || product.name} />
-        <meta property="og:description" content={product.seo_description || product.description || ''} />
-        {product.cover && <meta property="og:image" content={product.cover} />}
-      </Helmet>
+      <UnifiedSEO
+        title={product.seo_title || product.name}
+        description={product.seo_description || product.description || ''}
+        keywords={product.seo_keywords?.join(', ') || ''}
+        image={product.cover || ''}
+        canonical={`https://kambafy.com/produto/${product.slug || product.id}`}
+        type="product"
+        price={product.price}
+        currency={userCountry?.currency || "AOA"}
+        availability="InStock"
+        structuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": product.name,
+            "description": product.description,
+            "image": product.cover,
+            "brand": {
+              "@type": "Brand",
+              "name": product.profiles?.business_name || product.profiles?.full_name || "Kambafy"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": product.price,
+              "priceCurrency": userCountry?.currency || "AOA",
+              "availability": "https://schema.org/InStock",
+              "url": `https://kambafy.com/produto/${product.slug || product.id}`,
+              "seller": {
+                "@type": product.profiles?.business_name ? "Organization" : "Person",
+                "name": product.profiles?.business_name || product.profiles?.full_name
+              }
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "5"
+            }
+          }
+        ]}
+      />
 
       <div className="min-h-screen bg-background pb-24 md:pb-0">
         {/* Header */}

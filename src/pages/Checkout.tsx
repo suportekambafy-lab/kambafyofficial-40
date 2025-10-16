@@ -16,8 +16,7 @@ import { useCustomToast } from "@/hooks/useCustomToast";
 import { PhoneInput } from "@/components/PhoneInput";
 import { useGeoLocation } from "@/hooks/useGeoLocation";
 import { getPaymentMethodsByCountry } from "@/utils/paymentMethods";
-import { SEO } from "@/components/SEO";
-import { setProductSEO } from "@/utils/seoUtils";
+import { UnifiedSEO } from "@/components/UnifiedSEO";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
@@ -507,9 +506,6 @@ const Checkout = () => {
           console.log('Product loaded successfully:', productData);
           setProduct(productData);
           setError("");
-
-          // Aplicar SEO imediatamente quando o produto carrega
-          setProductSEO(productData);
         }
       } catch (error) {
         console.error('Unexpected error loading product:', error);
@@ -1937,28 +1933,41 @@ const Checkout = () => {
   return <ThemeProvider forceLightMode={true}>
       
       <FacebookPixelTracker productId={productId || ''} />
-      {product && <SEO title={product.seo_title && product.seo_title.trim() ? product.seo_title : `${product.name} | Kambafy`} description={product.seo_description || product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`} ogImage={product.cover || 'https://kambafy.com/kambafy-social-preview.png'} keywords={product.seo_keywords && product.seo_keywords.length > 0 ? product.seo_keywords.join(', ') : `${product.name}, comprar ${product.name}, checkout, pagamento seguro, ${product.tags?.join(', ') || ''}`} structuredData={{
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": product.name,
-      "description": product.seo_description || product.description || `Produto digital: ${product.name}`,
-      "image": product.cover || 'https://kambafy.com/kambafy-social-preview.png',
-      "brand": {
-        "@type": "Brand",
-        "name": product.fantasy_name || "Kambafy"
-      },
-      "offers": {
-        "@type": "Offer",
-        "url": `https://pay.kambafy.com/checkout/${product.id}`,
-        "priceCurrency": "AOA",
-        "price": product.price,
-        "availability": "https://schema.org/InStock",
-        "seller": {
-          "@type": "Organization",
-          "name": product.fantasy_name || "Kambafy"
-        }
-      }
-    }} />}
+      {product && (
+        <UnifiedSEO
+          title={product.seo_title && product.seo_title.trim() ? product.seo_title : product.name}
+          description={product.seo_description || product.description || `Finalize sua compra do produto ${product.name} com segurança na Kambafy.`}
+          image={product.cover || 'https://kambafy.com/lovable-uploads/d8006597-4c28-4313-b50d-96a944e49040.png'}
+          keywords={product.seo_keywords && product.seo_keywords.length > 0 ? product.seo_keywords.join(', ') : `${product.name}, comprar ${product.name}, checkout, pagamento seguro`}
+          canonical={`https://kambafy.com/checkout/${product.id}`}
+          type="product"
+          price={product.price}
+          currency={userCountry?.currency || "AOA"}
+          availability="InStock"
+          structuredData={{
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": product.name,
+            "description": product.seo_description || product.description || `Produto digital: ${product.name}`,
+            "image": product.cover || 'https://kambafy.com/lovable-uploads/d8006597-4c28-4313-b50d-96a944e49040.png',
+            "brand": {
+              "@type": "Brand",
+              "name": product.fantasy_name || "Kambafy"
+            },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://kambafy.com/checkout/${product.id}`,
+              "priceCurrency": userCountry?.currency || "AOA",
+              "price": product.price,
+              "availability": "https://schema.org/InStock",
+              "seller": {
+                "@type": "Organization",
+                "name": product.fantasy_name || "Kambafy"
+              }
+            }
+          }}
+        />
+      )}
       <div className="min-h-screen bg-gray-50">
         {checkoutSettings?.countdown?.enabled && <OptimizedCountdownTimer minutes={checkoutSettings.countdown.minutes} title={checkoutSettings.countdown.title} backgroundColor={checkoutSettings.countdown.backgroundColor} textColor={checkoutSettings.countdown.textColor} />}
 

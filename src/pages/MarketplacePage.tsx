@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Helmet } from "react-helmet-async";
+import { UnifiedSEO } from "@/components/UnifiedSEO";
 import { Search, Filter, TrendingUp, Clock, Star, User, GraduationCap, DollarSign, UtensilsCrossed, Briefcase, Heart, Dumbbell, Palette, Code, Music } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -151,27 +151,20 @@ export default function MarketplacePage() {
 
   return (
     <>
-      <Helmet>
-        <title>Marketplace - Descubra produtos digitais | Kambafy</title>
-        <meta
-          name="description"
-          content="Descubra e compre produtos digitais de especialistas angolanos. Marketplace com cursos online, ebooks, templates e infoprodutos para sua evolução pessoal e profissional."
-        />
-        
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://kambafy.com/marketplace" />
-        <meta property="og:title" content="Marketplace - Descubra produtos digitais | Kambafy" />
-        <meta property="og:description" content="Descubra e compre produtos digitais de especialistas angolanos. Marketplace com cursos online, ebooks, templates e infoprodutos para sua evolução pessoal e profissional." />
-        <meta property="og:image" content="https://kambafy.com/lovable-uploads/d8006597-4c28-4313-b50d-96a944e49040.png" />
-        
-        {/* Twitter */}
-        <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content="https://kambafy.com/marketplace" />
-        <meta property="twitter:title" content="Marketplace - Descubra produtos digitais | Kambafy" />
-        <meta property="twitter:description" content="Descubra e compre produtos digitais de especialistas angolanos. Marketplace com cursos online, ebooks, templates e infoprodutos para sua evolução pessoal e profissional." />
-        <meta property="twitter:image" content="https://kambafy.com/lovable-uploads/d8006597-4c28-4313-b50d-96a944e49040.png" />
-      </Helmet>
+      <UnifiedSEO
+        title="Marketplace - Descubra produtos digitais"
+        description="Descubra e compre produtos digitais de especialistas angolanos. Marketplace com cursos online, ebooks, templates e infoprodutos para sua evolução pessoal e profissional."
+        keywords="marketplace kambafy, produtos digitais angola, cursos online, ebooks, templates, infoprodutos"
+        canonical="https://kambafy.com/marketplace"
+        type="website"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Marketplace Kambafy",
+          "description": "Descubra produtos digitais de especialistas angolanos",
+          "url": "https://kambafy.com/marketplace"
+        }}
+      />
 
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
         {/* Header with Search */}
