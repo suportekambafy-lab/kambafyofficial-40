@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import marketplaceHeroImage from "@/assets/marketplace-hero.png";
 
 interface Product {
   id: string;
@@ -109,22 +110,34 @@ export default function MarketplacePage() {
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 pt-20 pb-16">
           <div className="container mx-auto px-4 max-w-7xl">
-            <div className="text-center max-w-3xl mx-auto mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                O que você quer aprender hoje?
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8">
-                Descubra cursos, ebooks e conteúdos exclusivos para acelerar seu aprendizado
-              </p>
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              {/* Left Side - Text and Search */}
+              <div className="space-y-6">
+                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                  O que você quer aprender hoje?
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  Descubra cursos, ebooks e conteúdos exclusivos para acelerar seu aprendizado
+                </p>
 
-              {/* Search Bar */}
-              <div className="relative max-w-2xl mx-auto">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  placeholder="Buscar por cursos, ebooks, categorias..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 pr-4 py-6 text-lg"
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                  <Input
+                    placeholder="Buscar por cursos, ebooks, categorias..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 pr-4 py-6 text-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Right Side - Image */}
+              <div className="relative">
+                <img
+                  src={marketplaceHeroImage}
+                  alt="Estudante aprendendo"
+                  className="w-full h-auto rounded-2xl shadow-2xl"
                 />
               </div>
             </div>
