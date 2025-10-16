@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import marketplaceHeroImage from "@/assets/marketplace-hero.png";
 import marketplaceLogo from "@/assets/marketplace-logo.png";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Product {
   id: string;
@@ -30,6 +32,7 @@ interface Product {
 
 export default function MarketplacePage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -112,45 +115,84 @@ export default function MarketplacePage() {
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="flex h-16 items-center gap-4">
-              {/* Logo */}
-              <div className="flex items-center mr-4">
-                <img 
-                  src={marketplaceLogo} 
-                  alt="Kambafy Marketplace" 
-                  className="h-8 w-auto"
-                />
-              </div>
-
-              {/* Categories Dropdown */}
-              <Button variant="ghost" className="hidden md:flex items-center gap-1">
-                Categorias
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </Button>
-
-              {/* Search Bar */}
-              <div className="flex-1 max-w-2xl">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    placeholder='Tente "marketing" ou "culinária"'
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4"
+              {/* Mobile: Logo menor à esquerda */}
+              {isMobile ? (
+                <div className="flex items-center flex-1">
+                  <img 
+                    src={marketplaceLogo} 
+                    alt="Kambafy Marketplace" 
+                    className="h-6 w-auto"
                   />
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Desktop: Logo */}
+                  <div className="flex items-center mr-4">
+                    <img 
+                      src={marketplaceLogo} 
+                      alt="Kambafy Marketplace" 
+                      className="h-8 w-auto"
+                    />
+                  </div>
 
-              {/* Action Buttons */}
-              <div className="hidden md:flex items-center gap-2">
-                <Button variant="outline" onClick={() => navigate('/membros')}>
-                  Acessar meu curso
-                </Button>
-                <Button onClick={() => navigate('/vendedor')}>
-                  Criar um curso
-                </Button>
-              </div>
+                  {/* Categories Dropdown */}
+                  <Button variant="ghost" className="hidden md:flex items-center gap-1">
+                    Categorias
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </Button>
+
+                  {/* Search Bar */}
+                  <div className="flex-1 max-w-2xl">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder='Tente "marketing" ou "culinária"'
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 pr-4"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="hidden md:flex items-center gap-2">
+                    <Button variant="outline" onClick={() => navigate('/membros')}>
+                      Acessar meu curso
+                    </Button>
+                    <Button onClick={() => navigate('/vendedor')}>
+                      Criar um curso
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* Mobile: Menu Icon */}
+              {isMobile && (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-[300px]">
+                    <SheetHeader>
+                      <SheetTitle>Menu</SheetTitle>
+                    </SheetHeader>
+                    <div className="flex flex-col gap-4 mt-6">
+                      <Button variant="outline" onClick={() => navigate('/membros')} className="w-full">
+                        Acessar meu curso
+                      </Button>
+                      <Button onClick={() => navigate('/vendedor')} className="w-full">
+                        Criar um curso
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
             </div>
           </div>
         </header>
