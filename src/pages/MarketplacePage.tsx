@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import marketplaceHeroImage from "@/assets/marketplace-hero.png";
+import marketplaceLogo from "@/assets/marketplace-logo.png";
 
 interface Product {
   id: string;
@@ -114,8 +115,8 @@ export default function MarketplacePage() {
               {/* Logo */}
               <div className="flex items-center mr-4">
                 <img 
-                  src="/kambafy-logo-new.svg" 
-                  alt="Kambafy" 
+                  src={marketplaceLogo} 
+                  alt="Kambafy Marketplace" 
                   className="h-8 w-auto"
                 />
               </div>
