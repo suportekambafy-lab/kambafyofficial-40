@@ -112,9 +112,12 @@ export default function MarketplacePage() {
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="flex h-16 items-center gap-4">
               {/* Logo */}
-              <div className="flex items-center gap-2 font-bold text-xl text-primary mr-4">
-                <span>🔥</span>
-                Kambafy <span className="text-muted-foreground font-normal">Marketplace</span>
+              <div className="flex items-center mr-4">
+                <img 
+                  src="/kambafy-logo-new.svg" 
+                  alt="Kambafy" 
+                  className="h-8 w-auto"
+                />
               </div>
 
               {/* Categories Dropdown */}
@@ -155,7 +158,7 @@ export default function MarketplacePage() {
         <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 pt-20 pb-16">
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="grid md:grid-cols-2 gap-8 items-center">
-              {/* Left Side - Text */}
+              {/* Left Side - Text and Search */}
               <div className="space-y-6">
                 <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   O que você quer aprender hoje?
@@ -163,6 +166,17 @@ export default function MarketplacePage() {
                 <p className="text-lg text-muted-foreground">
                   Descubra cursos, ebooks e conteúdos exclusivos para acelerar seu aprendizado
                 </p>
+
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                  <Input
+                    placeholder="Buscar por cursos, ebooks, categorias..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 pr-4 py-6 text-lg"
+                  />
+                </div>
               </div>
 
               {/* Right Side - Image */}
