@@ -126,10 +126,15 @@ const VideoPlayer = ({
         console.log('🎬 Detectado vídeo do Vimeo - usando iframe');
         setCurrentSource('iframe');
       }
-      // If Cloudflare Stream, prefer iframe over HLS for better compatibility
+      // If Cloudflare Stream with embed URL, prefer iframe
       else if (isCloudflareStream && embedUrl) {
-        console.log('🎬 Detectado Cloudflare Stream - usando iframe para melhor compatibilidade');
+        console.log('🎬 Detectado Cloudflare Stream com embedUrl - usando iframe');
         setCurrentSource('iframe');
+      }
+      // If Cloudflare Stream with only HLS, use HLS
+      else if (isCloudflareStream && hlsUrl && !embedUrl) {
+        console.log('🎬 Detectado Cloudflare Stream com apenas HLS - tentando HLS');
+        setCurrentSource('hls');
       }
       else if (hlsUrl) {
         console.log('🎬 Tentando HLS como fonte principal');
