@@ -947,20 +947,31 @@ const VideoPlayer = ({
       
       if (isCloudflareStream) {
         console.log('🎬 Processando URL do Cloudflare Stream para iframe:', embedUrl);
-        try {
-          const url = new URL(embedUrl);
-          // Adicionar parâmetros para Cloudflare Stream
-          url.searchParams.set('autoplay', 'false');
-          url.searchParams.set('muted', 'false');
-          url.searchParams.set('preload', 'auto');
-          if (startTime > 0) {
-            url.searchParams.set('startTime', Math.floor(startTime).toString());
+        
+        // Se já for uma URL completa do Cloudflare, usar diretamente
+        if (embedUrl.startsWith('http')) {
+          try {
+            const url = new URL(embedUrl);
+            url.searchParams.set('autoplay', 'false');
+            url.searchParams.set('muted', 'false');
+            url.searchParams.set('preload', 'auto');
+            if (startTime > 0) {
+              url.searchParams.set('startTime', Math.floor(startTime).toString());
+            }
+            console.log('✅ URL do Cloudflare processada:', url.toString());
+            return url.toString();
+          } catch (e) {
+            console.warn('⚠️ Erro ao processar URL do Cloudflare:', e);
+            return embedUrl;
           }
-          return url.toString();
-        } catch (e) {
-          console.warn('Erro ao processar URL do Cloudflare Stream:', e);
-          return embedUrl;
         }
+        
+        // Se for apenas o video ID do Cloudflare, não podemos usar iframe
+        console.warn('⚠️ embedUrl do Cloudflare não é uma URL completa:', embedUrl);
+        console.warn('⚠️ Tentando fallback para HLS...');
+        // Marcar iframe como falho e tentar HLS
+        handleSourceFailure('iframe', 'embedUrl incompleta - não é URL válida');
+        return embedUrl;
       }
       
       return embedUrl;
