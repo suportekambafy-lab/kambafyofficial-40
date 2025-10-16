@@ -571,8 +571,12 @@ const VideoPlayer = ({
     }
   };
 
+  // Determinar qual conteúdo renderizar (sem early returns que violam regras de hooks)
+  const shouldShowError = errorMessage && failedSources.size >= 2;
+  const shouldShowHLS = !shouldShowError && currentSource === 'hls' && hlsUrl;
+
   // Error display with ISP/DNS help
-  if (errorMessage && failedSources.size >= 2) {
+  if (shouldShowError) {
     return (
       <div className="relative w-full max-w-4xl mx-auto bg-black rounded-lg overflow-hidden">
         <div className="w-full aspect-video flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
@@ -650,7 +654,7 @@ const VideoPlayer = ({
   }
 
   // HLS Player
-  if (currentSource === 'hls' && hlsUrl) {
+  if (shouldShowHLS) {
     return (
       <motion.div
         className="relative w-full max-w-4xl mx-auto overflow-hidden bg-[#11111198] shadow-[0_0_20px_rgba(0,0,0,0.2)] backdrop-blur-sm"
