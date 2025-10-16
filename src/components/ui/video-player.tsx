@@ -103,10 +103,8 @@ const VideoPlayer = ({
   // Detect if video is from Vimeo
   const isVimeoVideo = embedUrl?.includes('player.vimeo.com') || embedUrl?.includes('vimeo.com') || hlsUrl?.includes('vimeo.com');
   
-  // Detect if video is from Cloudflare Stream (NOT Bunny.net!)
-  const isCloudflareStream = embedUrl?.includes('cloudflarestream.com') || 
-                             embedUrl?.includes('customer-') && embedUrl?.includes('cloudflarestream.com') || 
-                             hlsUrl?.includes('cloudflarestream.com');
+  // Detect if video is from Cloudflare Stream
+  const isCloudflareStream = embedUrl?.includes('cloudflarestream.com') || hlsUrl?.includes('cloudflarestream.com');
   
   // Fallback system state
   const [currentSource, setCurrentSource] = useState<VideoSource | null>(null);
@@ -125,23 +123,23 @@ const VideoPlayer = ({
         console.log('🎬 Detectado vídeo do Vimeo - usando iframe');
         setCurrentSource('iframe');
       }
-      // If Cloudflare Stream with embed URL, prefer iframe
-      else if (isCloudflareStream && embedUrl) {
-        console.log('🎬 Detectado Cloudflare Stream com embedUrl - usando iframe');
-        setCurrentSource('iframe');
-      }
-      // If Cloudflare Stream with only HLS, use HLS
-      else if (isCloudflareStream && hlsUrl && !embedUrl) {
-        console.log('🎬 Detectado Cloudflare Stream com apenas HLS - tentando HLS');
+      // If Cloudflare Stream, ALWAYS prefer HLS (mais estável que iframe)
+      else if (isCloudflareStream && hlsUrl) {
+        console.log('🎬 Detectado Cloudflare Stream - usando HLS (preferencial)');
         setCurrentSource('hls');
       }
+      // HLS genérico
       else if (hlsUrl) {
         console.log('🎬 Tentando HLS como fonte principal');
         setCurrentSource('hls');
-      } else if (embedUrl) {
+      } 
+      // Iframe como fallback
+      else if (embedUrl) {
         console.log('🎬 Tentando iframe como fonte principal');
         setCurrentSource('iframe');
-      } else if (src) {
+      } 
+      // Vídeo direto
+      else if (src) {
         console.log('🎬 Tentando vídeo direto como fonte principal');
         setCurrentSource('direct');
       }
@@ -946,31 +944,8 @@ const VideoPlayer = ({
       }
       
       if (isCloudflareStream) {
-        console.log('🎬 Processando URL do Cloudflare Stream para iframe:', embedUrl);
-        
-        // Se já for uma URL completa do Cloudflare, usar diretamente
-        if (embedUrl.startsWith('http')) {
-          try {
-            const url = new URL(embedUrl);
-            url.searchParams.set('autoplay', 'false');
-            url.searchParams.set('muted', 'false');
-            url.searchParams.set('preload', 'auto');
-            if (startTime > 0) {
-              url.searchParams.set('startTime', Math.floor(startTime).toString());
-            }
-            console.log('✅ URL do Cloudflare processada:', url.toString());
-            return url.toString();
-          } catch (e) {
-            console.warn('⚠️ Erro ao processar URL do Cloudflare:', e);
-            return embedUrl;
-          }
-        }
-        
-        // Se for apenas o video ID do Cloudflare, não podemos usar iframe
-        console.warn('⚠️ embedUrl do Cloudflare não é uma URL completa:', embedUrl);
-        console.warn('⚠️ Tentando fallback para HLS...');
-        // Marcar iframe como falho e tentar HLS
-        handleSourceFailure('iframe', 'embedUrl incompleta - não é URL válida');
+        console.log('🎬 Cloudflare Stream detectado - não deve usar iframe (preferir HLS)');
+        // Cloudflare Stream deve usar HLS, não iframe
         return embedUrl;
       }
       
