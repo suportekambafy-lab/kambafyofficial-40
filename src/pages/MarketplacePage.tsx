@@ -240,29 +240,31 @@ export default function MarketplacePage() {
                 Pesquise um tema e escolha cursos perfeitos para você
               </p>
 
-              {/* Hero Image */}
-              <div className="relative w-full mb-6 -mx-4 px-4">
+              {/* Hero Image with Overlapping Search */}
+              <div className="relative w-full -mx-4 px-4 mb-4">
                 <img
                   src={marketplaceHeroImage}
                   alt="Estudante aprendendo"
                   className="w-full h-auto"
                 />
-              </div>
-
-              {/* Search Bar with Button */}
-              <div className="relative">
-                <Input
-                  placeholder='Tente "marketing" ou "culinária"'
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-14 py-6 text-base rounded-full shadow-lg"
-                />
-                <Button 
-                  size="icon"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-10 w-10"
-                >
-                  <Search className="w-5 h-5" />
-                </Button>
+                
+                {/* Search Bar with Button - Positioned over image */}
+                <div className="absolute bottom-4 left-0 right-0 px-8">
+                  <div className="relative">
+                    <Input
+                      placeholder='Tente "marketing" ou "culinária"'
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pr-14 py-6 text-base rounded-full shadow-lg bg-background"
+                    />
+                    <Button 
+                      size="icon"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-10 w-10"
+                    >
+                      <Search className="w-5 h-5" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
 
