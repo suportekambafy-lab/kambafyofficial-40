@@ -45,16 +45,6 @@ export function ModernLessonViewer({
   const [isReplayMode, setIsReplayMode] = useState(false);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Proteção contra props undefined
-  if (!lesson) {
-    console.error('❌ ModernLessonViewer: lesson is undefined!');
-    return (
-      <div className="p-8 text-center">
-        <p className="text-red-500">Erro ao carregar aula</p>
-      </div>
-    );
-  }
-
   // Obter progresso da aula atual
   const currentProgress = lessonProgress[lesson.id];
   const startTime = shouldRestart ? 0 : (currentProgress?.video_current_time || 0);
@@ -162,6 +152,17 @@ export function ModernLessonViewer({
       onNavigateLesson(nextLesson.id);
     }
   };
+
+  // Verificação de segurança após todos os hooks
+  if (!lesson) {
+    console.error('❌ ModernLessonViewer: lesson is undefined!');
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-500">Erro ao carregar aula</p>
+      </div>
+    );
+  }
+
   return <div className="space-y-4 sm:space-y-8 bg-zinc-950 w-full max-w-full overflow-x-hidden">
       {/* Video Player */}
       <motion.div initial={{
