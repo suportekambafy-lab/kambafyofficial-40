@@ -103,11 +103,10 @@ const VideoPlayer = ({
   // Detect if video is from Vimeo
   const isVimeoVideo = embedUrl?.includes('player.vimeo.com') || embedUrl?.includes('vimeo.com') || hlsUrl?.includes('vimeo.com');
   
-  // Detect if video is from Cloudflare Stream
+  // Detect if video is from Cloudflare Stream (NOT Bunny.net!)
   const isCloudflareStream = embedUrl?.includes('cloudflarestream.com') || 
-                             embedUrl?.includes('customer-') || 
-                             hlsUrl?.includes('cloudflarestream.com') ||
-                             hlsUrl?.includes('.b-cdn.net');
+                             embedUrl?.includes('customer-') && embedUrl?.includes('cloudflarestream.com') || 
+                             hlsUrl?.includes('cloudflarestream.com');
   
   // Fallback system state
   const [currentSource, setCurrentSource] = useState<VideoSource | null>(null);
