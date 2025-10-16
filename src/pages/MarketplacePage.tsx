@@ -107,11 +107,55 @@ export default function MarketplacePage() {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        {/* Header with Search */}
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="flex h-16 items-center gap-4">
+              {/* Logo */}
+              <div className="flex items-center gap-2 font-bold text-xl text-primary mr-4">
+                <span>🔥</span>
+                Kambafy <span className="text-muted-foreground font-normal">Marketplace</span>
+              </div>
+
+              {/* Categories Dropdown */}
+              <Button variant="ghost" className="hidden md:flex items-center gap-1">
+                Categorias
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </Button>
+
+              {/* Search Bar */}
+              <div className="flex-1 max-w-2xl">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    placeholder='Tente "marketing" ou "culinária"'
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant="outline" onClick={() => navigate('/membros')}>
+                  Acessar meu curso
+                </Button>
+                <Button onClick={() => navigate('/vendedor')}>
+                  Criar um curso
+                </Button>
+              </div>
+            </div>
+          </div>
+        </header>
+
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 pt-20 pb-16">
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="grid md:grid-cols-2 gap-8 items-center">
-              {/* Left Side - Text and Search */}
+              {/* Left Side - Text */}
               <div className="space-y-6">
                 <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   O que você quer aprender hoje?
@@ -119,17 +163,6 @@ export default function MarketplacePage() {
                 <p className="text-lg text-muted-foreground">
                   Descubra cursos, ebooks e conteúdos exclusivos para acelerar seu aprendizado
                 </p>
-
-                {/* Search Bar */}
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                  <Input
-                    placeholder="Buscar por cursos, ebooks, categorias..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 pr-4 py-6 text-lg"
-                  />
-                </div>
               </div>
 
               {/* Right Side - Image */}
