@@ -12,6 +12,7 @@ import marketplaceHeroImage from "@/assets/marketplace-hero.png";
 import marketplaceLogo from "@/assets/marketplace-logo.png";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+
 interface Product {
   id: string;
   name: string;
@@ -28,21 +29,19 @@ interface Product {
     avatar_url: string | null;
   };
 }
+
 export default function MarketplacePage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const {
-    data: products,
-    isLoading
-  } = useQuery({
+
+  const { data: products, isLoading } = useQuery({
     queryKey: ["marketplace-products"],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from("products").select(`
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
           id,
           name,
           description,
@@ -57,43 +56,58 @@ export default function MarketplacePage() {
             business_name,
             avatar_url
           )
-        `).eq("status", "Ativo").order("sales", {
-        ascending: false
-      }).order("created_at", {
-        ascending: false
-      });
+        `)
+        .eq("status", "Ativo")
+        .order("sales", { ascending: false })
+        .order("created_at", { ascending: false });
+
       if (error) throw error;
       return data as Product[];
-    }
+    },
   });
 
   // Produtos mais acessados (top 8 por vendas)
   const topProducts = products?.slice(0, 8) || [];
 
   // Obter categorias únicas
-  const categories = Array.from(new Set(products?.map(p => p.category).filter(Boolean) || []));
+  const categories = Array.from(
+    new Set(products?.map((p) => p.category).filter(Boolean) || [])
+  );
 
   // Filtrar produtos
-  const filteredProducts = products?.filter(product => {
-    const matchesSearch = searchTerm === "" || product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || product.category === selectedCategory;
+  const filteredProducts = products?.filter((product) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesCategory =
+      !selectedCategory || product.category === selectedCategory;
+
     return matchesSearch && matchesCategory;
   });
+
   const formatPrice = (price: string) => {
     const numPrice = parseFloat(price);
     return new Intl.NumberFormat("pt-AO", {
       style: "currency",
       currency: "AOA",
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(numPrice);
   };
+
   const handleProductClick = (product: Product) => {
     navigate(`/produto/${product.slug || product.id}`);
   };
-  return <>
+
+  return (
+    <>
       <Helmet>
         <title>Marketplace - Descubra produtos digitais | Kambafy</title>
-        <meta name="description" content="Explore centenas de cursos, ebooks e produtos digitais criados por especialistas angolanos. Aprenda novas habilidades e desenvolva sua carreira." />
+        <meta
+          name="description"
+          content="Explore centenas de cursos, ebooks e produtos digitais criados por especialistas angolanos. Aprenda novas habilidades e desenvolva sua carreira."
+        />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -101,7 +115,8 @@ export default function MarketplacePage() {
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="flex h-16 items-center justify-between gap-4">
-              {isMobile ? <>
+              {isMobile ? (
+                <>
                   {/* Mobile: Menu à esquerda */}
                   <Sheet>
                     <SheetTrigger asChild>
@@ -128,7 +143,11 @@ export default function MarketplacePage() {
 
                   {/* Mobile: Logo centralizado */}
                   <div className="flex-1 flex justify-center">
-                    <img src={marketplaceLogo} alt="Kambafy Marketplace" className="h-8 w-auto" />
+                    <img 
+                      src={marketplaceLogo} 
+                      alt="Kambafy Marketplace" 
+                      className="h-8 w-auto"
+                    />
                   </div>
                   
                   {/* Mobile: Ícone de lupa à direita */}
@@ -145,15 +164,26 @@ export default function MarketplacePage() {
                       <div className="flex flex-col gap-4 mt-6">
                         <div className="relative">
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                          <Input placeholder='Tente "marketing" ou "culinária"' value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 pr-4" />
+                          <Input
+                            placeholder='Tente "marketing" ou "culinária"'
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 pr-4"
+                          />
                         </div>
                       </div>
                     </SheetContent>
                   </Sheet>
-                </> : <>
+                </>
+              ) : (
+                <>
                   {/* Desktop: Logo */}
                   <div className="flex items-center mr-4">
-                    <img src={marketplaceLogo} alt="Kambafy Marketplace" className="h-10 w-auto" />
+                    <img 
+                      src={marketplaceLogo} 
+                      alt="Kambafy Marketplace" 
+                      className="h-10 w-auto"
+                    />
                   </div>
 
                   {/* Categories Dropdown */}
@@ -168,7 +198,12 @@ export default function MarketplacePage() {
                   <div className="flex-1 max-w-2xl">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input placeholder='Tente "marketing" ou "culinária"' value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 pr-4" />
+                      <Input
+                        placeholder='Tente "marketing" ou "culinária"'
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 pr-4"
+                      />
                     </div>
                   </div>
 
@@ -181,7 +216,8 @@ export default function MarketplacePage() {
                       Criar um curso
                     </Button>
                   </div>
-                </>}
+                </>
+              )}
             </div>
           </div>
         </header>
@@ -202,13 +238,22 @@ export default function MarketplacePage() {
                 {/* Search Bar */}
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                  <Input placeholder="Buscar por cursos, ebooks, categorias..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-12 pr-4 py-6 text-lg" />
+                  <Input
+                    placeholder="Buscar por cursos, ebooks, categorias..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 pr-4 py-6 text-lg"
+                  />
                 </div>
               </div>
 
               {/* Right Side - Image */}
               <div className="relative max-w-md mx-auto">
-                <img src={marketplaceHeroImage} alt="Estudante aprendendo" className="w-full h-auto rounded-2xl shadow-2xl" />
+                <img
+                  src={marketplaceHeroImage}
+                  alt="Estudante aprendendo"
+                  className="w-full h-auto rounded-2xl shadow-2xl"
+                />
               </div>
             </div>
           </div>
@@ -219,7 +264,7 @@ export default function MarketplacePage() {
           <section className="mb-16">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="font-bold mb-2 text-xl">
+                <h2 className="text-3xl font-bold mb-2">
                   Os melhores conteúdos da Kambafy na palma da mão
                 </h2>
                 <p className="text-muted-foreground">Mais populares</p>
@@ -230,27 +275,51 @@ export default function MarketplacePage() {
               </Button>
             </div>
 
-            {isLoading ? <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => <Card key={i} className="overflow-hidden animate-pulse">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <Card key={i} className="overflow-hidden animate-pulse">
                     <div className="aspect-square bg-muted" />
                     <CardContent className="p-4">
                       <div className="h-4 bg-muted rounded mb-2" />
                       <div className="h-3 bg-muted rounded w-2/3" />
                     </CardContent>
-                  </Card>)}
-              </div> : <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {topProducts.map(product => <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => handleProductClick(product)}>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {topProducts.map((product) => (
+                  <Card
+                    key={product.id}
+                    className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
+                    onClick={() => handleProductClick(product)}
+                  >
                     <div className="relative aspect-square bg-muted overflow-hidden">
-                      {product.cover ? <img src={product.cover} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                      {product.cover ? (
+                        <img
+                          src={product.cover}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
                           <span className="text-4xl">📚</span>
-                        </div>}
+                        </div>
+                      )}
                     </div>
                     <CardContent className="p-4">
                       <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                         {product.name}
                       </h3>
                       <div className="flex items-center gap-2 mb-2">
-                        {product.profiles.avatar_url && <img src={product.profiles.avatar_url} alt="" className="w-6 h-6 rounded-full" />}
+                        {product.profiles.avatar_url && (
+                          <img
+                            src={product.profiles.avatar_url}
+                            alt=""
+                            className="w-6 h-6 rounded-full"
+                          />
+                        )}
                         <p className="text-sm text-muted-foreground">
                           {product.profiles.business_name || product.profiles.full_name}
                         </p>
@@ -262,22 +331,35 @@ export default function MarketplacePage() {
                         <Badge variant="outline">{product.type}</Badge>
                       </div>
                     </CardContent>
-                  </Card>)}
-              </div>}
+                  </Card>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Categorias */}
-          {categories.length > 0 && <section className="mb-16">
+          {categories.length > 0 && (
+            <section className="mb-16">
               <h2 className="text-3xl font-bold mb-8">Categorias</h2>
               <div className="flex flex-wrap gap-3 mb-8">
-                <Button variant={selectedCategory === null ? "default" : "outline"} onClick={() => setSelectedCategory(null)}>
+                <Button
+                  variant={selectedCategory === null ? "default" : "outline"}
+                  onClick={() => setSelectedCategory(null)}
+                >
                   Todas
                 </Button>
-                {categories.map(category => <Button key={category} variant={selectedCategory === category ? "default" : "outline"} onClick={() => setSelectedCategory(category)}>
+                {categories.map((category) => (
+                  <Button
+                    key={category}
+                    variant={selectedCategory === category ? "default" : "outline"}
+                    onClick={() => setSelectedCategory(category)}
+                  >
                     {category}
-                  </Button>)}
+                  </Button>
+                ))}
               </div>
-            </section>}
+            </section>
+          )}
 
           {/* Todos os produtos */}
           <section>
@@ -285,27 +367,51 @@ export default function MarketplacePage() {
               {selectedCategory ? `${selectedCategory}` : "Todos os produtos"}
             </h2>
 
-            {isLoading ? <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {[...Array(12)].map((_, i) => <Card key={i} className="overflow-hidden animate-pulse">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[...Array(12)].map((_, i) => (
+                  <Card key={i} className="overflow-hidden animate-pulse">
                     <div className="aspect-square bg-muted" />
                     <CardContent className="p-4">
                       <div className="h-4 bg-muted rounded mb-2" />
                       <div className="h-3 bg-muted rounded w-2/3" />
                     </CardContent>
-                  </Card>)}
-              </div> : filteredProducts && filteredProducts.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {filteredProducts.map(product => <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => handleProductClick(product)}>
+                  </Card>
+                ))}
+              </div>
+            ) : filteredProducts && filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {filteredProducts.map((product) => (
+                  <Card
+                    key={product.id}
+                    className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
+                    onClick={() => handleProductClick(product)}
+                  >
                     <div className="relative aspect-square bg-muted overflow-hidden">
-                      {product.cover ? <img src={product.cover} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                      {product.cover ? (
+                        <img
+                          src={product.cover}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
                           <span className="text-4xl">📚</span>
-                        </div>}
+                        </div>
+                      )}
                     </div>
                     <CardContent className="p-4">
                       <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                         {product.name}
                       </h3>
                       <div className="flex items-center gap-2 mb-3">
-                        {product.profiles.avatar_url && <img src={product.profiles.avatar_url} alt="" className="w-6 h-6 rounded-full" />}
+                        {product.profiles.avatar_url && (
+                          <img
+                            src={product.profiles.avatar_url}
+                            alt=""
+                            className="w-6 h-6 rounded-full"
+                          />
+                        )}
                         <p className="text-sm text-muted-foreground line-clamp-1">
                           {product.profiles.business_name || product.profiles.full_name}
                         </p>
@@ -317,14 +423,19 @@ export default function MarketplacePage() {
                         <Badge variant="outline">{product.type}</Badge>
                       </div>
                     </CardContent>
-                  </Card>)}
-              </div> : <div className="text-center py-16">
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
                 <p className="text-muted-foreground text-lg">
                   Nenhum produto encontrado com esses filtros.
                 </p>
-              </div>}
+              </div>
+            )}
           </section>
         </div>
       </div>
-    </>;
+    </>
+  );
 }
