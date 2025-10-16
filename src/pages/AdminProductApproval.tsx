@@ -55,6 +55,7 @@ export default function AdminProductApproval() {
             email
           )
         `)
+        .eq("status", "Ativo")
         .neq("type", "Link de Pagamento")
         .order("created_at", { ascending: false });
 
@@ -65,12 +66,20 @@ export default function AdminProductApproval() {
 
   const toggleMarketplaceMutation = useMutation({
     mutationFn: async ({ productId, isApproved }: { productId: string; isApproved: boolean }) => {
-      const { error } = await supabase
-        .from("products")
-        .update({ admin_approved: isApproved })
-        .eq("id", productId);
-
-      if (error) throw error;
+      if (isApproved) {
+        // Usar função do banco para aprovar
+        const { error } = await supabase.rpc('admin_approve_product', {
+          product_id: productId
+        });
+        if (error) throw error;
+      } else {
+        // Para desativar, fazer update direto
+        const { error } = await supabase
+          .from("products")
+          .update({ admin_approved: false })
+          .eq("id", productId);
+        if (error) throw error;
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-all-products"] });
