@@ -249,7 +249,7 @@ export default function MarketplacePage() {
                 />
                 
                 {/* Search Bar with Button - Positioned over image */}
-                <div className="absolute bottom-4 left-0 right-0 px-8">
+                <div className="absolute -bottom-6 left-0 right-0 px-8">
                   <div className="relative">
                     <Input
                       placeholder='Tente "marketing" ou "culinária"'
