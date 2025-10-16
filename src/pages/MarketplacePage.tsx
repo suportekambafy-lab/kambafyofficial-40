@@ -117,6 +117,30 @@ export default function MarketplacePage() {
             <div className="flex h-16 items-center justify-between gap-4">
               {isMobile ? (
                 <>
+                  {/* Mobile: Menu à esquerda */}
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-[300px]">
+                      <SheetHeader>
+                        <SheetTitle>Menu</SheetTitle>
+                      </SheetHeader>
+                      <div className="flex flex-col gap-4 mt-6">
+                        <Button variant="outline" onClick={() => navigate('/membros')} className="w-full">
+                          Acessar meu curso
+                        </Button>
+                        <Button onClick={() => navigate('/vendedor')} className="w-full">
+                          Criar um curso
+                        </Button>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+
                   {/* Mobile: Logo centralizado */}
                   <div className="flex-1 flex justify-center">
                     <img 
@@ -147,12 +171,6 @@ export default function MarketplacePage() {
                             className="pl-10 pr-4"
                           />
                         </div>
-                        <Button variant="outline" onClick={() => navigate('/membros')} className="w-full">
-                          Acessar meu curso
-                        </Button>
-                        <Button onClick={() => navigate('/vendedor')} className="w-full">
-                          Criar um curso
-                        </Button>
                       </div>
                     </SheetContent>
                   </Sheet>
