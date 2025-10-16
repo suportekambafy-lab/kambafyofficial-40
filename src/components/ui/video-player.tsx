@@ -103,6 +103,12 @@ const VideoPlayer = ({
   // Detect if video is from Vimeo
   const isVimeoVideo = embedUrl?.includes('player.vimeo.com') || embedUrl?.includes('vimeo.com') || hlsUrl?.includes('vimeo.com');
   
+  // Detect if video is from Cloudflare Stream
+  const isCloudflareStream = embedUrl?.includes('cloudflarestream.com') || 
+                             embedUrl?.includes('customer-') || 
+                             hlsUrl?.includes('cloudflarestream.com') ||
+                             hlsUrl?.includes('.b-cdn.net');
+  
   // Fallback system state
   const [currentSource, setCurrentSource] = useState<VideoSource | null>(null);
   const [failedSources, setFailedSources] = useState<Set<VideoSource>>(new Set());
@@ -119,7 +125,13 @@ const VideoPlayer = ({
       if (isVimeoVideo && embedUrl) {
         console.log('🎬 Detectado vídeo do Vimeo - usando iframe');
         setCurrentSource('iframe');
-      } else if (hlsUrl) {
+      }
+      // If Cloudflare Stream, prefer iframe over HLS for better compatibility
+      else if (isCloudflareStream && embedUrl) {
+        console.log('🎬 Detectado Cloudflare Stream - usando iframe para melhor compatibilidade');
+        setCurrentSource('iframe');
+      }
+      else if (hlsUrl) {
         console.log('🎬 Tentando HLS como fonte principal');
         setCurrentSource('hls');
       } else if (embedUrl) {
@@ -130,7 +142,7 @@ const VideoPlayer = ({
         setCurrentSource('direct');
       }
     }
-  }, [hlsUrl, embedUrl, src, currentSource, failedSources]);
+  }, [hlsUrl, embedUrl, src, currentSource, failedSources, isVimeoVideo, isCloudflareStream]);
 
   // Handle source failure and automatic fallback
   const handleSourceFailure = (source: VideoSource, error?: string) => {
@@ -908,7 +920,7 @@ const VideoPlayer = ({
 
   // Iframe Player
   if (currentSource === 'iframe' && embedUrl) {
-    // Processar URL para remover branding do Vimeo
+    // Processar URL para remover branding do Vimeo e adicionar parâmetros ao Cloudflare
     const processedEmbedUrl = (() => {
       if (isVimeoVideo) {
         try {
@@ -928,6 +940,25 @@ const VideoPlayer = ({
           return embedUrl;
         }
       }
+      
+      if (isCloudflareStream) {
+        console.log('🎬 Processando URL do Cloudflare Stream para iframe:', embedUrl);
+        try {
+          const url = new URL(embedUrl);
+          // Adicionar parâmetros para Cloudflare Stream
+          url.searchParams.set('autoplay', 'false');
+          url.searchParams.set('muted', 'false');
+          url.searchParams.set('preload', 'auto');
+          if (startTime > 0) {
+            url.searchParams.set('startTime', Math.floor(startTime).toString());
+          }
+          return url.toString();
+        } catch (e) {
+          console.warn('Erro ao processar URL do Cloudflare Stream:', e);
+          return embedUrl;
+        }
+      }
+      
       return embedUrl;
     })();
     
