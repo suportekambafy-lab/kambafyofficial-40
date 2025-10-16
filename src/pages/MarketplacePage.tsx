@@ -226,9 +226,9 @@ export default function MarketplacePage() {
 
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5">
-          <div className="container mx-auto max-w-7xl md:px-4">
+          <div className="container mx-auto px-4 max-w-7xl">
             {/* Mobile Layout */}
-            <div className="md:hidden pt-6 pb-8 px-4">
+            <div className="md:hidden pt-6 pb-8">
               {/* Title */}
               <h1 className="text-3xl font-bold mb-3">
                 O que você quer{" "}
@@ -241,7 +241,7 @@ export default function MarketplacePage() {
               </p>
 
               {/* Hero Image with Overlapping Search */}
-              <div className="relative w-full mb-4 -mx-4">
+              <div className="relative w-full mb-4">
                 <img
                   src={marketplaceHeroImage}
                   alt="Estudante aprendendo"
