@@ -75,8 +75,6 @@ export function LessonContentTabs({
                       Nenhuma descrição disponível para esta aula.
                     </p>}
                 </div>
-                
-                {lesson.duration > 0}
               </div>
             </CardContent>
           </Card>
