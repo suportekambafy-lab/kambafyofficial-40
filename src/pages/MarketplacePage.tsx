@@ -157,6 +157,20 @@ export default function MarketplacePage() {
           name="description"
           content="Descubra e compre produtos digitais de especialistas angolanos. Marketplace com cursos online, ebooks, templates e infoprodutos para sua evolução pessoal e profissional."
         />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://kambafy.com/marketplace" />
+        <meta property="og:title" content="Marketplace - Descubra produtos digitais | Kambafy" />
+        <meta property="og:description" content="Descubra e compre produtos digitais de especialistas angolanos. Marketplace com cursos online, ebooks, templates e infoprodutos para sua evolução pessoal e profissional." />
+        <meta property="og:image" content="https://kambafy.com/lovable-uploads/d8006597-4c28-4313-b50d-96a944e49040.png" />
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://kambafy.com/marketplace" />
+        <meta property="twitter:title" content="Marketplace - Descubra produtos digitais | Kambafy" />
+        <meta property="twitter:description" content="Descubra e compre produtos digitais de especialistas angolanos. Marketplace com cursos online, ebooks, templates e infoprodutos para sua evolução pessoal e profissional." />
+        <meta property="twitter:image" content="https://kambafy.com/lovable-uploads/d8006597-4c28-4313-b50d-96a944e49040.png" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
