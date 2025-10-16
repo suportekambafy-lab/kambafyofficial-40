@@ -55,11 +55,9 @@ export default function ProductSalesPage() {
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
   const [reviewsEmblaRef] = useEmblaCarousel({ loop: true, align: 'start' });
-  const [productsEmblaRef] = useEmblaCarousel({ loop: false, align: 'start' });
   const { userCountry } = useGeoLocation();
   
   const reviews = [
@@ -162,26 +160,6 @@ export default function ProductSalesPage() {
       } as Product;
       
       setProduct(productData);
-      
-      // Carregar outros produtos do mesmo vendedor
-      if (productData?.user_id) {
-        const { data: related } = await supabase
-          .from('products')
-          .select('id, name, description, price, cover, type, slug, user_id, custom_prices')
-          .eq('user_id', productData.user_id)
-          .eq('status', 'Ativo')
-          .neq('id', productData.id)
-          .limit(3);
-        
-        if (related) {
-          // Cast custom_prices para o tipo correto
-          const relatedWithCorrectTypes = related.map(p => ({
-            ...p,
-            custom_prices: p.custom_prices as unknown as Record<string, string>
-          }));
-          setRelatedProducts(relatedWithCorrectTypes);
-        }
-      }
     } catch (error) {
       console.error('Erro ao carregar produto:', error);
     } finally {
@@ -583,43 +561,6 @@ export default function ProductSalesPage() {
                   </div>
                 </div>
 
-                {/* Related Products Section - Carousel */}
-                {relatedProducts.length > 0 && (
-                  <div className="mb-6">
-                    <h2 className="text-base md:text-lg font-bold mb-4">Outros produtos de quem criou esse conteúdo</h2>
-                    <div className="overflow-hidden" ref={productsEmblaRef}>
-                      <div className="flex gap-4">
-                        {relatedProducts.map((relatedProduct) => (
-                          <div key={relatedProduct.id} className="flex-[0_0_85%] md:flex-[0_0_30%] min-w-0">
-                            <Card 
-                              className="cursor-pointer hover:shadow-lg transition-shadow h-full"
-                              onClick={() => navigate(`/produto/${relatedProduct.slug || relatedProduct.id}`)}
-                            >
-                              <CardContent className="p-4">
-                                <img
-                                  src={relatedProduct.cover}
-                                  alt={relatedProduct.name}
-                                  className="w-full h-32 object-cover rounded-md mb-3"
-                                />
-                                <h3 className="text-sm font-semibold mb-2 line-clamp-2 min-h-[40px]">
-                                  {relatedProduct.name}
-                                </h3>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-bold text-primary">
-                                    {formatPrice(parseFloat(relatedProduct.price), userCountry, true, relatedProduct.custom_prices)}
-                                  </span>
-                                  <Badge variant="secondary" className="text-xs">
-                                    {relatedProduct.type}
-                                  </Badge>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* FAQ Section - Mobile Modal / Desktop Accordion */}
                 <div className="mb-4">
