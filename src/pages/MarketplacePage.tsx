@@ -30,18 +30,51 @@ interface Product {
   };
 }
 
-// Mapeamento de categorias para ícones
-const categoryIcons: Record<string, React.ReactNode> = {
-  "Desenvolvimento Pessoal": <User className="w-8 h-8" />,
-  "Educacional": <GraduationCap className="w-8 h-8" />,
-  "Finanças e Investimentos": <DollarSign className="w-8 h-8" />,
-  "Culinária e Gastronomia": <UtensilsCrossed className="w-8 h-8" />,
-  "Negócios e Carreira": <Briefcase className="w-8 h-8" />,
-  "Saúde e Bem-estar": <Heart className="w-8 h-8" />,
-  "Fitness e Exercícios": <Dumbbell className="w-8 h-8" />,
-  "Arte e Design": <Palette className="w-8 h-8" />,
-  "Tecnologia": <Code className="w-8 h-8" />,
-  "Música": <Music className="w-8 h-8" />,
+// Função para obter ícone baseado na categoria
+const getCategoryIcon = (category: string) => {
+  const categoryLower = category.toLowerCase();
+  
+  if (categoryLower.includes('desenvolvimento') || categoryLower.includes('pessoal')) {
+    return <User className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('marketing')) {
+    return <TrendingUp className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('finança') || categoryLower.includes('investimento')) {
+    return <DollarSign className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('negócio') || categoryLower.includes('empreend')) {
+    return <Briefcase className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('saúde') || categoryLower.includes('bem-estar') || categoryLower.includes('nutricao')) {
+    return <Heart className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('design') || categoryLower.includes('grafico')) {
+    return <Palette className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('tecnologia') || categoryLower.includes('programação') || categoryLower.includes('inteligencia')) {
+    return <Code className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('relacionamento') || categoryLower.includes('amorosa') || categoryLower.includes('sexualidade')) {
+    return <Heart className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('fotografia') || categoryLower.includes('video')) {
+    return <Palette className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('idioma')) {
+    return <GraduationCap className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('venda')) {
+    return <Briefcase className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('viagem') || categoryLower.includes('estilo') || categoryLower.includes('espiritualidade')) {
+    return <Star className="w-8 h-8" />;
+  }
+  if (categoryLower.includes('psicologia') || categoryLower.includes('comportamento')) {
+    return <User className="w-8 h-8" />;
+  }
+  
+  return <Star className="w-8 h-8" />;
 };
 
 export default function MarketplacePage() {
@@ -412,7 +445,7 @@ export default function MarketplacePage() {
                             : 'bg-primary/90 hover:bg-primary'
                         }`}>
                           <div className="text-primary-foreground">
-                            {categoryIcons[category] || <Star className="w-8 h-8" />}
+                            {getCategoryIcon(category)}
                           </div>
                         </div>
                         <span className={`text-sm font-medium text-center max-w-[120px] transition-colors ${
