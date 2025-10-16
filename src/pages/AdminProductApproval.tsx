@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Eye, AlertCircle } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface Product {
   id: string;
@@ -19,9 +18,8 @@ interface Product {
   type: string;
   status: string;
   admin_approved: boolean;
-  revision_requested: boolean;
-  revision_requested_at: string | null;
   created_at: string;
+  sales: number;
   profiles: {
     full_name: string | null;
     business_name: string | null;
@@ -32,11 +30,10 @@ interface Product {
 export default function AdminProductApproval() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [revisionNote, setRevisionNote] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["admin-pending-products"],
+    queryKey: ["admin-all-products"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
@@ -50,8 +47,7 @@ export default function AdminProductApproval() {
           type,
           status,
           admin_approved,
-          revision_requested,
-          revision_requested_at,
+          sales,
           created_at,
           profiles!inner(
             full_name,
@@ -59,7 +55,7 @@ export default function AdminProductApproval() {
             email
           )
         `)
-        .eq("admin_approved", false)
+        .neq("type", "Link de Pagamento")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -67,63 +63,38 @@ export default function AdminProductApproval() {
     },
   });
 
-  const approveMutation = useMutation({
-    mutationFn: async (productId: string) => {
-      const { error } = await supabase.rpc("admin_approve_product", {
-        product_id: productId,
-      });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-pending-products"] });
-      toast({
-        title: "Produto aprovado",
-        description: "O produto foi aprovado e está ativo no marketplace",
-      });
-      setSelectedProduct(null);
-    },
-    onError: (error) => {
-      toast({
-        title: "Erro ao aprovar",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const requestRevisionMutation = useMutation({
-    mutationFn: async ({ productId, note }: { productId: string; note: string }) => {
+  const toggleMarketplaceMutation = useMutation({
+    mutationFn: async ({ productId, isApproved }: { productId: string; isApproved: boolean }) => {
       const { error } = await supabase
         .from("products")
-        .update({
-          revision_requested: true,
-          revision_requested_at: new Date().toISOString(),
-          status: "Revisão",
-        })
+        .update({ admin_approved: isApproved })
         .eq("id", productId);
 
       if (error) throw error;
-
-      // Enviar notificação ao vendedor (pode ser implementado depois)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-pending-products"] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-all-products"] });
       toast({
-        title: "Revisão solicitada",
-        description: "O vendedor foi notificado para revisar o produto",
+        title: variables.isApproved ? "Produto ativado" : "Produto desativado",
+        description: variables.isApproved 
+          ? "O produto agora aparece no marketplace" 
+          : "O produto foi removido do marketplace",
       });
-      setSelectedProduct(null);
-      setRevisionNote("");
     },
     onError: (error) => {
       toast({
-        title: "Erro ao solicitar revisão",
+        title: "Erro",
         description: error.message,
         variant: "destructive",
       });
     },
   });
+
+  const filteredProducts = products?.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.profiles.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.profiles.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const formatPrice = (price: string) => {
     const numPrice = parseFloat(price);
@@ -137,12 +108,12 @@ export default function AdminProductApproval() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Aprovação de Produtos</h1>
+        <h1 className="text-3xl font-bold mb-6">Controle do Marketplace</h1>
         <div className="grid gap-4">
-          {[...Array(3)].map((_, i) => (
+          {[...Array(5)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-6 bg-muted rounded mb-4 w-2/3" />
+                <div className="h-6 bg-muted rounded mb-2 w-2/3" />
                 <div className="h-4 bg-muted rounded w-1/2" />
               </CardContent>
             </Card>
@@ -155,30 +126,39 @@ export default function AdminProductApproval() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Aprovação de Produtos</h1>
+        <h1 className="text-3xl font-bold mb-2">Controle do Marketplace</h1>
         <p className="text-muted-foreground">
-          Controle de qualidade - {products?.length || 0} produtos pendentes
+          Gerencie quais produtos aparecem no marketplace - Total: {products?.length || 0} produtos
         </p>
       </div>
 
-      {!products || products.length === 0 ? (
+      <div className="mb-6">
+        <Input
+          placeholder="Buscar por nome do produto ou vendedor..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-md"
+        />
+      </div>
+
+      {!filteredProducts || filteredProducts.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <CheckCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Tudo em ordem!</h3>
+            <Eye className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-xl font-semibold mb-2">Nenhum produto encontrado</h3>
             <p className="text-muted-foreground">
-              Não há produtos pendentes de aprovação no momento.
+              {searchTerm ? "Tente outro termo de busca" : "Não há produtos cadastrados ainda"}
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6">
-          {products.map((product) => (
-            <Card key={product.id} className="overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex gap-6">
+        <div className="space-y-3">
+          {filteredProducts.map((product) => (
+            <Card key={product.id}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
                   {/* Product Image */}
-                  <div className="w-40 h-40 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                  <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
                     {product.cover ? (
                       <img
                         src={product.cover}
@@ -187,161 +167,55 @@ export default function AdminProductApproval() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-4xl">📦</span>
+                        <span className="text-2xl">📦</span>
                       </div>
                     )}
                   </div>
 
                   {/* Product Info */}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="text-xl font-bold mb-1">{product.name}</h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                          <span>
-                            {product.profiles.business_name || product.profiles.full_name}
-                          </span>
-                          <span>•</span>
-                          <span>{product.profiles.email}</span>
-                        </div>
-                        <div className="flex gap-2 mb-3">
-                          <Badge variant="outline">{product.type}</Badge>
-                          {product.category && (
-                            <Badge variant="secondary">{product.category}</Badge>
-                          )}
-                          {product.revision_requested && (
-                            <Badge variant="destructive">
-                              <AlertCircle className="w-3 h-3 mr-1" />
-                              Em revisão
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-primary">
-                          {formatPrice(product.price)}
-                        </div>
-                      </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold mb-1 truncate">{product.name}</h3>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                      <span className="truncate">
+                        {product.profiles.business_name || product.profiles.full_name}
+                      </span>
+                      <span>•</span>
+                      <span>{formatPrice(product.price)}</span>
+                      <span>•</span>
+                      <span>{product.sales} vendas</span>
                     </div>
-
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {product.description}
-                    </p>
-
                     <div className="flex gap-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedProduct(product)}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Ver detalhes
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>{product.name}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            {product.cover && (
-                              <img
-                                src={product.cover}
-                                alt={product.name}
-                                className="w-full rounded-lg"
-                              />
-                            )}
-                            <div>
-                              <h4 className="font-semibold mb-2">Descrição</h4>
-                              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                                {product.description}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={() => approveMutation.mutate(product.id)}
-                                disabled={approveMutation.isPending}
-                                className="flex-1"
-                              >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Aprovar
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  if (revisionNote.trim()) {
-                                    requestRevisionMutation.mutate({
-                                      productId: product.id,
-                                      note: revisionNote,
-                                    });
-                                  }
-                                }}
-                                disabled={requestRevisionMutation.isPending}
-                                className="flex-1"
-                              >
-                                <XCircle className="w-4 h-4 mr-2" />
-                                Solicitar revisão
-                              </Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-
-                      <Button
-                        onClick={() => approveMutation.mutate(product.id)}
-                        disabled={approveMutation.isPending}
-                        size="sm"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Aprovar
-                      </Button>
-
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedProduct(product)}
-                          >
-                            <XCircle className="w-4 h-4 mr-2" />
-                            Solicitar revisão
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Solicitar Revisão</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <p className="text-sm text-muted-foreground">
-                              Informe o que precisa ser ajustado no produto "{product.name}"
-                            </p>
-                            <Textarea
-                              placeholder="Ex: A descrição está incompleta, adicione mais detalhes sobre o conteúdo..."
-                              value={revisionNote}
-                              onChange={(e) => setRevisionNote(e.target.value)}
-                              rows={5}
-                            />
-                            <Button
-                              onClick={() => {
-                                if (revisionNote.trim()) {
-                                  requestRevisionMutation.mutate({
-                                    productId: product.id,
-                                    note: revisionNote,
-                                  });
-                                }
-                              }}
-                              disabled={
-                                !revisionNote.trim() || requestRevisionMutation.isPending
-                              }
-                              className="w-full"
-                            >
-                              Enviar solicitação
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      <Badge variant="outline" className="text-xs">
+                        {product.type}
+                      </Badge>
+                      {product.category && (
+                        <Badge variant="secondary" className="text-xs">
+                          {product.category}
+                        </Badge>
+                      )}
                     </div>
+                  </div>
+
+                  {/* Switch Control */}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-sm font-medium mb-1">
+                        {product.admin_approved ? "Visível" : "Oculto"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        no marketplace
+                      </p>
+                    </div>
+                    <Switch
+                      checked={product.admin_approved}
+                      onCheckedChange={(checked) => {
+                        toggleMarketplaceMutation.mutate({
+                          productId: product.id,
+                          isApproved: checked,
+                        });
+                      }}
+                      disabled={toggleMarketplaceMutation.isPending}
+                    />
                   </div>
                 </div>
               </CardContent>
