@@ -155,7 +155,7 @@ export default function MarketplacePage() {
         <title>Marketplace - Descubra produtos digitais | Kambafy</title>
         <meta
           name="description"
-          content="Explore centenas de cursos, ebooks e produtos digitais criados por especialistas angolanos. Aprenda novas habilidades e desenvolva sua carreira."
+          content="Descubra e compre produtos digitais de especialistas angolanos. Marketplace com cursos online, ebooks, templates e infoprodutos para sua evolução pessoal e profissional."
         />
       </Helmet>
 
