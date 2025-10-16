@@ -279,7 +279,7 @@ export default function MarketplacePage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[...Array(8)].map((_, i) => (
                   <Card key={i} className="overflow-hidden animate-pulse">
-                    <div className="aspect-video bg-muted" />
+                    <div className="aspect-square bg-muted" />
                     <CardContent className="p-4">
                       <div className="h-4 bg-muted rounded mb-2" />
                       <div className="h-3 bg-muted rounded w-2/3" />
@@ -295,7 +295,7 @@ export default function MarketplacePage() {
                     className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
                     onClick={() => handleProductClick(product)}
                   >
-                    <div className="relative aspect-video bg-muted overflow-hidden">
+                    <div className="relative aspect-square bg-muted overflow-hidden">
                       {product.cover ? (
                         <img
                           src={product.cover}
@@ -371,7 +371,7 @@ export default function MarketplacePage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[...Array(12)].map((_, i) => (
                   <Card key={i} className="overflow-hidden animate-pulse">
-                    <div className="aspect-video bg-muted" />
+                    <div className="aspect-square bg-muted" />
                     <CardContent className="p-4">
                       <div className="h-4 bg-muted rounded mb-2" />
                       <div className="h-3 bg-muted rounded w-2/3" />
@@ -387,7 +387,7 @@ export default function MarketplacePage() {
                     className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
                     onClick={() => handleProductClick(product)}
                   >
-                    <div className="relative aspect-video bg-muted overflow-hidden">
+                    <div className="relative aspect-square bg-muted overflow-hidden">
                       {product.cover ? (
                         <img
                           src={product.cover}
