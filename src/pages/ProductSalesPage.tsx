@@ -312,7 +312,7 @@ export default function ProductSalesPage() {
               </Sheet>
 
               {/* Logo - Center */}
-              <div className="absolute left-1/2 transform -translate-x-1/2">
+              <div className="absolute left-1/2 transform -translate-x-1/2 cursor-pointer" onClick={() => navigate('/marketplace')}>
                 <img 
                   src={kambaFyLogo}
                   alt="Kambafy Marketplace" 
@@ -329,7 +329,7 @@ export default function ProductSalesPage() {
             {/* Desktop Header */}
             <div className="hidden md:flex items-center gap-6">
               {/* Logo */}
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate('/marketplace')}>
                 <img 
                   src={kambaFyLogo}
                   alt="Kambafy Marketplace" 
