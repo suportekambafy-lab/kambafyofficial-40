@@ -122,34 +122,40 @@ const VideoPlayer = ({
       if (isVimeoVideo && embedUrl) {
         console.log('🎬 Detectado vídeo do Vimeo - usando iframe');
         setCurrentSource('iframe');
+        return;
       }
       // If Cloudflare Stream, ALWAYS use HLS (nunca iframe)
-      else if (isCloudflareStream) {
+      if (isCloudflareStream) {
         if (hlsUrl) {
           console.log('🎬 Detectado Cloudflare Stream - usando HLS');
           setCurrentSource('hls');
         } else {
           console.error('❌ Cloudflare Stream sem HLS URL');
           setErrorMessage('Vídeo não disponível');
+          setIsLoading(false);
         }
+        return;
       }
       // HLS genérico
-      else if (hlsUrl) {
+      if (hlsUrl) {
         console.log('🎬 Tentando HLS como fonte principal');
         setCurrentSource('hls');
+        return;
       } 
       // Iframe como fallback (não-Cloudflare)
-      else if (embedUrl) {
+      if (embedUrl) {
         console.log('🎬 Tentando iframe como fonte principal');
         setCurrentSource('iframe');
+        return;
       } 
       // Vídeo direto
-      else if (src) {
+      if (src) {
         console.log('🎬 Tentando vídeo direto como fonte principal');
         setCurrentSource('direct');
+        return;
       }
     }
-  }, [hlsUrl, embedUrl, src, currentSource, failedSources, isVimeoVideo, isCloudflareStream]);
+  }, [hlsUrl, embedUrl, src, currentSource, failedSources.size, isVimeoVideo, isCloudflareStream]);
 
   // Handle source failure and automatic fallback
   const handleSourceFailure = (source: VideoSource, error?: string) => {
@@ -158,8 +164,16 @@ const VideoPlayer = ({
     setFailedSources(prev => new Set([...prev, source]));
     setIsLoading(false);
     
+    // ⛔ Cloudflare Stream NUNCA deve tentar iframe
+    if (isCloudflareStream) {
+      console.error('❌ Cloudflare Stream falhou - sem fallback disponível');
+      setErrorMessage('Não foi possível carregar o vídeo do Cloudflare Stream.');
+      onError?.();
+      return;
+    }
+    
     // Try next available source
-    if (source === 'hls' && embedUrl && !failedSources.has('iframe')) {
+    if (source === 'hls' && embedUrl && !failedSources.has('iframe') && !isCloudflareStream) {
       console.log('🔄 Fallback: HLS → iframe');
       setCurrentSource('iframe');
       setErrorMessage(null);
