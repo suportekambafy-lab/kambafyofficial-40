@@ -35,6 +35,7 @@ export default function MarketplacePage() {
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showAllProducts, setShowAllProducts] = useState(false);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["marketplace-products"],
@@ -364,9 +365,16 @@ export default function MarketplacePage() {
 
           {/* Todos os produtos */}
           <section>
-            <h2 className="text-3xl font-bold mb-8">
-              {selectedCategory ? `${selectedCategory}` : "Todos os produtos"}
-            </h2>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold">
+                {selectedCategory ? `${selectedCategory}` : "Todos os produtos"}
+              </h2>
+              {!showAllProducts && filteredProducts && filteredProducts.length > 8 && (
+                <Button variant="ghost" onClick={() => setShowAllProducts(true)}>
+                  Ver tudo
+                </Button>
+              )}
+            </div>
 
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -382,7 +390,7 @@ export default function MarketplacePage() {
               </div>
             ) : filteredProducts && filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {filteredProducts.map((product) => (
+                {(showAllProducts ? filteredProducts : filteredProducts.slice(0, 8)).map((product) => (
                   <Card
                     key={product.id}
                     className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
