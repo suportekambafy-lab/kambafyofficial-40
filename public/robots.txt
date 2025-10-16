@@ -1,47 +1,69 @@
-# Kambafy Robots.txt
-User-agent: *
+User-agent: Googlebot
 Allow: /
-Allow: /marketplace
-Allow: /produto/*
-Allow: /como-funciona
-Allow: /precos
-Allow: /recursos
-Allow: /ajuda
-Allow: /contato
-
-# Disallow admin areas
-Disallow: /admin/*
-Disallow: /vendedor/*
-Disallow: /api/*
-
-# Disallow member areas
-Disallow: /members/*
-Disallow: /meus-afiliados
-Disallow: /minhas-compras
-Disallow: /identidade
-
-# Disallow checkout and thank you pages
-Disallow: /checkout/*
-Disallow: /obrigado
-
-# Disallow test pages
-Disallow: /test-*
-Disallow: /*teste
-Disallow: /bunny-storage-test
-Disallow: /cloudflare-storage-test
-
-# Disallow auth pages
+Disallow: /admin
+Disallow: /api/
+Disallow: /vendedor/
+Disallow: /*?*
 Disallow: /auth
-Disallow: /reset-password
+Disallow: /404
+Disallow: /app
+Disallow: /app/
+Disallow: /app/*
 
-# Allow social media crawlers full access to product pages
-User-agent: facebookexternalhit
-Allow: /produto/*
-Allow: /marketplace
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /vendedor/
+Disallow: /*?*
+Disallow: /auth
+Disallow: /404
+Disallow: /app
+Disallow: /app/
+Disallow: /app/*
 
 User-agent: Twitterbot
-Allow: /produto/*
-Allow: /marketplace
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /vendedor/
 
-# Sitemap location
+User-agent: facebookexternalhit
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /vendedor/
+
+User-agent: *
+Allow: /
+Allow: /features
+Allow: /pricing
+Allow: /contact
+Allow: /help-center
+Allow: /how-it-works
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Disallow: /admin
+Disallow: /api/
+Disallow: /vendedor/
+Disallow: /*?*
+Disallow: /auth
+Disallow: /404
+Disallow: /user-settings
+Disallow: /financial
+Disallow: /sales
+Disallow: /products
+Disallow: /apps
+Disallow: /members
+Disallow: /checkout
+Disallow: /thank-you
+Disallow: /app
+Disallow: /app/
+Disallow: /app/*
+
+# Crawl-delay for general bots
+Crawl-delay: 1
+
+# Sitemap
 Sitemap: https://kambafy.com/sitemap.xml

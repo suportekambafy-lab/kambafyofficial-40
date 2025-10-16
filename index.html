@@ -12,29 +12,110 @@
     <!-- Script para SEO dinâmico de produtos - DEVE executar PRIMEIRO -->
     <script src="/product-seo-loader.js"></script>
     
-    <!-- Primary Meta Tags - Will be replaced by React Helmet -->
-    <title>Kambafy</title>
-    <meta name="title" content="" />
-    <meta name="description" content="" />
-    <meta name="keywords" content="" />
-    <meta name="robots" content="index, follow" />
+    <!-- SEO Meta Tags -->
+    <title id="page-title">Kambafy - Transforme seu conhecimento em renda</title>
+    <meta name="description" content="Kambafy é a plataforma completa para criar, vender e gerenciar produtos digitais. Checkout otimizado, analytics avançados, integração com pagamentos e muito mais.">
+    <meta name="keywords" content="vendas digitais, e-commerce, produtos digitais, checkout, pagamentos online, plataforma de vendas, infoprodutos, cursos online">
+    <meta name="author" content="Kambafy" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
     
-    <!-- Open Graph - Will be replaced by React Helmet -->
+    <!-- Viewport and Mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="screen-orientation" content="portrait" />
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="" />
-    <meta property="og:title" content="" />
-    <meta property="og:description" content="" />
-    <meta property="og:image" content="" />
-    <meta property="og:site_name" content="Kambafy" />
-    <meta property="og:locale" content="pt_AO" />
+    <meta property="og:url" id="og-url" content="https://kambafy.com" />
     
-    <!-- Twitter - Will be replaced by React Helmet -->
+    
+    <meta property="og:image" id="og-image" content="https://kambafy.com/lovable-uploads/d8006597-4c28-4313-b50d-96a944e49040.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Kambafy" />
+    <meta property="og:locale" content="pt_BR" />
+    
+    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="" />
-    <meta property="twitter:title" content="" />
-    <meta property="twitter:description" content="" />
-    <meta property="twitter:image" content="" />
-    <meta property="twitter:site" content="@kambafy" />
+    <meta property="twitter:url" id="twitter-url" content="https://kambafy.com" />
+    <meta property="twitter:title" id="twitter-title" content="Kambafy - Transforme seu conhecimento em renda" />
+    <meta property="twitter:description" id="twitter-description" content="Crie, venda e gerencie seus produtos digitais com a plataforma mais completa do mercado." />
+    <meta property="twitter:image" id="twitter-image" content="https://kambafy.com/lovable-uploads/d8006597-4c28-4313-b50d-96a944e49040.png" />
+    <meta property="twitter:creator" content="@kambafy" />
+    
+    <!-- Favicon and Icons -->
+    <link rel="icon" type="image/x-icon" href="https://storage.googleapis.com/gpt-engineer-file-uploads/xFbN394D8QW1rWAtQnW1ChJ9o6n1/uploads/1758661252582-símbolo verde@10x-8.png">
+    <link rel="apple-touch-icon" href="/lovable-uploads/a70398e0-b123-4faf-92ad-8fc2499aade2.png" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" id="canonical-url" href="https://kambafy.com" />
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    
+    <link rel="preconnect" href="https://pay.kambafy.com" crossorigin />
+    <link rel="preconnect" href="https://hcbkqygdtzpxvctfdqbd.supabase.co" crossorigin />
+    <link rel="preconnect" href="https://js.stripe.com" crossorigin />
+    <link rel="preconnect" href="https://api.stripe.com" crossorigin />
+    
+    <!-- DNS Prefetch -->
+    <link rel="dns-prefetch" href="//stripe.com" />
+    <link rel="dns-prefetch" href="//supabase.co" />
+    
+    <!-- Schema.org markup for Google -->
+    <script type="application/ld+json" id="structured-data">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Kambafy",
+      "description": "Plataforma completa para criar, vender e gerenciar produtos digitais",
+      "url": "https://kambafy.com",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "description": "Plano gratuito disponível"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Kambafy"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Kambafy"
+      }
+    }
+    </script>
+    
+    <!-- Facebook Pixel Base Code -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    </script>
+    <!-- End Facebook Pixel Base Code -->
+    
+    <meta property="og:title" content="Kambafy - Transforme seu conhecimento em renda">
+  <meta name="twitter:title" content="Kambafy - Transforme seu conhecimento em renda">
+  <meta property="og:description" content="Kambafy é a plataforma completa para criar, vender e gerenciar produtos digitais. Checkout otimizado, analytics avançados, integração com pagamentos e muito mais.">
+  <meta name="twitter:description" content="Kambafy é a plataforma completa para criar, vender e gerenciar produtos digitais. Checkout otimizado, analytics avançados, integração com pagamentos e muito mais.">
+  <meta name="twitter:card" content="summary_large_image">
 </head>
   <body>
     <div id="root"></div>
