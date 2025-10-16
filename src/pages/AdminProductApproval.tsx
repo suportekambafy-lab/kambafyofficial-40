@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 interface Product {
   id: string;
@@ -30,6 +31,7 @@ interface Product {
 export default function AdminProductApproval() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { admin } = useAdminAuth();
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data: products, isLoading } = useQuery({
@@ -66,20 +68,22 @@ export default function AdminProductApproval() {
 
   const toggleMarketplaceMutation = useMutation({
     mutationFn: async ({ productId, isApproved }: { productId: string; isApproved: boolean }) => {
-      if (isApproved) {
-        // Usar função do banco para aprovar
-        const { error } = await supabase.rpc('admin_approve_product', {
-          product_id: productId
-        });
-        if (error) throw error;
-      } else {
-        // Para desativar, fazer update direto
-        const { error } = await supabase
-          .from("products")
-          .update({ admin_approved: false })
-          .eq("id", productId);
-        if (error) throw error;
+      if (!admin?.email) {
+        throw new Error('Admin não autenticado');
       }
+
+      const { data, error } = await supabase.functions.invoke('admin-toggle-marketplace', {
+        body: {
+          productId,
+          isApproved,
+          adminEmail: admin.email
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-all-products"] });
