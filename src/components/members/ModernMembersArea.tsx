@@ -18,6 +18,7 @@ import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { LessonComments } from './LessonComments';
 import { MemberAreaOffers } from './MemberAreaOffers';
 import { ModulePaymentModal } from './ModulePaymentModal';
+import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMemberLessonProgress } from '@/hooks/useMemberLessonProgress';
@@ -820,7 +821,24 @@ export default function ModernMembersArea() {
               <div className="flex-1 p-3 sm:p-6 px-0 py-0 w-full max-w-full min-w-0">
                 <motion.div className="w-full max-w-full overflow-x-hidden">
                   <Card className="overflow-hidden mb-4 sm:mb-6 bg-zinc-950 rounded-none border-0 w-full max-w-full">
-                    <ModernLessonViewer lesson={selectedLesson} lessons={lessons} lessonProgress={lessonProgress} onNavigateLesson={handleNavigateLesson} onClose={() => setSelectedLesson(null)} onUpdateProgress={updateVideoProgress} />
+                    {selectedLesson ? (
+                      <ModernErrorBoundary>
+                        <ModernLessonViewer 
+                          lesson={selectedLesson} 
+                          lessons={lessons || []} 
+                          lessonProgress={lessonProgress || {}} 
+                          onNavigateLesson={handleNavigateLesson} 
+                          onClose={() => setSelectedLesson(null)} 
+                          onUpdateProgress={updateVideoProgress || ((lessonId, time, duration) => {
+                            console.log('🎬 Progress update (fallback):', { lessonId, time, duration });
+                          })} 
+                        />
+                      </ModernErrorBoundary>
+                    ) : (
+                      <div className="p-8 text-center text-gray-400">
+                        Selecione uma aula para começar
+                      </div>
+                    )}
                   </Card>
                   
                   {/* Info da aula */}

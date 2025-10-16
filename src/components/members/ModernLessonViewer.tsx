@@ -20,12 +20,19 @@ interface ModernLessonViewerProps {
 }
 export function ModernLessonViewer({
   lesson,
-  lessons,
+  lessons = [],
   lessonProgress = {},
   onNavigateLesson,
   onClose,
   onUpdateProgress
 }: ModernLessonViewerProps) {
+  console.log('🎬 ModernLessonViewer: Iniciando com', {
+    lessonTitle: lesson?.title,
+    lessonsCount: lessons?.length,
+    hasProgress: !!lessonProgress,
+    hasUpdateProgress: !!onUpdateProgress
+  });
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -37,6 +44,16 @@ export function ModernLessonViewer({
   const [shouldRestart, setShouldRestart] = useState(false);
   const [isReplayMode, setIsReplayMode] = useState(false);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Proteção contra props undefined
+  if (!lesson) {
+    console.error('❌ ModernLessonViewer: lesson is undefined!');
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-500">Erro ao carregar aula</p>
+      </div>
+    );
+  }
 
   // Obter progresso da aula atual
   const currentProgress = lessonProgress[lesson.id];
@@ -125,6 +142,7 @@ export function ModernLessonViewer({
   }, [lesson.id]);
 
   const handleVideoEnd = () => {
+    console.log('🎬 Video ended for:', lesson?.title);
     setVideoEnded(true);
     setAutoplayCountdown(10);
     setIsReplayMode(false);
