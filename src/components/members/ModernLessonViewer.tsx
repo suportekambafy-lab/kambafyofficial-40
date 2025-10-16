@@ -45,16 +45,16 @@ export function ModernLessonViewer({
   const [isReplayMode, setIsReplayMode] = useState(false);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Obter progresso da aula atual
-  const currentProgress = lessonProgress[lesson.id];
+  // Obter progresso da aula atual (com verificação segura)
+  const currentProgress = lesson?.id ? lessonProgress[lesson.id] : null;
   const startTime = shouldRestart ? 0 : (currentProgress?.video_current_time || 0);
-  const currentIndex = lessons.findIndex(l => l.id === lesson.id);
-  const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
+  const currentIndex = lesson?.id ? lessons.findIndex(l => l.id === lesson.id) : -1;
+  const nextLesson = currentIndex >= 0 && currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
   const prevLesson = currentIndex > 0 ? lessons[currentIndex - 1] : null;
 
   // Inicializar estado com progresso salvo
   useEffect(() => {
-    if (currentProgress) {
+    if (currentProgress && lesson?.title) {
       setProgress(currentProgress.progress_percentage || 0);
       setIsCompleted(currentProgress.completed || false);
       setRating(currentProgress.rating || 0);
@@ -64,7 +64,7 @@ export function ModernLessonViewer({
         startTime: currentProgress.video_current_time
       });
     }
-  }, [lesson.id, currentProgress]);
+  }, [lesson?.id, currentProgress, lesson?.title]);
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -72,14 +72,16 @@ export function ModernLessonViewer({
   };
 
   // lesson.duration está em segundos
-  const totalSeconds = lesson.duration;
+  const totalSeconds = lesson?.duration || 0;
 
   // Verificar se a aula está agendada para liberação futura
-  const isScheduled = lesson.is_scheduled && lesson.scheduled_at;
-  const isNotYetReleased = isScheduled && new Date(lesson.scheduled_at) > new Date();
+  const isScheduled = lesson?.is_scheduled && lesson?.scheduled_at;
+  const isNotYetReleased = isScheduled && new Date(lesson.scheduled_at!) > new Date();
 
   // Derivar HLS URL do embed URL do Bunny se necessário
   const getHlsUrl = () => {
+    if (!lesson) return null;
+    
     // Se já tem hls_url e NÃO é Vimeo, retornar
     if (lesson.hls_url && !lesson.hls_url.includes('vimeo.com') && !lesson.hls_url.includes('player.vimeo.com')) {
       return lesson.hls_url;
@@ -129,7 +131,7 @@ export function ModernLessonViewer({
     if (countdownTimerRef.current) {
       clearTimeout(countdownTimerRef.current);
     }
-  }, [lesson.id]);
+  }, [lesson?.id]);
 
   const handleVideoEnd = () => {
     console.log('🎬 Video ended for:', lesson?.title);
@@ -153,27 +155,24 @@ export function ModernLessonViewer({
     }
   };
 
-  // Verificação de segurança após todos os hooks
-  if (!lesson) {
-    console.error('❌ ModernLessonViewer: lesson is undefined!');
-    return (
-      <div className="p-8 text-center">
-        <p className="text-red-500">Erro ao carregar aula</p>
-      </div>
-    );
-  }
-
-  return <div className="space-y-4 sm:space-y-8 bg-zinc-950 w-full max-w-full overflow-x-hidden">
-      {/* Video Player */}
-      <motion.div initial={{
-      opacity: 0,
-      scale: 0.95
-    }} animate={{
-      opacity: 1,
-      scale: 1
-    }} transition={{
-      delay: 0.1
-    }}>
+  return (
+    <div className="space-y-4 sm:space-y-8 bg-zinc-950 w-full max-w-full overflow-x-hidden">
+      {!lesson ? (
+        <div className="p-8 text-center">
+          <p className="text-red-500">Erro ao carregar aula</p>
+        </div>
+      ) : (
+        <>
+          {/* Video Player */}
+          <motion.div initial={{
+            opacity: 0,
+            scale: 0.95
+          }} animate={{
+            opacity: 1,
+            scale: 1
+          }} transition={{
+            delay: 0.1
+          }}>
         <div className="overflow-hidden bg-black border border-gray-800 rounded-none my-0 py-0 px-0 mx-0 w-full">
           {isNotYetReleased ? (
             <LessonReleaseTimer 
@@ -283,17 +282,20 @@ export function ModernLessonViewer({
         </div>
       </motion.div>
 
-      {/* Lesson Content Tabs */}
-      <motion.div initial={{
-      opacity: 0,
-      y: 20
-    }} animate={{
-      opacity: 1,
-      y: 0
-    }} transition={{
-      delay: 0.2
-    }}>
-        <LessonContentTabs lesson={lesson} />
-      </motion.div>
-    </div>;
+          {/* Lesson Content Tabs */}
+          <motion.div initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            delay: 0.2
+          }}>
+            <LessonContentTabs lesson={lesson} />
+          </motion.div>
+        </>
+      )}
+    </div>
+  );
 }
