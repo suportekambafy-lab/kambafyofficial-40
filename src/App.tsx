@@ -172,8 +172,9 @@ const App = () => {
                        <Route path="/contato" element={<OptimizedRoutes.Contact />} />
                        <Route path="/denuncie" element={<OptimizedRoutes.Report />} />
                        <Route path="/status" element={<OptimizedRoutes.Status />} />
-                       <Route path="/marketplace" element={<OptimizedRoutes.MarketplacePage />} />
-                      <Route path="/privacidade" element={<OptimizedRoutes.Privacy />} />
+                        <Route path="/marketplace" element={<OptimizedRoutes.MarketplacePage />} />
+                        <Route path="/ranking" element={<OptimizedRoutes.RankingPage />} />
+                       <Route path="/privacidade" element={<OptimizedRoutes.Privacy />} />
                       <Route path="/termos" element={<OptimizedRoutes.Terms />} />
                       <Route path="/cookies" element={<OptimizedRoutes.Cookies />} />
                       <Route path="/apps/*" element={<OptimizedRoutes.Apps />} />

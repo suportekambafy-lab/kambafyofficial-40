@@ -48,6 +48,7 @@ const Features = createLazyWithRetry(() => import('@/pages/Features'), "Features
 const HelpCenter = createLazyWithRetry(() => import('@/pages/HelpCenter'), "HelpCenter");
 const Contact = createLazyWithRetry(() => import('@/pages/Contact'), "Contact");
 const Report = createLazyWithRetry(() => import('@/pages/Report'), "Report");
+const RankingPage = createLazyWithRetry(() => import('@/pages/RankingPage'), "RankingPage");
 const Status = createLazyWithRetry(() => import('@/pages/Status'), "Status");
 const Privacy = createLazyWithRetry(() => import('@/pages/Privacy'), "Privacy");
 const Terms = createLazyWithRetry(() => import('@/pages/Terms'), "Terms");
@@ -213,4 +214,7 @@ export const OptimizedRoutes = {
   // Hub unificado de cursos
   UnifiedMembersLogin: withLazyLoading(UnifiedMembersLogin, 'member-area'),
   UnifiedMembersHub: withLazyLoading(UnifiedMembersHub, 'member-area'),
+  
+  // Ranking page
+  RankingPage: withLazyLoading(RankingPage, 'dashboard'),
 };
