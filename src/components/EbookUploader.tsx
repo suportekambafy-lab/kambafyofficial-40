@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { FileUp, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useBunnyUpload } from "@/hooks/useBunnyUpload";
+import { useCloudflareUpload } from "@/hooks/useCloudflareUpload";
 
 interface EbookUploaderProps {
   onFileUploaded: (fileUrl: string) => void;
@@ -19,13 +19,24 @@ interface EbookUploaderProps {
 export default function EbookUploader({ onFileUploaded, open, onOpenChange }: EbookUploaderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { uploadFile: bunnyUpload, uploading } = useBunnyUpload();
+  const { uploadFile: cloudflareUpload, uploading } = useCloudflareUpload();
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Verificar tamanho do arquivo (máximo 100MB)
+      const maxSize = 100 * 1024 * 1024; // 100MB em bytes
+      if (file.size > maxSize) {
+        toast({
+          title: "Erro",
+          description: "O arquivo é muito grande. Tamanho máximo: 100MB",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Verificar se é um arquivo válido (PDF, DOC, DOCX, etc.)
       const validTypes = [
         'application/pdf',
@@ -52,7 +63,7 @@ export default function EbookUploader({ onFileUploaded, open, onOpenChange }: Eb
 
     setUploadProgress(0);
 
-    const url = await bunnyUpload(selectedFile, {
+    const url = await cloudflareUpload(selectedFile, {
       onProgress: setUploadProgress
     });
 

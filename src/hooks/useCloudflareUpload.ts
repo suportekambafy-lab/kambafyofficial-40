@@ -15,12 +15,16 @@ export function useCloudflareUpload() {
       setUploading(true);
       options?.onProgress?.(10);
 
-      // Convert file to base64
+      // Para arquivos grandes (>10MB), usar upload direto com presigned URL
+      if (file.size > 10 * 1024 * 1024) {
+        return await uploadLargeFile(file, options);
+      }
+
+      // Para arquivos pequenos, usar método base64 (mais rápido)
       const reader = new FileReader();
       const base64Data = await new Promise<string>((resolve, reject) => {
         reader.onload = () => {
           const result = reader.result as string;
-          // Remove data URL prefix to get only base64 data
           const base64 = result.split(',')[1];
           resolve(base64);
         };
@@ -30,7 +34,6 @@ export function useCloudflareUpload() {
 
       options?.onProgress?.(30);
 
-      // Call edge function to upload to Cloudflare R2
       const { data, error } = await supabase.functions.invoke('cloudflare-r2-upload', {
         body: {
           fileName: file.name,
@@ -62,6 +65,48 @@ export function useCloudflareUpload() {
       return null;
     } finally {
       setUploading(false);
+    }
+  };
+
+  // Upload direto para R2 usando presigned URL (para arquivos grandes)
+  const uploadLargeFile = async (file: File, options?: UploadOptions): Promise<string | null> => {
+    try {
+      options?.onProgress?.(20);
+
+      // Obter presigned URL
+      const { data, error } = await supabase.functions.invoke('get-r2-upload-url', {
+        body: {
+          fileName: file.name,
+          fileType: file.type
+        }
+      });
+
+      if (error || !data?.uploadUrl) {
+        throw new Error('Erro ao obter URL de upload');
+      }
+
+      options?.onProgress?.(40);
+
+      // Upload direto para R2
+      const uploadResponse = await fetch(data.uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Erro ao enviar arquivo para R2');
+      }
+
+      options?.onProgress?.(100);
+      console.log('Large file upload successful to Cloudflare R2:', data.publicUrl);
+      
+      return data.publicUrl;
+    } catch (error: any) {
+      console.error('Error uploading large file:', error);
+      throw error;
     }
   };
 
