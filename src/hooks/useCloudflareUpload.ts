@@ -15,12 +15,7 @@ export function useCloudflareUpload() {
       setUploading(true);
       options?.onProgress?.(10);
 
-      // Para arquivos grandes (>5MB), usar upload direto com presigned URL
-      if (file.size > 5 * 1024 * 1024) {
-        return await uploadLargeFile(file, options);
-      }
-
-      // Para arquivos pequenos, usar método base64 (mais rápido)
+      // Usar método base64 para todos os arquivos (evita problemas de CORS)
       const reader = new FileReader();
       const base64Data = await new Promise<string>((resolve, reject) => {
         reader.onload = () => {
