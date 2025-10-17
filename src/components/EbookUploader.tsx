@@ -26,12 +26,12 @@ export default function EbookUploader({ onFileUploaded, open, onOpenChange }: Eb
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Verificar tamanho do arquivo (máximo 100MB)
-      const maxSize = 100 * 1024 * 1024; // 100MB em bytes
+      // Verificar tamanho do arquivo (máximo 500MB)
+      const maxSize = 500 * 1024 * 1024; // 500MB em bytes
       if (file.size > maxSize) {
         toast({
           title: "Erro",
-          description: "O arquivo é muito grande. Tamanho máximo: 100MB",
+          description: "O arquivo é muito grande. Tamanho máximo: 500MB",
           variant: "destructive"
         });
         return;

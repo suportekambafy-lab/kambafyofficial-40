@@ -15,8 +15,8 @@ export function useCloudflareUpload() {
       setUploading(true);
       options?.onProgress?.(10);
 
-      // Para arquivos grandes (>10MB), usar upload direto com presigned URL
-      if (file.size > 10 * 1024 * 1024) {
+      // Para arquivos grandes (>5MB), usar upload direto com presigned URL
+      if (file.size > 5 * 1024 * 1024) {
         return await uploadLargeFile(file, options);
       }
 
