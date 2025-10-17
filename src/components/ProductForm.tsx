@@ -361,13 +361,27 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
               </Button>
             </div>
             {formData.shareLink && (
-              <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-md text-green-700">
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-sm truncate">
-                  {formData.shareLink.split('/').pop()}
-                </p>
+              <div className="flex items-center justify-between gap-2 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-md">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <svg className="w-5 h-5 flex-shrink-0 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-green-700 dark:text-green-400">Arquivo carregado</p>
+                    <p className="text-xs text-green-600 dark:text-green-500 truncate">
+                      {formData.shareLink.split('/').pop()}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.open(formData.shareLink, '_blank')}
+                  className="flex-shrink-0"
+                >
+                  Ver arquivo
+                </Button>
               </div>
             )}
           </div>
