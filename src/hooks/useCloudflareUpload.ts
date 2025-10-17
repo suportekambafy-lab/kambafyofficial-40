@@ -29,7 +29,7 @@ export function useCloudflareUpload() {
 
       options?.onProgress?.(30);
 
-      const { data, error } = await supabase.functions.invoke('cloudflare-r2-upload', {
+      const { data, error } = await supabase.functions.invoke('bunny-storage-upload', {
         body: {
           fileName: file.name,
           fileType: file.type,
