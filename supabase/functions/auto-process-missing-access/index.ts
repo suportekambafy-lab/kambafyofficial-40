@@ -132,10 +132,14 @@ serve(async (req) => {
             body: {
               customerEmail: order.customer_email,
               customerName: order.customer_name,
+              productName: product.name,
               productId: order.product_id,
               orderId: order.order_id,
-              orderAmount: order.amount,
+              amount: order.amount,
               currency: order.currency,
+              sellerId: product.user_id, // ✅ ADICIONAR sellerId do produto
+              memberAreaId: product.member_area_id,
+              shareLink: product.share_link,
               paymentStatus: "completed",
               isNewAccount: false,
             },

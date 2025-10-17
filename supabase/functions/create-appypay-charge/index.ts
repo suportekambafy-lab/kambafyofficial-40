@@ -446,7 +446,9 @@ serve(async (req) => {
               productName: product.name,
               amount: orderDataToSave.amount,
               currency: orderDataToSave.currency,
-              orderId: orderId
+              orderId: orderId,
+              productId: productId, // ✅ ADICIONAR productId
+              sellerId: product?.user_id // ✅ ADICIONAR sellerId do produto
             }
           });
 
