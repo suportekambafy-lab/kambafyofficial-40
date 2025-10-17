@@ -276,7 +276,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
               <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações de Contato</h3>
               <p style="margin: 0 0 15px; color: #475569; font-size: 14px;">
-                <strong>Vendedor:</strong> ${sellerProfile.full_name}
+                <strong>Vendedor:</strong> ${productData?.fantasy_name || sellerProfile.full_name}
               </p>
               <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #3b82f6;">
                 <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
@@ -388,7 +388,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (productId) {
           const { data: product, error: productError } = await supabase
             .from('products')
-            .select('sales, type')
+            .select('sales, type, fantasy_name')
             .eq('id', productId)
             .single();
 
@@ -591,7 +591,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
                   <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações de Contato</h3>
                   <p style="margin: 0 0 15px; color: #475569; font-size: 14px;">
-                    <strong>Vendedor:</strong> ${sellerProfile.full_name}
+                    <strong>Vendedor:</strong> ${productData?.fantasy_name || sellerProfile.full_name}
                   </p>
                   <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #3b82f6;">
                     <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
@@ -694,7 +694,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div class="section" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
                 <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações de Contato</h3>
                 <p style="margin: 0 0 15px; color: #475569; font-size: 14px;">
-                  <strong>Vendedor:</strong> ${sellerProfile.full_name}
+                  <strong>Vendedor:</strong> ${productData?.fantasy_name || sellerProfile.full_name}
                 </p>
                 <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #3b82f6;">
                   <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
@@ -873,7 +873,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="padding: 30px; border-top: 1px solid #e2e8f0;">
                 <h3 style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #1e293b;">📧 Informações do Vendedor</h3>
                 <p style="margin: 0 0 15px; color: #475569; font-size: 14px;">
-                  <strong>Vendedor:</strong> ${sellerProfile.full_name}
+                  <strong>Vendedor:</strong> ${productData?.fantasy_name || sellerProfile.full_name}
                 </p>
                 <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #3b82f6;">
                   <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
@@ -974,7 +974,7 @@ const handler = async (req: Request): Promise<Response> => {
                 studentEmail: normalizedEmail,
                 memberAreaName: memberArea.name,
                 memberAreaUrl: mainMemberAreaUrl,
-                sellerName: sellerProfile?.full_name || 'Kambafy',
+                sellerName: productData?.fantasy_name || sellerProfile?.full_name || 'Kambafy',
                 isNewAccount: isNewAccount,
                 temporaryPassword: passwordToUse
               };
@@ -1077,7 +1077,7 @@ const handler = async (req: Request): Promise<Response> => {
                   studentEmail: normalizedEmail,
                   memberAreaName: memberArea.name,
                   memberAreaUrl: bumpMemberAreaUrl,
-                  sellerName: sellerProfile?.full_name || 'Kambafy',
+                  sellerName: productData?.fantasy_name || sellerProfile?.full_name || 'Kambafy',
                   isNewAccount: false, // Account already exists from main product
                   temporaryPassword: bumpTemporaryPassword
                 };

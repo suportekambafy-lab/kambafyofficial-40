@@ -24,6 +24,7 @@ interface Product {
   type: string;
   sales: number;
   slug: string;
+  fantasy_name: string | null;
   profiles: {
     full_name: string | null;
     business_name: string | null;
@@ -100,6 +101,7 @@ export default function MarketplacePage() {
           type,
           sales,
           slug,
+          fantasy_name,
           profiles!inner(
             full_name,
             business_name,
@@ -426,7 +428,7 @@ export default function MarketplacePage() {
                           />
                         )}
                         <p className="text-sm text-muted-foreground">
-                          {product.profiles.business_name || product.profiles.full_name}
+                          {product.fantasy_name || product.profiles.business_name || product.profiles.full_name}
                         </p>
                       </div>
                       <div className="flex items-center justify-between">
