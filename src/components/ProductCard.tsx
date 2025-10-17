@@ -75,7 +75,7 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                   Revisão Solicitada
                 </Badge>
               )}
-              {!product.admin_approved && product.status !== 'Banido' && product.status !== 'Rascunho' && (
+              {product.status === 'Pendente' && (
                 <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-600">
                   Pendente Aprovação
                 </Badge>
