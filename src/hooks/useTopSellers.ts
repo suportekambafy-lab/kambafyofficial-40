@@ -25,19 +25,36 @@ export const useTopSellers = () => {
 
       console.log('🔍 useTopSellers: Período:', { startOfMonth, endOfMonth });
 
-      const { data: orders, error: ordersError } = await supabase
-        .from('orders')
-        .select('amount, products!inner(user_id)')
-        .eq('status', 'completed')
-        .gte('created_at', startOfMonth.toISOString())
-        .lt('created_at', endOfMonth.toISOString());
-
-      console.log('🔍 useTopSellers: Orders encontradas:', orders?.length);
-
-      if (ordersError) {
-        console.error('❌ useTopSellers: Erro ao buscar orders:', ordersError);
-        throw ordersError;
+      // Buscar TODAS as orders sem limite
+      let allOrders: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      
+      while (true) {
+        const { data: batch, error: batchError } = await supabase
+          .from('orders')
+          .select('amount, products!inner(user_id)')
+          .eq('status', 'completed')
+          .gte('created_at', startOfMonth.toISOString())
+          .lt('created_at', endOfMonth.toISOString())
+          .range(from, from + batchSize - 1);
+        
+        if (batchError) {
+          console.error('❌ useTopSellers: Erro ao buscar batch:', batchError);
+          throw batchError;
+        }
+        
+        if (!batch || batch.length === 0) break;
+        
+        allOrders = [...allOrders, ...batch];
+        
+        if (batch.length < batchSize) break;
+        from += batchSize;
       }
+      
+      const orders = allOrders;
+
+      console.log('🔍 useTopSellers: Total de orders encontradas:', orders?.length);
 
       // Agrupar vendas por vendedor
       const salesByUser = orders?.reduce((acc, order) => {
@@ -60,8 +77,13 @@ export const useTopSellers = () => {
       console.log('🔍 useTopSellers: Vendedores agrupados:', Object.keys(salesByUser).length);
 
       // Pegar os IDs dos top 3 vendedores (filtrar nulls e valores inválidos)
+      // Ordenar por RECEITA TOTAL (não por número de vendas)
       const topUserIds = Object.entries(salesByUser)
-        .sort((a, b) => b[1].total_sales - a[1].total_sales)
+        .sort((a, b) => {
+          const revenueA = (a[1] as { total_sales: number; total_revenue: number }).total_revenue;
+          const revenueB = (b[1] as { total_sales: number; total_revenue: number }).total_revenue;
+          return revenueB - revenueA;
+        })
         .slice(0, 3)
         .map(([userId]) => userId)
         .filter(id => id && id !== 'null' && id !== 'undefined');
@@ -94,10 +116,14 @@ export const useTopSellers = () => {
         total_revenue: salesByUser[profile.user_id].total_revenue,
       })) || [];
 
-      // Ordenar por vendas
-      const sortedResult = result.sort((a, b) => b.total_sales - a.total_sales);
+      // Ordenar por RECEITA TOTAL (não por vendas)
+      const sortedResult = result.sort((a, b) => b.total_revenue - a.total_revenue);
       
-      console.log('✅ useTopSellers: Resultado final:', sortedResult);
+      console.log('✅ useTopSellers: Resultado final:', sortedResult.map(s => ({
+        name: s.full_name,
+        sales: s.total_sales,
+        revenue: s.total_revenue
+      })));
       
       return sortedResult;
     },
