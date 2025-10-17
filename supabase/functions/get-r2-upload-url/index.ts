@@ -47,23 +47,33 @@ serve(async (req) => {
     const region = 'auto';
     const service = 's3';
     const host = `${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
-    const endpoint = `https://${host}/${R2_BUCKET_NAME}/${key}`;
-
+    
     // Data e hora
     const now = new Date();
     const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
     const dateStamp = amzDate.slice(0, 8);
+    
+    // Configurar query parameters para presigned URL
+    const expiresIn = 3600; // 1 hora
+    const algorithm = 'AWS4-HMAC-SHA256';
+    const credential = `${R2_ACCESS_KEY_ID}/${dateStamp}/${region}/${service}/aws4_request`;
+    
+    const canonicalQuerystring = [
+      `X-Amz-Algorithm=${algorithm}`,
+      `X-Amz-Credential=${encodeURIComponent(credential)}`,
+      `X-Amz-Date=${amzDate}`,
+      `X-Amz-Expires=${expiresIn}`,
+      `X-Amz-SignedHeaders=host`
+    ].join('&');
 
     // Criar canonical request
-    const method = 'PUT';
     const canonicalUri = `/${R2_BUCKET_NAME}/${key}`;
-    const canonicalQuerystring = '';
     const canonicalHeaders = `host:${host}\n`;
     const signedHeaders = 'host';
     const payloadHash = 'UNSIGNED-PAYLOAD';
 
     const canonicalRequest = [
-      method,
+      'PUT',
       canonicalUri,
       canonicalQuerystring,
       canonicalHeaders,
@@ -72,7 +82,6 @@ serve(async (req) => {
     ].join('\n');
 
     // Criar string to sign
-    const algorithm = 'AWS4-HMAC-SHA256';
     const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
     const encoder = new TextEncoder();
     const canonicalRequestHash = Array.from(
@@ -95,20 +104,15 @@ serve(async (req) => {
       new Uint8Array(await createSignature(kSigning, stringToSign))
     ).map(b => b.toString(16).padStart(2, '0')).join('');
 
-    // Montar URL com assinatura
-    const authorizationHeader = `${algorithm} Credential=${R2_ACCESS_KEY_ID}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+    // Montar presigned URL
+    const presignedUrl = `https://${host}/${R2_BUCKET_NAME}/${key}?${canonicalQuerystring}&X-Amz-Signature=${signature}`;
 
     console.log('✅ Presigned URL gerada para:', uniqueFileName);
 
     return new Response(
       JSON.stringify({
-        uploadUrl: endpoint,
-        publicUrl: `https://pub-b5914a93ed33480dba157a5f46c57749.r2.dev/${key}`,
-        headers: {
-          'x-amz-date': amzDate,
-          'Authorization': authorizationHeader,
-          'x-amz-content-sha256': payloadHash
-        }
+        uploadUrl: presignedUrl,
+        publicUrl: `https://pub-b5914a93ed33480dba157a5f46c57749.r2.dev/${key}`
       }),
       { 
         status: 200, 

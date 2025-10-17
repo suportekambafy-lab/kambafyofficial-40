@@ -92,15 +92,12 @@ export function useCloudflareUpload() {
 
       console.log('📤 Fazendo upload direto para R2...');
 
-      // Upload direto para R2 com headers de autenticação
+      // Upload direto para R2 usando presigned URL
       const uploadResponse = await fetch(data.uploadUrl, {
         method: 'PUT',
         body: file,
         headers: {
-          'Content-Type': file.type,
-          'x-amz-date': data.headers['x-amz-date'],
-          'Authorization': data.headers['Authorization'],
-          'x-amz-content-sha256': data.headers['x-amz-content-sha256']
+          'Content-Type': file.type || 'application/octet-stream'
         },
       });
 
