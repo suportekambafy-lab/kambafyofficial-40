@@ -1,5 +1,8 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.get-r2-upload-url]
+verify_jwt = false
+
 [functions.admin-toggle-marketplace]
 verify_jwt = false
 

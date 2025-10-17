@@ -15,7 +15,13 @@ export function useCloudflareUpload() {
       setUploading(true);
       options?.onProgress?.(10);
 
-      // Usar método base64 para todos os arquivos (evita problemas de CORS)
+      // Para arquivos grandes (>10MB), usar upload direto com presigned URL
+      if (file.size > 10 * 1024 * 1024) {
+        console.log('📦 Arquivo grande detectado, usando presigned URL');
+        return await uploadLargeFile(file, options);
+      }
+
+      // Para arquivos pequenos, usar método base64
       const reader = new FileReader();
       const base64Data = await new Promise<string>((resolve, reject) => {
         reader.onload = () => {
@@ -29,7 +35,7 @@ export function useCloudflareUpload() {
 
       options?.onProgress?.(30);
 
-      const { data, error } = await supabase.functions.invoke('bunny-storage-upload', {
+      const { data, error } = await supabase.functions.invoke('cloudflare-r2-upload', {
         body: {
           fileName: file.name,
           fileType: file.type,
@@ -66,9 +72,10 @@ export function useCloudflareUpload() {
   // Upload direto para R2 usando presigned URL (para arquivos grandes)
   const uploadLargeFile = async (file: File, options?: UploadOptions): Promise<string | null> => {
     try {
+      setUploading(true);
       options?.onProgress?.(20);
 
-      // Obter presigned URL
+      // Obter presigned URL e headers de autenticação
       const { data, error } = await supabase.functions.invoke('get-r2-upload-url', {
         body: {
           fileName: file.name,
@@ -77,31 +84,46 @@ export function useCloudflareUpload() {
       });
 
       if (error || !data?.uploadUrl) {
-        throw new Error('Erro ao obter URL de upload');
+        console.error('Erro ao obter presigned URL:', error);
+        throw new Error(error?.message || 'Erro ao obter URL de upload');
       }
 
       options?.onProgress?.(40);
 
-      // Upload direto para R2
+      console.log('📤 Fazendo upload direto para R2...');
+
+      // Upload direto para R2 com headers de autenticação
       const uploadResponse = await fetch(data.uploadUrl, {
         method: 'PUT',
         body: file,
         headers: {
           'Content-Type': file.type,
+          'x-amz-date': data.headers['x-amz-date'],
+          'Authorization': data.headers['Authorization'],
+          'x-amz-content-sha256': data.headers['x-amz-content-sha256']
         },
       });
 
       if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error('Erro no upload R2:', errorText);
         throw new Error('Erro ao enviar arquivo para R2');
       }
 
       options?.onProgress?.(100);
-      console.log('Large file upload successful to Cloudflare R2:', data.publicUrl);
+      console.log('✅ Upload de arquivo grande bem-sucedido:', data.publicUrl);
       
       return data.publicUrl;
     } catch (error: any) {
-      console.error('Error uploading large file:', error);
-      throw error;
+      console.error('❌ Erro no upload de arquivo grande:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao enviar arquivo grande",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setUploading(false);
     }
   };
 
