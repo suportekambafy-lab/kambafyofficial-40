@@ -27,7 +27,7 @@ export const useTopSellers = () => {
 
       const { data: orders, error: ordersError } = await supabase
         .from('orders')
-        .select('user_id, amount')
+        .select('amount, products!inner(user_id)')
         .eq('status', 'completed')
         .gte('created_at', startOfMonth.toISOString())
         .lt('created_at', endOfMonth.toISOString());
@@ -41,14 +41,17 @@ export const useTopSellers = () => {
 
       // Agrupar vendas por vendedor
       const salesByUser = orders?.reduce((acc, order) => {
-        if (!acc[order.user_id]) {
-          acc[order.user_id] = {
+        const sellerId = order.products?.user_id;
+        if (!sellerId) return acc;
+        
+        if (!acc[sellerId]) {
+          acc[sellerId] = {
             total_sales: 0,
             total_revenue: 0,
           };
         }
-        acc[order.user_id].total_sales += 1;
-        acc[order.user_id].total_revenue += parseFloat(order.amount);
+        acc[sellerId].total_sales += 1;
+        acc[sellerId].total_revenue += parseFloat(order.amount);
         return acc;
       }, {} as Record<string, { total_sales: number; total_revenue: number }>);
 
@@ -56,13 +59,19 @@ export const useTopSellers = () => {
 
       console.log('🔍 useTopSellers: Vendedores agrupados:', Object.keys(salesByUser).length);
 
-      // Pegar os IDs dos top 3 vendedores
+      // Pegar os IDs dos top 3 vendedores (filtrar nulls e valores inválidos)
       const topUserIds = Object.entries(salesByUser)
         .sort((a, b) => b[1].total_sales - a[1].total_sales)
         .slice(0, 3)
-        .map(([userId]) => userId);
+        .map(([userId]) => userId)
+        .filter(id => id && id !== 'null' && id !== 'undefined');
 
       console.log('🔍 useTopSellers: Top 3 IDs:', topUserIds);
+      
+      if (topUserIds.length === 0) {
+        console.log('⚠️ useTopSellers: Nenhum vendedor válido encontrado');
+        return [];
+      }
 
       // Buscar perfis dos vendedores
       const { data: profiles, error: profilesError } = await supabase
