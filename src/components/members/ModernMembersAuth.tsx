@@ -50,11 +50,15 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
   // Configurar listener de autenticação do Supabase
   useEffect(() => {
     console.log('🔍 ModernAuth: Configurando listener de auth...');
+    console.log('🔍 ModernAuth: URL atual:', window.location.href);
+    console.log('🔍 ModernAuth: Query string:', window.location.search);
     
     // Verificar query params para acesso verificado
     const urlParams = new URLSearchParams(window.location.search);
     const verified = urlParams.get('verified') === 'true';
     const email = urlParams.get('email');
+    
+    console.log('🔍 ModernAuth: Params detectados:', { verified, email, allParams: Object.fromEntries(urlParams.entries()) });
     
     if (verified && email) {
       // Normalizar email para lowercase
@@ -86,17 +90,21 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
       } as Session;
       
       // Salvar no localStorage para persistência
-      localStorage.setItem('memberAreaSession', JSON.stringify({
+      const sessionData = {
         user: virtualUser,
         session: virtualSession,
         timestamp: Date.now()
-      }));
+      };
+      localStorage.setItem('memberAreaSession', JSON.stringify(sessionData));
       
       setUser(virtualUser);
       setSession(virtualSession);
       setIsLoading(false);
       
-      console.log('✅ ModernAuth: Sessão virtual criada e persistida');
+      console.log('✅ ModernAuth: Sessão virtual criada e persistida:', {
+        email: normalizedEmail,
+        sessionSaved: !!localStorage.getItem('memberAreaSession')
+      });
       return;
     }
     

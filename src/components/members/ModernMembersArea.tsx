@@ -165,7 +165,13 @@ export default function ModernMembersArea() {
     
     // Só redirecionar se NÃO for acesso verificado E não estiver autenticado
     if (!authLoading && !isAuthenticated) {
-      console.log('🔄 ModernMembersArea: Navegando para login - não autenticado e sem verificação');
+      console.log('🔄 ModernMembersArea: Navegando para login - não autenticado e sem verificação', {
+        authLoading,
+        isAuthenticated,
+        isVerified,
+        emailParam,
+        hasSession: !!session
+      });
       navigate(`/login/${memberAreaId}`);
       return;
     }

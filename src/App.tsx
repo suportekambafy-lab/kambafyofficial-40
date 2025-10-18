@@ -186,13 +186,13 @@ const App = () => {
                          
                          {/* Member Area Routes - ÁREAS ESPECÍFICAS DE CADA VENDEDOR */}
                             
-                            {/* 🎓 ÁREAS ESPECÍFICAS - Sistema individual (login simples por email) */}
-                            <Route path="/members/login/:id" element={<OptimizedRoutes.MembersLogin />} />
-                            <Route path="/members/area/:id" element={<OptimizedRoutes.MembersArea />} />
+                            {/* 🎓 ÁREAS ESPECÍFICAS - Sistema individual (verificação direta no banco) */}
+                            <Route path="/members/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
+                            <Route path="/members/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
                             
                             {/* Rotas para subdomínio membros.kambafy.com (sem prefixo /members) */}
-                            <Route path="/login/:id" element={<OptimizedRoutes.MembersLogin />} />
-                            <Route path="/area/:id" element={<OptimizedRoutes.MembersArea />} />
+                            <Route path="/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
+                            <Route path="/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
                         <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                         <Route path="/app" element={<OptimizedRoutes.AppMobile />} />
                          
