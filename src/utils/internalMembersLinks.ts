@@ -5,13 +5,13 @@
 
 import { useNavigate } from 'react-router-dom';
 
-// URLs sempre internas - nunca redireciona para subdomínio
+// URLs sempre internas - navegação direta sem prefixo /members/
 export function getInternalMembersLoginUrl(memberAreaId: string): string {
-  return `/members/login/${memberAreaId}`;
+  return `/login/${memberAreaId}`;
 }
 
 export function getInternalMembersAreaUrl(memberAreaId: string): string {
-  return `/members/area/${memberAreaId}`;
+  return `/area/${memberAreaId}`;
 }
 
 // Hook para navegação interna segura
@@ -19,11 +19,13 @@ export function useInternalMembersNavigation() {
   const navigate = useNavigate();
 
   const goToLogin = (memberAreaId: string) => {
-    navigate(`/members/login/${memberAreaId}`);
+    console.log('🔄 Navegando para login da área:', memberAreaId);
+    navigate(`/login/${memberAreaId}`);
   };
 
   const goToArea = (memberAreaId: string) => {
-    navigate(`/members/area/${memberAreaId}`);
+    console.log('🔄 Navegando para área de membros:', memberAreaId);
+    navigate(`/area/${memberAreaId}`);
   };
 
   return {
@@ -36,8 +38,8 @@ export function useInternalMembersNavigation() {
 
 // Função utilitária para gerar URLs internas
 export const internalMembersUrls = {
-  login: (id: string) => `/members/login/${id}`,
-  area: (id: string) => `/members/area/${id}`,
+  login: (id: string) => `/login/${id}`,
+  area: (id: string) => `/area/${id}`,
 };
 
 console.log('✅ Sistema de links INTERNOS para membros carregado - sem redirecionamentos');

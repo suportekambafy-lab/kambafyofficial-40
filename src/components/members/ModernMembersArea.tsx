@@ -166,7 +166,7 @@ export default function ModernMembersArea() {
     // Só redirecionar se NÃO for acesso verificado E não estiver autenticado
     if (!authLoading && !isAuthenticated) {
       console.log('🔄 ModernMembersArea: Navegando para login - não autenticado e sem verificação');
-      navigate(`/members/login/${memberAreaId}`);
+      navigate(`/login/${memberAreaId}`);
       return;
     }
     
@@ -309,7 +309,8 @@ export default function ModernMembersArea() {
   const handleLogout = () => {
     logout();
     // Navegar para login da área de membros
-    navigate(`/members/login/${memberAreaId}`);
+    console.log('🔄 Logout: Navegando para login da área:', memberAreaId);
+    navigate(`/login/${memberAreaId}`);
   };
   const handleLessonClick = (lesson: Lesson) => {
     if (!isLessonAccessible(lesson)) {

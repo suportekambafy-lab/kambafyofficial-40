@@ -58,7 +58,8 @@ export default function ModernMembersLogin() {
           });
           
           setTimeout(() => {
-            navigate(`/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`);
+            console.log('🔄 Navegando para área de membros após validação:', memberAreaId);
+            navigate(`/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`);
           }, 800);
           return;
         }
@@ -88,7 +89,8 @@ export default function ModernMembersLogin() {
         
         // Navegar para a área de membros com acesso verificado
         setTimeout(() => {
-          navigate(`/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`);
+          console.log('🔄 Navegando para área de membros após login:', memberAreaId);
+          navigate(`/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`);
         }, 800);
         
       } catch (error: any) {
