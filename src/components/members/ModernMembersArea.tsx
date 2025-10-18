@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,6 +67,7 @@ const detectAndUpdateVideoDuration = async (lesson: Lesson) => {
   });
 };
 export default function ModernMembersArea() {
+  const navigate = useNavigate();
   const {
     id: memberAreaId
   } = useParams();
@@ -164,8 +165,8 @@ export default function ModernMembersArea() {
     
     // Só redirecionar se NÃO for acesso verificado E não estiver autenticado
     if (!authLoading && !isAuthenticated) {
-      console.log('🔄 ModernMembersArea: Redirecionando para login - não autenticado e sem verificação');
-      window.location.href = `/members/login/${memberAreaId}`;
+      console.log('🔄 ModernMembersArea: Navegando para login - não autenticado e sem verificação');
+      navigate(`/members/login/${memberAreaId}`);
       return;
     }
     
@@ -307,8 +308,8 @@ export default function ModernMembersArea() {
   }, [selectedLesson, isMobile]);
   const handleLogout = () => {
     logout();
-    // Redirecionar para login da área de membros
-    window.location.href = `/members/login/${memberAreaId}`;
+    // Navegar para login da área de membros
+    navigate(`/members/login/${memberAreaId}`);
   };
   const handleLessonClick = (lesson: Lesson) => {
     if (!isLessonAccessible(lesson)) {

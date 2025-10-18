@@ -28,24 +28,20 @@ export default function UnifiedMembersLogin() {
       if (success) {
         // Aguardar um momento para carregar as áreas
         setTimeout(() => {
-          const baseUrl = window.location.hostname.includes('localhost') 
-            ? window.location.origin 
-            : 'https://membros.kambafy.com';
-            
           // PRIORIDADE 1: Se veio de URL específica (/login/:id), redirecionar para essa área
           if (memberAreaId) {
-            console.log('🎯 Redirecionando para área específica:', memberAreaId);
-            window.location.href = `${baseUrl}/area/${memberAreaId}`;
+            console.log('🎯 Navegando para área específica:', memberAreaId);
+            navigate(`/area/${memberAreaId}`);
           } 
           // PRIORIDADE 2: Se tiver apenas 1 curso, redirecionar direto
           else if (memberAreas.length === 1) {
-            console.log('📚 Redirecionando para única área:', memberAreas[0].memberAreaId);
-            window.location.href = `${baseUrl}/area/${memberAreas[0].memberAreaId}`;
+            console.log('📚 Navegando para única área:', memberAreas[0].memberAreaId);
+            navigate(`/area/${memberAreas[0].memberAreaId}`);
           } 
           // PRIORIDADE 3: Se tiver múltiplos, ir para dashboard do hub
           else {
-            console.log('🏠 Redirecionando para hub com múltiplas áreas');
-            window.location.href = `${baseUrl}/hub/dashboard`;
+            console.log('🏠 Navegando para hub com múltiplas áreas');
+            navigate('/hub/dashboard');
           }
         }, 500);
       }

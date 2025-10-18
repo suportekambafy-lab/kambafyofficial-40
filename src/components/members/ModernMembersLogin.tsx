@@ -58,7 +58,7 @@ export default function ModernMembersLogin() {
           });
           
           setTimeout(() => {
-            window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`;
+            navigate(`/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`);
           }, 800);
           return;
         }
@@ -86,9 +86,9 @@ export default function ModernMembersLogin() {
           variant: "success",
         });
         
-        // Redirecionar para a área de membros com acesso verificado
+        // Navegar para a área de membros com acesso verificado
         setTimeout(() => {
-          window.location.href = `/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`;
+          navigate(`/members/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`);
         }, 800);
         
       } catch (error: any) {

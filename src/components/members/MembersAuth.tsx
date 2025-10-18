@@ -126,11 +126,11 @@ export function MembersAuthProvider({ children }: MembersAuthProviderProps) {
           expiresAt: sessionData.expiresAt
         };
 
-        setSession(newSession);
-        localStorage.setItem('memberAreaSession', JSON.stringify(newSession));
-        
-        await loadMemberArea(memberAreaId);
-        return true;
+      setSession(newSession);
+      localStorage.setItem('membersSession', JSON.stringify(newSession));
+      
+      await loadMemberArea(memberAreaId);
+      return true;
       }
 
       // Para outros emails, verificar se o estudante tem acesso
