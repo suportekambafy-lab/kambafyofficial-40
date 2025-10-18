@@ -111,7 +111,7 @@ export function ModernSalesChart() {
           amount = grossAmount * 0.92; // Descontar 8% da plataforma
         }
         
-        // Converter para KZ se necessário
+        // Converter para KZ se necessário (APENAS UMA VEZ)
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
             'EUR': 1053, // 1 EUR = ~1053 KZ
@@ -119,20 +119,6 @@ export function ModernSalesChart() {
           };
           const rate = exchangeRates[order.currency.toUpperCase()] || 1;
           amount = Math.round(amount * rate);
-        }
-        const currency = order.currency || 'KZ';
-        
-        // Aplicar desconto de 20% se for venda recuperada
-        const isRecovered = recoveredOrderIds.has(order.order_id);
-        if (isRecovered) {
-          amount = amount * 0.8;
-        }
-        
-        // Converter para KZ
-        if (currency === 'EUR') {
-          amount *= 833;
-        } else if (currency === 'MZN') {
-          amount *= 13;
         }
         
         if (salesByDay[dayKey] !== undefined) {

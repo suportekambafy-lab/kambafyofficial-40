@@ -77,7 +77,7 @@ export function MobileSalesChart() {
         const dayKey = orderDate.toISOString().split('T')[0];
         
         let amount = parseFloat(order.amount || '0');
-        // Converter para KZ se necessário
+        // Converter para KZ se necessário (APENAS UMA VEZ)
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
             'EUR': 1053, // 1 EUR = ~1053 KZ
