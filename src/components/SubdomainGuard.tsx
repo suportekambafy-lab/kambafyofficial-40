@@ -105,10 +105,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     
     // QUINTA VERIFICAÇÃO: ÁREA DE MEMBROS - SEMPRE redirecionar para membros.kambafy.com
     // Áreas específicas: /login/:id, /area/:id
-    // Hub geral: /hub, /hub/dashboard
     if (currentPath.startsWith('/area/') || currentPath.startsWith('/login/') || 
-        currentPath.startsWith('/hub') || 
-        currentPath.startsWith('/members/hub') || 
         currentPath.startsWith('/members/login') || 
         currentPath.startsWith('/members/area')) {
       console.log('🎓 SubdomainGuard: DETECTADA rota de área de membros em PRODUÇÃO', {
@@ -116,7 +113,6 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         currentSubdomain,
         hostname,
         isSpecificArea: currentPath.includes('/login/') || currentPath.includes('/area/'),
-        isGeneralHub: currentPath.includes('/hub'),
         message: 'Verificando se deve redirecionar para subdomínio membros'
       });
       
@@ -124,9 +120,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       if (currentSubdomain !== 'membros') {
         // Remover prefixo /members se existir
         let cleanPath = currentPath;
-        if (currentPath.startsWith('/members/hub')) {
-          cleanPath = currentPath.replace('/members/hub', '/hub');
-        } else if (currentPath.startsWith('/members/login')) {
+        if (currentPath.startsWith('/members/login')) {
           cleanPath = currentPath.replace('/members/login', '/login');
         } else if (currentPath.startsWith('/members/area')) {
           cleanPath = currentPath.replace('/members/area', '/area');
@@ -137,7 +131,6 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
           from: window.location.href,
           to: targetUrl,
           isSpecificArea: cleanPath.includes('/login/') || cleanPath.includes('/area/'),
-          isGeneralHub: cleanPath.includes('/hub'),
           reason: 'Área de membros SEMPRE usa membros.kambafy.com em produção'
         });
         window.location.href = targetUrl;
@@ -146,11 +139,11 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     }
     
     // Define quais rotas são RESTRITAS de cada subdomínio (não permitidas)
-    // NOTA: /login/:id e /area/:id são tratadas separadamente (linhas 109-146 e 200-228)
-    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/hub']; 
-    const restrictedFromApp = ['/checkout', '/obrigado', '/admin', '/hub']; 
-    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin', '/hub']; 
-    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/minhas-compras', '/hub'];
+    // NOTA: /login/:id e /area/:id são tratadas separadamente
+    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin']; 
+    const restrictedFromApp = ['/checkout', '/obrigado', '/admin']; 
+    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/admin']; 
+    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/minhas-compras'];
     
     // Verifica se a rota atual é restrita do subdomínio atual
     let shouldRedirect = false;
@@ -177,8 +170,6 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         shouldRedirect = true;
         if (currentPath.startsWith('/admin')) {
           targetSubdomain = 'admin';
-        } else if (currentPath.startsWith('/hub')) {
-          targetSubdomain = 'membros';
         } else {
           targetSubdomain = 'app';
         }
@@ -195,41 +186,35 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
           targetSubdomain = 'admin';
         } else if (currentPath.startsWith('/checkout') || currentPath.startsWith('/obrigado')) {
           targetSubdomain = 'pay';
-        } else if (currentPath.startsWith('/hub')) {
-          targetSubdomain = 'membros';
         }
       }
     } else if (currentSubdomain === 'membros') {
       // membros.kambafy.com: permitir APENAS rotas de área de membros
-      // ✅ Áreas específicas: /login/:id, /area/:id  
-      // ✅ Hub geral: /hub, /hub/dashboard
-      // CRÍTICO: Áreas específicas NUNCA são redirecionadas para /hub
+      // ✅ Áreas específicas: /login/:id, /area/:id
       const isSpecificArea = currentPath.match(/^\/(login|area)\/[^/]+/);
-      const isGeneralHub = currentPath.startsWith('/hub');
       
       console.log('🎓 SubdomainGuard: Verificando subdomínio MEMBROS', {
         currentPath,
         isSpecificArea: !!isSpecificArea,
-        isGeneralHub: isGeneralHub,
-        isValidMemberRoute: !!(isSpecificArea || isGeneralHub)
+        isValidMemberRoute: !!isSpecificArea
       });
       
-      // ✅ Permitir áreas específicas E hub geral (ambos são válidos)
-      if (isSpecificArea || isGeneralHub) {
+      // ✅ Permitir apenas áreas específicas
+      if (isSpecificArea) {
         console.log('✅ SubdomainGuard: Rota PERMITIDA no membros', {
           currentPath,
-          type: isSpecificArea ? 'área específica' : 'hub geral',
-          message: 'Usuário pode navegar livremente entre hub e áreas específicas'
+          type: 'área específica',
+          message: 'Usuário acessando área de membros específica'
         });
         return; // Permitir acesso sem redirecionamento
       }
       
-      // ❌ Se NÃO é área específica NEM hub, redirecionar para hub
+      // ❌ Se NÃO é área específica, redirecionar para kambafy.com
       console.log('❌ SubdomainGuard: Rota inválida para subdomínio membros', {
         currentPath,
-        message: 'Redirecionando para /hub dentro de membros.kambafy.com'
+        message: 'Redirecionando para kambafy.com (não é área de membros)'
       });
-      window.location.href = window.location.protocol + '//' + window.location.host + '/hub';
+      window.location.href = 'https://kambafy.com';
       return;
     } else if (currentSubdomain === 'pay') {
       // pay.kambafy.com: permitir apenas checkout e obrigado
@@ -238,8 +223,6 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         if (restrictedFromPay.some(route => currentPath.startsWith(route))) {
           if (currentPath.startsWith('/admin')) {
             targetSubdomain = 'admin';
-          } else if (currentPath.startsWith('/hub')) {
-            targetSubdomain = 'membros';
           } else if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || 
               currentPath.startsWith('/apps') || currentPath.startsWith('/minhas-compras')) {
             targetSubdomain = 'app';

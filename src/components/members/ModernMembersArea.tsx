@@ -728,16 +728,6 @@ export default function ModernMembersArea() {
             {/* Header */}
             <motion.div className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10">
               <div className="flex items-center gap-3">
-                {/* Botão Voltar para Meus Cursos */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => window.location.href = '/hub/dashboard'}
-                  className="text-white/80 hover:text-white hover:bg-white/10"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar
-                </Button>
                 
                 {currentMemberArea?.logo_url ? <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
                     <AvatarImage src={currentMemberArea.logo_url} alt={currentMemberArea.name} />
