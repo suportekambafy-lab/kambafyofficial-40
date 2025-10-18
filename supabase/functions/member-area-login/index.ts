@@ -45,6 +45,21 @@ serve(async (req) => {
     // Normalizar email para lowercase
     const normalizedEmail = studentEmail.toLowerCase().trim();
     
+    // ✅ PRIMEIRO: Verificar se está na tabela member_area_students (forma principal)
+    const { data: studentAccess, error: studentError } = await supabase
+      .from('member_area_students')
+      .select('id, student_email')
+      .eq('member_area_id', memberAreaId)
+      .ilike('student_email', normalizedEmail)
+      .maybeSingle();
+
+    if (studentError) {
+      console.error('❌ Error checking student access:', studentError);
+    }
+
+    const hasStudentAccess = studentAccess !== null;
+    console.log('📚 Student access check:', { hasStudentAccess, studentEmail: normalizedEmail });
+    
     // Check if student has access (purchased a product with this member area)
     const { data: orders, error: ordersError } = await supabase
       .from('orders')
@@ -61,8 +76,10 @@ serve(async (req) => {
 
     if (ordersError) {
       console.error('❌ Error checking orders:', ordersError);
-      throw new Error('Erro ao verificar acesso');
     }
+
+    const hasPurchased = orders && orders.length > 0;
+    console.log('🛒 Purchase check:', { hasPurchased, ordersCount: orders?.length || 0 });
 
     // Check if user is the creator of the member area
     const { data: profiles, error: profileError } = await supabase
@@ -70,15 +87,28 @@ serve(async (req) => {
       .select('user_id, email')
       .ilike('email', normalizedEmail)
       .eq('user_id', memberArea.user_id)
-      .single();
+      .maybeSingle();
 
-    const isCreator = !profileError && profiles;
-    const hasPurchased = orders && orders.length > 0;
+    const isCreator = profiles !== null;
+    console.log('👤 Creator check:', { isCreator });
 
-    if (!isCreator && !hasPurchased) {
-      console.log('❌ Access denied - no purchase found and not creator');
+    // ✅ Permitir acesso se: está na tabela de alunos OU comprou OU é o criador
+    if (!hasStudentAccess && !isCreator && !hasPurchased) {
+      console.log('❌ Access denied:', { 
+        hasStudentAccess, 
+        isCreator, 
+        hasPurchased, 
+        normalizedEmail,
+        memberAreaId 
+      });
       throw new Error('Você não tem acesso a esta área de membros. Verifique se comprou o curso relacionado.');
     }
+
+    console.log('✅ Access granted:', { 
+      hasStudentAccess, 
+      isCreator, 
+      hasPurchased 
+    });
 
     // Generate session token
     const sessionToken = crypto.randomUUID();
