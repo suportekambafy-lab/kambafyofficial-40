@@ -184,22 +184,13 @@ const App = () => {
                          <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                          <Route path="/vimeo-settings" element={<OptimizedRoutes.VimeoSettings />} />
                          
-                         {/* Member Area Routes - SISTEMAS SEPARADOS */}
-                            
-                            {/* ⚡ HUB GERAL - Sistema unificado (acesso a TODOS os cursos) */}
-                            <Route path="/members/hub" element={<OptimizedRoutes.UnifiedMembersLogin />} />
-                            <Route path="/members/hub/dashboard" element={<OptimizedRoutes.UnifiedMembersHub />} />
+                         {/* Member Area Routes - ÁREAS ESPECÍFICAS DE CADA VENDEDOR */}
                             
                             {/* 🎓 ÁREAS ESPECÍFICAS - Sistema individual (login simples por email) */}
                             <Route path="/members/login/:id" element={<OptimizedRoutes.MembersLogin />} />
                             <Route path="/members/area/:id" element={<OptimizedRoutes.MembersArea />} />
                             
                             {/* Rotas para subdomínio membros.kambafy.com (sem prefixo /members) */}
-                            {/* HUB GERAL - Sistema unificado */}
-                            <Route path="/hub" element={<OptimizedRoutes.UnifiedMembersLogin />} />
-                            <Route path="/hub/dashboard" element={<OptimizedRoutes.UnifiedMembersHub />} />
-                            
-                            {/* ÁREAS ESPECÍFICAS - Sistema individual (NUNCA redireciona para hub) */}
                             <Route path="/login/:id" element={<OptimizedRoutes.MembersLogin />} />
                             <Route path="/area/:id" element={<OptimizedRoutes.MembersArea />} />
                         <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />

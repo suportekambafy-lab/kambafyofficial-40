@@ -71,10 +71,6 @@ const MembersArea = createLazyWithRetry(() => import('@/pages/MembersArea'), "Me
 const ModernMembersLogin = createLazyWithRetry(() => import('@/pages/ModernMembersLogin'), "ModernMembersLogin");
 const ModernMembersArea = createLazyWithRetry(() => import('@/pages/ModernMembersArea'), "ModernMembersArea");
 
-// Sistema unificado de hub de cursos
-const UnifiedMembersLogin = createLazyWithRetry(() => import('@/pages/UnifiedMembersLogin'), "UnifiedMembersLogin");
-const UnifiedMembersHub = createLazyWithRetry(() => import('@/pages/UnifiedMembersHub'), "UnifiedMembersHub");
-
 
 // Páginas do painel vendedor - lazy load com preload e retry
 const SellerDashboard = createLazyWithRetry(() => 
@@ -210,10 +206,6 @@ export const OptimizedRoutes = {
   MembersArea: withLazyLoading(MembersArea, 'member-area'),
   ModernMembersLogin: withLazyLoading(ModernMembersLogin, 'member-area'),
   ModernMembersArea: withLazyLoading(ModernMembersArea, 'member-area'),
-  
-  // Hub unificado de cursos
-  UnifiedMembersLogin: withLazyLoading(UnifiedMembersLogin, 'member-area'),
-  UnifiedMembersHub: withLazyLoading(UnifiedMembersHub, 'member-area'),
   
   // Ranking page
   RankingPage: withLazyLoading(RankingPage, 'dashboard'),

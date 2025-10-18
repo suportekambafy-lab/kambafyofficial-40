@@ -26,22 +26,14 @@ export default function UnifiedMembersLogin() {
       const success = await login(email);
       
       if (success) {
-        // Aguardar um momento para carregar as áreas
+        // Aguardar um momento para carregar a área
         setTimeout(() => {
-          // PRIORIDADE 1: Se veio de URL específica (/login/:id), redirecionar para essa área
+          // Se veio de URL específica (/login/:id), redirecionar para essa área
           if (memberAreaId) {
             console.log('🎯 Navegando para área específica:', memberAreaId);
             navigate(`/area/${memberAreaId}`);
-          } 
-          // PRIORIDADE 2: Se tiver apenas 1 curso, redirecionar direto
-          else if (memberAreas.length === 1) {
-            console.log('📚 Navegando para única área:', memberAreas[0].memberAreaId);
-            navigate(`/area/${memberAreas[0].memberAreaId}`);
-          } 
-          // PRIORIDADE 3: Se tiver múltiplos, ir para dashboard do hub
-          else {
-            console.log('🏠 Navegando para hub com múltiplas áreas');
-            navigate('/hub/dashboard');
+          } else {
+            console.error('❌ Nenhuma área específica informada no login');
           }
         }, 500);
       }
