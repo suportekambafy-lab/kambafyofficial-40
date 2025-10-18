@@ -201,10 +201,9 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       }
     } else if (currentSubdomain === 'membros') {
       // membros.kambafy.com: permitir APENAS rotas de área de membros
-      // ✅ Áreas específicas: /login/:id, /area/:id
+      // ✅ Áreas específicas: /login/:id, /area/:id  
       // ✅ Hub geral: /hub, /hub/dashboard
-      // NUNCA redirecionar para kambafy.com - manter sempre em membros.kambafy.com
-      // CRÍTICO: Áreas específicas NUNCA devem ser redirecionadas para /hub
+      // CRÍTICO: Áreas específicas NUNCA são redirecionadas para /hub
       const isSpecificArea = currentPath.match(/^\/(login|area)\/[^/]+/);
       const isGeneralHub = currentPath.startsWith('/hub');
       
@@ -212,34 +211,24 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         currentPath,
         isSpecificArea: !!isSpecificArea,
         isGeneralHub: isGeneralHub,
-        isValidMemberRoute: !!(isSpecificArea || isGeneralHub),
-        regexMatch: currentPath.match(/^\/(login|area)\/[^/]+/)
+        isValidMemberRoute: !!(isSpecificArea || isGeneralHub)
       });
       
-      // ✅ CRÍTICO: Se é área específica (/login/:id ou /area/:id), SEMPRE permitir
-      if (isSpecificArea) {
-        console.log('✅ SubdomainGuard: ÁREA ESPECÍFICA detectada - NUNCA redirecionar para hub', {
+      // ✅ Permitir áreas específicas E hub geral (ambos são válidos)
+      if (isSpecificArea || isGeneralHub) {
+        console.log('✅ SubdomainGuard: Rota PERMITIDA no membros', {
           currentPath,
-          type: 'área específica'
+          type: isSpecificArea ? 'área específica' : 'hub geral',
+          message: 'Usuário pode navegar livremente entre hub e áreas específicas'
         });
-        return; // Sair imediatamente, NUNCA redirecionar
+        return; // Permitir acesso sem redirecionamento
       }
       
-      // Se é hub geral, permitir também
-      if (isGeneralHub) {
-        console.log('✅ SubdomainGuard: HUB GERAL detectado', {
-          currentPath,
-          type: 'hub geral'
-        });
-        return; // Permitir hub
-      }
-      
-      // Apenas redirecionar se NÃO for área específica NEM hub
+      // ❌ Se NÃO é área específica NEM hub, redirecionar para hub
       console.log('❌ SubdomainGuard: Rota inválida para subdomínio membros', {
         currentPath,
         message: 'Redirecionando para /hub dentro de membros.kambafy.com'
       });
-      // NUNCA redirecionar para kambafy.com - redirecionar para /hub dentro do mesmo subdomínio
       window.location.href = window.location.protocol + '//' + window.location.host + '/hub';
       return;
     } else if (currentSubdomain === 'pay') {
