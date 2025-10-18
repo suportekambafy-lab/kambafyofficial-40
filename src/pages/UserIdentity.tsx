@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCustomToast } from '@/hooks/useCustomToast';
-import { useBunnyUpload } from '@/hooks/useBunnyUpload';
+import { useCloudflareUpload } from '@/hooks/useCloudflareUpload';
 import { format } from 'date-fns';
 import { Loader2, Upload, X, Shield, CheckCircle, AlertCircle, Clock, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -40,7 +40,7 @@ export default function UserIdentity() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useCustomToast();
-  const { uploadFile: bunnyUpload, uploading } = useBunnyUpload();
+  const { uploadFile: cloudflareUpload, uploading } = useCloudflareUpload();
   const [loading, setLoading] = useState(false);
   const [verification, setVerification] = useState<IdentityVerification | null>(null);
   const [formData, setFormData] = useState({
@@ -114,10 +114,10 @@ export default function UserIdentity() {
       return;
     }
 
-    console.log('🔄 Fazendo upload via Bunny CDN...');
-    const url = await bunnyUpload(file);
+    console.log('🔄 Fazendo upload via Cloudflare R2...');
+    const url = await cloudflareUpload(file);
     
-    console.log('📥 URL retornada do Bunny:', url);
+    console.log('📥 URL retornada do Cloudflare:', url);
     
     if (url && user) {
       console.log('✅ Upload bem-sucedido, atualizando estado local');
@@ -230,7 +230,7 @@ export default function UserIdentity() {
 
   const removeDocument = async (type: 'front' | 'back') => {
     // Apenas remove do estado local e do banco
-    // Bunny CDN files não precisam ser deletados manualmente
+    // Cloudflare R2 files não precisam ser deletados manualmente
     setVerification(prev => prev ? {
       ...prev,
       [`document_${type}_url`]: undefined
