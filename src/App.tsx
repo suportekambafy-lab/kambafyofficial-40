@@ -191,8 +191,8 @@ const App = () => {
                             <Route path="/members/hub/dashboard" element={<OptimizedRoutes.UnifiedMembersHub />} />
                             
                             {/* 🎓 ÁREAS ESPECÍFICAS - Sistema individual (login simples por email) */}
-                            <Route path="/members/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
-                            <Route path="/members/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
+                            <Route path="/members/login/:id" element={<OptimizedRoutes.MembersLogin />} />
+                            <Route path="/members/area/:id" element={<OptimizedRoutes.MembersArea />} />
                             
                             {/* Rotas para subdomínio membros.kambafy.com (sem prefixo /members) */}
                             {/* HUB GERAL - Sistema unificado */}
@@ -200,8 +200,8 @@ const App = () => {
                             <Route path="/hub/dashboard" element={<OptimizedRoutes.UnifiedMembersHub />} />
                             
                             {/* ÁREAS ESPECÍFICAS - Sistema individual (NUNCA redireciona para hub) */}
-                            <Route path="/login/:id" element={<OptimizedRoutes.ModernMembersLogin />} />
-                            <Route path="/area/:id" element={<OptimizedRoutes.ModernMembersArea />} />
+                            <Route path="/login/:id" element={<OptimizedRoutes.MembersLogin />} />
+                            <Route path="/area/:id" element={<OptimizedRoutes.MembersArea />} />
                         <Route path="/mobile" element={<OptimizedRoutes.Mobile />} />
                         <Route path="/app" element={<OptimizedRoutes.AppMobile />} />
                          
