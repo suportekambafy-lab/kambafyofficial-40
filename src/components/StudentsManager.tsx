@@ -49,6 +49,9 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
     email: '',
     cohortId: ''
   });
+  const [changeCohortDialog, setChangeCohortDialog] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [newCohortId, setNewCohortId] = useState('');
 
   // Carregar estudantes e turmas da área de membros
   useEffect(() => {
@@ -394,6 +397,81 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
     }
   };
 
+  const handleChangeCohort = async () => {
+    if (!selectedStudent || !newCohortId) return;
+
+    try {
+      const oldCohortId = selectedStudent.cohort_id;
+
+      // Atualizar turma do aluno
+      const { error: updateError } = await supabase
+        .from('member_area_students')
+        .update({ cohort_id: newCohortId })
+        .eq('id', selectedStudent.id);
+
+      if (updateError) {
+        console.error('Error updating student cohort:', updateError);
+        toast.error("Erro ao alterar turma do aluno");
+        return;
+      }
+
+      // Decrementar contador da turma antiga (se existir)
+      if (oldCohortId) {
+        const { data: oldCohortData } = await supabase
+          .from('member_area_cohorts')
+          .select('current_students')
+          .eq('id', oldCohortId)
+          .single();
+
+        if (oldCohortData) {
+          await supabase
+            .from('member_area_cohorts')
+            .update({ current_students: Math.max(0, oldCohortData.current_students - 1) })
+            .eq('id', oldCohortId);
+        }
+      }
+
+      // Incrementar contador da nova turma
+      const { data: newCohortData } = await supabase
+        .from('member_area_cohorts')
+        .select('current_students')
+        .eq('id', newCohortId)
+        .single();
+
+      if (newCohortData) {
+        await supabase
+          .from('member_area_cohorts')
+          .update({ current_students: newCohortData.current_students + 1 })
+          .eq('id', newCohortId);
+      }
+
+      // Atualizar estados locais
+      setStudents(prev => prev.map(s => 
+        s.id === selectedStudent.id 
+          ? { ...s, cohort_id: newCohortId }
+          : s
+      ));
+
+      setCohorts(prev => prev.map(c => {
+        if (c.id === oldCohortId) {
+          return { ...c, current_students: Math.max(0, c.current_students - 1) };
+        }
+        if (c.id === newCohortId) {
+          return { ...c, current_students: c.current_students + 1 };
+        }
+        return c;
+      }));
+
+      toast.success("Turma alterada com sucesso!");
+      setChangeCohortDialog(false);
+      setSelectedStudent(null);
+      setNewCohortId('');
+    } catch (error) {
+      console.error('Exception changing cohort:', error);
+      toast.error("Erro inesperado ao alterar turma");
+    }
+  };
+
   const filteredStudents = students.filter(student =>
     // Filtrar email de validação da Kambafy
     student.student_email !== 'validar@kambafy.com' &&
@@ -603,6 +681,16 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedStudent(student);
+                              setNewCohortId(student.cohort_id || '');
+                              setChangeCohortDialog(true);
+                            }}
+                          >
+                            <Calendar className="mr-2 h-4 w-4" />
+                            Alterar Turma
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
                             onClick={() => handleResendAccess(student)}
                           >
                             <Mail className="mr-2 h-4 w-4" />
@@ -625,6 +713,69 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog para alterar turma */}
+      <Dialog open={changeCohortDialog} onOpenChange={setChangeCohortDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Alterar Turma</DialogTitle>
+            <DialogDescription>
+              Altere a turma de {selectedStudent?.student_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-cohort">Nova Turma</Label>
+              <Select
+                value={newCohortId}
+                onValueChange={setNewCohortId}
+              >
+                <SelectTrigger id="new-cohort">
+                  <SelectValue placeholder="Selecione uma turma" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cohorts.map((cohort) => (
+                    <SelectItem 
+                      key={cohort.id} 
+                      value={cohort.id}
+                      disabled={
+                        cohort.id === selectedStudent?.cohort_id ||
+                        (cohort.max_students !== null && cohort.current_students >= cohort.max_students)
+                      }
+                    >
+                      {cohort.name}
+                      {cohort.max_students !== null && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({cohort.current_students}/{cohort.max_students})
+                        </span>
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                setChangeCohortDialog(false);
+                setSelectedStudent(null);
+                setNewCohortId('');
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleChangeCohort}
+              disabled={!newCohortId || newCohortId === selectedStudent?.cohort_id}
+            >
+              Alterar Turma
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
