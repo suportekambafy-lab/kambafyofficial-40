@@ -70,19 +70,27 @@ Deno.serve(async (req) => {
       console.log(`\n🎥 Processing: "${lesson.title}"`);
 
       try {
-        // Check if lesson has original Bunny ID in video_data
-        let bunnyVideoId = lesson.bunny_video_id;
+        // PRIORITY 1: Check video_data.original_bunny_id (most reliable)
+        let bunnyVideoId = lesson.video_data?.original_bunny_id;
         
-        if (!bunnyVideoId && lesson.video_data?.original_bunny_id) {
-          bunnyVideoId = lesson.video_data.original_bunny_id;
-          console.log(`  ↳ Found original Bunny ID in video_data: ${bunnyVideoId}`);
+        if (bunnyVideoId) {
+          console.log(`  ↳ Using original Bunny ID from video_data: ${bunnyVideoId}`);
+        }
+        
+        // PRIORITY 2: Try bunny_video_id (may be outdated)
+        if (!bunnyVideoId && lesson.bunny_video_id) {
+          // Only use if it looks like a Bunny UUID (not Cloudflare ID)
+          if (lesson.bunny_video_id.includes('-') && lesson.bunny_video_id.length === 36) {
+            bunnyVideoId = lesson.bunny_video_id;
+            console.log(`  ↳ Using bunny_video_id: ${bunnyVideoId}`);
+          }
         }
 
-        // Try to extract from existing URLs
+        // PRIORITY 3: Try to extract from existing Bunny URLs
         if (!bunnyVideoId) {
           const hlsUrl = lesson.hls_url || lesson.video_url;
           if (hlsUrl?.includes('b-cdn.net')) {
-            const match = hlsUrl.match(/([a-f0-9-]{36})/);
+            const match = hlsUrl.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/);
             if (match) {
               bunnyVideoId = match[1];
               console.log(`  ↳ Extracted Bunny ID from HLS URL: ${bunnyVideoId}`);
