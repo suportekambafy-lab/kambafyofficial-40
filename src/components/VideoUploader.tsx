@@ -122,44 +122,9 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       });
 
       console.log('✅ Upload concluído no Bunny.net!');
-      setUploadProgress(95);
-
-      // Tentar obter info do vídeo (não bloqueante - apenas 3 tentativas rápidas)
-      let duration = 0;
-      let videoProcessed = false;
-      
-      for (let i = 0; i < 3; i++) {
-        try {
-          await new Promise(resolve => setTimeout(resolve, 1000)); // 1s entre tentativas
-          
-          const { data: videoInfo, error: infoError } = await supabase.functions.invoke('get-bunny-video-info', {
-            body: { videoId }
-          });
-
-          console.log(`📹 Info do vídeo (tentativa ${i + 1}):`, videoInfo);
-
-          if (videoInfo && !infoError) {
-            duration = videoInfo.duration || 0;
-            videoProcessed = videoInfo.status === 4 || videoInfo.status === 'finished';
-            
-            if (videoProcessed) {
-              console.log('✅ Vídeo já processado!');
-              break;
-            }
-          }
-        } catch (error) {
-          console.log(`⚠️ Não foi possível obter info (tentativa ${i + 1}):`, error);
-        }
-        
-        setUploadProgress(95 + i);
-      }
-
       setUploadProgress(100);
       
-      const statusMessage = videoProcessed 
-        ? `Vídeo processado! Duração: ${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}`
-        : 'Upload concluído! O vídeo será processado em segundo plano.';
-        
+      const statusMessage = 'Vídeo enviado com sucesso! Será processado em segundo plano.';
       console.log(`✅ ${statusMessage}`);
 
       onVideoUploaded(embedUrl, {
@@ -168,7 +133,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         videoId,
         hlsUrl,
         embedUrl,
-        duration,
         original_bunny_id: videoId
       });
       
