@@ -18,6 +18,7 @@ import { SEO } from '@/components/SEO';
 import { ResendAllAccessButton } from '@/components/admin/ResendAllAccessButton';
 import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalancesButton';
 import BunnyToVimeoMigration from '@/components/admin/BunnyToVimeoMigration';
+import { BunnyMigration } from '@/components/admin/BunnyMigration';
 
 interface ModernMetricCardProps {
   title: string;
@@ -536,7 +537,10 @@ export default function AdminDashboard() {
             <h2 className="text-2xl font-bold text-foreground">Ferramentas do Sistema</h2>
           </div>
           
-          <BunnyToVimeoMigration />
+          <div className="space-y-6">
+            <BunnyMigration />
+            <BunnyToVimeoMigration />
+          </div>
         </div>
       </div>
     </div>
