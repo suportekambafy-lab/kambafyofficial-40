@@ -121,47 +121,46 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         xhr.send(selectedFile);
       });
 
-      console.log('✅ Upload concluído, aguardando processamento...');
-      setUploadProgress(92);
+      console.log('✅ Upload concluído no Bunny.net!');
+      setUploadProgress(95);
 
-      // Aguardar processamento do vídeo (polling)
+      // Tentar obter info do vídeo (não bloqueante - apenas 3 tentativas rápidas)
       let duration = 0;
-      let attempts = 0;
-      const maxAttempts = 30;
-
-      while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Aguarda 2s
-
+      let videoProcessed = false;
+      
+      for (let i = 0; i < 3; i++) {
         try {
-          const { data: videoInfo } = await supabase.functions.invoke('get-bunny-video-info', {
+          await new Promise(resolve => setTimeout(resolve, 1000)); // 1s entre tentativas
+          
+          const { data: videoInfo, error: infoError } = await supabase.functions.invoke('get-bunny-video-info', {
             body: { videoId }
           });
 
-          console.log(`⏳ Status do vídeo: ${videoInfo?.status}`);
+          console.log(`📹 Info do vídeo (tentativa ${i + 1}):`, videoInfo);
 
-          // Status 4 = ready/finished no Bunny.net
-          if (videoInfo?.status === 4 || videoInfo?.status === 'finished') {
+          if (videoInfo && !infoError) {
             duration = videoInfo.duration || 0;
-            console.log('✅ Vídeo processado:', videoInfo);
-            break;
+            videoProcessed = videoInfo.status === 4 || videoInfo.status === 'finished';
+            
+            if (videoProcessed) {
+              console.log('✅ Vídeo já processado!');
+              break;
+            }
           }
         } catch (error) {
-          console.log('⏳ Aguardando processamento... tentativa', attempts + 1);
+          console.log(`⚠️ Não foi possível obter info (tentativa ${i + 1}):`, error);
         }
-
-        attempts++;
-        // Aumentar progresso gradualmente durante o processamento
-        const processingProgress = 92 + Math.floor((attempts / maxAttempts) * 6);
-        setUploadProgress(Math.min(processingProgress, 98));
+        
+        setUploadProgress(95 + i);
       }
 
       setUploadProgress(100);
       
-      const durationText = duration > 0 
-        ? `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}` 
-        : 'processando...';
+      const statusMessage = videoProcessed 
+        ? `Vídeo processado! Duração: ${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}`
+        : 'Upload concluído! O vídeo será processado em segundo plano.';
         
-      console.log(`✅ Upload concluído - Duração: ${durationText}`);
+      console.log(`✅ ${statusMessage}`);
 
       onVideoUploaded(embedUrl, {
         success: true,
@@ -179,7 +178,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       
       toast({
         title: "Sucesso",
-        description: `Vídeo enviado com sucesso! Duração: ${durationText}`
+        description: statusMessage
       });
 
     } catch (error: any) {
