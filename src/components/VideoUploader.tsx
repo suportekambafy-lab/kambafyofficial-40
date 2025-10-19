@@ -83,39 +83,46 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       const { videoId, uploadUrl, accessKey, embedUrl, hlsUrl } = uploadData;
       setUploadProgress(10);
 
-      // Upload do arquivo em chunks com progresso
-      const chunkSize = 5 * 1024 * 1024; // 5MB por chunk
-      const totalChunks = Math.ceil(selectedFile.size / chunkSize);
-      let uploadedBytes = 0;
+      // Upload direto com progresso real usando XMLHttpRequest
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
 
-      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-        const start = chunkIndex * chunkSize;
-        const end = Math.min(start + chunkSize, selectedFile.size);
-        const chunk = selectedFile.slice(start, end);
-
-        // Upload do chunk
-        const uploadResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          headers: {
-            'AccessKey': accessKey,
-            'Content-Type': 'application/octet-stream',
-            'Content-Range': `bytes ${start}-${end - 1}/${selectedFile.size}`
-          },
-          body: chunk
+        // Tracking de progresso
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentage = Math.round((e.loaded / e.total) * 80) + 10; // 10% a 90%
+            setUploadProgress(percentage);
+            console.log(`📊 Upload: ${percentage}% (${(e.loaded / (1024 * 1024)).toFixed(2)}MB / ${(e.total / (1024 * 1024)).toFixed(2)}MB)`);
+          }
         });
 
-        if (!uploadResponse.ok) {
-          throw new Error(`Falha no upload do chunk ${chunkIndex + 1}/${totalChunks}`);
-        }
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log('✅ Upload concluído');
+            setUploadProgress(90);
+            resolve();
+          } else {
+            reject(new Error(`Upload falhou: ${xhr.status} ${xhr.statusText}`));
+          }
+        });
 
-        uploadedBytes += chunk.size;
-        const percentage = Math.round((uploadedBytes / selectedFile.size) * 85) + 10;
-        setUploadProgress(percentage);
-        console.log(`📊 Progresso: ${percentage}% (chunk ${chunkIndex + 1}/${totalChunks})`);
-      }
+        xhr.addEventListener('error', () => {
+          reject(new Error('Erro de rede durante o upload'));
+        });
+
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Upload cancelado'));
+        });
+
+        // Configurar e enviar
+        xhr.open('PUT', uploadUrl);
+        xhr.setRequestHeader('AccessKey', accessKey);
+        xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+        xhr.send(selectedFile);
+      });
 
       console.log('✅ Upload concluído, aguardando processamento...');
-      setUploadProgress(95);
+      setUploadProgress(92);
 
       // Aguardar processamento do vídeo (polling)
       let duration = 0;
@@ -130,21 +137,31 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
             body: { videoId }
           });
 
-          if (videoInfo?.status === 'finished' || videoInfo?.status === 4) {
+          console.log(`⏳ Status do vídeo: ${videoInfo?.status}`);
+
+          // Status 4 = ready/finished no Bunny.net
+          if (videoInfo?.status === 4 || videoInfo?.status === 'finished') {
             duration = videoInfo.duration || 0;
             console.log('✅ Vídeo processado:', videoInfo);
             break;
           }
         } catch (error) {
-          console.log('⏳ Aguardando processamento...');
+          console.log('⏳ Aguardando processamento... tentativa', attempts + 1);
         }
 
         attempts++;
+        // Aumentar progresso gradualmente durante o processamento
+        const processingProgress = 92 + Math.floor((attempts / maxAttempts) * 6);
+        setUploadProgress(Math.min(processingProgress, 98));
       }
 
       setUploadProgress(100);
       
-      console.log(`✅ Upload concluído - Duração: ${duration > 0 ? `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}` : 'processando...'}`);
+      const durationText = duration > 0 
+        ? `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}` 
+        : 'processando...';
+        
+      console.log(`✅ Upload concluído - Duração: ${durationText}`);
 
       onVideoUploaded(embedUrl, {
         success: true,
@@ -159,10 +176,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       setSelectedFile(null);
       setUploadProgress(0);
       onOpenChange(false);
-
-      const durationText = duration > 0 
-        ? `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}` 
-        : 'processando...';
       
       toast({
         title: "Sucesso",
