@@ -9,7 +9,7 @@ import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import * as tus from "tus-js-client";
+
 
 interface VideoUploaderProps {
   onVideoUploaded: (videoUrl: string, videoData?: any) => void;
@@ -60,99 +60,100 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     try {
       const fileName = selectedFile.name;
       
-      console.log('🚀 Upload para Vimeo Pro via TUS:', fileName);
-      console.log('📦 Tamanho:', (selectedFile.size / (1024 * 1024 * 1024)).toFixed(2), 'GB');
+      console.log('🚀 Upload para Bunny.net:', fileName);
+      console.log('📦 Tamanho:', (selectedFile.size / (1024 * 1024)).toFixed(2), 'MB');
       
       setUploadProgress(5);
 
-      // Obter URL de upload do Vimeo
-      console.log('🔐 Obtendo URL de upload do Vimeo...');
+      // Criar vídeo no Bunny.net
+      console.log('🔐 Criando vídeo no Bunny.net...');
       
-      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('create-vimeo-upload', {
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('bunny-video-upload', {
         body: {
           fileName,
-          fileSize: selectedFile.size
+          title: fileName.replace(/\.[^/.]+$/, '') // Remove extensão
         }
       });
 
-      if (uploadError || !uploadData?.success) {
-        throw new Error(uploadError?.message || uploadData?.error || 'Falha ao criar upload no Vimeo');
+      if (uploadError || !uploadData?.videoId) {
+        throw new Error(uploadError?.message || 'Falha ao criar vídeo no Bunny.net');
       }
 
-      console.log('✅ URL obtida, iniciando upload TUS...');
+      console.log('✅ Vídeo criado, iniciando upload...');
+      const { videoId, uploadUrl, accessKey, embedUrl, hlsUrl } = uploadData;
       setUploadProgress(10);
 
-      const { uploadUrl, videoId, videoUri } = uploadData;
+      // Upload do arquivo em chunks com progresso
+      const chunkSize = 5 * 1024 * 1024; // 5MB por chunk
+      const totalChunks = Math.ceil(selectedFile.size / chunkSize);
+      let uploadedBytes = 0;
 
-      // Upload via TUS (resumível)
-      await new Promise<void>((resolve, reject) => {
-        const upload = new tus.Upload(selectedFile, {
-          uploadUrl: uploadUrl,
-          retryDelays: [0, 3000, 5000, 10000, 20000], // Retry automático
-          metadata: {
-            filename: fileName,
-            filetype: selectedFile.type,
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+        const start = chunkIndex * chunkSize;
+        const end = Math.min(start + chunkSize, selectedFile.size);
+        const chunk = selectedFile.slice(start, end);
+
+        // Upload do chunk
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'AccessKey': accessKey,
+            'Content-Type': 'application/octet-stream',
+            'Content-Range': `bytes ${start}-${end - 1}/${selectedFile.size}`
           },
-          onError: (error) => {
-            console.error('❌ Erro no upload TUS:', error);
-            reject(error);
-          },
-          onProgress: (bytesUploaded, bytesTotal) => {
-            const percentage = Math.round((bytesUploaded / bytesTotal) * 85) + 10;
-            setUploadProgress(percentage);
-            console.log(`📊 Progresso: ${percentage}% (${bytesUploaded}/${bytesTotal} bytes)`);
-          },
-          onSuccess: () => {
-            console.log('✅ Upload TUS concluído');
-            setUploadProgress(95);
-            resolve();
-          },
+          body: chunk
         });
 
-        upload.start();
-      });
-
-      // Obter informações do vídeo APÓS upload
-      console.log('📊 Obtendo informações do vídeo para ID:', videoId);
-      
-      let duration = 0;
-      try {
-        const { data: videoInfo, error: infoError } = await supabase.functions.invoke('get-vimeo-info', {
-          body: { videoId }
-        });
-
-        if (infoError) {
-          console.error('❌ Erro ao obter informações:', infoError);
-        } else {
-          console.log('✅ Informações recebidas:', videoInfo);
-          duration = videoInfo?.duration || 0;
+        if (!uploadResponse.ok) {
+          throw new Error(`Falha no upload do chunk ${chunkIndex + 1}/${totalChunks}`);
         }
-      } catch (error) {
-        console.error('❌ Exceção ao obter informações:', error);
+
+        uploadedBytes += chunk.size;
+        const percentage = Math.round((uploadedBytes / selectedFile.size) * 85) + 10;
+        setUploadProgress(percentage);
+        console.log(`📊 Progresso: ${percentage}% (chunk ${chunkIndex + 1}/${totalChunks})`);
       }
+
+      console.log('✅ Upload concluído, aguardando processamento...');
+      setUploadProgress(95);
+
+      // Aguardar processamento do vídeo (polling)
+      let duration = 0;
+      let attempts = 0;
+      const maxAttempts = 30;
+
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Aguarda 2s
+
+        try {
+          const { data: videoInfo } = await supabase.functions.invoke('get-bunny-video-info', {
+            body: { videoId }
+          });
+
+          if (videoInfo?.status === 'finished' || videoInfo?.status === 4) {
+            duration = videoInfo.duration || 0;
+            console.log('✅ Vídeo processado:', videoInfo);
+            break;
+          }
+        } catch (error) {
+          console.log('⏳ Aguardando processamento...');
+        }
+
+        attempts++;
+      }
+
+      setUploadProgress(100);
       
       console.log(`✅ Upload concluído - Duração: ${duration > 0 ? `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}` : 'processando...'}`);
 
-      setUploadProgress(100);
-
-      // URLs do Vimeo - usar apenas embedUrl para iframes
-      const embedUrl = `https://player.vimeo.com/video/${videoId}`;
-      const thumbnailUrl = `https://i.vimeocdn.com/video/${videoId}_640.jpg`;
-
       onVideoUploaded(embedUrl, {
         success: true,
-        platform: 'vimeo',
+        platform: 'bunny',
         videoId,
-        videoUri,
-        hlsUrl: null, // Vimeo não usa HLS direto, usa iframe
+        hlsUrl,
         embedUrl,
-        thumbnailUrl,
         duration,
-        privacy: {
-          view: 'disable',
-          embed: 'whitelist',
-          domains: ['app.kambafy.com', 'membros.kambafy.com', '*.kambafy.com'],
-        },
+        original_bunny_id: videoId
       });
       
       setSelectedFile(null);
