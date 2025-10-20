@@ -326,7 +326,7 @@ export default function ModernMembersArea() {
     console.log('🔄 Logout: Navegando para login da área:', memberAreaId);
     navigate(`/login/${memberAreaId}`);
   };
-  const handleLessonClick = (lesson: Lesson) => {
+  const handleLessonClick = async (lesson: Lesson) => {
     if (!isLessonAccessible(lesson)) {
       if (lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date()) {
         toast.error("Aula agendada", {
@@ -339,6 +339,24 @@ export default function ModernMembersArea() {
       }
       return;
     }
+    
+    // ✅ Verificar se a aula pertence a um módulo pago
+    if (lesson.module_id) {
+      const module = modules.find(m => m.id === lesson.module_id);
+      if (module) {
+        const { hasAccess } = await checkModuleAccessibility(module);
+        const isPaid = isModulePaidForStudent(module);
+        
+        // Se é pago e não tem acesso, abrir modal de pagamento
+        if (isPaid && !hasAccess) {
+          console.log('💰 [handleLessonClick] Aula pertence a módulo pago - abrindo modal');
+          setModuleForPayment(module);
+          setPaymentModalOpen(true);
+          return;
+        }
+      }
+    }
+    
     setSelectedLesson(lesson);
     // Expandir o módulo da aula automaticamente
     if (lesson.module_id) {
