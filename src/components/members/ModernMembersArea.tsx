@@ -1013,7 +1013,7 @@ export default function ModernMembersArea() {
                 </div>
 
                 {/* Continue Watching Section */}
-                {!selectedModule && user?.email && memberAreaId && (
+                {user?.email && memberAreaId && (
                   <div className="mb-8">
                     <ContinueWatching 
                       memberAreaId={memberAreaId} 
