@@ -302,6 +302,21 @@ export default function ModernMembersArea() {
       // NÃO fazer setIsLoading(false) - nunca usar loading
     };
     loadContent();
+    
+    // ✅ Listener para recarregar quando sessão for criada
+    const handleSessionCreated = (event: any) => {
+      console.log('🔄 ModernMembersArea: Sessão criada, recarregando conteúdo...', event.detail);
+      // Aguardar 500ms para garantir que a sessão foi salva no banco
+      setTimeout(() => {
+        loadContent();
+      }, 500);
+    };
+    
+    window.addEventListener('member-session-created', handleSessionCreated);
+    
+    return () => {
+      window.removeEventListener('member-session-created', handleSessionCreated);
+    };
   }, [memberAreaId, session]); // Adicionar session como dependência
 
   // Esconder sidebar automaticamente no mobile quando aula for selecionada

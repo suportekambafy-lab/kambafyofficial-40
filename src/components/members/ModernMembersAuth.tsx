@@ -113,19 +113,32 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
       
       if (memberAreaId) {
         console.log('📝 ModernAuth: Criando sessão real no Supabase...');
-        supabase.functions.invoke('member-area-login', {
-          body: {
-            memberAreaId,
-            studentEmail: normalizedEmail,
-            studentName: normalizedEmail.split('@')[0]
-          }
-        }).then(({ data, error }) => {
+        
+        // AGUARDAR criação da sessão no banco antes de continuar
+        (async () => {
+          const { data, error } = await supabase.functions.invoke('member-area-login', {
+            body: {
+              memberAreaId,
+              studentEmail: normalizedEmail,
+              studentName: normalizedEmail.split('@')[0]
+            }
+          });
+          
           if (error) {
             console.error('❌ ModernAuth: Erro ao criar sessão no Supabase:', error);
+            toast({
+              title: 'Aviso',
+              message: 'Sessão criada localmente. Recarregue a página se houver problemas.',
+              variant: 'warning'
+            });
           } else {
             console.log('✅ ModernAuth: Sessão criada no Supabase:', data);
+            // Forçar reload dos dados após criar sessão
+            window.dispatchEvent(new CustomEvent('member-session-created', { 
+              detail: { email: normalizedEmail, memberAreaId } 
+            }));
           }
-        });
+        })();
       }
       
       return;
