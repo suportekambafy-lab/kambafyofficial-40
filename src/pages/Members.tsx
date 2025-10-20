@@ -405,12 +405,15 @@ export default function Members() {
         const { data: lessonsData, count, error: countError } = await supabase
           .from('lessons')
           .select('*', { count: 'exact' })
-          .eq('module_id', module.id);
+          .eq('module_id', module.id)
+          .eq('member_area_id', selectedArea.id)
+          .eq('user_id', user.id);
         
         console.log(`📚 [Members] Módulo "${module.title}": ${count} aulas`, {
           error: countError,
           moduleId: module.id,
           userId: user.id,
+          memberAreaId: selectedArea.id,
           lessonsFound: lessonsData?.length || 0,
           lessonIds: lessonsData?.map(l => l.id) || []
         });

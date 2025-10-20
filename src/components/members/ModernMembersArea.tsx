@@ -247,8 +247,12 @@ export default function ModernMembersArea() {
           console.log('❌ SEM SESSION/EMAIL - não buscar turma');
         }
 
-        // Carregar lessons
-        console.log('🔍 ModernMembersArea: Buscando aulas...');
+        // Carregar lessons - FORÇAR RELOAD SEM CACHE
+        console.log('🔍 ModernMembersArea: Buscando aulas...', {
+          memberAreaId,
+          timestamp: new Date().toISOString()
+        });
+        
         const { data: lessonsData, error: lessonsError } = await supabase
           .from('lessons')
           .select('*')
@@ -259,7 +263,8 @@ export default function ModernMembersArea() {
         console.log('📦 ModernMembersArea: Resposta de aulas:', { 
           count: lessonsData?.length, 
           error: lessonsError,
-          lessons: lessonsData
+          lessons: lessonsData,
+          firstLesson: lessonsData?.[0]
         });
         
         if (!lessonsError && lessonsData) {
