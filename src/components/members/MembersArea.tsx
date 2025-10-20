@@ -66,6 +66,12 @@ export default function MembersArea() {
         const studentEmail = session?.studentEmail || '';
         console.log('📚 Buscando aulas para:', { studentEmail, memberAreaId });
         
+        // ✅ Validação: não chamar RPC sem email válido
+        if (!studentEmail || studentEmail.trim() === '') {
+          console.log('⚠️ Email vazio - aguardando sessão ser carregada');
+          return;
+        }
+        
         const { data: lessonsData, error: lessonsError } = await supabase
           .rpc('get_lessons_for_student', {
             p_student_email: studentEmail.toLowerCase().trim(),
