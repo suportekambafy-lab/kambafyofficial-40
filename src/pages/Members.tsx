@@ -1288,7 +1288,13 @@ export default function Members() {
 
                         {/* Aulas do Módulo */}
                         <div className="pl-4 md:pl-8 space-y-2">
-                          {getLessonsByModule(module.id).map(lesson => <div key={lesson.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                          {(() => {
+                            const moduleLessons = getLessonsByModule(module.id);
+                            console.log(`📝 [UI-RENDER] Renderizando ${moduleLessons.length} aulas para módulo "${module.title}"`, {
+                              moduleId: module.id,
+                              lessons: moduleLessons.map(l => ({ id: l.id, title: l.title }))
+                            });
+                            return moduleLessons.map(lesson => <div key={lesson.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
                               <div className="flex items-center gap-2 md:gap-3 flex-1">
                                 <GripVertical className="w-3 h-3 md:w-4 md:h-4 text-gray-400 cursor-move hidden md:block" />
                                 <div className="w-2 h-2 md:w-3 md:h-3 bg-gray-200 rounded flex-shrink-0"></div>
@@ -1338,7 +1344,8 @@ export default function Members() {
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </div>
-                            </div>)}
+                            </div>);
+                          })()}
                           
                           {getLessonsByModule(module.id).length === 0 && <div className="text-center py-4 text-gray-500 text-xs md:text-sm">
                               <Video className="h-4 w-4 md:h-6 md:w-6 mx-auto mb-2" />
