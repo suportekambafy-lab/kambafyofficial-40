@@ -105,6 +105,29 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
         email: normalizedEmail,
         sessionSaved: !!localStorage.getItem('memberAreaSession')
       });
+      
+      // ✅ CRIAR SESSÃO REAL NO SUPABASE para que a RLS funcione
+      const memberAreaId = window.location.pathname.split('/').find((segment, index, arr) => 
+        arr[index - 1] === 'area'
+      );
+      
+      if (memberAreaId) {
+        console.log('📝 ModernAuth: Criando sessão real no Supabase...');
+        supabase.functions.invoke('member-area-login', {
+          body: {
+            memberAreaId,
+            studentEmail: normalizedEmail,
+            studentName: normalizedEmail.split('@')[0]
+          }
+        }).then(({ data, error }) => {
+          if (error) {
+            console.error('❌ ModernAuth: Erro ao criar sessão no Supabase:', error);
+          } else {
+            console.log('✅ ModernAuth: Sessão criada no Supabase:', data);
+          }
+        });
+      }
+      
       return;
     }
     
