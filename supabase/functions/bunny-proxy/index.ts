@@ -88,8 +88,14 @@ serve(async (req) => {
 
     // Construir URL do Bunny - OTIMIZADO PARA ZONA EUROPA
     // Europa oferece ~95% de economia vs África e melhor latência via cabos submarinos
-    // Configure BUNNY_EUROPE_CDN_URL nas secrets com sua zona Europa (ex: falkenstein.b-cdn.net)
-    const bunnyBaseUrl = Deno.env.get('BUNNY_EUROPE_CDN_URL') || 'https://vz-5c879716-268.b-cdn.net';
+    // Configure BUNNY_EUROPE_CDN_URL nas secrets com sua zona Europa (ex: falkenstein.b-cdn.net ou https://falkenstein.b-cdn.net)
+    let bunnyBaseUrl = Deno.env.get('BUNNY_EUROPE_CDN_URL') || 'https://vz-5c879716-268.b-cdn.net';
+    
+    // Adicionar https:// se não estiver presente
+    if (!bunnyBaseUrl.startsWith('http://') && !bunnyBaseUrl.startsWith('https://')) {
+      bunnyBaseUrl = `https://${bunnyBaseUrl}`;
+    }
+    
     const bunnyUrl = `${bunnyBaseUrl}/${videoId}/${resource}`;
     
     console.log('📍 Usando zona Bunny:', bunnyBaseUrl);
