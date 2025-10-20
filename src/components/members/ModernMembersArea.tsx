@@ -302,8 +302,11 @@ export default function ModernMembersArea() {
           console.error('❌ ModernMembersArea: Erro ao carregar módulos:', modulesError);
         }
 
-        // ✅ Carregar acessos individuais de módulos
-        await loadModulesWithAccess();
+        // ✅ Carregar acessos individuais de módulos - passar email da sessão
+        const sessionEmail = session?.user?.email || (session as any)?.student_email || user?.email;
+        if (sessionEmail) {
+          await loadModulesWithAccess(sessionEmail);
+        }
 
         // Sempre carregar dados da área de membros
         const { data: memberAreaData, error: memberAreaError } = await supabase
@@ -503,8 +506,7 @@ export default function ModernMembersArea() {
   };
 
   // ✅ Carregar módulos com acesso individual do aluno
-  const loadModulesWithAccess = async () => {
-    const studentEmail = (session as any)?.student_email || user?.email;
+  const loadModulesWithAccess = async (studentEmail?: string) => {
     console.log('🔍 [loadModulesWithAccess] Carregando acessos para:', studentEmail);
     
     if (!studentEmail) {
