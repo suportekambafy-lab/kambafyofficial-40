@@ -64,6 +64,8 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
       // Normalizar email para lowercase
       const normalizedEmail = decodeURIComponent(email).toLowerCase().trim();
       console.log('🔑 ModernAuth: Acesso verificado detectado via URL:', normalizedEmail);
+      console.log('📍 ModernAuth: URL completa:', window.location.href);
+      console.log('🔍 ModernAuth: Todos os params:', Object.fromEntries(urlParams.entries()));
       
       // Criar sessão virtual persistente
       const virtualUser = {
@@ -111,11 +113,18 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
         arr[index - 1] === 'area'
       );
       
+      console.log('🔍 ModernAuth: Extraindo memberAreaId do pathname:', {
+        pathname: window.location.pathname,
+        pathParts: window.location.pathname.split('/'),
+        memberAreaId
+      });
+      
       if (memberAreaId) {
-        console.log('📝 ModernAuth: Criando sessão real no Supabase...');
+        console.log('📝 ModernAuth: Criando sessão real no Supabase para:', { memberAreaId, normalizedEmail });
         
         // AGUARDAR criação da sessão no banco antes de continuar
         (async () => {
+          console.log('⏳ ModernAuth: Invocando edge function member-area-login...');
           const { data, error } = await supabase.functions.invoke('member-area-login', {
             body: {
               memberAreaId,
@@ -124,21 +133,28 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
             }
           });
           
+          console.log('📦 ModernAuth: Resposta da edge function:', { data, error });
+          
           if (error) {
             console.error('❌ ModernAuth: Erro ao criar sessão no Supabase:', error);
+            console.error('❌ ModernAuth: Detalhes do erro:', JSON.stringify(error, null, 2));
             toast({
               title: 'Aviso',
               message: 'Sessão criada localmente. Recarregue a página se houver problemas.',
               variant: 'warning'
             });
           } else {
-            console.log('✅ ModernAuth: Sessão criada no Supabase:', data);
+            console.log('✅ ModernAuth: Sessão criada no Supabase com sucesso:', data);
+            console.log('🔔 ModernAuth: Disparando evento member-session-created');
             // Forçar reload dos dados após criar sessão
             window.dispatchEvent(new CustomEvent('member-session-created', { 
               detail: { email: normalizedEmail, memberAreaId } 
             }));
+            console.log('✅ ModernAuth: Evento member-session-created disparado');
           }
         })();
+      } else {
+        console.warn('⚠️ ModernAuth: memberAreaId não encontrado no pathname');
       }
       
       return;

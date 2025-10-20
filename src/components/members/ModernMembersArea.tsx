@@ -193,6 +193,13 @@ export default function ModernMembersArea() {
     
     console.log('📥 ModernMembersArea: Carregando conteúdo...');
     const loadContent = async () => {
+      console.log('🚀 ModernMembersArea: loadContent chamado', {
+        memberAreaId,
+        isAuthenticated,
+        hasSession: !!session,
+        sessionEmail: session?.user?.email
+      });
+      
       try {
         // NÃO usar setIsLoading - nunca mostrar loading
 
@@ -233,6 +240,7 @@ export default function ModernMembersArea() {
         }
 
         // Carregar lessons
+        console.log('🔍 ModernMembersArea: Buscando aulas...');
         const { data: lessonsData, error: lessonsError } = await supabase
           .from('lessons')
           .select('*')
@@ -240,6 +248,12 @@ export default function ModernMembersArea() {
           .eq('status', 'published')
           .order('order_number');
           
+        console.log('📦 ModernMembersArea: Resposta de aulas:', { 
+          count: lessonsData?.length, 
+          error: lessonsError,
+          lessons: lessonsData
+        });
+        
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
 
@@ -267,6 +281,7 @@ export default function ModernMembersArea() {
         }
 
         // Carregar módulos
+        console.log('🔍 ModernMembersArea: Buscando módulos...');
         const { data: modulesData, error: modulesError } = await supabase
           .from('modules')
           .select('*')
@@ -274,6 +289,12 @@ export default function ModernMembersArea() {
           .eq('status', 'published')
           .order('order_number');
           
+        console.log('📦 ModernMembersArea: Resposta de módulos:', { 
+          count: modulesData?.length, 
+          error: modulesError,
+          modules: modulesData
+        });
+        
         if (!modulesError && modulesData) {
           console.log('✅ ModernMembersArea: Módulos carregados:', modulesData.length);
           setModules(modulesData as Module[]);
@@ -304,17 +325,29 @@ export default function ModernMembersArea() {
     loadContent();
     
     // ✅ Listener para recarregar quando sessão for criada
+    console.log('🎧 ModernMembersArea: Configurando listener para member-session-created');
+    
     const handleSessionCreated = (event: any) => {
-      console.log('🔄 ModernMembersArea: Sessão criada, recarregando conteúdo...', event.detail);
+      console.log('🔔 ModernMembersArea: Evento member-session-created recebido:', event.detail);
+      console.log('📊 ModernMembersArea: Estado atual:', {
+        memberAreaId,
+        hasSession: !!session,
+        sessionEmail: session?.user?.email,
+        eventEmail: event.detail?.email
+      });
+      
       // Aguardar 500ms para garantir que a sessão foi salva no banco
       setTimeout(() => {
+        console.log('🔄 ModernMembersArea: Recarregando conteúdo após criação de sessão');
         loadContent();
       }, 500);
     };
     
     window.addEventListener('member-session-created', handleSessionCreated);
+    console.log('✅ ModernMembersArea: Listener registrado');
     
     return () => {
+      console.log('🧹 ModernMembersArea: Removendo listener');
       window.removeEventListener('member-session-created', handleSessionCreated);
     };
   }, [memberAreaId, session]); // Adicionar session como dependência
