@@ -193,34 +193,19 @@ export default function ModernMembersArea() {
     
     console.log('📥 ModernMembersArea: Carregando conteúdo...');
     const loadContent = async () => {
-      // Extrair email dos query params como fallback
-      const urlParams = new URLSearchParams(window.location.search);
-      const emailFromUrl = urlParams.get('email');
-      
-      const sessionEmail = session?.user?.email || (session as any)?.student_email || user?.email || emailFromUrl;
-      
-      console.log('🚀 ModernMembersArea: loadContent chamado', {
-        memberAreaId,
-        isAuthenticated,
-        hasSession: !!session,
-        sessionEmail,
-        emailFromUrl,
-        finalEmail: sessionEmail
-      });
-      
       try {
         // NÃO usar setIsLoading - nunca mostrar loading
 
         // Buscar turma do aluno se estiver autenticado
         console.log('🔍 INÍCIO - Buscando turma do aluno:', {
           hasSession: !!session,
-          hasEmail: !!sessionEmail,
-          email: sessionEmail,
+          hasEmail: !!session?.user?.email,
+          email: session?.user?.email,
           memberAreaId
         });
         
-        if (sessionEmail) {
-          const normalizedEmail = sessionEmail.toLowerCase().trim();
+        if (session?.user?.email) {
+          const normalizedEmail = session.user.email.toLowerCase().trim();
           console.log('📧 Email normalizado:', normalizedEmail);
           
           const { data: studentData, error } = await supabase
@@ -247,12 +232,7 @@ export default function ModernMembersArea() {
           console.log('❌ SEM SESSION/EMAIL - não buscar turma');
         }
 
-        // Carregar lessons - FORÇAR RELOAD SEM CACHE
-        console.log('🔍 ModernMembersArea: Buscando aulas...', {
-          memberAreaId,
-          timestamp: new Date().toISOString()
-        });
-        
+        // Carregar lessons
         const { data: lessonsData, error: lessonsError } = await supabase
           .from('lessons')
           .select('*')
@@ -260,13 +240,6 @@ export default function ModernMembersArea() {
           .eq('status', 'published')
           .order('order_number');
           
-        console.log('📦 ModernMembersArea: Resposta de aulas:', { 
-          count: lessonsData?.length, 
-          error: lessonsError,
-          lessons: lessonsData,
-          firstLesson: lessonsData?.[0]
-        });
-        
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
 
@@ -294,7 +267,6 @@ export default function ModernMembersArea() {
         }
 
         // Carregar módulos
-        console.log('🔍 ModernMembersArea: Buscando módulos...');
         const { data: modulesData, error: modulesError } = await supabase
           .from('modules')
           .select('*')
@@ -302,12 +274,6 @@ export default function ModernMembersArea() {
           .eq('status', 'published')
           .order('order_number');
           
-        console.log('📦 ModernMembersArea: Resposta de módulos:', { 
-          count: modulesData?.length, 
-          error: modulesError,
-          modules: modulesData
-        });
-        
         if (!modulesError && modulesData) {
           console.log('✅ ModernMembersArea: Módulos carregados:', modulesData.length);
           setModules(modulesData as Module[]);
@@ -315,17 +281,8 @@ export default function ModernMembersArea() {
           console.error('❌ ModernMembersArea: Erro ao carregar módulos:', modulesError);
         }
 
-        // ✅ Carregar acessos individuais de módulos com o email já extraído
-        console.log('🔍 [loadContent] Carregando acessos de módulos:', {
-          hasEmail: !!sessionEmail,
-          email: sessionEmail
-        });
-        
-        if (sessionEmail) {
-          await loadModulesWithAccess(sessionEmail);
-        } else {
-          console.warn('⚠️ [loadContent] SEM EMAIL - não carregar acessos de módulos');
-        }
+        // ✅ Carregar acessos individuais de módulos
+        await loadModulesWithAccess();
 
         // Sempre carregar dados da área de membros
         const { data: memberAreaData, error: memberAreaError } = await supabase
@@ -345,33 +302,6 @@ export default function ModernMembersArea() {
       // NÃO fazer setIsLoading(false) - nunca usar loading
     };
     loadContent();
-    
-    // ✅ Listener para recarregar quando sessão for criada
-    console.log('🎧 ModernMembersArea: Configurando listener para member-session-created');
-    
-    const handleSessionCreated = (event: any) => {
-      console.log('🔔 ModernMembersArea: Evento member-session-created recebido:', event.detail);
-      console.log('📊 ModernMembersArea: Estado atual:', {
-        memberAreaId,
-        hasSession: !!session,
-        sessionEmail: session?.user?.email,
-        eventEmail: event.detail?.email
-      });
-      
-      // Aguardar 500ms para garantir que a sessão foi salva no banco
-      setTimeout(() => {
-        console.log('🔄 ModernMembersArea: Recarregando conteúdo após criação de sessão');
-        loadContent();
-      }, 500);
-    };
-    
-    window.addEventListener('member-session-created', handleSessionCreated);
-    console.log('✅ ModernMembersArea: Listener registrado');
-    
-    return () => {
-      console.log('🧹 ModernMembersArea: Removendo listener');
-      window.removeEventListener('member-session-created', handleSessionCreated);
-    };
   }, [memberAreaId, session]); // Adicionar session como dependência
 
   // Esconder sidebar automaticamente no mobile quando aula for selecionada
@@ -431,13 +361,11 @@ export default function ModernMembersArea() {
     const isAccessible = module.status === 'published' && hasAccess;
     
     console.log('🎯 [handleModuleClick] Verificações:', {
-      moduleStatus: module.status,
       isComingSoon,
       isPaid,
       isAccessible,
       hasAccess,
-      shouldOpenPayment: isPaid && !hasAccess,
-      willBlock: !isAccessible && (isComingSoon || isPaid)
+      shouldOpenPayment: isPaid && !hasAccess
     });
     
     // Se é pago e não tem acesso, abrir modal de pagamento
@@ -527,7 +455,8 @@ export default function ModernMembersArea() {
   };
 
   // ✅ Carregar módulos com acesso individual do aluno
-  const loadModulesWithAccess = async (studentEmail?: string) => {
+  const loadModulesWithAccess = async () => {
+    const studentEmail = (session as any)?.student_email || user?.email;
     console.log('🔍 [loadModulesWithAccess] Carregando acessos para:', studentEmail);
     
     if (!studentEmail) {
@@ -652,18 +581,7 @@ export default function ModernMembersArea() {
   const checkModuleAccessibility = async (module: Module): Promise<{ isComingSoon: boolean; hasAccess: boolean }> => {
     const studentEmail = (session as any)?.student_email || user?.email;
     
-    console.log('🔍 [checkModuleAccessibility] INÍCIO:', {
-      moduleId: module.id,
-      moduleTitle: module.title,
-      sessionStudentEmail: (session as any)?.student_email,
-      userEmail: user?.email,
-      finalStudentEmail: studentEmail,
-      hasSession: !!session,
-      hasUser: !!user
-    });
-    
     if (!studentEmail) {
-      console.warn('⚠️ [checkModuleAccessibility] SEM EMAIL - bloqueando acesso');
       return { isComingSoon: module.coming_soon || false, hasAccess: false };
     }
     

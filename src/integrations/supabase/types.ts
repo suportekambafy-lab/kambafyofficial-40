@@ -3150,14 +3150,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
-      student_has_module_access: {
-        Args: {
-          _member_area_id: string
-          _module_id: string
-          _student_email: string
-        }
-        Returns: boolean
-      }
       unaccent: {
         Args: { "": string }
         Returns: string

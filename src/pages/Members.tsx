@@ -343,14 +343,12 @@ export default function Members() {
         const {
           count
         } = await supabase.from('member_area_students').select('*', {
-          count: 'exact',
-          head: true
+          count: 'exact'
         }).eq('member_area_id', area.id);
         const {
           count: lessonsCount
         } = await supabase.from('lessons').select('*', {
-          count: 'exact',
-          head: true
+          count: 'exact'
         }).eq('member_area_id', area.id).eq('status', 'published');
         return {
           ...area,
@@ -400,35 +398,18 @@ export default function Members() {
 
       // Carregar contagem de aulas para cada módulo
       const modulesWithCounts = await Promise.all((modulesData || []).map(async module => {
-        console.log(`📚 [DEBUG] Buscando aulas para módulo "${module.title}" (ID: ${module.id})`);
-        
-        const { data: lessonsData, count, error: countError } = await supabase
-          .from('lessons')
-          .select('*', { count: 'exact' })
-          .eq('module_id', module.id)
-          .eq('member_area_id', selectedArea.id)
-          .eq('user_id', user.id);
-        
-        console.log(`📚 [Members] Módulo "${module.title}": ${count} aulas`, {
-          error: countError,
-          moduleId: module.id,
-          userId: user.id,
-          memberAreaId: selectedArea.id,
-          lessonsFound: lessonsData?.length || 0,
-          lessonIds: lessonsData?.map(l => l.id) || []
-        });
-        
+        const {
+          count
+        } = await supabase.from('lessons').select('*', {
+          count: 'exact'
+        }).eq('module_id', module.id);
         return {
           ...module,
           lessons_count: count || 0
         };
       }));
       console.log('Setting modules:', modulesWithCounts);
-      console.log('📊 Contagem final de aulas por módulo:', modulesWithCounts.map(m => ({ 
-        title: m.title, 
-        lessons_count: m.lessons_count 
-      })));
-      setModules([...modulesWithCounts] as Module[]);
+      setModules(modulesWithCounts as Module[]);
     } catch (error) {
       console.error('Error in loadModules:', error);
       toast({
@@ -989,15 +970,7 @@ export default function Members() {
     return module ? module.title : 'Sem módulo';
   };
   const getLessonsByModule = (moduleId: string) => {
-    const filtered = lessons.filter(lesson => lesson.module_id === moduleId).sort((a, b) => a.order_number - b.order_number);
-    console.log(`🔍 [getLessonsByModule] Para módulo ${moduleId}:`, {
-      totalLessons: lessons.length,
-      filteredLessons: filtered.length,
-      allModuleIds: [...new Set(lessons.map(l => l.module_id))],
-      requestedModuleId: moduleId,
-      filteredLessonTitles: filtered.map(l => l.title)
-    });
-    return filtered;
+    return lessons.filter(lesson => lesson.module_id === moduleId).sort((a, b) => a.order_number - b.order_number);
   };
   const openLessonDialogForModule = (moduleId: string) => {
     console.log('openLessonDialogForModule called with moduleId:', moduleId);
@@ -1237,17 +1210,7 @@ export default function Members() {
                                   {module.description}
                                 </div>}
                               <div className="text-xs md:text-sm text-gray-400 mt-1">
-                                {(() => {
-                                  const storedCount = module.lessons_count || 0;
-                                  const actualLessons = getLessonsByModule(module.id);
-                                  const actualCount = actualLessons.length;
-                                  console.log(`🎯 Renderizando módulo "${module.title}":`, {
-                                    lessons_count: storedCount,
-                                    actualCount: actualCount,
-                                    lessonIds: actualLessons.map(l => l.id)
-                                  });
-                                  return `${storedCount} aulas`;
-                                })()}
+                                {module.lessons_count || 0} aulas
                               </div>
                             </div>
                           </div>
@@ -1299,13 +1262,7 @@ export default function Members() {
 
                         {/* Aulas do Módulo */}
                         <div className="pl-4 md:pl-8 space-y-2">
-                          {(() => {
-                            const moduleLessons = getLessonsByModule(module.id);
-                            console.log(`📝 [UI-RENDER] Renderizando ${moduleLessons.length} aulas para módulo "${module.title}"`, {
-                              moduleId: module.id,
-                              lessons: moduleLessons.map(l => ({ id: l.id, title: l.title }))
-                            });
-                            return moduleLessons.map(lesson => <div key={lesson.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                          {getLessonsByModule(module.id).map(lesson => <div key={lesson.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
                               <div className="flex items-center gap-2 md:gap-3 flex-1">
                                 <GripVertical className="w-3 h-3 md:w-4 md:h-4 text-gray-400 cursor-move hidden md:block" />
                                 <div className="w-2 h-2 md:w-3 md:h-3 bg-gray-200 rounded flex-shrink-0"></div>
@@ -1355,8 +1312,7 @@ export default function Members() {
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </div>
-                            </div>);
-                          })()}
+                            </div>)}
                           
                           {getLessonsByModule(module.id).length === 0 && <div className="text-center py-4 text-gray-500 text-xs md:text-sm">
                               <Video className="h-4 w-4 md:h-6 md:w-6 mx-auto mb-2" />
