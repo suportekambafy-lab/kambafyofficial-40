@@ -986,7 +986,15 @@ export default function Members() {
     return module ? module.title : 'Sem módulo';
   };
   const getLessonsByModule = (moduleId: string) => {
-    return lessons.filter(lesson => lesson.module_id === moduleId).sort((a, b) => a.order_number - b.order_number);
+    const filtered = lessons.filter(lesson => lesson.module_id === moduleId).sort((a, b) => a.order_number - b.order_number);
+    console.log(`🔍 [getLessonsByModule] Para módulo ${moduleId}:`, {
+      totalLessons: lessons.length,
+      filteredLessons: filtered.length,
+      allModuleIds: [...new Set(lessons.map(l => l.module_id))],
+      requestedModuleId: moduleId,
+      filteredLessonTitles: filtered.map(l => l.title)
+    });
+    return filtered;
   };
   const openLessonDialogForModule = (moduleId: string) => {
     console.log('openLessonDialogForModule called with moduleId:', moduleId);
