@@ -232,13 +232,15 @@ export default function ModernMembersArea() {
           console.log('❌ SEM SESSION/EMAIL - não buscar turma');
         }
 
-        // Carregar lessons
+        // Carregar lessons usando função que bypassa RLS de forma segura
+        const studentEmail = session?.user?.email || emailParam || '';
+        console.log('📚 Buscando aulas para:', { studentEmail, memberAreaId });
+        
         const { data: lessonsData, error: lessonsError } = await supabase
-          .from('lessons')
-          .select('*')
-          .eq('member_area_id', memberAreaId)
-          .eq('status', 'published')
-          .order('order_number');
+          .rpc('get_lessons_for_student', {
+            p_student_email: studentEmail.toLowerCase().trim(),
+            p_member_area_id: memberAreaId
+          });
           
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);

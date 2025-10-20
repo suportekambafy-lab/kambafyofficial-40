@@ -62,16 +62,20 @@ export default function MembersArea() {
 
     const loadContent = async () => {
       try {
-        // Carregar lessons
+        // Carregar lessons usando função que bypassa RLS de forma segura
+        const studentEmail = session?.studentEmail || '';
+        console.log('📚 Buscando aulas para:', { studentEmail, memberAreaId });
+        
         const { data: lessonsData, error: lessonsError } = await supabase
-          .from('lessons')
-          .select('*')
-          .eq('member_area_id', memberAreaId)
-          .eq('status', 'published')
-          .order('order_number');
+          .rpc('get_lessons_for_student', {
+            p_student_email: studentEmail.toLowerCase().trim(),
+            p_member_area_id: memberAreaId
+          });
 
         if (!lessonsError) {
           setLessons(lessonsData || []);
+        } else {
+          console.error('Erro ao carregar lessons:', lessonsError);
         }
 
         // Carregar módulos

@@ -3042,6 +3042,31 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_lessons_for_student: {
+        Args: { p_member_area_id: string; p_student_email: string }
+        Returns: {
+          bunny_embed_url: string
+          bunny_video_id: string
+          complementary_links: Json
+          created_at: string
+          description: string
+          duration: number
+          hls_url: string
+          id: string
+          is_scheduled: boolean
+          lesson_materials: Json
+          member_area_id: string
+          module_id: string
+          order_number: number
+          scheduled_at: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          video_data: Json
+          video_url: string
+        }[]
+      }
       get_order_details_for_admin: {
         Args: { p_order_id: string }
         Returns: {
