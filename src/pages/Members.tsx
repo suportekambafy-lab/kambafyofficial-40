@@ -343,12 +343,14 @@ export default function Members() {
         const {
           count
         } = await supabase.from('member_area_students').select('*', {
-          count: 'exact'
+          count: 'exact',
+          head: true
         }).eq('member_area_id', area.id);
         const {
           count: lessonsCount
         } = await supabase.from('lessons').select('*', {
-          count: 'exact'
+          count: 'exact',
+          head: true
         }).eq('member_area_id', area.id).eq('status', 'published');
         return {
           ...area,
