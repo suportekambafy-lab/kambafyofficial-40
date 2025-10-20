@@ -403,8 +403,9 @@ export default function Members() {
         const {
           count
         } = await supabase.from('lessons').select('*', {
-          count: 'exact'
-        }).eq('module_id', module.id);
+          count: 'exact',
+          head: true
+        }).eq('module_id', module.id).eq('status', 'published');
         return {
           ...module,
           lessons_count: count || 0

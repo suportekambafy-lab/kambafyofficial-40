@@ -98,8 +98,9 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
         (modulesData || []).map(async (module) => {
           const { count } = await supabase
             .from('lessons')
-            .select('*', { count: 'exact' })
-            .eq('module_id', module.id);
+            .select('*', { count: 'exact', head: true })
+            .eq('module_id', module.id)
+            .eq('status', 'published');
 
           return {
             ...module,
