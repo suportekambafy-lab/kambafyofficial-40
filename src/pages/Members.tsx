@@ -403,7 +403,8 @@ export default function Members() {
         const { count, error: countError } = await supabase
           .from('lessons')
           .select('id', { count: 'exact' })
-          .eq('module_id', module.id);
+          .eq('module_id', module.id)
+          .eq('user_id', user.id);
         
         console.log(`📚 [Members] Módulo "${module.title}": ${count} aulas`, countError);
         
