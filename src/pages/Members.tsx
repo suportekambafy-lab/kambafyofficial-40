@@ -1227,9 +1227,15 @@ export default function Members() {
                                 </div>}
                               <div className="text-xs md:text-sm text-gray-400 mt-1">
                                 {(() => {
-                                  const count = module.lessons_count || 0;
-                                  console.log(`🎯 Renderizando módulo "${module.title}": ${count} aulas`);
-                                  return `${count} aulas`;
+                                  const storedCount = module.lessons_count || 0;
+                                  const actualLessons = getLessonsByModule(module.id);
+                                  const actualCount = actualLessons.length;
+                                  console.log(`🎯 Renderizando módulo "${module.title}":`, {
+                                    lessons_count: storedCount,
+                                    actualCount: actualCount,
+                                    lessonIds: actualLessons.map(l => l.id)
+                                  });
+                                  return `${storedCount} aulas`;
                                 })()}
                               </div>
                             </div>
