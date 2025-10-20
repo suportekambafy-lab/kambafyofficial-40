@@ -193,11 +193,19 @@ export default function ModernMembersArea() {
     
     console.log('📥 ModernMembersArea: Carregando conteúdo...');
     const loadContent = async () => {
+      // Extrair email dos query params como fallback
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailFromUrl = urlParams.get('email');
+      
+      const sessionEmail = session?.user?.email || (session as any)?.student_email || user?.email || emailFromUrl;
+      
       console.log('🚀 ModernMembersArea: loadContent chamado', {
         memberAreaId,
         isAuthenticated,
         hasSession: !!session,
-        sessionEmail: session?.user?.email
+        sessionEmail,
+        emailFromUrl,
+        finalEmail: sessionEmail
       });
       
       try {
@@ -206,8 +214,8 @@ export default function ModernMembersArea() {
         // Buscar turma do aluno se estiver autenticado
         console.log('🔍 INÍCIO - Buscando turma do aluno:', {
           hasSession: !!session,
-          hasEmail: !!session?.user?.email,
-          email: session?.user?.email,
+          hasEmail: !!sessionEmail,
+          email: sessionEmail,
           memberAreaId
         });
         
@@ -302,15 +310,10 @@ export default function ModernMembersArea() {
           console.error('❌ ModernMembersArea: Erro ao carregar módulos:', modulesError);
         }
 
-        // ✅ Carregar acessos individuais de módulos - passar email da sessão
-        const sessionEmail = session?.user?.email || (session as any)?.student_email || user?.email;
-        console.log('🔍 [loadContent] Extraindo email para loadModulesWithAccess:', {
-          sessionUserEmail: session?.user?.email,
-          sessionStudentEmail: (session as any)?.student_email,
-          userEmail: user?.email,
-          finalEmail: sessionEmail,
-          hasSession: !!session,
-          hasUser: !!user
+        // ✅ Carregar acessos individuais de módulos com o email já extraído
+        console.log('🔍 [loadContent] Carregando acessos de módulos:', {
+          hasEmail: !!sessionEmail,
+          email: sessionEmail
         });
         
         if (sessionEmail) {
