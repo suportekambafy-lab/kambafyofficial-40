@@ -256,7 +256,7 @@ export default function Financial() {
       <div className="space-y-6 p-4 md:p-6 lg:p-8 max-w-full overflow-x-hidden">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Financeiro</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold dark:text-white">Financeiro</h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
               Gerencie seus ganhos e saques
             </p>
