@@ -265,7 +265,7 @@ export default function Financial() {
             <Button
               variant="outline"
               onClick={() => loadFinancialData()}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 dark:text-white"
               size="sm"
             >
               <RefreshCw className="h-4 w-4" />
