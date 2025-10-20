@@ -304,8 +304,19 @@ export default function ModernMembersArea() {
 
         // ✅ Carregar acessos individuais de módulos - passar email da sessão
         const sessionEmail = session?.user?.email || (session as any)?.student_email || user?.email;
+        console.log('🔍 [loadContent] Extraindo email para loadModulesWithAccess:', {
+          sessionUserEmail: session?.user?.email,
+          sessionStudentEmail: (session as any)?.student_email,
+          userEmail: user?.email,
+          finalEmail: sessionEmail,
+          hasSession: !!session,
+          hasUser: !!user
+        });
+        
         if (sessionEmail) {
           await loadModulesWithAccess(sessionEmail);
+        } else {
+          console.warn('⚠️ [loadContent] SEM EMAIL - não carregar acessos de módulos');
         }
 
         // Sempre carregar dados da área de membros
@@ -412,11 +423,13 @@ export default function ModernMembersArea() {
     const isAccessible = module.status === 'published' && hasAccess;
     
     console.log('🎯 [handleModuleClick] Verificações:', {
+      moduleStatus: module.status,
       isComingSoon,
       isPaid,
       isAccessible,
       hasAccess,
-      shouldOpenPayment: isPaid && !hasAccess
+      shouldOpenPayment: isPaid && !hasAccess,
+      willBlock: !isAccessible && (isComingSoon || isPaid)
     });
     
     // Se é pago e não tem acesso, abrir modal de pagamento
@@ -631,7 +644,18 @@ export default function ModernMembersArea() {
   const checkModuleAccessibility = async (module: Module): Promise<{ isComingSoon: boolean; hasAccess: boolean }> => {
     const studentEmail = (session as any)?.student_email || user?.email;
     
+    console.log('🔍 [checkModuleAccessibility] INÍCIO:', {
+      moduleId: module.id,
+      moduleTitle: module.title,
+      sessionStudentEmail: (session as any)?.student_email,
+      userEmail: user?.email,
+      finalStudentEmail: studentEmail,
+      hasSession: !!session,
+      hasUser: !!user
+    });
+    
     if (!studentEmail) {
+      console.warn('⚠️ [checkModuleAccessibility] SEM EMAIL - bloqueando acesso');
       return { isComingSoon: module.coming_soon || false, hasAccess: false };
     }
     
