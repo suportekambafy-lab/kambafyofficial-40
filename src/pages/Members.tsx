@@ -421,7 +421,11 @@ export default function Members() {
         };
       }));
       console.log('Setting modules:', modulesWithCounts);
-      setModules(modulesWithCounts as Module[]);
+      console.log('📊 Contagem final de aulas por módulo:', modulesWithCounts.map(m => ({ 
+        title: m.title, 
+        lessons_count: m.lessons_count 
+      })));
+      setModules([...modulesWithCounts] as Module[]);
     } catch (error) {
       console.error('Error in loadModules:', error);
       toast({
@@ -1222,7 +1226,11 @@ export default function Members() {
                                   {module.description}
                                 </div>}
                               <div className="text-xs md:text-sm text-gray-400 mt-1">
-                                {module.lessons_count || 0} aulas
+                                {(() => {
+                                  const count = module.lessons_count || 0;
+                                  console.log(`🎯 Renderizando módulo "${module.title}": ${count} aulas`);
+                                  return `${count} aulas`;
+                                })()}
                               </div>
                             </div>
                           </div>
