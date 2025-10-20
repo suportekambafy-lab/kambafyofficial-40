@@ -82,22 +82,26 @@ export function ModernLessonViewer({
   const getHlsUrl = () => {
     if (!lesson) return null;
     
-    // Se já tem hls_url e NÃO é Vimeo, retornar
+    // Se já tem hls_url e NÃO é Vimeo
     if (lesson.hls_url && !lesson.hls_url.includes('vimeo.com') && !lesson.hls_url.includes('player.vimeo.com')) {
+      // Se for URL do Bunny CDN, usar proxy reverso
+      if (lesson.hls_url.includes('vz-5c879716-268.b-cdn.net')) {
+        const videoId = lesson.hls_url.split('/')[3]; // Extrair videoId da URL
+        const proxyUrl = `https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/bunny-proxy/video/${videoId}/playlist.m3u8`;
+        console.log('🔄 Usando proxy para Bunny:', { original: lesson.hls_url, proxy: proxyUrl });
+        return proxyUrl;
+      }
       return lesson.hls_url;
     }
     
-    // Se temos um embed URL do Bunny, derivar o HLS URL
+    // Se temos um embed URL do Bunny, derivar o HLS URL através do proxy
     const embedUrl = lesson.bunny_embed_url || lesson.video_url;
-    
-    // ❌ NÃO processar URLs do Vimeo como HLS
-    if (embedUrl?.includes('vimeo.com') || embedUrl?.includes('player.vimeo.com')) {
-      return null;
-    }
     
     if (embedUrl?.includes('iframe.mediadelivery.net/embed/')) {
       const videoId = embedUrl.split('/').pop();
-      return `https://vz-5c879716-268.b-cdn.net/${videoId}/playlist.m3u8`;
+      const proxyUrl = `https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/bunny-proxy/video/${videoId}/playlist.m3u8`;
+      console.log('🔄 Gerando URL de proxy para Bunny:', { embedUrl, videoId, proxyUrl });
+      return proxyUrl;
     }
     
     return null;

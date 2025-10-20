@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.migrate-bunny-to-vimeo]
 verify_jwt = false
+
+[functions.bunny-proxy]
+verify_jwt = false
