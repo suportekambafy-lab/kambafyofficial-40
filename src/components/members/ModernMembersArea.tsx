@@ -232,21 +232,14 @@ export default function ModernMembersArea() {
           console.log('❌ SEM SESSION/EMAIL - não buscar turma');
         }
 
-        // Carregar lessons usando função que bypassa RLS de forma segura
-        const studentEmail = session?.user?.email || emailParam || '';
-        console.log('📚 Buscando aulas para:', { studentEmail, memberAreaId });
-        
-        // ✅ Validação: não chamar RPC sem email válido
-        if (!studentEmail || studentEmail.trim() === '') {
-          console.log('⚠️ Email vazio - aguardando sessão ser carregada');
-          return;
-        }
-        
+        // ✅ Carregar TODAS as aulas da área para mostrar contagem correta
+        // A lógica de acesso é tratada no frontend, não no backend
         const { data: lessonsData, error: lessonsError } = await supabase
-          .rpc('get_lessons_for_student', {
-            p_student_email: studentEmail.toLowerCase().trim(),
-            p_member_area_id: memberAreaId
-          });
+          .from('lessons')
+          .select('*')
+          .eq('member_area_id', memberAreaId)
+          .eq('status', 'published')
+          .order('order_number');
           
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
