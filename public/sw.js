@@ -11,6 +11,15 @@ const NEVER_CACHE = [
   '/checkout'
 ];
 
+// Domínios externos que NUNCA devem ser interceptados pelo SW
+const EXTERNAL_APIS = [
+  'ipapi.co',
+  'exchangerate-api.com',
+  'cloudflarestream.com',
+  'r2.cloudflarestorage.com',
+  'b-cdn.net'
+];
+
 // Instalação - skipWaiting para forçar ativação imediata
 self.addEventListener('install', (event) => {
   console.log('🔄 SW: Instalando nova versão:', CACHE_VERSION);
@@ -54,10 +63,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // NUNCA interceptar uploads do Cloudflare (Stream e R2)
-  if (url.hostname.includes('cloudflarestream.com') || 
-      url.hostname.includes('r2.cloudflarestorage.com') ||
-      url.hostname.includes('b-cdn.net')) {
+  // NUNCA interceptar APIs externas
+  if (EXTERNAL_APIS.some(domain => url.hostname.includes(domain))) {
     return; // Deixa o navegador lidar diretamente
   }
   
@@ -92,8 +99,14 @@ self.addEventListener('fetch', (event) => {
   
   // Para tudo o resto, tentar network primeiro
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
+    fetch(event.request)
+      .catch(() => caches.match(event.request))
+      .then(response => {
+        // Se não há resposta, retornar uma resposta vazia válida
+        if (!response) {
+          return new Response('', { status: 504, statusText: 'Gateway Timeout' });
+        }
+        return response;
+      })
   );
 });
