@@ -320,24 +320,6 @@ export default function ModernMembersArea() {
   };
   const handleLessonClick = (lesson: Lesson) => {
     if (!isLessonAccessible(lesson)) {
-      // ✅ Verificar se é módulo pago sem acesso
-      if (lesson.module_id) {
-        const module = modules.find(m => m.id === lesson.module_id);
-        if (module && isModulePaidForStudent(module) && !modulesWithAccess.has(module.id)) {
-          toast.error("Módulo pago - Acesso negado", {
-            description: "Você precisa comprar este módulo para acessar as aulas",
-            action: {
-              label: "Comprar agora",
-              onClick: () => {
-                setModuleForPayment(module);
-                setPaymentModalOpen(true);
-              }
-            }
-          });
-          return;
-        }
-      }
-      
       if (lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date()) {
         toast.error("Aula agendada", {
           description: `Esta aula será liberada em ${new Date(lesson.scheduled_at).toLocaleString()}`
@@ -439,21 +421,6 @@ export default function ModernMembersArea() {
   // Funções para verificar acessibilidade
   const isLessonAccessible = (lesson: Lesson) => {
     if (lesson.status !== 'published') return false;
-    
-    // ✅ CRÍTICO: Verificar se a aula pertence a um módulo pago
-    if (lesson.module_id) {
-      const module = modules.find(m => m.id === lesson.module_id);
-      if (module) {
-        const isPaid = isModulePaidForStudent(module);
-        const hasAccess = modulesWithAccess.has(module.id);
-        
-        // Se é módulo pago e NÃO tem acesso, BLOQUEAR
-        if (isPaid && !hasAccess) {
-          return false;
-        }
-      }
-    }
-    
     // Para aulas agendadas, consideramos "acessível" para permitir abertura mas não reprodução
     return true;
   };
@@ -461,21 +428,6 @@ export default function ModernMembersArea() {
   // Função para verificar se o conteúdo da aula pode ser reproduzido
   const isLessonContentAccessible = (lesson: Lesson) => {
     if (lesson.status !== 'published') return false;
-    
-    // ✅ CRÍTICO: Verificar se a aula pertence a um módulo pago
-    if (lesson.module_id) {
-      const module = modules.find(m => m.id === lesson.module_id);
-      if (module) {
-        const isPaid = isModulePaidForStudent(module);
-        const hasAccess = modulesWithAccess.has(module.id);
-        
-        // Se é módulo pago e NÃO tem acesso, BLOQUEAR reprodução
-        if (isPaid && !hasAccess) {
-          return false;
-        }
-      }
-    }
-    
     if (lesson.is_scheduled && lesson.scheduled_at) {
       return new Date(lesson.scheduled_at) <= new Date();
     }
@@ -874,8 +826,7 @@ export default function ModernMembersArea() {
                           lessons={lessons || []} 
                           lessonProgress={lessonProgress || {}} 
                           onNavigateLesson={handleNavigateLesson} 
-                          onClose={() => setSelectedLesson(null)}
-                          hasModuleAccess={selectedLesson.module_id ? !isModulePaidForStudent(modules.find(m => m.id === selectedLesson.module_id)!) || modulesWithAccess.has(selectedLesson.module_id) : true}
+                          onClose={() => setSelectedLesson(null)} 
                           onUpdateProgress={updateVideoProgress || ((lessonId, time, duration) => {
                             console.log('🎬 Progress update (fallback):', { lessonId, time, duration });
                           })} 
