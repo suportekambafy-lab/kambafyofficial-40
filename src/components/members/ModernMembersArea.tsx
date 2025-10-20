@@ -219,8 +219,8 @@ export default function ModernMembersArea() {
           memberAreaId
         });
         
-        if (session?.user?.email) {
-          const normalizedEmail = session.user.email.toLowerCase().trim();
+        if (sessionEmail) {
+          const normalizedEmail = sessionEmail.toLowerCase().trim();
           console.log('📧 Email normalizado:', normalizedEmail);
           
           const { data: studentData, error } = await supabase
