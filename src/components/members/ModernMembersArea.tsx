@@ -539,15 +539,11 @@ export default function ModernMembersArea() {
       return isComingSoon;
     }
     
-    // ✅ Para módulos pagos, verificar se está marcado como coming_soon PARA A TURMA DO ALUNO
-    if (!module.coming_soon) {
-      console.log('✅ [isModuleComingSoonForStudent] Módulo pago NÃO está em breve (coming_soon: false)');
-      return false;
-    }
-    
+    // ✅ Para módulos pagos, SEMPRE verificar coming_soon_cohort_ids primeiro
     const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
     
     console.log('🔍 [isModuleComingSoonForStudent] MÓDULO PAGO - Verificando cohorts:', {
+      coming_soon: module.coming_soon,
       comingSoonCohortIds,
       studentCohortId,
       isNull: comingSoonCohortIds === null,
@@ -555,13 +551,28 @@ export default function ModernMembersArea() {
       includes: studentCohortId ? comingSoonCohortIds?.includes(studentCohortId) : 'sem turma'
     });
     
-    // ✅ CORREÇÃO: null = todas turmas, array vazio = nenhuma turma
+    // ✅ PRIORIDADE 1: Verificar se a turma do aluno está em coming_soon_cohort_ids
+    if (comingSoonCohortIds && comingSoonCohortIds.length > 0 && studentCohortId) {
+      const isComingSoonForThisCohort = comingSoonCohortIds.includes(studentCohortId);
+      if (isComingSoonForThisCohort) {
+        console.log('🚫 [isModuleComingSoonForStudent] Módulo está EM BREVE para a turma do aluno:', studentCohortId);
+        return true;
+      }
+    }
+    
+    // ✅ PRIORIDADE 2: Se coming_soon global é true, verificar cohorts
+    if (!module.coming_soon) {
+      console.log('✅ [isModuleComingSoonForStudent] Módulo pago NÃO está em breve (coming_soon: false e turma não está na lista)');
+      return false;
+    }
+    
+    // ✅ coming_soon: true - verificar null = todas turmas, array vazio = nenhuma turma
     if (comingSoonCohortIds === null) {
       console.log('✅ [isModuleComingSoonForStudent] Módulo pago em breve para TODAS as turmas (null)');
       return true;
     }
     
-    if (comingSoonCohortIds.length === 0) {
+    if (!comingSoonCohortIds || comingSoonCohortIds.length === 0) {
       console.log('✅ [isModuleComingSoonForStudent] Módulo pago NÃO está em breve para ninguém (array vazio)');
       return false;
     }
