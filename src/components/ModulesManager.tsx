@@ -96,10 +96,12 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
       // Carregar contagem de aulas para cada módulo
       const modulesWithCounts = await Promise.all(
         (modulesData || []).map(async (module) => {
-          const { count } = await supabase
+          const { count, error: countError } = await supabase
             .from('lessons')
             .select('*', { count: 'exact', head: true })
             .eq('module_id', module.id);
+
+          console.log(`[ModulesManager] Module "${module.title}" (${module.id}): count=${count}, error=`, countError);
 
           return {
             ...module,
