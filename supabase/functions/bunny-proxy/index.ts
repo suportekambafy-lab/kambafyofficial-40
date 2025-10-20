@@ -38,13 +38,18 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const pathParts = url.pathname.split('/').filter(p => p);
+    let pathParts = url.pathname.split('/').filter(p => p);
 
     console.log('🎯 Bunny Proxy Request:', {
       method: req.method,
       path: url.pathname,
       pathParts
     });
+
+    // Remove o nome da função se estiver presente (bunny-proxy)
+    if (pathParts[0] === 'bunny-proxy') {
+      pathParts = pathParts.slice(1);
+    }
 
     // Formato esperado: /video/{videoId}/playlist.m3u8 ou /video/{videoId}/seg-{n}.m4s
     if (pathParts[0] !== 'video' || pathParts.length < 2) {
