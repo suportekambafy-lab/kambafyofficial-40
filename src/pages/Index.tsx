@@ -47,10 +47,7 @@ const Index = () => {
         </div>
       )}
 
-      {/* Wrapper para ajustar o header do InteractiveHero */}
-      <div className={showBanner ? "[&_header]:!top-[48px]" : ""}>
-        <InteractiveHero />
-      </div>
+      <InteractiveHero />
     </>
   );
 };
