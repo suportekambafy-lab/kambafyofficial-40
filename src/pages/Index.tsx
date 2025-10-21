@@ -33,7 +33,7 @@ const Index = () => {
       <SEO {...pageSEO.home} />
       
       {/* Banner de anúncio - acima do header */}
-      <div className="bg-emerald-900 text-white px-4 py-3">
+      <div className="relative z-50 bg-emerald-900 text-white px-4 py-3">
         <div className="max-w-7xl mx-auto">
           <Banner
             show={true}
