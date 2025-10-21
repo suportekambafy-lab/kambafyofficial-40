@@ -22,7 +22,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Debug log quando o modal abre
@@ -67,7 +66,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     console.log('🎬 INICIANDO UPLOAD DE VÍDEO');
     setUploading(true);
     setUploadProgress(0);
-    setUploadStatus('Preparando upload...');
 
     try {
       const fileName = selectedFile.name;
@@ -80,7 +78,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('🔢 Chunks:', Math.ceil(fileSize / CHUNK_SIZE));
       
       setUploadProgress(5);
-      setUploadStatus('Conectando ao servidor...');
 
       // Criar vídeo no Bunny.net
       console.log('🔐 Criando vídeo no Bunny.net...');
@@ -99,7 +96,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('✅ Vídeo criado, iniciando upload em chunks...');
       const { videoId, uploadUrl, accessKey, embedUrl, hlsUrl } = uploadData;
       setUploadProgress(10);
-      setUploadStatus('Enviando vídeo...');
 
       // Upload em chunks com retry para conexões instáveis
       const uploadChunk = async (chunk: Blob, start: number, end: number, attempt = 1): Promise<void> => {
@@ -114,13 +110,13 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
             xhr.upload.addEventListener('progress', (e) => {
               if (e.lengthComputable) {
-                const bytesUploaded = start + e.loaded;
-                const totalProgress = (bytesUploaded / fileSize) * 100;
-                const percentage = Math.min(Math.max(Math.round(totalProgress), 10), 95);
-                const totalUploadedMB = (bytesUploaded / (1024 * 1024)).toFixed(1);
-                const totalFileSizeMB = (fileSize / (1024 * 1024)).toFixed(1);
+                const chunkProgress = (e.loaded / e.total);
+                const totalProgress = ((start + (e.loaded)) / fileSize);
+                const percentage = Math.round(totalProgress * 80) + 10; // 10% a 90%
+                const loadedMB = (e.loaded / (1024 * 1024)).toFixed(2);
+                const totalMB = (e.total / (1024 * 1024)).toFixed(2);
+                console.log(`📊 Chunk ${chunkNum}/${totalChunks}: ${loadedMB}MB/${totalMB}MB (${Math.round(chunkProgress * 100)}%) | Total: ${percentage}%`);
                 setUploadProgress(percentage);
-                setUploadStatus(`Enviando vídeo: ${totalUploadedMB}MB / ${totalFileSizeMB}MB`);
               }
             });
 
@@ -188,7 +184,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       console.log('✅ Upload concluído no Bunny.net!');
       setUploadProgress(100);
-      setUploadStatus('Upload completo! Finalizando...');
       
       const statusMessage = 'Vídeo enviado com sucesso! Será processado em segundo plano.';
       console.log(`✅ ${statusMessage}`);
@@ -204,7 +199,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       
       setSelectedFile(null);
       setUploadProgress(0);
-      setUploadStatus('');
       onOpenChange(false);
       
       toast({
@@ -272,17 +266,12 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
           )}
 
           {uploading && (
-            <div className="space-y-3">
-              <div className="flex flex-col gap-1">
-                <div className="flex justify-between text-sm font-medium">
-                  <span className="text-primary">{uploadStatus}</span>
-                  <span className="text-muted-foreground">{Math.round(uploadProgress)}%</span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  O upload pode demorar dependendo da velocidade da sua internet
-                </p>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Enviando...</span>
+                <span>{Math.round(uploadProgress)}%</span>
               </div>
-              <Progress value={uploadProgress} className="h-2" />
+              <Progress value={uploadProgress} />
             </div>
           )}
         </div>
