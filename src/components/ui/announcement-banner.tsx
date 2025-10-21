@@ -79,11 +79,9 @@ export function AnnouncementBanner({
       />
 
       <div className="flex items-center gap-3">
-        {icon && (
-          <div className="hidden rounded-full border border-green-600/50 bg-white/50 p-1 shadow-[inset_0_0_1px_1px_#fff] sm:block">
-            {icon}
-          </div>
-        )}
+        <span className="inline-flex items-center rounded-full bg-green-600 px-2 py-0.5 text-xs font-semibold text-white">
+          Novo
+        </span>
         <p className="text-sm text-gray-900">
           {title}
           {learnMoreUrl && (

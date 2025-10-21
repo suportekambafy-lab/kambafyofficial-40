@@ -5,7 +5,6 @@ import { useSubdomain } from '@/hooks/useSubdomain';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { SEO, pageSEO } from "@/components/SEO";
 import { AnnouncementBanner } from "@/components/ui/announcement-banner";
-import { Sparkles } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -39,7 +38,6 @@ const Index = () => {
           <AnnouncementBanner
             show={showBanner}
             onHide={() => setShowBanner(false)}
-            icon={<Sparkles className="h-5 w-5 text-green-600" />}
             title="O seu curso terá um novo visual com a nova área de membro da Kambafy"
             action={{
               label: "Conheça Agora",
