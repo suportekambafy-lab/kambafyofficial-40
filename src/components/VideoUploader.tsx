@@ -96,20 +96,24 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       console.log('✅ Vídeo criado, iniciando upload via TUS...');
       const { videoId, uploadUrl, accessKey, embedUrl, hlsUrl } = uploadData;
+      const bunnyLibraryId = uploadData.videoData?.libraryId || '500107';
       setUploadProgress(10);
 
-      // Upload usando TUS protocol (suportado nativamente pelo Bunny.net)
+      // Upload usando TUS protocol com endpoint correto do Bunny Stream
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(selectedFile, {
-          endpoint: uploadUrl,
+          endpoint: `https://video.bunnycdn.com/tusupload`,
           retryDelays: [0, 3000, 5000, 10000, 20000],
           headers: {
-            'AccessKey': accessKey,
+            'AuthorizationSignature': accessKey,
+            'AuthorizationExpire': '2147483647',
+            'VideoId': videoId,
+            'LibraryId': bunnyLibraryId,
           },
-          chunkSize: 10 * 1024 * 1024, // 10MB chunks
+          chunkSize: 50 * 1024 * 1024, // 50MB chunks para melhor performance
           metadata: {
-            filename: fileName,
-            filetype: selectedFile.type
+            filetype: selectedFile.type,
+            title: fileName.replace(/\.[^/.]+$/, '')
           },
           onError: (error) => {
             console.error('❌ Erro no upload TUS:', error);
