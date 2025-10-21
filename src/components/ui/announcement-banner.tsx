@@ -79,7 +79,7 @@ export function AnnouncementBanner({
       />
 
       <div className="flex items-center gap-3">
-        <span className="inline-flex items-center rounded-full bg-[#81e76a] px-2 py-0.5 text-xs font-semibold text-white">
+        <span className="inline-flex items-center rounded-full bg-green-600 px-2 py-0.5 text-xs font-semibold text-white">
           Novo
         </span>
         <p className="text-sm text-gray-900">
