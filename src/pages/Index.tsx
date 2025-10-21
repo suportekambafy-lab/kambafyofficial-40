@@ -64,6 +64,7 @@ const Index = () => {
             show={showBanner}
             onHide={() => setShowBanner(false)}
             title="O seu curso terá um novo visual com a nova área de membro da Kambafy"
+            mobileTitle="Nova Área de Membros"
             action={{
               label: "Conheça Agora",
               onClick: () => window.open('https://membros.kambafy.com', '_blank')

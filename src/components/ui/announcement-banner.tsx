@@ -53,6 +53,7 @@ interface AnnouncementBannerProps {
   onHide: () => void
   icon?: React.ReactNode
   title: React.ReactNode
+  mobileTitle?: React.ReactNode
   action: {
     label: string
     onClick: () => void
@@ -65,25 +66,27 @@ export function AnnouncementBanner({
   onHide,
   icon,
   title,
+  mobileTitle,
   action,
   learnMoreUrl,
 }: AnnouncementBannerProps) {
   if (!show) return null
 
   return (
-    <div className="relative isolate flex justify-center items-center gap-3 overflow-hidden border-b border-green-600/15 bg-gradient-to-r from-lime-100/80 to-emerald-100/80 py-2.5 px-4">
+    <div className="relative isolate flex justify-center items-center gap-2 sm:gap-3 overflow-hidden border-b border-green-600/15 bg-gradient-to-r from-lime-100/80 to-emerald-100/80 py-2.5 px-4 sm:px-6">
       <Grid
         cellSize={13}
         patternOffset={[0, -1]}
         className="text-black/30 mix-blend-overlay"
       />
 
-      <div className="flex items-center gap-3">
-        <span className="inline-flex items-center rounded-full bg-[#1b2f1a] px-2 py-0.5 text-xs font-semibold text-white">
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+        <span className="inline-flex items-center rounded-full bg-[#1b2f1a] px-2 py-0.5 text-xs font-semibold text-white shrink-0">
           Novo
         </span>
-        <p className="text-sm text-gray-900">
-          {title}
+        <p className="text-xs sm:text-sm text-gray-900 truncate">
+          <span className="hidden sm:inline">{title}</span>
+          <span className="sm:hidden">{mobileTitle || title}</span>
           {learnMoreUrl && (
             <>
               {" "}
@@ -99,10 +102,10 @@ export function AnnouncementBanner({
         </p>
       </div>
 
-      <div className="flex items-center sm:-my-1">
+      <div className="flex items-center sm:-my-1 shrink-0">
         <button
           type="button"
-          className="text-sm text-gray-800 underline transition-colors hover:text-green-700"
+          className="text-xs sm:text-sm text-gray-800 underline transition-colors hover:text-green-700 whitespace-nowrap"
           onClick={action.onClick}
         >
           {action.label}
