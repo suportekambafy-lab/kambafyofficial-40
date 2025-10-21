@@ -74,7 +74,9 @@ const Index = () => {
       )}
 
       {/* Ajustar header para ficar abaixo do banner */}
-      <InteractiveHero />
+      <div className={showBanner && bannerVisible ? "[&_header]:!top-[48px]" : ""}>
+        <InteractiveHero />
+      </div>
     </>
   );
 };
