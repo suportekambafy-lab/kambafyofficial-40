@@ -73,7 +73,7 @@ export function AnnouncementBanner({
   if (!show) return null
 
   return (
-    <div className="relative isolate flex justify-center items-center gap-3 overflow-hidden border-b border-green-600/15 bg-gradient-to-r from-lime-100/80 to-emerald-100/80 py-2.5 px-4">
+    <div className="w-full relative isolate flex justify-center items-center gap-3 overflow-hidden border-b border-green-600/15 bg-gradient-to-r from-lime-100/80 to-emerald-100/80 py-2.5 px-4">
       <Grid
         cellSize={13}
         patternOffset={[0, -1]}
