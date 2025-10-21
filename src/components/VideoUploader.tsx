@@ -24,8 +24,12 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  // Debug log quando o modal abre
+  console.log('🎬 VideoUploader - Modal estado:', { open, hasUser: !!user, selectedFile: selectedFile?.name });
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    console.log('📁 Arquivo selecionado:', { name: file?.name, size: file?.size, type: file?.type });
     if (file) {
       if (!file.type.startsWith('video/')) {
         toast({
@@ -52,8 +56,10 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
   };
 
   const uploadVideo = async () => {
+    console.log('🎯 uploadVideo chamado!', { hasFile: !!selectedFile, hasUser: !!user, fileName: selectedFile?.name });
+    
     if (!selectedFile || !user) {
-      console.log('❌ Upload cancelado: arquivo ou usuário não disponível');
+      console.log('❌ Upload cancelado: arquivo ou usuário não disponível', { selectedFile: !!selectedFile, user: !!user });
       return;
     }
 
