@@ -114,7 +114,7 @@ export function AnnouncementBanner({
 
       <button
         type="button"
-        className="absolute inset-y-0 right-2.5 p-1 text-sm text-green-700 underline transition-colors hover:text-green-900"
+        className="absolute inset-y-0 right-1 sm:right-2.5 p-1 text-sm text-green-700 transition-colors hover:text-green-900 shrink-0"
         onClick={onHide}
       >
         <X className="h-[18px] w-[18px]" />
