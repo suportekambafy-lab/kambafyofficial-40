@@ -73,6 +73,9 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Espaçamento para compensar o banner fixo */}
+      <div className={`transition-all duration-300 ${showBanner ? 'h-16' : 'h-0'}`} />
+
       <InteractiveHero />
     </>
   );
