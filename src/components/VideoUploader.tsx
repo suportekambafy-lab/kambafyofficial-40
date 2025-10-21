@@ -9,6 +9,7 @@ import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import * as tus from "tus-js-client";
 
 
 interface VideoUploaderProps {
@@ -93,94 +94,44 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         throw new Error(uploadError?.message || 'Falha ao criar vídeo no Bunny.net');
       }
 
-      console.log('✅ Vídeo criado, iniciando upload em chunks...');
+      console.log('✅ Vídeo criado, iniciando upload via TUS...');
       const { videoId, uploadUrl, accessKey, embedUrl, hlsUrl } = uploadData;
       setUploadProgress(10);
 
-      // Upload em chunks com retry para conexões instáveis
-      const uploadChunk = async (chunk: Blob, start: number, end: number, attempt = 1): Promise<void> => {
-        const chunkNum = Math.floor(start / CHUNK_SIZE) + 1;
-        const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
-        
-        console.log(`📤 Tentativa ${attempt}: Enviando chunk ${chunkNum}/${totalChunks} (${(start / (1024 * 1024)).toFixed(1)}MB - ${(end / (1024 * 1024)).toFixed(1)}MB)`);
-        
-        try {
-          await new Promise<void>((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-
-            xhr.upload.addEventListener('progress', (e) => {
-              if (e.lengthComputable) {
-                const chunkProgress = (e.loaded / e.total);
-                const totalProgress = ((start + (e.loaded)) / fileSize);
-                const percentage = Math.round(totalProgress * 80) + 10; // 10% a 90%
-                const loadedMB = (e.loaded / (1024 * 1024)).toFixed(2);
-                const totalMB = (e.total / (1024 * 1024)).toFixed(2);
-                console.log(`📊 Chunk ${chunkNum}/${totalChunks}: ${loadedMB}MB/${totalMB}MB (${Math.round(chunkProgress * 100)}%) | Total: ${percentage}%`);
-                setUploadProgress(percentage);
-              }
-            });
-
-            xhr.addEventListener('load', () => {
-              if (xhr.status >= 200 && xhr.status < 300) {
-                console.log(`✅ Chunk ${Math.floor(start / CHUNK_SIZE) + 1} enviado (${(start / (1024 * 1024)).toFixed(1)}MB - ${(end / (1024 * 1024)).toFixed(1)}MB)`);
-                resolve();
-              } else {
-                reject(new Error(`Chunk falhou: ${xhr.status}`));
-              }
-            });
-
-            xhr.addEventListener('error', (e) => {
-              console.error(`❌ Erro de rede no chunk ${chunkNum}/${totalChunks}:`, e);
-              reject(new Error('Erro de rede no chunk'));
-            });
-
-            xhr.addEventListener('abort', () => {
-              reject(new Error('Chunk cancelado'));
-            });
-
-            xhr.open('PUT', uploadUrl);
-            xhr.setRequestHeader('AccessKey', accessKey);
-            xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-            xhr.setRequestHeader('Content-Range', `bytes ${start}-${end - 1}/${fileSize}`);
-            xhr.send(chunk);
-          });
-        } catch (error: any) {
-          const waitTime = Math.min(5000 * Math.pow(2, attempt - 1), 30000); // Máximo 30 segundos
-          if (attempt < MAX_RETRIES) {
-            console.warn(`⚠️ Chunk ${chunkNum}/${totalChunks} falhou na tentativa ${attempt}/${MAX_RETRIES}`);
-            console.log(`⏳ Aguardando ${(waitTime / 1000).toFixed(0)}s antes de tentar novamente...`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            return uploadChunk(chunk, start, end, attempt + 1);
+      // Upload usando TUS protocol (suportado nativamente pelo Bunny.net)
+      await new Promise<void>((resolve, reject) => {
+        const upload = new tus.Upload(selectedFile, {
+          endpoint: uploadUrl,
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          headers: {
+            'AccessKey': accessKey,
+          },
+          chunkSize: 10 * 1024 * 1024, // 10MB chunks
+          metadata: {
+            filename: fileName,
+            filetype: selectedFile.type
+          },
+          onError: (error) => {
+            console.error('❌ Erro no upload TUS:', error);
+            reject(error);
+          },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const percentage = Math.min(Math.max(Math.round((bytesUploaded / bytesTotal) * 80) + 10, 10), 95);
+            const uploadedMB = (bytesUploaded / (1024 * 1024)).toFixed(2);
+            const totalMB = (bytesTotal / (1024 * 1024)).toFixed(2);
+            
+            console.log(`📊 Progresso: ${uploadedMB}MB / ${totalMB}MB (${percentage}%)`);
+            setUploadProgress(percentage);
+          },
+          onSuccess: () => {
+            console.log('✅ Upload TUS concluído com sucesso!');
+            resolve();
           }
-          console.error(`❌ Chunk ${chunkNum}/${totalChunks} falhou após ${MAX_RETRIES} tentativas`);
-          throw error;
-        }
-      };
+        });
 
-      // Enviar arquivo em chunks
-      const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
-      
-      console.log(`📊 Arquivo: ${(fileSize / (1024 * 1024)).toFixed(2)}MB dividido em ${totalChunks} chunks de ${(CHUNK_SIZE / (1024 * 1024)).toFixed(1)}MB`);
-      console.log(`⚠️ ATENÇÃO: Upload sem limite de tempo. Aguarde até que todos os chunks sejam enviados.`);
-      
-      if (totalChunks === 1) {
-        // Arquivo pequeno, upload direto
-        console.log('📤 Arquivo pequeno, upload direto...');
-        await uploadChunk(selectedFile, 0, fileSize);
-      } else {
-        // Arquivo grande, upload em chunks
-        console.log(`📤 Iniciando upload de ${totalChunks} chunks...`);
-        
-        for (let i = 0; i < totalChunks; i++) {
-          const start = i * CHUNK_SIZE;
-          const end = Math.min(start + CHUNK_SIZE, fileSize);
-          const chunk = selectedFile.slice(start, end);
-          
-          console.log(`\n🔄 === CHUNK ${i + 1}/${totalChunks} ===`);
-          await uploadChunk(chunk, start, end);
-          console.log(`✅ Chunk ${i + 1}/${totalChunks} concluído`);
-        }
-      }
+        console.log('🚀 Iniciando upload TUS...');
+        upload.start();
+      });
 
       console.log('✅ Upload concluído no Bunny.net!');
       setUploadProgress(100);
