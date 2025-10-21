@@ -111,11 +111,15 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
             xhr.upload.addEventListener('progress', (e) => {
               if (e.lengthComputable) {
                 const chunkProgress = (e.loaded / e.total);
-                const totalProgress = ((start + (e.loaded)) / fileSize);
-                const percentage = Math.round(totalProgress * 80) + 10; // 10% a 90%
+                const bytesUploaded = start + e.loaded;
+                const totalProgress = bytesUploaded / fileSize;
+                const percentage = Math.min(Math.round(totalProgress * 85) + 10, 95); // 10% a 95%
                 const loadedMB = (e.loaded / (1024 * 1024)).toFixed(2);
                 const totalMB = (e.total / (1024 * 1024)).toFixed(2);
-                console.log(`📊 Chunk ${chunkNum}/${totalChunks}: ${loadedMB}MB/${totalMB}MB (${Math.round(chunkProgress * 100)}%) | Total: ${percentage}%`);
+                const totalUploadedMB = (bytesUploaded / (1024 * 1024)).toFixed(2);
+                const totalFileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+                console.log(`📊 Chunk ${chunkNum}/${totalChunks}: ${loadedMB}MB/${totalMB}MB (${Math.round(chunkProgress * 100)}%)`);
+                console.log(`📈 Progresso total: ${totalUploadedMB}MB/${totalFileSizeMB}MB (${percentage}%)`);
                 setUploadProgress(percentage);
               }
             });
