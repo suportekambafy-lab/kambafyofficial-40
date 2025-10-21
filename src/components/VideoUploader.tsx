@@ -52,8 +52,12 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
   };
 
   const uploadVideo = async () => {
-    if (!selectedFile || !user) return;
+    if (!selectedFile || !user) {
+      console.log('❌ Upload cancelado: arquivo ou usuário não disponível');
+      return;
+    }
 
+    console.log('🎬 INICIANDO UPLOAD DE VÍDEO');
     setUploading(true);
     setUploadProgress(0);
 
@@ -61,7 +65,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       const fileName = selectedFile.name;
       const fileSize = selectedFile.size;
       const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks para conexões instáveis
-      const MAX_RETRIES = 3;
+      const MAX_RETRIES = 5; // Aumentado para 5 tentativas
       
       console.log('🚀 Upload para Bunny.net:', fileName);
       console.log('📦 Tamanho:', (fileSize / (1024 * 1024)).toFixed(2), 'MB');
@@ -89,19 +93,26 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       // Upload em chunks com retry para conexões instáveis
       const uploadChunk = async (chunk: Blob, start: number, end: number, attempt = 1): Promise<void> => {
+        const chunkNum = Math.floor(start / CHUNK_SIZE) + 1;
+        const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
+        
+        console.log(`📤 Tentativa ${attempt}: Enviando chunk ${chunkNum}/${totalChunks} (${(start / (1024 * 1024)).toFixed(1)}MB - ${(end / (1024 * 1024)).toFixed(1)}MB)`);
+        
         try {
           await new Promise<void>((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             const timeout = setTimeout(() => {
+              console.warn(`⏱️ Timeout no chunk ${chunkNum}/${totalChunks} após 5 minutos`);
               xhr.abort();
               reject(new Error('Timeout no chunk'));
-            }, 120000); // 2 minutos por chunk
+            }, 300000); // 5 minutos por chunk para conexões muito lentas
 
             xhr.upload.addEventListener('progress', (e) => {
               if (e.lengthComputable) {
                 const chunkProgress = (e.loaded / e.total);
                 const totalProgress = ((start + (e.loaded)) / fileSize);
                 const percentage = Math.round(totalProgress * 80) + 10; // 10% a 90%
+                console.log(`📊 Chunk ${chunkNum}/${totalChunks}: ${Math.round(chunkProgress * 100)}% | Total: ${percentage}%`);
                 setUploadProgress(percentage);
               }
             });
@@ -133,17 +144,22 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
             xhr.send(chunk);
           });
         } catch (error: any) {
+          const waitTime = Math.min(5000 * Math.pow(2, attempt - 1), 30000); // Máximo 30 segundos
           if (attempt < MAX_RETRIES) {
-            console.warn(`⚠️ Chunk ${Math.floor(start / CHUNK_SIZE) + 1} falhou, tentativa ${attempt}/${MAX_RETRIES}. Tentando novamente...`);
-            await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Backoff exponencial
+            console.warn(`⚠️ Chunk ${chunkNum}/${totalChunks} falhou na tentativa ${attempt}/${MAX_RETRIES}`);
+            console.log(`⏳ Aguardando ${(waitTime / 1000).toFixed(0)}s antes de tentar novamente...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
             return uploadChunk(chunk, start, end, attempt + 1);
           }
+          console.error(`❌ Chunk ${chunkNum}/${totalChunks} falhou após ${MAX_RETRIES} tentativas`);
           throw error;
         }
       };
 
       // Enviar arquivo em chunks
       const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
+      
+      console.log(`📊 Arquivo: ${(fileSize / (1024 * 1024)).toFixed(2)}MB dividido em ${totalChunks} chunks de ${(CHUNK_SIZE / (1024 * 1024)).toFixed(1)}MB`);
       
       if (totalChunks === 1) {
         // Arquivo pequeno, upload direto
@@ -158,8 +174,9 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
           const end = Math.min(start + CHUNK_SIZE, fileSize);
           const chunk = selectedFile.slice(start, end);
           
-          console.log(`📦 Enviando chunk ${i + 1}/${totalChunks}...`);
+          console.log(`\n🔄 === CHUNK ${i + 1}/${totalChunks} ===`);
           await uploadChunk(chunk, start, end);
+          console.log(`✅ Chunk ${i + 1}/${totalChunks} concluído`);
         }
       }
 
@@ -188,13 +205,16 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       });
 
     } catch (error: any) {
-      console.error('❌ Erro ao fazer upload:', error);
+      console.error('❌ ERRO NO UPLOAD:', error);
+      console.error('Stack:', error.stack);
       
       let errorMessage = error.message;
       if (error.message.includes('Timeout')) {
-        errorMessage = 'Upload muito lento. Tente com uma conexão melhor ou arquivo menor.';
-      } else if (error.message.includes('rede')) {
+        errorMessage = 'Upload muito lento. A conexão está instável. Tente: 1) Usar uma conexão mais estável 2) Reduzir o tamanho do vídeo 3) Tentar em outro horário.';
+      } else if (error.message.includes('rede') || error.message.includes('network')) {
         errorMessage = 'Problema de conexão. Verifique sua internet e tente novamente.';
+      } else if (error.message.includes('abort')) {
+        errorMessage = 'Upload cancelado devido a timeout. Sua conexão pode estar muito lenta para este arquivo.';
       }
       
       toast({
