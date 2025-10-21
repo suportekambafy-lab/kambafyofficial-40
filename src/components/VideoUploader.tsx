@@ -70,7 +70,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     try {
       const fileName = selectedFile.name;
       const fileSize = selectedFile.size;
-      const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB chunks
+      const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks para conexões instáveis
       const MAX_RETRIES = 5; // Aumentado para 5 tentativas
       
       console.log('🚀 Upload para Bunny.net:', fileName);
@@ -118,7 +118,9 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
                 const chunkProgress = (e.loaded / e.total);
                 const totalProgress = ((start + (e.loaded)) / fileSize);
                 const percentage = Math.round(totalProgress * 80) + 10; // 10% a 90%
-                console.log(`📊 Chunk ${chunkNum}/${totalChunks}: ${Math.round(chunkProgress * 100)}% | Total: ${percentage}%`);
+                const loadedMB = (e.loaded / (1024 * 1024)).toFixed(2);
+                const totalMB = (e.total / (1024 * 1024)).toFixed(2);
+                console.log(`📊 Chunk ${chunkNum}/${totalChunks}: ${loadedMB}MB/${totalMB}MB (${Math.round(chunkProgress * 100)}%) | Total: ${percentage}%`);
                 setUploadProgress(percentage);
               }
             });
@@ -133,8 +135,9 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
               }
             });
 
-            xhr.addEventListener('error', () => {
+            xhr.addEventListener('error', (e) => {
               clearTimeout(timeout);
+              console.error(`❌ Erro de rede no chunk ${chunkNum}/${totalChunks}:`, e);
               reject(new Error('Erro de rede no chunk'));
             });
 
@@ -166,6 +169,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
       
       console.log(`📊 Arquivo: ${(fileSize / (1024 * 1024)).toFixed(2)}MB dividido em ${totalChunks} chunks de ${(CHUNK_SIZE / (1024 * 1024)).toFixed(1)}MB`);
+      console.log(`⚠️ ATENÇÃO: Se a conexão for muito lenta, este upload pode levar várias horas. Cada chunk de 10MB tem até 15 minutos para ser enviado.`);
       
       if (totalChunks === 1) {
         // Arquivo pequeno, upload direto
