@@ -562,7 +562,7 @@ export default function AdminProducts() {
     else if (statusFilter === 'inativo') statusMatch = product.status === 'Inativo';
     else if (statusFilter === 'em_revisao') statusMatch = product.status === 'Em Revisão';
     else if (statusFilter === 'revisao') statusMatch = product.revision_requested === true;
-    else if (statusFilter === 'pendente') statusMatch = product.status === 'Pendente' || (!product.admin_approved && product.status !== 'Banido' && product.status !== 'Rascunho' && product.status !== 'Em Revisão' && !product.revision_requested);
+    else if (statusFilter === 'pendente') statusMatch = product.status === 'Pendente';
     
     // Filtro por pesquisa
     if (!searchTerm.trim()) return statusMatch;
