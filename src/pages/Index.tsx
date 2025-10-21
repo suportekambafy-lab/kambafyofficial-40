@@ -25,11 +25,10 @@ const Index = () => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        // Scrolling down
+      // Só mostrar o banner se estiver próximo do topo (menos de 100px)
+      if (currentScrollY > 100) {
         setBannerVisible(false);
-      } else if (currentScrollY < lastScrollY) {
-        // Scrolling up
+      } else {
         setBannerVisible(true);
       }
       
