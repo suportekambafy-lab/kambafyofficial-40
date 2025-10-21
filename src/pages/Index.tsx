@@ -10,6 +10,8 @@ const Index = () => {
   const navigate = useNavigate();
   const { currentSubdomain } = useSubdomain();
   const [showBanner, setShowBanner] = useState(true);
+  const [bannerVisible, setBannerVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   // Se for mobile subdomain, redirecionar para /app
   useEffect(() => {
@@ -17,6 +19,26 @@ const Index = () => {
       navigate('/app', { replace: true });
     }
   }, [currentSubdomain, navigate]);
+
+  // Controlar visibilidade do banner baseado no scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        // Scrolling down
+        setBannerVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        setBannerVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   // Mostrar loading enquanto redireciona
   if (currentSubdomain === 'mobile') {
@@ -34,7 +56,11 @@ const Index = () => {
       
       {/* Banner de anúncio - fixo no topo */}
       {showBanner && (
-        <div className="fixed top-0 left-0 right-0 z-50">
+        <div 
+          className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
+            bannerVisible ? 'translate-y-0' : '-translate-y-full'
+          }`}
+        >
           <AnnouncementBanner
             show={showBanner}
             onHide={() => setShowBanner(false)}
