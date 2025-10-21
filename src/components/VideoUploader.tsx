@@ -22,6 +22,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Debug log quando o modal abre
@@ -66,6 +67,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     console.log('🎬 INICIANDO UPLOAD DE VÍDEO');
     setUploading(true);
     setUploadProgress(0);
+    setUploadStatus('Preparando upload...');
 
     try {
       const fileName = selectedFile.name;
@@ -78,6 +80,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('🔢 Chunks:', Math.ceil(fileSize / CHUNK_SIZE));
       
       setUploadProgress(5);
+      setUploadStatus('Conectando ao servidor...');
 
       // Criar vídeo no Bunny.net
       console.log('🔐 Criando vídeo no Bunny.net...');
@@ -96,6 +99,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('✅ Vídeo criado, iniciando upload em chunks...');
       const { videoId, uploadUrl, accessKey, embedUrl, hlsUrl } = uploadData;
       setUploadProgress(10);
+      setUploadStatus(`Enviando arquivo (0/${Math.ceil(fileSize / CHUNK_SIZE)} partes)...`);
 
       // Upload em chunks com retry para conexões instáveis
       const uploadChunk = async (chunk: Blob, start: number, end: number, attempt = 1): Promise<void> => {
@@ -121,6 +125,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
                 console.log(`📊 Chunk ${chunkNum}/${totalChunks}: ${loadedMB}MB/${totalMB}MB (${Math.round(chunkProgress * 100)}%)`);
                 console.log(`📈 Progresso total: ${totalUploadedMB}MB/${totalFileSizeMB}MB (${percentage}%)`);
                 setUploadProgress(percentage);
+                setUploadStatus(`Enviando parte ${chunkNum}/${totalChunks} (${totalUploadedMB}MB/${totalFileSizeMB}MB)`);
               }
             });
 
@@ -188,6 +193,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
       console.log('✅ Upload concluído no Bunny.net!');
       setUploadProgress(100);
+      setUploadStatus('Upload completo! Finalizando...');
       
       const statusMessage = 'Vídeo enviado com sucesso! Será processado em segundo plano.';
       console.log(`✅ ${statusMessage}`);
@@ -203,6 +209,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       
       setSelectedFile(null);
       setUploadProgress(0);
+      setUploadStatus('');
       onOpenChange(false);
       
       toast({
@@ -270,12 +277,19 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
           )}
 
           {uploading && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Enviando...</span>
-                <span>{Math.round(uploadProgress)}%</span>
+            <div className="space-y-3">
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between text-sm font-medium">
+                  <span className="text-primary">{uploadStatus}</span>
+                  <span className="text-muted-foreground">{Math.round(uploadProgress)}%</span>
+                </div>
+                {uploadProgress > 10 && uploadProgress < 95 && (
+                  <p className="text-xs text-muted-foreground">
+                    O upload pode demorar dependendo da velocidade da sua internet
+                  </p>
+                )}
               </div>
-              <Progress value={uploadProgress} />
+              <Progress value={uploadProgress} className="h-2" />
             </div>
           )}
         </div>
