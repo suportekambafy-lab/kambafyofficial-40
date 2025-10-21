@@ -32,8 +32,8 @@ const Index = () => {
     <>
       <SEO {...pageSEO.home} />
       
-      {/* Banner de anúncio - acima do header */}
-      <div className="relative z-50 bg-emerald-900 text-white px-4 py-3">
+      {/* Banner de anúncio - fixo no topo */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-emerald-900 text-white px-4 py-3">
         <div className="max-w-7xl mx-auto">
           <Banner
             show={true}
@@ -52,7 +52,10 @@ const Index = () => {
         </div>
       </div>
 
-      <InteractiveHero />
+      {/* Wrapper para ajustar o header do InteractiveHero */}
+      <div className="[&_header]:!top-[60px]">
+        <InteractiveHero />
+      </div>
     </>
   );
 };
