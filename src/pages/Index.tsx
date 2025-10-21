@@ -19,7 +19,7 @@ const Index = () => {
     }
   }, [currentSubdomain, navigate]);
 
-  // Esconder banner ao rolar para baixo
+  // Esconder/mostrar banner ao rolar
   useEffect(() => {
     let lastScrollY = window.scrollY;
 
@@ -27,7 +27,11 @@ const Index = () => {
       const currentScrollY = window.scrollY;
       
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        // Rolando para baixo - esconder
         setShowBanner(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Rolando para cima - mostrar
+        setShowBanner(true);
       }
       
       lastScrollY = currentScrollY;
