@@ -705,7 +705,7 @@ const InteractiveHero: React.FC = () => {
             >
                 <motion.button
                     onClick={() => handleAuthNavigation('signup')}
-                    className="w-full sm:w-auto bg-[#0CF2A0] text-[#111111] px-8 py-3 rounded-md text-base font-semibold hover:bg-opacity-90 transition-colors duration-200 shadow-lg hover:shadow-xl flex-shrink-0"
+                    className="w-full sm:w-auto bg-[#81e76a] text-[#111111] px-8 py-3 rounded-md text-base font-semibold hover:bg-opacity-90 transition-colors duration-200 shadow-lg hover:shadow-xl flex-shrink-0"
                     whileHover={{ scale: 1.03, y: -1 }}
                     whileTap={{ scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 400, damping: 15 }}
@@ -713,7 +713,7 @@ const InteractiveHero: React.FC = () => {
                     Começar a Vender
                 </motion.button>
                 <motion.button
-                    className="w-full sm:w-auto bg-transparent border border-[#0CF2A0] text-[#0CF2A0] px-8 py-3 rounded-md text-base font-semibold hover:bg-[#0CF2A0]/10 transition-colors duration-200 flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto bg-transparent border border-[#81e76a] text-[#81e76a] px-8 py-3 rounded-md text-base font-semibold hover:bg-[#81e76a]/10 transition-colors duration-200 flex items-center justify-center gap-2"
                     whileHover={{ scale: 1.03, y: -1 }}
                     whileTap={{ scale: 0.97 }}
                 >
