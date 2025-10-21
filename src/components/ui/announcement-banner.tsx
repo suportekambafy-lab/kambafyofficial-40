@@ -102,7 +102,7 @@ export function AnnouncementBanner({
       <div className="flex items-center sm:-my-1">
         <button
           type="button"
-          className="whitespace-nowrap rounded-md border border-green-700/50 px-3 py-1 text-sm text-gray-800 transition-colors hover:bg-green-500/10"
+          className="text-sm text-gray-800 underline transition-colors hover:text-green-700"
           onClick={action.onClick}
         >
           {action.label}
