@@ -35,24 +35,22 @@ const Index = () => {
       
       {/* Banner de anúncio - fixo no topo */}
       {showBanner && (
-        <div className="fixed top-0 left-0 right-0 z-50 px-4 py-3 bg-white/95 backdrop-blur-sm shadow-sm">
-          <div className="max-w-7xl mx-auto">
-            <AnnouncementBanner
-              show={showBanner}
-              onHide={() => setShowBanner(false)}
-              icon={<Sparkles className="h-5 w-5 text-green-600" />}
-              title="O seu curso terá um novo visual com a nova área de membro da Kambafy"
-              action={{
-                label: "Conheça Agora",
-                onClick: () => window.open('https://membros.kambafy.com', '_blank')
-              }}
-            />
-          </div>
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <AnnouncementBanner
+            show={showBanner}
+            onHide={() => setShowBanner(false)}
+            icon={<Sparkles className="h-5 w-5 text-green-600" />}
+            title="O seu curso terá um novo visual com a nova área de membro da Kambafy"
+            action={{
+              label: "Conheça Agora",
+              onClick: () => window.open('https://membros.kambafy.com', '_blank')
+            }}
+          />
         </div>
       )}
 
       {/* Wrapper para ajustar o header do InteractiveHero */}
-      <div className="[&_header]:!top-[60px]">
+      <div className={showBanner ? "[&_header]:!top-[48px]" : ""}>
         <InteractiveHero />
       </div>
     </>
