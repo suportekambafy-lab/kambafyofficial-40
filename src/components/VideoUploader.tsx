@@ -107,11 +107,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         try {
           await new Promise<void>((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            const timeout = setTimeout(() => {
-              console.warn(`⏱️ Timeout no chunk ${chunkNum}/${totalChunks} após 15 minutos`);
-              xhr.abort();
-              reject(new Error('Timeout no chunk'));
-            }, 900000); // 15 minutos por chunk para conexões muito lentas
 
             xhr.upload.addEventListener('progress', (e) => {
               if (e.lengthComputable) {
@@ -126,7 +121,6 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
             });
 
             xhr.addEventListener('load', () => {
-              clearTimeout(timeout);
               if (xhr.status >= 200 && xhr.status < 300) {
                 console.log(`✅ Chunk ${Math.floor(start / CHUNK_SIZE) + 1} enviado (${(start / (1024 * 1024)).toFixed(1)}MB - ${(end / (1024 * 1024)).toFixed(1)}MB)`);
                 resolve();
@@ -136,13 +130,11 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
             });
 
             xhr.addEventListener('error', (e) => {
-              clearTimeout(timeout);
               console.error(`❌ Erro de rede no chunk ${chunkNum}/${totalChunks}:`, e);
               reject(new Error('Erro de rede no chunk'));
             });
 
             xhr.addEventListener('abort', () => {
-              clearTimeout(timeout);
               reject(new Error('Chunk cancelado'));
             });
 
@@ -169,7 +161,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
       
       console.log(`📊 Arquivo: ${(fileSize / (1024 * 1024)).toFixed(2)}MB dividido em ${totalChunks} chunks de ${(CHUNK_SIZE / (1024 * 1024)).toFixed(1)}MB`);
-      console.log(`⚠️ ATENÇÃO: Se a conexão for muito lenta, este upload pode levar várias horas. Cada chunk de 10MB tem até 15 minutos para ser enviado.`);
+      console.log(`⚠️ ATENÇÃO: Upload sem limite de tempo. Aguarde até que todos os chunks sejam enviados.`);
       
       if (totalChunks === 1) {
         // Arquivo pequeno, upload direto
