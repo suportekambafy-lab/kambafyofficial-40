@@ -108,10 +108,10 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
           await new Promise<void>((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             const timeout = setTimeout(() => {
-              console.warn(`⏱️ Timeout no chunk ${chunkNum}/${totalChunks} após 5 minutos`);
+              console.warn(`⏱️ Timeout no chunk ${chunkNum}/${totalChunks} após 15 minutos`);
               xhr.abort();
               reject(new Error('Timeout no chunk'));
-            }, 300000); // 5 minutos por chunk para conexões muito lentas
+            }, 900000); // 15 minutos por chunk para conexões muito lentas
 
             xhr.upload.addEventListener('progress', (e) => {
               if (e.lengthComputable) {
