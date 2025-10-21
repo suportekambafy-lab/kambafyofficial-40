@@ -9,7 +9,6 @@ import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import * as tus from "tus-js-client";
 
 
 interface VideoUploaderProps {
@@ -94,47 +93,49 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         throw new Error(uploadError?.message || 'Falha ao criar vídeo no Bunny.net');
       }
 
-      console.log('✅ Vídeo criado, iniciando upload via TUS...');
+      console.log('✅ Vídeo criado, iniciando upload direto...');
       const { videoId, uploadUrl, accessKey, embedUrl, hlsUrl } = uploadData;
-      const bunnyLibraryId = uploadData.videoData?.libraryId || '500107';
       setUploadProgress(10);
 
-      // Upload usando TUS protocol com endpoint correto do Bunny Stream
+      // Upload direto usando XMLHttpRequest (método mais confiável para Bunny.net)
       await new Promise<void>((resolve, reject) => {
-        const upload = new tus.Upload(selectedFile, {
-          endpoint: `https://video.bunnycdn.com/tusupload`,
-          retryDelays: [0, 3000, 5000, 10000, 20000],
-          headers: {
-            'AuthorizationSignature': accessKey,
-            'AuthorizationExpire': '2147483647',
-            'VideoId': videoId,
-            'LibraryId': bunnyLibraryId,
-          },
-          chunkSize: 50 * 1024 * 1024, // 50MB chunks para melhor performance
-          metadata: {
-            filetype: selectedFile.type,
-            title: fileName.replace(/\.[^/.]+$/, '')
-          },
-          onError: (error) => {
-            console.error('❌ Erro no upload TUS:', error);
-            reject(error);
-          },
-          onProgress: (bytesUploaded, bytesTotal) => {
-            const percentage = Math.min(Math.max(Math.round((bytesUploaded / bytesTotal) * 80) + 10, 10), 95);
-            const uploadedMB = (bytesUploaded / (1024 * 1024)).toFixed(2);
-            const totalMB = (bytesTotal / (1024 * 1024)).toFixed(2);
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentage = Math.min(Math.max(Math.round((e.loaded / e.total) * 80) + 10, 10), 95);
+            const uploadedMB = (e.loaded / (1024 * 1024)).toFixed(2);
+            const totalMB = (e.total / (1024 * 1024)).toFixed(2);
             
             console.log(`📊 Progresso: ${uploadedMB}MB / ${totalMB}MB (${percentage}%)`);
             setUploadProgress(percentage);
-          },
-          onSuccess: () => {
-            console.log('✅ Upload TUS concluído com sucesso!');
-            resolve();
           }
         });
 
-        console.log('🚀 Iniciando upload TUS...');
-        upload.start();
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log('✅ Upload concluído com sucesso!');
+            resolve();
+          } else {
+            console.error(`❌ Upload falhou com status ${xhr.status}:`, xhr.responseText);
+            reject(new Error(`Upload falhou: ${xhr.status} - ${xhr.responseText}`));
+          }
+        });
+
+        xhr.addEventListener('error', (e) => {
+          console.error('❌ Erro de rede no upload:', e);
+          reject(new Error('Erro de rede no upload'));
+        });
+
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Upload cancelado'));
+        });
+
+        console.log('🚀 Iniciando upload direto...');
+        xhr.open('PUT', uploadUrl);
+        xhr.setRequestHeader('AccessKey', accessKey);
+        xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+        xhr.send(selectedFile);
       });
 
       console.log('✅ Upload concluído no Bunny.net!');
