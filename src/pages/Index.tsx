@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 const Index = () => {
   const navigate = useNavigate();
   const { currentSubdomain } = useSubdomain();
-  const [showBanner, setShowBanner] = useState(true);
 
   // Se for mobile subdomain, redirecionar para /app
   useEffect(() => {
@@ -18,28 +17,6 @@ const Index = () => {
       navigate('/app', { replace: true });
     }
   }, [currentSubdomain, navigate]);
-
-  // Esconder/mostrar banner ao rolar
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        // Rolando para baixo - esconder
-        setShowBanner(false);
-      } else if (currentScrollY < lastScrollY) {
-        // Rolando para cima - mostrar
-        setShowBanner(true);
-      }
-      
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Mostrar loading enquanto redireciona
   if (currentSubdomain === 'mobile') {
@@ -56,7 +33,7 @@ const Index = () => {
       <SEO {...pageSEO.home} />
       
       {/* Banner de anúncio */}
-      <div className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${showBanner ? 'translate-y-0' : '-translate-y-full'}`}>
+      <div className="fixed top-0 left-0 right-0 z-50">
         <div className="bg-emerald-900 text-white px-4 py-3">
           <div className="max-w-7xl mx-auto">
             <Banner
@@ -78,7 +55,7 @@ const Index = () => {
       </div>
 
       {/* Espaçamento para compensar o banner fixo */}
-      <div className={`transition-all duration-300 ${showBanner ? 'h-16' : 'h-0'}`} />
+      <div className="h-16" />
 
       <InteractiveHero />
     </>
