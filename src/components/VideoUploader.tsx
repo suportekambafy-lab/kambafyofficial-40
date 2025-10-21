@@ -64,7 +64,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
     try {
       const fileName = selectedFile.name;
       const fileSize = selectedFile.size;
-      const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks para conexões instáveis
+      const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB chunks
       const MAX_RETRIES = 5; // Aumentado para 5 tentativas
       
       console.log('🚀 Upload para Bunny.net:', fileName);
