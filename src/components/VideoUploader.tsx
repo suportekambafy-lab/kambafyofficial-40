@@ -99,7 +99,7 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
       console.log('✅ Vídeo criado, iniciando upload em chunks...');
       const { videoId, uploadUrl, accessKey, embedUrl, hlsUrl } = uploadData;
       setUploadProgress(10);
-      setUploadStatus(`Enviando arquivo (0/${Math.ceil(fileSize / CHUNK_SIZE)} partes)...`);
+      setUploadStatus('Enviando vídeo...');
 
       // Upload em chunks com retry para conexões instáveis
       const uploadChunk = async (chunk: Blob, start: number, end: number, attempt = 1): Promise<void> => {
@@ -114,18 +114,13 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
             xhr.upload.addEventListener('progress', (e) => {
               if (e.lengthComputable) {
-                const chunkProgress = (e.loaded / e.total);
                 const bytesUploaded = start + e.loaded;
-                const totalProgress = bytesUploaded / fileSize;
-                const percentage = Math.min(Math.round(totalProgress * 85) + 10, 95); // 10% a 95%
-                const loadedMB = (e.loaded / (1024 * 1024)).toFixed(2);
-                const totalMB = (e.total / (1024 * 1024)).toFixed(2);
-                const totalUploadedMB = (bytesUploaded / (1024 * 1024)).toFixed(2);
-                const totalFileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
-                console.log(`📊 Chunk ${chunkNum}/${totalChunks}: ${loadedMB}MB/${totalMB}MB (${Math.round(chunkProgress * 100)}%)`);
-                console.log(`📈 Progresso total: ${totalUploadedMB}MB/${totalFileSizeMB}MB (${percentage}%)`);
+                const totalProgress = (bytesUploaded / fileSize) * 100;
+                const percentage = Math.min(Math.max(Math.round(totalProgress), 10), 95);
+                const totalUploadedMB = (bytesUploaded / (1024 * 1024)).toFixed(1);
+                const totalFileSizeMB = (fileSize / (1024 * 1024)).toFixed(1);
                 setUploadProgress(percentage);
-                setUploadStatus(`Enviando parte ${chunkNum}/${totalChunks} (${totalUploadedMB}MB/${totalFileSizeMB}MB)`);
+                setUploadStatus(`Enviando vídeo: ${totalUploadedMB}MB / ${totalFileSizeMB}MB`);
               }
             });
 
@@ -283,11 +278,9 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
                   <span className="text-primary">{uploadStatus}</span>
                   <span className="text-muted-foreground">{Math.round(uploadProgress)}%</span>
                 </div>
-                {uploadProgress > 10 && uploadProgress < 95 && (
-                  <p className="text-xs text-muted-foreground">
-                    O upload pode demorar dependendo da velocidade da sua internet
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  O upload pode demorar dependendo da velocidade da sua internet
+                </p>
               </div>
               <Progress value={uploadProgress} className="h-2" />
             </div>
