@@ -34,21 +34,17 @@ const Index = () => {
       
       {/* Banner de anúncio - fixo no topo */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-emerald-900 text-white px-4 py-3">
-        <div className="max-w-7xl mx-auto">
-          <Banner
-            show={true}
-            title="O seu curso terá um novo visual com a nova área de membro da Kambafy"
-            className="bg-transparent border-0 shadow-none text-white"
-            action={
-              <Button 
-                variant="secondary" 
-                size="sm"
-                onClick={() => window.open('https://membros.kambafy.com', '_blank')}
-              >
-                Conheça Agora
-              </Button>
-            }
-          />
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
+          <span className="text-sm font-medium">
+            O seu curso terá um novo visual com a nova área de membro da Kambafy
+          </span>
+          <Button 
+            variant="secondary" 
+            size="sm"
+            onClick={() => window.open('https://membros.kambafy.com', '_blank')}
+          >
+            Conheça Agora
+          </Button>
         </div>
       </div>
 
