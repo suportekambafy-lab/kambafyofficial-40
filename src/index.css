@@ -312,12 +312,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #eaeeec;
+  background: #1b2f1a;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #d0d4d2;
+  background: #2a4628;
 }
 
 /* New animations for sign-in page */
