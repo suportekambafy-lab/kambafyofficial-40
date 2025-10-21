@@ -59,9 +59,13 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
     try {
       const fileName = selectedFile.name;
+      const fileSize = selectedFile.size;
+      const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks para conexões instáveis
+      const MAX_RETRIES = 3;
       
       console.log('🚀 Upload para Bunny.net:', fileName);
-      console.log('📦 Tamanho:', (selectedFile.size / (1024 * 1024)).toFixed(2), 'MB');
+      console.log('📦 Tamanho:', (fileSize / (1024 * 1024)).toFixed(2), 'MB');
+      console.log('🔢 Chunks:', Math.ceil(fileSize / CHUNK_SIZE));
       
       setUploadProgress(5);
 
@@ -79,47 +83,85 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
         throw new Error(uploadError?.message || 'Falha ao criar vídeo no Bunny.net');
       }
 
-      console.log('✅ Vídeo criado, iniciando upload...');
+      console.log('✅ Vídeo criado, iniciando upload em chunks...');
       const { videoId, uploadUrl, accessKey, embedUrl, hlsUrl } = uploadData;
       setUploadProgress(10);
 
-      // Upload direto com progresso real usando XMLHttpRequest
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
+      // Upload em chunks com retry para conexões instáveis
+      const uploadChunk = async (chunk: Blob, start: number, end: number, attempt = 1): Promise<void> => {
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const timeout = setTimeout(() => {
+              xhr.abort();
+              reject(new Error('Timeout no chunk'));
+            }, 120000); // 2 minutos por chunk
 
-        // Tracking de progresso
-        xhr.upload.addEventListener('progress', (e) => {
-          if (e.lengthComputable) {
-            const percentage = Math.round((e.loaded / e.total) * 80) + 10; // 10% a 90%
-            setUploadProgress(percentage);
-            console.log(`📊 Upload: ${percentage}% (${(e.loaded / (1024 * 1024)).toFixed(2)}MB / ${(e.total / (1024 * 1024)).toFixed(2)}MB)`);
+            xhr.upload.addEventListener('progress', (e) => {
+              if (e.lengthComputable) {
+                const chunkProgress = (e.loaded / e.total);
+                const totalProgress = ((start + (e.loaded)) / fileSize);
+                const percentage = Math.round(totalProgress * 80) + 10; // 10% a 90%
+                setUploadProgress(percentage);
+              }
+            });
+
+            xhr.addEventListener('load', () => {
+              clearTimeout(timeout);
+              if (xhr.status >= 200 && xhr.status < 300) {
+                console.log(`✅ Chunk ${Math.floor(start / CHUNK_SIZE) + 1} enviado (${(start / (1024 * 1024)).toFixed(1)}MB - ${(end / (1024 * 1024)).toFixed(1)}MB)`);
+                resolve();
+              } else {
+                reject(new Error(`Chunk falhou: ${xhr.status}`));
+              }
+            });
+
+            xhr.addEventListener('error', () => {
+              clearTimeout(timeout);
+              reject(new Error('Erro de rede no chunk'));
+            });
+
+            xhr.addEventListener('abort', () => {
+              clearTimeout(timeout);
+              reject(new Error('Chunk cancelado'));
+            });
+
+            xhr.open('PUT', uploadUrl);
+            xhr.setRequestHeader('AccessKey', accessKey);
+            xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+            xhr.setRequestHeader('Content-Range', `bytes ${start}-${end - 1}/${fileSize}`);
+            xhr.send(chunk);
+          });
+        } catch (error: any) {
+          if (attempt < MAX_RETRIES) {
+            console.warn(`⚠️ Chunk ${Math.floor(start / CHUNK_SIZE) + 1} falhou, tentativa ${attempt}/${MAX_RETRIES}. Tentando novamente...`);
+            await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Backoff exponencial
+            return uploadChunk(chunk, start, end, attempt + 1);
           }
-        });
+          throw error;
+        }
+      };
 
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            console.log('✅ Upload concluído');
-            setUploadProgress(90);
-            resolve();
-          } else {
-            reject(new Error(`Upload falhou: ${xhr.status} ${xhr.statusText}`));
-          }
-        });
-
-        xhr.addEventListener('error', () => {
-          reject(new Error('Erro de rede durante o upload'));
-        });
-
-        xhr.addEventListener('abort', () => {
-          reject(new Error('Upload cancelado'));
-        });
-
-        // Configurar e enviar
-        xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('AccessKey', accessKey);
-        xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-        xhr.send(selectedFile);
-      });
+      // Enviar arquivo em chunks
+      const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
+      
+      if (totalChunks === 1) {
+        // Arquivo pequeno, upload direto
+        console.log('📤 Arquivo pequeno, upload direto...');
+        await uploadChunk(selectedFile, 0, fileSize);
+      } else {
+        // Arquivo grande, upload em chunks
+        console.log(`📤 Iniciando upload de ${totalChunks} chunks...`);
+        
+        for (let i = 0; i < totalChunks; i++) {
+          const start = i * CHUNK_SIZE;
+          const end = Math.min(start + CHUNK_SIZE, fileSize);
+          const chunk = selectedFile.slice(start, end);
+          
+          console.log(`📦 Enviando chunk ${i + 1}/${totalChunks}...`);
+          await uploadChunk(chunk, start, end);
+        }
+      }
 
       console.log('✅ Upload concluído no Bunny.net!');
       setUploadProgress(100);
@@ -147,9 +189,17 @@ export default function VideoUploader({ onVideoUploaded, open, onOpenChange }: V
 
     } catch (error: any) {
       console.error('❌ Erro ao fazer upload:', error);
+      
+      let errorMessage = error.message;
+      if (error.message.includes('Timeout')) {
+        errorMessage = 'Upload muito lento. Tente com uma conexão melhor ou arquivo menor.';
+      } else if (error.message.includes('rede')) {
+        errorMessage = 'Problema de conexão. Verifique sua internet e tente novamente.';
+      }
+      
       toast({
-        title: "Erro",
-        description: `Não foi possível enviar o vídeo: ${error.message}`,
+        title: "Erro no Upload",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
