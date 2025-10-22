@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { 
+import { PageLayout } from "@/components/PageLayout";
+import {
   MessageSquare, 
   ThumbsUp, 
   Eye, 
@@ -380,14 +381,15 @@ export default function SellerCommunity() {
   );
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Comunidade Kambafy</h1>
-          <p className="text-muted-foreground mt-1">
-            Conecte-se com outros criadores e compartilhe experiências
-          </p>
-        </div>
+    <PageLayout title="Comunidade">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Comunidade Kambafy</h2>
+            <p className="text-muted-foreground mt-1">
+              Conecte-se com outros criadores e compartilhe experiências
+            </p>
+          </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -675,6 +677,7 @@ export default function SellerCommunity() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </PageLayout>
   );
 }

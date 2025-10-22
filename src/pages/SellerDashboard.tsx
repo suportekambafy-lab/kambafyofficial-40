@@ -50,7 +50,6 @@ const Sales = createLazyWithRetry(() => import("./Sales"), "Sales");
 const Financial = createLazyWithRetry(() => import("./Financial"), "Financial");
 const SellerHelp = createLazyWithRetry(() => import("./SellerHelp"), "SellerHelp");
 const SellerDocumentation = createLazyWithRetry(() => import("./SellerDocumentation"), "SellerDocumentation");
-const SellerCommunity = createLazyWithRetry(() => import("./SellerCommunity"), "SellerCommunity");
 const ComingSoon = createLazyWithRetry(() => import("./ComingSoon"), "ComingSoon");
 const KambaExtra = createLazyWithRetry(() => import("./KambaExtra"), "KambaExtra");
 const MeusAfiliados = createLazyWithRetry(() => import("./MeusAfiliados"), "MeusAfiliados");
@@ -112,7 +111,6 @@ function SellerDashboardContent() {
                 <Route path="/financeiro" element={<Financial />} />
                 <Route path="/ajuda" element={<SellerHelp />} />
                 <Route path="/documentacao" element={<SellerDocumentation />} />
-                <Route path="/comunidade" element={<SellerCommunity />} />
                 <Route path="/configuracoes" element={<UserSettings />} />
                 <Route path="/membros" element={<Members />} />
                 <Route path="/membros/pagamentos" element={<SellerMemberModulePayments />} />

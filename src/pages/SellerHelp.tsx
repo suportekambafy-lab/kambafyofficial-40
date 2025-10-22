@@ -197,7 +197,7 @@ export default function SellerHelp() {
 
         <Card 
           className="hover:shadow-md transition-shadow cursor-pointer"
-          onClick={() => window.location.href = '/vendedor/comunidade'}
+          onClick={() => window.location.href = '/comunidade'}
         >
           <CardContent className="p-6 text-center">
             <Users className="h-8 w-8 mx-auto mb-3 text-primary" />
