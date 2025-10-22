@@ -315,13 +315,13 @@ export default function SellerReports() {
   }) => {
     const isPositive = change >= 0;
     const formattedValue = isCurrency 
-      ? formatPriceForSeller(value, 'KZ')
+      ? value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')
       : isPercentage 
         ? `${value.toFixed(2)}%`
         : value.toFixed(2);
     
     const formattedPrevious = isCurrency
-      ? formatPriceForSeller(previousValue, 'KZ')
+      ? previousValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')
       : isPercentage
         ? `${previousValue.toFixed(2)}%`
         : previousValue.toFixed(2);
@@ -335,14 +335,17 @@ export default function SellerReports() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold mb-2">{formattedValue}</div>
+          <div className="text-3xl font-bold mb-2">
+            {isCurrency && 'KZ '}
+            {formattedValue}
+          </div>
           <div className="flex items-center gap-2 text-sm">
             <span className={`flex items-center gap-1 font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
               {isPositive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
               {Math.abs(change).toFixed(2)}%
             </span>
             <span className="text-muted-foreground">
-              vs. {formattedPrevious} no período anterior
+              vs. {isCurrency && 'KZ '}{formattedPrevious} no período anterior
             </span>
           </div>
         </CardContent>
@@ -453,7 +456,7 @@ export default function SellerReports() {
               <Info className="h-4 w-4 text-muted-foreground" />
             </CardTitle>
             <div className="text-4xl font-bold">
-              {formatPriceForSeller(netRevenue.current, 'KZ')}
+              KZ {netRevenue.current.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')}
             </div>
             <div className="flex items-center gap-2 text-sm">
               <span className={`flex items-center gap-1 font-medium ${netRevenue.percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -461,7 +464,7 @@ export default function SellerReports() {
                 {Math.abs(netRevenue.percentageChange).toFixed(2)}%
               </span>
               <span className="text-muted-foreground">
-                vs. {formatPriceForSeller(netRevenue.previous, 'KZ')} no período anterior
+                vs. KZ {netRevenue.previous.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} no período anterior
               </span>
             </div>
           </div>
@@ -499,7 +502,7 @@ export default function SellerReports() {
                               />
                               <span className="text-muted-foreground">{entry.name}:</span>
                               <span className="font-medium">
-                                {formatPriceForSeller(entry.value, 'KZ')}
+                                KZ {entry.value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')}
                               </span>
                             </div>
                           ))}
