@@ -14,7 +14,8 @@ import {
   Image as ImageIcon, 
   X,
   Loader2,
-  Send
+  Send,
+  Trash2
 } from "lucide-react";
 
 interface Comment {
@@ -242,6 +243,34 @@ export function PostComments({ postId, commentsCount }: PostCommentsProps) {
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('community_comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Comentário deletado",
+        description: "Seu comentário foi removido"
+      });
+
+      loadComments();
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao deletar comentário",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleLikeComment = async (commentId: string) => {
     if (!user) {
       toast({
@@ -423,15 +452,29 @@ export function PostComments({ postId, commentsCount }: PostCommentsProps) {
                           </div>
                         )}
 
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleLikeComment(comment.id)}
-                          className="gap-2 -ml-2"
-                        >
-                          <ThumbsUp className="h-3 w-3" />
-                          {comment.likes_count}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleLikeComment(comment.id)}
+                            className="gap-2 -ml-2"
+                          >
+                            <ThumbsUp className="h-3 w-3" />
+                            {comment.likes_count}
+                          </Button>
+
+                          {user && user.id === comment.user_id && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="gap-2 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Deletar
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>

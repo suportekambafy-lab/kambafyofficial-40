@@ -284,6 +284,26 @@ export default function SellerCommunity() {
     }
   };
 
+  const handleViewPost = async (postId: string) => {
+    try {
+      // Incrementar visualização
+      const { data: currentPost } = await supabase
+        .from('community_posts')
+        .select('views_count')
+        .eq('id', postId)
+        .single();
+
+      if (currentPost) {
+        await supabase
+          .from('community_posts')
+          .update({ views_count: currentPost.views_count + 1 })
+          .eq('id', postId);
+      }
+    } catch (error) {
+      console.error('Error incrementing view:', error);
+    }
+  };
+
   const handleLike = async (postId: string) => {
     if (!user) {
       toast({
@@ -535,7 +555,11 @@ export default function SellerCommunity() {
             const categoryInfo = categoryLabels[post.category];
             
             return (
-              <Card key={post.id} className="hover:shadow-md transition-shadow">
+              <Card 
+                key={post.id} 
+                className="hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => handleViewPost(post.id)}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-2 flex-1">
@@ -557,7 +581,7 @@ export default function SellerCommunity() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent onClick={(e) => e.stopPropagation()}>
                   <p className="text-muted-foreground mb-4 whitespace-pre-wrap">
                     {post.content.length > 300 
                       ? post.content.substring(0, 300) + '...' 
