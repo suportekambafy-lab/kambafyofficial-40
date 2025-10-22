@@ -576,6 +576,7 @@ export type Database = {
       }
       community_comments: {
         Row: {
+          attachments: Json | null
           content: string
           created_at: string
           id: string
@@ -585,6 +586,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attachments?: Json | null
           content: string
           created_at?: string
           id?: string
@@ -594,6 +596,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attachments?: Json | null
           content?: string
           created_at?: string
           id?: string

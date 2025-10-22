@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PostComments } from "@/components/community/PostComments";
 
 type Category = 'duvidas' | 'dicas' | 'novidades' | 'produtos' | 'marketing' | 'tecnologia' | 'geral';
 
@@ -423,10 +424,7 @@ export default function SellerCommunity() {
                       {post.likes_count}
                     </Button>
                     
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      {post.comments_count}
-                    </Button>
+                    <PostComments postId={post.id} commentsCount={post.comments_count} />
                     
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Eye className="h-4 w-4" />
