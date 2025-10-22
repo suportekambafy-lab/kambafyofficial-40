@@ -49,17 +49,17 @@ export function useSellerData() {
         modulePayments = mp || [];
       }
 
-      // Combinar orders e module_payments com valores líquidos
+      // Combinar orders e module_payments com valores diretos (já líquidos)
       const allTransactions = [
         ...(orders || []).map(order => ({
           ...order,
           netAmount: order.seller_commission 
             ? parseFloat(String(order.seller_commission))
-            : parseFloat(String(order.amount || '0')) * 0.92
+            : parseFloat(String(order.amount || '0'))
         })),
         ...(modulePayments || []).map(mp => ({
           ...mp,
-          netAmount: parseFloat(String(mp.amount || '0')) * 0.92,
+          netAmount: parseFloat(String(mp.amount || '0')),
           isModulePayment: true
         }))
       ];
