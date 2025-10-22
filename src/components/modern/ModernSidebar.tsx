@@ -330,14 +330,26 @@ export function ModernSidebar({
       </div>
 
       {/* Progress bar above navigation */}
-      {!collapsed && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.2 }}
-          className="px-4 py-2 border-b border-sidebar-border/30 dark:border-sidebar/30"
-        >
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: 0.2 }}
+        className={`border-b border-sidebar-border/30 dark:border-sidebar/30 ${collapsed ? 'px-2 py-2' : 'px-4 py-2'}`}
+      >
+        {collapsed ? (
+          // Versão compacta vertical quando fechado
+          <div className="flex flex-col items-center gap-1" title={`${formatCurrency(dashboardData.totalRevenue)} / ${formatCurrency(nextGoal)} KZ - ${progressPercent.toFixed(0)}%`}>
+            <div className="w-1 h-16 bg-sidebar-accent rounded-full flex flex-col-reverse">
+              <div 
+                className="w-full bg-gradient-to-t from-yellow-400 to-yellow-500 rounded-full transition-all duration-500" 
+                style={{ height: `${progressPercent}%` }}
+              />
+            </div>
+            <span className="text-[10px] text-sidebar-foreground/60">{progressPercent.toFixed(0)}%</span>
+          </div>
+        ) : (
+          // Versão completa quando aberto
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
               <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
@@ -350,8 +362,8 @@ export function ModernSidebar({
               />
             </div>
           </div>
-        </motion.div>
-      )}
+        )}
+      </motion.div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-3 space-y-1">
