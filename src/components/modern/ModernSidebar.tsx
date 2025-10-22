@@ -321,9 +321,9 @@ export function ModernSidebar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              src="/kambafy-icon-collapsed.svg"
+              src={isDark ? "/kambafy-icon-dark.png" : "/kambafy-icon-collapsed.svg"}
               alt="Kambafy"
-              className="w-8 h-8 dark:brightness-0 dark:invert"
+              className="w-8 h-8"
             />
           )}
         </AnimatePresence>
