@@ -1,4 +1,3 @@
-"use client";
 
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -8,6 +7,8 @@ import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
+  ChevronLeft, 
+  ChevronRight,
   LayoutDashboard, 
   Package, 
   TrendingUp, 
@@ -23,29 +24,30 @@ import {
   HelpCircle,
   LogOut,
   X,
-  Menu,
+  RotateCcw,
   Coins
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const menuItems = [
-  { label: "Dashboard", href: "/vendedor", icon: <LayoutDashboard className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Produtos", href: "/vendedor/produtos", icon: <Package className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Vendas", href: "/vendedor/vendas", icon: <TrendingUp className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Financeiro", href: "/vendedor/financeiro", icon: <DollarSign className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Membros", href: "/vendedor/membros", icon: <Users className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Pagamentos Módulos", href: "/vendedor/membros/pagamentos", icon: <Coins className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Kamba Extra", href: "/vendedor/marketplace", icon: <Store className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Afiliados", href: "/vendedor/afiliados", icon: <UserCheck className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Assinaturas", href: "/vendedor/assinaturas", icon: <CreditCard className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Relatórios", href: "/vendedor/relatorios", icon: <FileText className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Colaboradores", href: "/vendedor/colaboradores", icon: <UserPlus className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Apps", href: "/vendedor/apps", icon: <Grid3X3 className="h-5 w-5 flex-shrink-0" /> },
+  { label: "Dashboard", href: "/vendedor", icon: LayoutDashboard },
+  { label: "Produtos", href: "/vendedor/produtos", icon: Package },
+  { label: "Vendas", href: "/vendedor/vendas", icon: TrendingUp },
+  { label: "Financeiro", href: "/vendedor/financeiro", icon: DollarSign },
+  { label: "Membros", href: "/vendedor/membros", icon: Users },
+  { label: "Pagamentos Módulos", href: "/vendedor/membros/pagamentos", icon: Coins },
+  { label: "Kamba Extra", href: "/vendedor/marketplace", icon: Store },
+  { label: "Afiliados", href: "/vendedor/afiliados", icon: UserCheck },
+  
+  { label: "Assinaturas", href: "/vendedor/assinaturas", icon: CreditCard },
+  { label: "Relatórios", href: "/vendedor/relatorios", icon: FileText },
+  { label: "Colaboradores", href: "/vendedor/colaboradores", icon: UserPlus },
+  { label: "Apps", href: "/vendedor/apps", icon: Grid3X3 },
 ];
 
 const bottomItems = [
-  { label: "Configurações", href: "/vendedor/configuracoes", icon: <Settings className="h-5 w-5 flex-shrink-0" /> },
-  { label: "Ajuda", href: "/vendedor/ajuda", icon: <HelpCircle className="h-5 w-5 flex-shrink-0" /> },
+  { label: "Configurações", href: "/vendedor/configuracoes", icon: Settings },
+  { label: "Ajuda", href: "/vendedor/ajuda", icon: HelpCircle },
 ];
 
 interface ModernSidebarProps {
@@ -183,54 +185,46 @@ export function ModernSidebar({
     }
   };
 
-  // Mobile Sidebar
   if (isMobile) {
     return (
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40"
-              onClick={onClose}
-            />
-            
-            {/* Mobile Sidebar */}
-            <motion.div
-              initial={{ x: "-100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "-100%", opacity: 0 }}
+              initial={{ x: -320 }}
+              animate={{ x: 0 }}
+              exit={{ x: -320 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="fixed left-0 top-0 h-screen w-80 bg-neutral-100 dark:bg-neutral-900 flex flex-col z-50 shadow-xl"
+              className="fixed left-0 top-0 h-screen w-80 bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-xl"
             >
               {/* Header */}
-              <div className="h-16 flex items-center justify-between px-4 border-b border-border">
-                <img 
-                  src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
-                  alt="Kambafy" 
-                  className="h-16 w-auto"
-                />
-                <button
+              <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
+              <img 
+                src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
+                alt="Kambafy" 
+                className="h-16 w-auto"
+              />
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={onClose}
-                  className="w-8 h-8 flex items-center justify-center text-neutral-800 dark:text-neutral-200 hover:bg-sidebar-accent rounded-lg transition-colors"
+                  className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                 >
-                  <X className="w-5 h-5" />
-                </button>
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
 
-              {/* Progress bar */}
-              <div className="px-4 py-3 border-b border-border">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+              {/* Progress bar above navigation */}
+              <div className="px-4 py-2 border-b border-sidebar-border/30 dark:border-sidebar/30">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
                     <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
                     <span>{progressPercent.toFixed(0)}%</span>
                   </div>
-                  <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-sidebar-accent rounded-full">
                     <div 
-                      className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-500" 
+                      className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500" 
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
@@ -238,54 +232,52 @@ export function ModernSidebar({
               </div>
 
               {/* Navigation */}
-              <nav className="flex-1 px-4 py-4 space-y-1">
+              <nav className="flex-1 px-3 py-3 space-y-1">
                 {menuItems.map((item) => (
                   <NavLink
                     key={item.href}
                     to={item.href}
                     onClick={handleItemClick}
                     className={({ isActive }) =>
-                      cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                        isActive
-                          ? "bg-primary/10 text-primary dark:text-primary"
-                          : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white"
-                      )
+                      `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${
+                        isActive 
+                          ? "bg-primary/10 text-primary border-l-2 border-primary ml-1" 
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                      }`
                     }
                   >
-                    {item.icon}
-                    <span>{item.label}</span>
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{item.label}</span>
                   </NavLink>
                 ))}
               </nav>
 
-              {/* Bottom Section */}
-              <div className="border-t border-border px-4 py-3 space-y-1">
+              {/* Bottom Section Mobile */}
+              <div className="border-t border-sidebar-border/30 dark:border-sidebar/30 p-3 space-y-1">
                 {bottomItems.map((item) => (
                   <NavLink
                     key={item.href}
                     to={item.href}
                     onClick={handleItemClick}
                     className={({ isActive }) =>
-                      cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                        isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800"
-                      )
+                      `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        isActive 
+                          ? "bg-primary/10 text-primary" 
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                      }`
                     }
                   >
-                    {item.icon}
-                    <span>{item.label}</span>
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{item.label}</span>
                   </NavLink>
                 ))}
                 
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full"
                 >
-                  <LogOut className="w-5 h-5 flex-shrink-0" />
-                  <span>Sair</span>
+                  <LogOut className="w-4 h-4 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Sair</span>
                 </button>
               </div>
             </motion.div>
@@ -295,58 +287,72 @@ export function ModernSidebar({
     );
   }
 
-  // Desktop Sidebar
+  // Desktop sidebar
   return (
-    <div
-      className="h-screen bg-neutral-100 dark:bg-neutral-900 border-r border-border flex flex-col shadow-sm transition-all duration-300"
-      style={{ width: collapsed ? '60px' : '300px' }}
+    <motion.div
+      animate={{ 
+        width: collapsed ? 80 : 320
+      }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-sm"
     >
       {/* Header */}
-      <div className="h-16 flex items-center justify-center px-4 border-b border-border">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
         <AnimatePresence mode="wait">
           {!collapsed ? (
-            <motion.img
-              key="logo-full"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
-              src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
-              alt="Kambafy"
-              className="h-16 w-auto"
-            />
+              className="flex items-center gap-3"
+            >
+              <img 
+                src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
+                alt="Kambafy" 
+                className="h-16 w-auto"
+              />
+            </motion.div>
           ) : (
             <motion.img
-              key="logo-icon"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               src="/kambafy-icon-collapsed.svg"
-              alt="K"
-              className="w-8 h-8 dark:brightness-0 dark:invert"
+              alt="Kambafy"
+              className="w-8 h-8 mx-auto dark:brightness-0 dark:invert"
             />
           )}
         </AnimatePresence>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggle}
+          className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+        >
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </Button>
       </div>
 
-      {/* Progress bar */}
+      {/* Progress bar above navigation */}
       {!collapsed && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.2 }}
-          className="px-4 py-3 border-b border-border"
+          className="px-4 py-2 border-b border-sidebar-border/30 dark:border-sidebar/30"
         >
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
               <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
               <span>{progressPercent.toFixed(0)}%</span>
             </div>
-            <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-sidebar-accent rounded-full">
               <div 
-                className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-500" 
+                className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500" 
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -357,60 +363,89 @@ export function ModernSidebar({
       {/* Navigation */}
       <nav className="flex-1 px-3 py-3 space-y-1">
         {menuItems.map((item) => (
-          <NavLink
-            key={item.href}
-            to={item.href}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 text-sm",
-                collapsed && "justify-center",
-                isActive
-                  ? "bg-primary/10 text-primary dark:text-primary"
-                  : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white"
-              )
-            }
+           <NavLink
+             key={item.href}
+             to={item.href}
+             className={({ isActive }) =>
+               `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${
+                 isActive 
+                   ? "bg-primary/10 text-primary dark:text-white border-l-2 border-primary ml-1" 
+                   : "text-sidebar-foreground/70 dark:text-white/70 hover:bg-sidebar-accent hover:text-sidebar-foreground dark:hover:text-white"
+               }`
+             }
             title={collapsed ? item.label : undefined}
           >
-            {item.icon}
-            {!collapsed && <span className="text-sm whitespace-pre">{item.label}</span>}
+            <item.icon className="w-4 h-4 flex-shrink-0" />
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: "auto" }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="whitespace-nowrap overflow-hidden"
+                >
+                  {item.label}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </NavLink>
         ))}
       </nav>
 
       {/* Bottom Section */}
-      <div className="border-t border-border px-3 py-3 space-y-1">
+      <div className="border-t border-sidebar-border/30 dark:border-sidebar/30 p-3 space-y-1">
         {bottomItems.map((item) => (
           <NavLink
             key={item.href}
             to={item.href}
             className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 text-sm",
-                collapsed && "justify-center",
-                isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800"
-              )
+              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isActive 
+                  ? "bg-primary/10 text-primary" 
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`
             }
             title={collapsed ? item.label : undefined}
           >
-            {item.icon}
-            {!collapsed && <span className="text-sm whitespace-pre">{item.label}</span>}
+            <item.icon className="w-4 h-4 flex-shrink-0" />
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: "auto" }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="whitespace-nowrap overflow-hidden"
+                >
+                  {item.label}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </NavLink>
         ))}
         
         <button
           onClick={handleSignOut}
-          className={cn(
-            "flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-sm",
-            collapsed && "justify-center"
-          )}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full"
           title={collapsed ? "Sair" : undefined}
         >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span className="text-sm whitespace-pre">Sair</span>}
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.span
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: "auto" }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.2 }}
+                className="whitespace-nowrap overflow-hidden"
+              >
+                Sair
+              </motion.span>
+            )}
+          </AnimatePresence>
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
