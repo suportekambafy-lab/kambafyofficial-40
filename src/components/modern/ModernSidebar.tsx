@@ -25,7 +25,8 @@ import {
   LogOut,
   X,
   RotateCcw,
-  Coins
+  Coins,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -47,6 +48,7 @@ const menuItems = [
 
 const bottomItems = [
   { label: "Configurações", href: "/vendedor/configuracoes", icon: Settings },
+  { label: "Comunidade", href: "/vendedor/comunidade", icon: MessageSquare },
   { label: "Ajuda", href: "/vendedor/ajuda", icon: HelpCircle },
 ];
 
