@@ -232,25 +232,54 @@ export function ModernSidebar({
               </div>
 
               {/* Navigation */}
-              <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+              <nav className="flex-1 px-3 py-2 space-y-0.5">
                 {menuItems.map((item) => (
                   <NavLink
                     key={item.href}
                     to={item.href}
                     onClick={handleItemClick}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                      `flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group ${
                         isActive 
                           ? "bg-primary/10 text-primary border-l-2 border-primary ml-1" 
                           : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                       }`
                     }
                   >
-                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
                     <span className="whitespace-nowrap">{item.label}</span>
                   </NavLink>
                 ))}
               </nav>
+
+              {/* Bottom Section Mobile */}
+              <div className="border-t border-sidebar-border/30 dark:border-sidebar/30 p-2 space-y-0.5">
+                {bottomItems.map((item) => (
+                  <NavLink
+                    key={item.href}
+                    to={item.href}
+                    onClick={handleItemClick}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                        isActive 
+                          ? "bg-primary/10 text-primary" 
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                      }`
+                    }
+                  >
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{item.label}</span>
+                  </NavLink>
+                ))}
+                
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full"
+                >
+                  <LogOut className="w-4 h-4 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Sair</span>
+                </button>
+              </div>
             </motion.div>
           </>
         )}
@@ -332,13 +361,13 @@ export function ModernSidebar({
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-2 space-y-0.5">
         {menuItems.map((item) => (
            <NavLink
              key={item.href}
              to={item.href}
              className={({ isActive }) =>
-               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+               `flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group ${
                  isActive 
                    ? "bg-primary/10 text-primary dark:text-white border-l-2 border-primary ml-1" 
                    : "text-sidebar-foreground/70 dark:text-white/70 hover:bg-sidebar-accent hover:text-sidebar-foreground dark:hover:text-white"
@@ -346,7 +375,7 @@ export function ModernSidebar({
              }
             title={collapsed ? item.label : undefined}
           >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
+            <item.icon className="w-4 h-4 flex-shrink-0" />
             <AnimatePresence>
               {!collapsed && (
                 <motion.span
@@ -365,13 +394,13 @@ export function ModernSidebar({
       </nav>
 
       {/* Bottom Section */}
-      <div className="border-t border-sidebar-border/30 dark:border-sidebar/30 p-3 space-y-1">
+      <div className="border-t border-sidebar-border/30 dark:border-sidebar/30 p-2 space-y-0.5">
         {bottomItems.map((item) => (
           <NavLink
             key={item.href}
             to={item.href}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+              `flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                 isActive 
                   ? "bg-primary/10 text-primary" 
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
@@ -379,7 +408,7 @@ export function ModernSidebar({
             }
             title={collapsed ? item.label : undefined}
           >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
+            <item.icon className="w-4 h-4 flex-shrink-0" />
             <AnimatePresence>
               {!collapsed && (
                 <motion.span
@@ -398,10 +427,10 @@ export function ModernSidebar({
         
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full"
+          className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full"
           title={collapsed ? "Sair" : undefined}
         >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
+          <LogOut className="w-4 h-4 flex-shrink-0" />
           <AnimatePresence>
             {!collapsed && (
               <motion.span
