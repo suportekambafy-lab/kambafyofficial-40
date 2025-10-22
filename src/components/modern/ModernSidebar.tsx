@@ -321,7 +321,7 @@ export function ModernSidebar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              src={isDark ? "/kambafy-icon-dark.png" : "/kambafy-icon-collapsed.svg"}
+              src={isDark ? "/kambafy-icon-dark.png" : "/kambafy-icon-light.png"}
               alt="Kambafy"
               className="w-8 h-8"
             />
