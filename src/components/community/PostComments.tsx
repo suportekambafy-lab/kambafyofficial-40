@@ -323,77 +323,6 @@ export function PostComments({ postId, commentsCount }: PostCommentsProps) {
 
       {isOpen && (
         <div className="mt-4 space-y-4">
-          {/* Formulário de novo comentário */}
-          <Card>
-            <CardContent className="p-4 space-y-3">
-              <Textarea
-                placeholder="Escreva seu comentário..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="min-h-[80px]"
-              />
-
-              {/* Preview de arquivos */}
-              {uploadingFiles.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {uploadingFiles.map((file, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt={file.name}
-                        className="h-20 w-20 object-cover rounded border"
-                      />
-                      <button
-                        onClick={() => removeFile(index)}
-                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadProgress}
-                >
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  Anexar Imagem
-                </Button>
-
-                <Button
-                  onClick={handleSubmitComment}
-                  disabled={uploadProgress || (!newComment.trim() && uploadingFiles.length === 0)}
-                  className="ml-auto"
-                >
-                  {uploadProgress ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4 mr-2" />
-                      Comentar
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Lista de comentários */}
           {loading ? (
             <div className="text-center py-8">
@@ -482,6 +411,77 @@ export function PostComments({ postId, commentsCount }: PostCommentsProps) {
               ))}
             </div>
           )}
+
+          {/* Formulário de novo comentário */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <Textarea
+                placeholder="Escreva seu comentário..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="min-h-[80px]"
+              />
+
+              {/* Preview de arquivos */}
+              {uploadingFiles.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {uploadingFiles.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={file.name}
+                        className="h-20 w-20 object-cover rounded border"
+                      />
+                      <button
+                        onClick={() => removeFile(index)}
+                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadProgress}
+                >
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Anexar Imagem
+                </Button>
+
+                <Button
+                  onClick={handleSubmitComment}
+                  disabled={uploadProgress || (!newComment.trim() && uploadingFiles.length === 0)}
+                  className="ml-auto"
+                >
+                  {uploadProgress ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Comentar
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
