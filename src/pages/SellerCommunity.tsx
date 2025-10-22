@@ -88,6 +88,7 @@ export default function SellerCommunity() {
   const [hoveredPost, setHoveredPost] = useState<string | null>(null);
   const [savedPosts, setSavedPosts] = useState<string[]>([]);
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [previewStats, setPreviewStats] = useState({ members: 0, posts: 0, active: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [newPost, setNewPost] = useState({
@@ -95,6 +96,40 @@ export default function SellerCommunity() {
     content: "",
     category: "geral" as Category
   });
+
+  // Carregar stats mesmo sem login
+  useEffect(() => {
+    const loadPreviewStats = async () => {
+      try {
+        const { count: membersCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
+
+        const { count: postsCount } = await supabase
+          .from('community_posts')
+          .select('*', { count: 'exact', head: true });
+
+        const yesterday = new Date();
+        yesterday.setHours(yesterday.getHours() - 24);
+        const { data: recentPosts } = await supabase
+          .from('community_posts')
+          .select('user_id')
+          .gte('created_at', yesterday.toISOString());
+
+        const activeNow = new Set(recentPosts?.map(p => p.user_id) || []).size;
+
+        setPreviewStats({
+          members: membersCount || 0,
+          posts: postsCount || 0,
+          active: activeNow
+        });
+      } catch (error) {
+        console.error('Error loading preview stats:', error);
+      }
+    };
+
+    loadPreviewStats();
+  }, []);
 
   // Verificar autenticação
   if (!user) {
@@ -137,7 +172,7 @@ export default function SellerCommunity() {
             </Button>
           </motion.div>
 
-          {/* Stats sem login */}
+          {/* Stats Preview com dados reais */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -145,16 +180,16 @@ export default function SellerCommunity() {
             className="grid grid-cols-3 gap-6 mt-8"
           >
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">500+</div>
+              <div className="text-3xl font-bold text-primary">{previewStats.members > 0 ? previewStats.members : '...'}</div>
               <div className="text-sm text-muted-foreground">Membros</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">2.5k+</div>
+              <div className="text-3xl font-bold text-primary">{previewStats.posts > 0 ? previewStats.posts : '...'}</div>
               <div className="text-sm text-muted-foreground">Posts</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">50+</div>
-              <div className="text-sm text-muted-foreground">Online</div>
+              <div className="text-3xl font-bold text-primary">{previewStats.active > 0 ? previewStats.active : '...'}</div>
+              <div className="text-sm text-muted-foreground">Online Hoje</div>
             </div>
           </motion.div>
         </motion.div>
@@ -191,10 +226,17 @@ export default function SellerCommunity() {
 
   const loadCommunityStats = async () => {
     try {
+      // Número real de usuários cadastrados no Kambafy
+      const { count: membersCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Total de posts na comunidade
       const { count: postsCount } = await supabase
         .from('community_posts')
         .select('*', { count: 'exact', head: true });
 
+      // Posts criados hoje
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const { count: todayCount } = await supabase
@@ -202,11 +244,21 @@ export default function SellerCommunity() {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', today.toISOString());
 
+      // Usuários ativos (que postaram nas últimas 24h)
+      const yesterday = new Date();
+      yesterday.setHours(yesterday.getHours() - 24);
+      const { data: recentPosts } = await supabase
+        .from('community_posts')
+        .select('user_id')
+        .gte('created_at', yesterday.toISOString());
+
+      const activeNow = new Set(recentPosts?.map(p => p.user_id) || []).size;
+
       setCommunityStats({
-        totalMembers: 500 + Math.floor(Math.random() * 100),
+        totalMembers: membersCount || 0,
         totalPosts: postsCount || 0,
         todayPosts: todayCount || 0,
-        activeNow: 20 + Math.floor(Math.random() * 30)
+        activeNow: activeNow
       });
     } catch (error) {
       console.error('Error loading community stats:', error);
