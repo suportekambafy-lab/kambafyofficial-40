@@ -13,9 +13,12 @@ import {
   Plus,
   Search,
   TrendingUp,
-  Clock
+  Clock,
+  Image as ImageIcon,
+  X,
+  Loader2
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +38,7 @@ interface Post {
   views_count: number;
   created_at: string;
   user_id: string;
+  attachments?: { url: string; name: string }[];
   profiles?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -60,6 +64,9 @@ export default function SellerCommunity() {
   const [selectedCategory, setSelectedCategory] = useState<Category | "all">("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [sortBy, setSortBy] = useState<"recent" | "popular">("recent");
+  const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [newPost, setNewPost] = useState({
     title: "",
@@ -126,6 +133,7 @@ export default function SellerCommunity() {
         
         const postsWithProfiles = postsData.map(post => ({
           ...post,
+          attachments: post.attachments as { url: string; name: string }[] | undefined,
           profiles: profilesMap.get(post.user_id) || { full_name: null, avatar_url: null }
         }));
         
@@ -145,6 +153,79 @@ export default function SellerCommunity() {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isUnder5MB = file.size <= 5 * 1024 * 1024;
+      
+      if (!isImage) {
+        toast({
+          title: "Erro",
+          description: "Apenas imagens são permitidas",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      if (!isUnder5MB) {
+        toast({
+          title: "Erro",
+          description: `${file.name} excede 5MB`,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      return true;
+    });
+
+    setUploadingFiles([...uploadingFiles, ...validFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setUploadingFiles(uploadingFiles.filter((_, i) => i !== index));
+  };
+
+  const uploadFiles = async (): Promise<{ url: string; name: string }[]> => {
+    if (uploadingFiles.length === 0) return [];
+
+    const uploadedFiles: { url: string; name: string }[] = [];
+
+    for (const file of uploadingFiles) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('community-attachments')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast({
+          title: "Erro",
+          description: `Erro ao fazer upload de ${file.name}`,
+          variant: "destructive"
+        });
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('community-attachments')
+        .getPublicUrl(fileName);
+
+      uploadedFiles.push({
+        url: publicUrl,
+        name: file.name
+      });
+    }
+
+    return uploadedFiles;
+  };
+
   const handleCreatePost = async () => {
     if (!user) {
       toast({
@@ -158,20 +239,26 @@ export default function SellerCommunity() {
     if (!newPost.title || !newPost.content) {
       toast({
         title: "Erro",
-        description: "Preencha todos os campos",
+        description: "Preencha título e conteúdo",
         variant: "destructive"
       });
       return;
     }
 
     try {
+      setUploadProgress(true);
+
+      // Upload de arquivos se houver
+      const attachments = await uploadFiles();
+
       const { error } = await supabase
         .from('community_posts')
         .insert({
           user_id: user.id,
           title: newPost.title,
           content: newPost.content,
-          category: newPost.category
+          category: newPost.category,
+          attachments: attachments
         });
 
       if (error) throw error;
@@ -182,6 +269,7 @@ export default function SellerCommunity() {
       });
 
       setNewPost({ title: "", content: "", category: "geral" });
+      setUploadingFiles([]);
       setIsDialogOpen(false);
       loadPosts();
     } catch (error) {
@@ -191,6 +279,8 @@ export default function SellerCommunity() {
         description: "Erro ao criar post",
         variant: "destructive"
       });
+    } finally {
+      setUploadProgress(false);
     }
   };
 
@@ -300,13 +390,75 @@ export default function SellerCommunity() {
                 />
               </div>
 
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleCreatePost}>
-                  Publicar
-                </Button>
+              {/* Preview de arquivos */}
+              {uploadingFiles.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {uploadingFiles.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={file.name}
+                        className="h-24 w-24 object-cover rounded border"
+                      />
+                      <button
+                        onClick={() => removeFile(index)}
+                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2 justify-between">
+                <div className="flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadProgress}
+                  >
+                    <ImageIcon className="h-4 w-4 mr-2" />
+                    Anexar Imagens
+                  </Button>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      setUploadingFiles([]);
+                    }}
+                    disabled={uploadProgress}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    onClick={handleCreatePost}
+                    disabled={uploadProgress}
+                  >
+                    {uploadProgress ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Publicando...
+                      </>
+                    ) : (
+                      'Publicar'
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </DialogContent>
@@ -412,6 +564,27 @@ export default function SellerCommunity() {
                       : post.content
                     }
                   </p>
+
+                  {/* Anexos do post */}
+                  {post.attachments && post.attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {post.attachments.map((attachment, index) => (
+                        <a
+                          key={index}
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <img
+                            src={attachment.url}
+                            alt={attachment.name}
+                            className="h-40 w-auto object-cover rounded border hover:opacity-80 transition-opacity"
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                   
                   <div className="flex items-center gap-4">
                     <Button

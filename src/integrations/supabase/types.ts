@@ -656,6 +656,7 @@ export type Database = {
       }
       community_posts: {
         Row: {
+          attachments: Json | null
           category: Database["public"]["Enums"]["community_category"]
           comments_count: number | null
           content: string
@@ -668,6 +669,7 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
+          attachments?: Json | null
           category?: Database["public"]["Enums"]["community_category"]
           comments_count?: number | null
           content: string
@@ -680,6 +682,7 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
+          attachments?: Json | null
           category?: Database["public"]["Enums"]["community_category"]
           comments_count?: number | null
           content?: string
