@@ -360,7 +360,7 @@ export function ModernSidebar({
              key={item.href}
              to={item.href}
              className={({ isActive }) =>
-               `flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${
+               `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${
                  isActive 
                    ? "bg-primary/10 text-primary dark:text-white border-l-2 border-primary ml-1" 
                    : "text-sidebar-foreground/70 dark:text-white/70 hover:bg-sidebar-accent hover:text-sidebar-foreground dark:hover:text-white"
@@ -393,7 +393,7 @@ export function ModernSidebar({
             key={item.href}
             to={item.href}
             className={({ isActive }) =>
-              `flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive 
                   ? "bg-primary/10 text-primary" 
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
