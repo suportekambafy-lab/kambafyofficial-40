@@ -458,7 +458,7 @@ export function ModernDashboardHome() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
         <ModernMetricCard
           title="Vendas Realizadas"
-          value={showValues.revenue ? `${dashboardData.totalRevenue.toLocaleString('pt-BR')} KZ` : "••••••••"}
+          value={showValues.revenue ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` : "••••••••"}
           icon={<DollarSign className="w-5 h-5" />}
           trend={calculateTrend(dashboardData.totalRevenue, dashboardData.previousRevenue)}
           trendUp={dashboardData.totalRevenue >= dashboardData.previousRevenue}

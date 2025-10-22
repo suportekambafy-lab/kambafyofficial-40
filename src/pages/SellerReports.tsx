@@ -186,7 +186,7 @@ export default function SellerReports() {
         const ordersRevenue = completedOrders.reduce((sum, order) => {
           const netAmount = order.seller_commission 
             ? parseFloat(String(order.seller_commission)) 
-            : parseFloat(String(order.amount || '0')) * 0.9101;
+            : parseFloat(String(order.amount || '0')) * 0.92;
           return sum + netAmount;
         }, 0);
 
@@ -266,7 +266,7 @@ export default function SellerReports() {
           ...currentDayOrders.map(o => {
             return o.seller_commission 
               ? parseFloat(String(o.seller_commission))
-              : parseFloat(String(o.amount || '0')) * 0.9101;
+              : parseFloat(String(o.amount || '0')) * 0.92;
           }),
           ...currentDayMP.map(mp => parseFloat(String(mp.amount || '0')) * 0.92)
         ].reduce((sum, val) => sum + val, 0);
@@ -275,7 +275,7 @@ export default function SellerReports() {
           ...previousDayOrders.map(o => {
             return o.seller_commission 
               ? parseFloat(String(o.seller_commission))
-              : parseFloat(String(o.amount || '0')) * 0.9101;
+              : parseFloat(String(o.amount || '0')) * 0.92;
           }),
           ...previousDayMP.map(mp => parseFloat(String(mp.amount || '0')) * 0.92)
         ].reduce((sum, val) => sum + val, 0);

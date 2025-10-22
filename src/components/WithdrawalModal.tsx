@@ -54,7 +54,7 @@ export function WithdrawalModal({
     }
 
     if (amount > availableBalance) {
-      setError(`Valor máximo disponível: ${availableBalance.toLocaleString()} KZ`);
+      setError(`Valor máximo disponível: ${availableBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ`);
       return;
     }
 
@@ -142,7 +142,7 @@ export function WithdrawalModal({
           <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
             <p className="text-sm text-muted-foreground mb-1">Saldo Disponível</p>
             <p className="text-2xl font-bold text-primary mb-3">
-              {availableBalance.toLocaleString()} KZ
+              {availableBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
             </p>
           </div>
 
@@ -161,7 +161,7 @@ export function WithdrawalModal({
                 setWithdrawalAmount(e.target.value);
                 setError("");
               }}
-              placeholder={`Máximo: ${availableBalance.toLocaleString()} KZ`}
+              placeholder={`Máximo: ${availableBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ`}
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={loading}
             />

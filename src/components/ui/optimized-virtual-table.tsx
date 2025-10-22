@@ -49,7 +49,7 @@ const VirtualTableRow = memo(({ index, style, data }: VirtualTableRowProps) => {
           <div className="flex-1 min-w-0">
             <h3 className="font-medium truncate">{item.name}</h3>
             <p className="text-sm text-muted-foreground">
-              {item.sales} vendas • {item.price.toLocaleString('pt-BR')} KZ
+              {item.sales} vendas • {item.price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
             </p>
           </div>
         </div>

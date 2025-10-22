@@ -85,7 +85,7 @@ export const OptimizedProductCard = memo(({
               {trend === 'down' && <TrendingDown className="h-3 w-3 text-red-500" />}
             </div>
             <p className="text-sm font-medium">
-              {price.toLocaleString('pt-BR')} KZ
+              {price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
             </p>
           </div>
           <Button 

@@ -123,7 +123,7 @@ export function KambaPayCheckoutOption({
   };
 
   const formatPrice = (amount: number) => {
-    return `${parseFloat(amount.toString()).toLocaleString('pt-BR')} KZ`;
+    return `${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ`;
   };
 
   const isDisabled = disabled || loading || isProcessing;
