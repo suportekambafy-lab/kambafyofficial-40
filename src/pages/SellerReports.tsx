@@ -2,14 +2,16 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Info, TrendingUp, TrendingDown } from 'lucide-react';
+import { Info, TrendingUp, TrendingDown, Calendar, Package } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SEO } from '@/components/SEO';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface DailyData {
   date: string;
@@ -31,12 +33,81 @@ export default function SellerReports() {
   const [netRevenue, setNetRevenue] = useState<MetricData>({ current: 0, previous: 0, percentageChange: 0 });
   const [approvalRate, setApprovalRate] = useState<MetricData>({ current: 0, previous: 0, percentageChange: 0 });
   const [averageTicket, setAverageTicket] = useState<MetricData>({ current: 0, previous: 0, percentageChange: 0 });
+  const [products, setProducts] = useState<any[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<string>('all');
+  const [timePeriod, setTimePeriod] = useState<string>('30d');
 
   useEffect(() => {
     if (user) {
-      loadReportData();
+      loadProducts();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user && products.length > 0) {
+      loadReportData();
+    }
+  }, [user, selectedProduct, timePeriod, products]);
+
+  const loadProducts = async () => {
+    if (!user) return;
+
+    try {
+      const { data } = await supabase
+        .from('products')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar produtos:', error);
+    }
+  };
+
+  const getDateRange = () => {
+    const now = new Date();
+    let days = 30;
+
+    switch (timePeriod) {
+      case '7d':
+        days = 7;
+        break;
+      case '30d':
+        days = 30;
+        break;
+      case '90d':
+        days = 90;
+        break;
+      case 'month':
+        return {
+          currentStart: startOfMonth(now),
+          currentEnd: now,
+          previousStart: startOfMonth(subMonths(now, 1)),
+          previousEnd: endOfMonth(subMonths(now, 1)),
+          days: now.getDate()
+        };
+      case 'lastMonth':
+        const lastMonth = subMonths(now, 1);
+        return {
+          currentStart: startOfMonth(lastMonth),
+          currentEnd: endOfMonth(lastMonth),
+          previousStart: startOfMonth(subMonths(lastMonth, 1)),
+          previousEnd: endOfMonth(subMonths(lastMonth, 1)),
+          days: endOfMonth(lastMonth).getDate()
+        };
+      default:
+        days = 30;
+    }
+
+    return {
+      currentStart: startOfDay(subDays(now, days - 1)),
+      currentEnd: now,
+      previousStart: startOfDay(subDays(subDays(now, days - 1), days)),
+      previousEnd: startOfDay(subDays(now, days)),
+      days
+    };
+  };
 
   const loadReportData = async () => {
     if (!user) return;
@@ -44,19 +115,16 @@ export default function SellerReports() {
     try {
       setLoading(true);
 
-      // Definir períodos: últimos 30 dias (período atual) e 30 dias anteriores (período anterior)
-      const currentEndDate = new Date();
-      const currentStartDate = startOfDay(subDays(currentEndDate, 29));
-      const previousEndDate = startOfDay(subDays(currentStartDate, 1));
-      const previousStartDate = startOfDay(subDays(previousEndDate, 29));
+      const dateRange = getDateRange();
+      const { currentStart, currentEnd, previousStart, previousEnd, days } = dateRange;
 
-      // Buscar produtos do usuário
-      const { data: products } = await supabase
-        .from('products')
-        .select('id')
-        .eq('user_id', user.id);
-
-      const productIds = products?.map(p => p.id) || [];
+      // Filtrar produtos
+      let productIds: string[];
+      if (selectedProduct === 'all') {
+        productIds = products.map(p => p.id);
+      } else {
+        productIds = [selectedProduct];
+      }
 
       if (productIds.length === 0) {
         setLoading(false);
@@ -68,16 +136,16 @@ export default function SellerReports() {
         .from('orders')
         .select('*')
         .in('product_id', productIds)
-        .gte('created_at', currentStartDate.toISOString())
-        .lte('created_at', currentEndDate.toISOString());
+        .gte('created_at', currentStart.toISOString())
+        .lte('created_at', currentEnd.toISOString());
 
       // Buscar pedidos do período anterior
       const { data: previousOrders } = await supabase
         .from('orders')
         .select('*')
         .in('product_id', productIds)
-        .gte('created_at', previousStartDate.toISOString())
-        .lte('created_at', previousEndDate.toISOString());
+        .gte('created_at', previousStart.toISOString())
+        .lte('created_at', previousEnd.toISOString());
 
       // Buscar member_areas e module_payments
       const { data: memberAreas } = await supabase
@@ -95,15 +163,15 @@ export default function SellerReports() {
           .from('module_payments')
           .select('*')
           .in('member_area_id', memberAreaIds)
-          .gte('created_at', currentStartDate.toISOString())
-          .lte('created_at', currentEndDate.toISOString());
+          .gte('created_at', currentStart.toISOString())
+          .lte('created_at', currentEnd.toISOString());
 
         const { data: previousMP } = await supabase
           .from('module_payments')
           .select('*')
           .in('member_area_id', memberAreaIds)
-          .gte('created_at', previousStartDate.toISOString())
-          .lte('created_at', previousEndDate.toISOString());
+          .gte('created_at', previousStart.toISOString())
+          .lte('created_at', previousEnd.toISOString());
 
         currentModulePayments = currentMP || [];
         previousModulePayments = previousMP || [];
@@ -165,12 +233,12 @@ export default function SellerReports() {
         percentageChange: calculateChange(current.avgTicket, previous.avgTicket)
       });
 
-      // Preparar dados do gráfico (últimos 30 dias)
+      // Preparar dados do gráfico
       const dailyData: DailyData[] = [];
       
-      for (let i = 29; i >= 0; i--) {
-        const currentDate = subDays(currentEndDate, i);
-        const previousDate = subDays(currentDate, 30);
+      for (let i = days - 1; i >= 0; i--) {
+        const currentDate = subDays(currentEnd, i);
+        const previousDate = subDays(currentDate, days);
         
         const currentDayOrders = currentOrders?.filter(o => {
           const orderDate = new Date(o.created_at);
@@ -310,11 +378,45 @@ export default function SellerReports() {
         description="Analise suas métricas de vendas e desempenho"
       />
       
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Relatórios</h1>
-        <p className="text-muted-foreground">
-          Análise detalhada do seu desempenho nos últimos 30 dias
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Relatórios</h1>
+          <p className="text-muted-foreground">
+            Análise detalhada do seu desempenho
+          </p>
+        </div>
+
+        {/* Filtros */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Select value={timePeriod} onValueChange={setTimePeriod}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <Calendar className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Últimos 7 dias</SelectItem>
+              <SelectItem value="30d">Últimos 30 dias</SelectItem>
+              <SelectItem value="90d">Últimos 90 dias</SelectItem>
+              <SelectItem value="month">Este mês</SelectItem>
+              <SelectItem value="lastMonth">Mês passado</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <Package className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Produto" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os produtos</SelectItem>
+              {products.map((product) => (
+                <SelectItem key={product.id} value={product.id}>
+                  {product.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Métricas principais */}
@@ -346,7 +448,7 @@ export default function SellerReports() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            Receita líquida - Últimos 30 dias
+            Receita líquida - Evolução diária
             <Info className="h-4 w-4 text-muted-foreground" />
           </CardTitle>
         </CardHeader>
