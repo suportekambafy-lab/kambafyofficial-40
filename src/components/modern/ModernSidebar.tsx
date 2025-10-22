@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -27,45 +27,6 @@ import {
   Coins
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-// Sidebar Context
-interface SidebarContextType {
-  open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  animate: boolean;
-}
-
-const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
-
-const useSidebarInternal = () => {
-  const context = useContext(SidebarContext);
-  if (!context) {
-    throw new Error("useSidebarInternal must be used within a SidebarProvider");
-  }
-  return context;
-};
-
-const SidebarProvider = ({
-  children,
-  open: openProp,
-  setOpen: setOpenProp,
-  animate = true,
-}: {
-  children: React.ReactNode;
-  open?: boolean;
-  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
-  animate?: boolean;
-}) => {
-  const [openState, setOpenState] = useState(false);
-  const open = openProp !== undefined ? openProp : openState;
-  const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
-
-  return (
-    <SidebarContext.Provider value={{ open, setOpen, animate }}>
-      {children}
-    </SidebarContext.Provider>
-  );
-};
 
 const menuItems = [
   { label: "Dashboard", href: "/vendedor", icon: <LayoutDashboard className="h-5 w-5 flex-shrink-0" /> },
@@ -94,41 +55,6 @@ interface ModernSidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
 }
-
-const SidebarLink = ({
-  link,
-  onClick,
-}: {
-  link: { label: string; href: string; icon: React.ReactNode };
-  onClick?: () => void;
-}) => {
-  const { open, animate } = useSidebarInternal();
-  return (
-    <NavLink
-      to={link.href}
-      onClick={onClick}
-      className={({ isActive }) =>
-        cn(
-          "flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 text-sm",
-          isActive
-            ? "bg-primary/10 text-primary dark:text-primary"
-            : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white"
-        )
-      }
-    >
-      {link.icon}
-      <motion.span
-        animate={{
-          display: animate ? (open ? "inline-block" : "none") : "inline-block",
-          opacity: animate ? (open ? 1 : 0) : 1,
-        }}
-        className="text-sm whitespace-pre"
-      >
-        {link.label}
-      </motion.span>
-    </NavLink>
-  );
-};
 
 export function ModernSidebar({ 
   collapsed, 
@@ -370,106 +296,121 @@ export function ModernSidebar({
   }
 
   // Desktop Sidebar
-  const [sidebarOpen, setSidebarOpen] = useState(!collapsed);
-
   return (
-    <SidebarProvider open={sidebarOpen} setOpen={setSidebarOpen} animate={true}>
-      <motion.div
-        className="fixed left-0 top-0 h-screen bg-neutral-100 dark:bg-neutral-900 border-r border-border flex flex-col z-50 shadow-lg"
-        animate={{
-          width: sidebarOpen ? "300px" : "60px",
-        }}
-        onMouseEnter={() => setSidebarOpen(true)}
-        onMouseLeave={() => setSidebarOpen(false)}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-      >
-        {/* Header */}
-        <div className="h-16 flex items-center justify-center px-4 border-b border-border">
-          <AnimatePresence mode="wait">
-            {sidebarOpen ? (
-              <motion.img
-                key="logo-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
-                alt="Kambafy"
-                className="h-16 w-auto"
-              />
-            ) : (
-              <motion.img
-                key="logo-icon"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                src="/kambafy-icon-collapsed.svg"
-                alt="K"
-                className="w-8 h-8 dark:brightness-0 dark:invert"
-              />
-            )}
-          </AnimatePresence>
-        </div>
+    <div
+      className="h-screen bg-neutral-100 dark:bg-neutral-900 border-r border-border flex flex-col shadow-sm transition-all duration-300"
+      style={{ width: collapsed ? '60px' : '300px' }}
+    >
+      {/* Header */}
+      <div className="h-16 flex items-center justify-center px-4 border-b border-border">
+        <AnimatePresence mode="wait">
+          {!collapsed ? (
+            <motion.img
+              key="logo-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
+              alt="Kambafy"
+              className="h-16 w-auto"
+            />
+          ) : (
+            <motion.img
+              key="logo-icon"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              src="/kambafy-icon-collapsed.svg"
+              alt="K"
+              className="w-8 h-8 dark:brightness-0 dark:invert"
+            />
+          )}
+        </AnimatePresence>
+      </div>
 
-        {/* Progress bar */}
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="px-4 py-3 border-b border-border"
-          >
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
-                <span>{progressPercent.toFixed(0)}%</span>
-              </div>
-              <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-500" 
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
+      {/* Progress bar */}
+      {!collapsed && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.2 }}
+          className="px-4 py-3 border-b border-border"
+        >
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
+              <span>{progressPercent.toFixed(0)}%</span>
             </div>
-          </motion.div>
-        )}
+            <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-500" 
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+        </motion.div>
+      )}
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-3 space-y-1">
-          {menuItems.map((item) => (
-            <SidebarLink key={item.href} link={item} />
-          ))}
-        </nav>
-
-        {/* Bottom Section */}
-        <div className="border-t border-border px-3 py-3 space-y-1">
-          {bottomItems.map((item) => (
-            <SidebarLink key={item.href} link={item} />
-          ))}
-          
-          <button
-            onClick={handleSignOut}
-            className={cn(
-              "flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full",
-              !sidebarOpen && "justify-center"
-            )}
-            title={!sidebarOpen ? "Sair" : undefined}
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-3 space-y-1">
+        {menuItems.map((item) => (
+          <NavLink
+            key={item.href}
+            to={item.href}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 text-sm",
+                collapsed && "justify-center",
+                isActive
+                  ? "bg-primary/10 text-primary dark:text-primary"
+                  : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white"
+              )
+            }
+            title={collapsed ? item.label : undefined}
           >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            <motion.span
-              animate={{
-                display: sidebarOpen ? "inline-block" : "none",
-                opacity: sidebarOpen ? 1 : 0,
-              }}
-              className="text-sm whitespace-pre"
-            >
-              Sair
-            </motion.span>
-          </button>
-        </div>
-      </motion.div>
-    </SidebarProvider>
+            {item.icon}
+            {!collapsed && <span className="text-sm whitespace-pre">{item.label}</span>}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Bottom Section */}
+      <div className="border-t border-border px-3 py-3 space-y-1">
+        {bottomItems.map((item) => (
+          <NavLink
+            key={item.href}
+            to={item.href}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 text-sm",
+                collapsed && "justify-center",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800"
+              )
+            }
+            title={collapsed ? item.label : undefined}
+          >
+            {item.icon}
+            {!collapsed && <span className="text-sm whitespace-pre">{item.label}</span>}
+          </NavLink>
+        ))}
+        
+        <button
+          onClick={handleSignOut}
+          className={cn(
+            "flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-sm",
+            collapsed && "justify-center"
+          )}
+          title={collapsed ? "Sair" : undefined}
+        >
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          {!collapsed && <span className="text-sm whitespace-pre">Sair</span>}
+        </button>
+      </div>
+    </div>
   );
 }
