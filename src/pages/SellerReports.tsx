@@ -136,6 +136,7 @@ export default function SellerReports() {
         .from('orders')
         .select('*')
         .in('product_id', productIds)
+        .eq('status', 'completed')
         .gte('created_at', currentStart.toISOString())
         .lte('created_at', currentEnd.toISOString());
 
@@ -144,6 +145,7 @@ export default function SellerReports() {
         .from('orders')
         .select('*')
         .in('product_id', productIds)
+        .eq('status', 'completed')
         .gte('created_at', previousStart.toISOString())
         .lte('created_at', previousEnd.toISOString());
 
@@ -176,6 +178,19 @@ export default function SellerReports() {
         currentModulePayments = currentMP || [];
         previousModulePayments = previousMP || [];
       }
+
+      console.log('📊 RELATÓRIO DEBUG:', {
+        timePeriod,
+        days,
+        currentStart: currentStart.toISOString(),
+        currentEnd: currentEnd.toISOString(),
+        previousStart: previousStart.toISOString(),
+        previousEnd: previousEnd.toISOString(),
+        currentOrdersCount: currentOrders?.length || 0,
+        previousOrdersCount: previousOrders?.length || 0,
+        currentModulePaymentsCount: currentModulePayments?.length || 0,
+        previousModulePaymentsCount: previousModulePayments?.length || 0
+      });
 
       // Calcular métricas
       const calculateMetrics = (orders: any[], modulePayments: any[]) => {
