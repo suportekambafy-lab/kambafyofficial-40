@@ -41,37 +41,22 @@ const OptimizedSellerDashboard = memo(() => {
     );
   }
 
-  // ✅ UNIFICADO: Estatísticas calculadas SEM conversão de moeda
+  // ✅ UNIFICADO: Estatísticas calculadas incluindo orders E module_payments
   // Todos os valores são mantidos em suas moedas originais do banco de dados
-  // Isso garante consistência entre Dashboard, Vendas e Financeiro
+  // Isso garante consistência entre Dashboard, Vendas, Financeiro e Relatórios
   // ⚡ IMPORTANTE: Conta order bumps separadamente usando countOrderItems()
   const stats = {
     totalSales: sellerData?.orders?.reduce((sum: number, order: any) => {
+      if (order.isModulePayment) return sum + 1; // Module payments contam como 1 venda
       return sum + countOrderItems(order); // ✅ Conta produto principal + order bumps
     }, 0) || 0,
     totalRevenue: sellerData?.orders?.reduce((sum: number, order: any) => {
-      // ✅ Usar seller_commission se disponível, senão descontar 8% do amount
-      let amount = parseFloat(order.seller_commission?.toString() || '0');
-      if (amount === 0) {
-        const grossAmount = parseFloat(order.amount || '0');
-        amount = grossAmount * 0.92; // Descontar 8% da plataforma
-      }
-      return sum + amount;
+      // ✅ Usar netAmount já calculado no hook (inclui orders e module_payments)
+      return sum + (order.netAmount || 0);
     }, 0) || 0,
     totalProducts: sellerData?.products?.length || 0,
-    totalCustomers: new Set(sellerData?.orders?.map((order: any) => order.customer_email))?.size || 0
+    totalCustomers: new Set(sellerData?.orders?.filter((o: any) => !o.isModulePayment).map((order: any) => order.customer_email))?.size || 0
   };
-
-  console.log('📊 DASHBOARD STATS DEBUG:', {
-    totalSales: stats.totalSales,
-    ordersLength: sellerData?.orders?.length,
-    ordersWithDetails: sellerData?.orders?.map((o: any) => ({
-      id: o.id,
-      items: countOrderItems(o),
-      hasBump: !!o.order_bump_data
-    })),
-    note: 'Dashboard conta order bumps separadamente (igual Sales)'
-  });
 
   return (
     <div className="space-y-6 p-6">
@@ -138,19 +123,12 @@ const OptimizedSellerDashboard = memo(() => {
       {/* Tabela virtual de vendas otimizada */}
       <AnimatedWrapper delay={300}>
         <OptimizedVirtualTable
-          items={sellerData?.orders?.map((order: any) => {
-            // ✅ Calcular valor líquido do vendedor (já descontado 8%)
-            let amount = parseFloat(order.seller_commission?.toString() || '0');
-            if (amount === 0) {
-              const grossAmount = parseFloat(order.amount || '0');
-              amount = grossAmount * 0.92; // Descontar 8% da plataforma
-            }
-            
+          items={sellerData?.orders?.filter((o: any) => !o.isModulePayment).map((order: any) => {
             return {
               id: order.id,
               name: `Pedido #${order.id.slice(0, 8)}`,
               sales: 1,
-              price: amount,
+              price: order.netAmount || 0,
               status: order.status === 'completed' ? 'Concluído' : 'Pendente',
               created_at: order.created_at
             };
