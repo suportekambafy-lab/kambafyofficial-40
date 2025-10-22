@@ -16,7 +16,8 @@ import {
   Clock,
   Image as ImageIcon,
   X,
-  Loader2
+  Loader2,
+  Trash2
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -345,6 +346,34 @@ export default function SellerCommunity() {
     }
   };
 
+  const handleDeletePost = async (postId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('community_posts')
+        .delete()
+        .eq('id', postId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Post deletado",
+        description: "Seu post foi removido com sucesso"
+      });
+
+      loadPosts();
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao deletar post",
+        variant: "destructive"
+      });
+    }
+  };
+
   const filteredPosts = posts.filter(post => 
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     post.content.toLowerCase().includes(searchQuery.toLowerCase())
@@ -627,6 +656,18 @@ export default function SellerCommunity() {
                       <Eye className="h-4 w-4" />
                       {post.views_count}
                     </div>
+
+                    {user && user.id === post.user_id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeletePost(post.id)}
+                        className="gap-2 text-destructive hover:text-destructive ml-auto"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Deletar
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
