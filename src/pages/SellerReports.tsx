@@ -182,14 +182,16 @@ export default function SellerReports() {
         const completedOrders = orders?.filter(o => o.status === 'completed') || [];
         const completedMP = modulePayments?.filter(mp => mp.status === 'completed') || [];
         
-        // Receita líquida (com taxa de 8.99% descontada)
+        // Receita líquida - usar seller_commission quando disponível (já é líquido)
         const ordersRevenue = completedOrders.reduce((sum, order) => {
-          const amount = parseFloat(order.seller_commission || order.amount || '0');
-          return sum + (amount * 0.9101); // Aplica taxa se não tiver seller_commission
+          const netAmount = order.seller_commission 
+            ? parseFloat(String(order.seller_commission)) 
+            : parseFloat(String(order.amount || '0')) * 0.9101;
+          return sum + netAmount;
         }, 0);
 
         const mpRevenue = completedMP.reduce((sum, mp) => {
-          const amount = parseFloat(mp.amount || '0');
+          const amount = parseFloat(String(mp.amount || '0'));
           return sum + (amount * 0.92); // Taxa de 8% para módulos
         }, 0);
 
@@ -261,12 +263,20 @@ export default function SellerReports() {
         }) || [];
 
         const currentDayRevenue = [
-          ...currentDayOrders.map(o => parseFloat(String(o.seller_commission || o.amount || '0')) * 0.9101),
+          ...currentDayOrders.map(o => {
+            return o.seller_commission 
+              ? parseFloat(String(o.seller_commission))
+              : parseFloat(String(o.amount || '0')) * 0.9101;
+          }),
           ...currentDayMP.map(mp => parseFloat(String(mp.amount || '0')) * 0.92)
         ].reduce((sum, val) => sum + val, 0);
 
         const previousDayRevenue = [
-          ...previousDayOrders.map(o => parseFloat(String(o.seller_commission || o.amount || '0')) * 0.9101),
+          ...previousDayOrders.map(o => {
+            return o.seller_commission 
+              ? parseFloat(String(o.seller_commission))
+              : parseFloat(String(o.amount || '0')) * 0.9101;
+          }),
           ...previousDayMP.map(mp => parseFloat(String(mp.amount || '0')) * 0.92)
         ].reduce((sum, val) => sum + val, 0);
 
