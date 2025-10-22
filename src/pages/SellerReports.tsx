@@ -447,48 +447,86 @@ export default function SellerReports() {
       {/* Gráfico de evolução */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            Receita líquida - Evolução diária
-            <Info className="h-4 w-4 text-muted-foreground" />
-          </CardTitle>
+          <div className="space-y-2">
+            <CardTitle className="flex items-center gap-2 text-lg font-medium text-muted-foreground">
+              Receita líquida
+              <Info className="h-4 w-4 text-muted-foreground" />
+            </CardTitle>
+            <div className="text-4xl font-bold">
+              {formatPriceForSeller(netRevenue.current, 'KZ')}
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className={`flex items-center gap-1 font-medium ${netRevenue.percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {netRevenue.percentageChange >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                {Math.abs(netRevenue.percentageChange).toFixed(2)}%
+              </span>
+              <span className="text-muted-foreground">
+                vs. {formatPriceForSeller(netRevenue.previous, 'KZ')} no período anterior
+              </span>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[400px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" vertical={false} />
                 <XAxis 
                   dataKey="displayDate" 
                   className="text-xs"
                   tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <YAxis 
                   className="text-xs"
                   tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                  axisLine={false}
+                  tickLine={false}
                 />
-                <ChartTooltip 
-                  content={<ChartTooltipContent />}
-                  formatter={(value: any) => [`${formatPriceForSeller(value, 'KZ')}`, '']}
-                />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="currentPeriod" 
-                  stroke="hsl(var(--chart-1))"
-                  strokeWidth={3}
-                  dot={{ fill: 'hsl(var(--chart-1))', r: 4 }}
-                  activeDot={{ r: 6 }}
-                  name="Período atual"
+                <Tooltip 
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+                          <p className="text-sm font-medium mb-2">{label}</p>
+                          {payload.map((entry: any, index: number) => (
+                            <div key={index} className="flex items-center gap-2 text-sm">
+                              <div 
+                                className="w-3 h-3 rounded-sm" 
+                                style={{ backgroundColor: entry.color }}
+                              />
+                              <span className="text-muted-foreground">{entry.name}:</span>
+                              <span className="font-medium">
+                                {formatPriceForSeller(entry.value, 'KZ')}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="previousPeriod" 
-                  stroke="hsl(var(--chart-2))"
+                  stroke="hsl(var(--muted-foreground))"
                   strokeWidth={2}
-                  dot={{ fill: 'hsl(var(--chart-2))', r: 3 }}
-                  strokeDasharray="5 5"
+                  dot={{ fill: 'hsl(var(--muted-foreground))', r: 3 }}
+                  activeDot={{ r: 5 }}
                   name="Período anterior"
+                  opacity={0.4}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="currentPeriod" 
+                  stroke="#84cc16"
+                  strokeWidth={3}
+                  dot={{ fill: '#84cc16', r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Período atual"
                 />
               </LineChart>
             </ResponsiveContainer>
