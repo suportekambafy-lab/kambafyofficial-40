@@ -87,12 +87,7 @@ function SellerDashboardContent() {
           />
           
           {/* Main content container */}
-          <div 
-            className={`
-              flex-1 flex flex-col
-              ${isMobile ? 'ml-0' : (collapsed ? 'ml-20' : 'ml-80')}
-            `}
-          >
+          <div className="flex-1 flex flex-col">
             {/* Top bar */}
             <ModernTopBar 
               sidebarCollapsed={collapsed} 

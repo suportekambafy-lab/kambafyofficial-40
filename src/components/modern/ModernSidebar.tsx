@@ -109,10 +109,10 @@ const SidebarLink = ({
       onClick={onClick}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200",
+          "flex items-center gap-3 py-2 px-3 rounded-lg transition-all duration-200 text-sm",
           isActive
             ? "bg-primary/10 text-primary dark:text-primary"
-            : "text-sidebar-foreground/70 dark:text-neutral-200 hover:bg-sidebar-accent hover:text-sidebar-foreground dark:hover:text-white"
+            : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white"
         )
       }
     >
@@ -312,7 +312,7 @@ export function ModernSidebar({
               </div>
 
               {/* Navigation */}
-              <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+              <nav className="flex-1 px-4 py-4 space-y-1">
                 {menuItems.map((item) => (
                   <NavLink
                     key={item.href}
@@ -375,7 +375,7 @@ export function ModernSidebar({
   return (
     <SidebarProvider open={sidebarOpen} setOpen={setSidebarOpen} animate={true}>
       <motion.div
-        className="fixed left-0 top-0 h-screen bg-neutral-100 dark:bg-neutral-900 border-r border-border flex flex-col z-50 shadow-sm"
+        className="fixed left-0 top-0 h-screen bg-neutral-100 dark:bg-neutral-900 border-r border-border flex flex-col z-50 shadow-lg"
         animate={{
           width: sidebarOpen ? "300px" : "60px",
         }}
@@ -437,14 +437,14 @@ export function ModernSidebar({
         )}
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-3 space-y-1">
           {menuItems.map((item) => (
             <SidebarLink key={item.href} link={item} />
           ))}
         </nav>
 
         {/* Bottom Section */}
-        <div className="border-t border-border px-4 py-3 space-y-1">
+        <div className="border-t border-border px-3 py-3 space-y-1">
           {bottomItems.map((item) => (
             <SidebarLink key={item.href} link={item} />
           ))}
