@@ -338,15 +338,15 @@ export function ModernSidebar({
         className={`border-b border-sidebar-border/30 dark:border-sidebar/30 ${collapsed ? 'px-2 py-2' : 'px-4 py-2'}`}
       >
         {collapsed ? (
-          // Versão compacta vertical quando fechado
+          // Versão compacta horizontal quando fechado
           <div className="flex flex-col items-center gap-1" title={`${formatCurrency(dashboardData.totalRevenue)} / ${formatCurrency(nextGoal)} KZ - ${progressPercent.toFixed(0)}%`}>
-            <div className="w-1 h-16 bg-sidebar-accent rounded-full flex flex-col-reverse">
+            <div className="w-full h-1.5 bg-sidebar-accent rounded-full">
               <div 
-                className="w-full bg-gradient-to-t from-yellow-400 to-yellow-500 rounded-full transition-all duration-500" 
-                style={{ height: `${progressPercent}%` }}
+                className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500" 
+                style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <span className="text-[10px] text-sidebar-foreground/60">{progressPercent.toFixed(0)}%</span>
+            <span className="text-[10px] text-sidebar-foreground/60 text-center">{progressPercent.toFixed(0)}%</span>
           </div>
         ) : (
           // Versão completa quando aberto
