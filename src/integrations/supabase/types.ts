@@ -574,6 +574,122 @@ export type Database = {
           },
         ]
       }
+      community_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          likes_count: number | null
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number | null
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number | null
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_likes: {
+        Row: {
+          comment_id: string | null
+          created_at: string
+          id: string
+          post_id: string | null
+          user_id: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          post_id?: string | null
+          user_id: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          post_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_posts: {
+        Row: {
+          category: Database["public"]["Enums"]["community_category"]
+          comments_count: number | null
+          content: string
+          created_at: string
+          id: string
+          likes_count: number | null
+          title: string
+          updated_at: string
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["community_category"]
+          comments_count?: number | null
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["community_category"]
+          comments_count?: number | null
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       customer_access: {
         Row: {
           access_expires_at: string | null
@@ -2865,10 +2981,7 @@ export type Database = {
         }
         Returns: undefined
       }
-      admin_recalculate_all_seller_balances: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      admin_recalculate_all_seller_balances: { Args: never; Returns: Json }
       admin_recalculate_seller_balance: {
         Args: {
           delete_old_credit_transactions?: boolean
@@ -2914,24 +3027,25 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_impersonation_sessions: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: undefined
       }
-      cleanup_expired_member_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_passwordless_users: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      count_duplicate_withdrawals: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      create_admin_user: {
-        Args:
-          | {
+      cleanup_expired_member_sessions: { Args: never; Returns: undefined }
+      cleanup_passwordless_users: { Args: never; Returns: undefined }
+      count_duplicate_withdrawals: { Args: never; Returns: number }
+      create_admin_user:
+        | {
+            Args: {
+              p_email: string
+              p_full_name: string
+              p_password: string
+              p_permissions?: string[]
+              p_role?: Database["public"]["Enums"]["admin_role"]
+            }
+            Returns: string
+          }
+        | {
+            Args: {
               p_admin_email?: string
               p_email: string
               p_full_name: string
@@ -2939,15 +3053,8 @@ export type Database = {
               p_permissions?: string[]
               p_role: Database["public"]["Enums"]["admin_role"]
             }
-          | {
-              p_email: string
-              p_full_name: string
-              p_password: string
-              p_permissions?: string[]
-              p_role?: Database["public"]["Enums"]["admin_role"]
-            }
-        Returns: string
-      }
+            Returns: string
+          }
       create_customer_access_manual: {
         Args: {
           p_access_expires_at?: string
@@ -2981,16 +3088,10 @@ export type Database = {
         }
         Returns: string
       }
-      fix_bunny_cdn_urls: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      generate_api_key: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      fix_bunny_cdn_urls: { Args: never; Returns: undefined }
+      generate_api_key: { Args: never; Returns: string }
       get_admin_dashboard_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           pending_withdrawals: number
           total_paid_out: number
@@ -3007,7 +3108,7 @@ export type Database = {
         }[]
       }
       get_all_identity_verifications_for_admin: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           birth_date: string
           created_at: string
@@ -3026,7 +3127,7 @@ export type Database = {
         }[]
       }
       get_all_withdrawal_requests_for_admin: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           admin_notes: string
           admin_processed_by: string
@@ -3038,10 +3139,7 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_current_user_email: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_email: { Args: never; Returns: string }
       get_lessons_for_student: {
         Args: { p_member_area_id: string; p_student_email: string }
         Returns: {
@@ -3094,7 +3192,7 @@ export type Database = {
         }[]
       }
       get_pending_transfers_for_admin: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           amount: string
           created_at: string
@@ -3110,12 +3208,9 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_seller_stats: {
-        Args: { seller_id: string }
-        Returns: Json
-      }
+      get_seller_stats: { Args: { seller_id: string }; Returns: Json }
       get_top_sellers_of_month: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avatar_url: string
           full_name: string
@@ -3123,22 +3218,10 @@ export type Database = {
           total_sales: number
         }[]
       }
-      is_admin_session: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_admin_user: {
-        Args: { user_email: string }
-        Returns: boolean
-      }
-      is_current_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: { user_email: string }
-        Returns: boolean
-      }
+      is_admin_session: { Args: never; Returns: boolean }
+      is_admin_user: { Args: { user_email: string }; Returns: boolean }
+      is_current_user_admin: { Args: never; Returns: boolean }
+      is_super_admin: { Args: { user_email: string }; Returns: boolean }
       is_suspicious_ip: {
         Args: { _ip_address: string; _user_id: string }
         Returns: boolean
@@ -3171,18 +3254,8 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
-      remove_duplicate_withdrawals: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      unaccent: {
-        Args: { "": string }
-        Returns: string
-      }
-      unaccent_init: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
+      remove_duplicate_withdrawals: { Args: never; Returns: number }
+      unaccent: { Args: { "": string }; Returns: string }
       update_admin_permissions: {
         Args: {
           p_admin_email?: string
@@ -3202,6 +3275,14 @@ export type Database = {
     }
     Enums: {
       admin_role: "super_admin" | "admin" | "support" | "moderator"
+      community_category:
+        | "duvidas"
+        | "dicas"
+        | "novidades"
+        | "produtos"
+        | "marketing"
+        | "tecnologia"
+        | "geral"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3330,6 +3411,15 @@ export const Constants = {
   public: {
     Enums: {
       admin_role: ["super_admin", "admin", "support", "moderator"],
+      community_category: [
+        "duvidas",
+        "dicas",
+        "novidades",
+        "produtos",
+        "marketing",
+        "tecnologia",
+        "geral",
+      ],
     },
   },
 } as const

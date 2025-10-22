@@ -195,12 +195,15 @@ export default function SellerHelp() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow">
+        <Card 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => window.location.href = '/vendedor/comunidade'}
+        >
           <CardContent className="p-6 text-center">
-            <Users className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
+            <Users className="h-8 w-8 mx-auto mb-3 text-primary" />
             <h3 className="font-semibold mb-2">Comunidade</h3>
             <p className="text-sm text-muted-foreground mb-3">Conecte-se com outros criadores</p>
-            <Badge variant="secondary">Em Breve</Badge>
+            <Badge className="bg-purple-500 hover:bg-purple-600">Disponível</Badge>
           </CardContent>
         </Card>
       </div>
