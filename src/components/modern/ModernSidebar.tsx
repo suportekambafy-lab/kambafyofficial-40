@@ -294,10 +294,12 @@ export function ModernSidebar({
         width: collapsed ? 80 : 320
       }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
+      onMouseEnter={() => !isMobile && onToggle && collapsed && onToggle()}
+      onMouseLeave={() => !isMobile && onToggle && !collapsed && onToggle()}
       className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-sm"
     >
       {/* Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
+      <div className="h-16 flex items-center justify-center px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
         <AnimatePresence mode="wait">
           {!collapsed ? (
             <motion.div
@@ -321,19 +323,10 @@ export function ModernSidebar({
               transition={{ duration: 0.2 }}
               src="/kambafy-icon-collapsed.svg"
               alt="Kambafy"
-              className="w-8 h-8 mx-auto dark:brightness-0 dark:invert"
+              className="w-8 h-8 dark:brightness-0 dark:invert"
             />
           )}
         </AnimatePresence>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggle}
-          className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-        >
-          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </Button>
       </div>
 
       {/* Progress bar above navigation */}
