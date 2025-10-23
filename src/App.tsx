@@ -173,17 +173,21 @@ const App = () => {
                         <Route path="/contato" element={<OptimizedRoutes.Contact />} />
                        <Route path="/denuncie" element={<OptimizedRoutes.Report />} />
                        <Route path="/status" element={<OptimizedRoutes.Status />} />
-                        <Route path="/marketplace" element={<OptimizedRoutes.MarketplacePage />} />
-                        <Route path="/ranking" element={<OptimizedRoutes.RankingPage />} />
-                       <Route path="/privacidade" element={<OptimizedRoutes.Privacy />} />
-                      <Route path="/termos" element={<OptimizedRoutes.Terms />} />
-                      <Route path="/cookies" element={<OptimizedRoutes.Cookies />} />
-                      <Route path="/apps/*" element={<OptimizedRoutes.Apps />} />
-                        <Route path="/vendedor/*" element={<OptimizedRoutes.SellerDashboard />} />
-                         <Route path="/meus-afiliados" element={<OptimizedRoutes.MeusAfiliados />} />
-                         <Route path="/minhas-compras" element={<OptimizedRoutes.MeusAcessos />} />
-                         <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
-                         <Route path="/vimeo-settings" element={<OptimizedRoutes.VimeoSettings />} />
+                         <Route path="/marketplace" element={<OptimizedRoutes.MarketplacePage />} />
+                         <Route path="/ranking" element={<OptimizedRoutes.RankingPage />} />
+                        <Route path="/privacidade" element={<OptimizedRoutes.Privacy />} />
+                       <Route path="/termos" element={<OptimizedRoutes.Terms />} />
+                       <Route path="/cookies" element={<OptimizedRoutes.Cookies />} />
+                       <Route path="/apps/*" element={<OptimizedRoutes.Apps />} />
+                         <Route path="/vendedor/*" element={<OptimizedRoutes.SellerDashboard />} />
+                          <Route path="/meus-afiliados" element={<OptimizedRoutes.MeusAfiliados />} />
+                          <Route path="/minhas-compras" element={<OptimizedRoutes.MeusAcessos />} />
+                          <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
+                          <Route path="/vimeo-settings" element={<OptimizedRoutes.VimeoSettings />} />
+                          
+                          {/* Refund Routes */}
+                          <Route path="/cliente/compras" element={<OptimizedRoutes.MyPurchases />} />
+                          <Route path="/vendedor/reembolsos" element={<OptimizedRoutes.SellerRefunds />} />
                          
                          {/* Member Area Routes - ÁREAS ESPECÍFICAS DE CADA VENDEDOR */}
                             

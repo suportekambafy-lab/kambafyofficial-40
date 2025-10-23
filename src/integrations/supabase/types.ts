@@ -3098,6 +3098,15 @@ export type Database = {
         Args: { admin_email: string; required_permission: string }
         Returns: boolean
       }
+      admin_process_refund: {
+        Args: {
+          p_action: string
+          p_admin_email: string
+          p_comment?: string
+          p_refund_id: string
+        }
+        Returns: Json
+      }
       admin_process_transfer_request: {
         Args: { p_action: string; p_transfer_id: string }
         Returns: Json
@@ -3390,6 +3399,10 @@ export type Database = {
         Returns: undefined
       }
       remove_duplicate_withdrawals: { Args: never; Returns: number }
+      seller_process_refund: {
+        Args: { p_action: string; p_comment?: string; p_refund_id: string }
+        Returns: Json
+      }
       unaccent: { Args: { "": string }; Returns: string }
       update_admin_permissions: {
         Args: {
