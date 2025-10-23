@@ -1806,6 +1806,7 @@ export type Database = {
           customer_name: string
           customer_phone: string | null
           expires_at: string | null
+          has_active_refund: boolean | null
           id: string
           impersonation_session_id: string | null
           order_bump_data: Json | null
@@ -1813,6 +1814,7 @@ export type Database = {
           payment_method: string | null
           payment_proof_data: Json | null
           product_id: string
+          refund_deadline: string | null
           seller_commission: number | null
           status: string | null
           stripe_payment_intent_id: string | null
@@ -1834,6 +1836,7 @@ export type Database = {
           customer_name: string
           customer_phone?: string | null
           expires_at?: string | null
+          has_active_refund?: boolean | null
           id?: string
           impersonation_session_id?: string | null
           order_bump_data?: Json | null
@@ -1841,6 +1844,7 @@ export type Database = {
           payment_method?: string | null
           payment_proof_data?: Json | null
           product_id: string
+          refund_deadline?: string | null
           seller_commission?: number | null
           status?: string | null
           stripe_payment_intent_id?: string | null
@@ -1862,6 +1866,7 @@ export type Database = {
           customer_name?: string
           customer_phone?: string | null
           expires_at?: string | null
+          has_active_refund?: boolean | null
           id?: string
           impersonation_session_id?: string | null
           order_bump_data?: Json | null
@@ -1869,6 +1874,7 @@ export type Database = {
           payment_method?: string | null
           payment_proof_data?: Json | null
           product_id?: string
+          refund_deadline?: string | null
           seller_commission?: number | null
           status?: string | null
           stripe_payment_intent_id?: string | null
@@ -2485,6 +2491,124 @@ export type Database = {
           seller_user_id?: string
         }
         Relationships: []
+      }
+      refund_logs: {
+        Row: {
+          action: string
+          actor_email: string
+          actor_id: string | null
+          actor_role: string
+          comment: string | null
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          new_status: string | null
+          old_status: string | null
+          refund_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_email: string
+          actor_id?: string | null
+          actor_role: string
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          new_status?: string | null
+          old_status?: string | null
+          refund_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string
+          actor_id?: string | null
+          actor_role?: string
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          new_status?: string | null
+          old_status?: string | null
+          refund_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_logs_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: false
+            referencedRelation: "refund_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refund_requests: {
+        Row: {
+          admin_comment: string | null
+          amount: number
+          buyer_email: string
+          buyer_user_id: string | null
+          created_at: string | null
+          currency: string
+          id: string
+          order_id: string
+          processed_at: string | null
+          product_id: string | null
+          reason: string
+          refund_deadline: string
+          seller_comment: string | null
+          seller_user_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_comment?: string | null
+          amount: number
+          buyer_email: string
+          buyer_user_id?: string | null
+          created_at?: string | null
+          currency?: string
+          id?: string
+          order_id: string
+          processed_at?: string | null
+          product_id?: string | null
+          reason: string
+          refund_deadline: string
+          seller_comment?: string | null
+          seller_user_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_comment?: string | null
+          amount?: number
+          buyer_email?: string
+          buyer_user_id?: string | null
+          created_at?: string | null
+          currency?: string
+          id?: string
+          order_id?: string
+          processed_at?: string | null
+          product_id?: string | null
+          reason?: string
+          refund_deadline?: string
+          seller_comment?: string | null
+          seller_user_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales_recovery_analytics: {
         Row: {
