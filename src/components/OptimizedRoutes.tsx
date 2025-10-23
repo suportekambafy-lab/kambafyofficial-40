@@ -59,7 +59,6 @@ const MeusAcessos = createLazyWithRetry(() => import('@/pages/MeusAcessos'), "Me
 const MeusAfiliados = createLazyWithRetry(() => import('@/pages/MeusAfiliados'), "MeusAfiliados");
 const UserIdentity = createLazyWithRetry(() => import('@/pages/UserIdentity'), "UserIdentity");
 const MyPurchases = createLazyWithRetry(() => import('@/pages/MyPurchases'), "MyPurchases");
-const SellerRefunds = createLazyWithRetry(() => import('@/pages/SellerRefunds'), "SellerRefunds");
 const VimeoSettings = createLazyWithRetry(() => import('@/pages/VimeoSettings'), "VimeoSettings");
 const Mobile = createLazyWithRetry(() => import('@/pages/Mobile'), "Mobile");
 const AppMobile = createLazyWithRetry(() => import('@/pages/AppMobile'), "AppMobile");
@@ -169,7 +168,6 @@ export const OptimizedRoutes = {
   MeusAfiliados: withLazyLoading(MeusAfiliados, 'dashboard'),
   UserIdentity: withLazyLoading(UserIdentity, 'settings'),
   MyPurchases: withLazyLoading(MyPurchases, 'dashboard'),
-  SellerRefunds: withLazyLoading(SellerRefunds, 'dashboard'),
   Mobile: withLazyLoading(Mobile, 'minimal'),
   AppMobile: withLazyLoading(AppMobile, 'minimal'),
   KambaPay: withLazyLoading(KambaPay, 'settings'),

@@ -187,7 +187,6 @@ const App = () => {
                           
                           {/* Refund Routes */}
                           <Route path="/cliente/compras" element={<OptimizedRoutes.MyPurchases />} />
-                          <Route path="/vendedor/reembolsos" element={<OptimizedRoutes.SellerRefunds />} />
                          
                          {/* Member Area Routes - ÁREAS ESPECÍFICAS DE CADA VENDEDOR */}
                             
