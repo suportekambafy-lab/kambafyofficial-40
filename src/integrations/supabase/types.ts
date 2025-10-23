@@ -3162,6 +3162,7 @@ export type Database = {
       }
       cleanup_expired_member_sessions: { Args: never; Returns: undefined }
       cleanup_passwordless_users: { Args: never; Returns: undefined }
+      complete_refund: { Args: { p_refund_id: string }; Returns: undefined }
       count_duplicate_withdrawals: { Args: never; Returns: number }
       create_admin_user:
         | {
@@ -3193,6 +3194,10 @@ export type Database = {
           p_order_id: string
           p_product_id: string
         }
+        Returns: string
+      }
+      create_refund_request: {
+        Args: { p_buyer_email?: string; p_order_id: string; p_reason: string }
         Returns: string
       }
       detect_abandoned_purchase: {
