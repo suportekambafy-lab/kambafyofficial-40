@@ -50,6 +50,11 @@ const mobileItems = [
     icon: TrendingUp,
   },
   {
+    title: "Reembolsos",
+    url: "/vendedor/reembolsos",
+    icon: AlertCircle,
+  },
+  {
     title: "Financeiro",
     url: "/vendedor/financeiro",
     icon: DollarSign,
