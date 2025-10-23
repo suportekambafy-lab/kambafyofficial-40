@@ -25,7 +25,8 @@ import {
   LogOut,
   X,
   RotateCcw,
-  Coins
+  Coins,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -40,6 +41,7 @@ const menuItems = [
   { label: "Afiliados", href: "/vendedor/afiliados", icon: UserCheck },
   
   { label: "Assinaturas", href: "/vendedor/assinaturas", icon: CreditCard },
+  { label: "Reembolsos", href: "/vendedor/reembolsos", icon: AlertCircle },
   { label: "Relatórios", href: "/vendedor/relatorios", icon: FileText },
   { label: "Colaboradores", href: "/vendedor/colaboradores", icon: UserPlus },
   { label: "Apps", href: "/vendedor/apps", icon: Grid3X3 },
