@@ -15,7 +15,8 @@ import {
   LogOut,
   Bell,
   ChevronDown,
-  Search
+  Search,
+  AlertCircle
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -92,6 +93,11 @@ const menuItems = [
     label: "Assinaturas",
     href: "/vendedor/assinaturas",
     icon: CreditCard,
+  },
+  {
+    label: "Reembolsos",
+    href: "/vendedor/reembolsos",
+    icon: AlertCircle,
   },
   {
     label: "Financeiro",
