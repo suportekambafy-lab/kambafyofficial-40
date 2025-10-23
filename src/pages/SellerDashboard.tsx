@@ -58,6 +58,7 @@ const UserSettings = createLazyWithRetry(() => import("./UserSettings"), "UserSe
 const Members = createLazyWithRetry(() => import("./Members"), "Members");
 const SellerMemberModulePayments = createLazyWithRetry(() => import("./SellerMemberModulePayments"), "SellerMemberModulePayments");
 const SellerReports = createLazyWithRetry(() => import("./SellerReports"), "SellerReports");
+const SellerRefunds = createLazyWithRetry(() => import("./SellerRefunds"), "SellerRefunds");
 
 function SellerDashboardContent() {
   const location = useLocation();
@@ -117,6 +118,7 @@ function SellerDashboardContent() {
                 <Route path="/marketplace" element={<KambaExtra />} />
                 <Route path="/afiliados" element={<MeusAfiliados />} />
                 <Route path="/assinaturas" element={<ComingSoon title="Assinaturas" description="O sistema de assinaturas estará disponível em breve para criar produtos recorrentes." />} />
+                <Route path="/reembolsos" element={<SellerRefunds />} />
                 <Route path="/relatorios" element={<SellerReports />} />
                 <Route path="/colaboradores" element={<ComingSoon title="Colaboradores" description="O sistema de colaboradores estará disponível em breve para trabalho em equipe." />} />
                 <Route path="/apps" element={<Apps />} />
