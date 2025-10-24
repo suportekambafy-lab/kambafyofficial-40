@@ -1049,26 +1049,26 @@ export default function Members() {
   if (selectedArea) {
     return <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
         <div className="flex flex-col gap-3 md:gap-0 md:flex-row md:items-center md:justify-between max-w-full">
-          <div className="flex items-center gap-3 md:gap-4">
-            <Button variant="ghost" onClick={() => setSelectedArea(null)} className="p-1 md:p-2">
+          <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-shrink">
+            <Button variant="ghost" onClick={() => setSelectedArea(null)} className="p-1 md:p-2 flex-shrink-0">
               <ArrowLeft className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
-            <div>
-              <h1 className="text-lg md:text-2xl font-bold">{selectedArea.name}</h1>
+            <div className="min-w-0 flex-shrink">
+              <h1 className="text-lg md:text-2xl font-bold truncate">{selectedArea.name}</h1>
               <Button variant="outline" size="sm" className="mt-2 text-xs md:text-sm" onClick={handlePreview}>
                 <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-                Pré-visualizar
+                <span className="hidden sm:inline">Pré-visualizar</span>
               </Button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 flex-shrink-0">
             <Button variant="outline" onClick={() => setVideoUploaderOpen(true)} size="sm" className="text-xs md:text-sm">
-              <Upload className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              Upload de vídeos
+              <Upload className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
+              <span className="hidden md:inline">Upload de vídeos</span>
             </Button>
             <Button onClick={() => setModuleDialogOpen(true)} size="sm" className="text-xs md:text-sm">
-              <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              Adicionar Módulo
+              <Plus className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
+              <span className="hidden md:inline">Adicionar Módulo</span>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
