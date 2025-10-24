@@ -641,75 +641,140 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
               )}
             </div>
           ) : (
-            <div className="w-full overflow-x-auto">
-              <Table>
-                <TableHeader>
-                <TableRow>
-                  <TableHead className="whitespace-nowrap">Nome</TableHead>
-                  <TableHead className="whitespace-nowrap">Email</TableHead>
-                  <TableHead className="whitespace-nowrap">Turma</TableHead>
-                  <TableHead className="whitespace-nowrap">Acesso Liberado</TableHead>
-                  <TableHead className="whitespace-nowrap">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Layout Desktop - Tabela */}
+              <div className="hidden md:block w-full overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="whitespace-nowrap">Nome</TableHead>
+                      <TableHead className="whitespace-nowrap">Email</TableHead>
+                      <TableHead className="whitespace-nowrap">Turma</TableHead>
+                      <TableHead className="whitespace-nowrap">Acesso Liberado</TableHead>
+                      <TableHead className="whitespace-nowrap">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredStudents.map((student) => {
+                      const cohort = cohorts.find(c => c.id === student.cohort_id);
+                      return (
+                        <TableRow key={student.id}>
+                          <TableCell className="font-medium whitespace-nowrap">{student.student_name}</TableCell>
+                          <TableCell className="whitespace-nowrap">{student.student_email}</TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {cohort ? (
+                              <span className="text-sm font-medium">
+                                {cohort.name}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">Sem turma</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {new Date(student.access_granted_at).toLocaleDateString('pt-BR')}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem 
+                                  onClick={() => {
+                                    setSelectedStudent(student);
+                                    setNewCohortId(student.cohort_id || '');
+                                    setChangeCohortDialog(true);
+                                  }}
+                                >
+                                  <Calendar className="mr-2 h-4 w-4" />
+                                  Alterar Turma
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleResendAccess(student)}
+                                >
+                                  <Mail className="mr-2 h-4 w-4" />
+                                  Reenviar Acesso
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="text-red-600"
+                                  onClick={() => handleRemoveStudent(student.id)}
+                                >
+                                  Remover Estudante
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Layout Mobile - Cards Empilhados */}
+              <div className="md:hidden space-y-3 p-4">
                 {filteredStudents.map((student) => {
                   const cohort = cohorts.find(c => c.id === student.cohort_id);
                   return (
-                    <TableRow key={student.id}>
-                      <TableCell className="font-medium whitespace-nowrap">{student.student_name}</TableCell>
-                      <TableCell className="whitespace-nowrap">{student.student_email}</TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {cohort ? (
-                          <span className="text-sm font-medium">
-                            {cohort.name}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">Sem turma</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {new Date(student.access_granted_at).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              setSelectedStudent(student);
-                              setNewCohortId(student.cohort_id || '');
-                              setChangeCohortDialog(true);
-                            }}
-                          >
-                            <Calendar className="mr-2 h-4 w-4" />
-                            Alterar Turma
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleResendAccess(student)}
-                          >
-                            <Mail className="mr-2 h-4 w-4" />
-                            Reenviar Acesso
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-red-600"
-                            onClick={() => handleRemoveStudent(student.id)}
-                          >
-                            Remover Estudante
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                    <div key={student.id} className="border rounded-lg p-4 space-y-3 bg-card">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{student.student_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{student.student_email}</p>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedStudent(student);
+                                setNewCohortId(student.cohort_id || '');
+                                setChangeCohortDialog(true);
+                              }}
+                            >
+                              <Calendar className="mr-2 h-4 w-4" />
+                              Alterar Turma
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleResendAccess(student)}
+                            >
+                              <Mail className="mr-2 h-4 w-4" />
+                              Reenviar Acesso
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-red-600"
+                              onClick={() => handleRemoveStudent(student.id)}
+                            >
+                              Remover Estudante
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <div className="flex gap-4 text-xs">
+                        <div className="flex-1">
+                          <p className="text-muted-foreground">Turma</p>
+                          <p className="font-medium mt-0.5">
+                            {cohort ? cohort.name : "Sem turma"}
+                          </p>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-muted-foreground">Acesso</p>
+                          <p className="font-medium mt-0.5">
+                            {new Date(student.access_granted_at).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </TableBody>
-            </Table>
-            </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
