@@ -3386,6 +3386,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      process_missing_customer_access: {
+        Args: never
+        Returns: {
+          details: Json
+          processed_count: number
+        }[]
+      }
       process_recovery_fee: {
         Args: {
           _abandoned_purchase_id: string
