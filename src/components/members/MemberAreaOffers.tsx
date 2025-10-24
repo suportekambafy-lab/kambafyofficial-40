@@ -178,116 +178,114 @@ export function MemberAreaOffers({
   if (offers.length === 0) {
     return null;
   }
-  return <section className="py-12 px-4">
+  return <section className="py-8 md:py-12 px-3 md:px-4 max-w-full overflow-x-hidden">
       <div className="container mx-auto max-w-6xl">
-        {/* Header - Seguindo padrão dos módulos */}
+        {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} 
           animate={{ opacity: 1, y: 0 }} 
           transition={{ delay: 0.2 }}
-          className="mb-8"
+          className="mb-6 md:mb-8"
         >
-          <h2 className="text-3xl font-bold text-white mb-3">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 md:mb-3">
             Aproveite Nossas Ofertas
           </h2>
-          <p className="text-gray-400 text-lg">
+          <p className="text-gray-400 text-sm md:text-lg">
             Produtos especiais selecionados para você continuar sua jornada
           </p>
         </motion.div>
 
-        {/* Carrossel de Ofertas - Estilo Netflix */}
-        <div className="relative">
-          <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide scroll-smooth">
-            <div className="flex gap-4 min-w-max">
-              {offers.map((offer, index) => (
-                <motion.div 
-                  key={offer.id} 
-                  initial={{ opacity: 0, scale: 0.95 }} 
-                  animate={{ opacity: 1, scale: 1 }} 
-                  transition={{ delay: 0.1 * index }}
-                  whileHover={{ scale: 1.05, y: -8 }}
-                  className="group cursor-pointer flex-shrink-0 w-64"
-                >
-                  <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 hover:border-emerald-500/50 transform-gpu">
-                    {/* Imagem */}
-                    <div className="relative h-36 overflow-hidden bg-gradient-to-br from-emerald-500/10 to-purple-500/10">
-                      {offer.image_url ? (
-                        <img 
-                          src={offer.image_url} 
-                          alt={offer.title} 
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                        />
+        {/* Carrossel de Ofertas - Responsivo */}
+        <div className="relative -mx-3 md:mx-0">
+          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-6 px-3 md:px-0 scrollbar-hide scroll-smooth snap-x snap-mandatory">
+            {offers.map((offer, index) => (
+              <motion.div 
+                key={offer.id} 
+                initial={{ opacity: 0, scale: 0.95 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                transition={{ delay: 0.1 * index }}
+                whileHover={{ scale: 1.05, y: -8 }}
+                className="group cursor-pointer flex-shrink-0 w-[280px] md:w-64 snap-start"
+              >
+                <Card className="overflow-hidden bg-gray-900 shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 border border-gray-800 hover:border-emerald-500/50 transform-gpu h-full">
+                  {/* Imagem */}
+                  <div className="relative h-32 md:h-36 overflow-hidden bg-gradient-to-br from-emerald-500/10 to-purple-500/10">
+                    {offer.image_url ? (
+                      <img 
+                        src={offer.image_url} 
+                        alt={offer.title} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-10 h-10 text-gray-600" />
+                      </div>
+                    )}
+                    
+                    {offer.discount_percentage > 0 && (
+                      <div className="absolute top-2 right-2">
+                        <Badge className="bg-red-500 text-white font-bold shadow-lg text-xs">
+                          -{offer.discount_percentage}%
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Conteúdo */}
+                  <CardContent className="p-3 md:p-4">
+                    <h3 className="text-sm md:text-base font-bold mb-1 text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
+                      {offer.title}
+                    </h3>
+                    
+                    {offer.description && (
+                      <p className="text-xs text-gray-400 mb-2 md:mb-3 line-clamp-2">
+                        {offer.description}
+                      </p>
+                    )}
+
+                    {/* Preço */}
+                    <div className="flex items-center gap-2 mb-2 md:mb-3">
+                      {offer.discount_percentage > 0 ? (
+                        <>
+                          <span className="text-xs text-gray-500 line-through">
+                            {getFormattedPrice(offer)}
+                          </span>
+                          <span className="text-base md:text-lg font-bold text-emerald-400">
+                            {getDiscountedPrice(offer)}
+                          </span>
+                        </>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="w-10 h-10 text-gray-600" />
-                        </div>
-                      )}
-                      
-                      {offer.discount_percentage > 0 && (
-                        <div className="absolute top-2 right-2">
-                          <Badge className="bg-red-500 text-white font-bold shadow-lg text-xs">
-                            -{offer.discount_percentage}%
-                          </Badge>
-                        </div>
+                        <span className="text-base md:text-lg font-bold text-emerald-400">
+                          {getFormattedPrice(offer)}
+                        </span>
                       )}
                     </div>
 
-                    {/* Conteúdo */}
-                    <CardContent className="p-4">
-                      <h3 className="text-base font-bold mb-1 text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
-                        {offer.title}
-                      </h3>
-                      
-                      {offer.description && (
-                        <p className="text-xs text-gray-400 mb-3 line-clamp-2">
-                          {offer.description}
-                        </p>
-                      )}
-
-                      {/* Preço */}
-                      <div className="flex items-center gap-2 mb-3">
-                        {offer.discount_percentage > 0 ? (
-                          <>
-                            <span className="text-xs text-gray-500 line-through">
-                              {getFormattedPrice(offer)}
-                            </span>
-                            <span className="text-lg font-bold text-emerald-400">
-                              {getDiscountedPrice(offer)}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-lg font-bold text-emerald-400">
-                            {getFormattedPrice(offer)}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Botão de Ação */}
-                      {offer.hasAccess ? (
-                        <Button 
-                          size="sm"
-                          disabled
-                          className="w-full bg-gray-700 text-gray-300 cursor-not-allowed"
-                        >
-                          <CheckCircle2 className="w-3 h-3 mr-1" />
-                          Você já tem acesso
-                        </Button>
-                      ) : (
-                        <Button 
-                          onClick={() => handleOfferClick(offer)} 
-                          size="sm"
-                          className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
-                        >
-                          <ShoppingCart className="w-3 h-3 mr-1" />
-                          Ver Oferta
-                          <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
+                    {/* Botão de Ação */}
+                    {offer.hasAccess ? (
+                      <Button 
+                        size="sm"
+                        disabled
+                        className="w-full bg-gray-700 text-gray-300 cursor-not-allowed text-xs md:text-sm"
+                      >
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Você já tem acesso
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={() => handleOfferClick(offer)} 
+                        size="sm"
+                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-xs md:text-sm"
+                      >
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        Ver Oferta
+                        <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
