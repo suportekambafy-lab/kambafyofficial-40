@@ -490,7 +490,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
   return (
     <div className="space-y-6">
       {/* Header com busca e botão adicionar */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">Estudantes</h2>
           {memberAreaName && (
@@ -499,7 +499,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <UserPlus className="h-4 w-4 mr-2" />
               Adicionar Estudante
             </Button>
