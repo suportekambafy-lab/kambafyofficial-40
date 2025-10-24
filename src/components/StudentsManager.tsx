@@ -34,15 +34,19 @@ interface Cohort {
 interface StudentsManagerProps {
   memberAreaId: string;
   memberAreaName?: string;
+  externalDialogOpen?: boolean;
+  onExternalDialogChange?: (open: boolean) => void;
 }
 
-export default function StudentsManager({ memberAreaId, memberAreaName }: StudentsManagerProps) {
+export default function StudentsManager({ memberAreaId, memberAreaName, externalDialogOpen, onExternalDialogChange }: StudentsManagerProps) {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [internalDialogOpen, setInternalDialogOpen] = useState(false);
+  const dialogOpen = externalDialogOpen !== undefined ? externalDialogOpen : internalDialogOpen;
+  const setDialogOpen = onExternalDialogChange || setInternalDialogOpen;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -489,8 +493,8 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
 
   return (
     <div className="space-y-6">
-      {/* Header com busca e botão adicionar */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      {/* Header com busca - botão movido para dropdown menu da página principal */}
+      <div className="flex flex-col gap-4">
         <div>
           <h2 className="text-2xl font-bold">Estudantes</h2>
           {memberAreaName && (
@@ -498,12 +502,6 @@ export default function StudentsManager({ memberAreaId, memberAreaName }: Studen
           )}
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Adicionar Estudante
-            </Button>
-          </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Adicionar Estudante</DialogTitle>

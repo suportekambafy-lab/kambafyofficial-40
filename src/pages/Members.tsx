@@ -139,6 +139,7 @@ export default function Members() {
   });
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [userProducts, setUserProducts] = useState<any[]>([]);
+  const [addStudentDialogOpen, setAddStudentDialogOpen] = useState(false);
   useEffect(() => {
     if (!loading && user) {
       // Cache check para member areas
@@ -1076,6 +1077,10 @@ export default function Members() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setAddStudentDialogOpen(true)}>
+                  <Users className="h-3 w-3 mr-2" />
+                  Adicionar Estudante
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleDeleteArea(selectedArea.id)} className="text-destructive">
                   <Trash2 className="h-3 w-3 mr-2" />
                   Excluir Área
@@ -1413,7 +1418,12 @@ export default function Members() {
           </TabsContent>
 
           <TabsContent value="alunos" className="space-y-6">
-            <StudentsManager memberAreaId={selectedArea.id} memberAreaName={selectedArea.name} />
+            <StudentsManager 
+              memberAreaId={selectedArea.id} 
+              memberAreaName={selectedArea.name}
+              externalDialogOpen={addStudentDialogOpen}
+              onExternalDialogChange={setAddStudentDialogOpen}
+            />
           </TabsContent>
 
           <TabsContent value="configuracoes">
