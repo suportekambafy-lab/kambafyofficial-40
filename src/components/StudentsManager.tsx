@@ -626,13 +626,13 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
       </div>
 
       {/* Tabela de estudantes */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Lista de Estudantes</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           {filteredStudents.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 px-4">
               <p>Nenhum estudante encontrado</p>
               {students.length === 0 && (
                 <p className="text-sm mt-2">
@@ -641,8 +641,9 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
               )}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
+            <div className="min-w-[600px]">
+              <Table>
+                <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
@@ -708,6 +709,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
                 })}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -1101,7 +1101,7 @@ export default function Members() {
           </TabsList>
           
           <TabsContent value="conteudo" className="space-y-6">
-            <Card>
+            <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <span className="text-sm md:text-base">Conteúdo do Curso</span>
@@ -1115,11 +1115,11 @@ export default function Members() {
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {modules.length > 0 ? <div className="space-y-4">
+              <CardContent className="space-y-4 overflow-x-auto">
+                {modules.length > 0 ? <div className="space-y-4 min-w-0">
                     {modules.sort((a, b) => a.order_number - b.order_number).map((module, index) => <div 
                       key={module.id} 
-                      className="border rounded-lg p-3 md:p-4 space-y-3 transition-all hover:shadow-md"
+                      className="border rounded-lg p-3 md:p-4 space-y-3 transition-all hover:shadow-md min-w-0"
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.effectAllowed = 'move';
@@ -1417,7 +1417,7 @@ export default function Members() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="alunos" className="space-y-6">
+          <TabsContent value="alunos" className="space-y-6 overflow-x-auto">
             <StudentsManager 
               memberAreaId={selectedArea.id} 
               memberAreaName={selectedArea.name}
