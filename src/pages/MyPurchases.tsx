@@ -16,22 +16,33 @@ export default function MyPurchases() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   const loadPurchases = async () => {
-    if (!user) return;
+    if (!user?.email) {
+      console.warn('MyPurchases: User or email not available');
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
+      console.log('🛒 MyPurchases: Loading purchases for', user.email);
+      
       const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
-          products(name, image_url),
-          refund_requests(id, status, created_at)
+          products(name),
+          refund_requests!refund_requests_order_id_fkey(id, status, created_at)
         `)
         .eq('customer_email', user.email)
         .eq('status', 'completed')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ MyPurchases: Error loading purchases', error);
+        throw error;
+      }
+
+      console.log('✅ MyPurchases: Loaded', data?.length || 0, 'purchases');
       setPurchases(data || []);
     } catch (error) {
       console.error('Error loading purchases:', error);
@@ -99,17 +110,9 @@ export default function MyPurchases() {
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="w-full md:w-32 h-32 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                      {order.products?.image_url ? (
-                        <img 
-                          src={order.products.image_url} 
-                          alt={order.products.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ShoppingBag className="h-12 w-12 text-muted-foreground" />
-                        </div>
-                      )}
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                        <ShoppingBag className="h-12 w-12 text-primary" />
+                      </div>
                     </div>
 
                     <div className="flex-1">
