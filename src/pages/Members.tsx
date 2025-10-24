@@ -1090,7 +1090,7 @@ export default function Members() {
           </div>
         </div>
 
-        <Tabs defaultValue="conteudo" className="w-full">
+        <Tabs defaultValue="conteudo" className="w-full max-w-full overflow-hidden">
           <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto gap-1">
             <TabsTrigger value="conteudo" className="text-xs md:text-sm py-2">Conteúdo</TabsTrigger>
             <TabsTrigger value="ofertas" className="text-xs md:text-sm py-2">Ofertas</TabsTrigger>
@@ -1100,12 +1100,12 @@ export default function Members() {
             <TabsTrigger value="configuracoes" className="text-xs md:text-sm py-2">Config</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="conteudo" className="space-y-6">
-            <Card className="overflow-hidden">
+          <TabsContent value="conteudo" className="space-y-6 max-w-full">
+            <Card className="w-full max-w-full overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <span className="text-sm md:text-base">Conteúdo do Curso</span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
                       {modules.length} módulos
                     </Badge>
@@ -1115,11 +1115,11 @@ export default function Members() {
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 overflow-x-auto">
-                {modules.length > 0 ? <div className="space-y-4 min-w-0">
+              <CardContent className="space-y-4">
+                {modules.length > 0 ? <div className="space-y-4 w-full max-w-full">
                     {modules.sort((a, b) => a.order_number - b.order_number).map((module, index) => <div 
                       key={module.id} 
-                      className="border rounded-lg p-3 md:p-4 space-y-3 transition-all hover:shadow-md min-w-0"
+                      className="border rounded-lg p-3 md:p-4 space-y-3 transition-all hover:shadow-md w-full max-w-full"
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.effectAllowed = 'move';
@@ -1417,7 +1417,7 @@ export default function Members() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="alunos" className="space-y-6 overflow-x-auto">
+          <TabsContent value="alunos" className="space-y-6 max-w-full">
             <StudentsManager 
               memberAreaId={selectedArea.id} 
               memberAreaName={selectedArea.name}

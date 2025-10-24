@@ -626,11 +626,11 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
       </div>
 
       {/* Tabela de estudantes */}
-      <Card className="overflow-hidden">
+      <Card className="w-full max-w-full overflow-hidden">
         <CardHeader>
           <CardTitle>Lista de Estudantes</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="p-0">
           {filteredStudents.length === 0 ? (
             <div className="text-center py-8 text-gray-500 px-4">
               <p>Nenhum estudante encontrado</p>
@@ -641,15 +641,15 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
               )}
             </div>
           ) : (
-            <div className="min-w-[600px]">
+            <div className="w-full overflow-x-auto">
               <Table>
                 <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Turma</TableHead>
-                  <TableHead>Acesso Liberado</TableHead>
-                  <TableHead>Ações</TableHead>
+                  <TableHead className="whitespace-nowrap">Nome</TableHead>
+                  <TableHead className="whitespace-nowrap">Email</TableHead>
+                  <TableHead className="whitespace-nowrap">Turma</TableHead>
+                  <TableHead className="whitespace-nowrap">Acesso Liberado</TableHead>
+                  <TableHead className="whitespace-nowrap">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -657,9 +657,9 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
                   const cohort = cohorts.find(c => c.id === student.cohort_id);
                   return (
                     <TableRow key={student.id}>
-                      <TableCell className="font-medium">{student.student_name}</TableCell>
-                      <TableCell>{student.student_email}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium whitespace-nowrap">{student.student_name}</TableCell>
+                      <TableCell className="whitespace-nowrap">{student.student_email}</TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {cohort ? (
                           <span className="text-sm font-medium">
                             {cohort.name}
@@ -668,10 +668,10 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
                           <span className="text-muted-foreground text-sm">Sem turma</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {new Date(student.access_granted_at).toLocaleDateString('pt-BR')}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
