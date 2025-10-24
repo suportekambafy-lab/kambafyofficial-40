@@ -492,9 +492,9 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-x-hidden">
       {/* Header com busca - botão movido para dropdown menu da página principal */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 max-w-full">
         <div>
           <h2 className="text-2xl font-bold">Estudantes</h2>
           {memberAreaName && (
@@ -592,8 +592,8 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-full">
+        <Card className="w-full max-w-full">
           <CardContent className="p-4">
             <div className="text-2xl font-bold">
               {students.filter(s => s.student_email !== 'validar@kambafy.com').length}
@@ -601,7 +601,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
             <p className="text-sm text-gray-600">Total de Estudantes</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="w-full max-w-full">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">
               {students.filter(s => 
@@ -612,7 +612,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
             <p className="text-sm text-gray-600">Novos (7 dias)</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="w-full max-w-full">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-blue-600">
               {students.filter(s => 

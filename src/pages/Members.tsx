@@ -1047,8 +1047,8 @@ export default function Members() {
       </div>;
   }
   if (selectedArea) {
-    return <div className="p-3 md:p-6 space-y-4 md:space-y-6">
-        <div className="flex flex-col gap-3 md:gap-0 md:flex-row md:items-center md:justify-between">
+    return <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
+        <div className="flex flex-col gap-3 md:gap-0 md:flex-row md:items-center md:justify-between max-w-full">
           <div className="flex items-center gap-3 md:gap-4">
             <Button variant="ghost" onClick={() => setSelectedArea(null)} className="p-1 md:p-2">
               <ArrowLeft className="h-3 w-3 md:h-4 md:w-4" />
