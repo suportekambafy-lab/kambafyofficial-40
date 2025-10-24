@@ -54,14 +54,73 @@ export default function SellerRefunds() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold flex items-center gap-2 mb-3">
           <AlertCircle className="h-8 w-8" />
-          Pedidos de Reembolso
+          Gerenciar Reembolsos
         </h1>
-        <p className="text-muted-foreground mt-2">
-          Gerencie as solicitações de reembolso dos seus clientes
+        <p className="text-muted-foreground text-lg mb-4">
+          Analise e processe solicitações de reembolso dos seus clientes
         </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <Clock className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{pendingRefunds.length}</p>
+                  <p className="text-sm text-muted-foreground">Pendentes</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <MessageSquare className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Prazo de resposta</p>
+                  <p className="text-lg font-semibold">48h úteis</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-red-100 rounded-lg">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Impacto no saldo</p>
+                  <p className="text-lg font-semibold">Imediato</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex gap-3">
+            <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-900">
+              <p className="font-semibold mb-1">Como funciona:</p>
+              <ul className="list-disc list-inside space-y-1 text-blue-800">
+                <li>Analise o motivo da solicitação antes de decidir</li>
+                <li>Ao aprovar, o valor é descontado automaticamente do seu saldo</li>
+                <li>Se rejeitar, explique o motivo para manter um bom relacionamento</li>
+                <li>O prazo máximo de resposta é de 7 dias corridos</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
 
       {loading ? (

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, RefreshCw, AlertCircle } from 'lucide-react';
+import { ShoppingBag, RefreshCw, AlertCircle, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { RefundRequestDialog } from '@/components/refunds/RefundRequestDialog';
@@ -56,14 +56,24 @@ export default function MyPurchases() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold flex items-center gap-2 mb-3">
           <ShoppingBag className="h-8 w-8" />
           Minhas Compras
         </h1>
-        <p className="text-muted-foreground mt-2">
-          Visualize todas as suas compras e solicite reembolsos dentro de 7 dias
+        <p className="text-muted-foreground text-lg mb-2">
+          Visualize todas as suas compras e gerencie solicitações de reembolso
         </p>
+        <div className="flex flex-col sm:flex-row gap-2 mt-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-lg">
+            <AlertCircle className="h-4 w-4" />
+            <span>Prazo: 7 dias corridos após a compra</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-lg">
+            <Clock className="h-4 w-4" />
+            <span>Processamento: até 48 horas úteis</span>
+          </div>
+        </div>
       </div>
 
       {loading ? (
