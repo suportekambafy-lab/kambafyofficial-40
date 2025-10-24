@@ -1091,7 +1091,7 @@ export default function Members() {
         </div>
 
         <Tabs defaultValue="conteudo" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 h-auto">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto gap-1">
             <TabsTrigger value="conteudo" className="text-xs md:text-sm py-2">Conteúdo</TabsTrigger>
             <TabsTrigger value="ofertas" className="text-xs md:text-sm py-2">Ofertas</TabsTrigger>
             <TabsTrigger value="turmas" className="text-xs md:text-sm py-2">Turmas</TabsTrigger>
