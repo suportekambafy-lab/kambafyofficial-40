@@ -487,6 +487,48 @@ const handler = async (req: Request): Promise<Response> => {
             console.log('[APPYPAY-WEBHOOK] Webhooks triggered successfully');
           }
 
+          // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR
+          try {
+            console.log('[APPYPAY-WEBHOOK] 📱 Checking OneSignal notification...');
+            
+            // Buscar OneSignal Player ID do vendedor
+            const { data: sellerProfile } = await supabase
+              .from('profiles')
+              .select('onesignal_player_id')
+              .eq('user_id', product?.user_id)
+              .single();
+            
+            if (sellerProfile?.onesignal_player_id) {
+              console.log('[APPYPAY-WEBHOOK] 📤 Sending OneSignal notification to seller...');
+              
+              const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
+                body: {
+                  player_id: sellerProfile.onesignal_player_id,
+                  title: '🎉 Nova Venda!',
+                  message: `Você vendeu para ${order.customer_name} - ${order.amount} ${order.currency}`,
+                  data: {
+                    type: 'sale',
+                    order_id: order.order_id,
+                    amount: order.amount,
+                    currency: order.currency,
+                    customer_name: order.customer_name
+                  }
+                }
+              });
+              
+              if (notificationError) {
+                console.error('[APPYPAY-WEBHOOK] ❌ Error sending OneSignal notification:', notificationError);
+              } else {
+                console.log('[APPYPAY-WEBHOOK] ✅ OneSignal notification sent successfully');
+              }
+            } else {
+              console.log('[APPYPAY-WEBHOOK] ⚠️ Seller does not have OneSignal Player ID configured');
+            }
+          } catch (notifError) {
+            console.error('[APPYPAY-WEBHOOK] ❌ Error in OneSignal notification process:', notifError);
+            // Não falhar a operação principal por erro de notificação
+          }
+
           // Process order bumps and send separate access emails if applicable
           if (order.order_bump_data) {
             try {

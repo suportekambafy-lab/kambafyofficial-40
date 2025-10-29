@@ -383,6 +383,48 @@ serve(async (req) => {
           }
         }
 
+        // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR
+        try {
+          console.log('📱 Checking OneSignal notification...');
+          
+          // Buscar OneSignal Player ID do vendedor
+          const { data: sellerProfile } = await supabase
+            .from('profiles')
+            .select('onesignal_player_id')
+            .eq('user_id', product.user_id)
+            .single();
+          
+          if (sellerProfile?.onesignal_player_id) {
+            console.log('📤 Sending OneSignal notification to seller...');
+            
+            const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
+              body: {
+                player_id: sellerProfile.onesignal_player_id,
+                title: '🎉 Nova Venda!',
+                message: `Você vendeu para ${orderData.customer_name} - ${orderData.amount} ${orderData.currency}`,
+                data: {
+                  type: 'sale',
+                  order_id: orderId,
+                  amount: orderData.amount,
+                  currency: orderData.currency,
+                  customer_name: orderData.customer_name
+                }
+              }
+            });
+            
+            if (notificationError) {
+              console.error('❌ Error sending OneSignal notification:', notificationError);
+            } else {
+              console.log('✅ OneSignal notification sent successfully');
+            }
+          } else {
+            console.log('⚠️ Seller does not have OneSignal Player ID configured');
+          }
+        } catch (notifError) {
+          console.error('❌ Error in OneSignal notification process:', notifError);
+          // Não falhar a operação principal por erro de notificação
+        }
+
         // Process order bumps and send separate access emails if applicable
         if (orderData.order_bump_data) {
           try {

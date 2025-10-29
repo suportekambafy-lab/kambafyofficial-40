@@ -243,6 +243,48 @@ const handler = async (req: Request): Promise<Response> => {
 
         console.log('[VERIFY-APPYPAY-ORDER] Confirmation sent');
 
+        // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR
+        try {
+          console.log('[VERIFY-APPYPAY-ORDER] 📱 Checking OneSignal notification...');
+          
+          // Buscar OneSignal Player ID do vendedor
+          const { data: sellerProfile } = await supabase
+            .from('profiles')
+            .select('onesignal_player_id')
+            .eq('user_id', product?.user_id)
+            .single();
+          
+          if (sellerProfile?.onesignal_player_id) {
+            console.log('[VERIFY-APPYPAY-ORDER] 📤 Sending OneSignal notification to seller...');
+            
+            const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
+              body: {
+                player_id: sellerProfile.onesignal_player_id,
+                title: '🎉 Nova Venda!',
+                message: `Você vendeu para ${order.customer_name} - ${order.amount} ${order.currency}`,
+                data: {
+                  type: 'sale',
+                  order_id: order.order_id,
+                  amount: order.amount,
+                  currency: order.currency,
+                  customer_name: order.customer_name
+                }
+              }
+            });
+            
+            if (notificationError) {
+              console.error('[VERIFY-APPYPAY-ORDER] ❌ Error sending OneSignal notification:', notificationError);
+            } else {
+              console.log('[VERIFY-APPYPAY-ORDER] ✅ OneSignal notification sent successfully');
+            }
+          } else {
+            console.log('[VERIFY-APPYPAY-ORDER] ⚠️ Seller does not have OneSignal Player ID configured');
+          }
+        } catch (notifError) {
+          console.error('[VERIFY-APPYPAY-ORDER] ❌ Error in OneSignal notification process:', notifError);
+          // Não falhar a operação principal por erro de notificação
+        }
+
         // ✅ Enviar evento para Facebook Conversions API
         try {
           console.log('[VERIFY-APPYPAY-ORDER] Sending Facebook Conversion event...');

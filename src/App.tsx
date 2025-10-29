@@ -18,6 +18,7 @@ import { Suspense, lazy } from "react";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AdminPermissionRoute from "./components/AdminPermissionRoute";
 import { useVersionCheck } from "./hooks/useVersionCheck";
+import { useOneSignal } from "./hooks/useOneSignal";
 
 const TestFacebookIntegration = lazy(() => import("./pages/TestFacebookIntegration"));
 
@@ -55,6 +56,28 @@ const TestLoginComponent = () => {
     </div>
   );
 };
+
+// Component to initialize OneSignal after auth
+function OneSignalInitializer() {
+  const { isInitialized, playerId } = useOneSignal({
+    onNotificationReceived: (notification) => {
+      console.log('📩 Notification received in app:', notification);
+    },
+    onNotificationOpened: (notification) => {
+      console.log('🔔 Notification opened:', notification);
+      // Você pode adicionar navegação aqui se necessário
+      // Por exemplo, navegar para a página de vendas quando abrir notificação
+    }
+  });
+
+  useEffect(() => {
+    if (isInitialized && playerId) {
+      console.log('✅ OneSignal initialized with Player ID:', playerId);
+    }
+  }, [isInitialized, playerId]);
+
+  return null; // Este componente não renderiza nada
+}
 
 
 // QueryClient otimizado para WebSockets (sem refetch desnecessário)
@@ -140,6 +163,7 @@ const App = () => {
               <TooltipProvider>
               <CustomToaster ref={toasterRef} />
                <BrowserRouter>
+                 <OneSignalInitializer />
                  {impersonationData && (
                    <ImpersonationBanner
                      targetUserName={impersonationData.targetUser?.full_name || impersonationData.targetUser?.email || 'Usuário'}

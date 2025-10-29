@@ -1,5 +1,8 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.send-onesignal-notification]
+verify_jwt = false
+
 [functions.member-area-login]
 verify_jwt = false
 
