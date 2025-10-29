@@ -2,10 +2,13 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type AppStoreButtonProps = React.ComponentProps<typeof Button>;
+type AppStoreButtonProps = React.ComponentProps<typeof Button> & {
+  comingSoon?: boolean;
+};
 
 export function AppStoreButton({
   className,
+  comingSoon = false,
   ...props
 }: Omit<AppStoreButtonProps, "children">) {
   return (
@@ -13,7 +16,7 @@ export function AppStoreButton({
       <AppleIcon className="size-5" />
       <div className="text-left flex flex-col items-start justify-center pr-2">
         <span className="text-[10px] leading-none font-light tracking-tighter">
-          BAIXE NA
+          {comingSoon ? "EM BREVE" : "BAIXE NA"}
         </span>
         <p className="text-base font-bold leading-none">App Store</p>
       </div>

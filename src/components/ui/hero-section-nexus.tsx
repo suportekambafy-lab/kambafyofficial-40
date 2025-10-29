@@ -744,9 +744,9 @@ const InteractiveHero: React.FC = () => {
                     className="bg-white hover:bg-white/90 text-black"
                 />
                 <AppStoreButton 
+                    comingSoon
                     disabled
                     className="bg-white/50 text-black cursor-not-allowed opacity-60"
-                    title="Em breve"
                 />
             </motion.div>
           </section>
