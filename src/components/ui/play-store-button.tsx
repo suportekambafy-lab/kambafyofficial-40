@@ -13,7 +13,7 @@ export function PlayStoreButton({
       <PlayStoreIcon className="size-5" />
       <div className="text-left flex flex-col items-start justify-center pr-2">
         <span className="text-[10px] leading-none font-light tracking-tighter">
-          GET IT ON
+          BAIXE NO
         </span>
         <p className="text-base font-bold leading-none">Google Play</p>
       </div>
