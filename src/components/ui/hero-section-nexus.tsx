@@ -737,7 +737,7 @@ const InteractiveHero: React.FC = () => {
                 variants={worksWithVariants}
                 initial="hidden"
                 animate="visible"
-                className="flex flex-col sm:flex-row justify-center gap-3 mb-16"
+                className="flex flex-row justify-center gap-3 mb-16"
             >
                 <PlayStoreButton 
                     onClick={() => window.open('https://play.google.com/store/apps/details?id=com.converta.kambafy', '_blank')}
