@@ -12,8 +12,8 @@ export function AppStoreButton({
     <Button className={cn("h-11 gap-2", className)} {...props}>
       <AppleIcon className="size-5" />
       <div className="text-left flex flex-col items-start justify-center pr-2">
-        <span className="text-[10px] leading-none tracking-tighter">
-          Baixe na
+        <span className="text-[10px] leading-none font-light tracking-tighter">
+          BAIXE NA
         </span>
         <p className="text-base font-bold leading-none">App Store</p>
       </div>
