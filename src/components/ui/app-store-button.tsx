@@ -13,7 +13,7 @@ export function AppStoreButton({
       <AppleIcon className="size-5" />
       <div className="text-left flex flex-col items-start justify-center pr-2">
         <span className="text-[10px] leading-none tracking-tighter">
-          Download on the
+          Baixe na
         </span>
         <p className="text-base font-bold leading-none">App Store</p>
       </div>
