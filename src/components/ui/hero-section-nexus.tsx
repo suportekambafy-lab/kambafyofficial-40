@@ -739,7 +739,7 @@ const InteractiveHero: React.FC = () => {
                 className="flex justify-center mb-16"
             >
                 <PlayStoreButton 
-                    onClick={() => window.open('https://play.google.com/store/apps/details?id=com.kambafy.app', '_blank')}
+                    onClick={() => window.open('https://play.google.com/store/apps/details?id=com.converta.kambafy', '_blank')}
                     className="bg-white hover:bg-white/90 text-black"
                 />
             </motion.div>
