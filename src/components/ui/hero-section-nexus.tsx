@@ -25,6 +25,7 @@ import {
     type Variants,
 } from 'framer-motion';
 import { Button } from "@/components/ui/button";
+import { PlayStoreButton } from "@/components/ui/play-store-button";
 import { BookOpen, DollarSign, Users, Shield, Star, Play, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SubdomainLink } from "@/components/SubdomainLink";
@@ -726,10 +727,22 @@ const InteractiveHero: React.FC = () => {
                 variants={trialTextVariants}
                 initial="hidden"
                 animate="visible"
-                className="text-xs text-gray-500 mb-16"
+                className="text-xs text-gray-500 mb-6"
             >
                 Sem custos fixos • Sem mensalidades
             </motion.p>
+
+            <motion.div
+                variants={worksWithVariants}
+                initial="hidden"
+                animate="visible"
+                className="flex justify-center mb-16"
+            >
+                <PlayStoreButton 
+                    onClick={() => window.open('https://play.google.com/store/apps/details?id=com.kambafy.app', '_blank')}
+                    className="bg-white hover:bg-white/90 text-black"
+                />
+            </motion.div>
           </section>
 
           {/* Features Section */}
