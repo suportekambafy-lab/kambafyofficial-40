@@ -9,7 +9,8 @@ import { AppsTabLayout } from "@/components/AppsTabLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Product {
   id: string;
@@ -22,6 +23,7 @@ type Step = 'product' | 'integration' | 'configure' | 'complete';
 
 export default function Apps() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const isNew = searchParams.get('new') === 'true';
   const configureType = searchParams.get('configure');
@@ -97,13 +99,22 @@ export default function Apps() {
   }, [configureType, products]);
 
   const fetchProducts = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('products')
         .select('id, name, type, status')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching products:', error);
+        throw error;
+      }
       
       setProducts(data || []);
     } catch (error) {
@@ -113,6 +124,7 @@ export default function Apps() {
         description: "Falha ao carregar produtos",
         variant: "destructive"
       });
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -169,20 +181,24 @@ export default function Apps() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner text="Carregando..." />
-      </div>
-    );
-  }
-
   // Se não está criando nova integração, mostra o gerenciamento
   if (!isNew) {
     return (
-      <div className="p-3 xs:p-4 md:p-6 space-y-4 xs:space-y-6 max-w-6xl mx-auto min-h-screen">
-        <AppsTabLayout />
-      </div>
+      <OptimizedPageWrapper skeletonVariant="list" requireAuth={true}>
+        <div className="p-3 xs:p-4 md:p-6 space-y-4 xs:space-y-6 max-w-6xl mx-auto min-h-screen">
+          <AppsTabLayout />
+        </div>
+      </OptimizedPageWrapper>
+    );
+  }
+
+  if (loading) {
+    return (
+      <OptimizedPageWrapper skeletonVariant="form" requireAuth={true}>
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-muted-foreground">Carregando produtos...</p>
+        </div>
+      </OptimizedPageWrapper>
     );
   }
 
