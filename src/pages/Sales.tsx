@@ -19,6 +19,7 @@ import professionalManImage from "@/assets/professional-man.jpg";
 import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod } from "@/utils/paymentMethods";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
+import { ProductFilter } from '@/components/ProductFilter';
 
 interface Sale {
   id: string;
@@ -92,6 +93,7 @@ export default function Sales() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [paymentFilter, setPaymentFilter] = useState("todos");
+  const [selectedProduct, setSelectedProduct] = useState("todos");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(200); // Mostrar todas as vendas
   const [showAllPaymentMethods, setShowAllPaymentMethods] = useState(false);
@@ -164,8 +166,11 @@ export default function Sales() {
     if (paymentFilter !== "todos") {
       filtered = filtered.filter(sale => sale.payment_method === paymentFilter);
     }
+    if (selectedProduct !== "todos") {
+      filtered = filtered.filter(sale => sale.product_id === selectedProduct);
+    }
     return filtered;
-  }, [sales, searchTerm, statusFilter, paymentFilter]);
+  }, [sales, searchTerm, statusFilter, paymentFilter, selectedProduct]);
 
   // Paginação
   const paginatedSales = useMemo(() => {
@@ -216,7 +221,7 @@ export default function Sales() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, paymentFilter]);
+  }, [searchTerm, statusFilter, paymentFilter, selectedProduct]);
   const getProductImage = (cover: string) => {
     if (!cover) return professionalManImage;
     if (cover.startsWith('data:')) {
@@ -310,6 +315,12 @@ export default function Sales() {
     }
     if (paymentFilter !== 'todos') {
       fileName += `_${paymentFilter}`;
+    }
+    if (selectedProduct !== 'todos') {
+      const product = sales.find(s => s.product_id === selectedProduct);
+      if (product?.products?.name) {
+        fileName += `_${product.products.name.replace(/\s+/g, '_')}`;
+      }
     }
     fileName += `_${new Date().toISOString().split('T')[0]}.csv`;
     link.setAttribute('download', fileName);
@@ -464,6 +475,13 @@ export default function Sales() {
                   </SelectItem>)}
               </SelectContent>
             </Select>
+
+            <div className="w-full md:w-48">
+              <ProductFilter 
+                value={selectedProduct} 
+                onValueChange={setSelectedProduct}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
