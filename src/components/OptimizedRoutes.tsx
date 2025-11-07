@@ -93,6 +93,7 @@ const AdminUsers = createLazyWithRetry(() => import('@/pages/AdminUsers'), "Admi
 const AdminLogs = createLazyWithRetry(() => import('@/pages/AdminLogs'), "AdminLogs");
 const AdminSellers = createLazyWithRetry(() => import('@/pages/AdminSellers'), "AdminSellers");
 const AdminSellerReports = createLazyWithRetry(() => import('@/pages/AdminSellerReports'), "AdminSellerReports");
+const AdminRetentionManagement = createLazyWithRetry(() => import('@/pages/AdminRetentionManagement'), "AdminRetentionManagement");
 const AdminIdentityVerification = createLazyWithRetry(() => import('@/pages/AdminIdentityVerification'), "AdminIdentityVerification");
 const AdminPaymentApprovals = createLazyWithRetry(() => import('@/pages/AdminPaymentApprovals'), "AdminPaymentApprovals");
 const AdminManagement = createLazyWithRetry(() => import('@/pages/AdminManagement'), "AdminManagement");
@@ -186,6 +187,7 @@ export const OptimizedRoutes = {
   AdminLogs: withLazyLoading(AdminLogs, 'dashboard'),
   AdminSellers: withLazyLoading(AdminSellers, 'dashboard'),
   AdminSellerReports: withLazyLoading(AdminSellerReports, 'dashboard'),
+  AdminRetentionManagement: withLazyLoading(AdminRetentionManagement, 'financial'),
   AdminIdentityVerification: withLazyLoading(AdminIdentityVerification, 'dashboard'),
   AdminPaymentApprovals: withLazyLoading(AdminPaymentApprovals, 'financial'),
   AdminManagement: withLazyLoading(AdminManagement, 'settings'),

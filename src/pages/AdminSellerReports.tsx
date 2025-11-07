@@ -26,6 +26,8 @@ import { useToast } from '@/hooks/use-toast';
 import { BanUserDialog } from '@/components/BanUserDialog';
 import { SEO } from '@/components/SEO';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SellerRetentionDialog } from '@/components/admin/SellerRetentionDialog';
+import { Shield } from 'lucide-react';
 
 interface SellerReport {
   user_id: string;
@@ -41,6 +43,8 @@ interface SellerReport {
   available_balance: number;
   active_products: number;
   banned_products: number;
+  balance_retention_percentage?: number;
+  retention_reason?: string | null;
 }
 
 export default function AdminSellerReports() {
@@ -54,6 +58,8 @@ export default function AdminSellerReports() {
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [userToBan, setUserToBan] = useState<SellerReport | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'banned' | 'creator'>('all');
+  const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
+  const [sellerToManage, setSellerToManage] = useState<SellerReport | null>(null);
 
   useEffect(() => {
     if (admin) {
@@ -75,7 +81,7 @@ export default function AdminSellerReports() {
       while (hasMore) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('user_id, full_name, email, avatar_url, banned, is_creator')
+          .select('user_id, full_name, email, avatar_url, banned, is_creator, balance_retention_percentage, retention_reason')
           .range(offset, offset + limit - 1);
 
         if (error) throw error;
@@ -514,7 +520,7 @@ export default function AdminSellerReports() {
             {filteredSellers.map((seller) => (
               <Card key={seller.user_id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="h-12 w-12 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold">
                         {seller.full_name?.charAt(0).toUpperCase() || 'U'}
@@ -528,15 +534,23 @@ export default function AdminSellerReports() {
                         </CardDescription>
                       </div>
                     </div>
-                    {seller.banned && (
-                      <Badge variant="destructive">Banido</Badge>
-                    )}
-                    {seller.is_creator && !seller.banned && (
-                      <Badge className="bg-purple-600">Criador</Badge>
-                    )}
-                    {!seller.banned && !seller.is_creator && (
-                      <Badge variant="secondary">Ativo</Badge>
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {seller.banned && (
+                        <Badge variant="destructive">Banido</Badge>
+                      )}
+                      {seller.is_creator && !seller.banned && (
+                        <Badge className="bg-purple-600">Criador</Badge>
+                      )}
+                      {!seller.banned && !seller.is_creator && (
+                        <Badge variant="secondary">Ativo</Badge>
+                      )}
+                      {seller.balance_retention_percentage && seller.balance_retention_percentage > 0 && (
+                        <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20">
+                          <Shield className="h-3 w-3 mr-1" />
+                          Retenção {seller.balance_retention_percentage}%
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
 
@@ -604,7 +618,19 @@ export default function AdminSellerReports() {
                   </div>
 
                   {/* Ações */}
-                  <div className="pt-2">
+                  <div className="pt-2 space-y-2">
+                    <Button
+                      onClick={() => {
+                        setSellerToManage(seller);
+                        setRetentionDialogOpen(true);
+                      }}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Gerenciar Retenção
+                    </Button>
+                    
                     {seller.banned ? (
                       <Button
                         onClick={() => updateUserStatus(seller.user_id, false)}
@@ -642,6 +668,23 @@ export default function AdminSellerReports() {
         userName={userToBan?.full_name || userToBan?.email || 'usuário'}
         isLoading={processingId !== null}
       />
+
+      {/* Dialog de Retenção */}
+      {sellerToManage && (
+        <SellerRetentionDialog
+          open={retentionDialogOpen}
+          onOpenChange={setRetentionDialogOpen}
+          userId={sellerToManage.user_id}
+          userEmail={sellerToManage.email || ''}
+          currentBalance={sellerToManage.available_balance}
+          currentRetention={sellerToManage.balance_retention_percentage || 0}
+          adminEmail={admin?.email || ''}
+          onSuccess={() => {
+            loadSellersReport();
+            setSellerToManage(null);
+          }}
+        />
+      )}
     </div>
   );
 }

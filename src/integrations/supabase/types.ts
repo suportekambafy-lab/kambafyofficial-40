@@ -2213,6 +2213,7 @@ export type Database = {
         Row: {
           account_holder: string | null
           avatar_url: string | null
+          balance_retention_percentage: number | null
           ban_reason: string | null
           banned: boolean | null
           bio: string | null
@@ -2226,12 +2227,14 @@ export type Database = {
           is_creator: boolean | null
           onesignal_player_id: string | null
           push_notifications_enabled: boolean | null
+          retention_reason: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           account_holder?: string | null
           avatar_url?: string | null
+          balance_retention_percentage?: number | null
           ban_reason?: string | null
           banned?: boolean | null
           bio?: string | null
@@ -2245,12 +2248,14 @@ export type Database = {
           is_creator?: boolean | null
           onesignal_player_id?: string | null
           push_notifications_enabled?: boolean | null
+          retention_reason?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           account_holder?: string | null
           avatar_url?: string | null
+          balance_retention_percentage?: number | null
           ban_reason?: string | null
           banned?: boolean | null
           bio?: string | null
@@ -2264,6 +2269,7 @@ export type Database = {
           is_creator?: boolean | null
           onesignal_player_id?: string | null
           push_notifications_enabled?: boolean | null
+          retention_reason?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2788,6 +2794,36 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_retention_history: {
+        Row: {
+          admin_email: string
+          created_at: string
+          id: string
+          new_percentage: number
+          old_percentage: number
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          admin_email: string
+          created_at?: string
+          id?: string
+          new_percentage: number
+          old_percentage?: number
+          reason: string
+          user_id: string
+        }
+        Update: {
+          admin_email?: string
+          created_at?: string
+          id?: string
+          new_percentage?: number
+          old_percentage?: number
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trusted_devices: {
         Row: {
           created_at: string | null
@@ -3131,6 +3167,15 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_set_seller_retention: {
+        Args: {
+          p_admin_email: string
+          p_reason: string
+          p_retention_percentage: number
+          p_user_id: string
+        }
+        Returns: Json
+      }
       admin_update_identity_verification: {
         Args: {
           p_admin_email?: string
@@ -3285,6 +3330,10 @@ export type Database = {
           updated_at: string
           user_id: string
         }[]
+      }
+      get_available_balance_with_retention: {
+        Args: { p_user_id: string }
+        Returns: number
       }
       get_current_user_email: { Args: never; Returns: string }
       get_lessons_for_student: {
