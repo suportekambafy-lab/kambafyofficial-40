@@ -167,7 +167,13 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         supportWhatsapp: editingProduct.support_whatsapp || "",
         accessDurationType: editingProduct.access_duration_type || "lifetime",
         accessDurationValue: editingProduct.access_duration_value || null,
-        accessDurationDescription: editingProduct.access_duration_description || ""
+        accessDurationDescription: editingProduct.access_duration_description || "",
+        subscriptionConfig: editingProduct.subscription_config || {
+          is_subscription: false,
+          renewal_type: 'manual',
+          billing_cycle: 'monthly',
+          grace_period_days: 7
+        }
       });
     }
   }, [editingProduct, selectedType]);
@@ -272,6 +278,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         access_duration_type: formData.accessDurationType,
         access_duration_value: formData.accessDurationValue,
         access_duration_description: formData.accessDurationDescription || null,
+        subscription_config: formData.subscriptionConfig?.is_subscription ? formData.subscriptionConfig : null,
         user_id: user?.id,
         // ✅ Manter status "Ativo" se produto já foi aprovado, senão usar "Pendente"
         status: (editingProduct && editingProduct.admin_approved) ? 'Ativo' : 'Pendente'
@@ -327,6 +334,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         access_duration_type: formData.accessDurationType,
         access_duration_value: formData.accessDurationValue,
         access_duration_description: formData.accessDurationDescription || null,
+        subscription_config: formData.subscriptionConfig?.is_subscription ? formData.subscriptionConfig : null,
         user_id: user?.id,
         status: 'Rascunho'
       };
