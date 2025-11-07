@@ -61,10 +61,14 @@ export default function Financial() {
     withdrawn: true
   });
 
-  // ✅ DADOS FINANCEIROS SIMPLIFICADOS - Apenas Disponível + Sacado
+  // ✅ DADOS FINANCEIROS COMPLETOS - Total, Retido e Disponível
   const [financialData, setFinancialData] = useState({
-    availableBalance: 0,      // Do customer_balances.balance
-    withdrawnAmount: 0        // Saques aprovados
+    totalBalance: 0,          // Saldo total antes da retenção
+    retainedAmount: 0,        // Valor retido pela plataforma
+    availableBalance: 0,      // Disponível para saque (após retenção)
+    withdrawnAmount: 0,       // Saques aprovados
+    retentionPercentage: 0,   // Porcentagem de retenção
+    retentionReason: null as string | null  // Motivo da retenção
   });
 
   const loadUserData = useCallback(async () => {
@@ -97,16 +101,30 @@ export default function Financial() {
     try {
       setLoading(true);
 
-      // ✅ 1. SALDO DISPONÍVEL - Fonte única de verdade
+      // ✅ 1. BUSCAR RETENÇÃO DO PERFIL
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('balance_retention_percentage, retention_reason')
+        .eq('user_id', user.id)
+        .single();
+
+      const retentionPercentage = profileData?.balance_retention_percentage || 0;
+      const retentionReason = profileData?.retention_reason || null;
+
+      // ✅ 2. SALDO TOTAL (antes da retenção)
       const { data: balanceData } = await supabase
         .from('customer_balances')
         .select('balance')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      const availableBalance = balanceData?.balance || 0;
+      const totalBalance = balanceData?.balance || 0;
 
-      // ✅ 2. TOTAL SACADO (aprovado)
+      // ✅ 3. CALCULAR VALORES
+      const retainedAmount = (totalBalance * retentionPercentage) / 100;
+      const availableBalance = totalBalance - retainedAmount;
+
+      // ✅ 4. TOTAL SACADO (aprovado)
       const { data: withdrawals } = await supabase
         .from('withdrawal_requests')
         .select('amount, status')
@@ -116,7 +134,7 @@ export default function Financial() {
         .filter(w => w.status === 'aprovado')
         .reduce((sum, w) => sum + parseFloat(w.amount.toString()), 0);
 
-      // ✅ 3. CARREGAR HISTÓRICO DE SAQUES
+      // ✅ 5. CARREGAR HISTÓRICO DE SAQUES
       const { data: withdrawalRequestsData } = await supabase
         .from('withdrawal_requests')
         .select('*')
@@ -126,11 +144,18 @@ export default function Financial() {
       setWithdrawalRequests((withdrawalRequestsData as WithdrawalRequest[]) || []);
 
       setFinancialData({
+        totalBalance,
+        retainedAmount,
         availableBalance,
-        withdrawnAmount
+        withdrawnAmount,
+        retentionPercentage,
+        retentionReason
       });
 
       console.log('✅ Dados financeiros carregados:', {
+        totalBalance: totalBalance.toLocaleString(),
+        retentionPercentage: `${retentionPercentage}%`,
+        retainedAmount: retainedAmount.toLocaleString(),
         availableBalance: availableBalance.toLocaleString(),
         withdrawnAmount: withdrawnAmount.toLocaleString()
       });
@@ -331,12 +356,68 @@ export default function Financial() {
         )}
 
         {/* Cards de Saldo */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          {/* Saldo Total */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Saldo Total</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20">
+                  <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-2xl sm:text-3xl font-bold break-words">
+                    {formatCurrency(financialData.totalBalance)}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Total de ganhos
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Valor Retido */}
+          {financialData.retentionPercentage > 0 && (
+            <Card className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Valor Retido</CardTitle>
+                  <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20">
+                    {financialData.retentionPercentage}%
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/20">
+                    <Shield className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 break-words">
+                      {formatCurrency(financialData.retainedAmount)}
+                    </div>
+                    <p className="text-sm text-orange-800 dark:text-orange-200">
+                      Retenção administrativa
+                    </p>
+                  </div>
+                </div>
+                {financialData.retentionReason && (
+                  <div className="mt-3 p-2 bg-orange-100 dark:bg-orange-900/30 rounded text-xs text-orange-900 dark:text-orange-100">
+                    <span className="font-semibold">Motivo:</span> {financialData.retentionReason}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Saldo Disponível */}
           <HighlightedCard>
             <HighlightedCardHeader>
               <div className="flex items-center justify-between">
-                <HighlightedCardTitle>Saldo Disponível</HighlightedCardTitle>
+                <HighlightedCardTitle>Disponível para Saque</HighlightedCardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -356,7 +437,10 @@ export default function Financial() {
                     {showValues.available ? formatCurrency(financialData.availableBalance) : '••••••'}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Pronto para saque
+                    {financialData.retentionPercentage > 0 
+                      ? `Após retenção de ${financialData.retentionPercentage}%`
+                      : 'Pronto para saque'
+                    }
                   </p>
                 </div>
               </div>
@@ -371,38 +455,38 @@ export default function Financial() {
               )}
             </HighlightedCardContent>
           </HighlightedCard>
-
-          {/* Total Sacado */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Total Sacado</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowValues(prev => ({ ...prev, withdrawn: !prev.withdrawn }))}
-                >
-                  {showValues.withdrawn ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20">
-                  <CheckCircle className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-2xl sm:text-3xl font-bold break-words">
-                    {showValues.withdrawn ? formatCurrency(financialData.withdrawnAmount) : '••••••'}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Saques aprovados
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
+
+        {/* Total Sacado - Card separado */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Total Sacado</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowValues(prev => ({ ...prev, withdrawn: !prev.withdrawn }))}
+              >
+                {showValues.withdrawn ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/20">
+                <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-2xl sm:text-3xl font-bold break-words">
+                  {showValues.withdrawn ? formatCurrency(financialData.withdrawnAmount) : '••••••'}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Saques aprovados
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Informações Bancárias */}
         <BankingInfo />
