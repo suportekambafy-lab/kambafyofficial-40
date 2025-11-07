@@ -782,12 +782,18 @@ export type Database = {
           current_period_start: string
           customer_email: string
           customer_name: string | null
+          grace_period_end: string | null
           id: string
+          last_renewal_reminder: string | null
           metadata: Json | null
+          payment_method: string | null
           product_id: string
+          reactivation_count: number | null
+          renewal_type: string | null
           status: string
           stripe_customer_id: string
           stripe_subscription_id: string
+          suspension_date: string | null
           trial_end: string | null
           trial_start: string | null
           updated_at: string | null
@@ -800,12 +806,18 @@ export type Database = {
           current_period_start: string
           customer_email: string
           customer_name?: string | null
+          grace_period_end?: string | null
           id?: string
+          last_renewal_reminder?: string | null
           metadata?: Json | null
+          payment_method?: string | null
           product_id: string
+          reactivation_count?: number | null
+          renewal_type?: string | null
           status?: string
           stripe_customer_id: string
           stripe_subscription_id: string
+          suspension_date?: string | null
           trial_end?: string | null
           trial_start?: string | null
           updated_at?: string | null
@@ -818,12 +830,18 @@ export type Database = {
           current_period_start?: string
           customer_email?: string
           customer_name?: string | null
+          grace_period_end?: string | null
           id?: string
+          last_renewal_reminder?: string | null
           metadata?: Json | null
+          payment_method?: string | null
           product_id?: string
+          reactivation_count?: number | null
+          renewal_type?: string | null
           status?: string
           stripe_customer_id?: string
           stripe_subscription_id?: string
+          suspension_date?: string | null
           trial_end?: string | null
           trial_start?: string | null
           updated_at?: string | null
@@ -2939,6 +2957,79 @@ export type Database = {
           },
         ]
       }
+      subscription_renewal_reminders: {
+        Row: {
+          days_before: number
+          error_message: string | null
+          id: string
+          reminder_type: string
+          sent_at: string
+          status: string
+          subscription_id: string
+        }
+        Insert: {
+          days_before: number
+          error_message?: string | null
+          id?: string
+          reminder_type: string
+          sent_at?: string
+          status?: string
+          subscription_id: string
+        }
+        Update: {
+          days_before?: number
+          error_message?: string | null
+          id?: string
+          reminder_type?: string
+          sent_at?: string
+          status?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_renewal_reminders_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_renewal_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          subscription_id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          subscription_id: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          subscription_id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_renewal_tokens_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trusted_devices: {
         Row: {
           created_at: string | null
@@ -3441,6 +3532,10 @@ export type Database = {
       }
       fix_bunny_cdn_urls: { Args: never; Returns: undefined }
       generate_api_key: { Args: never; Returns: string }
+      generate_renewal_token: {
+        Args: { p_subscription_id: string }
+        Returns: string
+      }
       get_admin_dashboard_stats: {
         Args: never
         Returns: {

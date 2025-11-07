@@ -49,6 +49,7 @@ const HelpCenter = createLazyWithRetry(() => import('@/pages/HelpCenter'), "Help
 const Contact = createLazyWithRetry(() => import('@/pages/Contact'), "Contact");
 const Report = createLazyWithRetry(() => import('@/pages/Report'), "Report");
 const RankingPage = createLazyWithRetry(() => import('@/pages/RankingPage'), "RankingPage");
+const RenewalPage = createLazyWithRetry(() => import('@/pages/RenewalPage'), "RenewalPage");
 const Status = createLazyWithRetry(() => import('@/pages/Status'), "Status");
 const Privacy = createLazyWithRetry(() => import('@/pages/Privacy'), "Privacy");
 const Terms = createLazyWithRetry(() => import('@/pages/Terms'), "Terms");

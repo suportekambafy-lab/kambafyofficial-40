@@ -52,7 +52,15 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
     paymentMethods: [] as PaymentMethod[],
     fantasyName: "",
     customPrices: {} as Record<string, string>,
-    allowsAffiliates: false
+    allowsAffiliates: false,
+    subscriptionConfig: {
+      interval: "month",
+      stripe_price_id: "",
+      trial_days: 0,
+      grace_period_days: 7,
+      reactivation_discount_percentage: 0,
+      allow_reactivation: true
+    }
   });
 
   const [newTag, setNewTag] = useState("");
@@ -106,7 +114,15 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         paymentMethods: editingProduct.payment_methods || [],
         fantasyName: editingProduct.fantasy_name || "",
         customPrices: editingProduct.custom_prices || {},
-        allowsAffiliates: editingProduct.allows_affiliates || false
+        allowsAffiliates: editingProduct.allows_affiliates || false,
+        subscriptionConfig: editingProduct.subscription_config || {
+          interval: "month",
+          stripe_price_id: "",
+          trial_days: 0,
+          grace_period_days: 7,
+          reactivation_discount_percentage: 0,
+          allow_reactivation: true
+        }
       });
     } else {
       const defaultPaymentMethods = getAllPaymentMethods().filter(m => m.enabled);
@@ -123,7 +139,15 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
         paymentMethods: defaultPaymentMethods,
         fantasyName: "",
         customPrices: {},
-        allowsAffiliates: false
+        allowsAffiliates: false,
+        subscriptionConfig: {
+          interval: "month",
+          stripe_price_id: "",
+          trial_days: 0,
+          grace_period_days: 7,
+          reactivation_discount_percentage: 0,
+          allow_reactivation: true
+        }
       });
     }
   }, [editingProduct, selectedType]);
@@ -314,11 +338,19 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
             commission: "10%",
             tags: [],
             memberAreaId: "",
-            paymentMethods: [],
-            fantasyName: "",
-            customPrices: {},
-            allowsAffiliates: false
-          });
+        paymentMethods: [],
+        fantasyName: "",
+        customPrices: {},
+        allowsAffiliates: false,
+        subscriptionConfig: {
+          interval: "month",
+          stripe_price_id: "",
+          trial_days: 0,
+          grace_period_days: 7,
+          reactivation_discount_percentage: 0,
+          allow_reactivation: true
+        }
+      });
         }
       }
     } catch (error) {

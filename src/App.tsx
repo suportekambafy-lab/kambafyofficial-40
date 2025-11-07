@@ -188,8 +188,9 @@ const App = () => {
                        <Route path="/produto/:productId" element={<OptimizedRoutes.ProductSalesPage />} />
                        <Route path="/checkout/:productId" element={<OptimizedRoutes.Checkout />} />
                        <Route path="/checkout/:productId/success" element={<OptimizedRoutes.CheckoutSuccess />} />
-                      <Route path="/obrigado" element={<OptimizedRoutes.ThankYou />} />
-                      <Route path="/como-funciona" element={<OptimizedRoutes.HowItWorks />} />
+                       <Route path="/obrigado" element={<OptimizedRoutes.ThankYou />} />
+                       <Route path="/renovar/:token" element={<OptimizedRoutes.RenewalPage />} />
+                       <Route path="/como-funciona" element={<OptimizedRoutes.HowItWorks />} />
                       <Route path="/precos" element={<OptimizedRoutes.Pricing />} />
                       <Route path="/recursos" element={<OptimizedRoutes.Features />} />
                        <Route path="/ajuda" element={<OptimizedRoutes.HelpCenter />} />

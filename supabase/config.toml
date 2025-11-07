@@ -89,3 +89,18 @@ verify_jwt = false
 
 [functions.release-expired-retentions]
 verify_jwt = false
+
+[functions.check-subscriptions-renewal]
+verify_jwt = false
+
+[functions.send-renewal-reminder]
+verify_jwt = false
+
+[functions.suspend-expired-subscriptions]
+verify_jwt = false
+
+[functions.cancel-grace-period-expired]
+verify_jwt = false
+
+[functions.process-manual-renewal]
+verify_jwt = false

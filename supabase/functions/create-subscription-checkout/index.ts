@@ -30,8 +30,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { productId, customerEmail, customerName, cohortId } = await req.json();
-    logStep('Request data', { productId, customerEmail, cohortId });
+    const { productId, customerEmail, customerName, cohortId, paymentMethod } = await req.json();
+    logStep('Request data', { productId, customerEmail, cohortId, paymentMethod });
 
     if (!productId || !customerEmail) {
       throw new Error('Missing required fields: productId, customerEmail');
@@ -110,6 +110,29 @@ serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
     logStep('Checkout session created', { sessionId: session.id, url: session.url });
+
+    // Criar registro de assinatura com renewal_type = automatic (para Stripe)
+    const newPeriodStart = new Date();
+    const newPeriodEnd = new Date();
+    const interval = subscriptionConfig.interval === 'year' ? 365 : 30;
+    const trialDays = subscriptionConfig.trial_days || 0;
+    newPeriodEnd.setDate(newPeriodEnd.getDate() + interval + trialDays);
+
+    await supabaseClient.from('customer_subscriptions').insert({
+      customer_email: customerEmail,
+      customer_name: customerName || customerEmail,
+      product_id: productId,
+      stripe_subscription_id: session.subscription as string,
+      stripe_customer_id: customerId,
+      renewal_type: 'automatic',
+      payment_method: 'stripe',
+      status: 'active',
+      current_period_start: newPeriodStart.toISOString(),
+      current_period_end: newPeriodEnd.toISOString(),
+      trial_end: trialDays > 0 ? new Date(Date.now() + trialDays * 86400000).toISOString() : null
+    });
+
+    logStep('Subscription record created with renewal_type=automatic');
 
     return new Response(
       JSON.stringify({

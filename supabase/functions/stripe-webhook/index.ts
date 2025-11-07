@@ -96,6 +96,18 @@ serve(async (req) => {
       const metadata = subscription.metadata;
 
       try {
+        // Marcar assinatura como renovação automática
+        const { error: updateError } = await supabase
+          .from('customer_subscriptions')
+          .update({ renewal_type: 'automatic' })
+          .eq('stripe_subscription_id', subscription.id);
+
+        if (updateError) {
+          console.error('❌ Error updating renewal_type:', updateError);
+        } else {
+          console.log('✅ Subscription marked as automatic renewal');
+        }
+
         const { data: insertData, error: insertError } = await supabase
           .from('customer_subscriptions')
           .insert({
