@@ -177,6 +177,8 @@ export default function AdminSellerReports() {
           .from('customer_balances')
           .select('user_id, balance')
           .range(offset, offset + limit - 1);
+        
+        console.log('🔍 Balances query result:', { data, error, count: data?.length });
 
         if (error) throw error;
         
@@ -222,6 +224,7 @@ export default function AdminSellerReports() {
       allBalances?.forEach(balance => {
         balanceByUser.set(balance.user_id, balance.balance);
       });
+      console.log(`💰 ${allBalances.length} saldos organizados. Exemplo:`, balanceByUser.size > 0 ? Array.from(balanceByUser.entries())[0] : 'nenhum');
 
       // Processar dados de cada vendedor
       const sellersData = allProfiles.map(profile => {
@@ -244,6 +247,16 @@ export default function AdminSellerReports() {
         const totalWithdrawals = withdrawalsByUser.get(profile.user_id) || 0;
         const availableBalance = balanceByUser.get(profile.user_id) || 0;
         const totalFees = totalRevenue * 0.08;
+        
+        // Debug do Victor Muabi
+        if (profile.full_name?.includes('Victor Muabi')) {
+          console.log('🎯 Victor Muabi debug:', {
+            user_id: profile.user_id,
+            availableBalance,
+            hasBalanceInMap: balanceByUser.has(profile.user_id),
+            balanceValue: balanceByUser.get(profile.user_id)
+          });
+        }
 
         return {
           user_id: profile.user_id,
