@@ -216,4 +216,7 @@ export const OptimizedRoutes = {
   
   // Ranking page
   RankingPage: withLazyLoading(RankingPage, 'dashboard'),
+  
+  // Renewal page
+  RenewalPage: withLazyLoading(RenewalPage, 'settings'),
 };
