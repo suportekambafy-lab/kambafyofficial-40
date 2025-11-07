@@ -32,7 +32,7 @@ export const useSellerRetention = () => {
         p_retention_percentage: percentage,
         p_reason: reason,
         p_admin_email: adminEmail,
-        p_retention_days: retentionDays || null,
+        p_retention_days: retentionDays ?? null,
       });
 
       console.log('📥 [SET-RETENTION] Resposta do RPC:', { data, error });
