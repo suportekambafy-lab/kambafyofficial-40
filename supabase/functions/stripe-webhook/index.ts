@@ -1,12 +1,14 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
 };
+
+const PLATFORM_COMMISSION_RATE = 0.0899; // 8.99%
 
 serve(async (req) => {
   console.log('🚀 Stripe webhook called!', req.method);
@@ -35,7 +37,7 @@ serve(async (req) => {
     }
 
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2023-10-16',
+      apiVersion: '2025-08-27.basil',
     });
 
     const supabase = createClient(
@@ -86,6 +88,207 @@ serve(async (req) => {
     console.log('🎯 Processing webhook event:', event.type);
     console.log('📊 Event data:', JSON.stringify(event.data, null, 2));
 
+    // ========== HANDLE SUBSCRIPTION EVENTS ==========
+    
+    if (event.type === 'customer.subscription.created') {
+      console.log('📝 Processing subscription created');
+      const subscription = event.data.object as Stripe.Subscription;
+      const metadata = subscription.metadata;
+
+      try {
+        const { data: insertData, error: insertError } = await supabase
+          .from('customer_subscriptions')
+          .insert({
+            customer_email: metadata.customer_email,
+            customer_name: metadata.customer_name || '',
+            product_id: metadata.product_id,
+            stripe_subscription_id: subscription.id,
+            stripe_customer_id: subscription.customer as string,
+            status: subscription.status,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+            trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+            metadata: metadata,
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+
+        await supabase.from('subscription_events').insert({
+          subscription_id: insertData.id,
+          event_type: 'created',
+          stripe_event_id: event.id,
+          data: subscription,
+        });
+
+        console.log('✅ Subscription created successfully:', subscription.id);
+      } catch (error: any) {
+        console.error('❌ Error creating subscription:', error.message);
+        throw error;
+      }
+    }
+
+    if (event.type === 'customer.subscription.updated') {
+      console.log('📝 Processing subscription updated');
+      const subscription = event.data.object as Stripe.Subscription;
+
+      try {
+        const { data: subData, error: updateError } = await supabase
+          .from('customer_subscriptions')
+          .update({
+            status: subscription.status,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+          })
+          .eq('stripe_subscription_id', subscription.id)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+
+        await supabase.from('subscription_events').insert({
+          subscription_id: subData.id,
+          event_type: 'updated',
+          stripe_event_id: event.id,
+          data: subscription,
+        });
+
+        console.log('✅ Subscription updated successfully:', subscription.id);
+      } catch (error: any) {
+        console.error('❌ Error updating subscription:', error.message);
+        throw error;
+      }
+    }
+
+    if (event.type === 'customer.subscription.deleted') {
+      console.log('📝 Processing subscription deleted');
+      const subscription = event.data.object as Stripe.Subscription;
+
+      try {
+        const { data: subData, error: deleteError } = await supabase
+          .from('customer_subscriptions')
+          .update({
+            status: 'canceled',
+            canceled_at: new Date().toISOString(),
+          })
+          .eq('stripe_subscription_id', subscription.id)
+          .select()
+          .single();
+
+        if (deleteError) throw deleteError;
+
+        await supabase.from('subscription_events').insert({
+          subscription_id: subData.id,
+          event_type: 'canceled',
+          stripe_event_id: event.id,
+          data: subscription,
+        });
+
+        console.log('✅ Subscription deleted successfully:', subscription.id);
+      } catch (error: any) {
+        console.error('❌ Error deleting subscription:', error.message);
+        throw error;
+      }
+    }
+
+    if (event.type === 'invoice.payment_succeeded') {
+      console.log('💰 Processing invoice payment succeeded');
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscriptionId = invoice.subscription as string;
+
+      if (subscriptionId) {
+        try {
+          const { data: subscription, error: subError } = await supabase
+            .from('customer_subscriptions')
+            .select('*, products!inner(user_id, name)')
+            .eq('stripe_subscription_id', subscriptionId)
+            .single();
+
+          if (subError || !subscription) {
+            console.error('❌ Subscription not found:', subscriptionId);
+          } else {
+            const amount = (invoice.amount_paid || 0) / 100;
+            const platformFee = amount * PLATFORM_COMMISSION_RATE;
+            const sellerAmount = amount - platformFee;
+
+            console.log('💸 Processing renewal payment:', {
+              amount,
+              platformFee,
+              sellerAmount,
+              sellerUserId: subscription.products.user_id,
+            });
+
+            await supabase.from('balance_transactions').insert({
+              user_id: subscription.products.user_id,
+              type: 'subscription_renewal',
+              amount: sellerAmount,
+              currency: 'KZ',
+              description: `Renovação de assinatura - ${subscription.products.name}`,
+              order_id: `sub_${subscriptionId}_${Date.now()}`,
+            });
+
+            await supabase.from('balance_transactions').insert({
+              user_id: subscription.products.user_id,
+              type: 'kambafy_fee',
+              amount: -platformFee,
+              currency: 'KZ',
+              description: `Taxa Kambafy (8.99%) - Renovação assinatura`,
+              order_id: `fee_${subscriptionId}_${Date.now()}`,
+            });
+
+            await supabase.from('subscription_events').insert({
+              subscription_id: subscription.id,
+              event_type: 'renewed',
+              stripe_event_id: event.id,
+              amount: amount,
+              currency: 'KZ',
+              data: invoice,
+            });
+
+            console.log('✅ Renewal payment processed:', subscriptionId);
+          }
+        } catch (error: any) {
+          console.error('❌ Error processing renewal:', error.message);
+        }
+      }
+    }
+
+    if (event.type === 'invoice.payment_failed') {
+      console.log('⚠️ Processing invoice payment failed');
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscriptionId = invoice.subscription as string;
+
+      if (subscriptionId) {
+        try {
+          const { data: subData, error: updateError } = await supabase
+            .from('customer_subscriptions')
+            .update({ status: 'past_due' })
+            .eq('stripe_subscription_id', subscriptionId)
+            .select()
+            .single();
+
+          if (updateError) throw updateError;
+
+          await supabase.from('subscription_events').insert({
+            subscription_id: subData.id,
+            event_type: 'payment_failed',
+            stripe_event_id: event.id,
+            data: invoice,
+          });
+
+          console.log('✅ Payment failure recorded:', subscriptionId);
+        } catch (error: any) {
+          console.error('❌ Error recording payment failure:', error.message);
+        }
+      }
+    }
+
+    // ========== HANDLE ONE-TIME PAYMENT EVENTS (EXISTING LOGIC) ==========
+    
     // Handle payment intent created (for Multibanco pending payments)
     if (event.type === 'payment_intent.created' || event.type === 'payment_intent.requires_action') {
       console.log('🔔 Detected payment intent event for Multibanco processing');

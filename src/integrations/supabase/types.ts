@@ -773,6 +773,71 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          canceled_at: string | null
+          created_at: string | null
+          current_period_end: string
+          current_period_start: string
+          customer_email: string
+          customer_name: string | null
+          id: string
+          metadata: Json | null
+          product_id: string
+          status: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          trial_end: string | null
+          trial_start: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          canceled_at?: string | null
+          created_at?: string | null
+          current_period_end: string
+          current_period_start: string
+          customer_email: string
+          customer_name?: string | null
+          id?: string
+          metadata?: Json | null
+          product_id: string
+          status?: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          canceled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string
+          current_period_start?: string
+          customer_email?: string
+          customer_name?: string | null
+          id?: string
+          metadata?: Json | null
+          product_id?: string
+          status?: string
+          stripe_customer_id?: string
+          stripe_subscription_id?: string
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_subscriptions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       facebook_api_settings: {
         Row: {
           access_token: string
@@ -2089,6 +2154,7 @@ export type Database = {
           share_link: string | null
           slug: string | null
           status: string | null
+          subscription_config: Json | null
           suggested_price: number | null
           support_email: string | null
           support_whatsapp: string | null
@@ -2133,6 +2199,7 @@ export type Database = {
           share_link?: string | null
           slug?: string | null
           status?: string | null
+          subscription_config?: Json | null
           suggested_price?: number | null
           support_email?: string | null
           support_whatsapp?: string | null
@@ -2177,6 +2244,7 @@ export type Database = {
           share_link?: string | null
           slug?: string | null
           status?: string | null
+          subscription_config?: Json | null
           suggested_price?: number | null
           support_email?: string | null
           support_whatsapp?: string | null
@@ -2829,6 +2897,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      subscription_events: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          data: Json | null
+          event_type: string
+          id: string
+          stripe_event_id: string | null
+          subscription_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          data?: Json | null
+          event_type: string
+          id?: string
+          stripe_event_id?: string | null
+          subscription_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          data?: Json | null
+          event_type?: string
+          id?: string
+          stripe_event_id?: string | null
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trusted_devices: {
         Row: {
