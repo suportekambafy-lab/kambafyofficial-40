@@ -124,19 +124,10 @@ export const SellerRetentionDialog = ({
   };
 
   const handleRemoveRetention = async () => {
-    if (!reason.trim()) {
-      toast({
-        title: 'Razão Obrigatória',
-        description: 'Por favor, explique o motivo da remoção da retenção',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     const success = await setRetention(
       userId, 
       0, 
-      reason, 
+      reason.trim() || 'Retenção removida pelo administrador', 
       adminEmail
     );
     
@@ -217,7 +208,9 @@ export const SellerRetentionDialog = ({
 
           {/* Razão */}
           <div className="space-y-2">
-            <Label htmlFor="reason">Razão da Retenção *</Label>
+            <Label htmlFor="reason" className="text-base font-semibold">
+              Razão da Retenção *
+            </Label>
             <Textarea
               id="reason"
               placeholder="Explique o motivo da retenção ou alteração..."
@@ -225,7 +218,13 @@ export const SellerRetentionDialog = ({
               onChange={(e) => setReason(e.target.value)}
               rows={3}
               required
+              className={!reason.trim() ? 'border-amber-500' : ''}
             />
+            {!reason.trim() && (
+              <p className="text-xs text-amber-600">
+                ⚠️ Preencha a razão para habilitar os botões de ação
+              </p>
+            )}
           </div>
 
           {/* Liberação Automática */}
@@ -299,7 +298,7 @@ export const SellerRetentionDialog = ({
                 <Button 
                   variant="destructive" 
                   onClick={handleRemoveRetention} 
-                  disabled={loading || !reason.trim()}
+                  disabled={loading}
                 >
                   {loading ? 'Removendo...' : 'Remover Retenção'}
                 </Button>
