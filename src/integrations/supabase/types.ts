@@ -3139,6 +3139,14 @@ export type Database = {
         Args: { user_id: string }
         Returns: undefined
       }
+      admin_fix_duplicate_balance_transaction: {
+        Args: {
+          p_correct_balance: number
+          p_transaction_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       admin_get_all_balances: {
         Args: never
         Returns: {

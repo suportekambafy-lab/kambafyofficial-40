@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Shield, Search, Filter, TrendingDown } from 'lucide-react';
+import { ArrowLeft, Shield, Search, Filter, TrendingDown, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { SellerRetentionDialog } from '@/components/admin/SellerRetentionDialog';
 import { SEO } from '@/components/SEO';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 interface SellerWithRetention {
   user_id: string;
@@ -35,6 +36,7 @@ export default function AdminRetentionManagement() {
   const [retentionFilter, setRetentionFilter] = useState('all');
   const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState<SellerWithRetention | null>(null);
+  const [recalculatingBalance, setRecalculatingBalance] = useState<string | null>(null);
 
   useEffect(() => {
     if (admin) {
@@ -96,6 +98,33 @@ export default function AdminRetentionManagement() {
       console.error('Error loading sellers:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRecalculateBalance = async (userId: string, userEmail: string) => {
+    setRecalculatingBalance(userId);
+    try {
+      const { data, error } = await supabase.rpc('admin_recalculate_seller_balance', {
+        target_user_id: userId,
+        delete_old_credit_transactions: true,
+      });
+
+      if (error) throw error;
+
+      const result = data as any;
+      toast.success(`Saldo recalculado para ${userEmail}`, {
+        description: `Saldo anterior: ${formatPriceForSeller(result?.old_balance || 0)} | Novo: ${formatPriceForSeller(result?.new_balance || 0)}`,
+      });
+
+      // Recarregar dados
+      await loadSellersWithRetention();
+    } catch (error: any) {
+      console.error('Error recalculating balance:', error);
+      toast.error('Erro ao recalcular saldo', {
+        description: error.message || 'Erro desconhecido',
+      });
+    } finally {
+      setRecalculatingBalance(null);
     }
   };
 
@@ -300,18 +329,39 @@ export default function AdminRetentionManagement() {
                     <span className="font-medium">{seller.total_sales}</span>
                   </div>
 
-                  {/* Ação */}
-                  <Button
-                    onClick={() => {
-                      setSelectedSeller(seller);
-                      setRetentionDialogOpen(true);
-                    }}
-                    className="w-full"
-                    variant="outline"
-                  >
-                    <Shield className="h-4 w-4 mr-2" />
-                    Modificar Retenção
-                  </Button>
+                  {/* Ações */}
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => {
+                        setSelectedSeller(seller);
+                        setRetentionDialogOpen(true);
+                      }}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Modificar Retenção
+                    </Button>
+                    <Button
+                      onClick={() => handleRecalculateBalance(seller.user_id, seller.email || '')}
+                      disabled={recalculatingBalance === seller.user_id}
+                      className="w-full"
+                      variant="secondary"
+                      size="sm"
+                    >
+                      {recalculatingBalance === seller.user_id ? (
+                        <>
+                          <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                          Recalculando...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-3 w-3 mr-2" />
+                          Recalcular Saldo
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
