@@ -3230,6 +3230,16 @@ export type Database = {
         Args: { admin_id?: string; partner_id: string }
         Returns: undefined
       }
+      audit_balance_transactions: {
+        Args: never
+        Returns: {
+          order_id: string
+          total_amount: number
+          transaction_count: number
+          types: string[]
+          user_id: string
+        }[]
+      }
       calculate_access_expiration: {
         Args: {
           base_date?: string
