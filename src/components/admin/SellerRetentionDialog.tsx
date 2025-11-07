@@ -9,6 +9,7 @@ import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { AlertTriangle, History } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
 
 interface SellerRetentionDialogProps {
   open: boolean;
@@ -35,6 +36,7 @@ export const SellerRetentionDialog = ({
   const [reason, setReason] = useState('');
   const [history, setHistory] = useState<any[]>([]);
   const { setRetention, getRetentionHistory, loading } = useSellerRetention();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
@@ -53,6 +55,21 @@ export const SellerRetentionDialog = ({
     
     if (!reason.trim()) {
       console.warn('⚠️ [RETENTION-DIALOG] Razão vazia, não fazendo nada');
+      toast({
+        title: 'Razão Obrigatória',
+        description: 'Por favor, explique o motivo da retenção',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (percentage === currentRetention) {
+      console.warn('⚠️ [RETENTION-DIALOG] Porcentagem não mudou');
+      toast({
+        title: 'Sem Alterações',
+        description: `A retenção já está definida em ${percentage}%`,
+        variant: 'destructive',
+      });
       return;
     }
 
