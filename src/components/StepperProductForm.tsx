@@ -14,6 +14,7 @@ import PaymentMethodsSelector from "./PaymentMethodsSelector";
 import CountryPriceConfig from "./CountryPriceConfig";
 import { ImageUploader } from "./ImageUploader";
 import { getAllPaymentMethods, PaymentMethod } from "@/utils/paymentMethods";
+import SubscriptionConfig from "./product-form/SubscriptionConfig";
 
 interface StepperProductFormProps {
   editingProduct?: any;
@@ -43,6 +44,12 @@ interface FormData {
   accessDurationType: string;
   accessDurationValue: number | null;
   accessDurationDescription: string;
+  subscriptionConfig?: {
+    is_subscription: boolean;
+    renewal_type: 'manual' | 'automatic';
+    billing_cycle: 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+    grace_period_days: number;
+  };
 }
 
 const getStepTitle = (stepId: number, productType: string) => {
@@ -105,7 +112,13 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
     supportWhatsapp: "",
     accessDurationType: "lifetime",
     accessDurationValue: null,
-    accessDurationDescription: ""
+    accessDurationDescription: "",
+    subscriptionConfig: {
+      is_subscription: false,
+      renewal_type: 'manual',
+      billing_cycle: 'monthly',
+      grace_period_days: 7
+    }
   });
 
   useEffect(() => {
@@ -643,6 +656,18 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                   value={formData.supportWhatsapp}
                   onChange={(e) => setFormData({ ...formData, supportWhatsapp: e.target.value })}
                   placeholder="+244 900 000 000"
+                />
+              </div>
+
+              <div className="mt-6">
+                <SubscriptionConfig
+                  value={formData.subscriptionConfig || {
+                    is_subscription: false,
+                    renewal_type: 'manual',
+                    billing_cycle: 'monthly',
+                    grace_period_days: 7
+                  }}
+                  onChange={(config) => setFormData({ ...formData, subscriptionConfig: config })}
                 />
               </div>
             </>
