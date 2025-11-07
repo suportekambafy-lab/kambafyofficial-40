@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { useSellerRetention } from '@/hooks/useSellerRetention';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
-import { AlertTriangle, History } from 'lucide-react';
+import { AlertTriangle, History, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -34,6 +36,8 @@ export const SellerRetentionDialog = ({
 }: SellerRetentionDialogProps) => {
   const [percentage, setPercentage] = useState(currentRetention);
   const [reason, setReason] = useState('');
+  const [retentionDays, setRetentionDays] = useState<number | undefined>(undefined);
+  const [autoRelease, setAutoRelease] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const { setRetention, getRetentionHistory, loading } = useSellerRetention();
   const { toast } = useToast();
@@ -41,6 +45,8 @@ export const SellerRetentionDialog = ({
   useEffect(() => {
     if (open) {
       setPercentage(currentRetention);
+      setRetentionDays(undefined);
+      setAutoRelease(false);
       loadHistory();
     }
   }, [open, currentRetention]);
@@ -51,7 +57,12 @@ export const SellerRetentionDialog = ({
   };
 
   const handleSubmit = async () => {
-    console.log('🎯 [RETENTION-DIALOG] handleSubmit chamado', { reason: reason.trim(), hasReason: !!reason.trim() });
+    console.log('🎯 [RETENTION-DIALOG] handleSubmit chamado', { 
+      reason: reason.trim(), 
+      hasReason: !!reason.trim(),
+      retentionDays,
+      autoRelease
+    });
     
     if (!reason.trim()) {
       console.warn('⚠️ [RETENTION-DIALOG] Razão vazia, não fazendo nada');
@@ -63,8 +74,8 @@ export const SellerRetentionDialog = ({
       return;
     }
 
-    if (percentage === currentRetention) {
-      console.warn('⚠️ [RETENTION-DIALOG] Porcentagem não mudou');
+    if (percentage === currentRetention && !retentionDays) {
+      console.warn('⚠️ [RETENTION-DIALOG] Porcentagem não mudou e sem dias definidos');
       toast({
         title: 'Sem Alterações',
         description: `A retenção já está definida em ${percentage}%`,
@@ -73,13 +84,38 @@ export const SellerRetentionDialog = ({
       return;
     }
 
-    console.log('🚀 [RETENTION-DIALOG] Chamando setRetention...', { userId, percentage, reason, adminEmail });
-    const success = await setRetention(userId, percentage, reason, adminEmail);
+    if (autoRelease && (!retentionDays || retentionDays <= 0)) {
+      toast({
+        title: 'Dias Obrigatórios',
+        description: 'Defina quantos dias até liberar automaticamente a retenção',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    console.log('🚀 [RETENTION-DIALOG] Chamando setRetention...', { 
+      userId, 
+      percentage, 
+      reason, 
+      adminEmail,
+      retentionDays: autoRelease ? retentionDays : undefined
+    });
+    
+    const success = await setRetention(
+      userId, 
+      percentage, 
+      reason, 
+      adminEmail,
+      autoRelease ? retentionDays : undefined
+    );
+    
     console.log('📊 [RETENTION-DIALOG] Resultado:', { success });
     
     if (success) {
       console.log('✅ [RETENTION-DIALOG] Sucesso! Limpando e fechando...');
       setReason('');
+      setRetentionDays(undefined);
+      setAutoRelease(false);
       onOpenChange(false);
       onSuccess?.();
     } else {
@@ -164,6 +200,44 @@ export const SellerRetentionDialog = ({
               rows={3}
               required
             />
+          </div>
+
+          {/* Liberação Automática */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <Label htmlFor="auto-release" className="cursor-pointer">
+                  Liberação Automática
+                </Label>
+              </div>
+              <Switch
+                id="auto-release"
+                checked={autoRelease}
+                onCheckedChange={setAutoRelease}
+              />
+            </div>
+            
+            {autoRelease && (
+              <div className="space-y-2">
+                <Label htmlFor="retention-days">Dias até Liberar</Label>
+                <Input
+                  id="retention-days"
+                  type="number"
+                  min="1"
+                  max="365"
+                  placeholder="Ex: 90"
+                  value={retentionDays || ''}
+                  onChange={(e) => setRetentionDays(parseInt(e.target.value) || undefined)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {retentionDays && retentionDays > 0 
+                    ? `A retenção será automaticamente liberada em ${new Date(Date.now() + retentionDays * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}`
+                    : 'Defina quantos dias até liberar a retenção automaticamente'
+                  }
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Histórico */}

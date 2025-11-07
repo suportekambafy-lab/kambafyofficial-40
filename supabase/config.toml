@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.bunny-proxy]
 verify_jwt = false
+
+[functions.release-expired-retentions]
+verify_jwt = false

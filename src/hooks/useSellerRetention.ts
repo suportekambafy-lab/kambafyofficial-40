@@ -20,9 +20,10 @@ export const useSellerRetention = () => {
     userId: string,
     percentage: number,
     reason: string,
-    adminEmail: string
+    adminEmail: string,
+    retentionDays?: number
   ) => {
-    console.log('🔄 [SET-RETENTION] Iniciando...', { userId, percentage, reason, adminEmail });
+    console.log('🔄 [SET-RETENTION] Iniciando...', { userId, percentage, reason, adminEmail, retentionDays });
     setLoading(true);
     try {
       console.log('📡 [SET-RETENTION] Chamando RPC admin_set_seller_retention...');
@@ -31,6 +32,7 @@ export const useSellerRetention = () => {
         p_retention_percentage: percentage,
         p_reason: reason,
         p_admin_email: adminEmail,
+        p_retention_days: retentionDays || null,
       });
 
       console.log('📥 [SET-RETENTION] Resposta do RPC:', { data, error });
@@ -40,7 +42,13 @@ export const useSellerRetention = () => {
         throw error;
       }
 
-      const result = data as { success: boolean; error?: string; old_percentage?: number; new_percentage?: number };
+      const result = data as { 
+        success: boolean; 
+        error?: string; 
+        old_percentage?: number; 
+        new_percentage?: number;
+        release_date?: string;
+      };
 
       if (!result.success) {
         console.error('❌ [SET-RETENTION] RPC retornou success=false:', result);
@@ -48,9 +56,16 @@ export const useSellerRetention = () => {
       }
 
       console.log('✅ [SET-RETENTION] Sucesso!', result);
+      
+      let description = `Retenção alterada de ${result.old_percentage}% para ${result.new_percentage}%`;
+      if (result.release_date) {
+        const releaseDate = new Date(result.release_date);
+        description += `\nLiberação automática em: ${releaseDate.toLocaleDateString('pt-BR')}`;
+      }
+      
       toast({
         title: 'Retenção Atualizada',
-        description: `Retenção alterada de ${result.old_percentage}% para ${result.new_percentage}%`,
+        description,
       });
 
       return true;

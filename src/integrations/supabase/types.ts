@@ -2228,6 +2228,7 @@ export type Database = {
           onesignal_player_id: string | null
           push_notifications_enabled: boolean | null
           retention_reason: string | null
+          retention_release_date: string | null
           updated_at: string
           user_id: string
         }
@@ -2249,6 +2250,7 @@ export type Database = {
           onesignal_player_id?: string | null
           push_notifications_enabled?: boolean | null
           retention_reason?: string | null
+          retention_release_date?: string | null
           updated_at?: string
           user_id: string
         }
@@ -2270,6 +2272,7 @@ export type Database = {
           onesignal_player_id?: string | null
           push_notifications_enabled?: boolean | null
           retention_reason?: string | null
+          retention_release_date?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2802,6 +2805,7 @@ export type Database = {
           new_percentage: number
           old_percentage: number
           reason: string
+          retention_days: number | null
           user_id: string
         }
         Insert: {
@@ -2811,6 +2815,7 @@ export type Database = {
           new_percentage: number
           old_percentage?: number
           reason: string
+          retention_days?: number | null
           user_id: string
         }
         Update: {
@@ -2820,6 +2825,7 @@ export type Database = {
           new_percentage?: number
           old_percentage?: number
           reason?: string
+          retention_days?: number | null
           user_id?: string
         }
         Relationships: []
@@ -3182,15 +3188,26 @@ export type Database = {
         }
         Returns: Json
       }
-      admin_set_seller_retention: {
-        Args: {
-          p_admin_email: string
-          p_reason: string
-          p_retention_percentage: number
-          p_user_id: string
-        }
-        Returns: Json
-      }
+      admin_set_seller_retention:
+        | {
+            Args: {
+              p_admin_email: string
+              p_reason: string
+              p_retention_percentage: number
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_admin_email: string
+              p_reason: string
+              p_retention_days?: number
+              p_retention_percentage: number
+              p_user_id: string
+            }
+            Returns: Json
+          }
       admin_update_identity_verification: {
         Args: {
           p_admin_email?: string
@@ -3472,6 +3489,7 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      release_expired_retentions: { Args: never; Returns: Json }
       remove_duplicate_withdrawals: { Args: never; Returns: number }
       seller_process_refund: {
         Args: { p_action: string; p_comment?: string; p_refund_id: string }
