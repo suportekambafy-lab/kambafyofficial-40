@@ -61,11 +61,8 @@ export default function AdminRetentionManagement() {
 
       const userIds = profiles.map((p) => p.user_id);
 
-      // Buscar saldos
-      const { data: balances, error: balancesError } = await supabase
-        .from('customer_balances')
-        .select('user_id, balance')
-        .in('user_id', userIds);
+      // Buscar saldos usando RPC (bypassa RLS)
+      const { data: balances, error: balancesError } = await supabase.rpc('admin_get_all_balances');
 
       if (balancesError) throw balancesError;
 

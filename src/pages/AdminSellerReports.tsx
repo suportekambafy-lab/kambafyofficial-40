@@ -143,54 +143,27 @@ export default function AdminSellerReports() {
       }
       console.log(`✅ ${allOrders.length} vendas carregadas`);
 
-      // Buscar todos os saques aprovados
-      let allWithdrawals: any[] = [];
-      offset = 0;
-      hasMore = true;
+      // Buscar todos os saques aprovados usando RPC (bypassa RLS)
+      console.log('🔍 Buscando saques via RPC...');
+      const { data: allWithdrawals, error: withdrawalsError } = await supabase
+        .rpc('admin_get_all_withdrawals');
 
-      while (hasMore) {
-        const { data, error } = await supabase
-          .from('withdrawal_requests')
-          .select('user_id, amount, status')
-          .eq('status', 'aprovado')
-          .range(offset, offset + limit - 1);
-
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          allWithdrawals = [...allWithdrawals, ...data];
-          offset += limit;
-          hasMore = data.length === limit;
-        } else {
-          hasMore = false;
-        }
+      if (withdrawalsError) {
+        console.error('❌ Erro ao buscar saques:', withdrawalsError);
+        throw withdrawalsError;
       }
-      console.log(`✅ ${allWithdrawals.length} saques carregados`);
+      console.log(`✅ ${allWithdrawals?.length || 0} saques carregados`);
 
-      // Buscar todos os saldos
-      let allBalances: any[] = [];
-      offset = 0;
-      hasMore = true;
-
-      while (hasMore) {
-        const { data, error } = await supabase
-          .from('customer_balances')
-          .select('user_id, balance')
-          .range(offset, offset + limit - 1);
-        
-        console.log('🔍 Balances query result:', { data, error, count: data?.length });
-
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          allBalances = [...allBalances, ...data];
-          offset += limit;
-          hasMore = data.length === limit;
-        } else {
-          hasMore = false;
-        }
+      // Buscar todos os saldos usando RPC (bypassa RLS)
+      console.log('🔍 Buscando saldos via RPC...');
+      const { data: allBalances, error: balancesError } = await supabase
+        .rpc('admin_get_all_balances');
+      
+      if (balancesError) {
+        console.error('❌ Erro ao buscar saldos:', balancesError);
+        throw balancesError;
       }
-      console.log(`✅ ${allBalances.length} saldos carregados`);
+      console.log(`✅ ${allBalances?.length || 0} saldos carregados`, allBalances?.slice(0, 2));
 
       // Criar mapas para lookup eficiente
       const productsByUser = new Map<string, any[]>();
@@ -224,7 +197,6 @@ export default function AdminSellerReports() {
       allBalances?.forEach(balance => {
         balanceByUser.set(balance.user_id, balance.balance);
       });
-      console.log(`💰 ${allBalances.length} saldos organizados. Exemplo:`, balanceByUser.size > 0 ? Array.from(balanceByUser.entries())[0] : 'nenhum');
 
       // Processar dados de cada vendedor
       const sellersData = allProfiles.map(profile => {
@@ -247,16 +219,6 @@ export default function AdminSellerReports() {
         const totalWithdrawals = withdrawalsByUser.get(profile.user_id) || 0;
         const availableBalance = balanceByUser.get(profile.user_id) || 0;
         const totalFees = totalRevenue * 0.08;
-        
-        // Debug do Victor Muabi
-        if (profile.full_name?.includes('Victor Muabi')) {
-          console.log('🎯 Victor Muabi debug:', {
-            user_id: profile.user_id,
-            availableBalance,
-            hasBalanceInMap: balanceByUser.has(profile.user_id),
-            balanceValue: balanceByUser.get(profile.user_id)
-          });
-        }
 
         return {
           user_id: profile.user_id,

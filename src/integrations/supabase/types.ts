@@ -3133,6 +3133,21 @@ export type Database = {
         Args: { user_id: string }
         Returns: undefined
       }
+      admin_get_all_balances: {
+        Args: never
+        Returns: {
+          balance: number
+          user_id: string
+        }[]
+      }
+      admin_get_all_withdrawals: {
+        Args: never
+        Returns: {
+          amount: number
+          status: string
+          user_id: string
+        }[]
+      }
       admin_has_permission: {
         Args: { admin_email: string; required_permission: string }
         Returns: boolean
