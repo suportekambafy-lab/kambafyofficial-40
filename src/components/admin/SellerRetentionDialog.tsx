@@ -74,8 +74,9 @@ export const SellerRetentionDialog = ({
       return;
     }
 
-    if (percentage === currentRetention && !retentionDays) {
-      console.warn('⚠️ [RETENTION-DIALOG] Porcentagem não mudou e sem dias definidos');
+    // Permitir salvar se mudou a porcentagem OU se tem liberação automática configurada
+    if (percentage === currentRetention && !autoRelease) {
+      console.warn('⚠️ [RETENTION-DIALOG] Porcentagem não mudou e sem liberação automática');
       toast({
         title: 'Sem Alterações',
         description: `A retenção já está definida em ${percentage}%`,
@@ -239,7 +240,17 @@ export const SellerRetentionDialog = ({
               <Switch
                 id="auto-release"
                 checked={autoRelease}
-                onCheckedChange={setAutoRelease}
+                onCheckedChange={(checked) => {
+                  setAutoRelease(checked);
+                  // Definir 90 dias como padrão quando ativar
+                  if (checked && !retentionDays) {
+                    setRetentionDays(90);
+                  }
+                  // Limpar dias quando desativar
+                  if (!checked) {
+                    setRetentionDays(undefined);
+                  }
+                }}
               />
             </div>
             
