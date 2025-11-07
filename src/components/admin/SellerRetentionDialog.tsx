@@ -123,6 +123,32 @@ export const SellerRetentionDialog = ({
     }
   };
 
+  const handleRemoveRetention = async () => {
+    if (!reason.trim()) {
+      toast({
+        title: 'Razão Obrigatória',
+        description: 'Por favor, explique o motivo da remoção da retenção',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const success = await setRetention(
+      userId, 
+      0, 
+      reason, 
+      adminEmail
+    );
+    
+    if (success) {
+      setReason('');
+      setRetentionDays(undefined);
+      setAutoRelease(false);
+      onOpenChange(false);
+      onSuccess?.();
+    }
+  };
+
   const availableBalance = currentBalance * (100 - percentage) / 100;
   const retainedBalance = currentBalance * percentage / 100;
 
@@ -267,13 +293,26 @@ export const SellerRetentionDialog = ({
           )}
 
           {/* Ações */}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSubmit} disabled={loading || !reason.trim()}>
-              {loading ? 'Salvando...' : 'Salvar Retenção'}
-            </Button>
+          <div className="flex justify-between gap-2">
+            <div>
+              {currentRetention > 0 && (
+                <Button 
+                  variant="destructive" 
+                  onClick={handleRemoveRetention} 
+                  disabled={loading || !reason.trim()}
+                >
+                  {loading ? 'Removendo...' : 'Remover Retenção'}
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSubmit} disabled={loading || !reason.trim()}>
+                {loading ? 'Salvando...' : 'Salvar Retenção'}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
