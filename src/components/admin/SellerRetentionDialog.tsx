@@ -49,15 +49,24 @@ export const SellerRetentionDialog = ({
   };
 
   const handleSubmit = async () => {
+    console.log('🎯 [RETENTION-DIALOG] handleSubmit chamado', { reason: reason.trim(), hasReason: !!reason.trim() });
+    
     if (!reason.trim()) {
+      console.warn('⚠️ [RETENTION-DIALOG] Razão vazia, não fazendo nada');
       return;
     }
 
+    console.log('🚀 [RETENTION-DIALOG] Chamando setRetention...', { userId, percentage, reason, adminEmail });
     const success = await setRetention(userId, percentage, reason, adminEmail);
+    console.log('📊 [RETENTION-DIALOG] Resultado:', { success });
+    
     if (success) {
+      console.log('✅ [RETENTION-DIALOG] Sucesso! Limpando e fechando...');
       setReason('');
       onOpenChange(false);
       onSuccess?.();
+    } else {
+      console.error('❌ [RETENTION-DIALOG] Falhou ao definir retenção');
     }
   };
 

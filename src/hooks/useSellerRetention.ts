@@ -22,8 +22,10 @@ export const useSellerRetention = () => {
     reason: string,
     adminEmail: string
   ) => {
+    console.log('🔄 [SET-RETENTION] Iniciando...', { userId, percentage, reason, adminEmail });
     setLoading(true);
     try {
+      console.log('📡 [SET-RETENTION] Chamando RPC admin_set_seller_retention...');
       const { data, error } = await supabase.rpc('admin_set_seller_retention', {
         p_user_id: userId,
         p_retention_percentage: percentage,
@@ -31,14 +33,21 @@ export const useSellerRetention = () => {
         p_admin_email: adminEmail,
       });
 
-      if (error) throw error;
+      console.log('📥 [SET-RETENTION] Resposta do RPC:', { data, error });
+
+      if (error) {
+        console.error('❌ [SET-RETENTION] Erro do RPC:', error);
+        throw error;
+      }
 
       const result = data as { success: boolean; error?: string; old_percentage?: number; new_percentage?: number };
 
       if (!result.success) {
+        console.error('❌ [SET-RETENTION] RPC retornou success=false:', result);
         throw new Error(result.error || 'Failed to set retention');
       }
 
+      console.log('✅ [SET-RETENTION] Sucesso!', result);
       toast({
         title: 'Retenção Atualizada',
         description: `Retenção alterada de ${result.old_percentage}% para ${result.new_percentage}%`,
@@ -46,6 +55,7 @@ export const useSellerRetention = () => {
 
       return true;
     } catch (error: any) {
+      console.error('❌ [SET-RETENTION] Erro capturado:', error);
       toast({
         title: 'Erro',
         description: error.message,
