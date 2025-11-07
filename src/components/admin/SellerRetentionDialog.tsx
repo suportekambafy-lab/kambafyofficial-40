@@ -20,6 +20,7 @@ interface SellerRetentionDialogProps {
   userEmail: string;
   currentBalance: number;
   currentRetention: number;
+  retentionReleaseDate?: string | null;
   adminEmail: string;
   onSuccess?: () => void;
 }
@@ -31,6 +32,7 @@ export const SellerRetentionDialog = ({
   userEmail,
   currentBalance,
   currentRetention,
+  retentionReleaseDate,
   adminEmail,
   onSuccess,
 }: SellerRetentionDialogProps) => {
@@ -45,11 +47,24 @@ export const SellerRetentionDialog = ({
   useEffect(() => {
     if (open) {
       setPercentage(currentRetention);
-      setRetentionDays(undefined);
-      setAutoRelease(false);
+      
+      // Inicializar liberação automática se existir data
+      if (retentionReleaseDate) {
+        const releaseDate = new Date(retentionReleaseDate);
+        const now = new Date();
+        const diffInMs = releaseDate.getTime() - now.getTime();
+        const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+        
+        setAutoRelease(true);
+        setRetentionDays(Math.max(1, diffInDays));
+      } else {
+        setAutoRelease(false);
+        setRetentionDays(undefined);
+      }
+      
       loadHistory();
     }
-  }, [open, currentRetention]);
+  }, [open, currentRetention, retentionReleaseDate]);
 
   const loadHistory = async () => {
     const data = await getRetentionHistory(userId);

@@ -45,6 +45,7 @@ interface SellerReport {
   banned_products: number;
   balance_retention_percentage?: number;
   retention_reason?: string | null;
+  retention_release_date?: string | null;
 }
 
 export default function AdminSellerReports() {
@@ -81,7 +82,7 @@ export default function AdminSellerReports() {
       while (hasMore) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('user_id, full_name, email, avatar_url, banned, is_creator, balance_retention_percentage, retention_reason')
+          .select('user_id, full_name, email, avatar_url, banned, is_creator, balance_retention_percentage, retention_reason, retention_release_date')
           .range(offset, offset + limit - 1);
 
         if (error) throw error;
@@ -653,6 +654,7 @@ export default function AdminSellerReports() {
           userEmail={sellerToManage.email || ''}
           currentBalance={sellerToManage.available_balance}
           currentRetention={sellerToManage.balance_retention_percentage || 0}
+          retentionReleaseDate={sellerToManage.retention_release_date}
           adminEmail={admin?.email || ''}
           onSuccess={() => {
             loadSellersReport();

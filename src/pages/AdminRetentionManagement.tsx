@@ -20,6 +20,7 @@ interface SellerWithRetention {
   email: string | null;
   balance_retention_percentage: number;
   retention_reason: string | null;
+  retention_release_date: string | null;
   balance: number;
   total_sales: number;
   total_revenue: number;
@@ -47,7 +48,7 @@ export default function AdminRetentionManagement() {
       // Buscar perfis com retenção ativa
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, full_name, email, balance_retention_percentage, retention_reason')
+        .select('user_id, full_name, email, balance_retention_percentage, retention_reason, retention_release_date')
         .gt('balance_retention_percentage', 0)
         .order('balance_retention_percentage', { ascending: false });
 
@@ -337,6 +338,7 @@ export default function AdminRetentionManagement() {
           userEmail={selectedSeller.email || ''}
           currentBalance={selectedSeller.balance}
           currentRetention={selectedSeller.balance_retention_percentage}
+          retentionReleaseDate={selectedSeller.retention_release_date}
           adminEmail={admin?.email || ''}
           onSuccess={() => {
             loadSellersWithRetention();
