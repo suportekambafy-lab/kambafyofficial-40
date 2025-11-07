@@ -68,7 +68,8 @@ export default function Financial() {
     availableBalance: 0,      // Disponível para saque (após retenção)
     withdrawnAmount: 0,       // Saques aprovados
     retentionPercentage: 0,   // Porcentagem de retenção
-    retentionReason: null as string | null  // Motivo da retenção
+    retentionReason: null as string | null,  // Motivo da retenção
+    retentionReleaseDate: null as string | null  // Data de liberação automática
   });
 
   const loadUserData = useCallback(async () => {
@@ -104,12 +105,13 @@ export default function Financial() {
       // ✅ 1. BUSCAR RETENÇÃO DO PERFIL
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('balance_retention_percentage, retention_reason')
+        .select('balance_retention_percentage, retention_reason, retention_release_date')
         .eq('user_id', user.id)
         .single();
 
       const retentionPercentage = profileData?.balance_retention_percentage || 0;
       const retentionReason = profileData?.retention_reason || null;
+      const retentionReleaseDate = profileData?.retention_release_date || null;
 
       // ✅ 2. SALDO TOTAL (antes da retenção)
       const { data: balanceData } = await supabase
@@ -149,7 +151,8 @@ export default function Financial() {
         availableBalance,
         withdrawnAmount,
         retentionPercentage,
-        retentionReason
+        retentionReason,
+        retentionReleaseDate
       });
 
       console.log('✅ Dados financeiros carregados:', {
@@ -407,6 +410,16 @@ export default function Financial() {
                 {financialData.retentionReason && (
                   <div className="mt-3 p-2 bg-orange-100 dark:bg-orange-900/30 rounded text-xs text-orange-900 dark:text-orange-100">
                     <span className="font-semibold">Motivo:</span> {financialData.retentionReason}
+                  </div>
+                )}
+                {financialData.retentionReleaseDate && (
+                  <div className="mt-2 p-2 bg-green-100 dark:bg-green-900/30 rounded text-xs text-green-900 dark:text-green-100">
+                    <span className="font-semibold">Liberação automática:</span>{' '}
+                    {new Date(financialData.retentionReleaseDate).toLocaleDateString('pt-PT', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    })}
                   </div>
                 )}
               </CardContent>
