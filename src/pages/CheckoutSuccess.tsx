@@ -136,6 +136,21 @@ const CheckoutSuccess = () => {
 
     const checkUpsellConfig = async (productId: string) => {
       try {
+        // 🎯 VERIFICAR STATUS DO PAGAMENTO ANTES DE MOSTRAR UPSELL
+        const { data: orderCheck } = await supabase
+          .from('orders')
+          .select('status')
+          .eq('order_id', orderId)
+          .maybeSingle();
+        
+        console.log('🔍 Verificando status do pagamento para upsell:', orderCheck?.status);
+        
+        // ✅ SÓ mostrar upsell se pagamento estiver COMPLETED
+        if (orderCheck?.status !== 'completed') {
+          console.log('⏸️ Pagamento não está completed - sem upsell (status:', orderCheck?.status + ')');
+          return;
+        }
+        
         const { data: upsellData } = await supabase
           .from('checkout_customizations')
           .select('settings')
@@ -145,7 +160,7 @@ const CheckoutSuccess = () => {
         if (upsellData?.settings && typeof upsellData.settings === 'object') {
           const settings = upsellData.settings as any;
           if (settings.upsell?.enabled && settings.upsell?.link_pagina_upsell) {
-            console.log('✅ Configuração de upsell encontrada, redirecionando...');
+            console.log('✅ Pagamento completed + Upsell configurado - redirecionando...');
             setUpsellConfig(settings.upsell);
             // Redirecionar após 3 segundos
             setTimeout(() => {

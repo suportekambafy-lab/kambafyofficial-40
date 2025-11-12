@@ -1635,16 +1635,12 @@ const Checkout = () => {
       // Não marcar vendas como recuperadas - sistema de recuperação removido
       console.log('✅ Venda concluída - sistema de recuperação desabilitado');
 
-      // Verificar se há configuração de upsell
-      if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
-        console.log('🎯 Redirecionando para página de upsell:', checkoutSettings.upsell.link_pagina_upsell);
-        // Adicionar parâmetros necessários para tracking
-        const upsellUrl = new URL(checkoutSettings.upsell.link_pagina_upsell);
-        upsellUrl.searchParams.append('from_order', orderId);
-        upsellUrl.searchParams.append('customer_email', formData.email);
-        upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
-        window.location.href = upsellUrl.toString();
-      } else if (selectedPayment === 'express') {
+      // ═══════════════════════════════════════════════════════════════
+      // 🎯 LÓGICA DE UPSELL CORRIGIDA
+      // Upsell SÓ deve aparecer para pagamentos EXPRESS CONFIRMADOS
+      // ═══════════════════════════════════════════════════════════════
+      
+      if (selectedPayment === 'express') {
         console.log('⏳ Aguardando confirmação do pagamento Express...');
         
         // Start polling for payment status
@@ -1678,7 +1674,7 @@ const Checkout = () => {
                 countdownIntervalRef.current = null;
               }
               
-              console.log('✅ Pagamento Express confirmado! Redirecionando...');
+              console.log('✅ Pagamento Express confirmado! Verificando upsell...');
               
               // CRÍTICO: Mostrar toast no topo IMEDIATAMENTE quando pagamento confirmado
               toast({
@@ -1714,10 +1710,19 @@ const Checkout = () => {
                 }
               }).catch(err => console.error('Error sending Facebook conversion:', err));
               
-              // Redirecionar normalmente (toast já está visível)
-              // Validação será feita na página de sucesso
-              console.log('🚀 Redirect URL:', `/obrigado?${params.toString()}`);
-              navigate(`/obrigado?${params.toString()}`);
+              // 🎯 AGORA SIM: Verificar upsell APÓS confirmar pagamento
+              if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
+                console.log('🎯 Pagamento confirmado! Redirecionando para upsell:', checkoutSettings.upsell.link_pagina_upsell);
+                const upsellUrl = new URL(checkoutSettings.upsell.link_pagina_upsell);
+                upsellUrl.searchParams.append('from_order', orderId);
+                upsellUrl.searchParams.append('customer_email', formData.email);
+                upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
+                window.location.href = upsellUrl.toString();
+              } else {
+                // Sem upsell, redirecionar para página de sucesso
+                console.log('🚀 Redirect URL:', `/obrigado?${params.toString()}`);
+                navigate(`/obrigado?${params.toString()}`);
+              }
             } else if (pollAttempts >= maxPollAttempts) {
               clearInterval(pollInterval);
               setProcessing(false);
@@ -1734,39 +1739,48 @@ const Checkout = () => {
         }, 5000); // Poll every 5 seconds
         
         setProcessing(false);
-      } else if (selectedPayment === 'reference') {
-        console.log('📋 Processando pagamento por referência AppyPay');
-        console.log('📦 insertedOrder:', insertedOrder);
+      } else if (selectedPayment === 'reference' || selectedPayment === 'transfer') {
+        // 📋 REFERENCE e TRANSFER: NUNCA mostrar upsell (sempre pending)
+        console.log(`📋 Pagamento por ${selectedPayment} - redirecionando sem upsell (pagamento pendente)`);
         
-        // Para pagamento por referência, sempre mostrar modal com dados da referência
-        const refNumber = insertedOrder?.reference_number || insertedOrder?.reference?.referenceNumber;
-        const refEntity = insertedOrder?.entity || insertedOrder?.reference?.entity;
-        const refDueDate = insertedOrder?.due_date || insertedOrder?.reference?.dueDate;
-        
-        if (refNumber && refEntity) {
-          console.log('✅ Dados da referência encontrados:', { refNumber, refEntity, refDueDate });
-          setReferenceData({
-            referenceNumber: refNumber,
-            entity: refEntity,
-            dueDate: refDueDate,
-            amount: totalAmountInKZ,
-            currency: 'KZ',
-            productName: product.name,
-            orderId: orderId
-          });
-          setProcessing(false);
+        if (selectedPayment === 'reference') {
+          console.log('📋 Processando pagamento por referência AppyPay');
+          console.log('📦 insertedOrder:', insertedOrder);
+          
+          // Para pagamento por referência, sempre mostrar modal com dados da referência
+          const refNumber = insertedOrder?.reference_number || insertedOrder?.reference?.referenceNumber;
+          const refEntity = insertedOrder?.entity || insertedOrder?.reference?.entity;
+          const refDueDate = insertedOrder?.due_date || insertedOrder?.reference?.dueDate;
+          
+          if (refNumber && refEntity) {
+            console.log('✅ Dados da referência encontrados:', { refNumber, refEntity, refDueDate });
+            setReferenceData({
+              referenceNumber: refNumber,
+              entity: refEntity,
+              dueDate: refDueDate,
+              amount: totalAmountInKZ,
+              currency: 'KZ',
+              productName: product.name,
+              orderId: orderId
+            });
+            setProcessing(false);
+          } else {
+            console.error('❌ Dados da referência não encontrados:', { refNumber, refEntity, insertedOrder });
+            toast({
+              title: "Erro",
+              message: "Erro ao obter dados da referência. Verifique seu email para os detalhes do pagamento.",
+              variant: "error"
+            });
+            // Redirecionar para página de obrigado mesmo sem modal
+            navigate(`/obrigado?${params.toString()}`);
+          }
         } else {
-          console.error('❌ Dados da referência não encontrados:', { refNumber, refEntity, insertedOrder });
-          toast({
-            title: "Erro",
-            message: "Erro ao obter dados da referência. Verifique seu email para os detalhes do pagamento.",
-            variant: "error"
-          });
-          // Redirecionar para página de obrigado mesmo sem modal
+          // Transfer: redirecionar diretamente
           navigate(`/obrigado?${params.toString()}`);
         }
       } else {
-        console.log('🏠 Redirecionando para página de agradecimento');
+        // 🎯 OUTROS MÉTODOS: Verificar se pagamento já está confirmado
+        console.log('🏠 Processando outros métodos de pagamento');
         
         // ✅ CRITICAL: Só disparar evento de Purchase quando pagamento REALMENTE confirmado
         // - Express: Após polling confirmar status 'completed'
@@ -1807,11 +1821,22 @@ const Checkout = () => {
               eventSourceUrl: window.location.href
             }
           }).catch(err => console.error('Error sending Facebook conversion:', err));
+          
+          // 🎯 Verificar upsell APENAS se pagamento confirmado
+          if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
+            console.log('🎯 Pagamento confirmado! Redirecionando para upsell:', checkoutSettings.upsell.link_pagina_upsell);
+            const upsellUrl = new URL(checkoutSettings.upsell.link_pagina_upsell);
+            upsellUrl.searchParams.append('from_order', orderId);
+            upsellUrl.searchParams.append('customer_email', formData.email);
+            upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
+            window.location.href = upsellUrl.toString();
+          } else {
+            navigate(`/obrigado?${params.toString()}`);
+          }
         } else {
-          console.log('⚠️ Payment not confirmed yet (status: ' + insertedOrder?.payment_status + '), skipping Facebook Pixel event');
+          console.log('⚠️ Payment not confirmed yet (status: ' + insertedOrder?.payment_status + '), skipping Facebook Pixel event and upsell');
+          navigate(`/obrigado?${params.toString()}`);
         }
-        
-        navigate(`/obrigado?${params.toString()}`);
       }
     } catch (error) {
       console.error('Error processing payment:', error);
