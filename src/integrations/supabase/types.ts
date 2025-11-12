@@ -3416,6 +3416,10 @@ export type Database = {
             }
             Returns: Json
           }
+      admin_update_balance: {
+        Args: { p_new_balance: number; p_user_id: string }
+        Returns: undefined
+      }
       admin_update_identity_verification: {
         Args: {
           p_admin_email?: string
