@@ -744,9 +744,8 @@ const InteractiveHero: React.FC = () => {
                     className="bg-white hover:bg-white/90 text-black"
                 />
                 <AppStoreButton 
-                    comingSoon
-                    disabled
-                    className="bg-white/50 text-black cursor-not-allowed opacity-60"
+                    onClick={() => window.open('https://apps.apple.com/pt/app/kambafy/id6752709065', '_blank')}
+                    className="bg-white hover:bg-white/90 text-black"
                 />
             </motion.div>
           </section>
