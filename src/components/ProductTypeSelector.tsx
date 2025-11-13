@@ -45,6 +45,15 @@ export default function ProductTypeSelector({ onClose, onSelectType }: ProductTy
             <Button 
               variant="outline" 
               className="h-20 flex-col gap-2 hover:bg-primary/5"
+              onClick={() => onSelectType("Assinatura")}
+            >
+              <span className="font-medium">Assinatura</span>
+              <span className="text-xs text-muted-foreground">Pagamentos recorrentes mensais ou anuais</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col gap-2 hover:bg-primary/5"
               onClick={() => onSelectType("Link de Pagamento")}
             >
               <span className="font-medium">Link de Pagamento</span>
