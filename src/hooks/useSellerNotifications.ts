@@ -84,16 +84,19 @@ export function useSellerNotifications() {
         .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // últimas 24h
         .order('created_at', { ascending: false });
 
-      return (recentSales || []).map(sale => ({
-        id: `sale-${sale.id}`,
-        type: 'sale' as const,
-        title: 'Nova Venda! 🎉',
-        message: `Você vendeu para ${sale.customer_name}`,
-        amount: parseFloat(sale.amount?.toString() || '0'),
-        timestamp: sale.created_at,
-        read: false,
-        actionUrl: '/vendedor/vendas'
-      }));
+      return (recentSales || []).map(sale => {
+        const sellerCommission = parseFloat(sale.seller_commission?.toString() || '0');
+        return {
+          id: `sale-${sale.id}`,
+          type: 'sale' as const,
+          title: 'Nova Venda',
+          message: `Você vendeu para ${sale.customer_name} (Taxa: ${sale.currency === 'KZ' ? 'Kz' : sale.currency === 'EUR' ? '€' : 'MT'} ${sellerCommission.toFixed(2)})`,
+          amount: parseFloat(sale.amount?.toString() || '0'),
+          timestamp: sale.created_at,
+          read: false,
+          actionUrl: '/vendedor/vendas'
+        };
+      });
     } catch (error) {
       console.error('Erro ao verificar vendas:', error);
       return [];
