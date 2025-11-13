@@ -200,8 +200,11 @@ export function PendingTransfersManager() {
     console.log('🔍 Verificando duplicatas em', transfers.length, 'transferências...');
     const warnings = new Map<string, DuplicateWarning[]>();
     
+    // Helper para normalizar emails (case-insensitive)
+    const normalizeEmail = (email: string) => email.toLowerCase().trim();
+    
     // ⚡ OTIMIZAÇÃO: Buscar todos os dados necessários de uma vez
-    const emails = [...new Set(transfers.map(t => t.customer_email))];
+    const emails = [...new Set(transfers.map(t => normalizeEmail(t.customer_email)))];
     const productIds = [...new Set(transfers.filter(t => t.product_id).map(t => t.product_id!))];
     const hashes = [...new Set(transfers.filter(t => t.payment_proof_hash).map(t => t.payment_proof_hash!))];
     
@@ -209,16 +212,24 @@ export function PendingTransfersManager() {
     const accessMap = new Map<string, Set<string>>();
     if (productIds.length > 0 && emails.length > 0) {
       try {
-        const { data: accesses } = await supabase
+        // Usar OR com ilike para busca case-insensitive
+        let query = supabase
           .from('customer_access')
           .select('customer_email, product_id')
-          .in('customer_email', emails)
           .in('product_id', productIds)
           .eq('is_active', true);
+        
+        // Adicionar condições OR para cada email (case-insensitive)
+        if (emails.length > 0) {
+          const emailConditions = emails.map(email => `customer_email.ilike.${email}`).join(',');
+          query = query.or(emailConditions);
+        }
+        
+        const { data: accesses } = await query;
           
         if (accesses) {
           accesses.forEach(access => {
-            const key = `${access.customer_email}|${access.product_id}`;
+            const key = `${normalizeEmail(access.customer_email)}|${access.product_id}`;
             if (!accessMap.has(key)) {
               accessMap.set(key, new Set());
             }
@@ -258,17 +269,24 @@ export function PendingTransfersManager() {
     const completedTodayMap = new Map<string, number>();
     if (emails.length > 0) {
       try {
-        const { data: completedToday } = await supabase
+        // Usar OR com ilike para busca case-insensitive
+        let query = supabase
           .from('orders')
           .select('customer_email')
-          .in('customer_email', emails)
           .eq('status', 'completed')
           .gte('created_at', todayStart.toISOString());
+        
+        // Adicionar condições OR para cada email (case-insensitive)
+        const emailConditions = emails.map(email => `customer_email.ilike.${email}`).join(',');
+        query = query.or(emailConditions);
+        
+        const { data: completedToday } = await query;
           
         if (completedToday) {
           completedToday.forEach(order => {
-            const count = completedTodayMap.get(order.customer_email) || 0;
-            completedTodayMap.set(order.customer_email, count + 1);
+            const normalizedEmail = normalizeEmail(order.customer_email);
+            const count = completedTodayMap.get(normalizedEmail) || 0;
+            completedTodayMap.set(normalizedEmail, count + 1);
           });
         }
       } catch (error) {
@@ -282,7 +300,7 @@ export function PendingTransfersManager() {
       
       // 1️⃣ Verificar múltiplos pedidos pendentes do mesmo email
       const sameEmailCount = transfers.filter(
-        t => t.customer_email === transfer.customer_email
+        t => normalizeEmail(t.customer_email) === normalizeEmail(transfer.customer_email)
       ).length;
       
       if (sameEmailCount > 1) {
@@ -295,7 +313,7 @@ export function PendingTransfersManager() {
       
       // 2️⃣ Verificar se cliente já tem acesso ao produto (usando cache)
       if (transfer.product_id) {
-        const key = `${transfer.customer_email}|${transfer.product_id}`;
+        const key = `${normalizeEmail(transfer.customer_email)}|${transfer.product_id}`;
         if (accessMap.has(key)) {
           transferWarnings.push({
             type: 'has_access',
@@ -318,7 +336,7 @@ export function PendingTransfersManager() {
       }
       
       // 4️⃣ Verificar múltiplos pedidos aprovados do mesmo cliente hoje (usando cache)
-      const todayCount = completedTodayMap.get(transfer.customer_email) || 0;
+      const todayCount = completedTodayMap.get(normalizeEmail(transfer.customer_email)) || 0;
       if (todayCount > 0) {
         transferWarnings.push({
           type: 'multiple_today',
