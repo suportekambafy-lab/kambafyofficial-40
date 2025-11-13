@@ -191,7 +191,7 @@ export default function ProtectedMemberArea({ children }: ProtectedMemberAreaPro
             </p>
             <div className="space-y-3">
               <Button 
-                onClick={() => navigate('/minhas-compras')}
+                onClick={() => navigate('/meus-acessos')}
                 className="w-full bg-checkout-green hover:bg-checkout-green/90"
               >
                 Ver Meus Acessos
