@@ -637,7 +637,7 @@ const Checkout = () => {
           .from('orders')
           .select('order_bump_data')
           .eq('product_id', product.id)
-          .eq('payment_status', 'completed');
+          .eq('status', 'completed');
         
         if (!response.error && response.data) {
           const totalSales = countTotalSales(response.data);
@@ -1502,11 +1502,11 @@ const Checkout = () => {
             console.log('🔔 Triggering webhooks for local payment method...');
             
             // ✅ CRITICAL: Só disparar webhooks se o pagamento foi realmente completado
-            // Verificar payment_status para TODOS os métodos (express, reference, etc)
-            const shouldTriggerWebhooks = insertedOrder?.payment_status === 'completed';
+            // Verificar status para TODOS os métodos (express, reference, etc)
+            const shouldTriggerWebhooks = insertedOrder?.status === 'completed';
             
             console.log('🔍 Webhook trigger check:', {
-              payment_status: insertedOrder?.payment_status,
+              status: insertedOrder?.status,
               shouldTrigger: shouldTriggerWebhooks,
               payment_method: selectedPayment
             });
@@ -1803,11 +1803,11 @@ const Checkout = () => {
         // - Reference: NÃO disparar aqui (será disparado quando webhook confirmar pagamento)
         // - Stripe: Após redirect de sucesso do Stripe Checkout
         // - Transfer/Outros: NÃO disparar automaticamente
-        const shouldDispatchPixelEvent = insertedOrder?.payment_status === 'completed';
+        const shouldDispatchPixelEvent = insertedOrder?.status === 'completed';
         
         console.log('📊 Facebook Pixel Purchase Event Check:', {
           orderId,
-          paymentStatus: insertedOrder?.payment_status,
+          paymentStatus: insertedOrder?.status,
           paymentMethod: selectedPayment,
           shouldDispatch: shouldDispatchPixelEvent
         });
@@ -1850,7 +1850,7 @@ const Checkout = () => {
             navigate(`/obrigado?${params.toString()}`);
           }
         } else {
-          console.log('⚠️ Payment not confirmed yet (status: ' + insertedOrder?.payment_status + '), skipping Facebook Pixel event and upsell');
+          console.log('⚠️ Payment not confirmed yet (status: ' + insertedOrder?.status + '), skipping Facebook Pixel event and upsell');
           navigate(`/obrigado?${params.toString()}`);
         }
       }
