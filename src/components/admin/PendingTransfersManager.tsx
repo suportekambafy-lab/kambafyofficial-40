@@ -655,12 +655,17 @@ export function PendingTransfersManager() {
           throw error;
         }
         
+        // Detectar se é PDF pelo nome do arquivo
+        const fileName = data.proof_file_name || '';
+        const isPdf = fileName.toLowerCase().endsWith('.pdf');
+        
         setSelectedProof({
           url: signedUrlData.signedUrl,
           fileName: data.proof_file_name || 'Comprovativo',
           bank: data.bank || 'N/A',
           uploadedAt: data.upload_timestamp,
-          hasFile: true
+          hasFile: true,
+          isPdf: isPdf
         });
       } else {
         // Formato antigo - arquivo não disponível no storage
@@ -669,7 +674,8 @@ export function PendingTransfersManager() {
           fileName: data.proof_file_name || 'Comprovativo',
           bank: data.bank || 'N/A',
           uploadedAt: data.upload_timestamp,
-          hasFile: false
+          hasFile: false,
+          isPdf: false
         });
       }
       
@@ -986,15 +992,23 @@ export function PendingTransfersManager() {
               <>
                 {selectedProof.hasFile && selectedProof.url ? (
                   <div className="border rounded p-2">
-                    <img 
-                      src={selectedProof.url} 
-                      alt="Comprovativo de transferência"
-                      className="max-w-full h-auto rounded"
-                      onError={(e) => {
-                        console.error('Erro ao carregar imagem:', e);
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
+                    {selectedProof.isPdf ? (
+                      <iframe
+                        src={selectedProof.url}
+                        className="w-full h-[600px] rounded"
+                        title="Comprovativo de transferência PDF"
+                      />
+                    ) : (
+                      <img 
+                        src={selectedProof.url} 
+                        alt="Comprovativo de transferência"
+                        className="max-w-full h-auto rounded"
+                        onError={(e) => {
+                          console.error('Erro ao carregar imagem:', e);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="border rounded p-4 text-center text-muted-foreground">
