@@ -160,11 +160,88 @@ export function PendingTransfersManager() {
     }
   };
 
-  // 🔍 Função para verificar duplicatas e gerar warnings
+  // 🔍 Função OTIMIZADA para verificar duplicatas e gerar warnings
   const checkForDuplicates = async (transfers: PendingTransfer[]) => {
     console.log('🔍 Verificando duplicatas em', transfers.length, 'transferências...');
     const warnings = new Map<string, DuplicateWarning[]>();
     
+    // ⚡ OTIMIZAÇÃO: Buscar todos os dados necessários de uma vez
+    const emails = [...new Set(transfers.map(t => t.customer_email))];
+    const productIds = [...new Set(transfers.filter(t => t.product_id).map(t => t.product_id!))];
+    const hashes = [...new Set(transfers.filter(t => t.payment_proof_hash).map(t => t.payment_proof_hash!))];
+    
+    // Buscar todos os acessos ativos de uma vez
+    const accessMap = new Map<string, Set<string>>();
+    if (productIds.length > 0 && emails.length > 0) {
+      try {
+        const { data: accesses } = await supabase
+          .from('customer_access')
+          .select('customer_email, product_id')
+          .in('customer_email', emails)
+          .in('product_id', productIds)
+          .eq('is_active', true);
+          
+        if (accesses) {
+          accesses.forEach(access => {
+            const key = `${access.customer_email}|${access.product_id}`;
+            if (!accessMap.has(key)) {
+              accessMap.set(key, new Set());
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao verificar acessos:', error);
+      }
+    }
+    
+    // Buscar hashes duplicados de uma vez
+    const duplicateHashesMap = new Map<string, any>();
+    if (hashes.length > 0) {
+      try {
+        // @ts-ignore - Evitar problemas de inferência de tipo do Supabase
+        const { data: duplicateHashes } = await supabase
+          .from('orders')
+          .select('payment_proof_hash, order_id, customer_email, created_at')
+          .in('payment_proof_hash', hashes)
+          .eq('status', 'completed') as { data: any[] | null };
+          
+        if (duplicateHashes) {
+          duplicateHashes.forEach((dup: any) => {
+            if (dup.payment_proof_hash) {
+              duplicateHashesMap.set(dup.payment_proof_hash, dup);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao verificar hashes:', error);
+      }
+    }
+    
+    // Buscar pedidos completados hoje de uma vez
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const completedTodayMap = new Map<string, number>();
+    if (emails.length > 0) {
+      try {
+        const { data: completedToday } = await supabase
+          .from('orders')
+          .select('customer_email')
+          .in('customer_email', emails)
+          .eq('status', 'completed')
+          .gte('created_at', todayStart.toISOString());
+          
+        if (completedToday) {
+          completedToday.forEach(order => {
+            const count = completedTodayMap.get(order.customer_email) || 0;
+            completedTodayMap.set(order.customer_email, count + 1);
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao verificar pedidos hoje:', error);
+      }
+    }
+    
+    // Processar warnings para cada transferência
     for (const transfer of transfers) {
       const transferWarnings: DuplicateWarning[] = [];
       
@@ -181,74 +258,38 @@ export function PendingTransfersManager() {
         });
       }
       
-      // 2️⃣ Verificar se cliente já tem acesso ao produto
+      // 2️⃣ Verificar se cliente já tem acesso ao produto (usando cache)
       if (transfer.product_id) {
-        try {
-          const { data: access } = await supabase
-            .from('customer_access')
-            .select('id')
-            .eq('customer_email', transfer.customer_email)
-            .eq('product_id', transfer.product_id)
-            .eq('is_active', true)
-            .maybeSingle();
-            
-          if (access) {
-            transferWarnings.push({
-              type: 'has_access',
-              message: '🚨 Cliente já tem acesso ativo ao produto',
-              severity: 'error'
-            });
-          }
-        } catch (error) {
-          console.error('Erro ao verificar acesso:', error);
-        }
-      }
-      
-      // 3️⃣ Verificar hash duplicado em pedidos aprovados
-      if (transfer.payment_proof_hash) {
-        try {
-          // @ts-ignore - Tipos do Supabase ainda não atualizados após migração
-          const { data: duplicateHash } = await supabase
-            .from('orders')
-            .select('order_id, customer_email, created_at')
-            .eq('payment_proof_hash', transfer.payment_proof_hash)
-            .eq('status', 'completed')
-            .not('id', 'eq', transfer.id)
-            .limit(1)
-            .maybeSingle();
-            
-          if (duplicateHash) {
-            transferWarnings.push({
-              type: 'duplicate_hash',
-              message: `🔴 COMPROVATIVO DUPLICADO - já usado no pedido #${duplicateHash.order_id}`,
-              severity: 'error'
-            });
-          }
-        } catch (error) {
-          console.error('Erro ao verificar hash:', error);
-        }
-      }
-      
-      // 4️⃣ Verificar múltiplos pedidos aprovados do mesmo cliente hoje
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        const { data: todayOrders, count } = await supabase
-          .from('orders')
-          .select('id', { count: 'exact', head: false })
-          .eq('customer_email', transfer.customer_email)
-          .eq('status', 'completed')
-          .gte('created_at', today)
-          .not('id', 'eq', transfer.id);
-
-        if (count && count > 0) {
+        const key = `${transfer.customer_email}|${transfer.product_id}`;
+        if (accessMap.has(key)) {
           transferWarnings.push({
-            type: 'multiple_today',
-            message: `⚠️ Cliente já teve ${count} pedido(s) aprovado(s) hoje`,
-            severity: 'warning'
+            type: 'has_access',
+            message: '🚨 Cliente já tem acesso ativo ao produto',
+            severity: 'error'
           });
         }
-      } catch (error) {
-        console.error('Erro ao verificar pedidos de hoje:', error);
+      }
+      
+      // 3️⃣ Verificar hash duplicado (usando cache)
+      if (transfer.payment_proof_hash) {
+        const duplicateHash = duplicateHashesMap.get(transfer.payment_proof_hash);
+        if (duplicateHash && duplicateHash.order_id !== transfer.order_id) {
+          transferWarnings.push({
+            type: 'duplicate_hash',
+            message: `🔴 COMPROVATIVO DUPLICADO - já usado no pedido #${duplicateHash.order_id}`,
+            severity: 'error'
+          });
+        }
+      }
+      
+      // 4️⃣ Verificar múltiplos pedidos aprovados do mesmo cliente hoje (usando cache)
+      const todayCount = completedTodayMap.get(transfer.customer_email) || 0;
+      if (todayCount > 0) {
+        transferWarnings.push({
+          type: 'multiple_today',
+          message: `⚠️ Cliente já teve ${todayCount} pedido(s) aprovado(s) hoje`,
+          severity: 'warning'
+        });
       }
       
       if (transferWarnings.length > 0) {
