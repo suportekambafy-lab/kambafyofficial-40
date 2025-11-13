@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0'
-import { create, verify } from 'https://deno.land/x/djwt@v2.8/mod.ts'
-import { compareSync } from 'https://deno.land/x/bcrypt@v0.2.4/mod.ts'
+import * as jose from 'https://esm.sh/jose@5.2.0'
+import bcrypt from 'https://esm.sh/bcryptjs@2.4.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,38 +11,25 @@ const corsHeaders = {
 const JWT_SECRET = Deno.env.get('ADMIN_JWT_SECRET') || 'kambafy-admin-secret-2025'
 
 async function generateJWT(email: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(JWT_SECRET),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
-
-  const jwt = await create(
-    { alg: 'HS256', typ: 'JWT' },
-    { 
-      email, 
-      role: 'admin',
-      exp: Date.now() / 1000 + 3600 // 1 hora
-    },
-    key
-  )
+  const secret = new TextEncoder().encode(JWT_SECRET)
+  
+  const jwt = await new jose.SignJWT({ 
+    email, 
+    role: 'admin'
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('1h')
+    .setIssuedAt()
+    .sign(secret)
 
   return jwt
 }
 
 async function verifyJWT(token: string): Promise<any> {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(JWT_SECRET),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['verify']
-  )
+  const secret = new TextEncoder().encode(JWT_SECRET)
 
   try {
-    const payload = await verify(token, key)
+    const { payload } = await jose.jwtVerify(token, secret)
     return payload
   } catch {
     return null
@@ -104,7 +91,7 @@ Deno.serve(async (req) => {
     }
     
     // Verificar se a senha fornecida corresponde ao hash armazenado
-    const passwordMatch = compareSync(password, adminUser.password_hash)
+    const passwordMatch = await bcrypt.compare(password, adminUser.password_hash)
     
     if (!passwordMatch) {
       console.error('❌ Senha incorreta')
