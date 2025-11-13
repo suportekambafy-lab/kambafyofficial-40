@@ -136,7 +136,7 @@ export function SellerNotificationCenter() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'payment_approved':
-        return '🎉';
+        return '✓';
       case 'new_sale':
         return '💰';
       case 'withdrawal_processed':
