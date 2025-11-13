@@ -563,16 +563,22 @@ export function PendingTransfersManager() {
         try {
           console.log('📬 Enviando notificação para o vendedor...');
           
+          // Calcular valor com taxa deduzida
+          const fullAmount = parseFloat(orderData.amount);
+          const sellerCommission = orderData.seller_commission 
+            ? parseFloat(orderData.seller_commission.toString())
+            : fullAmount * 0.9101;
+          
           // 1. Notificação no banco de dados
           const { error: notificationError } = await supabase
             .from('seller_notifications')
             .insert({
               user_id: orderData.product_user_id,
               type: 'payment_approved',
-              title: '🎉 Transferência Aprovada!',
-              message: `Sua transferência bancária foi aprovada para o produto "${orderData.product_name}". Valor: ${formatAmount(orderData.amount, orderData.currency)}`,
+              title: 'Transferência Aprovada',
+              message: `Sua transferência bancária foi aprovada para o produto "${orderData.product_name}". Valor (após taxa): ${formatAmount(sellerCommission.toString(), orderData.currency)}`,
               order_id: orderData.order_id,
-              amount: parseFloat(orderData.amount),
+              amount: sellerCommission,
               currency: orderData.currency || 'KZ'
             });
 
