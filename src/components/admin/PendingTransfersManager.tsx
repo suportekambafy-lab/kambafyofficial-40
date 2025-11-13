@@ -435,9 +435,27 @@ export function PendingTransfersManager() {
             }
           }
 
-          // 3. Criar transação de saldo para o vendedor
+          // 3. Criar transação de saldo para o vendedor (COM TAXA DE 8.99%)
           console.log('💰 Criando transação de saldo para o vendedor...');
-          const sellerCommission = parseFloat(orderData.amount);
+          
+          // Usar seller_commission do banco (se disponível) ou calcular: valor × 0.9101 (descontar 8.99%)
+          const fullAmount = parseFloat(orderData.amount);
+          const sellerCommission = orderData.seller_commission 
+            ? parseFloat(orderData.seller_commission)
+            : fullAmount * 0.9101;
+          
+          const platformFee = fullAmount - sellerCommission;
+          const feePercentage = ((platformFee / fullAmount) * 100).toFixed(2);
+          
+          console.log('💰 DETALHES DA COMISSÃO:', {
+            valorTotal: fullAmount,
+            comissaoVendedor: sellerCommission,
+            taxaPlataforma: platformFee,
+            porcentagemTaxa: feePercentage + '%',
+            moeda: orderData.currency || 'KZ',
+            fonte: orderData.seller_commission ? 'banco_de_dados' : 'calculado_automaticamente'
+          });
+          
           const { error: balanceError } = await supabase
             .from('balance_transactions')
             .insert({
@@ -452,7 +470,7 @@ export function PendingTransfersManager() {
           if (balanceError && !balanceError.message.includes('duplicate key') && !balanceError.message.includes('already exists')) {
             console.error('❌ Erro ao criar transação do vendedor:', balanceError);
           } else {
-            console.log('✅ Transação do vendedor criada/verificada');
+            console.log('✅ Transação do vendedor criada/verificada com taxa aplicada');
           }
 
           // 4. Processar dados do order bump se existirem
