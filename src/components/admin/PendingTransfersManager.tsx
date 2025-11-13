@@ -2,13 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle, XCircle, Download, Eye, FileText } from 'lucide-react';
+import { CheckCircle, XCircle, Download, Eye, FileText, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PendingTransfer {
   id: string;
@@ -21,6 +32,21 @@ interface PendingTransfer {
   payment_proof_data: any;
   product_name?: string;
   user_id: string;
+  product_id?: string;
+  payment_proof_hash?: string;
+}
+
+interface DuplicateWarning {
+  type: 'multiple_pending' | 'has_access' | 'duplicate_hash' | 'multiple_today';
+  message: string;
+  severity: 'warning' | 'error';
+}
+
+interface ConfirmationDialog {
+  open: boolean;
+  transferId: string;
+  action: 'approve' | 'reject';
+  warnings: DuplicateWarning[];
 }
 
 export function PendingTransfersManager() {
@@ -31,6 +57,8 @@ export function PendingTransfersManager() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [selectedProof, setSelectedProof] = useState<any>(null);
   const [showProofDialog, setShowProofDialog] = useState(false);
+  const [duplicateWarnings, setDuplicateWarnings] = useState<Map<string, DuplicateWarning[]>>(new Map());
+  const [confirmationDialog, setConfirmationDialog] = useState<ConfirmationDialog | null>(null);
 
   useEffect(() => {
     if (admin) {
@@ -94,11 +122,36 @@ export function PendingTransfersManager() {
         created_at: order.created_at,
         payment_proof_data: order.payment_proof_data,
         product_name: order.product_name,
-        user_id: order.user_id
+        user_id: order.user_id,
+        product_id: undefined, // Será preenchido abaixo
+        payment_proof_hash: undefined // Será preenchido abaixo
         }));
+
+      // 🔍 Buscar dados adicionais (product_id e payment_proof_hash) para cada pedido
+      console.log('🔍 Buscando dados adicionais dos pedidos...');
+      for (const transfer of formattedTransfers) {
+        try {
+          const { data: fullOrder } = await supabase
+            .from('orders')
+            .select('product_id, payment_proof_hash')
+            .eq('id', transfer.id)
+            .maybeSingle();
+            
+          if (fullOrder) {
+            transfer.product_id = fullOrder.product_id;
+            transfer.payment_proof_hash = fullOrder.payment_proof_hash;
+          }
+        } catch (error) {
+          console.error('Erro ao buscar dados adicionais:', error);
+        }
+      }
 
       console.log(`💰 ${formattedTransfers.length} transferências realmente pendentes encontradas`);
       setPendingTransfers(formattedTransfers);
+      
+      // 🔍 Verificar duplicatas após carregar transferências
+      await checkForDuplicates(formattedTransfers);
+      
       console.log(`💰 ${formattedTransfers.length} transferências pendentes carregadas`);
     } catch (error) {
       console.error('❌ Erro ao buscar transferências:', error);
@@ -112,7 +165,125 @@ export function PendingTransfersManager() {
     }
   };
 
+  // 🔍 Função para verificar duplicatas e gerar warnings
+  const checkForDuplicates = async (transfers: PendingTransfer[]) => {
+    console.log('🔍 Verificando duplicatas em', transfers.length, 'transferências...');
+    const warnings = new Map<string, DuplicateWarning[]>();
+    
+    for (const transfer of transfers) {
+      const transferWarnings: DuplicateWarning[] = [];
+      
+      // 1️⃣ Verificar múltiplos pedidos pendentes do mesmo email
+      const sameEmailCount = transfers.filter(
+        t => t.customer_email === transfer.customer_email
+      ).length;
+      
+      if (sameEmailCount > 1) {
+        transferWarnings.push({
+          type: 'multiple_pending',
+          message: `⚠️ ${sameEmailCount} pedidos pendentes do mesmo email`,
+          severity: 'warning'
+        });
+      }
+      
+      // 2️⃣ Verificar se cliente já tem acesso ao produto
+      if (transfer.product_id) {
+        try {
+          const { data: access } = await supabase
+            .from('customer_access')
+            .select('id')
+            .eq('customer_email', transfer.customer_email)
+            .eq('product_id', transfer.product_id)
+            .eq('is_active', true)
+            .maybeSingle();
+            
+          if (access) {
+            transferWarnings.push({
+              type: 'has_access',
+              message: '🚨 Cliente já tem acesso ativo ao produto',
+              severity: 'error'
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao verificar acesso:', error);
+        }
+      }
+      
+      // 3️⃣ Verificar hash duplicado em pedidos aprovados
+      if (transfer.payment_proof_hash) {
+        try {
+          const { data: duplicateHash } = await supabase
+            .from('orders')
+            .select('order_id, customer_email, created_at')
+            .eq('payment_proof_hash', transfer.payment_proof_hash)
+            .eq('status', 'completed')
+            .not('id', 'eq', transfer.id)
+            .limit(1)
+            .maybeSingle();
+            
+          if (duplicateHash) {
+            transferWarnings.push({
+              type: 'duplicate_hash',
+              message: `🔴 COMPROVATIVO DUPLICADO - já usado no pedido #${duplicateHash.order_id}`,
+              severity: 'error'
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao verificar hash:', error);
+        }
+      }
+      
+      // 4️⃣ Verificar múltiplos pedidos aprovados do mesmo cliente hoje
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const { data: todayOrders, count } = await supabase
+          .from('orders')
+          .select('id', { count: 'exact', head: false })
+          .eq('customer_email', transfer.customer_email)
+          .eq('status', 'completed')
+          .gte('created_at', today)
+          .not('id', 'eq', transfer.id);
+
+        if (count && count > 0) {
+          transferWarnings.push({
+            type: 'multiple_today',
+            message: `⚠️ Cliente já teve ${count} pedido(s) aprovado(s) hoje`,
+            severity: 'warning'
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao verificar pedidos de hoje:', error);
+      }
+      
+      if (transferWarnings.length > 0) {
+        warnings.set(transfer.id, transferWarnings);
+        console.log(`⚠️ ${transferWarnings.length} warning(s) para pedido #${transfer.order_id}:`, transferWarnings);
+      }
+    }
+    
+    setDuplicateWarnings(warnings);
+    console.log(`✅ Verificação completa: ${warnings.size} transferências com warnings`);
+  };
+
   const processTransfer = async (transferId: string, action: 'approve' | 'reject') => {
+    // Verificar se há warnings antes de processar
+    const warnings = duplicateWarnings.get(transferId);
+    if (warnings && warnings.length > 0 && action === 'approve') {
+      // Mostrar dialog de confirmação
+      setConfirmationDialog({
+        open: true,
+        transferId,
+        action,
+        warnings
+      });
+      return;
+    }
+    
+    // Processar normalmente se não houver warnings
+    await executeProcessTransfer(transferId, action);
+  };
+
+  const executeProcessTransfer = async (transferId: string, action: 'approve' | 'reject') => {
     try {
       setProcessingId(transferId);
       
@@ -537,6 +708,25 @@ export function PendingTransfersManager() {
                         </div>
                       </div>
 
+                      {/* 🚨 ALERTAS DE DUPLICAÇÃO */}
+                      {duplicateWarnings.has(transfer.id) && (
+                        <div className="space-y-2 mb-3">
+                          {duplicateWarnings.get(transfer.id)!.map((warning, idx) => (
+                            <Alert 
+                              key={idx} 
+                              variant={warning.severity === 'error' ? 'destructive' : 'default'}
+                              className={warning.severity === 'warning' ? 'border-yellow-500 bg-yellow-50' : ''}
+                            >
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertTitle className="text-sm font-semibold">Atenção!</AlertTitle>
+                              <AlertDescription className="text-xs">
+                                {warning.message}
+                              </AlertDescription>
+                            </Alert>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap items-center gap-2 mb-3">
                         <Button
                           variant="outline"
@@ -662,6 +852,61 @@ export function PendingTransfersManager() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 🔔 DIALOG DE CONFIRMAÇÃO PARA CASOS SUSPEITOS */}
+      <AlertDialog 
+        open={confirmationDialog?.open || false} 
+        onOpenChange={(open) => !open && setConfirmationDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              Confirmar Aprovação Suspeita
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p className="font-semibold text-foreground">
+                Este pedido possui os seguintes avisos de segurança:
+              </p>
+              <div className="space-y-2">
+                {confirmationDialog?.warnings.map((warning, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`p-3 rounded border ${
+                      warning.severity === 'error' 
+                        ? 'bg-red-50 border-red-200' 
+                        : 'bg-yellow-50 border-yellow-200'
+                    }`}
+                  >
+                    <p className="text-sm font-medium text-foreground">
+                      {warning.message}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="font-semibold text-foreground pt-2">
+                Tem certeza que deseja aprovar esta transferência?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmationDialog(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmationDialog) {
+                  executeProcessTransfer(confirmationDialog.transferId, confirmationDialog.action);
+                  setConfirmationDialog(null);
+                }
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Sim, Aprovar Mesmo Assim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
