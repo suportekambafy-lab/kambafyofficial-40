@@ -711,8 +711,6 @@ export function PendingTransfersManager() {
           variant: "destructive"
         });
       }
-      
-      await fetchPendingTransfers();
     } catch (error) {
       console.error('❌ Erro ao rejeitar pedidos em lote:', error);
       toast({
@@ -743,8 +741,6 @@ export function PendingTransfersManager() {
         title: "Pedidos processados",
         description: `1 pedido aprovado, ${rejectedCount} pedido(s) rejeitado(s)`,
       });
-      
-      await fetchPendingTransfers();
     } catch (error) {
       console.error('❌ Erro ao processar pedidos:', error);
       toast({
