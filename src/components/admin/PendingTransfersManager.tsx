@@ -83,7 +83,7 @@ export function PendingTransfersManager() {
              console.log('💰 Pending transfers update triggered:', payload);
              // Pequeno delay para permitir que a transação complete
              setTimeout(() => {
-               fetchPendingTransfers();
+               fetchPendingTransfers(true); // Silent refresh para não perder scroll
              }, 500);
            }
         )
@@ -95,9 +95,12 @@ export function PendingTransfersManager() {
     }
   }, [admin]);
 
-  const fetchPendingTransfers = async () => {
+  const fetchPendingTransfers = async (silentRefresh = false) => {
     try {
-      setLoading(true);
+      // Só mostrar loading na primeira carga, não em refreshes automáticos
+      if (!silentRefresh) {
+        setLoading(true);
+      }
       
       console.log('💰 Buscando transferências pendentes...');
 
@@ -156,7 +159,9 @@ export function PendingTransfersManager() {
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      if (!silentRefresh) {
+        setLoading(false);
+      }
     }
   };
 
