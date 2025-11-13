@@ -47,8 +47,13 @@ interface FormData {
   subscriptionConfig?: {
     is_subscription: boolean;
     renewal_type: 'manual' | 'automatic';
-    billing_cycle: 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+    interval: 'day' | 'week' | 'month' | 'year';
+    interval_count: number;
+    trial_days: number;
     grace_period_days: number;
+    stripe_price_id: string;
+    allow_reactivation: boolean;
+    reactivation_discount_percentage: number;
   };
 }
 
@@ -114,10 +119,15 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
     accessDurationValue: null,
     accessDurationDescription: "",
     subscriptionConfig: {
-      is_subscription: false,
+      is_subscription: selectedType === "Assinatura",
       renewal_type: 'manual',
-      billing_cycle: 'monthly',
-      grace_period_days: 7
+      interval: 'month',
+      interval_count: 1,
+      trial_days: 0,
+      grace_period_days: 7,
+      stripe_price_id: '',
+      allow_reactivation: true,
+      reactivation_discount_percentage: 0
     }
   });
 
@@ -169,10 +179,15 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         accessDurationValue: editingProduct.access_duration_value || null,
         accessDurationDescription: editingProduct.access_duration_description || "",
         subscriptionConfig: editingProduct.subscription_config || {
-          is_subscription: false,
+          is_subscription: selectedType === "Assinatura",
           renewal_type: 'manual',
-          billing_cycle: 'monthly',
-          grace_period_days: 7
+          interval: 'month',
+          interval_count: 1,
+          trial_days: 0,
+          grace_period_days: 7,
+          stripe_price_id: '',
+          allow_reactivation: true,
+          reactivation_discount_percentage: 0
         }
       });
     }
@@ -219,6 +234,32 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
           toast.error("Categoria é obrigatória");
           return false;
         }
+        
+        // Validação de configurações de assinatura
+        if (formData.subscriptionConfig?.is_subscription) {
+          if (formData.subscriptionConfig.interval_count < 1) {
+            toast.error("O intervalo de cobrança deve ser maior que zero");
+            return false;
+          }
+          
+          if (formData.subscriptionConfig.renewal_type === 'automatic' && 
+              !formData.subscriptionConfig.stripe_price_id?.trim()) {
+            toast.error("Para renovação automática, é necessário configurar o Stripe Price ID");
+            return false;
+          }
+          
+          if (formData.subscriptionConfig.trial_days < 0) {
+            toast.error("O período de teste não pode ser negativo");
+            return false;
+          }
+          
+          if (formData.subscriptionConfig.reactivation_discount_percentage < 0 || 
+              formData.subscriptionConfig.reactivation_discount_percentage > 100) {
+            toast.error("O desconto de reativação deve estar entre 0% e 100%");
+            return false;
+          }
+        }
+        
         return true;
 
       case 5:
@@ -667,17 +708,24 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                 />
               </div>
 
-              <div className="mt-6">
-                <SubscriptionConfig
-                  value={formData.subscriptionConfig || {
-                    is_subscription: false,
-                    renewal_type: 'manual',
-                    billing_cycle: 'monthly',
-                    grace_period_days: 7
-                  }}
-                  onChange={(config) => setFormData({ ...formData, subscriptionConfig: config })}
-                />
-              </div>
+              {formData.type === "Assinatura" && (
+                <div className="mt-6">
+                  <SubscriptionConfig
+                    value={formData.subscriptionConfig || {
+                      is_subscription: true,
+                      renewal_type: 'manual',
+                      interval: 'month',
+                      interval_count: 1,
+                      trial_days: 0,
+                      grace_period_days: 7,
+                      stripe_price_id: '',
+                      allow_reactivation: true,
+                      reactivation_discount_percentage: 0
+                    }}
+                    onChange={(config) => setFormData({ ...formData, subscriptionConfig: config })}
+                  />
+                </div>
+              )}
             </>
           )}
 

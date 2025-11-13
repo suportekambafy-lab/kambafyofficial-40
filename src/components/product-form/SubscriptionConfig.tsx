@@ -4,12 +4,18 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Check } from "lucide-react";
 
 export interface SubscriptionConfigData {
   is_subscription: boolean;
   renewal_type: 'manual' | 'automatic';
-  billing_cycle: 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+  interval: 'day' | 'week' | 'month' | 'year';
+  interval_count: number;
+  trial_days: number;
   grace_period_days: number;
+  stripe_price_id: string;
+  allow_reactivation: boolean;
+  reactivation_discount_percentage: number;
 }
 
 interface SubscriptionConfigProps {
@@ -48,6 +54,16 @@ export default function SubscriptionConfig({ value, onChange }: SubscriptionConf
 
         {value.is_subscription && (
           <>
+            {/* Exemplos Práticos */}
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+              <h4 className="font-semibold text-sm mb-2">💡 Exemplos comuns:</h4>
+              <ul className="text-xs space-y-1 text-muted-foreground">
+                <li>• <strong>Netflix:</strong> Mensal (1 mês) + 7 dias teste + renovação automática</li>
+                <li>• <strong>Quinzenal:</strong> Semanal (2 semanas) + renovação manual</li>
+                <li>• <strong>Trimestral:</strong> Mensal (3 meses) + renovação automática</li>
+              </ul>
+            </div>
+
             {/* Tipo de Renovação */}
             <div className="space-y-2">
               <Label htmlFor="renewal_type">Tipo de Renovação</Label>
@@ -70,23 +86,54 @@ export default function SubscriptionConfig({ value, onChange }: SubscriptionConf
               </p>
             </div>
 
-            {/* Ciclo de Cobrança */}
+            {/* Intervalo de Cobrança */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Intervalo de Cobrança</Label>
+                <Select value={value.interval} onValueChange={(val) => handleChange('interval', val)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="day">Diário</SelectItem>
+                    <SelectItem value="week">Semanal</SelectItem>
+                    <SelectItem value="month">Mensal</SelectItem>
+                    <SelectItem value="year">Anual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>A cada quantos(as)?</Label>
+                <Input 
+                  type="number" 
+                  min="1" 
+                  max="12"
+                  value={value.interval_count}
+                  onChange={(e) => handleChange('interval_count', parseInt(e.target.value) || 1)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ex: "2" semanas = quinzenal
+                </p>
+              </div>
+            </div>
+
+            {/* Período de Teste Grátis */}
             <div className="space-y-2">
-              <Label htmlFor="billing_cycle">Ciclo de Cobrança</Label>
-              <Select
-                value={value.billing_cycle}
-                onValueChange={(val) => handleChange('billing_cycle', val)}
-              >
-                <SelectTrigger id="billing_cycle">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="monthly">Mensal</SelectItem>
-                  <SelectItem value="quarterly">Trimestral (3 meses)</SelectItem>
-                  <SelectItem value="semiannual">Semestral (6 meses)</SelectItem>
-                  <SelectItem value="annual">Anual (12 meses)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="trial_days">Período de Teste Grátis (dias)</Label>
+              <Input
+                id="trial_days"
+                type="number"
+                min="0"
+                max="90"
+                value={value.trial_days}
+                onChange={(e) => handleChange('trial_days', parseInt(e.target.value) || 0)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {value.trial_days === 0 
+                  ? '⚠️ Sem período de teste - cliente pagará imediatamente' 
+                  : `✅ Cliente terá ${value.trial_days} dias grátis antes da primeira cobrança`}
+              </p>
             </div>
 
             {/* Período de Graça */}
@@ -105,21 +152,95 @@ export default function SubscriptionConfig({ value, onChange }: SubscriptionConf
               </p>
             </div>
 
+            {/* Stripe Price ID */}
+            <div className="space-y-2">
+              <Label htmlFor="stripe_price_id">Stripe Price ID</Label>
+              <Input
+                id="stripe_price_id"
+                type="text"
+                placeholder="price_1ABC..."
+                value={value.stripe_price_id}
+                onChange={(e) => handleChange('stripe_price_id', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {value.renewal_type === 'automatic' 
+                  ? '⚠️ Obrigatório para renovação automática' 
+                  : 'Opcional para renovação manual'}
+              </p>
+            </div>
+
+            {/* Configurações de Reativação */}
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Permitir Reativação</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Cliente pode reativar assinatura cancelada
+                  </p>
+                </div>
+                <Switch
+                  checked={value.allow_reactivation}
+                  onCheckedChange={(checked) => handleChange('allow_reactivation', checked)}
+                />
+              </div>
+              
+              {value.allow_reactivation && (
+                <div className="space-y-2">
+                  <Label>Desconto na Reativação (%)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={value.reactivation_discount_percentage}
+                    onChange={(e) => handleChange('reactivation_discount_percentage', parseInt(e.target.value) || 0)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Ex: 20 = 20% de desconto no primeiro mês ao reativar
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Resumo da Configuração */}
-            <div className="mt-4 p-4 bg-muted rounded-lg space-y-2">
-              <h4 className="font-semibold text-sm">Resumo</h4>
-              <ul className="text-sm space-y-1 text-muted-foreground">
-                <li>• Renovação: <span className="font-medium text-foreground">
-                  {value.renewal_type === 'manual' ? 'Manual' : 'Automática'}
-                </span></li>
-                <li>• Ciclo: <span className="font-medium text-foreground">
-                  {value.billing_cycle === 'monthly' ? 'Mensal' :
-                   value.billing_cycle === 'quarterly' ? 'Trimestral' :
-                   value.billing_cycle === 'semiannual' ? 'Semestral' : 'Anual'}
-                </span></li>
-                <li>• Período de Graça: <span className="font-medium text-foreground">
-                  {value.grace_period_days} dias
-                </span></li>
+            <div className="mt-6 p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg space-y-2">
+              <h4 className="font-semibold text-sm flex items-center gap-2">
+                <Check className="w-4 h-4" /> Resumo da Configuração
+              </h4>
+              <ul className="text-sm space-y-1.5 text-muted-foreground">
+                <li>
+                  <strong>Renovação:</strong> {value.renewal_type === 'manual' ? '🔄 Manual' : '⚡ Automática'}
+                </li>
+                
+                <li>
+                  <strong>Frequência:</strong> A cada {value.interval_count}{' '}
+                  {value.interval === 'day' ? 'dia(s)' :
+                   value.interval === 'week' ? 'semana(s)' :
+                   value.interval === 'month' ? 'mês(es)' : 'ano(s)'}
+                </li>
+                
+                {value.trial_days > 0 && (
+                  <li className="text-green-600 dark:text-green-400">
+                    <strong>Teste Grátis:</strong> ✨ {value.trial_days} dias
+                  </li>
+                )}
+                
+                <li>
+                  <strong>Período de Graça:</strong> {value.grace_period_days} dias após vencimento
+                </li>
+                
+                {value.stripe_price_id && (
+                  <li className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                    Stripe: {value.stripe_price_id}
+                  </li>
+                )}
+                
+                {value.allow_reactivation && (
+                  <li>
+                    <strong>Reativação:</strong> ✅ Permitida
+                    {value.reactivation_discount_percentage > 0 && 
+                      ` (${value.reactivation_discount_percentage}% desconto)`}
+                  </li>
+                )}
               </ul>
             </div>
           </>
