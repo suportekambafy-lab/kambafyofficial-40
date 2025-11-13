@@ -53,6 +53,25 @@ export function DuplicatesManagementDialog({
   const [selectedForApproval, setSelectedForApproval] = useState<string | null>(null);
   const [bulkAction, setBulkAction] = useState<{ type: 'reject_all' | 'approve_one'; data?: string } | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [processedIds, setProcessedIds] = useState<Set<string>>(new Set());
+
+  // Reset processed IDs when dialog opens with new transfers
+  React.useEffect(() => {
+    if (open) {
+      setProcessedIds(new Set());
+      setSelectedForApproval(null);
+    }
+  }, [open, email]);
+
+  // Fechar automaticamente quando todos os pedidos forem processados
+  React.useEffect(() => {
+    if (open && transfers.length > 0 && processedIds.size === transfers.length) {
+      console.log('✅ Todos os pedidos foram processados, fechando modal');
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 1000); // Delay para mostrar que foi processado
+    }
+  }, [open, transfers.length, processedIds.size, onOpenChange]);
 
   const handleBulkRejectConfirm = async () => {
     setProcessing(true);
@@ -84,10 +103,8 @@ export function DuplicatesManagementDialog({
     setProcessing(true);
     try {
       await onApprove(transferId);
-      // Se sobrar apenas 1 pedido, fechar o modal
-      if (transfers.length <= 2) {
-        onOpenChange(false);
-      }
+      // Marcar como processado
+      setProcessedIds(prev => new Set([...prev, transferId]));
     } finally {
       setProcessing(false);
     }
@@ -97,10 +114,8 @@ export function DuplicatesManagementDialog({
     setProcessing(true);
     try {
       await onReject(transferId);
-      // Se sobrar apenas 1 pedido, fechar o modal
-      if (transfers.length <= 2) {
-        onOpenChange(false);
-      }
+      // Marcar como processado
+      setProcessedIds(prev => new Set([...prev, transferId]));
     } finally {
       setProcessing(false);
     }
@@ -111,6 +126,9 @@ export function DuplicatesManagementDialog({
     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
 
+  // Filtrar pedidos não processados
+  const activeTransfers = sortedTransfers.filter(t => !processedIds.has(t.id));
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -120,7 +138,13 @@ export function DuplicatesManagementDialog({
               🔍 Pedidos Duplicados
             </DialogTitle>
             <DialogDescription>
-              <span className="font-semibold">{email}</span> - {transfers.length} pedidos pendentes encontrados
+              <span className="font-semibold">{email}</span> - {activeTransfers.length} de {transfers.length} pedidos pendentes
+              {processedIds.size > 0 && (
+                <>
+                  <br />
+                  <span className="text-xs text-green-600">✅ {processedIds.size} processado(s)</span>
+                </>
+              )}
               <br />
               <span className="text-xs text-muted-foreground">💡 Sugerimos aprovar o pedido mais antigo</span>
             </DialogDescription>
@@ -128,21 +152,28 @@ export function DuplicatesManagementDialog({
           
           {/* Grid com os pedidos */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[55vh] overflow-y-auto p-1">
-            {sortedTransfers.map((transfer, idx) => (
-              <Card 
-                key={transfer.id} 
-                className={`relative transition-all ${
-                  selectedForApproval === transfer.id 
-                    ? 'ring-2 ring-primary shadow-lg' 
-                    : ''
-                }`}
-              >
-                <Badge 
-                  className="absolute top-2 right-2 z-10"
-                  variant={idx === 0 ? "default" : "secondary"}
-                >
-                  {idx === 0 ? '🕐 Mais Antigo' : `${idx + 1} de ${transfers.length}`}
-                </Badge>
+            {activeTransfers.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                <p>✅ Todos os pedidos foram processados</p>
+              </div>
+            ) : (
+              activeTransfers.map((transfer, idx) => {
+                const originalIdx = sortedTransfers.findIndex(t => t.id === transfer.id);
+                return (
+                  <Card 
+                    key={transfer.id} 
+                    className={`relative transition-all ${
+                      selectedForApproval === transfer.id 
+                        ? 'ring-2 ring-primary shadow-lg' 
+                        : ''
+                    } ${processedIds.has(transfer.id) ? 'opacity-50' : ''}`}
+                  >
+                    <Badge 
+                      className="absolute top-2 right-2 z-10"
+                      variant={originalIdx === 0 ? "default" : "secondary"}
+                    >
+                      {originalIdx === 0 ? '🕐 Mais Antigo' : `${originalIdx + 1} de ${transfers.length}`}
+                    </Badge>
                 
                 <CardContent className="p-4 pt-10 space-y-3">
                   {/* Thumbnail do comprovativo */}
@@ -239,7 +270,9 @@ export function DuplicatesManagementDialog({
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            );
+          })
+        )}
           </div>
           
           {/* Ações em lote */}
@@ -247,9 +280,9 @@ export function DuplicatesManagementDialog({
             <Button 
               variant="destructive" 
               onClick={() => setBulkAction({ type: 'reject_all' })}
-              disabled={processing || transfers.length === 0}
+              disabled={processing || activeTransfers.length === 0}
             >
-              🗑️ Rejeitar Todos ({transfers.length})
+              🗑️ Rejeitar Todos ({activeTransfers.length})
             </Button>
             <Button 
               variant="default" 
@@ -260,7 +293,7 @@ export function DuplicatesManagementDialog({
                 }
                 setBulkAction({ type: 'approve_one', data: selectedForApproval || sortedTransfers[0].id });
               }}
-              disabled={processing || transfers.length === 0}
+              disabled={processing || activeTransfers.length === 0}
             >
               ✅ Aprovar {selectedForApproval ? 'Selecionado' : '1º'} e Rejeitar Outros
             </Button>
