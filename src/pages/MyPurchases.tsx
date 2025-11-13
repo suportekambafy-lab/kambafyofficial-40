@@ -43,6 +43,19 @@ export default function MyPurchases() {
       }
 
       console.log('✅ MyPurchases: Loaded', data?.length || 0, 'purchases');
+      console.log('🔍 MyPurchases: Dados das compras:', data);
+      
+      // Debug: verificar campos importantes para reembolso
+      data?.forEach((order, idx) => {
+        console.log(`📦 Compra ${idx + 1}:`, {
+          id: order.id,
+          has_active_refund: order.has_active_refund,
+          refund_deadline: order.refund_deadline,
+          refund_requests: order.refund_requests,
+          created_at: order.created_at
+        });
+      });
+      
       setPurchases(data || []);
     } catch (error) {
       console.error('Error loading purchases:', error);
@@ -56,9 +69,24 @@ export default function MyPurchases() {
   }, [user]);
 
   const canRequestRefund = (order: any) => {
-    if (order.has_active_refund) return false;
-    if (!order.refund_deadline) return false;
-    return new Date(order.refund_deadline) > new Date();
+    console.log('🔍 Verificando se pode solicitar reembolso:', {
+      order_id: order.id,
+      has_active_refund: order.has_active_refund,
+      refund_deadline: order.refund_deadline,
+      deadline_passou: order.refund_deadline ? new Date(order.refund_deadline) > new Date() : false
+    });
+    
+    if (order.has_active_refund) {
+      console.log('❌ Já tem reembolso ativo');
+      return false;
+    }
+    if (!order.refund_deadline) {
+      console.log('❌ Sem refund_deadline definido');
+      return false;
+    }
+    const canRefund = new Date(order.refund_deadline) > new Date();
+    console.log(canRefund ? '✅ Pode solicitar reembolso' : '❌ Prazo expirado');
+    return canRefund;
   };
 
   const getDaysLeft = (deadline: string) => {
