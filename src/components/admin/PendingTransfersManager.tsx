@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle, XCircle, Download, Eye, FileText, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, Download, Eye, FileText, AlertTriangle, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -64,6 +64,10 @@ export function PendingTransfersManager() {
   // Estados para gerenciamento de duplicados
   const [duplicatesModalOpen, setDuplicatesModalOpen] = useState(false);
   const [selectedEmailForDuplicates, setSelectedEmailForDuplicates] = useState<string | null>(null);
+  
+  // Estado para botão de scroll
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const scrollPositionRef = useRef<number>(0);
 
   useEffect(() => {
     if (admin) {
@@ -81,6 +85,8 @@ export function PendingTransfersManager() {
           },
            (payload) => {
              console.log('💰 Pending transfers update triggered:', payload);
+             // Salvar posição de scroll antes de atualizar
+             scrollPositionRef.current = window.pageYOffset;
              // Pequeno delay para permitir que a transação complete
              setTimeout(() => {
                fetchPendingTransfers(true); // Silent refresh para não perder scroll
@@ -95,7 +101,26 @@ export function PendingTransfersManager() {
     }
   }, [admin]);
 
+  // Listener para scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      
+      // Mostrar botão se não está perto do fim da página
+      setShowScrollButton(scrollTop + clientHeight < scrollHeight - 200);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial position
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const fetchPendingTransfers = async (silentRefresh = false) => {
+    const savedScrollPosition = scrollPositionRef.current;
+    
     try {
       // Só mostrar loading na primeira carga, não em refreshes automáticos
       if (!silentRefresh) {
@@ -161,6 +186,11 @@ export function PendingTransfersManager() {
     } finally {
       if (!silentRefresh) {
         setLoading(false);
+      } else {
+        // Restaurar posição de scroll após atualização silenciosa
+        requestAnimationFrame(() => {
+          window.scrollTo(0, savedScrollPosition);
+        });
       }
     }
   };
@@ -1059,6 +1089,23 @@ export function PendingTransfersManager() {
           onDownloadProof={(proof) => downloadProof(proof, 'comprovativo')}
           formatAmount={formatAmount}
         />
+      )}
+
+      {/* Botão flutuante para scroll até o fim */}
+      {showScrollButton && (
+        <Button
+          onClick={() => {
+            window.scrollTo({
+              top: document.documentElement.scrollHeight,
+              behavior: 'smooth'
+            });
+          }}
+          className="fixed bottom-6 right-6 z-50 rounded-full w-12 h-12 p-0 shadow-lg"
+          size="icon"
+          title="Ir para o fim da página"
+        >
+          <ArrowDown className="h-5 w-5" />
+        </Button>
       )}
     </>
   );
