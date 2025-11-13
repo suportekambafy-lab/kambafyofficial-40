@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DuplicatesManagementDialog } from './DuplicatesManagementDialog';
 
 interface PendingTransfer {
   id: string;
@@ -59,6 +60,10 @@ export function PendingTransfersManager() {
   const [showProofDialog, setShowProofDialog] = useState(false);
   const [duplicateWarnings, setDuplicateWarnings] = useState<Map<string, DuplicateWarning[]>>(new Map());
   const [confirmationDialog, setConfirmationDialog] = useState<ConfirmationDialog | null>(null);
+  
+  // Estados para gerenciamento de duplicados
+  const [duplicatesModalOpen, setDuplicatesModalOpen] = useState(false);
+  const [selectedEmailForDuplicates, setSelectedEmailForDuplicates] = useState<string | null>(null);
 
   useEffect(() => {
     if (admin) {
@@ -633,6 +638,87 @@ export function PendingTransfersManager() {
     return `${numAmount.toLocaleString()} KZ`;
   };
 
+  // Função para abrir modal de duplicados
+  const showDuplicatesModal = (email: string) => {
+    setSelectedEmailForDuplicates(email);
+    setDuplicatesModalOpen(true);
+  };
+
+  // Função para rejeitar todos os pedidos duplicados
+  const handleBulkReject = async (transferIds: string[]) => {
+    try {
+      console.log('🗑️ Rejeitando pedidos em lote:', transferIds);
+      
+      const results = await Promise.allSettled(
+        transferIds.map(id => executeProcessTransfer(id, 'reject'))
+      );
+      
+      const successful = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+      
+      if (successful > 0) {
+        toast({
+          title: "Pedidos rejeitados",
+          description: `${successful} pedido(s) rejeitado(s) com sucesso${failed > 0 ? ` (${failed} falhou)` : ''}`,
+        });
+      }
+      
+      if (failed > 0 && successful === 0) {
+        toast({
+          title: "Erro",
+          description: `Não foi possível rejeitar os pedidos`,
+          variant: "destructive"
+        });
+      }
+      
+      await fetchPendingTransfers();
+    } catch (error) {
+      console.error('❌ Erro ao rejeitar pedidos em lote:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao processar os pedidos",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Função para aprovar 1 e rejeitar os outros
+  const handleApproveOneRejectOthers = async (approveId: string, rejectIds: string[]) => {
+    try {
+      console.log('✅ Aprovando pedido:', approveId);
+      console.log('🗑️ Rejeitando pedidos:', rejectIds);
+      
+      // 1. Aprovar o selecionado
+      await executeProcessTransfer(approveId, 'approve');
+      
+      // 2. Rejeitar os outros
+      const rejectResults = await Promise.allSettled(
+        rejectIds.map(id => executeProcessTransfer(id, 'reject'))
+      );
+      
+      const rejectedCount = rejectResults.filter(r => r.status === 'fulfilled').length;
+      
+      toast({
+        title: "Pedidos processados",
+        description: `1 pedido aprovado, ${rejectedCount} pedido(s) rejeitado(s)`,
+      });
+      
+      await fetchPendingTransfers();
+    } catch (error) {
+      console.error('❌ Erro ao processar pedidos:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao processar os pedidos",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Obter pedidos duplicados para um email específico
+  const getDuplicateTransfers = (email: string): PendingTransfer[] => {
+    return pendingTransfers.filter(t => t.customer_email === email);
+  };
+
   if (loading) {
     return (
       <Card>
@@ -702,19 +788,36 @@ export function PendingTransfersManager() {
                       {/* 🚨 ALERTAS DE DUPLICAÇÃO */}
                       {duplicateWarnings.has(transfer.id) && (
                         <div className="space-y-2 mb-3">
-                          {duplicateWarnings.get(transfer.id)!.map((warning, idx) => (
-                            <Alert 
-                              key={idx} 
-                              variant={warning.severity === 'error' ? 'destructive' : 'default'}
-                              className={warning.severity === 'warning' ? 'border-yellow-500 bg-yellow-50' : ''}
-                            >
-                              <AlertTriangle className="h-4 w-4" />
-                              <AlertTitle className="text-sm font-semibold">Atenção!</AlertTitle>
-                              <AlertDescription className="text-xs">
-                                {warning.message}
-                              </AlertDescription>
-                            </Alert>
-                          ))}
+                          {duplicateWarnings.get(transfer.id)!.map((warning, idx) => {
+                            const isMultiplePending = warning.type === 'multiple_pending';
+                            const duplicateCount = isMultiplePending 
+                              ? getDuplicateTransfers(transfer.customer_email).length 
+                              : 0;
+                            
+                            return (
+                              <Alert 
+                                key={idx} 
+                                variant={warning.severity === 'error' ? 'destructive' : 'default'}
+                                className={warning.severity === 'warning' ? 'border-yellow-500 bg-yellow-50' : ''}
+                              >
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle className="text-sm font-semibold">Atenção!</AlertTitle>
+                                <AlertDescription className="text-xs flex items-center justify-between gap-2">
+                                  <span>{warning.message}</span>
+                                  {isMultiplePending && duplicateCount > 1 && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => showDuplicatesModal(transfer.customer_email)}
+                                      className="ml-2 text-xs h-7"
+                                    >
+                                      Ver Todos os {duplicateCount} Pedidos →
+                                    </Button>
+                                  )}
+                                </AlertDescription>
+                              </Alert>
+                            );
+                          })}
                         </div>
                       )}
 
@@ -898,6 +1001,23 @@ export function PendingTransfersManager() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 🔍 DIALOG DE GESTÃO DE DUPLICADOS */}
+      {selectedEmailForDuplicates && (
+        <DuplicatesManagementDialog
+          open={duplicatesModalOpen}
+          onOpenChange={setDuplicatesModalOpen}
+          email={selectedEmailForDuplicates}
+          transfers={getDuplicateTransfers(selectedEmailForDuplicates)}
+          onApprove={async (id) => await executeProcessTransfer(id, 'approve')}
+          onReject={async (id) => await executeProcessTransfer(id, 'reject')}
+          onBulkReject={handleBulkReject}
+          onApproveOneRejectOthers={handleApproveOneRejectOthers}
+          onViewProof={viewProof}
+          onDownloadProof={(proof) => downloadProof(proof, 'comprovativo')}
+          formatAmount={formatAmount}
+        />
+      )}
     </>
   );
 }
