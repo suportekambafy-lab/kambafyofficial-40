@@ -51,25 +51,32 @@ export function ModernRecentSales() {
             table: 'orders'
           },
           (payload: any) => {
-            console.log('🔔 Recent sales update triggered:', {
+            console.log('🔔 [RECENT SALES] Mudança detectada:', {
               event: payload.eventType,
               order_id: payload.new?.order_id || payload.old?.order_id,
               new_status: payload.new?.status,
-              old_status: payload.old?.status
+              old_status: payload.old?.status,
+              payment_method: payload.new?.payment_method,
+              updated_at: payload.new?.updated_at
             });
             
-            // Apenas atualizar se for uma mudança de status para completed
+            // Atualizar em qualquer mudança para completed ou nova venda completed
             if (payload.eventType === 'UPDATE' && payload.new?.status === 'completed') {
-              console.log('✅ Venda completada detectada! Atualizando lista...');
+              console.log('✅ [RECENT SALES] Venda APROVADA detectada! Atualizando lista...', payload.new?.order_id);
               fetchRecentSales();
             } else if (payload.eventType === 'INSERT' && payload.new?.status === 'completed') {
-              console.log('✅ Nova venda completada detectada! Atualizando lista...');
+              console.log('✅ [RECENT SALES] Nova venda COMPLETED detectada! Atualizando lista...', payload.new?.order_id);
               fetchRecentSales();
+            } else {
+              console.log('⏩ [RECENT SALES] Mudança ignorada (não é completed)', {
+                event: payload.eventType,
+                status: payload.new?.status
+              });
             }
           }
         )
         .subscribe((status) => {
-          console.log('📡 Recent Sales Realtime status:', status);
+          console.log('📡 [RECENT SALES] Realtime status:', status);
         });
 
       return () => {
@@ -84,7 +91,7 @@ export function ModernRecentSales() {
     try {
       setLoading(true);
       
-      console.log('📋 Recent Sales carregando vendas próprias + afiliado para:', user.id);
+      console.log('📋 [RECENT SALES] Carregando vendas para:', user.id);
 
       // Primeiro, buscar produtos do usuário
       const { data: userProducts, error: productsError } = await supabase
@@ -95,6 +102,7 @@ export function ModernRecentSales() {
       if (productsError) throw productsError;
 
       const userProductIds = userProducts?.map(p => p.id) || [];
+      console.log('📦 [RECENT SALES] Produtos do usuário:', userProductIds.length);
 
       // Segundo, buscar códigos de afiliação do usuário
       const { data: affiliateCodes, error: affiliateError } = await supabase
@@ -216,7 +224,22 @@ export function ModernRecentSales() {
         return;
       }
 
-      console.log(`✅ Recent Sales carregou ${ownOrders?.length || 0} vendas próprias e ${affiliateOrders?.length || 0} comissões`);
+      console.log(`✅ [RECENT SALES] Carregou ${ownOrders?.length || 0} vendas próprias e ${affiliateOrders?.length || 0} comissões`);
+      console.log('📊 [RECENT SALES] Detalhes das vendas:', {
+        own_orders: ownOrders?.map(o => ({
+          order_id: o.order_id,
+          status: o.status,
+          created_at: o.created_at,
+          updated_at: o.updated_at,
+          payment_method: o.payment_method
+        })),
+        affiliate_orders: affiliateOrders?.map(o => ({
+          order_id: o.order_id,
+          status: o.status,
+          created_at: o.created_at,
+          updated_at: o.updated_at
+        }))
+      });
 
       // Combinar e formatar vendas
       const allOrders = [
