@@ -206,12 +206,12 @@ const App = () => {
                        <Route path="/apps/*" element={<OptimizedRoutes.Apps />} />
                          <Route path="/vendedor/*" element={<OptimizedRoutes.SellerDashboard />} />
                           <Route path="/meus-afiliados" element={<OptimizedRoutes.MeusAfiliados />} />
-                          <Route path="/minhas-compras" element={<OptimizedRoutes.MeusAcessos />} />
+                          <Route path="/minhas-compras" element={<OptimizedRoutes.MyPurchases />} />
+                          <Route path="/meus-acessos" element={<OptimizedRoutes.MeusAcessos />} />
                           <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                           <Route path="/vimeo-settings" element={<OptimizedRoutes.VimeoSettings />} />
                           
                           {/* Refund Routes */}
-                          <Route path="/cliente/compras" element={<OptimizedRoutes.MyPurchases />} />
                          
                          {/* Member Area Routes - ÁREAS ESPECÍFICAS DE CADA VENDEDOR */}
                             

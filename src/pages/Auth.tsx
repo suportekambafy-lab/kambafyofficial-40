@@ -76,7 +76,7 @@ const Auth = () => {
   useEffect(() => {
     if (user) {
       const userType = localStorage.getItem('userType') || 'business';
-      const redirectPath = userType === 'customer' ? '/minhas-compras' : '/vendedor';
+      const redirectPath = userType === 'customer' ? '/meus-acessos' : '/vendedor';
       
       navigate(redirectPath, { replace: true });
     }
@@ -239,7 +239,7 @@ const Auth = () => {
           description: "Senha redefinida com sucesso. Fazendo login...",
         });
         
-        const redirectPath = selectedUserType === 'customer' ? '/minhas-compras' : '/vendedor';
+        const redirectPath = selectedUserType === 'customer' ? '/meus-acessos' : '/vendedor';
         setTimeout(() => {
           navigate(redirectPath);
         }, 2000);

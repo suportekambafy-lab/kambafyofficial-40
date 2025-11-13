@@ -11,7 +11,8 @@ import {
   X,
   User,
   ChevronRight,
-  ArrowLeftRight
+  ArrowLeftRight,
+  ShoppingBag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -69,10 +70,16 @@ export function AvatarDrawer({
       onClick: () => handleNavigation("/vendedor/configuracoes")
     },
     {
-      label: "Mudar para painel de acessos",
+      label: "Ver minhas compras",
       href: "/minhas-compras",
-      icon: ArrowLeftRight,
+      icon: ShoppingBag,
       onClick: () => handleNavigation("/minhas-compras")
+    },
+    {
+      label: "Ver meus acessos",
+      href: "/meus-acessos",
+      icon: ArrowLeftRight,
+      onClick: () => handleNavigation("/meus-acessos")
     },
     {
       label: "Ajuda",
