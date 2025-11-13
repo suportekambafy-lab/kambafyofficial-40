@@ -385,7 +385,7 @@ export function PendingTransfersManager() {
       const { data: orderDataArray, error: orderFetchError } = await supabase
         .rpc('get_order_details_for_admin', { p_order_id: transferId });
       
-      const orderData = orderDataArray?.[0];
+      const orderData = orderDataArray?.[0] as any; // Type assertion for RPC result
 
       if (orderFetchError || !orderData) {
         console.error('❌ Erro ao buscar dados do pedido:', orderFetchError);
@@ -441,7 +441,7 @@ export function PendingTransfersManager() {
           // Usar seller_commission do banco (se disponível) ou calcular: valor × 0.9101 (descontar 8.99%)
           const fullAmount = parseFloat(orderData.amount);
           const sellerCommission = orderData.seller_commission 
-            ? parseFloat(orderData.seller_commission)
+            ? parseFloat(orderData.seller_commission.toString())
             : fullAmount * 0.9101;
           
           const platformFee = fullAmount - sellerCommission;
