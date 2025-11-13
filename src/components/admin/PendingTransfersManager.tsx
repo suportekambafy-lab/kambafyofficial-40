@@ -112,39 +112,29 @@ export function PendingTransfersManager() {
           order.status === 'pending' && 
           ['transfer', 'bank_transfer', 'transferencia'].includes(order.payment_method)
         )
-        .map(order => ({
-        id: order.id,
-        order_id: order.order_id,
-        customer_name: order.customer_name,
-        customer_email: order.customer_email,
-        amount: order.amount,
-        currency: order.currency || 'KZ',
-        created_at: order.created_at,
-        payment_proof_data: order.payment_proof_data,
-        product_name: order.product_name,
-        user_id: order.user_id,
-        product_id: undefined, // Será preenchido abaixo
-        payment_proof_hash: undefined // Será preenchido abaixo
-        }));
+        .map(order => {
+          const orderWithExtras = order as typeof order & { 
+            product_id?: string; 
+            payment_proof_hash?: string 
+          };
+          
+          return {
+            id: order.id,
+            order_id: order.order_id,
+            customer_name: order.customer_name,
+            customer_email: order.customer_email,
+            amount: order.amount,
+            currency: order.currency || 'KZ',
+            created_at: order.created_at,
+            payment_proof_data: order.payment_proof_data,
+            product_name: order.product_name,
+            user_id: order.user_id,
+            product_id: orderWithExtras.product_id, // ✅ Agora vem direto da RPC
+            payment_proof_hash: orderWithExtras.payment_proof_hash // ✅ Agora vem direto da RPC
+          };
+        });
 
-      // 🔍 Buscar dados adicionais (product_id e payment_proof_hash) para cada pedido
-      console.log('🔍 Buscando dados adicionais dos pedidos...');
-      for (const transfer of formattedTransfers) {
-        try {
-          const { data: fullOrder } = await supabase
-            .from('orders')
-            .select('product_id, payment_proof_hash')
-            .eq('id', transfer.id)
-            .maybeSingle();
-            
-          if (fullOrder) {
-            transfer.product_id = fullOrder.product_id;
-            transfer.payment_proof_hash = fullOrder.payment_proof_hash;
-          }
-        } catch (error) {
-          console.error('Erro ao buscar dados adicionais:', error);
-        }
-      }
+      console.log('🔍 Dados das transferências com product_id e hash:', formattedTransfers);
 
       console.log(`💰 ${formattedTransfers.length} transferências realmente pendentes encontradas`);
       setPendingTransfers(formattedTransfers);
@@ -212,6 +202,7 @@ export function PendingTransfersManager() {
       // 3️⃣ Verificar hash duplicado em pedidos aprovados
       if (transfer.payment_proof_hash) {
         try {
+          // @ts-ignore - Tipos do Supabase ainda não atualizados após migração
           const { data: duplicateHash } = await supabase
             .from('orders')
             .select('order_id, customer_email, created_at')
