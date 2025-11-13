@@ -58,9 +58,9 @@ export function FacebookApiList({ productId, onSaveSuccess }: FacebookApiListPro
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">APIs de Conversões</h2>
+        <h2 className="text-2xl font-bold mb-2">🔄 API de Conversões do Facebook (Server-Side)</h2>
         <p className="text-muted-foreground">
-          Adicione múltiplas APIs de Conversões do Facebook
+          Envia eventos de conversão direto do servidor. Mais confiável e não é bloqueado por ad-blockers.
         </p>
       </div>
 

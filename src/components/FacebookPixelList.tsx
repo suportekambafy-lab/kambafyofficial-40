@@ -58,9 +58,9 @@ export function FacebookPixelList({ productId, onSaveSuccess }: FacebookPixelLis
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Facebook Pixels</h2>
+        <h2 className="text-2xl font-bold mb-2">📊 Facebook Pixel (Client-Side)</h2>
         <p className="text-muted-foreground">
-          Adicione múltiplos pixels do Facebook ao seu produto
+          Rastreamento de eventos no navegador do cliente. Adicione múltiplos pixels.
         </p>
       </div>
 
