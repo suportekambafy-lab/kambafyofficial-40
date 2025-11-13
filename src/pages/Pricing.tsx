@@ -55,6 +55,167 @@ const Pricing = () => {
             </p>
           </div>
 
+          {/* Seção de Planos de Assinatura */}
+          <div className="px-4">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold mb-2">
+                Planos de <span className="text-checkout-green">Assinatura</span>
+              </h3>
+              <p className="text-muted-foreground">
+                Escolha o plano ideal para o seu negócio digital
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12">
+              {/* Plano Básico */}
+              <div className="bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-checkout-green/50 transition-all">
+                <div className="text-center mb-6">
+                  <h4 className="text-xl font-bold mb-2">Básico</h4>
+                  <div className="mb-2">
+                    <span className="text-3xl font-bold">2.500</span>
+                    <span className="text-muted-foreground"> AOA/mês</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Ideal para começar</p>
+                </div>
+
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm">Até 5 produtos</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm">Taxa reduzida: 6,99%</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm">Dashboard básico</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm">Suporte via email</span>
+                  </li>
+                </ul>
+
+                <Button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900">
+                  Assinar Plano Básico
+                </Button>
+              </div>
+
+              {/* Plano Premium (Destacado) */}
+              <div className="bg-white rounded-xl p-6 border-2 border-checkout-green ring-2 ring-checkout-green/20 relative transform scale-105">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-checkout-green text-white px-4 py-1 rounded-full text-xs font-medium">
+                    Mais Popular
+                  </span>
+                </div>
+                
+                <div className="text-center mb-6">
+                  <h4 className="text-xl font-bold mb-2">Premium</h4>
+                  <div className="mb-2">
+                    <span className="text-3xl font-bold">5.000</span>
+                    <span className="text-muted-foreground"> AOA/mês</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Melhor custo-benefício</p>
+                </div>
+
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm font-semibold">Produtos ilimitados</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm font-semibold">Taxa reduzida: 4,99%</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm">Dashboard avançado</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm">Suporte prioritário</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm">Relatórios personalizados</span>
+                  </li>
+                </ul>
+
+                <Button className="w-full bg-checkout-green hover:bg-checkout-green/90 text-white">
+                  Assinar Plano Premium
+                </Button>
+              </div>
+
+              {/* Plano Pro */}
+              <div className="bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-checkout-green/50 transition-all">
+                <div className="text-center mb-6">
+                  <h4 className="text-xl font-bold mb-2">Profissional</h4>
+                  <div className="mb-2">
+                    <span className="text-3xl font-bold">10.000</span>
+                    <span className="text-muted-foreground"> AOA/mês</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Para grandes vendedores</p>
+                </div>
+
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm font-semibold">Tudo do Premium</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm font-semibold">Taxa mínima: 2,99%</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm">API personalizada</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm">Account manager dedicado</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-checkout-green" />
+                    <span className="text-sm">Integrações customizadas</span>
+                  </li>
+                </ul>
+
+                <Button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900">
+                  Assinar Plano Pro
+                </Button>
+              </div>
+            </div>
+
+            {/* Comparação de Taxa por Transação */}
+            <div className="bg-gradient-to-r from-checkout-green/10 to-checkout-green/5 rounded-xl p-6 max-w-3xl mx-auto mb-12">
+              <h4 className="text-lg font-semibold text-center mb-4">
+                💰 Comparativo de Taxas por Transação
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Sem Plano</p>
+                  <p className="text-2xl font-bold text-gray-600">8,99%</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Básico</p>
+                  <p className="text-2xl font-bold text-blue-600">6,99%</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-sm text-muted-foreground mb-1">Premium ⭐</p>
+                  <p className="text-2xl font-bold text-checkout-green">4,99%</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Pro</p>
+                  <p className="text-2xl font-bold text-purple-600">2,99%</p>
+                </div>
+              </div>
+              <p className="text-xs text-center text-muted-foreground mt-4">
+                * Quanto mais você vende, mais você economiza em taxas
+              </p>
+            </div>
+          </div>
+
           {/* Plano Principal */}
           <div className="max-w-md mx-auto px-4">
             {plans.map((plan, index) => (

@@ -1,5 +1,8 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.create-stripe-product-price]
+verify_jwt = false
+
 [functions.send-onesignal-notification]
 verify_jwt = false
 

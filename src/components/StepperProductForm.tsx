@@ -51,7 +51,8 @@ interface FormData {
     interval_count: number;
     trial_days: number;
     grace_period_days: number;
-    stripe_price_id: string;
+    stripe_price_id?: string;
+    stripe_product_id?: string;
     allow_reactivation: boolean;
     reactivation_discount_percentage: number;
   };
@@ -242,12 +243,6 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
             return false;
           }
           
-          if (formData.subscriptionConfig.renewal_type === 'automatic' && 
-              !formData.subscriptionConfig.stripe_price_id?.trim()) {
-            toast.error("Para renovação automática, é necessário configurar o Stripe Price ID");
-            return false;
-          }
-          
           if (formData.subscriptionConfig.trial_days < 0) {
             toast.error("O período de teste não pode ser negativo");
             return false;
@@ -298,6 +293,42 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
 
     setSaving(true);
     try {
+      let subscriptionConfigWithStripe = formData.subscriptionConfig;
+
+      // ✅ SE FOR ASSINATURA, criar produto no Stripe automaticamente
+      if (formData.type === "Assinatura" && formData.subscriptionConfig?.is_subscription) {
+        toast("Criando produto no Stripe...", { 
+          description: "Aguarde enquanto configuramos sua assinatura",
+        });
+        
+        const { data: stripeData, error: stripeError } = await supabase.functions.invoke(
+          'create-stripe-product-price',
+          {
+            body: {
+              productName: formData.name,
+              productDescription: formData.description,
+              price: parseFloat(formData.price),
+              interval: formData.subscriptionConfig.interval,
+              interval_count: formData.subscriptionConfig.interval_count,
+              trial_days: formData.subscriptionConfig.trial_days
+            }
+          }
+        );
+
+        if (stripeError || !stripeData?.success) {
+          throw new Error(stripeData?.error || 'Erro ao criar produto no Stripe');
+        }
+
+        // ✅ Atualizar subscription_config com os IDs do Stripe
+        subscriptionConfigWithStripe = {
+          ...formData.subscriptionConfig,
+          stripe_price_id: stripeData.stripe_price_id,
+          stripe_product_id: stripeData.stripe_product_id
+        };
+
+        toast.success("Produto criado no Stripe com sucesso!");
+      }
+
       const productData = {
         name: formData.name,
         type: formData.type,
@@ -319,7 +350,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         access_duration_type: formData.accessDurationType,
         access_duration_value: formData.accessDurationValue,
         access_duration_description: formData.accessDurationDescription || null,
-        subscription_config: formData.subscriptionConfig?.is_subscription ? formData.subscriptionConfig : null,
+        subscription_config: subscriptionConfigWithStripe?.is_subscription ? subscriptionConfigWithStripe : null,
         user_id: user?.id,
         // ✅ Manter status "Ativo" se produto já foi aprovado, senão usar "Pendente"
         status: (editingProduct && editingProduct.admin_approved) ? 'Ativo' : 'Pendente'

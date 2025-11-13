@@ -13,7 +13,8 @@ export interface SubscriptionConfigData {
   interval_count: number;
   trial_days: number;
   grace_period_days: number;
-  stripe_price_id: string;
+  stripe_price_id?: string; // Gerado automaticamente
+  stripe_product_id?: string; // Gerado automaticamente
   allow_reactivation: boolean;
   reactivation_discount_percentage: number;
 }
@@ -152,21 +153,36 @@ export default function SubscriptionConfig({ value, onChange }: SubscriptionConf
               </p>
             </div>
 
-            {/* Stripe Price ID */}
-            <div className="space-y-2">
-              <Label htmlFor="stripe_price_id">Stripe Price ID</Label>
-              <Input
-                id="stripe_price_id"
-                type="text"
-                placeholder="price_1ABC..."
-                value={value.stripe_price_id}
-                onChange={(e) => handleChange('stripe_price_id', e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                {value.renewal_type === 'automatic' 
-                  ? '⚠️ Obrigatório para renovação automática' 
-                  : 'Opcional para renovação manual'}
-              </p>
+            {/* Aviso de Integração Automática */}
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                    Integração Automática com Stripe
+                  </h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                    Não se preocupe com configurações técnicas! Quando você criar este produto, 
+                    a plataforma irá <strong>automaticamente</strong>:
+                  </p>
+                  <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1.5">
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      Criar o produto no Stripe
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      Configurar o preço recorrente
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      Conectar tudo para você
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
             {/* Configurações de Reativação */}
