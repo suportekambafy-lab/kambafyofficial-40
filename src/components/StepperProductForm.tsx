@@ -297,6 +297,14 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
 
       // ✅ SE FOR ASSINATURA, criar produto no Stripe automaticamente
       if (formData.type === "Assinatura" && formData.subscriptionConfig?.is_subscription) {
+        // Validar preço antes de criar no Stripe
+        const priceValue = parseFloat(formData.price);
+        if (!formData.price || isNaN(priceValue) || priceValue <= 0) {
+          toast.error("Preço inválido. Por favor, preencha um valor válido.");
+          setSaving(false);
+          return;
+        }
+        
         toast("Criando produto no Stripe...", { 
           description: "Aguarde enquanto configuramos sua assinatura",
         });
@@ -307,7 +315,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
             body: {
               productName: formData.name,
               productDescription: formData.description,
-              price: parseFloat(formData.price),
+              price: priceValue,
               interval: formData.subscriptionConfig.interval,
               interval_count: formData.subscriptionConfig.interval_count,
               trial_days: formData.subscriptionConfig.trial_days
