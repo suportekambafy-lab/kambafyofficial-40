@@ -138,6 +138,7 @@ export function ModernRecentSales() {
               amount,
               currency,
               created_at,
+              updated_at,
               product_id,
               affiliate_commission,
               seller_commission,
@@ -148,7 +149,7 @@ export function ModernRecentSales() {
             `)
             .in('product_id', userProductIds)
             .eq('status', 'completed') // Apenas vendas pagas
-            .order('created_at', { ascending: false })
+            .order('updated_at', { ascending: false }) // Ordenar por data de aprovação/atualização
             .limit(10)
         );
       }
@@ -160,6 +161,7 @@ export function ModernRecentSales() {
             .from('orders')
             .select(`
               id,
+              order_id,
               customer_name,
               customer_email,
               customer_phone,
@@ -167,6 +169,7 @@ export function ModernRecentSales() {
               amount,
               currency,
               created_at,
+              updated_at,
               product_id,
               affiliate_commission,
               seller_commission,
@@ -181,7 +184,7 @@ export function ModernRecentSales() {
             .eq('status', 'completed')
             // Excluir vendas de produtos próprios para evitar duplicação
             .not('product_id', 'in', `(${userProductIds.length > 0 ? userProductIds.join(',') : 'null'})`)
-            .order('created_at', { ascending: false })
+            .order('updated_at', { ascending: false }) // Ordenar por data de aprovação/atualização
             .limit(10)
         );
       }
@@ -242,8 +245,8 @@ export function ModernRecentSales() {
         }))
       ];
 
-      // Ordenar por data e pegar as 5 mais recentes
-      allOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Ordenar por updated_at (vendas recém-aprovadas aparecem primeiro)
+      allOrders.sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime());
       const recentOrders = allOrders.slice(0, 5);
 
       const formattedSales: RecentSale[] = recentOrders.map(order => {
