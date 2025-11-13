@@ -1060,6 +1060,20 @@ const Checkout = () => {
       }
       console.log('✅ Payment proof uploaded successfully:', uploadData);
 
+      // 🔒 Calcular hash SHA-256 do comprovativo para anti-duplicação
+      console.log('🔐 Calculando hash SHA-256 do comprovativo...');
+      let proofHash: string | null = null;
+      try {
+        const arrayBuffer = await proofFile.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        proofHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        console.log('✅ Hash calculado:', proofHash.substring(0, 16) + '...');
+      } catch (hashError) {
+        console.error('⚠️ Erro ao calcular hash do comprovativo:', hashError);
+        // Continuar mesmo se falhar o hash - não bloquear o checkout
+      }
+
       // Calcular comissões se houver afiliado
       let affiliate_commission = null;
       let seller_commission = null;
@@ -1124,8 +1138,10 @@ const Checkout = () => {
           bank: selectedBank,
           proof_file_name: proofFile.name,
           proof_file_path: uploadData.path,
-          upload_timestamp: new Date().toISOString()
-        })
+          upload_timestamp: new Date().toISOString(),
+          proof_hash: proofHash // ✅ Hash para detecção de duplicatas
+        }),
+        payment_proof_hash: proofHash // ✅ Campo separado para indexação rápida
       };
       console.log('🏦 Creating bank transfer order:', orderData);
 
