@@ -50,12 +50,27 @@ export function ModernRecentSales() {
             schema: 'public',
             table: 'orders'
           },
-          (payload) => {
-            console.log('Recent sales update triggered:', payload);
-            fetchRecentSales();
+          (payload: any) => {
+            console.log('🔔 Recent sales update triggered:', {
+              event: payload.eventType,
+              order_id: payload.new?.order_id || payload.old?.order_id,
+              new_status: payload.new?.status,
+              old_status: payload.old?.status
+            });
+            
+            // Apenas atualizar se for uma mudança de status para completed
+            if (payload.eventType === 'UPDATE' && payload.new?.status === 'completed') {
+              console.log('✅ Venda completada detectada! Atualizando lista...');
+              fetchRecentSales();
+            } else if (payload.eventType === 'INSERT' && payload.new?.status === 'completed') {
+              console.log('✅ Nova venda completada detectada! Atualizando lista...');
+              fetchRecentSales();
+            }
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log('📡 Recent Sales Realtime status:', status);
+        });
 
       return () => {
         supabase.removeChannel(channel);
