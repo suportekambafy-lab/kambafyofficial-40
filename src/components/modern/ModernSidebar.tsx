@@ -291,54 +291,38 @@ export function ModernSidebar({
 
   // Desktop sidebar
   return (
-    <motion.div
-      animate={{ 
-        width: collapsed ? 80 : 320
-      }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      onMouseEnter={() => !isMobile && onToggle && collapsed && onToggle()}
-      onMouseLeave={() => !isMobile && onToggle && !collapsed && onToggle()}
-      className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-sm"
+    <div
+      style={{ width: collapsed ? 80 : 320 }}
+      className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-sm transition-all duration-300"
     >
       {/* Header */}
-      <div className="h-16 flex items-center justify-center px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
-        <AnimatePresence mode="wait">
-          {!collapsed ? (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-center gap-3"
-            >
-              <img 
-                src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
-                alt="Kambafy" 
-                className="h-16 w-auto"
-              />
-            </motion.div>
-          ) : (
-            <motion.img
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              src={isDark ? "/kambafy-icon-dark.png" : "/kambafy-icon-light.png"}
-              alt="Kambafy"
-              className="w-8 h-8"
-            />
-          )}
-        </AnimatePresence>
+      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
+        {!collapsed ? (
+          <img 
+            src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
+            alt="Kambafy" 
+            className="h-16 w-auto"
+          />
+        ) : (
+          <img
+            src={isDark ? "/kambafy-icon-dark.png" : "/kambafy-icon-light.png"}
+            alt="Kambafy"
+            className="w-8 h-8"
+          />
+        )}
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggle}
+          className="flex-shrink-0"
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
       </div>
 
       {/* Progress bar above navigation */}
-      <motion.div
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: "auto" }}
-        exit={{ opacity: 0, height: 0 }}
-        transition={{ duration: 0.2 }}
-        className={`border-b border-sidebar-border/30 dark:border-sidebar/30 ${collapsed ? 'px-2 py-2' : 'px-4 py-2'}`}
-      >
+      <div className={`border-b border-sidebar-border/30 dark:border-sidebar/30 ${collapsed ? 'px-2 py-2' : 'px-4 py-2'}`}>
         {collapsed ? (
           // Versão compacta horizontal quando fechado
           <div className="flex flex-col items-center gap-1" title={`${formatCurrency(dashboardData.totalRevenue)} / ${formatCurrency(nextGoal)} KZ - ${progressPercent.toFixed(0)}%`}>
@@ -365,7 +349,7 @@ export function ModernSidebar({
             </div>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-3 space-y-1">
@@ -453,6 +437,6 @@ export function ModernSidebar({
           </AnimatePresence>
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }

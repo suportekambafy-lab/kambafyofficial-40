@@ -1,5 +1,3 @@
-// ModernTopBar Component - Versão 2.0 - Build FORÇADO em 18:35
-// IMPORTANTE: Menu deve começar ABERTO e fechar com clique
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -57,11 +55,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
   const [notifications, setNotifications] = useState<Array<{id: string, message: string, action: string}>>([]);
   const [recentSalesCount, setRecentSalesCount] = useState(0);
   const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(true);
-
-  useEffect(() => {
-    console.log('🔵 ModernTopBar - userMenuOpen:', userMenuOpen);
-  }, [userMenuOpen]);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -489,14 +483,9 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
           ) : (
             <div className="relative">
               <button 
-                onClick={() => {
-                  console.log('🟢 Clique no botão do menu. Estado atual:', userMenuOpen);
-                  setUserMenuOpen(!userMenuOpen);
-                }}
-                className="flex items-center gap-3 h-12 px-4 text-foreground hover:bg-accent rounded-xl transition-all duration-200 border-4 border-red-500 bg-yellow-200"
-                style={{ boxShadow: '0 0 20px rgba(255,0,0,0.5)' }}
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200"
               >
-                <span className="text-2xl font-bold text-red-600">NOVO MENU</span>
                 <Avatar className="h-8 w-8 ring-2 ring-border">
                   <AvatarImage 
                     src={profileAvatar} 
@@ -511,54 +500,47 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                   {profileName || user?.email}
                 </span>
                 {userMenuOpen ? (
-                  <ChevronUp className="h-5 w-5 text-primary" />
+                  <ChevronUp className="h-4 w-4" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-primary" />
+                  <ChevronDown className="h-4 w-4" />
                 )}
               </button>
               
-              <AnimatePresence>
-                {userMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-56 rounded-lg border-2 border-primary bg-card p-2 shadow-xl z-[100]"
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-card p-2 shadow-xl z-[100]">
+                  <button
+                    onClick={() => {
+                      navigate('/vendedor/configuracoes');
+                      setUserMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
                   >
-                    <button
-                      onClick={() => {
-                        navigate('/vendedor/configuracoes');
-                        setUserMenuOpen(false);
-                      }}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Configurações</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate('/vendedor/ajuda');
-                        setUserMenuOpen(false);
-                      }}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
-                    >
-                      <HelpCircle className="h-4 w-4" />
-                      <span>Ajuda</span>
-                    </button>
-                    <div className="my-1 h-px bg-border" />
-                    <button
-                      onClick={() => {
-                        handleSignOut();
-                        setUserMenuOpen(false);
-                      }}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Sair</span>
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <Settings className="h-4 w-4" />
+                    <span>Configurações</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/vendedor/ajuda');
+                      setUserMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    <span>Ajuda</span>
+                  </button>
+                  <div className="my-1 h-px bg-border" />
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setUserMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sair</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
