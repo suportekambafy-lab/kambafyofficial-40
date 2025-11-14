@@ -483,10 +483,9 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
             </>
           ) : (
             <div className="relative">
-              <Button 
-                variant="ghost" 
-                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200"
+              <button 
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200"
               >
                 <Avatar className="h-8 w-8 ring-2 ring-border">
                   <AvatarImage 
@@ -502,52 +501,51 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                   {profileName || user?.email}
                 </span>
                 {userMenuOpen ? (
-                  <ChevronUp className="h-3 w-3" />
+                  <ChevronUp className="h-4 w-4" />
                 ) : (
-                  <ChevronDown className="h-3 w-3" />
+                  <ChevronDown className="h-4 w-4" />
                 )}
-              </Button>
+              </button>
               
-              <AnimatePresence mode="wait">
+              <AnimatePresence>
                 {userMenuOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-56 rounded-md border bg-card p-1 shadow-lg z-50"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-card p-2 shadow-xl z-[100]"
                   >
-                  <button
-                    onClick={() => {
-                      navigate('/vendedor/configuracoes');
-                      setUserMenuOpen(false);
-                    }}
-                    className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground text-foreground"
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configurações
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate('/vendedor/ajuda');
-                      setUserMenuOpen(false);
-                    }}
-                    className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground text-foreground"
-                  >
-                    <HelpCircle className="mr-2 h-4 w-4" />
-                    Ajuda
-                  </button>
-                  <div className="h-px my-1 bg-border" />
-                  <button
-                    onClick={() => {
-                      handleSignOut();
-                      setUserMenuOpen(false);
-                    }}
-                    className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground text-foreground"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sair
-                  </button>
+                    <button
+                      onClick={() => {
+                        navigate('/vendedor/configuracoes');
+                        setUserMenuOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Configurações</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate('/vendedor/ajuda');
+                        setUserMenuOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                      <span>Ajuda</span>
+                    </button>
+                    <div className="my-1 h-px bg-border" />
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setUserMenuOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Sair</span>
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
