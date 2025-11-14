@@ -508,32 +508,42 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                 )}
               </Button>
               
-              <AnimatePresence>
+              <AnimatePresence mode="wait">
                 {userMenuOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-lg backdrop-blur-sm z-50"
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-2 w-56 rounded-md border bg-card p-1 shadow-lg z-50"
                   >
                   <button
-                    onClick={() => navigate('/vendedor/configuracoes')}
-                    className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                    onClick={() => {
+                      navigate('/vendedor/configuracoes');
+                      setUserMenuOpen(false);
+                    }}
+                    className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground text-foreground"
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     Configurações
                   </button>
                   <button
-                    onClick={() => navigate('/vendedor/ajuda')}
-                    className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                    onClick={() => {
+                      navigate('/vendedor/ajuda');
+                      setUserMenuOpen(false);
+                    }}
+                    className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground text-foreground"
                   >
                     <HelpCircle className="mr-2 h-4 w-4" />
                     Ajuda
                   </button>
-                  <div className="h-px my-1 bg-muted" />
+                  <div className="h-px my-1 bg-border" />
                   <button
-                    onClick={handleSignOut}
-                    className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                    onClick={() => {
+                      handleSignOut();
+                      setUserMenuOpen(false);
+                    }}
+                    className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground text-foreground"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sair
