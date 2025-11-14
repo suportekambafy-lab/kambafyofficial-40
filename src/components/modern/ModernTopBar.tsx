@@ -1,3 +1,5 @@
+// ModernTopBar Component - Versão 2.0 - Build FORÇADO em 18:35
+// IMPORTANTE: Menu deve começar ABERTO e fechar com clique
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +27,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AvatarDrawer } from '@/components/ui/avatar-drawer';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
