@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, 
   ChevronDown, 
@@ -56,7 +56,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
   const [notifications, setNotifications] = useState<Array<{id: string, message: string, action: string}>>([]);
   const [recentSalesCount, setRecentSalesCount] = useState(0);
   const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(true);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -508,13 +508,14 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                 )}
               </Button>
               
-              {userMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute right-0 mt-2 w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-lg z-50"
-                >
+              <AnimatePresence>
+                {userMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 mt-2 w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-lg backdrop-blur-sm z-50"
+                  >
                   <button
                     onClick={() => navigate('/vendedor/configuracoes')}
                     className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
@@ -537,8 +538,9 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                     <LogOut className="mr-2 h-4 w-4" />
                     Sair
                   </button>
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </div>
