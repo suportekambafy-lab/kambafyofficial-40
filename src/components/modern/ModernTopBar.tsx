@@ -59,6 +59,10 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
   const [userMenuOpen, setUserMenuOpen] = useState(true);
 
   useEffect(() => {
+    console.log('🔵 ModernTopBar - userMenuOpen:', userMenuOpen);
+  }, [userMenuOpen]);
+
+  useEffect(() => {
     if (user) {
       loadDashboardData();
       loadProfileData();
@@ -484,8 +488,11 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
           ) : (
             <div className="relative">
               <button 
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200"
+                onClick={() => {
+                  console.log('🟢 Clique no botão do menu. Estado atual:', userMenuOpen);
+                  setUserMenuOpen(!userMenuOpen);
+                }}
+                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200 border-2 border-primary"
               >
                 <Avatar className="h-8 w-8 ring-2 ring-border">
                   <AvatarImage 
@@ -501,9 +508,9 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                   {profileName || user?.email}
                 </span>
                 {userMenuOpen ? (
-                  <ChevronUp className="h-4 w-4" />
+                  <ChevronUp className="h-5 w-5 text-primary" />
                 ) : (
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="h-5 w-5 text-primary" />
                 )}
               </button>
               
@@ -513,7 +520,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-card p-2 shadow-xl z-[100]"
+                    className="absolute right-0 mt-2 w-56 rounded-lg border-2 border-primary bg-card p-2 shadow-xl z-[100]"
                   >
                     <button
                       onClick={() => {
