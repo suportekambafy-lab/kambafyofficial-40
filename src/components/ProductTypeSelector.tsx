@@ -23,42 +23,50 @@ export default function ProductTypeSelector({ onClose, onSelectType }: ProductTy
             Selecione o tipo de produto que deseja criar:
           </p>
           
-          <div className="grid gap-3">
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col gap-2 hover:bg-primary/5"
+          <div className="grid grid-cols-2 gap-3">
+            <button
               onClick={() => onSelectType("E-book")}
+              className="group relative overflow-hidden rounded-lg border bg-card p-6 text-left transition-all hover:border-primary hover:shadow-lg"
             >
-              <span className="font-medium">E-book</span>
-              <span className="text-xs text-muted-foreground">Livro digital ou material de leitura</span>
-            </Button>
+              <div className="flex flex-col gap-2">
+                <span className="font-semibold text-lg">E-book</span>
+                <span className="text-sm text-muted-foreground">Livro digital ou material de leitura</span>
+              </div>
+              <div className="absolute inset-0 bg-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
+            </button>
             
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col gap-2 hover:bg-primary/5"
+            <button
               onClick={() => onSelectType("Curso")}
+              className="group relative overflow-hidden rounded-lg border bg-card p-6 text-left transition-all hover:border-primary hover:shadow-lg"
             >
-              <span className="font-medium">Curso</span>
-              <span className="text-xs text-muted-foreground">Conteúdo educacional estruturado</span>
-            </Button>
+              <div className="flex flex-col gap-2">
+                <span className="font-semibold text-lg">Curso</span>
+                <span className="text-sm text-muted-foreground">Conteúdo educacional estruturado</span>
+              </div>
+              <div className="absolute inset-0 bg-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
+            </button>
             
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col gap-2 hover:bg-primary/5"
+            <button
               onClick={() => onSelectType("Assinatura")}
+              className="group relative overflow-hidden rounded-lg border bg-card p-6 text-left transition-all hover:border-primary hover:shadow-lg"
             >
-              <span className="font-medium">Assinatura</span>
-              <span className="text-xs text-muted-foreground">Pagamentos recorrentes mensais ou anuais</span>
-            </Button>
+              <div className="flex flex-col gap-2">
+                <span className="font-semibold text-lg">Assinatura</span>
+                <span className="text-sm text-muted-foreground">Pagamentos recorrentes mensais ou anuais</span>
+              </div>
+              <div className="absolute inset-0 bg-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
+            </button>
             
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col gap-2 hover:bg-primary/5"
+            <button
               onClick={() => onSelectType("Link de Pagamento")}
+              className="group relative overflow-hidden rounded-lg border bg-card p-6 text-left transition-all hover:border-primary hover:shadow-lg"
             >
-              <span className="font-medium">Link de Pagamento</span>
-              <span className="text-xs text-muted-foreground">Para serviços, consultorias e mentorias</span>
-            </Button>
+              <div className="flex flex-col gap-2">
+                <span className="font-semibold text-lg">Link de Pagamento</span>
+                <span className="text-sm text-muted-foreground">Para serviços, consultorias e mentorias</span>
+              </div>
+              <div className="absolute inset-0 bg-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
+            </button>
           </div>
         </CardContent>
       </Card>
