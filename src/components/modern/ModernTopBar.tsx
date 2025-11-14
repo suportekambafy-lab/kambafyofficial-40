@@ -56,7 +56,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
   const [notifications, setNotifications] = useState<Array<{id: string, message: string, action: string}>>([]);
   const [recentSalesCount, setRecentSalesCount] = useState(0);
   const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(true);
 
   useEffect(() => {
     if (user) {
