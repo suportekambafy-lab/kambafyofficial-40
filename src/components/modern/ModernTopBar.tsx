@@ -492,8 +492,10 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                   console.log('🟢 Clique no botão do menu. Estado atual:', userMenuOpen);
                   setUserMenuOpen(!userMenuOpen);
                 }}
-                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200 border-2 border-primary"
+                className="flex items-center gap-3 h-12 px-4 text-foreground hover:bg-accent rounded-xl transition-all duration-200 border-4 border-red-500 bg-yellow-200"
+                style={{ boxShadow: '0 0 20px rgba(255,0,0,0.5)' }}
               >
+                <span className="text-2xl font-bold text-red-600">NOVO MENU</span>
                 <Avatar className="h-8 w-8 ring-2 ring-border">
                   <AvatarImage 
                     src={profileAvatar} 
