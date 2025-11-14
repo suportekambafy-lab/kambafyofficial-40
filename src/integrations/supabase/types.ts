@@ -1896,6 +1896,7 @@ export type Database = {
           order_id: string
           payment_method: string | null
           payment_proof_data: Json | null
+          payment_proof_hash: string | null
           product_id: string
           refund_deadline: string | null
           seller_commission: number | null
@@ -1926,6 +1927,7 @@ export type Database = {
           order_id: string
           payment_method?: string | null
           payment_proof_data?: Json | null
+          payment_proof_hash?: string | null
           product_id: string
           refund_deadline?: string | null
           seller_commission?: number | null
@@ -1956,6 +1958,7 @@ export type Database = {
           order_id?: string
           payment_method?: string | null
           payment_proof_data?: Json | null
+          payment_proof_hash?: string | null
           product_id?: string
           refund_deadline?: string | null
           seller_commission?: number | null
@@ -3430,6 +3433,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      apply_commission_to_all_transfers: {
+        Args: never
+        Returns: {
+          acao: string
+          order_id: string
+          seller_email: string
+          taxa_aplicada: number
+          valor_liquido: number
+          valor_original: number
+        }[]
+      }
       approve_partner: {
         Args: { admin_id?: string; partner_id: string }
         Returns: undefined
@@ -3534,7 +3548,38 @@ export type Database = {
         }
         Returns: string
       }
+      fix_all_transfer_seller_commission: {
+        Args: never
+        Returns: {
+          atualizado: boolean
+          order_id_result: string
+          status_venda: string
+          valor_bruto: number
+          valor_liquido_calculado: number
+        }[]
+      }
+      fix_bank_transfer_commissions: {
+        Args: never
+        Returns: {
+          corrigido: boolean
+          order_id: string
+          seller_user_id: string
+          taxa_devida: number
+          valor_creditado: number
+          valor_original: number
+        }[]
+      }
       fix_bunny_cdn_urls: { Args: never; Returns: undefined }
+      fix_seller_commission_values: {
+        Args: never
+        Returns: {
+          atualizado: boolean
+          order_id_result: string
+          seller_commission_anterior: number
+          valor_bruto: number
+          valor_liquido_calculado: number
+        }[]
+      }
       generate_api_key: { Args: never; Returns: string }
       generate_renewal_token: {
         Args: { p_subscription_id: string }
@@ -3640,6 +3685,7 @@ export type Database = {
           product_share_link: string
           product_type: string
           product_user_id: string
+          seller_commission: string
           status: string
           updated_at: string
           user_id: string
@@ -3657,6 +3703,8 @@ export type Database = {
           order_id: string
           payment_method: string
           payment_proof_data: Json
+          payment_proof_hash: string
+          product_id: string
           product_name: string
           status: string
           user_id: string
@@ -3729,6 +3777,16 @@ export type Database = {
           p_permissions: string[]
         }
         Returns: undefined
+      }
+      update_old_commission_rates: {
+        Args: never
+        Returns: {
+          diferenca: number
+          order_id: string
+          taxa_antiga: number
+          taxa_nova: number
+          updated: boolean
+        }[]
       }
       verify_admin_jwt: {
         Args: { jwt_token: string }
