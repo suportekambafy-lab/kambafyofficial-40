@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { 
   Bell, 
   ChevronDown, 
+  ChevronUp,
   Settings, 
   LogOut,
   Menu,
@@ -55,6 +56,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
   const [notifications, setNotifications] = useState<Array<{id: string, message: string, action: string}>>([]);
   const [recentSalesCount, setRecentSalesCount] = useState(0);
   const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -480,44 +482,64 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
               />
             </>
           ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200"
-                >
-                  <Avatar className="h-8 w-8 ring-2 ring-border">
-                    <AvatarImage 
-                      src={profileAvatar} 
-                      alt={profileName || user?.email}
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
-                      {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden sm:inline text-sm font-medium truncate max-w-28">
-                    {profileName || user?.email}
-                  </span>
+            <div className="relative">
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+              >
+                <Avatar className="h-8 w-8 ring-2 ring-border">
+                  <AvatarImage 
+                    src={profileAvatar} 
+                    alt={profileName || user?.email}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                    {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="hidden sm:inline text-sm font-medium truncate max-w-28">
+                  {profileName || user?.email}
+                </span>
+                {userMenuOpen ? (
+                  <ChevronUp className="h-3 w-3" />
+                ) : (
                   <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => navigate('/vendedor/configuracoes')}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Configurações
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/vendedor/ajuda')}>
-                  <HelpCircle className="mr-2 h-4 w-4" />
-                  Ajuda
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                )}
+              </Button>
+              
+              {userMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute right-0 mt-2 w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-lg z-50"
+                >
+                  <button
+                    onClick={() => navigate('/vendedor/configuracoes')}
+                    className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Configurações
+                  </button>
+                  <button
+                    onClick={() => navigate('/vendedor/ajuda')}
+                    className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    Ajuda
+                  </button>
+                  <div className="h-px my-1 bg-muted" />
+                  <button
+                    onClick={handleSignOut}
+                    className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sair
+                  </button>
+                </motion.div>
+              )}
+            </div>
           )}
         </div>
       </div>
