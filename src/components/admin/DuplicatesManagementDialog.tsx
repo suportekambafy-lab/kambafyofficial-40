@@ -178,26 +178,32 @@ export function DuplicatesManagementDialog({
                 <CardContent className="p-4 pt-10 space-y-3">
                   {/* Thumbnail do comprovativo */}
                   {transfer.payment_proof_data?.url && (
-                    <div className="relative w-full h-32 bg-muted rounded-lg overflow-hidden">
-                      <img 
-                        src={transfer.payment_proof_data.url} 
-                        alt="Comprovativo" 
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <div className="space-y-2">
+                      <div className="relative w-full h-32 bg-muted rounded-lg overflow-hidden">
+                        <img 
+                          src={transfer.payment_proof_data.url} 
+                          alt="Comprovativo" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex gap-2">
                         <Button
                           size="sm"
-                          variant="secondary"
+                          variant="outline"
+                          className="flex-1"
                           onClick={() => onViewProof(transfer.payment_proof_data)}
                         >
-                          <Eye className="h-3 w-3" />
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver
                         </Button>
                         <Button
                           size="sm"
-                          variant="secondary"
+                          variant="outline"
+                          className="flex-1"
                           onClick={() => onDownloadProof(transfer.payment_proof_data)}
                         >
-                          <Download className="h-3 w-3" />
+                          <Download className="h-4 w-4 mr-1" />
+                          Baixar
                         </Button>
                       </div>
                     </div>
