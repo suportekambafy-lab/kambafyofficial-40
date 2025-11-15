@@ -2912,9 +2912,11 @@ export type Database = {
           amount: number | null
           created_at: string | null
           currency: string | null
+          customer_name: string | null
           id: string
           message: string
           order_id: string | null
+          product_name: string | null
           read: boolean | null
           title: string
           type: string
@@ -2925,9 +2927,11 @@ export type Database = {
           amount?: number | null
           created_at?: string | null
           currency?: string | null
+          customer_name?: string | null
           id?: string
           message: string
           order_id?: string | null
+          product_name?: string | null
           read?: boolean | null
           title: string
           type: string
@@ -2938,9 +2942,11 @@ export type Database = {
           amount?: number | null
           created_at?: string | null
           currency?: string | null
+          customer_name?: string | null
           id?: string
           message?: string
           order_id?: string | null
+          product_name?: string | null
           read?: boolean | null
           title?: string
           type?: string
