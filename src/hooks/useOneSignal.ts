@@ -34,46 +34,46 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     const hasCordovaPlugin = typeof window !== 'undefined' && window.plugins?.OneSignal;
     const platform = Capacitor.getPlatform();
     
-    console.log('🔍 OneSignal Environment Check:', { 
+    console.log('🔍 [CRITICAL DEBUG] OneSignal Environment Check:', { 
       isNative, 
       hasCordovaPlugin,
       platform,
       hasWindow: typeof window !== 'undefined',
+      hasWebOneSignal: typeof window !== 'undefined' && typeof window.OneSignal !== 'undefined',
+      hasPlugins: typeof window !== 'undefined' && typeof window.plugins !== 'undefined',
       userAgent: navigator.userAgent 
     });
     
-    // Se tem o Cordova Plugin disponível, usar Native SDK
-    if (hasCordovaPlugin) {
-      console.log('✅ Detected Cordova Plugin - initializing Native SDK');
-      initializeNativeSDK();
-      return;
-    }
-    
-    // Se é nativo mas ainda não tem o plugin, aguardar
-    if (isNative && !hasCordovaPlugin) {
-      console.log('⏳ Native platform detected, waiting for Cordova Plugin...');
+    // IMPORTANTE: No app nativo (Capacitor), APENAS usar Cordova Plugin
+    if (isNative) {
+      console.log('📱 [NATIVE APP] Running in Capacitor - waiting for Cordova Plugin...');
+      
+      let attempts = 0;
+      const maxAttempts = 40; // 20 segundos (500ms * 40)
+      
       const checkPlugin = setInterval(() => {
-        if (window.plugins?.OneSignal) {
+        attempts++;
+        const pluginAvailable = window.plugins?.OneSignal;
+        
+        console.log(`🔍 [NATIVE APP] Check ${attempts}/${maxAttempts}: Plugin available = ${!!pluginAvailable}`);
+        
+        if (pluginAvailable) {
           clearInterval(checkPlugin);
-          console.log('✅ Cordova Plugin now available - initializing Native SDK');
+          console.log('✅ [NATIVE APP] Cordova Plugin found! Initializing Native SDK...');
           initializeNativeSDK();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(checkPlugin);
+          console.error('❌ [NATIVE APP] Cordova Plugin NOT found after 20 seconds! OneSignal will NOT work.');
+          console.error('❌ [NATIVE APP] Make sure to run: npx cap sync');
         }
       }, 500);
       
-      // Timeout após 10 segundos
-      setTimeout(() => {
-        clearInterval(checkPlugin);
-        if (!window.plugins?.OneSignal) {
-          console.log('⚠️ Cordova Plugin not available after timeout, falling back to Web SDK');
-          initializeWebSDK();
-        }
-      }, 10000);
-      return;
+      return () => clearInterval(checkPlugin);
     }
     
-    // Caso contrário, usar Web SDK
-    console.log('✅ Using Web SDK for browser environment');
-    initializeWebSDK();
+    // Apenas para web browser (não Capacitor)
+    console.log('🌐 [WEB BROWSER] Not Capacitor - Web SDK removed, OneSignal disabled');
+    console.log('⚠️ [WEB BROWSER] Web SDK was removed from index.html to avoid conflicts with native app');
   }, []);
 
   // Inicializar OneSignal Web SDK (para WebView e Web)
@@ -179,55 +179,71 @@ export function useOneSignal(options?: UseOneSignalOptions) {
   // Inicializar OneSignal Cordova Plugin (para apps nativos)
   const initializeNativeSDK = async () => {
     try {
+      console.log('🚀 [NATIVE SDK] initializeNativeSDK() called!');
+      console.log('🔍 [NATIVE SDK] Checking window.plugins.OneSignal...');
+      
       if (!window.plugins?.OneSignal) {
-        console.error('❌ OneSignal Cordova plugin not found');
+        console.error('❌ [NATIVE SDK] OneSignal Cordova plugin not found!');
+        console.error('❌ [NATIVE SDK] window.plugins:', window.plugins);
         return;
       }
 
       const OneSignalPlugin = window.plugins.OneSignal;
+      console.log('✅ [NATIVE SDK] OneSignal Plugin object found!', typeof OneSignalPlugin);
 
-      console.log('🔔 Initializing OneSignal Cordova Plugin...');
-
+      console.log('🔔 [NATIVE SDK] Setting App ID:', ONESIGNAL_APP_ID);
       OneSignalPlugin.setAppId(ONESIGNAL_APP_ID);
+      console.log('✅ [NATIVE SDK] App ID set successfully');
 
+      console.log('📱 [NATIVE SDK] Requesting push notification permission...');
       OneSignalPlugin.promptForPushNotificationsWithUserResponse((accepted: boolean) => {
-        console.log('📱 OneSignal permission:', accepted ? 'granted' : 'denied');
+        console.log(`📱 [NATIVE SDK] Permission response: ${accepted ? '✅ GRANTED' : '❌ DENIED'}`);
         setPermissionGranted(accepted);
       });
 
+      console.log('🔍 [NATIVE SDK] Getting device state...');
       OneSignalPlugin.getDeviceState((state: any) => {
-        console.log('📱 [Native SDK] Device State completo:', JSON.stringify(state, null, 2));
-        console.log('📱 [Native SDK] Player ID (userId):', state.userId);
-        console.log('📱 [Native SDK] Push Token:', state.pushToken);
-        console.log('📱 [Native SDK] Subscription:', state.isSubscribed);
+        console.log('📱 [NATIVE SDK] ========== DEVICE STATE ==========');
+        console.log('📱 [NATIVE SDK] Full State:', JSON.stringify(state, null, 2));
+        console.log('📱 [NATIVE SDK] userId (Player ID):', state.userId);
+        console.log('📱 [NATIVE SDK] pushToken:', state.pushToken);
+        console.log('📱 [NATIVE SDK] isSubscribed:', state.isSubscribed);
+        console.log('📱 [NATIVE SDK] isPushDisabled:', state.isPushDisabled);
+        console.log('📱 [NATIVE SDK] =====================================');
         
         if (state.userId) {
-          console.log('✅ [Native SDK] Setting player ID to state:', state.userId);
+          console.log('✅ [NATIVE SDK] Player ID found! Setting to state:', state.userId);
           setPlayerId(state.userId);
           savePlayerIdToProfile(state.userId);
         } else {
-          console.warn('⚠️ [Native SDK] No userId found in device state!');
+          console.error('❌ [NATIVE SDK] NO PLAYER ID (userId) found in device state!');
+          console.error('❌ [NATIVE SDK] This is critical - check OneSignal setup');
         }
       });
 
+      console.log('🎧 [NATIVE SDK] Setting up notification handlers...');
+      
       OneSignalPlugin.setNotificationWillShowInForegroundHandler((notificationReceivedEvent: any) => {
-        console.log('📩 Notification received:', notificationReceivedEvent);
+        console.log('📩 [NATIVE SDK] Notification received in foreground:', notificationReceivedEvent);
         const notification = notificationReceivedEvent.getNotification();
+        console.log('📩 [NATIVE SDK] Notification data:', notification);
         options?.onNotificationReceived?.(notification);
         notificationReceivedEvent.complete(notification);
       });
 
       OneSignalPlugin.setNotificationOpenedHandler((openedEvent: any) => {
-        console.log('🔔 Notification opened:', openedEvent);
+        console.log('🔔 [NATIVE SDK] Notification opened:', openedEvent);
         const notification = openedEvent.notification;
+        console.log('🔔 [NATIVE SDK] Opened notification data:', notification);
         options?.onNotificationOpened?.(notification);
       });
 
       setIsInitialized(true);
-      console.log('✅ OneSignal Cordova Plugin initialized successfully');
+      console.log('✅ [NATIVE SDK] OneSignal Cordova Plugin initialized successfully!');
 
     } catch (error) {
-      console.error('❌ Error initializing OneSignal Cordova Plugin:', error);
+      console.error('❌ [NATIVE SDK] Error initializing OneSignal Cordova Plugin:', error);
+      console.error('❌ [NATIVE SDK] Error details:', JSON.stringify(error, null, 2));
     }
   };
 
@@ -292,38 +308,44 @@ export function useOneSignal(options?: UseOneSignalOptions) {
   // Definir External User ID (para vincular user_id com OneSignal)
   const setExternalUserId = async (userId: string) => {
     try {
+      console.log('🔑 [setExternalUserId] Called with userId:', userId);
+      
+      const isNative = Capacitor.isNativePlatform();
       const hasCordovaPlugin = typeof window !== 'undefined' && window.plugins?.OneSignal;
+      const hasWebSDK = typeof window !== 'undefined' && typeof window.OneSignal !== 'undefined';
 
-      console.log('🔑 Setting External User ID:', userId);
+      console.log('🔍 [setExternalUserId] Environment check:', {
+        isNative,
+        hasCordovaPlugin,
+        hasWebSDK,
+        platform: Capacitor.getPlatform()
+      });
       
       if (hasCordovaPlugin) {
         // Usar Cordova Plugin (Native App)
-        console.log('📱 Using Cordova Plugin for External User ID');
+        console.log('📱 [setExternalUserId] Using Cordova Plugin for External User ID');
         window.plugins.OneSignal.setExternalUserId(userId, (results: any) => {
-          console.log('✅ External User ID set (native):', results);
+          console.log('✅ [setExternalUserId] External User ID set via Native SDK:', results);
         });
         return true;
-      } else {
-        // Web SDK - tentar definir, mas não travar se falhar
-        console.log('🌐 Attempting to set External User ID on Web SDK');
-        
-        if (typeof window.OneSignal !== 'undefined' && window.OneSignal.login) {
-          try {
-            await window.OneSignal.login(userId);
-            console.log('✅ External User ID set (web):', userId);
-            return true;
-          } catch (error) {
-            console.warn('⚠️ Could not set External User ID on web (não é crítico):', error);
-            // Não é crítico para web - notificações diretas ainda funcionam
-            return false;
-          }
-        } else {
-          console.log('⚠️ OneSignal.login not available on web - usando notificações diretas');
+      } else if (hasWebSDK && window.OneSignal.login) {
+        // Web SDK disponível - tentar usar
+        console.log('🌐 [setExternalUserId] Attempting to set External User ID on Web SDK');
+        try {
+          await window.OneSignal.login(userId);
+          console.log('✅ [setExternalUserId] External User ID set via Web SDK:', userId);
+          return true;
+        } catch (error) {
+          console.warn('⚠️ [setExternalUserId] Could not set External User ID on web:', error);
           return false;
         }
+      } else {
+        console.log('⚠️ [setExternalUserId] Neither Cordova Plugin nor Web SDK available');
+        console.log('⚠️ [setExternalUserId] Using direct player ID notifications instead');
+        return false;
       }
     } catch (error) {
-      console.error('❌ Error setting External User ID:', error);
+      console.error('❌ [setExternalUserId] Error:', error);
       return false;
     }
   };
