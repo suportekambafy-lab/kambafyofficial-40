@@ -503,14 +503,16 @@ const handler = async (req: Request): Promise<Response> => {
               const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
                 body: {
                   player_id: sellerProfile.onesignal_player_id,
-                  title: '🎉 Nova Venda!',
-                  message: `Você vendeu para ${order.customer_name} - ${order.amount} ${order.currency}`,
+                  title: 'Nova venda realizada! 🎉',
+                  message: `Parabéns! ${order.customer_name} comprou ${product?.name || 'um produto'} por ${order.amount} ${order.currency}`,
                   data: {
                     type: 'sale',
                     order_id: order.order_id,
                     amount: order.amount,
                     currency: order.currency,
-                    customer_name: order.customer_name
+                    customer_name: order.customer_name,
+                    product_name: product?.name || '',
+                    url: '/vendedor#vendas'
                   }
                 }
               });
