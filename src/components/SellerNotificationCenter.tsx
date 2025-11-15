@@ -219,8 +219,8 @@ export function SellerNotificationCenter() {
                     {notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`p-3 border-b cursor-pointer hover:bg-muted/50 ${
-                          !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                        className={`p-3 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors ${
+                          !notification.read ? 'bg-primary/10 dark:bg-primary/20 border-l-4 border-l-primary' : ''
                         }`}
                         onClick={() => !notification.read && markAsRead(notification.id)}
                       >
@@ -241,7 +241,7 @@ export function SellerNotificationCenter() {
                               {notification.message}
                             </p>
                             {notification.amount && (
-                              <p className="text-sm font-medium text-green-600 mt-1">
+                              <p className="text-sm font-medium text-green-600 dark:text-green-400 mt-1">
                                 {formatAmount(notification.amount, notification.currency || 'KZ')}
                               </p>
                             )}
