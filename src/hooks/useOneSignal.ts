@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
-import OneSignal from 'react-onesignal';
 
 declare global {
   interface Window {
     plugins?: {
       OneSignal?: any;
     };
+    OneSignal?: any;
   }
 }
 
@@ -84,11 +84,11 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       // Aguardar que o OneSignal esteja disponível (já inicializado pelo script no index.html)
       const waitForOneSignal = () => {
         return new Promise<void>((resolve) => {
-          if (typeof OneSignal !== 'undefined') {
+          if (typeof window.OneSignal !== 'undefined') {
             resolve();
           } else {
             const checkInterval = setInterval(() => {
-              if (typeof OneSignal !== 'undefined') {
+              if (typeof window.OneSignal !== 'undefined') {
                 clearInterval(checkInterval);
                 resolve();
               }
@@ -98,6 +98,7 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       };
 
       await waitForOneSignal();
+      const OneSignal = window.OneSignal;
       console.log('✅ [OneSignal Web SDK] OneSignal object is ready!');
       setIsInitialized(true);
 
@@ -266,10 +267,13 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     } else {
       // Para Web SDK
       try {
-        const subscriptionId = await OneSignal.User.PushSubscription.id;
-        if (subscriptionId) {
-          setPlayerId(subscriptionId);
-          await savePlayerIdToProfile(subscriptionId);
+        if (typeof window.OneSignal !== 'undefined') {
+          const OneSignal = window.OneSignal;
+          const subscriptionId = await OneSignal.User.PushSubscription.id;
+          if (subscriptionId) {
+            setPlayerId(subscriptionId);
+            await savePlayerIdToProfile(subscriptionId);
+          }
         }
       } catch (error) {
         console.error('❌ Error updating player ID:', error);
@@ -291,8 +295,10 @@ export function useOneSignal(options?: UseOneSignalOptions) {
         });
       } else {
         // Usar Web SDK
-        await OneSignal.login(userId);
-        console.log('✅ External User ID set (web):', userId);
+        if (typeof window.OneSignal !== 'undefined') {
+          await window.OneSignal.login(userId);
+          console.log('✅ External User ID set (web):', userId);
+        }
       }
 
       return true;
@@ -309,20 +315,23 @@ export function useOneSignal(options?: UseOneSignalOptions) {
 
       if (!isNative) {
         // Web SDK
-        await OneSignal.Notifications.requestPermission();
-        const permission = await OneSignal.Notifications.permission;
-        
-        if (permission) {
-          setPermissionGranted(true);
+        if (typeof window.OneSignal !== 'undefined') {
+          const OneSignal = window.OneSignal;
+          await OneSignal.Notifications.requestPermission();
+          const permission = await OneSignal.Notifications.permission;
           
-          const subscriptionId = await OneSignal.User.PushSubscription.id;
-          if (subscriptionId) {
-            setPlayerId(subscriptionId);
-            await savePlayerIdToProfile(subscriptionId);
+          if (permission) {
+            setPermissionGranted(true);
+            
+            const subscriptionId = await OneSignal.User.PushSubscription.id;
+            if (subscriptionId) {
+              setPlayerId(subscriptionId);
+              await savePlayerIdToProfile(subscriptionId);
+            }
           }
+          
+          return permission;
         }
-        
-        return permission;
       }
 
       return false;
