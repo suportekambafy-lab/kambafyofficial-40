@@ -9,13 +9,13 @@ export function PlayStoreButton({
   ...props
 }: Omit<PlayStoreButtonProps, "children">) {
   return (
-    <Button className={cn("h-11 gap-2", className)} {...props}>
-      <PlayStoreIcon className="size-5" />
+    <Button className={cn("h-11 gap-2 text-foreground border-border hover:bg-accent/50 hover:text-foreground", className)} {...props}>
+      <PlayStoreIcon className="size-5 text-foreground" />
       <div className="text-left flex flex-col items-start justify-center pr-2">
-        <span className="text-[10px] leading-none font-light tracking-tighter">
+        <span className="text-[10px] leading-none font-light tracking-tighter text-muted-foreground">
           BAIXE NO
         </span>
-        <p className="text-base font-bold leading-none">Google Play</p>
+        <p className="text-base font-bold leading-none text-foreground">Google Play</p>
       </div>
     </Button>
   );
