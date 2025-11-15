@@ -62,7 +62,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
     
-    <!-- OneSignal Web SDK -->
+    <!-- OneSignal Web SDK - DESABILITADO para usar apenas Cordova Plugin no app nativo -->
+    <!-- O Cordova Plugin será usado automaticamente pelo useOneSignal.ts quando detectar ambiente nativo -->
+    <!--
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
       window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -72,6 +74,7 @@
         });
       });
     </script>
+    -->
     
     <link rel="preconnect" href="https://pay.kambafy.com" crossorigin />
     <link rel="preconnect" href="https://hcbkqygdtzpxvctfdqbd.supabase.co" crossorigin />
