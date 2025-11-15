@@ -84,26 +84,41 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       console.log('✅ [OneSignal Web SDK] OneSignal object is ready!');
       setIsInitialized(true);
 
-      // Verificar permissão
-      console.log('🔔 [OneSignal Web SDK] Checking permission...');
-      const permission = await OneSignal.Notifications.permission;
-      console.log('🔔 [OneSignal Web SDK] Permission status:', permission);
+      // Verificar permissão do browser primeiro
+      const browserPermission = await Notification.permission;
+      console.log('🔔 [OneSignal Web SDK] Browser permission:', browserPermission);
+
+      // Verificar permissão no OneSignal
+      let permission = await OneSignal.Notifications.permission;
+      console.log('🔔 [OneSignal Web SDK] OneSignal permission status:', permission);
+      
+      // Se o browser concedeu mas OneSignal não sabe, precisamos pedir explicitamente
+      if (browserPermission === 'granted' && !permission) {
+        console.log('🔔 [OneSignal Web SDK] Browser granted but OneSignal not aware, requesting...');
+        try {
+          await OneSignal.Notifications.requestPermission();
+          permission = await OneSignal.Notifications.permission;
+          console.log('🔔 [OneSignal Web SDK] After request, permission is now:', permission);
+        } catch (permError) {
+          console.error('❌ [OneSignal Web SDK] Error requesting permission:', permError);
+        }
+      }
       
       if (permission) {
         setPermissionGranted(true);
-        console.log('✅ [OneSignal Web SDK] Permission already granted, subscribing...');
+        console.log('✅ [OneSignal Web SDK] Permission granted, subscribing...');
       }
 
       // Obter subscription ID
       let subscriptionId = await OneSignal.User.PushSubscription.id;
       console.log('📱 [OneSignal Web SDK] Subscription ID:', subscriptionId);
       
-      // Se não tem subscription ID mas tem permissão, solicitar opt-in
+      // Se não tem subscription ID mas tem permissão, fazer opt-in
       if (!subscriptionId && permission) {
         console.log('🔔 [OneSignal Web SDK] Has permission but no subscription, opting in...');
         try {
           await OneSignal.User.PushSubscription.optIn();
-          // Aguardar um pouco para o OneSignal processar
+          // Aguardar processamento
           await new Promise(resolve => setTimeout(resolve, 2000));
           subscriptionId = await OneSignal.User.PushSubscription.id;
           console.log('📱 [OneSignal Web SDK] New Subscription ID after opt-in:', subscriptionId);
@@ -117,7 +132,7 @@ export function useOneSignal(options?: UseOneSignalOptions) {
         await savePlayerIdToProfile(subscriptionId);
         console.log('✅ [OneSignal Web SDK] Player ID saved to profile!');
       } else {
-        console.log('⚠️ [OneSignal Web SDK] No subscription ID yet. User needs to grant permission or opt-in.');
+        console.log('⚠️ [OneSignal Web SDK] No subscription ID yet. User needs to grant permission.');
       }
 
       // Configurar listeners de notificação
