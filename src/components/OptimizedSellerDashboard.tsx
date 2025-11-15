@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { countOrderItems } from '@/utils/orderUtils';
+import { TestSaleNotification } from '@/components/TestSaleNotification';
 
 // Dashboard do vendedor otimizado
 const OptimizedSellerDashboard = memo(() => {
@@ -93,6 +94,11 @@ const OptimizedSellerDashboard = memo(() => {
           metrics={stats}
           loading={isLoading}
         />
+      </AnimatedWrapper>
+
+      {/* Teste de Notificação de Venda */}
+      <AnimatedWrapper delay={150}>
+        <TestSaleNotification products={sellerData?.products || []} />
       </AnimatedWrapper>
 
       {/* Grid de produtos otimizado */}
