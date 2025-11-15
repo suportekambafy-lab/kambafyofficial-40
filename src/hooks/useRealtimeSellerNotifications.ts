@@ -83,7 +83,8 @@ export function useRealtimeSellerNotifications(userId: string | undefined) {
 
           // Enviar notificação push DIRETA via OneSignal usando external_user_id
           try {
-            console.log('📲 [OneSignal Push] Enviando notificação push direta via external_user_id');
+            console.log('📲 [OneSignal Push] Preparando notificação push');
+            console.log('📲 [OneSignal Push] userId:', userId);
 
             const { data: pushData, error: pushError } = await supabase.functions.invoke('send-onesignal-notification', {
               body: {
@@ -94,7 +95,10 @@ export function useRealtimeSellerNotifications(userId: string | undefined) {
                   type: 'sale',
                   order_id: notification.order_id,
                   amount: notification.amount,
-                  currency: notification.currency
+                  currency: notification.currency,
+                  customer_name: (notification as any).customer_name,
+                  product_name: (notification as any).product_name,
+                  url: '/vendedor#vendas'
                 }
               }
             });

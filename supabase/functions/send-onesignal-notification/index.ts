@@ -10,7 +10,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { player_id, external_user_id, title, message, data, image_url, sound } = await req.json();
+    const body = await req.json();
+    console.log('📥 Request body recebido:', body);
+    
+    const { player_id, external_user_id, title, message, data, image_url, sound } = body;
 
     console.log('📱 Sending OneSignal notification:', {
       player_id,
