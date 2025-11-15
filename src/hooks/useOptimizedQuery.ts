@@ -57,8 +57,8 @@ export const useFinancialData = (userId: string) => {
       };
     },
     {
-      staleTime: 10 * 60 * 1000, // ✅ 10 minutos
-      gcTime: 15 * 60 * 1000  // ✅ 15 minutos
+      staleTime: 15 * 60 * 1000, // ✅ 15 minutos (aumentado)
+      gcTime: 30 * 60 * 1000  // ✅ 30 minutos (aumentado)
     }
   );
 };
