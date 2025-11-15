@@ -43,7 +43,7 @@ serve(async (req) => {
         {
           name: event_name,
           external_id: external_id,
-          timestamp: Math.floor(Date.now() / 1000).toString(), // OneSignal espera string
+          timestamp: new Date().toISOString(), // RFC3339 format
           properties: properties || {}
         }
       ]
