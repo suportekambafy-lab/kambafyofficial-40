@@ -29,13 +29,9 @@ serve(async (req) => {
         type: 'new_sale',
         title: '🎉 Nova Venda de Teste!',
         message: 'Teste do sistema de notificações em tempo real',
-        data: {
-          product_name: 'Produto Teste',
-          amount: '15000',
-          currency: 'KZ',
-          customer_name: 'Cliente Teste',
-          customer_email: 'teste@kambafy.com'
-        }
+        order_id: 'TEST-' + Date.now(),
+        amount: 15000,
+        currency: 'KZ'
       })
       .select()
       .single()
