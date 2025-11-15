@@ -71,13 +71,22 @@ export function SendAppAnnouncementButton() {
         (payload) => {
           console.log('Progress update:', payload);
           if (payload.new) {
-            setProgress(payload.new as Progress);
+            const newProgress = payload.new as Progress;
+            setProgress(newProgress);
+            
+            // Update results with latest progress data
+            setResults(prev => prev ? {
+              ...prev,
+              sent: newProgress.sent,
+              failed: newProgress.failed,
+              totalUsers: newProgress.total_users
+            } : null);
             
             // Stop tracking when completed
-            if ((payload.new as Progress).status === 'completed') {
+            if (newProgress.status === 'completed') {
               setIsTracking(false);
               toast.success(
-                `Envio concluído! ${(payload.new as Progress).sent} emails enviados com sucesso.`,
+                `Envio concluído! ${newProgress.sent} emails enviados com sucesso.`,
                 { duration: 10000 }
               );
             }
@@ -293,6 +302,28 @@ export function SendAppAnnouncementButton() {
 
           {results && (
             <div className="space-y-4">
+              {/* Progress tracking in real-time */}
+              {isTracking && progress && (
+                <div className="space-y-3 p-4 border rounded-lg bg-primary/5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-base">⚡ Progresso em Tempo Real</span>
+                    <span className="text-sm text-muted-foreground">
+                      {progress.sent + progress.failed} / {progress.total_users}
+                    </span>
+                  </div>
+                  
+                  <Progress 
+                    value={((progress.sent + progress.failed) / progress.total_users) * 100} 
+                    className="h-3"
+                  />
+                  
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Enviando emails em segundo plano...</span>
+                  </div>
+                </div>
+              )}
+
               {/* Resumo */}
               <div className="grid grid-cols-2 gap-4">
                 <Card>
