@@ -196,9 +196,17 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       });
 
       OneSignalPlugin.getDeviceState((state: any) => {
+        console.log('📱 [Native SDK] Device State completo:', JSON.stringify(state, null, 2));
+        console.log('📱 [Native SDK] Player ID (userId):', state.userId);
+        console.log('📱 [Native SDK] Push Token:', state.pushToken);
+        console.log('📱 [Native SDK] Subscription:', state.isSubscribed);
+        
         if (state.userId) {
-          console.log('✅ OneSignal Player ID obtained:', state.userId);
+          console.log('✅ [Native SDK] Setting player ID to state:', state.userId);
           setPlayerId(state.userId);
+          savePlayerIdToProfile(state.userId);
+        } else {
+          console.warn('⚠️ [Native SDK] No userId found in device state!');
         }
       });
 
