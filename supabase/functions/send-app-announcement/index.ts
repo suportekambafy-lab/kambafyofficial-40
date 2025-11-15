@@ -203,65 +203,76 @@ const handler = async (req: Request): Promise<Response> => {
       
       console.log(`[APP_ANNOUNCEMENT] Processing batch ${batchIndex + 1}/${batches.length}`);
 
-      const batchPromises = batch.map(async (user) => {
-        try {
-          const emailData = {
-            from: "Kambafy <noreply@kambafy.com>",
-            to: [user.email],
-            subject: "🎉 Novidades na Kambafy - Confira agora!",
-            html: createEmailHtml(user.full_name),
-          };
+      const batchPromises = [];
+      
+      for (const user of batch) {
+        batchPromises.push(
+          (async () => {
+            try {
+              const emailData = {
+                from: "Kambafy <noreply@kambafy.com>",
+                to: [user.email],
+                subject: "🎉 Novidades na Kambafy - Confira agora!",
+                html: createEmailHtml(user.full_name),
+              };
 
-          const response = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${resendApiKey}`,
-            },
-            body: JSON.stringify(emailData),
-          });
+              const response = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${resendApiKey}`,
+                },
+                body: JSON.stringify(emailData),
+              });
 
-          const responseData = await response.json();
+              const responseData = await response.json();
 
-          if (!response.ok) {
-            console.error(`[APP_ANNOUNCEMENT] Resend API Error for ${user.email}:`, {
-              status: response.status,
-              statusText: response.statusText,
-              data: responseData
-            });
-            
-            throw new Error(
-              responseData.message || 
-              `Resend API error: ${response.status} - ${response.statusText}`
-            );
-          }
+              if (!response.ok) {
+                console.error(`[APP_ANNOUNCEMENT] Resend API Error for ${user.email}:`, {
+                  status: response.status,
+                  statusText: response.statusText,
+                  data: responseData
+                });
+                
+                throw new Error(
+                  responseData.message || 
+                  `Resend API error: ${response.status} - ${response.statusText}`
+                );
+              }
 
-          console.log(`[APP_ANNOUNCEMENT] ✓ Email sent to ${user.email}`, responseData);
-          sent++;
-        } catch (error) {
-          failed++;
-          const errorMessage = error instanceof Error ? error.message : "Unknown error";
-          
-          // Check for common issues
-          let hint = "";
-          if (errorMessage.includes("401") || errorMessage.includes("authentication")) {
-            hint = "API Key inválida ou expirada";
-          } else if (errorMessage.includes("domain") || errorMessage.includes("verified")) {
-            hint = "Domínio não verificado no Resend";
-          }
-          
-          errors.push({ 
-            email: user.email, 
-            error: errorMessage,
-            details: hint ? { hint } : undefined
-          });
-          
-          console.error(`[APP_ANNOUNCEMENT] ✗ Failed to send to ${user.email}:`, {
-            error: errorMessage,
-            hint
-          });
-        }
-      });
+              console.log(`[APP_ANNOUNCEMENT] ✓ Email sent to ${user.email}`, responseData);
+              sent++;
+              
+              // Wait 600ms between emails to respect 2 req/s rate limit
+              await new Promise(resolve => setTimeout(resolve, 600));
+            } catch (error) {
+              failed++;
+              const errorMessage = error instanceof Error ? error.message : "Unknown error";
+              
+              // Check for common issues
+              let hint = "";
+              if (errorMessage.includes("401") || errorMessage.includes("authentication")) {
+                hint = "API Key inválida ou expirada";
+              } else if (errorMessage.includes("domain") || errorMessage.includes("verified")) {
+                hint = "Domínio não verificado no Resend";
+              } else if (errorMessage.includes("rate") || errorMessage.includes("429")) {
+                hint = "Rate limit excedido - aguarde alguns segundos";
+              }
+              
+              errors.push({ 
+                email: user.email, 
+                error: errorMessage,
+                details: hint ? { hint } : undefined
+              });
+              
+              console.error(`[APP_ANNOUNCEMENT] ✗ Failed to send to ${user.email}:`, {
+                error: errorMessage,
+                hint
+              });
+            }
+          })()
+        );
+      }
 
       await Promise.all(batchPromises);
 
@@ -283,7 +294,7 @@ const handler = async (req: Request): Promise<Response> => {
       timestamp: new Date().toISOString(),
     };
 
-    console.log(`✅ Envio concluído: ${totalSent} sucessos, ${totalFailed} falhas em ${duration}s`);
+    console.log(`[APP_ANNOUNCEMENT] Process completed:`, result);
 
     return new Response(
       JSON.stringify(result),
