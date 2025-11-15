@@ -53,7 +53,11 @@ export function WithdrawalModal({
       return;
     }
 
-    if (amount > availableBalance) {
+    // Arredondar ambos valores para 2 casas decimais para evitar erros de precisão
+    const roundedAmount = Math.round(amount * 100) / 100;
+    const roundedAvailableBalance = Math.round(availableBalance * 100) / 100;
+
+    if (roundedAmount > roundedAvailableBalance) {
       setError(`Valor máximo disponível: ${availableBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ`);
       return;
     }
@@ -98,7 +102,7 @@ export function WithdrawalModal({
         .from('withdrawal_requests')
         .insert({
           user_id: user.id,
-          amount: amount, // Valor exato que será transferido (já tem 8% descontado)
+          amount: roundedAmount, // Valor arredondado para evitar erros de precisão
           status: 'pendente'
         })
         .select();
