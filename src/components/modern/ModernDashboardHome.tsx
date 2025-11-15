@@ -6,6 +6,7 @@ import { ModernMetricCard } from './ModernMetricCard';
 import { ModernSalesChart } from './ModernSalesChart';
 import { ModernRecentSales } from './ModernRecentSales';
 import { ModernKambaAchievements } from './ModernKambaAchievements';
+import { AppDownloadBanner } from './AppDownloadBanner';
 import { ProductFilter } from '@/components/ProductFilter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-period-selector';
@@ -426,6 +427,8 @@ export function ModernDashboardHome() {
 
   return (
     <div className="p-4 md:p-6 space-y-6 bg-background min-h-full transition-colors duration-300">
+      <AppDownloadBanner />
+      
       <div className="mb-6 md:mb-8">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">
           Dashboard
