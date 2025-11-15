@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Mail, CheckCircle, XCircle, AlertTriangle, Send } from 'lucide-react';
+import { Loader2, Mail, CheckCircle, XCircle, AlertTriangle, Send, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SendResult {
@@ -38,6 +38,29 @@ export function SendAppAnnouncementButton() {
   const [results, setResults] = useState<SendResult | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [isTracking, setIsTracking] = useState(false);
+  const [alreadySent, setAlreadySent] = useState<number>(0);
+  const [totalUsers, setTotalUsers] = useState<number>(0);
+
+  // Fetch initial stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      const { count: sentCount } = await supabase
+        .from('app_announcement_sent')
+        .select('*', { count: 'exact', head: true })
+        .eq('announcement_type', 'app_launch');
+      
+      const { count: usersCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .not('email', 'is', null)
+        .neq('email', '');
+      
+      setAlreadySent(sentCount || 0);
+      setTotalUsers(usersCount || 0);
+    };
+    
+    fetchStats();
+  }, []);
 
   // Subscribe to progress updates
   useEffect(() => {
@@ -85,6 +108,13 @@ export function SendAppAnnouncementButton() {
             // Stop tracking when completed
             if (newProgress.status === 'completed') {
               setIsTracking(false);
+              // Refresh stats
+              supabase
+                .from('app_announcement_sent')
+                .select('*', { count: 'exact', head: true })
+                .eq('announcement_type', 'app_launch')
+                .then(({ count }) => setAlreadySent(count || 0));
+              
               toast.success(
                 `Envio concluído! ${newProgress.sent} emails enviados com sucesso.`,
                 { duration: 10000 }
@@ -181,6 +211,8 @@ export function SendAppAnnouncementButton() {
     }
   };
 
+  const remainingUsers = totalUsers - alreadySent;
+
   return (
     <>
       <Card className="border-primary/20">
@@ -194,12 +226,46 @@ export function SendAppAnnouncementButton() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Stats Section */}
+          <div className="grid grid-cols-3 gap-3 p-4 bg-muted/50 rounded-lg">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">{totalUsers}</div>
+              <div className="text-xs text-muted-foreground">Total de Usuários</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{alreadySent}</div>
+              <div className="text-xs text-muted-foreground">Já Receberam</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">{remainingUsers}</div>
+              <div className="text-xs text-muted-foreground">Faltam Receber</div>
+            </div>
+          </div>
+
+          {remainingUsers > 0 && (
+            <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                <strong>Sistema de proteção ativo:</strong> Apenas os {remainingUsers} usuários que ainda não receberam o email receberão a mensagem. Não haverá duplicação de envios.
+              </p>
+            </div>
+          )}
+
+          {remainingUsers === 0 && (
+            <div className="flex items-start gap-2 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-green-700 dark:text-green-300">
+                <strong>✅ Todos os usuários já receberam o email!</strong> Use o botão "Limpar Histórico" se quiser reenviar para todos.
+              </p>
+            </div>
+          )}
+          
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               <strong>Modo Teste:</strong> Envia apenas para 5 utilizadores para validar o email.
               <br />
-              <strong>Modo Completo:</strong> Envia para todos os utilizadores (~2.556).
+              <strong>Modo Completo:</strong> Envia para todos os utilizadores que ainda não receberam.
               <br />
               <strong>Sistema de Progresso:</strong> Acompanhe o envio em tempo real.
             </AlertDescription>
