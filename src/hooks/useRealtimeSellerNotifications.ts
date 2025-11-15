@@ -81,6 +81,46 @@ export function useRealtimeSellerNotifications(userId: string | undefined) {
             console.error('❌ [OneSignal Custom Event] Erro:', error);
           }
 
+          // Enviar notificação push DIRETA via OneSignal
+          try {
+            console.log('📲 [OneSignal Push] Enviando notificação push direta');
+            
+            // Buscar o onesignal_player_id do perfil do usuário
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('onesignal_player_id')
+              .eq('id', userId)
+              .single();
+
+            if (profileError || !profile?.onesignal_player_id) {
+              console.error('❌ [OneSignal Push] Player ID não encontrado:', profileError);
+            } else {
+              console.log('📱 [OneSignal Push] Player ID encontrado:', profile.onesignal_player_id);
+
+              const { data: pushData, error: pushError } = await supabase.functions.invoke('send-onesignal-notification', {
+                body: {
+                  player_id: profile.onesignal_player_id,
+                  title: notification.title,
+                  message: notification.message,
+                  data: {
+                    type: 'sale',
+                    order_id: notification.order_id,
+                    amount: notification.amount,
+                    currency: notification.currency
+                  }
+                }
+              });
+
+              if (pushError) {
+                console.error('❌ [OneSignal Push] Erro ao enviar notificação:', pushError);
+              } else {
+                console.log('✅ [OneSignal Push] Notificação enviada com sucesso:', pushData);
+              }
+            }
+          } catch (error) {
+            console.error('❌ [OneSignal Push] Erro:', error);
+          }
+
           // Navegador Web: Também atualizar estado para notificação in-app
           if (!isNative) {
             console.log('💻 [Web] Mostrando notificação in-app');
