@@ -62,6 +62,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
     
+    <!-- OneSignal Web SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "e1a77f24-25aa-4f9d-a0fd-316ecc8885cd",
+        });
+      });
+    </script>
+    
     <link rel="preconnect" href="https://pay.kambafy.com" crossorigin />
     <link rel="preconnect" href="https://hcbkqygdtzpxvctfdqbd.supabase.co" crossorigin />
     <link rel="preconnect" href="https://js.stripe.com" crossorigin />
