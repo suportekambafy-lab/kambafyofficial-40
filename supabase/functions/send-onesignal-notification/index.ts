@@ -55,7 +55,6 @@ serve(async (req) => {
       headings: { en: title },
       contents: { en: message },
       data: data || {},
-      android_channel_id: '85da5c4b-c2a7-426f-851f-5c7c42afd64a', // Canal de notificação
       priority: 10, // Alta prioridade
       ttl: 259200, // 3 dias
     };
