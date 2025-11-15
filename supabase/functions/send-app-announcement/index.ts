@@ -206,7 +206,7 @@ const handler = async (req: Request): Promise<Response> => {
           const emailHtml = createEmailHtml(profile.full_name);
           
           await resend.emails.send({
-            from: "Kambafy <onboarding@resend.dev>",
+            from: "Kambafy <noreply@kambafy.com>",
             to: [profile.email!],
             subject: "📱 Kambafy agora disponível no seu telemóvel!",
             html: emailHtml,
