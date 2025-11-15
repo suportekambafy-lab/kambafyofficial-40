@@ -18,6 +18,7 @@ import { SEO } from '@/components/SEO';
 import { ResendAllAccessButton } from '@/components/admin/ResendAllAccessButton';
 import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalancesButton';
 import { SendAppAnnouncementButton } from '@/components/admin/SendAppAnnouncementButton';
+import { ClearAnnouncementButton } from '@/components/admin/ClearAnnouncementButton';
 import BunnyToVimeoMigration from '@/components/admin/BunnyToVimeoMigration';
 import { BunnyMigration } from '@/components/admin/BunnyMigration';
 
@@ -539,7 +540,10 @@ export default function AdminDashboard() {
           </div>
           
           <div className="space-y-6">
-            <SendAppAnnouncementButton />
+            <div className="space-y-3">
+              <SendAppAnnouncementButton />
+              <ClearAnnouncementButton />
+            </div>
             <BunnyMigration />
             <BunnyToVimeoMigration />
           </div>
