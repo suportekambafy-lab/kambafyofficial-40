@@ -2376,6 +2376,7 @@ export type Database = {
           is_creator: boolean | null
           onesignal_player_id: string | null
           push_notifications_enabled: boolean | null
+          retained_fixed_amount: number | null
           retention_reason: string | null
           retention_release_date: string | null
           updated_at: string
@@ -2398,6 +2399,7 @@ export type Database = {
           is_creator?: boolean | null
           onesignal_player_id?: string | null
           push_notifications_enabled?: boolean | null
+          retained_fixed_amount?: number | null
           retention_reason?: string | null
           retention_release_date?: string | null
           updated_at?: string
@@ -2420,6 +2422,7 @@ export type Database = {
           is_creator?: boolean | null
           onesignal_player_id?: string | null
           push_notifications_enabled?: boolean | null
+          retained_fixed_amount?: number | null
           retention_reason?: string | null
           retention_release_date?: string | null
           updated_at?: string
@@ -3460,6 +3463,16 @@ export type Database = {
         Returns: Json
       }
       admin_set_seller_retention:
+        | {
+            Args: {
+              p_admin_email: string
+              p_reason: string
+              p_retention_days?: number
+              p_retention_percentage: number
+              p_user_id: string
+            }
+            Returns: Json
+          }
         | {
             Args: {
               p_admin_email: string

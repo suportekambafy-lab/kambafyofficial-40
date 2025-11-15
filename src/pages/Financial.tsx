@@ -102,18 +102,19 @@ export default function Financial() {
     try {
       setLoading(true);
 
-      // ✅ 1. BUSCAR RETENÇÃO DO PERFIL
+      // ✅ 1. BUSCAR RETENÇÃO DO PERFIL (incluindo valor retido FIXO)
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('balance_retention_percentage, retention_reason, retention_release_date')
+        .select('balance_retention_percentage, retained_fixed_amount, retention_reason, retention_release_date')
         .eq('user_id', user.id)
         .single();
 
       const retentionPercentage = profileData?.balance_retention_percentage || 0;
+      const retainedFixedAmount = profileData?.retained_fixed_amount || 0;
       const retentionReason = profileData?.retention_reason || null;
       const retentionReleaseDate = profileData?.retention_release_date || null;
 
-      // ✅ 2. SALDO TOTAL (antes da retenção)
+      // ✅ 2. SALDO TOTAL
       const { data: balanceData } = await supabase
         .from('customer_balances')
         .select('balance')
@@ -122,8 +123,9 @@ export default function Financial() {
 
       const totalBalance = balanceData?.balance || 0;
 
-      // ✅ 3. CALCULAR VALORES
-      const retainedAmount = (totalBalance * retentionPercentage) / 100;
+      // ✅ 3. CALCULAR VALORES USANDO VALOR RETIDO FIXO
+      // O valor retido é FIXO desde quando foi aplicado, não muda com saques
+      const retainedAmount = retainedFixedAmount;
       const availableBalance = totalBalance - retainedAmount;
 
       // ✅ 4. TOTAL SACADO (aprovado)
