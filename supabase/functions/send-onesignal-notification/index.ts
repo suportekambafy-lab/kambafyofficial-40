@@ -12,13 +12,15 @@ serve(async (req) => {
   }
 
   try {
-    const { player_id, title, message, data } = await req.json();
+    const { player_id, title, message, data, image_url, sound } = await req.json();
 
     console.log('📱 Sending OneSignal notification:', {
       player_id,
       title,
       message,
-      data
+      data,
+      image_url,
+      sound
     });
 
     // Validar dados obrigatórios
@@ -48,16 +50,34 @@ serve(async (req) => {
       );
     }
 
-    // Preparar payload para OneSignal
-    const notificationPayload = {
+    // Preparar payload para OneSignal seguindo melhores práticas
+    const notificationPayload: any = {
       app_id: ONESIGNAL_APP_ID,
       include_player_ids: [player_id],
-      headings: { en: title },
-      contents: { en: message },
+      headings: { 
+        en: title,
+        pt: title // Suporte multi-idioma
+      },
+      contents: { 
+        en: message,
+        pt: message // Suporte multi-idioma
+      },
       data: data || {},
-      priority: 10, // Alta prioridade
+      priority: 10, // Alta prioridade para notificações de venda
       ttl: 259200, // 3 dias
+      android_channel_id: "sales_notifications", // Canal Android customizado
+      android_sound: sound || "default",
+      ios_sound: sound || "default.caf",
+      ios_badgeType: "Increase",
+      ios_badgeCount: 1,
     };
+
+    // Adicionar imagem se fornecida
+    if (image_url) {
+      notificationPayload.big_picture = image_url; // Android
+      notificationPayload.ios_attachments = { id: image_url }; // iOS
+      notificationPayload.chrome_web_image = image_url; // Web
+    }
 
     console.log('📤 Sending to OneSignal API:', notificationPayload);
 
@@ -65,7 +85,7 @@ serve(async (req) => {
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
       },
       body: JSON.stringify(notificationPayload),
@@ -80,7 +100,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Failed to send notification',
-          details: result 
+          details: result,
+          errors: result.errors || []
         }),
         { 
           status: response.status, 
@@ -90,12 +111,14 @@ serve(async (req) => {
     }
 
     console.log('✅ Notification sent successfully:', result.id);
+    console.log('📊 Recipients:', result.recipients);
 
     return new Response(
       JSON.stringify({ 
         success: true,
         notification_id: result.id,
-        recipients: result.recipients 
+        recipients: result.recipients,
+        external_id: result.external_id
       }),
       { 
         status: 200, 
