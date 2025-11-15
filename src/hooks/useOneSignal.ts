@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
+import OneSignal from 'react-onesignal';
 
 declare global {
   interface Window {
@@ -9,6 +10,8 @@ declare global {
     };
   }
 }
+
+const ONESIGNAL_APP_ID = 'e1a77f24-25aa-4f9d-a0fd-316ecc8885cd';
 
 export interface UseOneSignalOptions {
   onNotificationReceived?: (notification: any) => void;
@@ -21,77 +24,120 @@ export function useOneSignal(options?: UseOneSignalOptions) {
   const [permissionGranted, setPermissionGranted] = useState(false);
 
   useEffect(() => {
-    const initializeOneSignal = async () => {
-      const isNative = Capacitor.isNativePlatform();
+    const isNative = Capacitor.isNativePlatform();
+    const isWebView = !isNative && typeof window !== 'undefined';
+    
+    console.log('🔍 OneSignal Environment:', { isNative, isWebView });
+    
+    if (isWebView) {
+      // Inicializar OneSignal Web SDK para WebView/Web
+      initializeWebSDK();
+      return;
+    }
+    
+    if (isNative) {
+      // Inicializar OneSignal Cordova Plugin para apps nativos
+      initializeNativeSDK();
+      return;
+    }
+    
+    console.log('⚠️ OneSignal: Environment not supported');
+  }, []);
 
-      if (!isNative) {
-        console.log('⚠️ OneSignal: Not a native platform, skipping initialization');
+  // Inicializar OneSignal Web SDK (para WebView e Web)
+  const initializeWebSDK = async () => {
+    try {
+      console.log('🌐 Initializing OneSignal Web SDK...');
+      
+      await OneSignal.init({
+        appId: ONESIGNAL_APP_ID,
+        allowLocalhostAsSecureOrigin: true,
+      });
+
+      console.log('✅ OneSignal Web SDK initialized');
+      setIsInitialized(true);
+
+      // Verificar permissão
+      const permission = await OneSignal.Notifications.permission;
+      console.log('🔔 Permission status:', permission);
+      
+      if (permission) {
+        setPermissionGranted(true);
+        
+        // Obter Subscription ID
+        const subscriptionId = await OneSignal.User.PushSubscription.id;
+        console.log('📱 Subscription ID:', subscriptionId);
+        
+        if (subscriptionId) {
+          setPlayerId(subscriptionId);
+          await savePlayerIdToProfile(subscriptionId);
+        }
+      }
+
+      // Event listeners
+      OneSignal.Notifications.addEventListener('click', (event) => {
+        console.log('🔔 Notification clicked:', event);
+        options?.onNotificationOpened?.(event);
+      });
+
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+        console.log('📩 Notification received:', event);
+        options?.onNotificationReceived?.(event);
+      });
+
+    } catch (error) {
+      console.error('❌ Error initializing OneSignal Web SDK:', error);
+    }
+  };
+
+  // Inicializar OneSignal Cordova Plugin (para apps nativos)
+  const initializeNativeSDK = async () => {
+    try {
+      if (!window.plugins?.OneSignal) {
+        console.error('❌ OneSignal Cordova plugin not found');
         return;
       }
 
-      try {
-        // Verificar se OneSignal plugin está disponível
-        if (!window.plugins?.OneSignal) {
-          console.error('❌ OneSignal plugin not found');
-          return;
+      const OneSignalPlugin = window.plugins.OneSignal;
+
+      console.log('🔔 Initializing OneSignal Cordova Plugin...');
+
+      OneSignalPlugin.setAppId(ONESIGNAL_APP_ID);
+
+      OneSignalPlugin.promptForPushNotificationsWithUserResponse((accepted: boolean) => {
+        console.log('📱 OneSignal permission:', accepted ? 'granted' : 'denied');
+        setPermissionGranted(accepted);
+      });
+
+      OneSignalPlugin.getDeviceState((state: any) => {
+        if (state.userId) {
+          console.log('✅ OneSignal Player ID obtained:', state.userId);
+          setPlayerId(state.userId);
         }
+      });
 
-        const OneSignal = window.plugins.OneSignal;
+      OneSignalPlugin.setNotificationWillShowInForegroundHandler((notificationReceivedEvent: any) => {
+        console.log('📩 Notification received:', notificationReceivedEvent);
+        const notification = notificationReceivedEvent.getNotification();
+        options?.onNotificationReceived?.(notification);
+        notificationReceivedEvent.complete(notification);
+      });
 
-        console.log('🔔 Initializing OneSignal...');
+      OneSignalPlugin.setNotificationOpenedHandler((openedEvent: any) => {
+        console.log('🔔 Notification opened:', openedEvent);
+        const notification = openedEvent.notification;
+        options?.onNotificationOpened?.(notification);
+      });
 
-        // Configurar OneSignal App ID (obtido do .env ou direto)
-        const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID || 
-                                  '85da5c4b-c2a7-426f-851f-5c7c42afd64a';
+      setIsInitialized(true);
+      console.log('✅ OneSignal Cordova Plugin initialized successfully');
 
-        // Inicializar OneSignal
-        OneSignal.setAppId(ONESIGNAL_APP_ID);
+    } catch (error) {
+      console.error('❌ Error initializing OneSignal Cordova Plugin:', error);
+    }
+  };
 
-        // Solicitar permissão de notificações
-        OneSignal.promptForPushNotificationsWithUserResponse((accepted: boolean) => {
-          console.log('📱 OneSignal permission:', accepted ? 'granted' : 'denied');
-          setPermissionGranted(accepted);
-        });
-
-        // Obter Player ID (Device Token)
-        OneSignal.getDeviceState((state: any) => {
-          if (state.userId) {
-            console.log('✅ OneSignal Player ID obtained:', state.userId);
-            setPlayerId(state.userId);
-          }
-        });
-
-        // Handler quando notificação é recebida (app aberto)
-        OneSignal.setNotificationWillShowInForegroundHandler((notificationReceivedEvent: any) => {
-          console.log('📩 Notification received:', notificationReceivedEvent);
-          
-          const notification = notificationReceivedEvent.getNotification();
-          options?.onNotificationReceived?.(notification);
-          
-          // Mostrar a notificação
-          notificationReceivedEvent.complete(notification);
-        });
-
-        // Handler quando notificação é aberta/clicada
-        OneSignal.setNotificationOpenedHandler((openedEvent: any) => {
-          console.log('🔔 Notification opened:', openedEvent);
-          
-          const notification = openedEvent.notification;
-          options?.onNotificationOpened?.(notification);
-        });
-
-        setIsInitialized(true);
-        console.log('✅ OneSignal initialized successfully');
-
-      } catch (error) {
-        console.error('❌ Error initializing OneSignal:', error);
-      }
-    };
-
-    initializeOneSignal();
-  }, []);
-
-  // Função pública para salvar Player ID no perfil do usuário
+  // Salvar Player ID no perfil do usuário
   const savePlayerIdToProfile = async (playerIdValue: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -111,54 +157,92 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       if (error) {
         console.error('❌ Error saving player ID:', error);
         return false;
-      } else {
-        console.log('✅ Player ID saved successfully');
-        return true;
       }
+
+      console.log('✅ Player ID saved successfully');
+      return true;
     } catch (error) {
       console.error('❌ Error in savePlayerIdToProfile:', error);
       return false;
     }
   };
 
-  // Função para atualizar Player ID manualmente
+  // Atualizar Player ID manualmente
   const updatePlayerId = async () => {
-    if (!window.plugins?.OneSignal) return;
+    const isNative = Capacitor.isNativePlatform();
 
-    window.plugins.OneSignal.getDeviceState((state: any) => {
-      if (state.userId) {
-        setPlayerId(state.userId);
-        savePlayerIdToProfile(state.userId);
+    if (isNative && window.plugins?.OneSignal) {
+      window.plugins.OneSignal.getDeviceState((state: any) => {
+        if (state.userId) {
+          setPlayerId(state.userId);
+          savePlayerIdToProfile(state.userId);
+        }
+      });
+    } else {
+      // Para Web SDK
+      try {
+        const subscriptionId = await OneSignal.User.PushSubscription.id;
+        if (subscriptionId) {
+          setPlayerId(subscriptionId);
+          await savePlayerIdToProfile(subscriptionId);
+        }
+      } catch (error) {
+        console.error('❌ Error updating player ID:', error);
       }
-    });
+    }
   };
 
-  // Função para definir External User ID (necessário para Custom Events)
+  // Definir External User ID (para vincular user_id com OneSignal)
   const setExternalUserId = async (userId: string) => {
     try {
       const isNative = Capacitor.isNativePlatform();
 
-      if (!isNative) {
-        console.log('⚠️ OneSignal: Not a native platform, skipping External User ID');
-        return false;
-      }
-
-      if (!window.plugins?.OneSignal) {
-        console.error('❌ OneSignal plugin not found');
-        return false;
-      }
-
-      const OneSignal = window.plugins.OneSignal;
-
       console.log('🔑 Setting External User ID:', userId);
       
-      OneSignal.setExternalUserId(userId, (results: any) => {
-        console.log('✅ External User ID set successfully:', results);
-      });
+      if (isNative && window.plugins?.OneSignal) {
+        // Usar Cordova Plugin
+        window.plugins.OneSignal.setExternalUserId(userId, (results: any) => {
+          console.log('✅ External User ID set (native):', results);
+        });
+      } else {
+        // Usar Web SDK
+        await OneSignal.login(userId);
+        console.log('✅ External User ID set (web):', userId);
+      }
 
       return true;
     } catch (error) {
       console.error('❌ Error setting External User ID:', error);
+      return false;
+    }
+  };
+
+  // Solicitar permissão de notificações (para Web SDK)
+  const requestPermission = async () => {
+    try {
+      const isNative = Capacitor.isNativePlatform();
+
+      if (!isNative) {
+        // Web SDK
+        await OneSignal.Notifications.requestPermission();
+        const permission = await OneSignal.Notifications.permission;
+        
+        if (permission) {
+          setPermissionGranted(true);
+          
+          const subscriptionId = await OneSignal.User.PushSubscription.id;
+          if (subscriptionId) {
+            setPlayerId(subscriptionId);
+            await savePlayerIdToProfile(subscriptionId);
+          }
+        }
+        
+        return permission;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('❌ Error requesting permission:', error);
       return false;
     }
   };
@@ -170,5 +254,6 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     updatePlayerId,
     savePlayerIdToProfile,
     setExternalUserId,
+    requestPermission,
   };
 }
