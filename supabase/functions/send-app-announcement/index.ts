@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,11 +8,11 @@ const corsHeaders = {
 
 interface SendResult {
   success: boolean;
-  total_users: number;
-  emails_sent: number;
+  totalUsers: number;
+  sent: number;
   failed: number;
-  errors: string[];
-  duration_seconds: number;
+  errors: Array<{ email: string; error: string; details?: any }>;
+  duration: number;
   timestamp: string;
 }
 
@@ -35,48 +32,68 @@ const handler = async (req: Request): Promise<Response> => {
   const startTime = Date.now();
   
   try {
-    // Parse request body for optional test mode
-    const body = await req.json().catch(() => ({}));
-    const testMode = body.test_mode === true;
-    const testLimit = 5;
-
-    console.log(`Iniciando envio de emails - Modo teste: ${testMode}`);
-
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Fetch all profiles with emails
-    let query = supabase
-      .from("profiles")
-      .select("email, full_name")
-      .not("email", "is", null);
-
-    if (testMode) {
-      query = query.limit(testLimit);
-    }
-
-    const { data: profiles, error: fetchError } = await query;
-
-    if (fetchError) {
-      console.error("Erro ao buscar perfis:", fetchError);
-      throw new Error(`Erro ao buscar utilizadores: ${fetchError.message}`);
-    }
-
-    if (!profiles || profiles.length === 0) {
+    // Validate RESEND_API_KEY exists
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("[APP_ANNOUNCEMENT] RESEND_API_KEY not configured");
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          message: "Nenhum utilizador com email encontrado",
-          total_users: 0,
-          emails_sent: 0
+          success: false,
+          error: "RESEND_API_KEY não configurada. Configure em Supabase Dashboard > Edge Functions > Secrets",
+          resendDashboard: "https://resend.com/api-keys"
         }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
-    console.log(`Total de utilizadores a notificar: ${profiles.length}`);
+    const { test_mode } = await req.json();
+    
+    console.log("[APP_ANNOUNCEMENT] Starting email send process", { test_mode, resendKeyExists: !!resendApiKey });
+    
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch users with emails from profiles
+    let query = supabase
+      .from("profiles")
+      .select("user_id, email, full_name")
+      .not("email", "is", null);
+    
+    if (test_mode) {
+      query = query.limit(5);
+    }
+    
+    const { data: users, error: fetchError } = await query;
+
+    if (fetchError) {
+      console.error("[APP_ANNOUNCEMENT] Error fetching users:", fetchError);
+      throw new Error(`Failed to fetch users: ${fetchError.message}`);
+    }
+    
+    if (!users || users.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          totalUsers: 0,
+          sent: 0,
+          failed: 0,
+          errors: [],
+          duration: Date.now() - startTime,
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+    
+    console.log(`[APP_ANNOUNCEMENT] Found ${users.length} users to notify`);
 
     // Email template
     const createEmailHtml = (name: string | null) => `

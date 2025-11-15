@@ -5,58 +5,83 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Mail, CheckCircle, XCircle, AlertTriangle, Send } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface SendResult {
   success: boolean;
-  total_users: number;
-  emails_sent: number;
+  totalUsers: number;
+  sent: number;
   failed: number;
-  errors?: string[];
-  duration_seconds: number;
+  errors: Array<{ email: string; error: string; details?: { hint?: string } }>;
+  duration: number;
   timestamp: string;
 }
 
 export function SendAppAnnouncementButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [testMode, setTestMode] = useState(true);
   const [results, setResults] = useState<SendResult | null>(null);
-  const { toast } = useToast();
 
   const handleSend = async (isTest: boolean) => {
-    if (!isTest && !confirm('⚠️ Confirma o envio de emails para TODOS os utilizadores? Esta ação não pode ser revertida.')) {
-      return;
-    }
-
-    setIsLoading(true);
-    setTestMode(isTest);
+    const confirmMessage = isTest 
+      ? "Enviar email de teste para 5 usuários?"
+      : "ATENÇÃO: Isso enviará o email para TODOS os usuários cadastrados. Confirma?";
     
-    toast({
-      title: isTest ? "🧪 Enviando emails de teste..." : "📧 Enviando emails em massa...",
-      description: isTest ? "Enviando para 5 utilizadores" : "Aguarde, pode levar alguns segundos",
-    });
-
+    if (!confirm(confirmMessage)) return;
+    
+    setIsLoading(true);
+    setShowResults(false);
+    
     try {
+      toast.loading(isTest ? "Enviando emails de teste..." : "Enviando emails...", {
+        id: "sending-emails"
+      });
+      
       const { data, error } = await supabase.functions.invoke('send-app-announcement', {
         body: { test_mode: isTest }
       });
-
-      if (error) throw error;
-
-      setResults(data);
+      
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
+      console.log('Send announcement response:', data);
+      
+      // Check if response indicates configuration error
+      if (data && !data.success && data.error) {
+        toast.error(data.error, { 
+          id: "sending-emails",
+          duration: 10000 
+        });
+        
+        if (data.resendDashboard) {
+          setTimeout(() => {
+            window.open(data.resendDashboard, '_blank');
+          }, 1000);
+        }
+        return;
+      }
+      
+      setResults(data as SendResult);
       setShowResults(true);
       
-      toast({
-        title: "✅ Envio concluído!",
-        description: `${data.emails_sent} emails enviados com sucesso`,
-      });
-    } catch (error: any) {
-      console.error('Erro ao enviar emails:', error);
-      toast({
-        title: "❌ Erro ao enviar emails",
-        description: error.message || "Ocorreu um erro desconhecido",
-        variant: "destructive",
+      if (data.failed > 0) {
+        toast.warning(
+          `${data.sent} emails enviados, ${data.failed} falharam. Veja detalhes.`,
+          { id: "sending-emails", duration: 8000 }
+        );
+      } else {
+        toast.success(
+          `${data.sent} emails enviados com sucesso!`,
+          { id: "sending-emails" }
+        );
+      }
+    } catch (error) {
+      console.error('Error sending emails:', error);
+      toast.error("Erro ao enviar emails. Verifique os logs da edge function.", {
+        id: "sending-emails",
+        duration: 8000
       });
     } finally {
       setIsLoading(false);
@@ -92,7 +117,7 @@ export function SendAppAnnouncementButton() {
               variant="outline"
               className="flex-1"
             >
-              {isLoading && testMode ? (
+              {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Send className="mr-2 h-4 w-4" />
@@ -106,7 +131,7 @@ export function SendAppAnnouncementButton() {
               variant="default"
               className="flex-1"
             >
-              {isLoading && !testMode ? (
+              {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Mail className="mr-2 h-4 w-4" />
@@ -129,7 +154,7 @@ export function SendAppAnnouncementButton() {
               Resultado do Envio
             </DialogTitle>
             <DialogDescription>
-              {testMode ? 'Modo Teste' : 'Envio Completo'} - {results?.timestamp}
+              {new Date(results?.timestamp).toLocaleString('pt-BR')}
             </DialogDescription>
           </DialogHeader>
 
@@ -141,7 +166,7 @@ export function SendAppAnnouncementButton() {
                   <CardContent className="pt-6">
                     <div className="text-center">
                       <p className="text-3xl font-bold text-green-600">
-                        {results.emails_sent}
+                        {results.sent}
                       </p>
                       <p className="text-sm text-muted-foreground">Enviados</p>
                     </div>
@@ -165,16 +190,16 @@ export function SendAppAnnouncementButton() {
                 <CardContent className="pt-6 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Total de Utilizadores:</span>
-                    <span className="font-semibold">{results.total_users}</span>
+                    <span className="font-semibold">{results.totalUsers}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Duração:</span>
-                    <span className="font-semibold">{results.duration_seconds}s</span>
+                    <span className="font-semibold">{(results.duration / 1000).toFixed(1)}s</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Taxa de Sucesso:</span>
                     <span className="font-semibold">
-                      {((results.emails_sent / results.total_users) * 100).toFixed(1)}%
+                      {((results.sent / results.totalUsers) * 100).toFixed(1)}%
                     </span>
                   </div>
                 </CardContent>
@@ -186,11 +211,57 @@ export function SendAppAnnouncementButton() {
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
                     <p className="font-semibold mb-2">Erros encontrados:</p>
-                    <ul className="text-xs space-y-1 max-h-40 overflow-y-auto">
-                      {results.errors.map((error, index) => (
-                        <li key={index}>• {error}</li>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {results.errors.map((err, idx) => (
+                        <div key={idx} className="text-xs p-2 bg-red-50 rounded">
+                          <div className="font-medium text-red-700">{err.email}</div>
+                          <div className="text-red-600 mb-1">{err.error}</div>
+                          {err.details?.hint && (
+                            <div className="text-orange-600 font-medium">
+                              💡 {err.details.hint}
+                            </div>
+                          )}
+                        </div>
                       ))}
-                    </ul>
+                    </div>
+                    
+                    {results.errors.some(e => e.details?.hint?.includes('API Key')) && (
+                      <div className="mt-3 p-3 bg-orange-50 rounded-lg text-sm">
+                        <div className="font-medium text-orange-700 mb-1">
+                          ⚠️ Configuração necessária:
+                        </div>
+                        <div className="text-orange-600">
+                          Verifique se RESEND_API_KEY está configurada em{' '}
+                          <a 
+                            href="https://supabase.com/dashboard/project/hcbkqygdtzpxvctfdqbd/settings/functions"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline font-medium"
+                          >
+                            Supabase Secrets
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {results.errors.some(e => e.details?.hint?.includes('Domínio')) && (
+                      <div className="mt-3 p-3 bg-blue-50 rounded-lg text-sm">
+                        <div className="font-medium text-blue-700 mb-1">
+                          📧 Domínio não verificado:
+                        </div>
+                        <div className="text-blue-600">
+                          Verifique seu domínio em{' '}
+                          <a 
+                            href="https://resend.com/domains"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline font-medium"
+                          >
+                            Resend Dashboard
+                          </a>
+                        </div>
+                      </div>
+                    )}
                   </AlertDescription>
                 </Alert>
               )}
