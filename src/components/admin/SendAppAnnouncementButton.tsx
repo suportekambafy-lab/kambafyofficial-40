@@ -15,6 +15,8 @@ interface SendResult {
   errors: Array<{ email: string; error: string; details?: { hint?: string } }>;
   duration: number;
   timestamp: string;
+  message?: string;
+  processing?: boolean;
 }
 
 export function SendAppAnnouncementButton() {
@@ -66,14 +68,19 @@ export function SendAppAnnouncementButton() {
       setResults(data as SendResult);
       setShowResults(true);
       
-      if (data.failed > 0) {
+      if (data.processing) {
+        toast.success(
+          data.message || `Envio iniciado para ${data.totalUsers} usuários. O processo continuará em segundo plano.`,
+          { id: "sending-emails", duration: 10000 }
+        );
+      } else if (data.failed > 0) {
         toast.warning(
           `${data.sent} emails enviados, ${data.failed} falharam. Veja detalhes.`,
           { id: "sending-emails", duration: 8000 }
         );
       } else {
         toast.success(
-          `${data.sent} emails enviados com sucesso!`,
+          data.message || `${data.sent} emails enviados com sucesso!`,
           { id: "sending-emails" }
         );
       }
