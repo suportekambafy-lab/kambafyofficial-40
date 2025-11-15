@@ -52,7 +52,7 @@ serve(async (req) => {
     console.log('📤 Sending Custom Event to OneSignal API:', eventPayload);
 
     // Enviar Custom Event para OneSignal
-    const response = await fetch('https://api.onesignal.com/apps/custom_events', {
+    const response = await fetch(`https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/custom_events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
