@@ -1,24 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Capacitor } from '@capacitor/core';
-
-interface NotificationData {
-  title: string;
-  message: string;
-  order_id?: string;
-  amount?: number;
-  currency?: string;
-}
 
 /**
  * Hook para escutar notificações de vendas em tempo real
- * Quando detecta uma nova venda:
- * - Em apps nativos: envia notificação push via OneSignal
- * - No navegador web: retorna dados para notificação in-app
+ * Envia notificações push via OneSignal automaticamente
  */
 export function useRealtimeSellerNotifications(userId: string | undefined) {
-  const [notification, setNotification] = useState<NotificationData | null>(null);
-  const isNative = Capacitor.isNativePlatform() || (typeof window !== 'undefined' && !!window.plugins?.OneSignal);
   useEffect(() => {
     if (!userId) return;
 
@@ -111,18 +98,6 @@ export function useRealtimeSellerNotifications(userId: string | undefined) {
           } catch (error) {
             console.error('❌ [OneSignal Push] Erro:', error);
           }
-
-          // Navegador Web: Também atualizar estado para notificação in-app
-          if (!isNative) {
-            console.log('💻 [Web] Mostrando notificação in-app');
-            setNotification({
-              title: notification.title,
-              message: notification.message,
-              order_id: notification.order_id || undefined,
-              amount: notification.amount || undefined,
-              currency: notification.currency || undefined
-            });
-          }
         }
       )
       .subscribe((status) => {
@@ -133,11 +108,5 @@ export function useRealtimeSellerNotifications(userId: string | undefined) {
       console.log('🔔 [Seller Notifications] Desconectando...');
       supabase.removeChannel(channel);
     };
-  }, [userId, isNative]);
-
-  const clearNotification = () => {
-    setNotification(null);
-  };
-
-  return { notification, clearNotification };
+  }, [userId]);
 }
