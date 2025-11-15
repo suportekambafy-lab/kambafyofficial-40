@@ -19,7 +19,6 @@ export function useOneSignal(options?: UseOneSignalOptions) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
-  const [pendingPlayerId, setPendingPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeOneSignal = async () => {
@@ -57,12 +56,8 @@ export function useOneSignal(options?: UseOneSignalOptions) {
         // Obter Player ID (Device Token)
         OneSignal.getDeviceState((state: any) => {
           if (state.userId) {
-            console.log('✅ OneSignal Player ID:', state.userId);
+            console.log('✅ OneSignal Player ID obtained:', state.userId);
             setPlayerId(state.userId);
-            setPendingPlayerId(state.userId);
-            
-            // Tentar salvar Player ID no Supabase
-            savePlayerIdToProfile(state.userId);
           }
         });
 
@@ -96,44 +91,14 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     initializeOneSignal();
   }, []);
 
-  // Escutar mudanças de autenticação e tentar salvar Player ID pendente
-  useEffect(() => {
-    if (!pendingPlayerId) return;
-
-    const checkAuthAndSave = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        console.log('🔄 User authenticated, saving pending Player ID:', pendingPlayerId);
-        await savePlayerIdToProfile(pendingPlayerId);
-        setPendingPlayerId(null); // Limpar após salvar
-      }
-    };
-
-    checkAuthAndSave();
-
-    // Também escutar mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user && pendingPlayerId) {
-        console.log('🔄 Auth state changed, saving pending Player ID:', pendingPlayerId);
-        savePlayerIdToProfile(pendingPlayerId);
-        setPendingPlayerId(null);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [pendingPlayerId]);
-
-  // Função para salvar Player ID no perfil do usuário
+  // Função pública para salvar Player ID no perfil do usuário
   const savePlayerIdToProfile = async (playerIdValue: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        console.log('⚠️ No authenticated user, skipping player ID save');
-        return;
+        console.log('⚠️ No authenticated user, cannot save player ID');
+        return false;
       }
 
       console.log('💾 Saving Player ID to profile:', playerIdValue);
@@ -145,11 +110,14 @@ export function useOneSignal(options?: UseOneSignalOptions) {
 
       if (error) {
         console.error('❌ Error saving player ID:', error);
+        return false;
       } else {
         console.log('✅ Player ID saved successfully');
+        return true;
       }
     } catch (error) {
       console.error('❌ Error in savePlayerIdToProfile:', error);
+      return false;
     }
   };
 
@@ -170,5 +138,6 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     playerId,
     permissionGranted,
     updatePlayerId,
+    savePlayerIdToProfile,
   };
 }
