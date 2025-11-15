@@ -18,7 +18,7 @@ interface NotificationData {
  */
 export function useRealtimeSellerNotifications(userId: string | undefined) {
   const [notification, setNotification] = useState<NotificationData | null>(null);
-  const isNative = Capacitor.isNativePlatform();
+  const isNative = Capacitor.isNativePlatform() || (typeof window !== 'undefined' && !!window.plugins?.OneSignal);
   useEffect(() => {
     if (!userId) return;
 

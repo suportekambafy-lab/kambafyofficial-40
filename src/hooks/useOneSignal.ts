@@ -31,32 +31,49 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     console.log('🎯 [useOneSignal] useEffect running!');
     
     const isNative = Capacitor.isNativePlatform();
-    const isWebView = !isNative && typeof window !== 'undefined';
+    const hasCordovaPlugin = typeof window !== 'undefined' && window.plugins?.OneSignal;
     const platform = Capacitor.getPlatform();
     
     console.log('🔍 OneSignal Environment Check:', { 
       isNative, 
-      isWebView, 
+      hasCordovaPlugin,
       platform,
       hasWindow: typeof window !== 'undefined',
       userAgent: navigator.userAgent 
     });
     
-    if (isWebView) {
-      console.log('✅ Detected WebView/Web environment - initializing Web SDK');
-      // Inicializar OneSignal Web SDK para WebView/Web
-      initializeWebSDK();
-      return;
-    }
-    
-    if (isNative) {
-      console.log('✅ Detected Native environment - initializing Cordova Plugin');
-      // Inicializar OneSignal Cordova Plugin para apps nativos
+    // Se tem o Cordova Plugin disponível, usar Native SDK
+    if (hasCordovaPlugin) {
+      console.log('✅ Detected Cordova Plugin - initializing Native SDK');
       initializeNativeSDK();
       return;
     }
     
-    console.log('⚠️ OneSignal: Environment not supported', { isNative, isWebView });
+    // Se é nativo mas ainda não tem o plugin, aguardar
+    if (isNative && !hasCordovaPlugin) {
+      console.log('⏳ Native platform detected, waiting for Cordova Plugin...');
+      const checkPlugin = setInterval(() => {
+        if (window.plugins?.OneSignal) {
+          clearInterval(checkPlugin);
+          console.log('✅ Cordova Plugin now available - initializing Native SDK');
+          initializeNativeSDK();
+        }
+      }, 500);
+      
+      // Timeout após 10 segundos
+      setTimeout(() => {
+        clearInterval(checkPlugin);
+        if (!window.plugins?.OneSignal) {
+          console.log('⚠️ Cordova Plugin not available after timeout, falling back to Web SDK');
+          initializeWebSDK();
+        }
+      }, 10000);
+      return;
+    }
+    
+    // Caso contrário, usar Web SDK
+    console.log('✅ Using Web SDK for browser environment');
+    initializeWebSDK();
   }, []);
 
   // Inicializar OneSignal Web SDK (para WebView e Web)
@@ -263,11 +280,11 @@ export function useOneSignal(options?: UseOneSignalOptions) {
   // Definir External User ID (para vincular user_id com OneSignal)
   const setExternalUserId = async (userId: string) => {
     try {
-      const isNative = Capacitor.isNativePlatform();
+      const hasCordovaPlugin = typeof window !== 'undefined' && window.plugins?.OneSignal;
 
       console.log('🔑 Setting External User ID:', userId);
       
-      if (isNative && window.plugins?.OneSignal) {
+      if (hasCordovaPlugin) {
         // Usar Cordova Plugin
         window.plugins.OneSignal.setExternalUserId(userId, (results: any) => {
           console.log('✅ External User ID set (native):', results);
