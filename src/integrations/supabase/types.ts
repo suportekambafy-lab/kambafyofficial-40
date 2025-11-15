@@ -3462,36 +3462,16 @@ export type Database = {
         }
         Returns: Json
       }
-      admin_set_seller_retention:
-        | {
-            Args: {
-              p_admin_email: string
-              p_reason: string
-              p_retention_percentage: number
-              p_user_id: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_admin_email: string
-              p_reason: string
-              p_retention_days?: number
-              p_retention_percentage: number
-              p_user_id: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_admin_email: string
-              p_reason: string
-              p_retention_days?: number
-              p_retention_percentage: number
-              p_user_id: string
-            }
-            Returns: Json
-          }
+      admin_set_seller_retention: {
+        Args: {
+          p_admin_email: string
+          p_reason: string
+          p_retention_days?: number
+          p_retention_percentage: number
+          p_user_id: string
+        }
+        Returns: Json
+      }
       admin_update_balance: {
         Args: { p_new_balance: number; p_user_id: string }
         Returns: undefined
