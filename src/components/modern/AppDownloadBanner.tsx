@@ -4,8 +4,8 @@ import { Smartphone } from "lucide-react";
 
 export function AppDownloadBanner() {
   return (
-    <div className="w-full bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-lg p-6 border border-border/50 mb-6">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+    <div className="w-full bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-lg p-4 sm:p-6 border border-border/50 mb-4 sm:mb-6">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-full bg-primary/10">
             <Smartphone className="h-6 w-6 text-primary" />
