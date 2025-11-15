@@ -54,36 +54,35 @@ export function useRealtimeSellerNotifications(userId: string | undefined) {
             currency: notification.currency
           });
 
-          // App Nativo: Enviar Custom Event para OneSignal Journey
-          if (isNative) {
-            try {
-              console.log('📤 [OneSignal Custom Event] Enviando evento new_sale');
+          // Enviar Custom Event para OneSignal Journey (Native e Web)
+          try {
+            console.log('📤 [OneSignal Custom Event] Enviando evento new_sale');
 
-              const { data, error } = await supabase.functions.invoke('send-onesignal-custom-event', {
-                body: {
-                  external_id: userId,
-                  event_name: 'new_sale',
-                  properties: {
-                    order_id: notification.order_id || 'N/A',
-                    amount: notification.amount || 0,
-                    currency: notification.currency || 'KZ',
-                    title: notification.title,
-                    message: notification.message
-                  }
+            const { data, error } = await supabase.functions.invoke('send-onesignal-custom-event', {
+              body: {
+                external_id: userId,
+                event_name: 'new_sale',
+                properties: {
+                  order_id: notification.order_id || 'N/A',
+                  amount: notification.amount || 0,
+                  currency: notification.currency || 'KZ',
+                  title: notification.title,
+                  message: notification.message
                 }
-              });
-
-              if (error) {
-                console.error('❌ [OneSignal Custom Event] Erro ao enviar:', error);
-              } else {
-                console.log('✅ [OneSignal Custom Event] Enviado com sucesso:', data);
               }
-            } catch (error) {
-              console.error('❌ [OneSignal Custom Event] Erro:', error);
+            });
+
+            if (error) {
+              console.error('❌ [OneSignal Custom Event] Erro ao enviar:', error);
+            } else {
+              console.log('✅ [OneSignal Custom Event] Enviado com sucesso:', data);
             }
+          } catch (error) {
+            console.error('❌ [OneSignal Custom Event] Erro:', error);
           }
-          // Navegador Web: Atualizar estado para notificação in-app
-          else {
+
+          // Navegador Web: Também atualizar estado para notificação in-app
+          if (!isNative) {
             console.log('💻 [Web] Mostrando notificação in-app');
             setNotification({
               title: notification.title,
