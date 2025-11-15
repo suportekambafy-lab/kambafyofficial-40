@@ -110,7 +110,8 @@ async function sendEmailsInBackground(
   usersToSend: Array<{ email: string; full_name: string | null }>,
   resendApiKey: string,
   supabaseUrl: string,
-  supabaseKey: string
+  supabaseKey: string,
+  progressId: string
 ) {
   const supabase = createClient(supabaseUrl, supabaseKey);
   let sent = 0;
@@ -170,11 +171,33 @@ async function sendEmailsInBackground(
 
     await Promise.all(batchPromises);
 
+    // Update progress after each batch
+    await supabase
+      .from("app_announcement_progress")
+      .update({
+        sent,
+        failed,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", progressId);
+
     // Wait 1 second before processing next pair
     if (i + 2 < usersToSend.length) {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
+
+  // Mark as completed
+  await supabase
+    .from("app_announcement_progress")
+    .update({
+      sent,
+      failed,
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", progressId);
 
   console.log(`[APP_ANNOUNCEMENT_BG] Completed: ${sent} sent, ${failed} failed`);
 }
@@ -292,13 +315,31 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Create progress record
+    const { data: progressRecord, error: progressError } = await supabase
+      .from("app_announcement_progress")
+      .insert({
+        total_users: usersToSend.length,
+        sent: 0,
+        failed: 0,
+        status: 'processing',
+        announcement_type: 'app_launch'
+      })
+      .select()
+      .single();
+
+    if (progressError || !progressRecord) {
+      console.error("[APP_ANNOUNCEMENT] Error creating progress record:", progressError);
+      throw new Error("Failed to create progress record");
+    }
+
     // Start background task to send emails
     // @ts-ignore - EdgeRuntime is available in Supabase Edge Functions
     EdgeRuntime.waitUntil(
-      sendEmailsInBackground(usersToSend, resendApiKey, supabaseUrl, supabaseKey)
+      sendEmailsInBackground(usersToSend, resendApiKey, supabaseUrl, supabaseKey, progressRecord.id)
     );
 
-    // Return immediate response
+    // Return immediate response with progress ID
     return new Response(
       JSON.stringify({
         success: true,
@@ -309,7 +350,8 @@ const handler = async (req: Request): Promise<Response> => {
         duration: Date.now() - startTime,
         timestamp: new Date().toISOString(),
         message: `Envio iniciado para ${usersToSend.length} usuários. O processo continuará em segundo plano.`,
-        processing: true
+        processing: true,
+        progressId: progressRecord.id
       }),
       {
         status: 200,
