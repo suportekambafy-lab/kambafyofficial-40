@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useState } from "react";
 
 export function TestNotificationButton() {
@@ -14,7 +13,7 @@ export function TestNotificationButton() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        toast.error('Você precisa estar logado');
+        console.error('❌ Usuário não autenticado');
         return;
       }
 
@@ -26,11 +25,9 @@ export function TestNotificationButton() {
 
       if (error) throw error;
 
-      toast.success('Notificação de teste enviada! Aguarde alguns segundos...');
-      console.log('✅ Resposta:', data);
+      console.log('✅ Notificação enviada com sucesso:', data);
     } catch (error) {
-      console.error('❌ Erro:', error);
-      toast.error('Erro ao enviar notificação de teste');
+      console.error('❌ Erro ao enviar notificação:', error);
     } finally {
       setLoading(false);
     }
