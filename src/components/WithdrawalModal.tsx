@@ -107,7 +107,16 @@ export function WithdrawalModal({
 
       if (insertError) {
         console.error('❌ Erro ao criar solicitação de saque:', insertError);
-        setError("Erro ao processar solicitação de saque: " + insertError.message);
+        
+        // Verificar se é erro de validação de saldo retido
+        if (insertError.message?.includes('excede o saldo disponível') || 
+            insertError.message?.includes('retido até')) {
+          setError(insertError.message);
+        } else if (insertError.message?.includes('Saldo insuficiente')) {
+          setError('Saldo insuficiente para realizar este saque.');
+        } else {
+          setError('Erro ao processar solicitação de saque: ' + insertError.message);
+        }
         return;
       }
 
