@@ -42,12 +42,86 @@ ONESIGNAL_REST_API_KEY=[sua-chave-rest-api]
    - Cole **Server Key** e **Sender ID**
    - Clique em **Save**
 
-### 3. Configurar iOS (Opcional)
+### 3. Configurar iOS (OBRIGATÓRIO para iPhone/iPad)
 
-Para iOS, você precisa:
-1. Certificado de push notification da Apple
-2. Configurar no OneSignal Dashboard
-3. Seguir [este guia](https://documentation.onesignal.com/docs/generate-an-ios-push-certificate)
+⚠️ **OBRIGATÓRIO para notificações funcionarem no iOS!**
+
+#### Passo 1: Obter Certificado APNs
+
+**Opção A: Certificado .p12 (tradicional)**
+
+1. Acesse [Apple Developer Portal - Certificates](https://developer.apple.com/account/resources/certificates/list)
+2. Clique no botão **+** para criar um novo certificado
+3. Selecione **Apple Push Notification service SSL (Sandbox & Production)**
+4. Selecione o App ID: `com.converta.kambafy`
+5. Siga as instruções para criar um Certificate Signing Request (CSR)
+6. Faça upload do CSR e baixe o certificado `.cer`
+7. Converta para `.p12` no Keychain Access (macOS):
+   - Importe o certificado `.cer`
+   - Clique com botão direito → Export
+   - Escolha formato `.p12`
+   - Defina uma senha (opcional)
+
+**Opção B: Auth Key .p8 (recomendado - mais simples)**
+
+1. No Apple Developer Portal, acesse **Keys** → **+**
+2. Marque **Apple Push Notifications service (APNs)**
+3. Baixe o arquivo `.p8` (guarde em local seguro - só pode baixar uma vez!)
+4. Anote o **Key ID** e o **Team ID**
+
+#### Passo 2: Configurar no OneSignal Dashboard
+
+1. Acesse [OneSignal Dashboard - iOS Settings](https://app.onesignal.com/apps/85da5c4b-c2a7-426f-851f-5c7c42afd64a/settings/platforms/apple_ios)
+
+**Se usar .p12:**
+- Faça upload do arquivo `.p12`
+- Digite a senha (se definiu)
+- Configure Bundle ID: `com.converta.kambafy`
+
+**Se usar .p8 (recomendado):**
+- Faça upload do arquivo `.p8`
+- Digite o **Key ID**
+- Digite o **Team ID**
+- Configure Bundle ID: `com.converta.kambafy`
+
+2. Salve as configurações e aguarde 2-5 minutos para sincronização
+
+#### Passo 3: Configurar Capabilities no Xcode
+
+1. Abra o projeto iOS:
+```bash
+npx cap open ios
+```
+
+2. Selecione o target do app → **Signing & Capabilities**
+
+3. Clique em **+ Capability** e adicione:
+   - **Push Notifications**
+   - **Background Modes** → Marque "Remote notifications"
+
+4. Verifique o **Bundle Identifier**: `com.converta.kambafy`
+
+5. Sincronize e rebuild:
+```bash
+npx cap sync ios
+npx cap run ios
+```
+
+#### ⚠️ IMPORTANTE - Testar em Dispositivo Físico
+
+- Notificações push **NÃO funcionam no simulador iOS**
+- Use um **iPhone ou iPad físico**
+- O dispositivo precisa estar conectado à internet
+- Aceite as permissões quando solicitado
+
+#### Verificar Configuração iOS
+
+Após abrir o app no dispositivo:
+1. Aceite permissões de notificação
+2. Faça login
+3. Verifique no console se Player ID foi gerado
+4. No [OneSignal Dashboard → Audience](https://app.onesignal.com/apps/85da5c4b-c2a7-426f-851f-5c7c42afd64a/audience), procure o Player ID com ícone iOS (🍎)
+5. Envie notificação teste pelo dashboard
 
 ## 🚀 Como Testar
 
@@ -141,6 +215,43 @@ npx cap sync android
 # Build > Clean Project
 # Build > Rebuild Project
 ```
+
+### 5. Player ID não está sendo gerado (iOS)?
+
+Se o Player ID não está sendo gerado no iOS:
+
+1. ✅ **Verifique certificados APNs** - Acesse [OneSignal iOS Settings](https://app.onesignal.com/apps/85da5c4b-c2a7-426f-851f-5c7c42afd64a/settings/platforms/apple_ios) e confirme que certificado `.p12` ou `.p8` está configurado corretamente com Bundle ID: `com.converta.kambafy`
+
+2. ✅ **Teste em dispositivo físico** - Notificações push **NÃO funcionam no simulador iOS** - use iPhone/iPad físico
+
+3. ✅ **Verifique Capabilities no Xcode:**
+   ```bash
+   npx cap open ios
+   ```
+   - Confirme que "Push Notifications" está habilitada
+   - Confirme que "Background Modes > Remote notifications" está marcado
+
+4. ✅ **Limpar e reconstruir:**
+   ```bash
+   npx cap sync ios
+   # No Xcode: Product → Clean Build Folder
+   # Rebuild e execute novamente
+   ```
+
+5. ✅ **Regenerar Player ID** - Desinstale o app, reinstale usando Xcode, aceite permissões novamente
+
+### 6. Erro "All included players are not subscribed" (iOS)?
+
+Este erro ocorre quando:
+- Os certificados APNs **não estão configurados** ou **expiraram**
+- O Player ID foi gerado sem certificados válidos
+- O app foi desinstalado ou as permissões foram revogadas
+
+**Solução:**
+1. Configure os certificados APNs corretamente (veja seção 3 acima)
+2. Desinstale e reinstale o app
+3. Aceite as permissões de notificação novamente
+4. Um novo Player ID válido será gerado automaticamente
 
 ## 📊 Como Funciona o Fluxo
 
