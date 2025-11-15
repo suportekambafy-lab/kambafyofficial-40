@@ -451,12 +451,6 @@ export default function Financial() {
                   <div className="text-2xl sm:text-3xl font-bold break-words">
                     {showValues.available ? formatCurrency(financialData.availableBalance) : '••••••'}
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {financialData.retentionPercentage > 0 
-                      ? `Após retenção de ${financialData.retentionPercentage}%`
-                      : 'Pronto para saque'
-                    }
-                  </p>
                 </div>
               </div>
               {canWithdraw && (
