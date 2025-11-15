@@ -20,7 +20,7 @@ export function AppDownloadBanner() {
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-row gap-3">
           <PlayStoreButton 
             variant="outline"
             onClick={() => window.open('https://play.google.com/store/apps/details?id=com.converta.kambafy', '_blank')}
