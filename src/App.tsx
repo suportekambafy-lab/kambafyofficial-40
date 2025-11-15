@@ -20,6 +20,7 @@ import AdminPermissionRoute from "./components/AdminPermissionRoute";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 import { useOneSignal } from "./hooks/useOneSignal";
 import { useRealtimeSellerNotifications } from "./hooks/useRealtimeSellerNotifications";
+import { InAppNotification } from "@/components/InAppNotification";
 import { supabase } from "@/integrations/supabase/client";
 
 const TestFacebookIntegration = lazy(() => import("./pages/TestFacebookIntegration"));
@@ -86,7 +87,7 @@ function OneSignalInitializer() {
   });
 
   // Hook para notificações em tempo real do vendedor
-  useRealtimeSellerNotifications(userId);
+  const { notification, clearNotification } = useRealtimeSellerNotifications(userId);
 
   useEffect(() => {
     if (isInitialized && playerId) {
@@ -111,7 +112,14 @@ function OneSignalInitializer() {
     }
   }, [user, playerId, savePlayerIdToProfile]);
 
-  return null; // Este componente não renderiza nada
+  return (
+    <>
+      <InAppNotification 
+        notification={notification} 
+        onClose={clearNotification} 
+      />
+    </>
+  );
 }
 
 
