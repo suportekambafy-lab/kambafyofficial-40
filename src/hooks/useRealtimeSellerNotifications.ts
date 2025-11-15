@@ -28,19 +28,18 @@ export function useRealtimeSellerNotifications(userId: string | undefined) {
             type: string;
             title: string;
             message: string;
-            data: {
-              product_name: string;
-              amount: string;
-              currency: string;
-              customer_name: string;
-            };
+            order_id: string | null;
+            amount: number | null;
+            currency: string | null;
           };
 
           // Aqui você pode disparar notificação push nativa via OneSignal
           console.log('📱 [Push] Notificação recebida:', {
             title: notification.title,
             message: notification.message,
-            data: notification.data
+            order_id: notification.order_id,
+            amount: notification.amount,
+            currency: notification.currency
           });
         }
       )
