@@ -64,7 +64,7 @@ const createEmailHtml = (name: string | null) => `
                 <tr>
                   <td align="center">
                     <!-- Google Play -->
-                    <a href="https://play.google.com/store/apps/details?id=dev.kambafy.twa" style="display: inline-block; margin: 0 10px 15px; padding: 12px 24px; background-color: #1a1a1a; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                    <a href="https://play.google.com/store/apps/details?id=com.converta.kambafy" style="display: inline-block; margin: 0 10px 15px; padding: 12px 24px; background-color: #1a1a1a; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
                       📱 Descarregar no Google Play
                     </a>
                   </td>
@@ -72,7 +72,7 @@ const createEmailHtml = (name: string | null) => `
                 <tr>
                   <td align="center">
                     <!-- App Store -->
-                    <a href="https://apps.apple.com/us/app/kambafy/id6739149041" style="display: inline-block; margin: 0 10px; padding: 12px 24px; background-color: #1a1a1a; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                    <a href="https://apps.apple.com/pt/app/kambafy/id6752709065" style="display: inline-block; margin: 0 10px; padding: 12px 24px; background-color: #1a1a1a; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
                       🍎 Descarregar na App Store
                     </a>
                   </td>
