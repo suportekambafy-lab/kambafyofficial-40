@@ -422,6 +422,29 @@ serve(async (req) => {
           } else {
             console.log('⚠️ Seller does not have OneSignal Player ID configured');
           }
+
+          // 🎯 ENVIAR CUSTOM EVENT PARA ONESIGNAL JOURNEY
+          console.log('📤 Sending OneSignal Custom Event...');
+          const { error: customEventError } = await supabase.functions.invoke('send-onesignal-custom-event', {
+            body: {
+              external_id: product.user_id,
+              event_name: 'new_sale',
+              properties: {
+                order_id: orderId,
+                amount: parseFloat(orderData.amount),
+                currency: orderData.currency,
+                customer_name: orderData.customer_name,
+                product_name: product.name,
+                product_id: orderData.product_id
+              }
+            }
+          });
+
+          if (customEventError) {
+            console.error('❌ Error sending Custom Event:', customEventError);
+          } else {
+            console.log('✅ Custom Event sent successfully');
+          }
         } catch (notifError) {
           console.error('❌ Error in OneSignal notification process:', notifError);
           // Não falhar a operação principal por erro de notificação

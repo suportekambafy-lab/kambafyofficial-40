@@ -133,11 +133,42 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     });
   };
 
+  // Função para definir External User ID (necessário para Custom Events)
+  const setExternalUserId = async (userId: string) => {
+    try {
+      const isNative = Capacitor.isNativePlatform();
+
+      if (!isNative) {
+        console.log('⚠️ OneSignal: Not a native platform, skipping External User ID');
+        return false;
+      }
+
+      if (!window.plugins?.OneSignal) {
+        console.error('❌ OneSignal plugin not found');
+        return false;
+      }
+
+      const OneSignal = window.plugins.OneSignal;
+
+      console.log('🔑 Setting External User ID:', userId);
+      
+      OneSignal.setExternalUserId(userId, (results: any) => {
+        console.log('✅ External User ID set successfully:', results);
+      });
+
+      return true;
+    } catch (error) {
+      console.error('❌ Error setting External User ID:', error);
+      return false;
+    }
+  };
+
   return {
     isInitialized,
     playerId,
     permissionGranted,
     updatePlayerId,
     savePlayerIdToProfile,
+    setExternalUserId,
   };
 }

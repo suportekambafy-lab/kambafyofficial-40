@@ -72,7 +72,7 @@ function OneSignalInitializer() {
     }
   }, [user]);
   
-  const { isInitialized, playerId, savePlayerIdToProfile } = useOneSignal({
+  const { isInitialized, playerId, savePlayerIdToProfile, setExternalUserId } = useOneSignal({
     onNotificationReceived: (notification) => {
       console.log('📩 Notification received in app:', notification);
     },
@@ -88,6 +88,14 @@ function OneSignalInitializer() {
 
   // Hook para notificações em tempo real do vendedor
   const { notification, clearNotification } = useRealtimeSellerNotifications(userId);
+
+  // Definir External User ID quando usuário autenticar
+  useEffect(() => {
+    if (isInitialized && user?.id) {
+      console.log('🔑 Setting External User ID for OneSignal Custom Events:', user.id);
+      setExternalUserId(user.id);
+    }
+  }, [isInitialized, user?.id, setExternalUserId]);
 
   useEffect(() => {
     if (isInitialized && playerId) {

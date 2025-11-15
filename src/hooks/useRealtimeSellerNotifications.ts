@@ -54,43 +54,32 @@ export function useRealtimeSellerNotifications(userId: string | undefined) {
             currency: notification.currency
           });
 
-          // App Nativo: Enviar via OneSignal
+          // App Nativo: Enviar Custom Event para OneSignal Journey
           if (isNative) {
             try {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('onesignal_player_id')
-                .eq('user_id', userId)
-                .single();
+              console.log('📤 [OneSignal Custom Event] Enviando evento new_sale');
 
-              if (profile?.onesignal_player_id) {
-                console.log('📤 [OneSignal] Enviando notificação para:', profile.onesignal_player_id);
-
-                const { data, error } = await supabase.functions.invoke('send-onesignal-notification', {
-                  body: {
-                    player_id: profile.onesignal_player_id,
+              const { data, error } = await supabase.functions.invoke('send-onesignal-custom-event', {
+                body: {
+                  external_id: userId,
+                  event_name: 'new_sale',
+                  properties: {
+                    order_id: notification.order_id || 'N/A',
+                    amount: notification.amount || 0,
+                    currency: notification.currency || 'KZ',
                     title: notification.title,
-                    message: notification.message,
-                    data: {
-                      type: notification.type,
-                      order_id: notification.order_id,
-                      amount: notification.amount,
-                      currency: notification.currency,
-                      navigate_to: '/vendedor/vendas'
-                    }
+                    message: notification.message
                   }
-                });
-
-                if (error) {
-                  console.error('❌ [OneSignal] Erro ao enviar notificação:', error);
-                } else {
-                  console.log('✅ [OneSignal] Notificação enviada com sucesso:', data);
                 }
+              });
+
+              if (error) {
+                console.error('❌ [OneSignal Custom Event] Erro ao enviar:', error);
               } else {
-                console.warn('⚠️ [OneSignal] Player ID não encontrado no perfil');
+                console.log('✅ [OneSignal Custom Event] Enviado com sucesso:', data);
               }
             } catch (error) {
-              console.error('❌ [OneSignal] Erro ao buscar player ID:', error);
+              console.error('❌ [OneSignal Custom Event] Erro:', error);
             }
           }
           // Navegador Web: Atualizar estado para notificação in-app
