@@ -88,21 +88,19 @@ function OneSignalInitializer() {
   // Vincular user_id com OneSignal quando usuário está autenticado
   useEffect(() => {
     if (user?.id && isInitialized) {
-      console.log('🔗 Vinculando user_id com OneSignal:', user.id);
-      setExternalUserId(user.id);
+      console.log('🔗 Vinculando user_id com OneSignal External ID:', user.id);
+      setExternalUserId(user.id).then(success => {
+        if (success) {
+          console.log('✅ External User ID configurado - Journeys do OneSignal podem funcionar');
+        } else {
+          console.log('⚠️ External User ID não configurado - usando notificações push diretas');
+        }
+      });
     }
   }, [user?.id, isInitialized, setExternalUserId]);
 
   // Hook para notificações em tempo real do vendedor (apenas envia push via OneSignal)
   useRealtimeSellerNotifications(userId);
-
-  // Definir External User ID quando usuário autenticar
-  useEffect(() => {
-    if (isInitialized && user?.id) {
-      console.log('🔑 Setting External User ID for OneSignal Custom Events:', user.id);
-      setExternalUserId(user.id);
-    }
-  }, [isInitialized, user?.id, setExternalUserId]);
 
   useEffect(() => {
     if (isInitialized && playerId) {

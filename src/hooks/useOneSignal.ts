@@ -297,44 +297,31 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       console.log('🔑 Setting External User ID:', userId);
       
       if (hasCordovaPlugin) {
-        // Usar Cordova Plugin
+        // Usar Cordova Plugin (Native App)
+        console.log('📱 Using Cordova Plugin for External User ID');
         window.plugins.OneSignal.setExternalUserId(userId, (results: any) => {
           console.log('✅ External User ID set (native):', results);
         });
+        return true;
       } else {
-        // Usar Web SDK - verificar se está completamente inicializado
-        if (typeof window.OneSignal !== 'undefined') {
-          // Aguardar que OneSignal esteja completamente pronto
-          const waitForOneSignalReady = async () => {
-            let attempts = 0;
-            const maxAttempts = 20; // 10 segundos máximo
-            
-            while (attempts < maxAttempts) {
-              try {
-                // Verificar se o método login existe e está acessível
-                if (window.OneSignal && window.OneSignal.User && typeof window.OneSignal.login === 'function') {
-                  await window.OneSignal.login(userId);
-                  console.log('✅ External User ID set (web):', userId);
-                  return true;
-                }
-              } catch (error) {
-                console.log(`⏳ OneSignal not ready yet, attempt ${attempts + 1}/${maxAttempts}...`);
-              }
-              
-              await new Promise(resolve => setTimeout(resolve, 500));
-              attempts++;
-            }
-            
-            throw new Error('OneSignal initialization timeout');
-          };
-          
-          await waitForOneSignalReady();
+        // Web SDK - tentar definir, mas não travar se falhar
+        console.log('🌐 Attempting to set External User ID on Web SDK');
+        
+        if (typeof window.OneSignal !== 'undefined' && window.OneSignal.login) {
+          try {
+            await window.OneSignal.login(userId);
+            console.log('✅ External User ID set (web):', userId);
+            return true;
+          } catch (error) {
+            console.warn('⚠️ Could not set External User ID on web (não é crítico):', error);
+            // Não é crítico para web - notificações diretas ainda funcionam
+            return false;
+          }
         } else {
-          throw new Error('OneSignal Web SDK not available');
+          console.log('⚠️ OneSignal.login not available on web - usando notificações diretas');
+          return false;
         }
       }
-
-      return true;
     } catch (error) {
       console.error('❌ Error setting External User ID:', error);
       return false;
