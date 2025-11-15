@@ -12,13 +12,13 @@ export function AppStoreButton({
   ...props
 }: Omit<AppStoreButtonProps, "children">) {
   return (
-    <Button className={cn("h-11 gap-2", className)} {...props}>
-      <AppleIcon className="size-5" />
+    <Button className={cn("h-11 gap-2 text-foreground border-border hover:bg-accent/50 hover:text-foreground", className)} {...props}>
+      <AppleIcon className="size-5 text-foreground" />
       <div className="text-left flex flex-col items-start justify-center pr-2">
-        <span className="text-[10px] leading-none font-light tracking-tighter">
+        <span className="text-[10px] leading-none font-light tracking-tighter text-muted-foreground">
           {comingSoon ? "EM BREVE" : "BAIXE NA"}
         </span>
-        <p className="text-base font-bold leading-none">App Store</p>
+        <p className="text-base font-bold leading-none text-foreground">App Store</p>
       </div>
     </Button>
   );
