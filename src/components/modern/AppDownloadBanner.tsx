@@ -27,8 +27,7 @@ export function AppDownloadBanner() {
           />
           <AppStoreButton 
             variant="outline"
-            comingSoon
-            disabled
+            onClick={() => window.open('https://apps.apple.com', '_blank')}
           />
         </div>
       </div>
