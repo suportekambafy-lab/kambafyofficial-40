@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Mail, CheckCircle, XCircle, AlertTriangle, Send } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,12 +18,63 @@ interface SendResult {
   timestamp: string;
   message?: string;
   processing?: boolean;
+  progressId?: string;
+}
+
+interface Progress {
+  id: string;
+  total_users: number;
+  sent: number;
+  failed: number;
+  status: 'processing' | 'completed' | 'failed';
+  started_at: string;
+  updated_at: string;
+  completed_at?: string;
 }
 
 export function SendAppAnnouncementButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<SendResult | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [isTracking, setIsTracking] = useState(false);
+
+  // Subscribe to progress updates
+  useEffect(() => {
+    if (!isTracking || !results?.progressId) return;
+
+    const channel = supabase
+      .channel('app-announcement-progress')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'app_announcement_progress',
+          filter: `id=eq.${results.progressId}`
+        },
+        (payload) => {
+          console.log('Progress update:', payload);
+          if (payload.new) {
+            setProgress(payload.new as Progress);
+            
+            // Stop tracking when completed
+            if ((payload.new as Progress).status === 'completed') {
+              setIsTracking(false);
+              toast.success(
+                `Envio concluído! ${(payload.new as Progress).sent} emails enviados com sucesso.`,
+                { duration: 10000 }
+              );
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isTracking, results?.progressId]);
 
   const handleSend = async (isTest: boolean) => {
     const confirmMessage = isTest 
@@ -68,9 +120,19 @@ export function SendAppAnnouncementButton() {
       setResults(data as SendResult);
       setShowResults(true);
       
-      if (data.processing) {
+      if (data.processing && data.progressId) {
+        setIsTracking(true);
+        setProgress({
+          id: data.progressId,
+          total_users: data.totalUsers,
+          sent: 0,
+          failed: 0,
+          status: 'processing',
+          started_at: data.timestamp,
+          updated_at: data.timestamp
+        });
         toast.success(
-          data.message || `Envio iniciado para ${data.totalUsers} usuários. O processo continuará em segundo plano.`,
+          data.message || `Envio iniciado para ${data.totalUsers} usuários. Acompanhe o progresso em tempo real.`,
           { id: "sending-emails", duration: 10000 }
         );
       } else if (data.failed > 0) {
@@ -114,8 +176,57 @@ export function SendAppAnnouncementButton() {
               <strong>Modo Teste:</strong> Envia apenas para 5 utilizadores para validar o email.
               <br />
               <strong>Modo Completo:</strong> Envia para todos os utilizadores (~2.556).
+              <br />
+              <strong>Sistema de Progresso:</strong> Acompanhe o envio em tempo real.
             </AlertDescription>
           </Alert>
+
+          {/* Progress tracking */}
+          {isTracking && progress && (
+            <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Progresso do Envio</span>
+                <span className="text-muted-foreground">
+                  {progress.sent + progress.failed} / {progress.total_users}
+                </span>
+              </div>
+              
+              <Progress 
+                value={((progress.sent + progress.failed) / progress.total_users) * 100} 
+                className="h-2"
+              />
+              
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Enviados</div>
+                  <div className="flex items-center gap-1 text-green-600 font-semibold">
+                    <CheckCircle className="h-4 w-4" />
+                    {progress.sent}
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Falhados</div>
+                  <div className="flex items-center gap-1 text-red-600 font-semibold">
+                    <XCircle className="h-4 w-4" />
+                    {progress.failed}
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Restantes</div>
+                  <div className="flex items-center gap-1 font-semibold">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {progress.total_users - progress.sent - progress.failed}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-xs text-muted-foreground pt-2 border-t">
+                Status: <span className="font-medium">{progress.status === 'processing' ? 'Em andamento...' : 'Concluído'}</span>
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-3">
             <Button

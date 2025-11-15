@@ -424,6 +424,42 @@ export type Database = {
           },
         ]
       }
+      app_announcement_progress: {
+        Row: {
+          announcement_type: string
+          completed_at: string | null
+          failed: number
+          id: string
+          sent: number
+          started_at: string
+          status: string
+          total_users: number
+          updated_at: string
+        }
+        Insert: {
+          announcement_type?: string
+          completed_at?: string | null
+          failed?: number
+          id?: string
+          sent?: number
+          started_at?: string
+          status?: string
+          total_users?: number
+          updated_at?: string
+        }
+        Update: {
+          announcement_type?: string
+          completed_at?: string | null
+          failed?: number
+          id?: string
+          sent?: number
+          started_at?: string
+          status?: string
+          total_users?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_announcement_sent: {
         Row: {
           announcement_type: string
