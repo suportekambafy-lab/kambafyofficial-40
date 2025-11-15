@@ -65,8 +65,11 @@ function OneSignalInitializer() {
     },
     onNotificationOpened: (notification) => {
       console.log('🔔 Notification opened:', notification);
-      // Você pode adicionar navegação aqui se necessário
-      // Por exemplo, navegar para a página de vendas quando abrir notificação
+      
+      // Navegar para a página de vendas quando abrir notificação
+      if (notification.data?.type === 'sale') {
+        window.location.href = '/vendedor#vendas';
+      }
     }
   });
 

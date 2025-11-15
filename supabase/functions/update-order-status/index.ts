@@ -400,14 +400,16 @@ serve(async (req) => {
             const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
               body: {
                 player_id: sellerProfile.onesignal_player_id,
-                title: '🎉 Nova Venda!',
-                message: `Você vendeu para ${orderData.customer_name} - ${orderData.amount} ${orderData.currency}`,
+                title: 'Nova venda realizada! 🎉',
+                message: `Parabéns! ${orderData.customer_name} comprou ${product.name} por ${orderData.amount} ${orderData.currency}`,
                 data: {
                   type: 'sale',
                   order_id: orderId,
                   amount: orderData.amount,
                   currency: orderData.currency,
-                  customer_name: orderData.customer_name
+                  customer_name: orderData.customer_name,
+                  product_name: product.name,
+                  url: '/vendedor#vendas'
                 }
               }
             });
