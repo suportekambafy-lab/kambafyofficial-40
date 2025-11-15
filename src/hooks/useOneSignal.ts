@@ -91,16 +91,33 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       
       if (permission) {
         setPermissionGranted(true);
+        console.log('✅ [OneSignal Web SDK] Permission already granted, subscribing...');
       }
 
       // Obter subscription ID
-      const subscriptionId = await OneSignal.User.PushSubscription.id;
+      let subscriptionId = await OneSignal.User.PushSubscription.id;
       console.log('📱 [OneSignal Web SDK] Subscription ID:', subscriptionId);
+      
+      // Se não tem subscription ID mas tem permissão, solicitar opt-in
+      if (!subscriptionId && permission) {
+        console.log('🔔 [OneSignal Web SDK] Has permission but no subscription, opting in...');
+        try {
+          await OneSignal.User.PushSubscription.optIn();
+          // Aguardar um pouco para o OneSignal processar
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          subscriptionId = await OneSignal.User.PushSubscription.id;
+          console.log('📱 [OneSignal Web SDK] New Subscription ID after opt-in:', subscriptionId);
+        } catch (optInError) {
+          console.error('❌ [OneSignal Web SDK] Error during opt-in:', optInError);
+        }
+      }
       
       if (subscriptionId) {
         setPlayerId(subscriptionId);
         await savePlayerIdToProfile(subscriptionId);
         console.log('✅ [OneSignal Web SDK] Player ID saved to profile!');
+      } else {
+        console.log('⚠️ [OneSignal Web SDK] No subscription ID yet. User needs to grant permission or opt-in.');
       }
 
       // Configurar listeners de notificação
