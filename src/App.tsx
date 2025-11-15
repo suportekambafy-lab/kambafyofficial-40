@@ -82,9 +82,18 @@ function OneSignalInitializer() {
 
   // Salvar Player ID quando usuário estiver autenticado e Player ID disponível
   useEffect(() => {
+    console.log('🔍 OneSignalInitializer check:', { 
+      hasUser: !!user, 
+      hasPlayerId: !!playerId, 
+      hasSaveFunction: !!savePlayerIdToProfile,
+      playerId 
+    });
+    
     if (user && playerId && savePlayerIdToProfile) {
       console.log('🔄 User authenticated + Player ID available, saving to Supabase...');
-      savePlayerIdToProfile(playerId);
+      savePlayerIdToProfile(playerId).then(success => {
+        console.log('💾 Save result:', success ? 'SUCCESS' : 'FAILED');
+      });
     }
   }, [user, playerId, savePlayerIdToProfile]);
 
