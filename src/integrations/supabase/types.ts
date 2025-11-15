@@ -3466,6 +3466,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      admin_set_retention_release_date: {
+        Args: { days_until_release: number; target_user_id: string }
+        Returns: Json
+      }
       admin_set_seller_retention:
         | {
             Args: {
