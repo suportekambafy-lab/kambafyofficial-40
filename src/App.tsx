@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ImpersonationBanner } from "@/components/ImpersonationBanner";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { ThemeProvider } from "./hooks/useTheme";
@@ -59,7 +59,8 @@ const TestLoginComponent = () => {
 
 // Component to initialize OneSignal after auth
 function OneSignalInitializer() {
-  const { isInitialized, playerId } = useOneSignal({
+  const { user } = useAuth();
+  const { isInitialized, playerId, savePlayerIdToProfile } = useOneSignal({
     onNotificationReceived: (notification) => {
       console.log('📩 Notification received in app:', notification);
     },
@@ -78,6 +79,14 @@ function OneSignalInitializer() {
       console.log('✅ OneSignal initialized with Player ID:', playerId);
     }
   }, [isInitialized, playerId]);
+
+  // Salvar Player ID quando usuário estiver autenticado e Player ID disponível
+  useEffect(() => {
+    if (user && playerId && savePlayerIdToProfile) {
+      console.log('🔄 User authenticated + Player ID available, saving to Supabase...');
+      savePlayerIdToProfile(playerId);
+    }
+  }, [user, playerId, savePlayerIdToProfile]);
 
   return null; // Este componente não renderiza nada
 }
