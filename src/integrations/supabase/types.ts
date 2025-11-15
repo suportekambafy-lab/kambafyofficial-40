@@ -424,6 +424,30 @@ export type Database = {
           },
         ]
       }
+      app_announcement_sent: {
+        Row: {
+          announcement_type: string
+          created_at: string
+          email: string
+          id: string
+          sent_at: string
+        }
+        Insert: {
+          announcement_type?: string
+          created_at?: string
+          email: string
+          id?: string
+          sent_at?: string
+        }
+        Update: {
+          announcement_type?: string
+          created_at?: string
+          email?: string
+          id?: string
+          sent_at?: string
+        }
+        Relationships: []
+      }
       balance_transactions: {
         Row: {
           amount: number
