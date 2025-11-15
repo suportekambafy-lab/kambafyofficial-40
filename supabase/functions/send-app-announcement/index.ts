@@ -184,63 +184,102 @@ const handler = async (req: Request): Promise<Response> => {
 </html>
     `;
 
-    // Send emails in batches
-    const batchSize = 100;
+    // Split users into batches
+    const batchSize = 50;
     const batches = [];
-    for (let i = 0; i < profiles.length; i += batchSize) {
-      batches.push(profiles.slice(i, i + batchSize));
+    for (let i = 0; i < users.length; i += batchSize) {
+      batches.push(users.slice(i, i + batchSize));
     }
 
-    let totalSent = 0;
-    let totalFailed = 0;
-    const errors: string[] = [];
+    console.log(`[APP_ANNOUNCEMENT] Sending to ${users.length} users in ${batches.length} batches`);
 
-    console.log(`Enviando ${profiles.length} emails em ${batches.length} lotes...`);
+    let sent = 0;
+    let failed = 0;
+    const errors: Array<{ email: string; error: string; details?: any }> = [];
 
+    // Process each batch with delay
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
       const batch = batches[batchIndex];
-      console.log(`Processando lote ${batchIndex + 1}/${batches.length} (${batch.length} emails)`);
+      
+      console.log(`[APP_ANNOUNCEMENT] Processing batch ${batchIndex + 1}/${batches.length}`);
 
-      const sendPromises = batch.map(async (profile) => {
+      const batchPromises = batch.map(async (user) => {
         try {
-          const emailHtml = createEmailHtml(profile.full_name);
-          
-          await resend.emails.send({
+          const emailData = {
             from: "Kambafy <noreply@kambafy.com>",
-            to: [profile.email!],
-            subject: "📱 Kambafy agora disponível no seu telemóvel!",
-            html: emailHtml,
+            to: [user.email],
+            subject: "🎉 Novidades na Kambafy - Confira agora!",
+            html: createEmailHtml(user.full_name),
+          };
+
+          const response = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${resendApiKey}`,
+            },
+            body: JSON.stringify(emailData),
           });
 
-          totalSent++;
-          return { success: true, email: profile.email };
-        } catch (error: any) {
-          totalFailed++;
-          const errorMsg = `Falha ao enviar para ${profile.email}: ${error.message}`;
-          console.error(errorMsg);
-          errors.push(errorMsg);
-          return { success: false, email: profile.email, error: error.message };
+          const responseData = await response.json();
+
+          if (!response.ok) {
+            console.error(`[APP_ANNOUNCEMENT] Resend API Error for ${user.email}:`, {
+              status: response.status,
+              statusText: response.statusText,
+              data: responseData
+            });
+            
+            throw new Error(
+              responseData.message || 
+              `Resend API error: ${response.status} - ${response.statusText}`
+            );
+          }
+
+          console.log(`[APP_ANNOUNCEMENT] ✓ Email sent to ${user.email}`, responseData);
+          sent++;
+        } catch (error) {
+          failed++;
+          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          
+          // Check for common issues
+          let hint = "";
+          if (errorMessage.includes("401") || errorMessage.includes("authentication")) {
+            hint = "API Key inválida ou expirada";
+          } else if (errorMessage.includes("domain") || errorMessage.includes("verified")) {
+            hint = "Domínio não verificado no Resend";
+          }
+          
+          errors.push({ 
+            email: user.email, 
+            error: errorMessage,
+            details: hint ? { hint } : undefined
+          });
+          
+          console.error(`[APP_ANNOUNCEMENT] ✗ Failed to send to ${user.email}:`, {
+            error: errorMessage,
+            hint
+          });
         }
       });
 
-      await Promise.all(sendPromises);
+      await Promise.all(batchPromises);
 
-      // Pause between batches (except for the last one)
+      // Wait between batches to avoid rate limiting
       if (batchIndex < batches.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
-    const endTime = Date.now();
-    const duration = Math.round((endTime - startTime) / 1000);
-
+    const duration = Date.now() - startTime;
+    
     const result: SendResult = {
       success: true,
-      total_users: profiles.length,
-      emails_sent: totalSent,
-      failed: totalFailed,
-      errors: errors.slice(0, 10), // Limit to first 10 errors
-      duration_seconds: duration,
+      totalUsers: users.length,
+      sent,
+      failed,
+      errors,
+      duration,
       timestamp: new Date().toISOString(),
     };
 
