@@ -32,18 +32,26 @@ export function TestSaleNotification({ products = [] }: TestSaleNotificationProp
   useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('🔍 TestSaleNotification: Verificando usuário', user?.email);
       if (user?.email) {
         setUserEmail(user.email);
-        setIsAuthorized(user.email === 'victormuabi20@gmail.com');
+        const authorized = user.email === 'victormuabi20@gmail.com';
+        setIsAuthorized(authorized);
+        console.log('🔍 TestSaleNotification: Email autorizado?', authorized);
       }
     };
     checkUser();
   }, []);
 
+  console.log('🔍 TestSaleNotification: Renderizando', { isAuthorized, userEmail });
+
   // Não renderizar se não for o usuário autorizado
   if (!isAuthorized) {
+    console.log('🔍 TestSaleNotification: Não autorizado, não renderizando');
     return null;
   }
+
+  console.log('🔍 TestSaleNotification: AUTORIZADO! Renderizando componente');
 
   const handleTestSale = async () => {
     if (!selectedProduct) {
