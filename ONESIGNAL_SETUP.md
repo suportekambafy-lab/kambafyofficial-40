@@ -85,26 +85,109 @@ npx cap run ios
 
 ---
 
-## 🔧 Configuração no Firebase (Android)
+## 🔧 Configuração do OneSignal Dashboard
+
+### **🤖 Android (FCM) - OBRIGATÓRIO**
 
 Para que o OneSignal funcione no Android, você precisa configurar o Firebase Cloud Messaging (FCM):
 
-### 1. Acessar Firebase Console
+#### 1. Acessar Firebase Console
 - Acesse: https://console.firebase.google.com
 - Selecione seu projeto (ou crie um novo)
 
-### 2. Obter Credenciais
+#### 2. Obter Credenciais
 - Vá em **Configurações do Projeto** (ícone de engrenagem)
 - Clique em **Cloud Messaging**
 - Copie:
   - **Server Key** (Legacy)
   - **Sender ID**
 
-### 3. Configurar no OneSignal
+#### 3. Configurar no OneSignal
 - Acesse: https://onesignal.com
 - Vá em **Settings → Keys & IDs → Google Android (FCM)**
 - Cole o **Firebase Server Key** e **Firebase Sender ID**
 - Salve as configurações
+
+### **🍎 iOS (APNs) - OBRIGATÓRIO para iPhone/iPad**
+
+Para enviar notificações push no iOS, você **PRECISA** configurar certificados Apple Push Notification service (APNs):
+
+#### **Passo 1: Obter Certificado APNs**
+
+**Opção A: Certificado .p12 (tradicional)**
+
+1. Acesse [Apple Developer Portal - Certificates](https://developer.apple.com/account/resources/certificates/list)
+2. Clique no botão **+** para criar um novo certificado
+3. Selecione **Apple Push Notification service SSL (Sandbox & Production)**
+4. Selecione o App ID: `com.converta.kambafy`
+5. Siga as instruções para criar um Certificate Signing Request (CSR)
+6. Faça upload do CSR e baixe o certificado `.cer`
+7. Converta para `.p12` no Keychain Access (macOS):
+   - Importe o certificado `.cer`
+   - Clique com botão direito → Export
+   - Escolha formato `.p12`
+   - Defina uma senha (opcional)
+
+**Opção B: Auth Key .p8 (recomendado - mais simples)**
+
+1. No Apple Developer Portal, acesse **Keys** → **+**
+2. Marque **Apple Push Notifications service (APNs)**
+3. Baixe o arquivo `.p8` (guarde em local seguro - só pode baixar uma vez!)
+4. Anote o **Key ID** e o **Team ID**
+
+#### **Passo 2: Configurar no OneSignal Dashboard**
+
+1. Acesse [OneSignal Dashboard - iOS Settings](https://app.onesignal.com/apps/85da5c4b-c2a7-426f-851f-5c7c42afd64a/settings/platforms/apple_ios)
+
+**Se usar .p12:**
+- Faça upload do arquivo `.p12`
+- Digite a senha (se definiu)
+- Configure Bundle ID: `com.converta.kambafy`
+
+**Se usar .p8 (recomendado):**
+- Faça upload do arquivo `.p8`
+- Digite o **Key ID**
+- Digite o **Team ID**
+- Configure Bundle ID: `com.converta.kambafy`
+
+2. Salve as configurações e aguarde 2-5 minutos para sincronização
+
+#### **Passo 3: Configurar Capabilities no Xcode**
+
+1. Abra o projeto iOS:
+   ```bash
+   npx cap open ios
+   ```
+
+2. Selecione o target do app → **Signing & Capabilities**
+
+3. Clique em **+ Capability** e adicione:
+   - **Push Notifications**
+   - **Background Modes** → Marque "Remote notifications"
+
+4. Verifique o **Bundle Identifier**: `com.converta.kambafy`
+
+5. Sincronize e rebuild:
+   ```bash
+   npx cap sync ios
+   npx cap run ios
+   ```
+
+#### **⚠️ IMPORTANTE - Testar em Dispositivo Físico**
+
+- Notificações push **NÃO funcionam no simulador iOS**
+- Use um **iPhone ou iPad físico**
+- O dispositivo precisa estar conectado à internet
+- Aceite as permissões quando solicitado
+
+#### **Verificar Configuração iOS**
+
+Após abrir o app no dispositivo:
+1. Aceite permissões de notificação
+2. Faça login
+3. Verifique no console se Player ID foi gerado
+4. No [OneSignal Dashboard → Audience](https://app.onesignal.com/apps/85da5c4b-c2a7-426f-851f-5c7c42afd64a/audience), procure o Player ID com ícone iOS (🍎)
+5. Envie notificação teste pelo dashboard
 
 ---
 
@@ -236,14 +319,52 @@ const notificationPayload = {
 
 ## 🐛 Troubleshooting
 
-### Problema: Player ID não está sendo salvo
+### **❌ Player ID não está sendo salvo no Supabase**
 
 **Solução:**
 1. Verifique se o usuário está autenticado
 2. Verifique os logs do console: `console.log` em `useOneSignal.ts`
 3. Verifique se o OneSignal plugin foi instalado corretamente: `npx cap sync`
 
-### Problema: Notificação não está chegando
+### **❌ Player ID não está sendo gerado (iOS)**
+
+**Sintomas:**
+- Console mostra "OneSignal Player ID: null"
+- Player ID não aparece no OneSignal Dashboard
+- Erro "All included players are not subscribed" ao enviar notificação
+
+**Soluções:**
+
+1. ✅ **Verificar certificados APNs:**
+   - Acesse [OneSignal Dashboard - iOS Settings](https://app.onesignal.com/apps/85da5c4b-c2a7-426f-851f-5c7c42afd64a/settings/platforms/apple_ios)
+   - Confirme que certificado `.p12` ou `.p8` está configurado
+   - Verifique se Bundle ID está correto: `com.converta.kambafy`
+
+2. ✅ **Testar em dispositivo físico:**
+   - Notificações push NÃO funcionam no simulador iOS
+   - Use iPhone/iPad físico
+
+3. ✅ **Verificar Capabilities no Xcode:**
+   ```bash
+   npx cap open ios
+   ```
+   - Confirme que "Push Notifications" está habilitada
+   - Confirme que "Background Modes > Remote notifications" está marcado
+
+4. ✅ **Limpar e reconstruir:**
+   ```bash
+   npx cap sync ios
+   # No Xcode: Product → Clean Build Folder
+   # Rebuild e execute novamente
+   ```
+
+5. ✅ **Regenerar Player ID:**
+   - Desinstale o app do dispositivo
+   - Reinstale usando Xcode
+   - Aceite permissões de notificação novamente
+   - Novo Player ID será gerado automaticamente
+
+### **❌ Notificação não está chegando**
 
 **Solução:**
 1. Verifique se o `onesignal_player_id` está salvo no banco
