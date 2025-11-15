@@ -34,15 +34,17 @@ export default function AppMobile() {
   useEffect(() => {
     if (user?.id && isInitialized) {
       console.log('🔗 [App Mobile] Vinculando user_id com OneSignal External ID:', user.id);
+      console.log('🔗 [App Mobile] Player ID atual:', playerId);
+      
       setExternalUserId(user.id).then(success => {
         if (success) {
           console.log('✅ [App Mobile] External User ID configurado - Journeys podem funcionar');
         } else {
-          console.log('⚠️ [App Mobile] External User ID não configurado');
+          console.log('⚠️ [App Mobile] External User ID não configurado (tentaremos novamente quando player_id estiver disponível)');
         }
       });
     }
-  }, [user?.id, isInitialized, setExternalUserId]);
+  }, [user?.id, isInitialized, playerId, setExternalUserId]); // Adicionado playerId como dependência
 
   useEffect(() => {
     // Verificar se há um query parameter para forçar onboarding (útil para desenvolvimento)

@@ -318,19 +318,42 @@ export function useOneSignal(options?: UseOneSignalOptions) {
         isNative,
         hasCordovaPlugin,
         hasWebSDK,
-        platform: Capacitor.getPlatform()
+        platform: Capacitor.getPlatform(),
+        currentPlayerId: playerId
       });
       
+      // Se temos player_id, usar API REST para garantir vínculo
+      if (playerId) {
+        console.log('🌐 [setExternalUserId] Using REST API to link external_id');
+        
+        try {
+          const { error } = await supabase.functions.invoke('link-onesignal-external-id', {
+            body: { 
+              user_id: userId,
+              player_id: playerId 
+            }
+          });
+          
+          if (error) {
+            console.error('❌ [setExternalUserId] Error calling edge function:', error);
+          } else {
+            console.log('✅ [setExternalUserId] External ID linked via REST API!');
+            return true;
+          }
+        } catch (apiError) {
+          console.error('❌ [setExternalUserId] API Error:', apiError);
+        }
+      }
+      
+      // Fallback: tentar via SDK nativo
       if (hasCordovaPlugin) {
-        // Usar Cordova Plugin (Native App)
-        console.log('📱 [setExternalUserId] Using Cordova Plugin for External User ID');
+        console.log('📱 [setExternalUserId] Trying via Cordova Plugin as fallback');
         window.plugins.OneSignal.setExternalUserId(userId, (results: any) => {
           console.log('✅ [setExternalUserId] External User ID set via Native SDK:', results);
         });
         return true;
       } else if (hasWebSDK && window.OneSignal.login) {
-        // Web SDK disponível - tentar usar
-        console.log('🌐 [setExternalUserId] Attempting to set External User ID on Web SDK');
+        console.log('🌐 [setExternalUserId] Trying via Web SDK as fallback');
         try {
           await window.OneSignal.login(userId);
           console.log('✅ [setExternalUserId] External User ID set via Web SDK:', userId);
@@ -340,8 +363,8 @@ export function useOneSignal(options?: UseOneSignalOptions) {
           return false;
         }
       } else {
-        console.log('⚠️ [setExternalUserId] Neither Cordova Plugin nor Web SDK available');
-        console.log('⚠️ [setExternalUserId] Using direct player ID notifications instead');
+        console.log('⚠️ [setExternalUserId] No player_id available yet');
+        console.log('⚠️ [setExternalUserId] Will retry after player_id is obtained');
         return false;
       }
     } catch (error) {
