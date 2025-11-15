@@ -10,10 +10,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { player_id, title, message, data, image_url, sound } = await req.json();
+    const { player_id, external_user_id, title, message, data, image_url, sound } = await req.json();
 
     console.log('📱 Sending OneSignal notification:', {
       player_id,
+      external_user_id,
       title,
       message,
       data,
@@ -21,11 +22,11 @@ Deno.serve(async (req) => {
       sound
     });
 
-    // Validar dados obrigatórios
-    if (!player_id || !title || !message) {
+    // Validar dados obrigatórios - aceitar player_id OU external_user_id
+    if ((!player_id && !external_user_id) || !title || !message) {
       return new Response(
         JSON.stringify({ 
-          error: 'Missing required fields: player_id, title, message' 
+          error: 'Missing required fields: (player_id OR external_user_id), title, message' 
         }),
         { 
           status: 400, 
@@ -51,7 +52,6 @@ Deno.serve(async (req) => {
     // Preparar payload para OneSignal seguindo melhores práticas
     const notificationPayload: any = {
       app_id: ONESIGNAL_APP_ID,
-      include_player_ids: [player_id],
       headings: { 
         en: title,
         pt: title // Suporte multi-idioma
@@ -68,6 +68,15 @@ Deno.serve(async (req) => {
       ios_badgeType: "Increase",
       ios_badgeCount: 1,
     };
+
+    // Usar external_user_id se fornecido (preferencial para apps nativos), senão player_id
+    if (external_user_id) {
+      notificationPayload.include_external_user_ids = [external_user_id];
+      console.log('📤 Using external_user_id:', external_user_id);
+    } else {
+      notificationPayload.include_player_ids = [player_id];
+      console.log('📤 Using player_id:', player_id);
+    }
 
     // Adicionar imagem se fornecida
     if (image_url) {
