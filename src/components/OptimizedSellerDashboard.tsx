@@ -61,6 +61,9 @@ const OptimizedSellerDashboard = memo(() => {
 
   return (
     <div className="space-y-6 p-6">
+      {/* Teste de Notificação - SEMPRE PRIMEIRO */}
+      <TestSaleNotification products={sellerData?.products || []} />
+      
       {/* Header otimizado */}
       <AnimatedWrapper>
         <div className="flex items-center justify-between">
@@ -87,9 +90,6 @@ const OptimizedSellerDashboard = memo(() => {
           </div>
         </div>
       </AnimatedWrapper>
-
-      {/* Teste de Notificação de Venda - SEMPRE VISÍVEL NO TOPO */}
-      <TestSaleNotification products={sellerData?.products || []} />
 
       {/* Métricas otimizadas */}
       <AnimatedWrapper delay={100}>
