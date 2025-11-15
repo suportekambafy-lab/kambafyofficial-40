@@ -62,22 +62,26 @@ export function useOneSignal(options?: UseOneSignalOptions) {
   // Inicializar OneSignal Web SDK (para WebView e Web)
   const initializeWebSDK = async () => {
     try {
-      console.log('🌐 [OneSignal Web SDK] Starting initialization...');
-      console.log('🌐 [OneSignal Web SDK] App ID:', ONESIGNAL_APP_ID);
-      console.log('🌐 [OneSignal Web SDK] OneSignal object available?', typeof OneSignal !== 'undefined');
+      console.log('🌐 [OneSignal Web SDK] Waiting for OneSignal to be ready...');
       
-      if (typeof OneSignal === 'undefined') {
-        console.error('❌ [OneSignal Web SDK] OneSignal object not found!');
-        return;
-      }
+      // Aguardar que o OneSignal esteja disponível (já inicializado pelo script no index.html)
+      const waitForOneSignal = () => {
+        return new Promise<void>((resolve) => {
+          if (typeof OneSignal !== 'undefined') {
+            resolve();
+          } else {
+            const checkInterval = setInterval(() => {
+              if (typeof OneSignal !== 'undefined') {
+                clearInterval(checkInterval);
+                resolve();
+              }
+            }, 100);
+          }
+        });
+      };
 
-      console.log('🌐 [OneSignal Web SDK] Calling OneSignal.init...');
-      await OneSignal.init({
-        appId: ONESIGNAL_APP_ID,
-        allowLocalhostAsSecureOrigin: true,
-      });
-
-      console.log('✅ [OneSignal Web SDK] Initialization complete!');
+      await waitForOneSignal();
+      console.log('✅ [OneSignal Web SDK] OneSignal object is ready!');
       setIsInitialized(true);
 
       // Verificar permissão
@@ -87,30 +91,33 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       
       if (permission) {
         setPermissionGranted(true);
-        
-        // Obter Subscription ID
-        const subscriptionId = await OneSignal.User.PushSubscription.id;
-        console.log('📱 Subscription ID:', subscriptionId);
-        
-        if (subscriptionId) {
-          setPlayerId(subscriptionId);
-          await savePlayerIdToProfile(subscriptionId);
-        }
       }
 
-      // Event listeners
-      OneSignal.Notifications.addEventListener('click', (event) => {
+      // Obter subscription ID
+      const subscriptionId = await OneSignal.User.PushSubscription.id;
+      console.log('📱 [OneSignal Web SDK] Subscription ID:', subscriptionId);
+      
+      if (subscriptionId) {
+        setPlayerId(subscriptionId);
+        await savePlayerIdToProfile(subscriptionId);
+        console.log('✅ [OneSignal Web SDK] Player ID saved to profile!');
+      }
+
+      // Configurar listeners de notificação
+      OneSignal.Notifications.addEventListener('click', (event: any) => {
         console.log('🔔 Notification clicked:', event);
         options?.onNotificationOpened?.(event);
       });
 
-      OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event: any) => {
         console.log('📩 Notification received:', event);
         options?.onNotificationReceived?.(event);
       });
 
+      console.log('✅ [OneSignal Web SDK] Setup complete!');
+
     } catch (error) {
-      console.error('❌ [OneSignal Web SDK] Error during initialization:', error);
+      console.error('❌ [OneSignal Web SDK] Error during setup:', error);
       console.error('❌ [OneSignal Web SDK] Error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
