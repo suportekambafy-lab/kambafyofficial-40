@@ -525,6 +525,29 @@ const handler = async (req: Request): Promise<Response> => {
             } else {
               console.log('[APPYPAY-WEBHOOK] ⚠️ Seller does not have OneSignal Player ID configured');
             }
+
+            // 🎯 ENVIAR CUSTOM EVENT PARA ONESIGNAL JOURNEY
+            console.log('[APPYPAY-WEBHOOK] 📤 Sending OneSignal Custom Event...');
+            const { error: customEventError } = await supabase.functions.invoke('send-onesignal-custom-event', {
+              body: {
+                external_id: product?.user_id,
+                event_name: 'new_sale',
+                properties: {
+                  order_id: order.order_id,
+                  amount: parseFloat(order.amount),
+                  currency: order.currency,
+                  customer_name: order.customer_name,
+                  product_name: product?.name || '',
+                  product_id: order.product_id
+                }
+              }
+            });
+
+            if (customEventError) {
+              console.error('[APPYPAY-WEBHOOK] ❌ Error sending Custom Event:', customEventError);
+            } else {
+              console.log('[APPYPAY-WEBHOOK] ✅ Custom Event sent successfully');
+            }
           } catch (notifError) {
             console.error('[APPYPAY-WEBHOOK] ❌ Error in OneSignal notification process:', notifError);
             // Não falhar a operação principal por erro de notificação
