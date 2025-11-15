@@ -88,17 +88,15 @@ const OptimizedSellerDashboard = memo(() => {
         </div>
       </AnimatedWrapper>
 
+      {/* Teste de Notificação de Venda - SEMPRE VISÍVEL NO TOPO */}
+      <TestSaleNotification products={sellerData?.products || []} />
+
       {/* Métricas otimizadas */}
       <AnimatedWrapper delay={100}>
         <OptimizedMetricsGrid 
           metrics={stats}
           loading={isLoading}
         />
-      </AnimatedWrapper>
-
-      {/* Teste de Notificação de Venda */}
-      <AnimatedWrapper delay={150}>
-        <TestSaleNotification products={sellerData?.products || []} />
       </AnimatedWrapper>
 
       {/* Grid de produtos otimizado */}
