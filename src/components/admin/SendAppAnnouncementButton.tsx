@@ -137,6 +137,12 @@ export function SendAppAnnouncementButton() {
     
     if (!confirm(confirmMessage)) return;
     
+    // Prevent multiple simultaneous executions
+    if (isLoading || status === 'processing') {
+      toast.error('Já existe um envio em andamento. Aguarde a conclusão.');
+      return;
+    }
+    
     setIsLoading(true);
     setShowResults(false);
     
@@ -151,6 +157,15 @@ export function SendAppAnnouncementButton() {
       
       if (error) {
         console.error('Supabase function error:', error);
+        
+        // Check if it's a conflict (already processing)
+        if (error.message?.includes('Already processing') || error.message?.includes('409')) {
+          toast.error('Já existe um envio em andamento. Aguarde a conclusão.', { 
+            id: "sending-emails" 
+          });
+          return;
+        }
+        
         throw error;
       }
       

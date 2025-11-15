@@ -156,13 +156,18 @@ async function sendEmailsInBackground(
         console.log(`[APP_ANNOUNCEMENT_BG] ✓ Email sent to ${user.email}`);
         sent++;
         
-        // Record this email as sent
-        await supabase
+        // Record this email as sent (ignore if already exists due to unique constraint)
+        const { error: recordError } = await supabase
           .from("app_announcement_sent")
           .insert({
             email: user.email,
             announcement_type: "app_launch"
           });
+        
+        // Only log if it's not a duplicate key error
+        if (recordError && !recordError.message?.includes('duplicate')) {
+          console.error(`[APP_ANNOUNCEMENT_BG] Error recording email for ${user.email}:`, recordError);
+        }
       } catch (error) {
         failed++;
         console.error(`[APP_ANNOUNCEMENT_BG] ✗ Failed to send to ${user.email}:`, error);
@@ -243,6 +248,31 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Check if there's already an active processing job
+    const { data: activeProgress } = await supabase
+      .from("app_announcement_progress")
+      .select("*")
+      .eq("announcement_type", "app_launch")
+      .eq("status", "processing")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (activeProgress) {
+      console.log("[APP_ANNOUNCEMENT] There is already an active sending process");
+      return new Response(
+        JSON.stringify({ 
+          error: "Already processing", 
+          message: "Já existe um envio em andamento. Aguarde a conclusão.",
+          progressId: activeProgress.id 
+        }),
+        { 
+          status: 409, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
 
     // Fetch users with emails from profiles
     let query = supabase
