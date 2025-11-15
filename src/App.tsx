@@ -86,6 +86,14 @@ function OneSignalInitializer() {
     }
   });
 
+  // Vincular user_id com OneSignal quando usuário está autenticado
+  useEffect(() => {
+    if (user?.id && isInitialized) {
+      console.log('🔗 Vinculando user_id com OneSignal:', user.id);
+      setExternalUserId(user.id);
+    }
+  }, [user?.id, isInitialized, setExternalUserId]);
+
   // Hook para notificações em tempo real do vendedor
   const { notification, clearNotification } = useRealtimeSellerNotifications(userId);
 
