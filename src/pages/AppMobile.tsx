@@ -9,6 +9,7 @@ import { initializeNativeFeatures } from '@/utils/nativeService';
 import { SEO } from '@/components/SEO';
 import { useOneSignal } from '@/hooks/useOneSignal';
 import { useRealtimeSellerNotifications } from '@/hooks/useRealtimeSellerNotifications';
+import { OneSignalDebug } from '@/components/OneSignalDebug';
 
 const ONBOARDING_KEY = 'kambafy_onboarding_completed';
 
@@ -92,6 +93,7 @@ export default function AppMobile() {
       <SellerThemeProvider>
         {!user ? <AppLogin /> : <AppHome />}
       </SellerThemeProvider>
+      <OneSignalDebug />
     </>
   );
 }
