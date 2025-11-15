@@ -43,6 +43,21 @@ export function SendAppAnnouncementButton() {
   useEffect(() => {
     if (!isTracking || !results?.progressId) return;
 
+    // Buscar estado inicial do progresso
+    const fetchInitialProgress = async () => {
+      const { data, error } = await supabase
+        .from('app_announcement_progress')
+        .select('*')
+        .eq('id', results.progressId)
+        .single();
+      
+      if (data && !error) {
+        setProgress(data as Progress);
+      }
+    };
+    
+    fetchInitialProgress();
+
     const channel = supabase
       .channel('app-announcement-progress')
       .on(
