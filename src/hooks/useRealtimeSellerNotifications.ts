@@ -1,10 +1,9 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 /**
  * Hook para escutar notificações de vendas em tempo real
- * Mostra toast quando vendedor recebe uma nova venda
+ * Quando detecta uma nova venda, dispara notificação push nativa (futuramente via OneSignal)
  */
 export function useRealtimeSellerNotifications(userId: string | undefined) {
   useEffect(() => {
@@ -37,10 +36,11 @@ export function useRealtimeSellerNotifications(userId: string | undefined) {
             };
           };
 
-          // Mostrar toast de nova venda
-          toast.success(notification.title, {
-            description: notification.message,
-            duration: 8000,
+          // Aqui você pode disparar notificação push nativa via OneSignal
+          console.log('📱 [Push] Notificação recebida:', {
+            title: notification.title,
+            message: notification.message,
+            data: notification.data
           });
         }
       )
