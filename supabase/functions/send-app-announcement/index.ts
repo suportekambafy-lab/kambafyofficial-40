@@ -1,0 +1,256 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { Resend } from "npm:resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface SendResult {
+  success: boolean;
+  total_users: number;
+  emails_sent: number;
+  failed: number;
+  errors: string[];
+  duration_seconds: number;
+  timestamp: string;
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Método não permitido" }),
+      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const startTime = Date.now();
+  
+  try {
+    // Parse request body for optional test mode
+    const body = await req.json().catch(() => ({}));
+    const testMode = body.test_mode === true;
+    const testLimit = 5;
+
+    console.log(`Iniciando envio de emails - Modo teste: ${testMode}`);
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch all profiles with emails
+    let query = supabase
+      .from("profiles")
+      .select("email, full_name")
+      .not("email", "is", null);
+
+    if (testMode) {
+      query = query.limit(testLimit);
+    }
+
+    const { data: profiles, error: fetchError } = await query;
+
+    if (fetchError) {
+      console.error("Erro ao buscar perfis:", fetchError);
+      throw new Error(`Erro ao buscar utilizadores: ${fetchError.message}`);
+    }
+
+    if (!profiles || profiles.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Nenhum utilizador com email encontrado",
+          total_users: 0,
+          emails_sent: 0
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Total de utilizadores a notificar: ${profiles.length}`);
+
+    // Email template
+    const createEmailHtml = (name: string | null) => `
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kambafy - App Disponível</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 100%;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #e5e5e5;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a1a1a; line-height: 1.2;">
+                📱 Kambafy agora no seu telemóvel!
+              </h1>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px;">
+              ${name ? `<p style="margin: 0 0 20px; font-size: 16px; color: #333; line-height: 1.6;">Olá, ${name}!</p>` : ''}
+              
+              <p style="margin: 0 0 20px; font-size: 16px; color: #333; line-height: 1.6;">
+                Temos uma ótima notícia: a aplicação móvel Kambafy já está disponível para descarregar!
+              </p>
+              
+              <p style="margin: 0 0 25px; font-size: 16px; color: #333; line-height: 1.6;">
+                Agora pode gerir o seu negócio digital de forma ainda mais prática, com todas as funcionalidades da plataforma ao seu alcance:
+              </p>
+              
+              <ul style="margin: 0 0 30px; padding-left: 20px; font-size: 15px; color: #555; line-height: 1.8;">
+                <li style="margin-bottom: 8px;">Gerir os seus produtos e vendas</li>
+                <li style="margin-bottom: 8px;">Acompanhar os seus alunos e cursos</li>
+                <li style="margin-bottom: 8px;">Receber notificações em tempo real</li>
+                <li style="margin-bottom: 8px;">Aceder às suas métricas e relatórios</li>
+              </ul>
+              
+              <!-- Download Buttons -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <!-- Google Play -->
+                    <a href="https://play.google.com/store/apps/details?id=dev.kambafy.twa" style="display: inline-block; margin: 0 10px 15px; padding: 12px 24px; background-color: #1a1a1a; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                      📱 Descarregar no Google Play
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <!-- App Store -->
+                    <a href="https://apps.apple.com/us/app/kambafy/id6739149041" style="display: inline-block; margin: 0 10px; padding: 12px 24px; background-color: #1a1a1a; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                      🍎 Descarregar na App Store
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 30px 0 0; font-size: 14px; color: #666; line-height: 1.6;">
+                Descarregue agora e tenha a Kambafy sempre consigo!
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; text-align: center; border-top: 1px solid #e5e5e5; background-color: #fafafa;">
+              <p style="margin: 0 0 10px; font-size: 14px; color: #666;">
+                Atenciosamente,<br>
+                <strong style="color: #1a1a1a;">Equipa Kambafy</strong>
+              </p>
+              <p style="margin: 15px 0 0; font-size: 12px; color: #999;">
+                © 2025 Kambafy. Todos os direitos reservados.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    // Send emails in batches
+    const batchSize = 100;
+    const batches = [];
+    for (let i = 0; i < profiles.length; i += batchSize) {
+      batches.push(profiles.slice(i, i + batchSize));
+    }
+
+    let totalSent = 0;
+    let totalFailed = 0;
+    const errors: string[] = [];
+
+    console.log(`Enviando ${profiles.length} emails em ${batches.length} lotes...`);
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`Processando lote ${batchIndex + 1}/${batches.length} (${batch.length} emails)`);
+
+      const sendPromises = batch.map(async (profile) => {
+        try {
+          const emailHtml = createEmailHtml(profile.full_name);
+          
+          await resend.emails.send({
+            from: "Kambafy <onboarding@resend.dev>",
+            to: [profile.email!],
+            subject: "📱 Kambafy agora disponível no seu telemóvel!",
+            html: emailHtml,
+          });
+
+          totalSent++;
+          return { success: true, email: profile.email };
+        } catch (error: any) {
+          totalFailed++;
+          const errorMsg = `Falha ao enviar para ${profile.email}: ${error.message}`;
+          console.error(errorMsg);
+          errors.push(errorMsg);
+          return { success: false, email: profile.email, error: error.message };
+        }
+      });
+
+      await Promise.all(sendPromises);
+
+      // Pause between batches (except for the last one)
+      if (batchIndex < batches.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    const endTime = Date.now();
+    const duration = Math.round((endTime - startTime) / 1000);
+
+    const result: SendResult = {
+      success: true,
+      total_users: profiles.length,
+      emails_sent: totalSent,
+      failed: totalFailed,
+      errors: errors.slice(0, 10), // Limit to first 10 errors
+      duration_seconds: duration,
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log(`✅ Envio concluído: ${totalSent} sucessos, ${totalFailed} falhas em ${duration}s`);
+
+    return new Response(
+      JSON.stringify(result),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+
+  } catch (error: any) {
+    console.error("Erro geral no envio de emails:", error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+};
+
+serve(handler);
