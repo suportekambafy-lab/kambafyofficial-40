@@ -2370,11 +2370,11 @@ export type Database = {
           country: string | null
           created_at: string
           email: string | null
-          fcm_token: string | null
           full_name: string | null
           iban: string | null
           id: string
           is_creator: boolean | null
+          onesignal_player_id: string | null
           push_notifications_enabled: boolean | null
           retained_fixed_amount: number | null
           retention_reason: string | null
@@ -2393,11 +2393,11 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string | null
-          fcm_token?: string | null
           full_name?: string | null
           iban?: string | null
           id?: string
           is_creator?: boolean | null
+          onesignal_player_id?: string | null
           push_notifications_enabled?: boolean | null
           retained_fixed_amount?: number | null
           retention_reason?: string | null
@@ -2416,11 +2416,11 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string | null
-          fcm_token?: string | null
           full_name?: string | null
           iban?: string | null
           id?: string
           is_creator?: boolean | null
+          onesignal_player_id?: string | null
           push_notifications_enabled?: boolean | null
           retained_fixed_amount?: number | null
           retention_reason?: string | null
