@@ -19,47 +19,71 @@ export interface UseOneSignalOptions {
 }
 
 export function useOneSignal(options?: UseOneSignalOptions) {
+  console.log('🎯 [useOneSignal] Hook called, options:', options);
+  
   const [isInitialized, setIsInitialized] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
 
+  console.log('🎯 [useOneSignal] Hook state:', { isInitialized, playerId, permissionGranted });
+
   useEffect(() => {
+    console.log('🎯 [useOneSignal] useEffect running!');
+    
     const isNative = Capacitor.isNativePlatform();
     const isWebView = !isNative && typeof window !== 'undefined';
+    const platform = Capacitor.getPlatform();
     
-    console.log('🔍 OneSignal Environment:', { isNative, isWebView });
+    console.log('🔍 OneSignal Environment Check:', { 
+      isNative, 
+      isWebView, 
+      platform,
+      hasWindow: typeof window !== 'undefined',
+      userAgent: navigator.userAgent 
+    });
     
     if (isWebView) {
+      console.log('✅ Detected WebView/Web environment - initializing Web SDK');
       // Inicializar OneSignal Web SDK para WebView/Web
       initializeWebSDK();
       return;
     }
     
     if (isNative) {
+      console.log('✅ Detected Native environment - initializing Cordova Plugin');
       // Inicializar OneSignal Cordova Plugin para apps nativos
       initializeNativeSDK();
       return;
     }
     
-    console.log('⚠️ OneSignal: Environment not supported');
+    console.log('⚠️ OneSignal: Environment not supported', { isNative, isWebView });
   }, []);
 
   // Inicializar OneSignal Web SDK (para WebView e Web)
   const initializeWebSDK = async () => {
     try {
-      console.log('🌐 Initializing OneSignal Web SDK...');
+      console.log('🌐 [OneSignal Web SDK] Starting initialization...');
+      console.log('🌐 [OneSignal Web SDK] App ID:', ONESIGNAL_APP_ID);
+      console.log('🌐 [OneSignal Web SDK] OneSignal object available?', typeof OneSignal !== 'undefined');
       
+      if (typeof OneSignal === 'undefined') {
+        console.error('❌ [OneSignal Web SDK] OneSignal object not found!');
+        return;
+      }
+
+      console.log('🌐 [OneSignal Web SDK] Calling OneSignal.init...');
       await OneSignal.init({
         appId: ONESIGNAL_APP_ID,
         allowLocalhostAsSecureOrigin: true,
       });
 
-      console.log('✅ OneSignal Web SDK initialized');
+      console.log('✅ [OneSignal Web SDK] Initialization complete!');
       setIsInitialized(true);
 
       // Verificar permissão
+      console.log('🔔 [OneSignal Web SDK] Checking permission...');
       const permission = await OneSignal.Notifications.permission;
-      console.log('🔔 Permission status:', permission);
+      console.log('🔔 [OneSignal Web SDK] Permission status:', permission);
       
       if (permission) {
         setPermissionGranted(true);
@@ -86,7 +110,12 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       });
 
     } catch (error) {
-      console.error('❌ Error initializing OneSignal Web SDK:', error);
+      console.error('❌ [OneSignal Web SDK] Error during initialization:', error);
+      console.error('❌ [OneSignal Web SDK] Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        errorObject: error
+      });
     }
   };
 
