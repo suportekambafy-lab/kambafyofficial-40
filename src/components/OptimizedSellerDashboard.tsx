@@ -87,9 +87,6 @@ const OptimizedSellerDashboard = memo(() => {
           </div>
         </div>
       </AnimatedWrapper>
-      
-      {/* Botão flutuante de teste - renderizado globalmente */}
-      <TestSaleNotification products={sellerData?.products || []} />
 
       {/* Métricas otimizadas */}
       <AnimatedWrapper delay={100}>

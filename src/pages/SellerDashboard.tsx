@@ -10,6 +10,8 @@ import { SkeletonPage } from '@/components/ui/skeleton-page';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { CrispChat } from '@/components/CrispChat';
+import { TestSaleNotification } from '@/components/TestSaleNotification';
+import { useSellerData } from '@/hooks/useOptimizedSellerData';
 
 // Lazy load páginas para melhor performance com retry logic
 const createLazyWithRetry = (importFn: () => Promise<any>, name: string) => {
@@ -66,10 +68,14 @@ function SellerDashboardContent() {
   const navigate = useNavigate();
   const { collapsed, isMobile, sidebarOpen, toggleSidebarOpen, closeSidebar } = useSidebar();
   const { theme } = useSellerTheme();
+  const { data: sellerData } = useSellerData();
 
   return (
     <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
         <CrispChat />
+        
+        {/* Botão Flutuante de Teste - Global para todas as páginas do vendedor */}
+        <TestSaleNotification products={sellerData?.products || []} />
         
         <div className="flex flex-1">
           {/* Backdrop para mobile */}
