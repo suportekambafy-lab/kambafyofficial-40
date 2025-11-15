@@ -156,10 +156,9 @@ export function TestSaleNotification({ products = [] }: TestSaleNotificationProp
       {/* Botão Flutuante */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
+        className="fixed bottom-6 left-6 z-50 px-4 py-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
         title="Testar Notificação de Venda"
       >
-        <Bell className="h-5 w-5 animate-pulse" />
         <span className="font-medium">Teste Push</span>
       </button>
 
