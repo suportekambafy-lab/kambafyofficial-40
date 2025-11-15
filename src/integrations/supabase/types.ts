@@ -3467,7 +3467,6 @@ export type Database = {
             Args: {
               p_admin_email: string
               p_reason: string
-              p_retention_days?: number
               p_retention_percentage: number
               p_user_id: string
             }
@@ -3477,6 +3476,7 @@ export type Database = {
             Args: {
               p_admin_email: string
               p_reason: string
+              p_retention_days?: number
               p_retention_percentage: number
               p_user_id: string
             }
