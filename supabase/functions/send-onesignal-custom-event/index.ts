@@ -61,7 +61,19 @@ serve(async (req) => {
       body: JSON.stringify(eventPayload),
     });
 
-    const result = await response.json();
+    console.log('📊 OneSignal Response Status:', response.status);
+    
+    // Ler resposta como texto primeiro
+    const responseText = await response.text();
+    console.log('📄 OneSignal Raw Response:', responseText);
+
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (e) {
+      console.error('❌ Failed to parse response as JSON:', responseText.substring(0, 500));
+      throw new Error(`OneSignal returned invalid response (status ${response.status}): ${responseText.substring(0, 200)}`);
+    }
 
     if (!response.ok) {
       console.error('❌ OneSignal API error:', result);
