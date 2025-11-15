@@ -64,6 +64,13 @@ function OneSignalInitializer() {
   const { user } = useAuth();
   const [userId, setUserId] = useState<string | undefined>();
   
+  // Monitorar user_id para notificações em tempo real
+  useEffect(() => {
+    if (user?.id) {
+      setUserId(user.id);
+    }
+  }, [user]);
+  
   const { isInitialized, playerId, savePlayerIdToProfile } = useOneSignal({
     onNotificationReceived: (notification) => {
       console.log('📩 Notification received in app:', notification);
@@ -80,13 +87,6 @@ function OneSignalInitializer() {
 
   // Hook para notificações em tempo real do vendedor
   useRealtimeSellerNotifications(userId);
-
-  // Monitorar user_id para notificações em tempo real
-  useEffect(() => {
-    if (user?.id) {
-      setUserId(user.id);
-    }
-  }, [user]);
 
   useEffect(() => {
     if (isInitialized && playerId) {
