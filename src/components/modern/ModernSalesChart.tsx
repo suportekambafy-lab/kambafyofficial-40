@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -30,8 +30,7 @@ export function ModernSalesChart() {
             schema: 'public',
             table: 'orders'
           },
-          (payload) => {
-            console.log('Chart data update triggered:', payload);
+          () => {
             fetchChartData();
           }
         )
@@ -68,8 +67,6 @@ export function ModernSalesChart() {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      console.log('📊 Chart carregando vendas dos últimos 7 dias para produtos:', userProductIds);
-
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
       const recoveredOrderIds = new Set();
 
@@ -82,11 +79,8 @@ export function ModernSalesChart() {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('❌ Erro ao buscar dados do chart:', error);
         return;
       }
-
-      console.log(`✅ Chart carregou ${orders?.length || 0} vendas dos últimos 7 dias`);
 
       // Processar dados por dia
       const salesByDay: { [key: string]: number } = {};
@@ -134,7 +128,7 @@ export function ModernSalesChart() {
 
       setChartData(formattedData);
     } catch (error) {
-      console.error('Error fetching chart data:', error);
+      // Error silently handled
     } finally {
       setLoading(false);
     }
@@ -159,26 +153,24 @@ export function ModernSalesChart() {
           </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <XAxis 
-                  dataKey="day" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis hide />
-                <ChartTooltip
-                  content={<ChartTooltipContent />}
-                  formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']}
-                />
-                <Bar 
-                  dataKey="vendas" 
-                  fill="var(--color-vendas)"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChart data={chartData} width={600} height={256} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+              <XAxis 
+                dataKey="day" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis hide />
+              <ChartTooltip
+                content={<ChartTooltipContent />}
+                formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']}
+              />
+              <Bar 
+                dataKey="vendas" 
+                fill="var(--color-vendas)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
           </ChartContainer>
         )}
       </CardContent>

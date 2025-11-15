@@ -76,12 +76,6 @@ export const formatPriceForSeller = (
   currency: string = 'KZ',
   useToLocaleString: boolean = true
 ): string => {
-  console.log('💰 FORMAT PRICE FOR SELLER DEBUG:', {
-    inputAmount: amount,
-    inputCurrency: currency,
-    currencyToUpperCase: currency.toUpperCase()
-  });
-  
   // Se não é KZ, converter para KZ
   let amountInKZ = amount;
   
@@ -94,24 +88,9 @@ export const formatPriceForSeller = (
     
     const rate = exchangeRates[currency.toUpperCase()] || 1;
     amountInKZ = Math.round(amount * rate);
-    
-    console.log('💰 CONVERSION APPLIED:', {
-      originalAmount: amount,
-      currency: currency.toUpperCase(),
-      conversionRate: rate,
-      convertedAmountKZ: amountInKZ
-    });
-  } else {
-    console.log('💰 NO CONVERSION NEEDED (already KZ):', {
-      amount,
-      currency
-    });
   }
   
-  const result = useToLocaleString 
+  return useToLocaleString 
     ? `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`
     : `${amountInKZ.toLocaleString()} KZ`;
-    
-  console.log('💰 FINAL FORMATTED RESULT:', result);
-  return result;
 };

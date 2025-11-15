@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -56,7 +56,6 @@ export function MobileSalesChart() {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('Error fetching chart data:', error);
         return;
       }
 
@@ -100,7 +99,7 @@ export function MobileSalesChart() {
 
       setChartData(formattedData);
     } catch (error) {
-      console.error('Error fetching chart data:', error);
+      // Error silently handled
     } finally {
       setLoading(false);
     }
@@ -125,26 +124,24 @@ export function MobileSalesChart() {
           </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-48 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <XAxis 
-                  dataKey="day" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis hide />
-                <ChartTooltip
-                  content={<ChartTooltipContent />}
-                  formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']}
-                />
-                <Bar 
-                  dataKey="vendas" 
-                  fill="var(--color-vendas)"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChart data={chartData} width={500} height={192} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+              <XAxis 
+                dataKey="day" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis hide />
+              <ChartTooltip
+                content={<ChartTooltipContent />}
+                formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']}
+              />
+              <Bar 
+                dataKey="vendas" 
+                fill="var(--color-vendas)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
           </ChartContainer>
         )}
       </CardContent>
