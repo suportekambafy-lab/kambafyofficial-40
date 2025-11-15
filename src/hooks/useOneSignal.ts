@@ -19,6 +19,7 @@ export function useOneSignal(options?: UseOneSignalOptions) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [pendingPlayerId, setPendingPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeOneSignal = async () => {
@@ -58,8 +59,9 @@ export function useOneSignal(options?: UseOneSignalOptions) {
           if (state.userId) {
             console.log('✅ OneSignal Player ID:', state.userId);
             setPlayerId(state.userId);
+            setPendingPlayerId(state.userId);
             
-            // Salvar Player ID no Supabase
+            // Tentar salvar Player ID no Supabase
             savePlayerIdToProfile(state.userId);
           }
         });
@@ -93,6 +95,36 @@ export function useOneSignal(options?: UseOneSignalOptions) {
 
     initializeOneSignal();
   }, []);
+
+  // Escutar mudanças de autenticação e tentar salvar Player ID pendente
+  useEffect(() => {
+    if (!pendingPlayerId) return;
+
+    const checkAuthAndSave = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        console.log('🔄 User authenticated, saving pending Player ID:', pendingPlayerId);
+        await savePlayerIdToProfile(pendingPlayerId);
+        setPendingPlayerId(null); // Limpar após salvar
+      }
+    };
+
+    checkAuthAndSave();
+
+    // Também escutar mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user && pendingPlayerId) {
+        console.log('🔄 Auth state changed, saving pending Player ID:', pendingPlayerId);
+        savePlayerIdToProfile(pendingPlayerId);
+        setPendingPlayerId(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [pendingPlayerId]);
 
   // Função para salvar Player ID no perfil do usuário
   const savePlayerIdToProfile = async (playerIdValue: string) => {
