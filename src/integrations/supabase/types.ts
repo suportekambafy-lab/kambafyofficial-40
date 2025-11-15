@@ -3462,6 +3462,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_remove_seller_retention: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       admin_set_seller_retention: {
         Args: {
           p_admin_email: string
