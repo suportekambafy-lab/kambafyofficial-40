@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,25 @@ export function TestSaleNotification({ products = [] }: TestSaleNotificationProp
   const [selectedProduct, setSelectedProduct] = useState<string>("");
   const [customerName, setCustomerName] = useState("Cliente Teste");
   const [customerEmail, setCustomerEmail] = useState("teste@kambafy.com");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  // Verificar se o usuário é autorizado
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        setUserEmail(user.email);
+        setIsAuthorized(user.email === 'victormuabi20@gmail.com');
+      }
+    };
+    checkUser();
+  }, []);
+
+  // Não renderizar se não for o usuário autorizado
+  if (!isAuthorized) {
+    return null;
+  }
 
   const handleTestSale = async () => {
     if (!selectedProduct) {
