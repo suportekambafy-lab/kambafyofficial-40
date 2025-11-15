@@ -95,6 +95,21 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`[APP_ANNOUNCEMENT] Found ${users.length} users to notify`);
 
+    // Check which emails have already received this announcement
+    const { data: alreadySent, error: sentError } = await supabase
+      .from("app_announcement_sent")
+      .select("email")
+      .eq("announcement_type", "app_launch");
+
+    if (sentError) {
+      console.error("[APP_ANNOUNCEMENT] Error checking sent emails:", sentError);
+    }
+
+    const sentEmails = new Set(alreadySent?.map(r => r.email) || []);
+    const usersToSend = users.filter(user => !sentEmails.has(user.email));
+    
+    console.log(`[APP_ANNOUNCEMENT] Already sent to ${sentEmails.size} users, will send to ${usersToSend.length} remaining users`);
+
     // Email template
     const createEmailHtml = (name: string | null) => `
 <!DOCTYPE html>
@@ -185,17 +200,17 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     // Process emails in pairs (2 req/s = Resend rate limit)
-    console.log(`[APP_ANNOUNCEMENT] Sending to ${users.length} users`);
+    console.log(`[APP_ANNOUNCEMENT] Sending to ${usersToSend.length} users`);
 
     let sent = 0;
     let failed = 0;
     const errors: Array<{ email: string; error: string; details?: any }> = [];
 
     // Process 2 emails at a time (respecting 2 req/s rate limit)
-    for (let i = 0; i < users.length; i += 2) {
-      const batch = users.slice(i, Math.min(i + 2, users.length));
+    for (let i = 0; i < usersToSend.length; i += 2) {
+      const batch = usersToSend.slice(i, Math.min(i + 2, usersToSend.length));
       
-      console.log(`[APP_ANNOUNCEMENT] Processing emails ${i + 1}-${Math.min(i + 2, users.length)}/${users.length}`);
+      console.log(`[APP_ANNOUNCEMENT] Processing emails ${i + 1}-${Math.min(i + 2, usersToSend.length)}/${usersToSend.length}`);
 
       // Send up to 2 emails in parallel
       const batchPromises = batch.map(async (user) => {
@@ -233,6 +248,18 @@ const handler = async (req: Request): Promise<Response> => {
 
           console.log(`[APP_ANNOUNCEMENT] ✓ Email sent to ${user.email}`, responseData);
           sent++;
+          
+          // Record this email as sent
+          const { error: recordError } = await supabase
+            .from("app_announcement_sent")
+            .insert({
+              email: user.email,
+              announcement_type: "app_launch"
+            });
+          
+          if (recordError) {
+            console.error(`[APP_ANNOUNCEMENT] Failed to record sent email for ${user.email}:`, recordError);
+          }
         } catch (error) {
           failed++;
           const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -263,7 +290,7 @@ const handler = async (req: Request): Promise<Response> => {
       await Promise.all(batchPromises);
 
       // Wait 1 second before processing next pair (respecting 2 req/s rate limit)
-      if (i + 2 < users.length) {
+      if (i + 2 < usersToSend.length) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -272,7 +299,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     const result: SendResult = {
       success: true,
-      totalUsers: users.length,
+      totalUsers: usersToSend.length,
       sent,
       failed,
       errors,
