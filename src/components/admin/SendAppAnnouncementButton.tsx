@@ -41,7 +41,7 @@ export function SendAppAnnouncementButton() {
   const [alreadySent, setAlreadySent] = useState<number>(0);
   const [totalUsers, setTotalUsers] = useState<number>(0);
 
-  // Fetch initial stats
+  // Fetch initial stats and check for active process
   useEffect(() => {
     const fetchStats = async () => {
       const { count: sentCount } = await supabase
@@ -57,12 +57,42 @@ export function SendAppAnnouncementButton() {
       
       setAlreadySent(sentCount || 0);
       setTotalUsers(usersCount || 0);
+
+      // 🔍 Check for active sending process
+      const { data: activeProgress } = await supabase
+        .from('app_announcement_progress')
+        .select('*')
+        .eq('announcement_type', 'app_launch')
+        .eq('status', 'processing')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (activeProgress) {
+        console.log('📧 Found active email sending process:', activeProgress);
+        setProgress(activeProgress as Progress);
+        setIsTracking(true);
+        setResults({
+          success: true,
+          totalUsers: activeProgress.total_users,
+          sent: activeProgress.sent,
+          failed: activeProgress.failed,
+          errors: [],
+          duration: 0,
+          timestamp: activeProgress.started_at,
+          processing: true,
+          progressId: activeProgress.id
+        });
+        toast.info('Envio de emails em andamento. Acompanhe o progresso abaixo.', {
+          duration: 5000
+        });
+      }
     };
     
     fetchStats();
   }, []);
 
-  // Subscribe to progress updates
+  // Subscribe to progress updates with polling fallback
   useEffect(() => {
     if (!isTracking || !results?.progressId) return;
 
@@ -80,6 +110,32 @@ export function SendAppAnnouncementButton() {
     };
     
     fetchInitialProgress();
+
+    // 🔄 Polling fallback every 3 seconds
+    const pollingInterval = setInterval(async () => {
+      const { data } = await supabase
+        .from('app_announcement_progress')
+        .select('*')
+        .eq('id', results.progressId)
+        .single();
+      
+      if (data) {
+        const newProgress = data as Progress;
+        setProgress(newProgress);
+        setResults(prev => prev ? {
+          ...prev,
+          sent: newProgress.sent,
+          failed: newProgress.failed,
+          totalUsers: newProgress.total_users
+        } : null);
+        
+        if (newProgress.status === 'completed') {
+          setIsTracking(false);
+          clearInterval(pollingInterval);
+          toast.success(`Envio concluído! ${newProgress.sent} emails enviados.`);
+        }
+      }
+    }, 3000);
 
     const channel = supabase
       .channel('app-announcement-progress')
@@ -127,6 +183,7 @@ export function SendAppAnnouncementButton() {
 
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(pollingInterval);
     };
   }, [isTracking, results?.progressId]);
 
@@ -286,49 +343,51 @@ export function SendAppAnnouncementButton() {
             </AlertDescription>
           </Alert>
 
-          {/* Progress tracking */}
+          {/* Progress tracking - DESTAQUE VISUAL */}
           {isTracking && progress && (
-            <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">Progresso do Envio</span>
-                <span className="text-muted-foreground">
+            <div className="space-y-3 p-4 border-2 border-primary rounded-lg bg-primary/10 animate-pulse-subtle">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="font-bold text-lg">Envio em Andamento</span>
+                </div>
+                <span className="text-sm font-semibold bg-primary/20 px-3 py-1 rounded-full">
                   {progress.sent + progress.failed} / {progress.total_users}
                 </span>
               </div>
               
               <Progress 
                 value={((progress.sent + progress.failed) / progress.total_users) * 100} 
-                className="h-2"
+                className="h-3"
               />
               
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div className="space-y-1">
-                  <div className="text-muted-foreground">Enviados</div>
-                  <div className="flex items-center gap-1 text-green-600 font-semibold">
-                    <CheckCircle className="h-4 w-4" />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="text-xs text-muted-foreground">✓ Enviados</div>
+                  <div className="flex items-center gap-1 text-green-600 font-bold text-xl">
+                    <CheckCircle className="h-5 w-5" />
                     {progress.sent}
                   </div>
                 </div>
                 
-                <div className="space-y-1">
-                  <div className="text-muted-foreground">Falhados</div>
-                  <div className="flex items-center gap-1 text-red-600 font-semibold">
-                    <XCircle className="h-4 w-4" />
+                <div className="space-y-1 p-3 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-800">
+                  <div className="text-xs text-muted-foreground">✗ Falhados</div>
+                  <div className="flex items-center gap-1 text-red-600 font-bold text-xl">
+                    <XCircle className="h-5 w-5" />
                     {progress.failed}
                   </div>
                 </div>
                 
-                <div className="space-y-1">
-                  <div className="text-muted-foreground">Restantes</div>
-                  <div className="flex items-center gap-1 font-semibold">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="space-y-1 p-3 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
+                  <div className="text-xs text-muted-foreground">⏳ Restantes</div>
+                  <div className="flex items-center gap-1 text-orange-600 font-bold text-xl">
                     {progress.total_users - progress.sent - progress.failed}
                   </div>
                 </div>
               </div>
               
-              <div className="text-xs text-muted-foreground pt-2 border-t">
-                Status: <span className="font-medium">{progress.status === 'processing' ? 'Em andamento...' : 'Concluído'}</span>
+              <div className="text-sm text-center font-medium pt-2 border-t">
+                {progress.status === 'processing' ? '🔄 Processando emails...' : '✅ Concluído'}
               </div>
             </div>
           )}
