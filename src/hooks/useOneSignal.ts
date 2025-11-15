@@ -302,10 +302,35 @@ export function useOneSignal(options?: UseOneSignalOptions) {
           console.log('✅ External User ID set (native):', results);
         });
       } else {
-        // Usar Web SDK
+        // Usar Web SDK - verificar se está completamente inicializado
         if (typeof window.OneSignal !== 'undefined') {
-          await window.OneSignal.login(userId);
-          console.log('✅ External User ID set (web):', userId);
+          // Aguardar que OneSignal esteja completamente pronto
+          const waitForOneSignalReady = async () => {
+            let attempts = 0;
+            const maxAttempts = 20; // 10 segundos máximo
+            
+            while (attempts < maxAttempts) {
+              try {
+                // Verificar se o método login existe e está acessível
+                if (window.OneSignal && window.OneSignal.User && typeof window.OneSignal.login === 'function') {
+                  await window.OneSignal.login(userId);
+                  console.log('✅ External User ID set (web):', userId);
+                  return true;
+                }
+              } catch (error) {
+                console.log(`⏳ OneSignal not ready yet, attempt ${attempts + 1}/${maxAttempts}...`);
+              }
+              
+              await new Promise(resolve => setTimeout(resolve, 500));
+              attempts++;
+            }
+            
+            throw new Error('OneSignal initialization timeout');
+          };
+          
+          await waitForOneSignalReady();
+        } else {
+          throw new Error('OneSignal Web SDK not available');
         }
       }
 
