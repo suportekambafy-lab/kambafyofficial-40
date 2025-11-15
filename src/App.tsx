@@ -19,6 +19,8 @@ import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AdminPermissionRoute from "./components/AdminPermissionRoute";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 import { useOneSignal } from "./hooks/useOneSignal";
+import { useRealtimeSellerNotifications } from "./hooks/useRealtimeSellerNotifications";
+import { supabase } from "@/integrations/supabase/client";
 
 const TestFacebookIntegration = lazy(() => import("./pages/TestFacebookIntegration"));
 
@@ -57,9 +59,11 @@ const TestLoginComponent = () => {
   );
 };
 
-// Component to initialize OneSignal after auth
+// Component to initialize OneSignal after auth  
 function OneSignalInitializer() {
   const { user } = useAuth();
+  const [userId, setUserId] = useState<string | undefined>();
+  
   const { isInitialized, playerId, savePlayerIdToProfile } = useOneSignal({
     onNotificationReceived: (notification) => {
       console.log('📩 Notification received in app:', notification);
@@ -73,6 +77,16 @@ function OneSignalInitializer() {
       }
     }
   });
+
+  // Hook para notificações em tempo real do vendedor
+  useRealtimeSellerNotifications(userId);
+
+  // Monitorar user_id para notificações em tempo real
+  useEffect(() => {
+    if (user?.id) {
+      setUserId(user.id);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (isInitialized && playerId) {
