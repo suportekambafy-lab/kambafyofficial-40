@@ -30,9 +30,20 @@ export function useOneSignal(options?: UseOneSignalOptions) {
   useEffect(() => {
     console.log('🎯 [useOneSignal] useEffect running!');
     
+    // Verificar se temos External ID nativo do WebView (injetado pelo app nativo)
+    const checkNativeExternalId = () => {
+      const nativeId = (window as any).NATIVE_EXTERNAL_ID;
+      if (nativeId) {
+        console.log('📱 [OneSignal] External ID nativo detectado do WebView:', nativeId);
+        return nativeId;
+      }
+      return null;
+    };
+    
     const isNative = Capacitor.isNativePlatform();
     const hasCordovaPlugin = typeof window !== 'undefined' && window.plugins?.OneSignal;
     const platform = Capacitor.getPlatform();
+    const nativeExternalId = checkNativeExternalId();
     
     console.log('🔍 [CRITICAL DEBUG] OneSignal Environment Check:', { 
       isNative, 
@@ -41,7 +52,8 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       hasWindow: typeof window !== 'undefined',
       hasWebOneSignal: typeof window !== 'undefined' && typeof window.OneSignal !== 'undefined',
       hasPlugins: typeof window !== 'undefined' && typeof window.plugins !== 'undefined',
-      userAgent: navigator.userAgent 
+      userAgent: navigator.userAgent,
+      nativeExternalId 
     });
     
     // IMPORTANTE: No app nativo (Capacitor), APENAS usar Cordova Plugin
@@ -81,6 +93,12 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     try {
       console.log('🌐 [OneSignal Web SDK] Waiting for OneSignal to be ready...');
       
+      // Verificar External ID nativo antes de inicializar
+      const nativeExternalId = (window as any).NATIVE_EXTERNAL_ID;
+      if (nativeExternalId) {
+        console.log('📱 [OneSignal Web SDK] External ID nativo disponível:', nativeExternalId);
+      }
+      
       // Aguardar que o OneSignal esteja disponível (já inicializado pelo script no index.html)
       const waitForOneSignal = () => {
         return new Promise<void>((resolve) => {
@@ -101,6 +119,17 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       const OneSignal = window.OneSignal;
       console.log('✅ [OneSignal Web SDK] OneSignal object is ready!');
       setIsInitialized(true);
+
+      // Se temos External ID nativo, fazer login imediatamente
+      if (nativeExternalId) {
+        console.log('📱 [OneSignal Web SDK] Fazendo login com External ID nativo:', nativeExternalId);
+        try {
+          await OneSignal.login(nativeExternalId);
+          console.log('✅ [OneSignal Web SDK] Login com External ID nativo bem-sucedido!');
+        } catch (loginError) {
+          console.error('❌ [OneSignal Web SDK] Erro ao fazer login com External ID nativo:', loginError);
+        }
+      }
 
       // Verificar permissão do browser primeiro
       const browserPermission = await Notification.permission;
@@ -194,6 +223,18 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       console.log('🔔 [NATIVE SDK] Setting App ID:', ONESIGNAL_APP_ID);
       OneSignalPlugin.setAppId(ONESIGNAL_APP_ID);
       console.log('✅ [NATIVE SDK] App ID set successfully');
+
+      // Verificar External ID nativo do WebView
+      const nativeExternalId = (window as any).NATIVE_EXTERNAL_ID;
+      if (nativeExternalId) {
+        console.log('📱 [NATIVE SDK] External ID nativo detectado, fazendo login:', nativeExternalId);
+        try {
+          OneSignalPlugin.setExternalUserId(nativeExternalId);
+          console.log('✅ [NATIVE SDK] Login com External ID nativo bem-sucedido!');
+        } catch (loginError) {
+          console.error('❌ [NATIVE SDK] Erro ao fazer login com External ID nativo:', loginError);
+        }
+      }
 
       console.log('📱 [NATIVE SDK] Requesting push notification permission...');
       OneSignalPlugin.promptForPushNotificationsWithUserResponse((accepted: boolean) => {
