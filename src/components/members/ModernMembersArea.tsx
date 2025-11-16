@@ -68,9 +68,10 @@ const detectAndUpdateVideoDuration = async (lesson: Lesson) => {
 };
 interface ModernMembersAreaProps {
   memberAreaId?: string;
+  isEmbeddedInApp?: boolean;
 }
 
-export default function ModernMembersArea({ memberAreaId: propMemberAreaId }: ModernMembersAreaProps = {}) {
+export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEmbeddedInApp = false }: ModernMembersAreaProps = {}) {
   const navigate = useNavigate();
   const {
     id: urlMemberAreaId
@@ -735,22 +736,24 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId }: Mo
   const verifiedEmail = urlParams.get('email');
 
   return <div className="min-h-screen bg-gray-950 dark text-white">
-      {/* Menu Slide Lateral */}
-      <MemberAreaSlideMenu 
-        lessons={lessons} 
-        modules={modules} 
-        lessonProgress={lessonProgress} 
-        getCourseProgress={getCourseProgress} 
-        getModuleProgress={getModuleProgress} 
-        getModuleStats={getModuleStats} 
-        totalDuration={totalDuration} 
-        completedLessons={completedLessons} 
-        onLessonSelect={setSelectedLesson} 
-        onLogout={handleLogout}
-        userEmail={user?.email || (verifiedEmail ? decodeURIComponent(verifiedEmail) : undefined)}
-        userName={user?.user_metadata?.full_name || user?.user_metadata?.name || (verifiedEmail ? decodeURIComponent(verifiedEmail).split('@')[0] : undefined)}
-        userAvatar={user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
-      />
+      {/* Menu Slide Lateral - Ocultar quando embutido no app */}
+      {!isEmbeddedInApp && (
+        <MemberAreaSlideMenu 
+          lessons={lessons} 
+          modules={modules} 
+          lessonProgress={lessonProgress} 
+          getCourseProgress={getCourseProgress} 
+          getModuleProgress={getModuleProgress} 
+          getModuleStats={getModuleStats} 
+          totalDuration={totalDuration} 
+          completedLessons={completedLessons} 
+          onLessonSelect={setSelectedLesson} 
+          onLogout={handleLogout}
+          userEmail={user?.email || (verifiedEmail ? decodeURIComponent(verifiedEmail) : undefined)}
+          userName={user?.user_metadata?.full_name || user?.user_metadata?.name || (verifiedEmail ? decodeURIComponent(verifiedEmail).split('@')[0] : undefined)}
+          userAvatar={user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
+        />
+      )}
       
       {/* Hero Section - Ocultar quando aula selecionada */}
       {!selectedLesson && <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden">

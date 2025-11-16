@@ -120,7 +120,7 @@ export function AppCourseViewer({ courseId, courseName, onClose }: AppCourseView
       {/* Área de membros embutida com scroll */}
       <div className="h-full w-full overflow-y-auto">
         <ModernMembersAuthProvider memberAreaId={courseId}>
-          <ModernMembersArea memberAreaId={courseId} />
+          <ModernMembersArea memberAreaId={courseId} isEmbeddedInApp={true} />
         </ModernMembersAuthProvider>
       </div>
     </div>
