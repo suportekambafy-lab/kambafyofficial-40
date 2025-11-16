@@ -1730,7 +1730,7 @@ export function AppHome() {
       {/* Notifications Drawer */}
       <Drawer open={showNotifications} onOpenChange={setShowNotifications}>
         <DrawerContent className="h-[85vh]">
-          <DrawerHeader>
+          <DrawerHeader className="border-b border-border">
             <div className="flex items-center justify-between">
               <DrawerTitle>Notificações</DrawerTitle>
               {unreadCount > 0 && (
@@ -1824,7 +1824,7 @@ export function AppHome() {
       {/* Quick Menu Drawer */}
       <Drawer open={showQuickMenu} onOpenChange={setShowQuickMenu}>
         <DrawerContent className="h-[85vh]">
-          <DrawerHeader>
+          <DrawerHeader className="border-b border-border">
             <DrawerTitle>Resumo Financeiro</DrawerTitle>
           </DrawerHeader>
           <div className="px-4 pb-4 overflow-auto space-y-4">
