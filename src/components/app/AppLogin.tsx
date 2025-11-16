@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, Moon, Sun } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Moon, Sun, Fingerprint } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { useDeviceContext } from '@/hooks/useDeviceContext';
 import { checkAndSaveDevice } from '@/utils/deviceTracking';
 import { supabase } from '@/integrations/supabase/client';
+import { BiometricService } from '@/utils/biometricService';
+import { BiometryType } from 'capacitor-native-biometric';
 
 export function AppLogin() {
   const [email, setEmail] = useState('');
@@ -20,10 +22,46 @@ export function AppLogin() {
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState('');
   const [welcomeBackMessage, setWelcomeBackMessage] = useState('');
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricType, setBiometricType] = useState<BiometryType | null>(null);
+  const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
   const { signIn, resetPassword } = useAuth();
   const { toast } = useToast();
   const { isDark, theme, setTheme } = useSellerTheme();
   const { context: deviceContext, loading: deviceLoading } = useDeviceContext();
+
+  // Verificar disponibilidade biométrica e tentar login automático
+  useEffect(() => {
+    const checkBiometric = async () => {
+      const available = await BiometricService.isAvailable();
+      setBiometricAvailable(available);
+      
+      if (available) {
+        const type = await BiometricService.getBiometryType();
+        setBiometricType(type);
+        
+        // Verificar se existem credenciais salvas
+        const credentials = await BiometricService.getCredentials();
+        if (credentials) {
+          // Tentar autenticação biométrica automática
+          const authenticated = await BiometricService.authenticate('Autentique-se para entrar');
+          if (authenticated) {
+            setEmail(credentials.username);
+            setPassword(credentials.password);
+            // Aguardar um frame para garantir que os estados foram atualizados
+            setTimeout(() => {
+              const form = document.querySelector('form');
+              if (form) {
+                form.requestSubmit();
+              }
+            }, 100);
+          }
+        }
+      }
+    };
+    
+    checkBiometric();
+  }, []);
 
   // Verificar se este dispositivo já foi usado antes (localStorage)
   useEffect(() => {
@@ -60,6 +98,14 @@ export function AppLogin() {
       if (user && deviceContext) {
         await checkAndSaveDevice(user.id, deviceContext);
       }
+
+      // Perguntar se quer ativar biometria após login bem-sucedido
+      if (biometricAvailable && email && password) {
+        const credentials = await BiometricService.getCredentials();
+        if (!credentials) {
+          setShowBiometricPrompt(true);
+        }
+      }
     } catch (error: any) {
       console.error('❌ Erro no login:', error);
       toast({
@@ -70,6 +116,48 @@ export function AppLogin() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleBiometricLogin = async () => {
+    const credentials = await BiometricService.getCredentials();
+    if (!credentials) {
+      toast({
+        title: "Biometria não configurada",
+        description: "Faça login primeiro para configurar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const authenticated = await BiometricService.authenticate();
+    if (authenticated) {
+      setEmail(credentials.username);
+      setPassword(credentials.password);
+      // Simular submit do formulário
+      setTimeout(() => {
+        const form = document.querySelector('form');
+        if (form) {
+          form.requestSubmit();
+        }
+      }, 100);
+    }
+  };
+
+  const handleEnableBiometric = async () => {
+    const success = await BiometricService.enableBiometric(email, password);
+    if (success) {
+      toast({
+        title: "Biometria ativada! 🎉",
+        description: `${BiometricService.getBiometryTypeName(biometricType)} configurado com sucesso.`,
+      });
+    } else {
+      toast({
+        title: "Erro ao ativar biometria",
+        description: "Não foi possível configurar a autenticação biométrica.",
+        variant: "destructive",
+      });
+    }
+    setShowBiometricPrompt(false);
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -236,15 +324,29 @@ export function AppLogin() {
                     )}
 
                     {/* Submit */}
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-                    >
-                      {isLoading 
-                        ? (isForgotPassword ? 'Enviando...' : 'Aguarde...') 
-                        : (isForgotPassword ? 'Enviar Email de Recuperação' : 'Entrar')}
-                    </Button>
+                    <div className="flex gap-2">
+                      {biometricAvailable && !isForgotPassword && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={handleBiometricLogin}
+                          disabled={isLoading}
+                          className="h-11"
+                        >
+                          <Fingerprint className="h-5 w-5" />
+                        </Button>
+                      )}
+                      <Button
+                        type="submit"
+                        disabled={isLoading}
+                        className="flex-1 h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                      >
+                        {isLoading 
+                          ? (isForgotPassword ? 'Enviando...' : 'Aguarde...') 
+                          : (isForgotPassword ? 'Enviar Email de Recuperação' : 'Entrar')}
+                      </Button>
+                    </div>
                   </form>
 
                   {/* Forgot Password Link */}
@@ -265,6 +367,40 @@ export function AppLogin() {
           </div>
         </div>
       </div>
+
+      {/* Biometric Prompt Dialog */}
+      {showBiometricPrompt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-sm w-full">
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Fingerprint className="h-5 w-5" />
+                  Ativar {BiometricService.getBiometryTypeName(biometricType)}?
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Deseja usar {BiometricService.getBiometryTypeName(biometricType)} para entrar mais rapidamente na próxima vez?
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowBiometricPrompt(false)}
+                >
+                  Agora não
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleEnableBiometric}
+                >
+                  Ativar
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
