@@ -28,12 +28,14 @@ export function SellerNotificationCenter() {
   const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
 
-  // Detectar tamanho da tela e se é app
+  // Detectar se é mobile/app (não apenas tamanho da tela)
   useEffect(() => {
     const checkMobile = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isCapacitor = !!(window as any).Capacitor;
-      setIsMobile(window.innerWidth < 768 || isStandalone || isCapacitor);
+      // Apenas considera mobile se for app ou dispositivo mobile real
+      const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      setIsMobile(isMobileDevice || isStandalone || isCapacitor);
     };
     
     checkMobile();
