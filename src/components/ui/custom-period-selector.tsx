@@ -130,13 +130,13 @@ export const CustomPeriodSelector = ({
   };
 
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium text-foreground">
+    <div className="space-y-1.5">
+      <label className="text-xs sm:text-sm font-medium text-foreground">
         Período
       </label>
       <div className="flex gap-2">
         <Select value={value} onValueChange={handlePresetChange}>
-          <SelectTrigger className="w-full h-11 rounded-xl border-border bg-card text-card-foreground">
+          <SelectTrigger className="w-full h-9 sm:h-10 rounded-lg text-xs sm:text-sm border-border bg-card text-card-foreground">
             <SelectValue className="text-card-foreground" />
           </SelectTrigger>
           <SelectContent>
@@ -157,12 +157,12 @@ export const CustomPeriodSelector = ({
               <Button
                 variant="outline"
                 className={cn(
-                  "h-11 px-3 rounded-xl border-border bg-card text-card-foreground",
+                  "h-9 sm:h-10 px-2 sm:px-3 rounded-lg text-xs sm:text-sm border-border bg-card text-card-foreground",
                   !customRange.from && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="h-4 w-4" />
-                {formatCustomRange(customRange)}
+                <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="ml-1 sm:ml-2">{formatCustomRange(customRange)}</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
