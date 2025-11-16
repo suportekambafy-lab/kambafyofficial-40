@@ -106,8 +106,8 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     }
     
     // Apenas para web browser (não Capacitor)
-    console.log('🌐 [WEB BROWSER] Not Capacitor - Web SDK removed, OneSignal disabled');
-    console.log('⚠️ [WEB BROWSER] Web SDK was removed from index.html to avoid conflicts with native app');
+    console.log('🌐 [WEB BROWSER] Not Capacitor - initializing Web SDK...');
+    initializeWebSDK();
   }, []);
 
   // Inicializar OneSignal Web SDK (para WebView e Web)
