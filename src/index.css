@@ -7,11 +7,19 @@ All colors MUST be HSL.
 */
 
 @layer base {
-  /* Prevenir overflow horizontal */
+  /* Prevenir overflow horizontal GLOBALMENTE */
   html,
-  body {
-    overflow-x: hidden;
-    max-width: 100vw;
+  body,
+  #root,
+  .seller-dashboard {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    position: relative;
+  }
+
+  * {
+    /* Prevenir que elementos individuais causem overflow */
+    max-width: 100%;
   }
 
   :root {

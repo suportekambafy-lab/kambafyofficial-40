@@ -70,10 +70,10 @@ function SellerDashboardContent() {
   const { data: sellerData } = useSellerData();
 
   return (
-    <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
+    <div className={`min-h-screen bg-background flex flex-col seller-dashboard overflow-x-hidden max-w-full ${theme === 'dark' ? 'dark' : ''}`}>
         <CrispChat />
         
-        <div className="flex flex-1">
+        <div className="flex flex-1 overflow-x-hidden max-w-full">
           {/* Backdrop para mobile */}
           {isMobile && sidebarOpen && (
             <div 
@@ -94,7 +94,7 @@ function SellerDashboardContent() {
           {/* Main content container */}
           <div 
             className={`
-              flex-1 flex flex-col
+              flex-1 flex flex-col overflow-x-hidden max-w-full
               ${isMobile ? 'ml-0' : (collapsed ? 'ml-20' : 'ml-80')}
             `}
           >
@@ -106,7 +106,7 @@ function SellerDashboardContent() {
             />
           
           {/* Main content */}
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden max-w-full">
             <Suspense fallback={<SkeletonPage variant="dashboard" />}>
               <Routes>
                 <Route path="/" element={<ModernDashboardHome />} />
