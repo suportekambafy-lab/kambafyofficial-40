@@ -1682,6 +1682,20 @@ export function AppHome() {
             <div className="p-4 space-y-4">
               <h3 className="font-semibold text-sm text-foreground mb-3">Resumo Financeiro</h3>
               
+              {/* Botão Ver como Aluno */}
+              <Button 
+                onClick={() => {
+                  setShowQuickMenu(false);
+                  setActiveTab('my-courses');
+                }}
+                variant="outline"
+                className="w-full dark:text-white dark:border-white/20"
+                size="sm"
+              >
+                <GraduationCap className="h-4 w-4 mr-2" />
+                Ver como Aluno
+              </Button>
+              
               {/* Meta Kamba */}
               <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
                 <div className="mb-2">
@@ -1770,18 +1784,6 @@ export function AppHome() {
                   size="sm"
                 >
                   Financeiro
-                </Button>
-                <Button 
-                  onClick={() => {
-                    setShowQuickMenu(false);
-                    setActiveTab('my-courses');
-                  }}
-                  variant="outline"
-                  className="w-full dark:text-white dark:border-white/20"
-                  size="sm"
-                >
-                  <GraduationCap className="h-4 w-4 mr-2" />
-                  Ver como Aluno
                 </Button>
               </div>
             </div>
