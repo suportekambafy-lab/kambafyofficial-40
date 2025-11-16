@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Capacitor } from '@capacitor/core';
 import { ModernMetricCard } from './ModernMetricCard';
 import { ModernSalesChart } from './ModernSalesChart';
 import { ModernRecentSales } from './ModernRecentSales';
@@ -550,10 +550,16 @@ export function ModernDashboardHome() {
     }
   };
 
+  const isNativeApp = Capacitor.isNativePlatform();
+
   return (
     <>
-      <OnboardingTour tourId="dashboard-tour" />
-      <OnboardingChecklist />
+      {isNativeApp && (
+        <>
+          <OnboardingTour tourId="dashboard-tour" />
+          <OnboardingChecklist />
+        </>
+      )}
       
       <div className="p-4 md:p-6 space-y-6 bg-background min-h-full transition-colors duration-300">
         <AppDownloadBanner />
