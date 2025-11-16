@@ -72,15 +72,15 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   // Sempre mostrar as opções de seleção se não foi selecionado um tipo
   if (!selectedUserType) {
     return (
-      <div className="h-[100dvh] flex flex-col md:flex-row font-geist w-[100dvw]">
+      <div className="min-h-screen flex flex-col md:flex-row font-geist w-full overflow-x-hidden">
         {/* Left column: user type selection */}
-        <section className="flex-1 flex items-center justify-center p-8">
+        <section className="flex-1 flex items-center justify-center p-4 md:p-8">
           <div className="w-full max-w-md">
-            <div className="flex flex-col gap-6">
-              <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">
+            <div className="flex flex-col gap-4 md:gap-6">
+              <h1 className="animate-element animate-delay-100 text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight">
                 <span className="font-light text-foreground tracking-tighter">Bem-vindo ao Kambafy!</span>
               </h1>
-              <p className="animate-element animate-delay-200 text-muted-foreground">
+              <p className="animate-element animate-delay-200 text-sm md:text-base text-muted-foreground">
                 Escolha como deseja acessar sua conta
               </p>
 
@@ -89,12 +89,12 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   onClick={() => onUserTypeSelect?.('customer')}
                   className="animate-element animate-delay-300 w-full p-6 rounded-2xl border-2 border-border hover:border-primary/50 transition-all duration-200 text-left group"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <span className="text-2xl">🛒</span>
+                  <div className="flex items-center space-x-3 md:space-x-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                      <span className="text-xl md:text-2xl">🛒</span>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">Área do Cliente</h3>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base md:text-lg">Área do Cliente</h3>
                       <p className="text-sm text-muted-foreground">Ver meus cursos e produtos com acesso</p>
                     </div>
                   </div>
@@ -158,13 +158,13 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">{title}</h1>
             <p className="animate-element animate-delay-200 text-muted-foreground">{description}</p>
 
-            {error && (
-              <div className="animate-element animate-delay-250 p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                {error}
-              </div>
-            )}
+              {error && (
+                <div className="animate-element animate-delay-250 p-3 md:p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs md:text-sm">
+                  {error}
+                </div>
+              )}
 
-            <form className="space-y-5" onSubmit={onSignIn}>
+              <form className="space-y-4 md:space-y-5" onSubmit={onSignIn}>
               <div className="animate-element animate-delay-300">
                 <label className="text-sm font-medium text-muted-foreground">Endereço de Email</label>
                 <GlassInputWrapper>
