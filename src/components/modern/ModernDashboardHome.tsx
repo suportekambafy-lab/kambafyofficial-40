@@ -474,9 +474,9 @@ export function ModernDashboardHome() {
       </div>
 
       {/* Widgets Estáticos */}
-      <div className="space-y-3 md:space-y-4">
+      <div className="space-y-3 md:space-y-4 w-full max-w-full overflow-x-hidden">
         {/* Revenue Card */}
-        <div data-onboarding="revenue-card">
+        <div data-onboarding="revenue-card" className="w-full max-w-full">
           <ModernMetricCard
             title="Vendas Realizadas"
             value={showValues.revenue ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` : "••••••••"}
@@ -498,7 +498,7 @@ export function ModernDashboardHome() {
         </div>
 
         {/* Sales Card */}
-        <div>
+        <div className="w-full max-w-full">
           <ModernMetricCard
             title="Total de Vendas"
             value={showValues.sales ? `${dashboardData.totalSales}` : "••••"}
@@ -520,17 +520,17 @@ export function ModernDashboardHome() {
         </div>
 
         {/* Chart */}
-        <div>
+        <div className="w-full max-w-full">
           <ModernSalesChart />
         </div>
 
         {/* Recent Sales */}
-        <div>
+        <div className="w-full max-w-full">
           <ModernRecentSales />
         </div>
 
         {/* Achievements */}
-        <div>
+        <div className="w-full max-w-full">
           <ModernKambaAchievements />
         </div>
       </div>

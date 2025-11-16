@@ -142,23 +142,23 @@ export function ModernSalesChart() {
   };
 
   return (
-    <Card className="rounded-2xl shadow-sm">
+    <Card className="rounded-2xl shadow-sm w-full max-w-full overflow-hidden">
       <CardHeader>
-        <CardTitle className="text-lg">Vendas dos Últimos 7 Dias</CardTitle>
+        <CardTitle className="text-base sm:text-lg">Vendas dos Últimos 7 Dias</CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4 overflow-x-hidden">
         {loading ? (
-          <div className="h-64 flex items-center justify-center">
-            <span className="text-muted-foreground">Carregando...</span>
+          <div className="h-48 sm:h-64 flex items-center justify-center">
+            <span className="text-muted-foreground text-sm">Carregando...</span>
           </div>
         ) : (
-          <ChartContainer config={chartConfig} className="h-64 w-full">
-            <BarChart data={chartData} width={600} height={256} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+          <ChartContainer config={chartConfig} className="h-48 sm:h-64 w-full">
+            <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
               <XAxis 
                 dataKey="day" 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 10 }}
               />
               <YAxis hide />
               <ChartTooltip
