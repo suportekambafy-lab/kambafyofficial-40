@@ -20,15 +20,15 @@ export function AppDownloadBanner() {
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-2 w-full">
+        <div className="flex flex-row gap-2 w-full">
           <PlayStoreButton 
             variant="outline"
-            className="w-full text-xs sm:text-sm py-2 shrink-0"
+            className="flex-1 text-xs sm:text-sm py-2 shrink-0"
             onClick={() => window.open('https://play.google.com/store/apps/details?id=com.converta.kambafy', '_blank')}
           />
           <AppStoreButton 
             variant="outline"
-            className="w-full text-xs sm:text-sm py-2 shrink-0"
+            className="flex-1 text-xs sm:text-sm py-2 shrink-0"
             onClick={() => window.open('https://apps.apple.com/pt/app/kambafy/id6752709065', '_blank')}
           />
         </div>
