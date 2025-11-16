@@ -34,6 +34,7 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
 import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
 import { useSalesCache } from '@/hooks/useSalesCache';
+import { useOneSignal } from '@/hooks/useOneSignal';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -45,6 +46,14 @@ export function AppHome() {
   const nativePush = useNativePush({
     onNotificationReceived: (notification) => {
       console.log('Native notification received:', notification);
+    }
+  });
+  const oneSignal = useOneSignal({
+    onNotificationReceived: (notification) => {
+      console.log('OneSignal notification received:', notification);
+    },
+    onNotificationOpened: (notification) => {
+      console.log('OneSignal notification opened:', notification);
     }
   });
   const { triggerHaptic } = useHaptics();
@@ -105,30 +114,45 @@ export function AppHome() {
     triggerHaptic('light');
     
     if (enabled) {
-      const success = await nativePush.requestPermission();
-      
-      if (success) {
-        setPushEnabled(true);
+      try {
+        // Solicitar permissão do OneSignal
+        await oneSignal.requestPermission();
         
-        // Enviar notificação de teste
-        await nativePush.sendLocalNotification(
-          'Notificações Ativadas! 🎉',
-          'Você receberá notificações sobre suas vendas e produtos.'
-        );
-        
-        localStorage.setItem('push_notifications_enabled', 'true');
-        
-        toast({
-          title: "Notificações Ativadas",
-          description: "Você receberá notificações sobre vendas e produtos"
-        });
-        
-        triggerHaptic('success');
-      } else {
+        // Verificar se foi concedida
+        if (oneSignal.permissionGranted) {
+          setPushEnabled(true);
+          
+          // Enviar notificação local de teste
+          await nativePush.sendLocalNotification(
+            'Notificações Ativadas! 🎉',
+            'Você receberá notificações sobre suas vendas e produtos.'
+          );
+          
+          localStorage.setItem('push_notifications_enabled', 'true');
+          
+          toast({
+            title: "Notificações Ativadas",
+            description: "Você receberá notificações sobre vendas e produtos"
+          });
+          
+          triggerHaptic('success');
+          
+          console.log('✅ OneSignal notifications enabled, Player ID:', oneSignal.playerId);
+        } else {
+          setPushEnabled(false);
+          toast({
+            title: "Permissão Negada",
+            description: "Habilite nas configurações do dispositivo",
+            variant: "destructive"
+          });
+          triggerHaptic('error');
+        }
+      } catch (error) {
+        console.error('❌ Error requesting OneSignal permission:', error);
         setPushEnabled(false);
         toast({
-          title: "Permissão Negada",
-          description: "Habilite nas configurações do dispositivo",
+          title: "Erro ao Ativar",
+          description: "Não foi possível ativar as notificações",
           variant: "destructive"
         });
         triggerHaptic('error');
@@ -146,10 +170,14 @@ export function AppHome() {
   useEffect(() => {
     // Verificar se as notificações já estão permitidas ao carregar
     const savedPreference = localStorage.getItem('push_notifications_enabled');
-    if (nativePush.permissionStatus === 'granted' && savedPreference === 'true') {
+    if (oneSignal.permissionGranted && savedPreference === 'true') {
       setPushEnabled(true);
+    } else if (oneSignal.permissionGranted && oneSignal.isInitialized) {
+      // Se OneSignal tem permissão mas localStorage não está setado, atualizar
+      setPushEnabled(true);
+      localStorage.setItem('push_notifications_enabled', 'true');
     }
-  }, [nativePush.permissionStatus]);
+  }, [oneSignal.permissionGranted, oneSignal.isInitialized]);
 
   // Auto-refresh quando app volta ao foreground
   useEffect(() => {
