@@ -345,7 +345,7 @@ export default function Products() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6 overflow-x-hidden">
         <div className="flex justify-center items-center min-h-[400px]">
           <LoadingSpinner text="Carregando produtos..." />
         </div>
@@ -354,7 +354,7 @@ export default function Products() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
       {showProductForm ? (
         <StepperProductForm
           editingProduct={selectedProduct}

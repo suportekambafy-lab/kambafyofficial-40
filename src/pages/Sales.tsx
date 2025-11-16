@@ -336,7 +336,7 @@ export default function Sales() {
   return <OptimizedPageWrapper skeletonVariant="list">
       {loading ? <div className="p-3 md:p-6 flex items-center justify-center min-h-96">
           <LoadingSpinner text="Carregando vendas..." />
-        </div> : <div className="p-3 md:p-6 space-y-4 md:space-y-6">
+        </div> : <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
       {/* Header com total de vendas */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>

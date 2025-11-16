@@ -278,7 +278,7 @@ export default function UserSettings() {
 
   return (
     <ProtectedRoute>
-      <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-6xl mx-auto">
+      <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-6xl mx-auto overflow-x-hidden">
         <div className="space-y-2">
           <h1 className="text-xl md:text-2xl font-bold text-foreground">Configurações da Conta</h1>
           <p className="text-sm md:text-base text-muted-foreground">Gerencie suas informações pessoais e configurações</p>
