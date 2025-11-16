@@ -337,50 +337,50 @@ export function ModernRecentSales() {
   };
 
   return (
-    <Card className="rounded-2xl shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-lg">Vendas Recentes</CardTitle>
+    <Card className="rounded-2xl shadow-sm w-full max-w-full overflow-hidden">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base sm:text-lg">Vendas Recentes</CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4 overflow-x-hidden">
         {loading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center space-x-4">
-                <div className="h-10 w-10 bg-muted rounded-full animate-pulse"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded animate-pulse"></div>
-                  <div className="h-3 bg-muted rounded w-3/4 animate-pulse"></div>
+              <div key={i} className="flex items-center space-x-3 sm:space-x-4">
+                <div className="h-8 w-8 sm:h-10 sm:w-10 bg-muted rounded-full animate-pulse shrink-0"></div>
+                <div className="flex-1 space-y-2 min-w-0">
+                  <div className="h-3 sm:h-4 bg-muted rounded animate-pulse"></div>
+                  <div className="h-2 sm:h-3 bg-muted rounded w-3/4 animate-pulse"></div>
                 </div>
               </div>
             ))}
           </div>
         ) : recentSales.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            <p>Nenhuma venda recente</p>
+          <div className="text-center text-muted-foreground py-6 sm:py-8">
+            <p className="text-sm">Nenhuma venda recente</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {recentSales.map((sale, index) => (
-              <div key={sale.id} className="flex items-center justify-between py-3">
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium text-foreground">
+              <div key={sale.id} className="flex items-center justify-between py-2 sm:py-3 gap-2 min-w-0">
+                <div className="flex flex-col gap-0.5 sm:gap-1 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-foreground truncate">
                     {sale.product_name || 'Produto'}
                   </p>
-                   <p className="text-xs text-muted-foreground">
+                   <p className="text-[10px] sm:text-xs text-muted-foreground">
                      #{(totalSalesCount - index + 1000).toString().padStart(4, '0')}
                    </p>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-foreground">
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <div className="text-right min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-foreground">
                       {formatAmount(sale).main}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[100px] sm:max-w-none">
                       {formatDistanceToNow(new Date(sale.created_at), { addSuffix: true, locale: ptBR })}
                     </p>
                   </div>
-                  <span className="text-2xl">{sale.country_flag}</span>
+                  <span className="text-xl sm:text-2xl">{sale.country_flag}</span>
                 </div>
               </div>
             ))}

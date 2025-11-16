@@ -86,38 +86,39 @@ export function ModernKambaAchievements() {
     }
   };
   return <>
-      <Card className="bg-card shadow-sm border border-border">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" />
-              Conquistas Kamba
+      <Card className="bg-card shadow-sm border border-border w-full max-w-full overflow-hidden">
+        <CardHeader className="pb-3 sm:pb-4">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 shrink-0" />
+              <span className="truncate">Conquistas Kamba</span>
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setShowModal(true)} className="text-xs">
-              <Eye className="w-4 h-4 mr-1" />
-              Ver todas
+            <Button variant="outline" size="sm" onClick={() => setShowModal(true)} className="text-[10px] sm:text-xs shrink-0 h-7 sm:h-8 px-2 sm:px-3">
+              <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
+              <span className="hidden sm:inline">Ver todas</span>
+              <span className="sm:hidden">Ver</span>
             </Button>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 sm:space-y-4 overflow-x-hidden">
           {/* Nível atual */}
           
 
           {/* Progresso para próximo nível */}
           {nextLevel && <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <span className="text-muted-foreground truncate">
                   Progresso para {nextLevel.name}
                 </span>
-                <span className="font-medium text-foreground">
+                <span className="font-medium text-foreground shrink-0 ml-2">
                   {progress.toFixed(0)}%
                 </span>
               </div>
-              <Progress value={progress} className="h-2" style={{
+              <Progress value={progress} className="h-1.5 sm:h-2" style={{
             '--progress-background': nextLevel.color
           } as React.CSSProperties} />
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="flex justify-between text-[10px] sm:text-xs text-muted-foreground">
                 <span>{formatCurrency(totalRevenue)}</span>
                 <span>{formatCurrency(nextLevel.threshold)}</span>
               </div>
@@ -125,11 +126,11 @@ export function ModernKambaAchievements() {
 
           {/* Níveis conquistados */}
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">
+            <p className="text-xs sm:text-sm font-medium text-foreground">
               Selos Conquistados ({achievedLevels.length}/{allLevels.length})
             </p>
             <TooltipProvider>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                 {allLevels.map(level => {
                 const isAchieved = totalRevenue >= level.threshold;
                 return <Tooltip key={level.id}>
@@ -138,7 +139,7 @@ export function ModernKambaAchievements() {
                           <img 
                             src={level.badge} 
                             alt={level.name} 
-                            className="w-12 h-12 rounded-lg" 
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg" 
                             onClick={(e) => {
                               // Force tooltip to show on mobile tap
                               e.preventDefault();
@@ -149,7 +150,7 @@ export function ModernKambaAchievements() {
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="z-50">
-                        <p>{level.name} - {formatCurrency(level.threshold)}</p>
+                        <p className="text-xs">{level.name} - {formatCurrency(level.threshold)}</p>
                       </TooltipContent>
                     </Tooltip>;
               })}
