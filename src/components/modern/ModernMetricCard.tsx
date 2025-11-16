@@ -23,14 +23,14 @@ export function ModernMetricCard({
 }: ModernMetricCardProps) {
   return (
     <div className={cn(
-      "bg-card rounded-lg p-3 shadow-sm border border-primary/20",
+      "bg-card rounded-lg p-3 shadow-sm border border-primary/20 w-full max-w-full overflow-hidden",
       className
     )}>
-      <div className="flex items-center justify-between mb-1.5">
-        <p className="text-muted-foreground text-xs">
+      <div className="flex items-center justify-between mb-1.5 min-w-0">
+        <p className="text-muted-foreground text-xs truncate">
           {title}
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {trend && (
             <div className={cn(
               "flex items-center gap-1 text-xs font-medium",
@@ -43,8 +43,8 @@ export function ModernMetricCard({
         </div>
       </div>
       
-      <div className="relative">
-        <h3 className="text-lg font-bold text-foreground">
+      <div className="relative min-w-0">
+        <h3 className="text-lg font-bold text-foreground truncate">
           {value}
         </h3>
         

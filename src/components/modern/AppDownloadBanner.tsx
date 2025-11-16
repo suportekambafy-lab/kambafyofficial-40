@@ -4,31 +4,31 @@ import { Smartphone } from "lucide-react";
 
 export function AppDownloadBanner() {
   return (
-    <div className="w-full bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-lg p-4 sm:p-6 border border-border/50 mb-4 sm:mb-6">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-full bg-primary/10">
-            <Smartphone className="h-6 w-6 text-primary" />
+    <div className="w-full max-w-full bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-lg p-3 sm:p-6 border border-border/50 mb-4 sm:mb-6 overflow-hidden">
+      <div className="flex flex-col items-start gap-3 sm:gap-4">
+        <div className="flex items-center gap-3 w-full">
+          <div className="p-2 sm:p-3 rounded-full bg-primary/10 shrink-0">
+            <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
               Baixe nosso App
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               Gerencie seu negócio de qualquer lugar
             </p>
           </div>
         </div>
         
-        <div className="flex flex-row gap-2 sm:gap-3 w-full">
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
           <PlayStoreButton 
             variant="outline"
-            className="flex-1 text-xs sm:text-sm"
+            className="w-full text-xs sm:text-sm shrink-0"
             onClick={() => window.open('https://play.google.com/store/apps/details?id=com.converta.kambafy', '_blank')}
           />
           <AppStoreButton 
             variant="outline"
-            className="flex-1 text-xs sm:text-sm"
+            className="w-full text-xs sm:text-sm shrink-0"
             onClick={() => window.open('https://apps.apple.com/pt/app/kambafy/id6752709065', '_blank')}
           />
         </div>

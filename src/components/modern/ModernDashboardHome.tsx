@@ -438,7 +438,7 @@ export function ModernDashboardHome() {
         </>
       )}
       
-      <div className="p-4 md:p-6 space-y-6 bg-background min-h-full transition-colors duration-300">
+      <div className="p-4 md:p-6 space-y-6 bg-background min-h-full transition-colors duration-300 max-w-full overflow-x-hidden">
         <AppDownloadBanner />
         
         <div className="mb-6 md:mb-8" data-onboarding="dashboard-header">
@@ -453,14 +453,16 @@ export function ModernDashboardHome() {
         </div>
 
       {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <CustomPeriodSelector
-          value={timeFilter}
-          onValueChange={setTimeFilter}
-          onCustomRangeChange={setCustomDateRange}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 max-w-full">
+        <div className="w-full min-w-0">
+          <CustomPeriodSelector
+            value={timeFilter}
+            onValueChange={setTimeFilter}
+            onCustomRangeChange={setCustomDateRange}
+          />
+        </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 w-full min-w-0">
           <label className="text-sm font-medium text-foreground">
             Produto
           </label>
