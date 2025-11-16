@@ -177,8 +177,8 @@ export function SellerNotificationCenter() {
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 z-50">
-          <Card className="w-96 shadow-lg">
+        <div className="absolute right-0 top-full mt-2 z-50 max-w-[calc(100vw-2rem)]">
+          <Card className="w-full sm:w-96 min-w-[320px] shadow-lg bg-card">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Notificações</CardTitle>
