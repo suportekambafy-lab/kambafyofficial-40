@@ -28,6 +28,8 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useNativeCamera } from '@/hooks/useNativeCamera';
 import { useAppState } from '@/hooks/useAppState';
 import { UnifiedMembersAuthProvider, useUnifiedMembersAuth } from '@/components/members/UnifiedMembersAuth';
+import { AppCourses } from '@/components/app/AppCourses';
+import { AppCourseViewer } from '@/components/app/AppCourseViewer';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
 import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
@@ -51,6 +53,7 @@ export function AppHome() {
   const { isOnline } = useNetworkStatus();
   
   const [activeTab, setActiveTab] = useState('home');
+  const [selectedCourse, setSelectedCourse] = useState<{ id: string; name: string } | null>(null);
   const [stats, setStats] = useState({
     totalSales: 0,
     totalRevenue: 0,
@@ -1136,38 +1139,10 @@ export function AppHome() {
           </div>
         );
       
-      case 'courses':
-        return (
-          <div className="p-4 space-y-4">
-            <h2 className="text-xl font-bold px-2 text-foreground">Meus Cursos</h2>
-            
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-6 text-center">
-                <div className="space-y-4">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto">
-                    <GraduationCap className="h-8 w-8 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-base mb-2 text-foreground">Acesse seus Cursos</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Visualize e continue seus cursos onde parou
-                    </p>
-                  </div>
-                  <Button 
-                    onClick={() => window.location.href = '/hub'}
-                    className="w-full"
-                  >
-                    <GraduationCap className="h-4 w-4 mr-2" />
-                    Ver Meus Cursos
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    💡 Você será redirecionado para a área de cursos
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+      case 'my-courses':
+        return <AppCourses onCourseSelect={(courseId, courseName) => {
+          setSelectedCourse({ id: courseId, name: courseName });
+        }} />;
       
       case 'profile':
         return (
@@ -1621,6 +1596,31 @@ export function AppHome() {
             {/* Sales Chart */}
             <ModernSalesChart />
 
+            {/* My Courses Card */}
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <GraduationCap className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-base text-foreground">Meus Cursos</h3>
+                      <p className="text-xs text-muted-foreground">Continue seus estudos</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <Button 
+                  onClick={() => setActiveTab('my-courses')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Ver Cursos Comprados
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Info Card */}
             <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-primary/5">
               <CardContent className="p-5">
@@ -1856,15 +1856,6 @@ export function AppHome() {
               >
                 <Package className={`h-5 w-5 ${activeTab === 'products' ? 'text-primary' : 'text-foreground'}`} />
               </button>
-              
-              <button
-                onClick={() => setActiveTab('courses')}
-                className={`p-2.5 rounded-full transition-colors ${
-                  activeTab === 'courses' ? 'bg-primary/10' : 'hover:bg-accent'
-                }`}
-              >
-                <GraduationCap className={`h-5 w-5 ${activeTab === 'courses' ? 'text-primary' : 'text-foreground'}`} />
-              </button>
             </div>
 
             {/* Profile Button */}
@@ -1902,6 +1893,15 @@ export function AppHome() {
           });
         }}
       />
+
+      {/* Course Viewer */}
+      {selectedCourse && (
+        <AppCourseViewer
+          courseId={selectedCourse.id}
+          courseName={selectedCourse.name}
+          onClose={() => setSelectedCourse(null)}
+        />
+      )}
       </div>
     </div>
   );
