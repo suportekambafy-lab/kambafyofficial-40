@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 
 interface SellerNotification {
   id: string;
@@ -24,7 +25,20 @@ export function SellerNotificationCenter() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
+
+  // Detectar tamanho da tela
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const fetchNotifications = async () => {
     try {
@@ -157,6 +171,64 @@ export function SellerNotificationCenter() {
     return `${Math.floor(diffInMinutes / 1440)}d`;
   };
 
+  // Conteúdo das notificações (reutilizado no Card e no Drawer)
+  const notificationContent = (
+    <>
+      {loading ? (
+        <div className="p-4 text-center text-muted-foreground">
+          Carregando notificações...
+        </div>
+      ) : notifications.length === 0 ? (
+        <div className="p-4 text-center text-muted-foreground">
+          Nenhuma notificação
+        </div>
+      ) : (
+        <ScrollArea className="h-96">
+          <div className="space-y-1">
+            {notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-3 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors ${
+                  !notification.read ? 'bg-muted border-l-4 border-l-accent' : ''
+                }`}
+                onClick={() => !notification.read && markAsRead(notification.id)}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-lg flex-shrink-0">
+                    {getNotificationIcon(notification.type)}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-sm truncate">
+                        {notification.title}
+                      </p>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDate(notification.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {notification.message}
+                    </p>
+                    {notification.amount && (
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {formatAmount(notification.amount, notification.currency || 'KZ')}
+                      </p>
+                    )}
+                    {notification.order_id && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Pedido: #{notification.order_id}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      )}
+    </>
+  );
+
   return (
     <div className="relative">
       <Button
@@ -176,7 +248,8 @@ export function SellerNotificationCenter() {
         )}
       </Button>
 
-      {isOpen && (
+      {/* Desktop: Dropdown Card */}
+      {!isMobile && isOpen && (
         <div className="absolute right-0 top-full mt-2 z-50 max-w-[calc(100vw-2rem)]">
           <Card className="w-full sm:w-96 min-w-[320px] shadow-lg bg-card">
             <CardHeader className="pb-3">
@@ -205,62 +278,38 @@ export function SellerNotificationCenter() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              {loading ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  Carregando notificações...
-                </div>
-              ) : notifications.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  Nenhuma notificação
-                </div>
-              ) : (
-                <ScrollArea className="h-96">
-                  <div className="space-y-1">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-3 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors ${
-                          !notification.read ? 'bg-muted border-l-4 border-l-accent' : ''
-                        }`}
-                        onClick={() => !notification.read && markAsRead(notification.id)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="text-lg flex-shrink-0">
-                            {getNotificationIcon(notification.type)}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className="font-medium text-sm truncate">
-                                {notification.title}
-                              </p>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDate(notification.created_at)}
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground line-clamp-2">
-                              {notification.message}
-                            </p>
-                            {notification.amount && (
-                              <p className="text-sm font-medium text-foreground mt-1">
-                                {formatAmount(notification.amount, notification.currency || 'KZ')}
-                              </p>
-                            )}
-                            {notification.order_id && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Pedido: #{notification.order_id}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
+              {notificationContent}
             </CardContent>
           </Card>
         </div>
       )}
+
+      {/* Mobile: Drawer Full Screen */}
+      <Drawer open={isMobile && isOpen} onOpenChange={setIsOpen}>
+        <DrawerContent className="h-[85vh]">
+          <DrawerHeader>
+            <div className="flex items-center justify-between">
+              <DrawerTitle>Notificações</DrawerTitle>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={markAllAsRead}
+                    className="text-xs"
+                  >
+                    <Check className="h-3 w-3 mr-1" />
+                    Marcar todas
+                  </Button>
+                )}
+              </div>
+            </div>
+          </DrawerHeader>
+          <div className="px-4 pb-4 overflow-hidden">
+            {notificationContent}
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
