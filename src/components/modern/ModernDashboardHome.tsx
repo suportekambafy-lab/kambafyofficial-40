@@ -9,34 +9,14 @@ import { ModernKambaAchievements } from './ModernKambaAchievements';
 import { AppDownloadBanner } from './AppDownloadBanner';
 import { ProductFilter } from '@/components/ProductFilter';
 import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-period-selector';
-import { QuickFilters } from '@/components/dashboard/QuickFilters';
-import { DraggableWidget } from '@/components/dashboard/DraggableWidget';
-import { WidgetCustomizer } from '@/components/dashboard/WidgetCustomizer';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { OnboardingTrigger } from '@/components/onboarding/OnboardingTrigger';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
-import { useDashboardPreferences } from '@/hooks/useDashboardPreferences';
-import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { DollarSign, ShoppingBag, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { countTotalSales } from '@/utils/orderUtils';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
 
 interface Order {
   id: string;
@@ -54,9 +34,7 @@ interface Order {
 
 export function ModernDashboardHome() {
   const { user } = useAuth();
-  const { preferences, updateWidgetVisibility, reorderWidgets, resetPreferences, savePreferences } = useDashboardPreferences();
-  const { completeTask } = useOnboardingProgress();
-  const [timeFilter, setTimeFilter] = useState(preferences.quickFilter || '7days');
+  const [timeFilter, setTimeFilter] = useState('7days');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedProduct, setSelectedProduct] = useState('todos');
   const [allOrders, setAllOrders] = useState<Order[]>([]);
@@ -65,24 +43,6 @@ export function ModernDashboardHome() {
     revenue: true,
     sales: true,
   });
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  // Complete onboarding task when dashboard is viewed
-  useEffect(() => {
-    if (user) {
-      completeTask('view-dashboard');
-    }
-  }, [user]);
 
   // Load all orders (own sales + affiliate commissions + module payments)
   const loadAllOrders = useCallback(async () => {
@@ -413,13 +373,6 @@ export function ModernDashboardHome() {
     };
   }, [filteredOrders, previousPeriodData]);
 
-  // Update quick filter preference when it changes
-  useEffect(() => {
-    if (timeFilter !== preferences.quickFilter) {
-      savePreferences({ quickFilter: timeFilter });
-    }
-  }, [timeFilter, preferences.quickFilter, savePreferences]);
-
   useEffect(() => {
     if (user) {
       loadAllOrders();
@@ -474,82 +427,6 @@ export function ModernDashboardHome() {
     return change >= 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = preferences.widgets.findIndex((w) => w.id === active.id);
-      const newIndex = preferences.widgets.findIndex((w) => w.id === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newWidgets = arrayMove(preferences.widgets, oldIndex, newIndex);
-        reorderWidgets(newWidgets);
-        completeTask('customize-dashboard');
-      }
-    }
-  };
-
-  const visibleWidgets = useMemo(() => {
-    return preferences.widgets
-      .filter(w => w.visible)
-      .sort((a, b) => a.order - b.order);
-  }, [preferences.widgets]);
-
-  const getWidgetContent = (widgetId: string) => {
-    switch (widgetId) {
-      case 'revenue':
-        return (
-          <ModernMetricCard
-            title="Vendas Realizadas"
-            value={showValues.revenue ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` : "••••••••"}
-            icon={<DollarSign className="w-5 h-5" />}
-            trend={calculateTrend(dashboardData.totalRevenue, dashboardData.previousRevenue)}
-            trendUp={dashboardData.totalRevenue >= dashboardData.previousRevenue}
-            className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow duration-200"
-            action={
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowValues(prev => ({ ...prev, revenue: !prev.revenue }))}
-                className="h-8 w-8 p-0"
-              >
-                {showValues.revenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </Button>
-            }
-          />
-        );
-      case 'sales':
-        return (
-          <ModernMetricCard
-            title="Total de Vendas"
-            value={showValues.sales ? `${dashboardData.totalSales}` : "••••"}
-            icon={<ShoppingBag className="w-5 h-5" />}
-            trend={calculateTrend(dashboardData.totalSales, dashboardData.previousSales)}
-            trendUp={dashboardData.totalSales >= dashboardData.previousSales}
-            className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow duration-200"
-            action={
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowValues(prev => ({ ...prev, sales: !prev.sales }))}
-                className="h-8 w-8 p-0"
-              >
-                {showValues.sales ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </Button>
-            }
-          />
-        );
-      case 'chart':
-        return <ModernSalesChart />;
-      case 'recent':
-        return <ModernRecentSales />;
-      case 'achievements':
-        return <ModernKambaAchievements />;
-      default:
-        return null;
-    }
-  };
-
   const isNativeApp = Capacitor.isNativePlatform();
 
   return (
@@ -594,34 +471,67 @@ export function ModernDashboardHome() {
         </div>
       </div>
 
-      {/* Widgets Personalizáveis com Drag & Drop */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={visibleWidgets.map(w => w.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="space-y-4">
-            {visibleWidgets.map((widget, index) => (
-              <div 
-                key={widget.id}
-                data-onboarding={index === 0 ? 'revenue-card' : index === 1 ? 'draggable-widget' : undefined}
+      {/* Widgets Estáticos */}
+      <div className="space-y-4">
+        {/* Revenue Card */}
+        <div data-onboarding="revenue-card">
+          <ModernMetricCard
+            title="Vendas Realizadas"
+            value={showValues.revenue ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` : "••••••••"}
+            icon={<DollarSign className="w-5 h-5" />}
+            trend={calculateTrend(dashboardData.totalRevenue, dashboardData.previousRevenue)}
+            trendUp={dashboardData.totalRevenue >= dashboardData.previousRevenue}
+            className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow duration-200"
+            action={
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowValues(prev => ({ ...prev, revenue: !prev.revenue }))}
+                className="h-8 w-8 p-0"
               >
-                <DraggableWidget
-                  id={widget.id}
-                  visible={widget.visible}
-                  onToggleVisibility={() => updateWidgetVisibility(widget.id, !widget.visible)}
-                >
-                  {getWidgetContent(widget.id)}
-                </DraggableWidget>
-              </div>
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+                {showValues.revenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </Button>
+            }
+          />
+        </div>
+
+        {/* Sales Card */}
+        <div>
+          <ModernMetricCard
+            title="Total de Vendas"
+            value={showValues.sales ? `${dashboardData.totalSales}` : "••••"}
+            icon={<ShoppingBag className="w-5 h-5" />}
+            trend={calculateTrend(dashboardData.totalSales, dashboardData.previousSales)}
+            trendUp={dashboardData.totalSales >= dashboardData.previousSales}
+            className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow duration-200"
+            action={
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowValues(prev => ({ ...prev, sales: !prev.sales }))}
+                className="h-8 w-8 p-0"
+              >
+                {showValues.sales ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </Button>
+            }
+          />
+        </div>
+
+        {/* Chart */}
+        <div>
+          <ModernSalesChart />
+        </div>
+
+        {/* Recent Sales */}
+        <div>
+          <ModernRecentSales />
+        </div>
+
+        {/* Achievements */}
+        <div>
+          <ModernKambaAchievements />
+        </div>
+      </div>
       </div>
     </>
   );
