@@ -36,6 +36,8 @@ export function AvatarDrawer({
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  console.log('AvatarDrawer render - isOpen:', isOpen, 'isMobile:', isMobile);
+
   const handleSignOut = async () => {
     try {
       await signOut();
