@@ -12,6 +12,8 @@ import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-per
 import { QuickFilters } from '@/components/dashboard/QuickFilters';
 import { DraggableWidget } from '@/components/dashboard/DraggableWidget';
 import { WidgetCustomizer } from '@/components/dashboard/WidgetCustomizer';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
+import { OnboardingTrigger } from '@/components/onboarding/OnboardingTrigger';
 import { useDashboardPreferences } from '@/hooks/useDashboardPreferences';
 import { DollarSign, ShoppingBag, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -538,29 +540,41 @@ export function ModernDashboardHome() {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 bg-background min-h-full transition-colors duration-300">
-      <AppDownloadBanner />
+    <>
+      <OnboardingTour tourId="dashboard-tour" />
       
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Dashboard
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
-          Acompanhe o desempenho do seu negócio
-        </p>
-      </div>
+      <div className="p-4 md:p-6 space-y-6 bg-background min-h-full transition-colors duration-300">
+        <AppDownloadBanner />
+        
+        <div className="mb-6 md:mb-8" data-onboarding="dashboard-header">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Dashboard
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
+                Acompanhe o desempenho do seu negócio
+              </p>
+            </div>
+            <OnboardingTrigger />
+          </div>
+        </div>
 
       {/* Quick Filters e Customização */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-4">
-        <QuickFilters
-          activeFilter={timeFilter}
-          onFilterChange={setTimeFilter}
-        />
-        <WidgetCustomizer
-          widgets={preferences.widgets}
-          onToggleWidget={updateWidgetVisibility}
-          onReset={resetPreferences}
-        />
+        <div data-onboarding="quick-filters">
+          <QuickFilters
+            activeFilter={timeFilter}
+            onFilterChange={setTimeFilter}
+          />
+        </div>
+        <div data-onboarding="widget-customizer">
+          <WidgetCustomizer
+            widgets={preferences.widgets}
+            onToggleWidget={updateWidgetVisibility}
+            onReset={resetPreferences}
+          />
+        </div>
       </div>
 
       {/* Filtros */}
@@ -593,19 +607,24 @@ export function ModernDashboardHome() {
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-4">
-            {visibleWidgets.map((widget) => (
-              <DraggableWidget
+            {visibleWidgets.map((widget, index) => (
+              <div 
                 key={widget.id}
-                id={widget.id}
-                visible={widget.visible}
-                onToggleVisibility={() => updateWidgetVisibility(widget.id, !widget.visible)}
+                data-onboarding={index === 0 ? 'revenue-card' : index === 1 ? 'draggable-widget' : undefined}
               >
-                {getWidgetContent(widget.id)}
-              </DraggableWidget>
+                <DraggableWidget
+                  id={widget.id}
+                  visible={widget.visible}
+                  onToggleVisibility={() => updateWidgetVisibility(widget.id, !widget.visible)}
+                >
+                  {getWidgetContent(widget.id)}
+                </DraggableWidget>
+              </div>
             ))}
           </div>
         </SortableContext>
       </DndContext>
-    </div>
+      </div>
+    </>
   );
 }
