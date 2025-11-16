@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 interface SidebarContextType {
   collapsed: boolean;
@@ -21,7 +22,13 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkIsMobile = () => {
-      const mobile = window.innerWidth < 768;
+      // Detectar se é realmente um dispositivo móvel ou app
+      const isCapacitor = Capacitor.isNativePlatform();
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      // Considera mobile se for Capacitor, PWA, dispositivo móvel OU tela pequena
+      const mobile = isCapacitor || isStandalone || isMobileDevice || window.innerWidth < 768;
       setIsMobile(mobile);
       
       if (mobile) {

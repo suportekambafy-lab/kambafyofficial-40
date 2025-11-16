@@ -455,7 +455,10 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
               <Button 
                 variant="ghost" 
                 className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200"
-                onClick={() => setAvatarDrawerOpen(true)}
+                onClick={() => {
+                  console.log('Avatar clicked - opening drawer');
+                  setAvatarDrawerOpen(true);
+                }}
               >
                 <Avatar className="h-8 w-8 ring-2 ring-border">
                   <AvatarImage 
