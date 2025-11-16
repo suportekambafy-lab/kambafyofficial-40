@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff, GraduationCap } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -27,6 +27,7 @@ import { useNativePush } from '@/hooks/useNativePush';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useNativeCamera } from '@/hooks/useNativeCamera';
 import { useAppState } from '@/hooks/useAppState';
+import { UnifiedMembersAuthProvider, useUnifiedMembersAuth } from '@/components/members/UnifiedMembersAuth';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
 import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
@@ -1135,6 +1136,39 @@ export function AppHome() {
           </div>
         );
       
+      case 'courses':
+        return (
+          <div className="p-4 space-y-4">
+            <h2 className="text-xl font-bold px-2 text-foreground">Meus Cursos</h2>
+            
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+              <CardContent className="p-6 text-center">
+                <div className="space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto">
+                    <GraduationCap className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-base mb-2 text-foreground">Acesse seus Cursos</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Visualize e continue seus cursos onde parou
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => window.location.href = '/hub'}
+                    className="w-full"
+                  >
+                    <GraduationCap className="h-4 w-4 mr-2" />
+                    Ver Meus Cursos
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    💡 Você será redirecionado para a área de cursos
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      
       case 'profile':
         return (
           <div className="p-4 space-y-4">
@@ -1821,6 +1855,15 @@ export function AppHome() {
                 }`}
               >
                 <Package className={`h-5 w-5 ${activeTab === 'products' ? 'text-primary' : 'text-foreground'}`} />
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('courses')}
+                className={`p-2.5 rounded-full transition-colors ${
+                  activeTab === 'courses' ? 'bg-primary/10' : 'hover:bg-accent'
+                }`}
+              >
+                <GraduationCap className={`h-5 w-5 ${activeTab === 'courses' ? 'text-primary' : 'text-foreground'}`} />
               </button>
             </div>
 
