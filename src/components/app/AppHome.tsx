@@ -31,7 +31,6 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
 import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
 import { useSalesCache } from '@/hooks/useSalesCache';
-import { TestSaleNotification } from '@/components/TestSaleNotification';
 
 export function AppHome() {
   const { user, signOut } = useAuth();
@@ -1846,9 +1845,6 @@ export function AppHome() {
           </div>
         </div>
       </nav>
-
-      {/* Test Sale Notification Button - Only for victormuabi20@gmail.com */}
-      <TestSaleNotification products={products} />
 
       {/* Withdrawal Modal */}
       <WithdrawalModal
