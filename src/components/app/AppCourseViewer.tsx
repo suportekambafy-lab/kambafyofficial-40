@@ -104,23 +104,25 @@ export function AppCourseViewer({ courseId, courseName, onClose }: AppCourseView
   }
   
   return (
-    <div className="fixed inset-0 z-[100] bg-background">
+    <div className="fixed inset-0 z-[100] bg-background overflow-hidden">
       {/* Header com botão de fechar */}
-      <div className="absolute top-4 right-4 z-50">
+      <div className="absolute top-4 right-4 z-[110]">
         <Button
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="bg-background/80 backdrop-blur-sm"
+          className="bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background"
         >
           <X className="h-5 w-5" />
         </Button>
       </div>
 
-      {/* Área de membros embutida */}
-      <ModernMembersAuthProvider memberAreaId={courseId}>
-        <ModernMembersArea memberAreaId={courseId} />
-      </ModernMembersAuthProvider>
+      {/* Área de membros embutida com scroll */}
+      <div className="h-full w-full overflow-y-auto">
+        <ModernMembersAuthProvider memberAreaId={courseId}>
+          <ModernMembersArea memberAreaId={courseId} />
+        </ModernMembersAuthProvider>
+      </div>
     </div>
   );
 }
