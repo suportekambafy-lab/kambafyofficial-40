@@ -164,14 +164,14 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
     const isVerified = urlParams.get('verified') === 'true';
     const emailParam = urlParams.get('email');
     
-    // ✅ CRÍTICO: Se tem verified=true na URL, NUNCA redirecionar
+    // ✅ CRÍTICO: Se tem verified=true na URL OU está embutido no app, NUNCA redirecionar
     // Esperar o ModernMembersAuth processar e criar a sessão virtual
-    if (isVerified && emailParam) {
-      console.log('🔑 Acesso verificado via query params - aguardando criação de sessão');
+    if ((isVerified && emailParam) || isEmbeddedInApp) {
+      console.log('🔑 Acesso verificado via query params ou app embutido - aguardando criação de sessão');
       return; // Não fazer NADA, deixar o auth processar
     }
     
-    // Só redirecionar se NÃO for acesso verificado E não estiver autenticado
+    // Só redirecionar se NÃO for acesso verificado E não estiver autenticado E não estiver embutido no app
     if (!authLoading && !isAuthenticated) {
       console.log('🔄 ModernMembersArea: Navegando para login - não autenticado e sem verificação', {
         authLoading,
@@ -180,12 +180,16 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
         emailParam,
         hasSession: !!session
       });
-      navigate(`/login/${memberAreaId}`);
+      
+      // Só navegar se não estiver embutido no app
+      if (!isEmbeddedInApp) {
+        navigate(`/login/${memberAreaId}`);
+      }
       return;
     }
     
     console.log('ℹ️ ModernMembersArea: Usuário autenticado, carregando área');
-  }, [authLoading, isAuthenticated, memberAreaId]);
+  }, [authLoading, isAuthenticated, memberAreaId, isEmbeddedInApp, navigate]);
 
   // Carregar conteúdo da área independente de loading - sempre mostrar o que tem
   useEffect(() => {
@@ -330,9 +334,15 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
   }, [selectedLesson, isMobile]);
   const handleLogout = () => {
     logout();
-    // Navegar para login da área de membros
-    console.log('🔄 Logout: Navegando para login da área:', memberAreaId);
-    navigate(`/login/${memberAreaId}`);
+    
+    // Se está embutido no app, não navegar - o app vai lidar com isso
+    if (!isEmbeddedInApp) {
+      // Navegar para login da área de membros
+      console.log('🔄 Logout: Navegando para login da área:', memberAreaId);
+      navigate(`/login/${memberAreaId}`);
+    } else {
+      console.log('🔄 Logout: Modo app - não navegar');
+    }
   };
   const handleLessonClick = async (lesson: Lesson) => {
     if (!isLessonAccessible(lesson)) {
