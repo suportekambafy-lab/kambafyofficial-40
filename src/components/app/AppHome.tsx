@@ -953,7 +953,6 @@ export function AppHome() {
                       <p className="font-semibold text-base text-foreground truncate">
                         {editingProfile.full_name || user?.email}
                       </p>
-                      {currentLevel && <span className="text-sm">{currentLevel.emoji}</span>}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {currentLevel ? `${currentLevel.name}` : 'Vendedor Kambafy'}
