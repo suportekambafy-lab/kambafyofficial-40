@@ -147,14 +147,35 @@ export function AppHome() {
   const monthlyGoal = nextLevel?.threshold || 1000000; // Meta dinâmica baseada no próximo nível
   const goalProgress = kambaProgress;
   const handlePushToggle = async (enabled: boolean) => {
+    console.log('🔔 [handlePushToggle] Called with enabled:', enabled);
+    console.log('🔔 [handlePushToggle] OneSignal state:', {
+      isInitialized: oneSignal.isInitialized,
+      permissionGranted: oneSignal.permissionGranted,
+      playerId: oneSignal.playerId
+    });
+    
     triggerHaptic('light');
     if (enabled) {
       try {
-        // Solicitar permissão do OneSignal
-        await oneSignal.requestPermission();
+        // Verificar se OneSignal está inicializado
+        if (!oneSignal.isInitialized) {
+          console.error('❌ [handlePushToggle] OneSignal não inicializado');
+          setPushEnabled(false);
+          toast({
+            title: "Erro",
+            description: "Sistema de notificações não está pronto. Tente novamente.",
+            variant: "destructive"
+          });
+          triggerHaptic('error');
+          return;
+        }
+
+        console.log('🔔 [handlePushToggle] Solicitando permissão...');
+        const permission = await oneSignal.requestPermission();
+        console.log('🔔 [handlePushToggle] Resultado da permissão:', permission);
 
         // Verificar se foi concedida
-        if (oneSignal.permissionGranted) {
+        if (permission && oneSignal.permissionGranted) {
           setPushEnabled(true);
 
           // Enviar notificação local de teste
@@ -170,7 +191,7 @@ export function AppHome() {
           setPushEnabled(false);
           toast({
             title: "Permissão Negada",
-            description: "Habilite nas configurações do dispositivo",
+            description: "Para ativar notificações, permita o acesso nas configurações do navegador",
             variant: "destructive"
           });
           triggerHaptic('error');
@@ -180,7 +201,7 @@ export function AppHome() {
         setPushEnabled(false);
         toast({
           title: "Erro ao Ativar",
-          description: "Não foi possível ativar as notificações",
+          description: "Não foi possível ativar as notificações. Verifique as permissões do navegador.",
           variant: "destructive"
         });
         triggerHaptic('error');
@@ -1021,7 +1042,13 @@ export function AppHome() {
                       </p>
                     </div>
                   </div>
-                  <Switch checked={pushEnabled} onCheckedChange={handlePushToggle} />
+                  <Switch 
+                    checked={pushEnabled} 
+                    onCheckedChange={(checked) => {
+                      console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
+                      handlePushToggle(checked);
+                    }} 
+                  />
                 </div>
               </CardContent>
             </Card>
