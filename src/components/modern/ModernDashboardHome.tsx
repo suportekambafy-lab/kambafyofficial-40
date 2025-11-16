@@ -565,35 +565,15 @@ export function ModernDashboardHome() {
         <AppDownloadBanner />
         
         <div className="mb-6 md:mb-8" data-onboarding="dashboard-header">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Dashboard
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
-                Acompanhe o desempenho do seu negócio
-              </p>
-            </div>
-            <OnboardingTrigger />
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
+              Acompanhe o desempenho do seu negócio
+            </p>
           </div>
         </div>
-
-      {/* Quick Filters e Customização */}
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-4">
-        <div data-onboarding="quick-filters">
-          <QuickFilters
-            activeFilter={timeFilter}
-            onFilterChange={setTimeFilter}
-          />
-        </div>
-        <div data-onboarding="widget-customizer">
-          <WidgetCustomizer
-            widgets={preferences.widgets}
-            onToggleWidget={updateWidgetVisibility}
-            onReset={resetPreferences}
-          />
-        </div>
-      </div>
 
       {/* Filtros */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
