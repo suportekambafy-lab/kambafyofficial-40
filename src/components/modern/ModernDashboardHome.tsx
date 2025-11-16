@@ -14,7 +14,9 @@ import { DraggableWidget } from '@/components/dashboard/DraggableWidget';
 import { WidgetCustomizer } from '@/components/dashboard/WidgetCustomizer';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { OnboardingTrigger } from '@/components/onboarding/OnboardingTrigger';
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import { useDashboardPreferences } from '@/hooks/useDashboardPreferences';
+import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { DollarSign, ShoppingBag, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
@@ -53,6 +55,7 @@ interface Order {
 export function ModernDashboardHome() {
   const { user } = useAuth();
   const { preferences, updateWidgetVisibility, reorderWidgets, resetPreferences, savePreferences } = useDashboardPreferences();
+  const { completeTask } = useOnboardingProgress();
   const [timeFilter, setTimeFilter] = useState(preferences.quickFilter || '7days');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedProduct, setSelectedProduct] = useState('todos');
@@ -73,6 +76,13 @@ export function ModernDashboardHome() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Complete onboarding task when dashboard is viewed
+  useEffect(() => {
+    if (user) {
+      completeTask('view-dashboard');
+    }
+  }, [user]);
 
   // Load all orders (own sales + affiliate commissions + module payments)
   const loadAllOrders = useCallback(async () => {
@@ -474,6 +484,7 @@ export function ModernDashboardHome() {
       if (oldIndex !== -1 && newIndex !== -1) {
         const newWidgets = arrayMove(preferences.widgets, oldIndex, newIndex);
         reorderWidgets(newWidgets);
+        completeTask('customize-dashboard');
       }
     }
   };
@@ -542,6 +553,7 @@ export function ModernDashboardHome() {
   return (
     <>
       <OnboardingTour tourId="dashboard-tour" />
+      <OnboardingChecklist />
       
       <div className="p-4 md:p-6 space-y-6 bg-background min-h-full transition-colors duration-300">
         <AppDownloadBanner />

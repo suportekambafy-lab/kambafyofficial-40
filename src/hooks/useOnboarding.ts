@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { getTourSteps } from './useTourSteps';
 
 export interface OnboardingStep {
   id: string;
@@ -13,51 +14,6 @@ export interface OnboardingStep {
   };
 }
 
-const DASHBOARD_STEPS: OnboardingStep[] = [
-  {
-    id: 'welcome',
-    target: 'dashboard-header',
-    title: 'Bem-vindo ao seu Dashboard! 👋',
-    description: 'Aqui você acompanha todas as suas vendas, receitas e métricas em tempo real. Vamos fazer um tour rápido?',
-    placement: 'bottom',
-  },
-  {
-    id: 'quick-filters',
-    target: 'quick-filters',
-    title: 'Filtros Rápidos ⚡',
-    description: 'Use estes botões para filtrar suas vendas por período: Hoje, 7 dias, 30 dias ou ver tudo. É instantâneo!',
-    placement: 'bottom',
-  },
-  {
-    id: 'customize',
-    target: 'widget-customizer',
-    title: 'Personalize seu Dashboard 🎨',
-    description: 'Clique aqui para escolher quais widgets aparecem no seu dashboard. Você também pode reorganizá-los arrastando!',
-    placement: 'bottom',
-  },
-  {
-    id: 'metrics',
-    target: 'revenue-card',
-    title: 'Suas Métricas 📊',
-    description: 'Acompanhe sua receita e número de vendas. Clique no ícone de olho para ocultar/mostrar os valores.',
-    placement: 'right',
-  },
-  {
-    id: 'drag-drop',
-    target: 'draggable-widget',
-    title: 'Reorganize como Quiser 🔄',
-    description: 'Passe o mouse sobre qualquer widget e arraste pela alça que aparece no topo para reorganizar!',
-    placement: 'left',
-  },
-  {
-    id: 'complete',
-    target: 'dashboard-header',
-    title: 'Tudo Pronto! 🎉',
-    description: 'Você pode revisitar este tour a qualquer momento clicando no ícone de ajuda. Boa sorte com suas vendas!',
-    placement: 'bottom',
-  },
-];
-
 interface OnboardingState {
   completed: boolean;
   currentStep: number;
@@ -69,7 +25,12 @@ export function useOnboarding(tourId: string = 'dashboard-tour') {
   const { user } = useAuth();
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [steps, setSteps] = useState<OnboardingStep[]>(DASHBOARD_STEPS);
+  const [steps, setSteps] = useState<OnboardingStep[]>([]);
+
+  useEffect(() => {
+    const tourSteps = getTourSteps(tourId);
+    setSteps(tourSteps);
+  }, [tourId]);
 
   useEffect(() => {
     if (user) {
