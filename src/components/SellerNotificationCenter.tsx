@@ -289,31 +289,33 @@ export function SellerNotificationCenter() {
       )}
 
       {/* Mobile: Drawer Full Screen */}
-      <Drawer open={isMobile && isOpen} onOpenChange={setIsOpen}>
-        <DrawerContent className="h-[85vh]">
-          <DrawerHeader>
-            <div className="flex items-center justify-between">
-              <DrawerTitle>Notificações</DrawerTitle>
-              <div className="flex items-center gap-2">
-                {unreadCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={markAllAsRead}
-                    className="text-xs"
-                  >
-                    <Check className="h-3 w-3 mr-1" />
-                    Marcar todas
-                  </Button>
-                )}
+      {isMobile && (
+        <Drawer open={isOpen} onOpenChange={setIsOpen}>
+          <DrawerContent className="h-[85vh]">
+            <DrawerHeader>
+              <div className="flex items-center justify-between">
+                <DrawerTitle>Notificações</DrawerTitle>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={markAllAsRead}
+                      className="text-xs"
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Marcar todas
+                    </Button>
+                  )}
+                </div>
               </div>
+            </DrawerHeader>
+            <div className="px-4 pb-4 overflow-hidden">
+              {notificationContent}
             </div>
-          </DrawerHeader>
-          <div className="px-4 pb-4 overflow-hidden">
-            {notificationContent}
-          </div>
-        </DrawerContent>
-      </Drawer>
+          </DrawerContent>
+        </Drawer>
+      )}
     </div>
   );
 }
