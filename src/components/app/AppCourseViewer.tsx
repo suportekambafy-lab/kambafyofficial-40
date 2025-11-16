@@ -119,7 +119,7 @@ export function AppCourseViewer({ courseId, courseName, onClose }: AppCourseView
 
       {/* Área de membros embutida */}
       <ModernMembersAuthProvider memberAreaId={courseId}>
-        <ModernMembersArea />
+        <ModernMembersArea memberAreaId={courseId} />
       </ModernMembersAuthProvider>
     </div>
   );

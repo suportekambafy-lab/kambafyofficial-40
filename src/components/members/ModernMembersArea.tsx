@@ -66,11 +66,18 @@ const detectAndUpdateVideoDuration = async (lesson: Lesson) => {
     }
   });
 };
-export default function ModernMembersArea() {
+interface ModernMembersAreaProps {
+  memberAreaId?: string;
+}
+
+export default function ModernMembersArea({ memberAreaId: propMemberAreaId }: ModernMembersAreaProps = {}) {
   const navigate = useNavigate();
   const {
-    id: memberAreaId
+    id: urlMemberAreaId
   } = useParams();
+  
+  // Usar prop se fornecido, senão usar da URL
+  const memberAreaId = propMemberAreaId || urlMemberAreaId;
   const {
     user,
     session,
