@@ -361,11 +361,11 @@ export default function SellerHelp() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => window.open("https://wa.me/244XXXXXXXXX", "_blank")}>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => window.open("https://chat.whatsapp.com/JgR87LKoVkYJ3ZGpNlmGMh", "_blank")}>
                     <MessageCircle className="h-5 w-5 text-green-600" />
                     <div>
                       <p className="font-medium">WhatsApp</p>
-                      <p className="text-sm text-muted-foreground">+244 XXX XXX XXX</p>
+                      <p className="text-sm text-muted-foreground">Grupo da Comunidade</p>
                     </div>
                   </div>
                   
