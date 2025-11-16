@@ -438,22 +438,22 @@ export function ModernDashboardHome() {
         </>
       )}
       
-      <div className="p-4 md:p-6 space-y-6 bg-background min-h-full transition-colors duration-300 max-w-full overflow-x-hidden">
+      <div className="p-3 md:p-6 space-y-3 md:space-y-6 bg-background min-h-full transition-colors duration-300 max-w-full overflow-x-hidden">
         <AppDownloadBanner />
         
-        <div className="mb-6 md:mb-8" data-onboarding="dashboard-header">
+        <div className="mb-4 md:mb-6" data-onboarding="dashboard-header">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-1">
               Dashboard
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
+            <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
               Acompanhe o desempenho do seu negócio
             </p>
           </div>
         </div>
 
       {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 max-w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 max-w-full">
         <div className="w-full min-w-0">
           <CustomPeriodSelector
             value={timeFilter}
@@ -462,8 +462,8 @@ export function ModernDashboardHome() {
           />
         </div>
 
-        <div className="space-y-2 w-full min-w-0">
-          <label className="text-sm font-medium text-foreground">
+        <div className="space-y-1.5 w-full min-w-0">
+          <label className="text-xs sm:text-sm font-medium text-foreground">
             Produto
           </label>
           <ProductFilter 
@@ -474,7 +474,7 @@ export function ModernDashboardHome() {
       </div>
 
       {/* Widgets Estáticos */}
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {/* Revenue Card */}
         <div data-onboarding="revenue-card">
           <ModernMetricCard
