@@ -1624,7 +1624,7 @@ export function AppHome() {
     <div className={isDark ? 'dark' : ''}>
       <div className="min-h-screen bg-background pb-28 pt-0 overflow-x-hidden">
         {/* Fixed Header - Similar to Landing */}
-        <header className="fixed top-0 left-0 right-0 z-20">
+        <header className="fixed top-0 left-0 right-0 z-50">
         <nav className="px-2 pt-2">
           <div className={cn(
             'mx-auto transition-all duration-300 px-4 py-3 flex items-center justify-between',
@@ -1678,7 +1678,7 @@ export function AppHome() {
 
         {/* Quick Menu Dropdown */}
         {showQuickMenu && (
-          <div className="absolute top-full right-0 w-80 bg-background border-l border-b border-border shadow-lg">
+          <div className="absolute top-full right-0 w-80 bg-background border-l border-b border-border shadow-lg z-50">
             <div className="p-4 space-y-4">
               <h3 className="font-semibold text-sm text-foreground mb-3">Resumo Financeiro</h3>
               
@@ -1791,8 +1791,8 @@ export function AppHome() {
         )}
       </header>
 
-      {/* Content with padding for fixed header */}
-      <div className="pt-20">
+      {/* Content with padding for fixed header and bottom nav */}
+      <div className="pt-20 pb-28 min-h-screen">
         {/* Offline Banner */}
         {!isOnline && (
           <div className="sticky top-20 z-10 mx-4 mb-4 bg-destructive/90 backdrop-blur-md text-destructive-foreground px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
@@ -1808,7 +1808,7 @@ export function AppHome() {
 
       {/* Horizontal Bottom Navigation */}
       {!selectedCourse && (
-        <nav className="fixed bottom-6 left-0 right-0 z-10 pb-safe">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 pb-safe bg-gradient-to-t from-background via-background to-background/95 backdrop-blur-xl">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between gap-3 max-w-2xl mx-auto">
             {/* Back Button */}
