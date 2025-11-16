@@ -10,8 +10,6 @@ import { SkeletonPage } from '@/components/ui/skeleton-page';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { CrispChat } from '@/components/CrispChat';
-import { TestSaleNotification } from '@/components/TestSaleNotification';
-import { TestNotificationButton } from '@/components/TestNotificationButton';
 import { useSellerData } from '@/hooks/useOptimizedSellerData';
 
 // Lazy load páginas para melhor performance com retry logic
@@ -73,15 +71,7 @@ function SellerDashboardContent() {
 
   return (
     <div className={`min-h-screen bg-background flex flex-col seller-dashboard ${theme === 'dark' ? 'dark' : ''}`}>
-      <CrispChat />
-        
-        {/* Botão Flutuante de Teste - Global para todas as páginas do vendedor */}
-        <TestSaleNotification products={sellerData?.products || []} />
-        
-        {/* Botão de teste de notificação em tempo real */}
-        <div className="fixed bottom-20 right-4 z-50">
-          <TestNotificationButton />
-        </div>
+        <CrispChat />
         
         <div className="flex flex-1">
           {/* Backdrop para mobile */}

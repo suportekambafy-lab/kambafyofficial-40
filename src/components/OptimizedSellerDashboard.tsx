@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { countOrderItems } from '@/utils/orderUtils';
-import { TestSaleNotification } from '@/components/TestSaleNotification';
 
 // Dashboard do vendedor otimizado
 const OptimizedSellerDashboard = memo(() => {
