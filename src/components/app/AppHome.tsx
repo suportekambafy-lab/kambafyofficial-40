@@ -1141,6 +1141,7 @@ export function AppHome() {
       
       case 'my-courses':
         return <AppCourses onCourseSelect={(courseId, courseName) => {
+          console.log('🎓 Curso selecionado:', { courseId, courseName });
           setSelectedCourse({ id: courseId, name: courseName });
         }} />;
       
@@ -1804,7 +1805,8 @@ export function AppHome() {
       </div>
 
       {/* Horizontal Bottom Navigation */}
-      <nav className="fixed bottom-6 left-0 right-0 z-10 pb-safe">
+      {!selectedCourse && (
+        <nav className="fixed bottom-6 left-0 right-0 z-10 pb-safe">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between gap-3 max-w-2xl mx-auto">
             {/* Back Button */}
@@ -1866,6 +1868,7 @@ export function AppHome() {
           </div>
         </div>
       </nav>
+      )}
 
       {/* Withdrawal Modal */}
       <WithdrawalModal
@@ -1883,11 +1886,17 @@ export function AppHome() {
 
       {/* Course Viewer */}
       {selectedCourse && (
-        <AppCourseViewer
-          courseId={selectedCourse.id}
-          courseName={selectedCourse.name}
-          onClose={() => setSelectedCourse(null)}
-        />
+        <>
+          {console.log('🎓 Renderizando AppCourseViewer com:', selectedCourse)}
+          <AppCourseViewer
+            courseId={selectedCourse.id}
+            courseName={selectedCourse.name}
+            onClose={() => {
+              console.log('🎓 Fechando curso');
+              setSelectedCourse(null);
+            }}
+          />
+        </>
       )}
       </div>
     </div>

@@ -8,8 +8,10 @@ interface AppCourseViewerProps {
 }
 
 export function AppCourseViewer({ courseId, courseName, onClose }: AppCourseViewerProps) {
+  console.log('🎓 AppCourseViewer renderizado:', { courseId, courseName });
+  
   return (
-    <div className="fixed inset-0 z-50 bg-background">
+    <div className="fixed inset-0 z-[100] bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="flex items-center justify-between p-4">
