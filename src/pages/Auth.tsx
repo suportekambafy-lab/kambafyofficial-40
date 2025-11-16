@@ -266,8 +266,8 @@ const Auth = () => {
     }
     
     return (
-      <div className="h-[100dvh] flex flex-col md:flex-row font-geist w-[100dvw]">
-        <section className="flex-1 flex items-center justify-center p-8">
+      <div className="min-h-screen flex flex-col md:flex-row font-geist w-full overflow-x-hidden">
+        <section className="flex-1 flex items-center justify-center p-4 md:p-8 py-8">
           <SignUpCodeVerification
             email={signupData.email}
             password={signupData.password}
@@ -298,31 +298,31 @@ const Auth = () => {
 
   if (currentView === 'reset-password') {
     return (
-      <div className="h-[100dvh] flex flex-col md:flex-row font-geist w-[100dvw]">
-        <section className="flex-1 flex items-center justify-center p-8">
+      <div className="min-h-screen flex flex-col md:flex-row font-geist w-full overflow-x-hidden">
+        <section className="flex-1 flex items-center justify-center p-4 md:p-8 py-8">
           <div className="w-full max-w-md">
-            <div className="flex flex-col gap-6">
-              <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">
+            <div className="flex flex-col gap-4 md:gap-6">
+              <h1 className="animate-element animate-delay-100 text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight">
                 <span className="font-light text-foreground tracking-tighter">Redefinir Senha</span>
               </h1>
-              <p className="animate-element animate-delay-200 text-muted-foreground">Digite sua nova senha</p>
+              <p className="animate-element animate-delay-200 text-sm md:text-base text-muted-foreground">Digite sua nova senha</p>
 
               {errorField && (
-                <div className="animate-element animate-delay-250 p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                <div className="animate-element animate-delay-250 p-3 md:p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs md:text-sm">
                   {errorField}
                 </div>
               )}
 
-              <form className="space-y-5" onSubmit={handleResetPassword}>
+              <form className="space-y-4 md:space-y-5" onSubmit={handleResetPassword}>
                 <div className="animate-element animate-delay-300">
-                  <label className="text-sm font-medium text-muted-foreground">Nova Senha</label>
+                  <label className="text-xs md:text-sm font-medium text-muted-foreground">Nova Senha</label>
                   <div className="rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors focus-within:border-violet-400/70 focus-within:bg-violet-500/10">
                     <input 
                       type="password"
                       placeholder="Digite sua nova senha"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
+                      className="w-full bg-transparent text-sm p-3 md:p-4 rounded-2xl focus:outline-none"
                       style={{ fontSize: '16px' }}
                       disabled={resetLoading}
                       required 
@@ -331,14 +331,14 @@ const Auth = () => {
                 </div>
 
                 <div className="animate-element animate-delay-400">
-                  <label className="text-sm font-medium text-muted-foreground">Confirmar Nova Senha</label>
+                  <label className="text-xs md:text-sm font-medium text-muted-foreground">Confirmar Nova Senha</label>
                   <div className="rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors focus-within:border-violet-400/70 focus-within:bg-violet-500/10">
                     <input 
                       type="password"
                       placeholder="Confirme sua nova senha"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
+                      className="w-full bg-transparent text-sm p-3 md:p-4 rounded-2xl focus:outline-none"
                       style={{ fontSize: '16px' }}
                       disabled={resetLoading}
                       required 
@@ -348,7 +348,7 @@ const Auth = () => {
 
                 <button 
                   type="submit" 
-                  className="animate-element animate-delay-500 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="animate-element animate-delay-500 w-full rounded-2xl bg-primary p-3 md:p-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm md:text-base"
                   disabled={resetLoading}
                 >
                   {resetLoading ? "Redefinindo..." : "Redefinir Senha"}
