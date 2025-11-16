@@ -36,9 +36,10 @@ export function useModernMembersAuth(): ModernMembersAuthContextType {
 
 interface ModernMembersAuthProviderProps {
   children: ReactNode;
+  memberAreaId?: string;
 }
 
-export function ModernMembersAuthProvider({ children }: ModernMembersAuthProviderProps) {
+export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMembersAuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [memberArea, setMemberArea] = useState<MemberArea | null>(null);
@@ -177,6 +178,14 @@ export function ModernMembersAuthProvider({ children }: ModernMembersAuthProvide
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Se memberAreaId for fornecido via prop, carregar automaticamente
+  useEffect(() => {
+    if (memberAreaId && user) {
+      console.log('🎯 ModernAuth: memberAreaId fornecido via prop, carregando...', memberAreaId);
+      checkMemberAccess(memberAreaId);
+    }
+  }, [memberAreaId, user]);
 
   const loadMemberArea = async (memberAreaId: string) => {
     try {
