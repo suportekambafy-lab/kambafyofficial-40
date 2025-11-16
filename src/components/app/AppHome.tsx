@@ -1615,120 +1615,6 @@ export function AppHome() {
             </div>
           </div>
         </nav>
-
-        {/* Quick Menu Dropdown */}
-        {showQuickMenu && (
-          <div className="absolute top-full right-0 w-80 bg-background border-l border-b border-border shadow-lg z-50">
-            <div className="p-4 space-y-4">
-              <h3 className="font-semibold text-sm text-foreground mb-3">Resumo Financeiro</h3>
-              
-              {/* Botão Ver como Aluno */}
-              <Button 
-                onClick={() => {
-                  setShowQuickMenu(false);
-                  setActiveTab('my-courses');
-                }}
-                variant="outline"
-                className="w-full dark:text-white dark:border-white/20"
-                size="sm"
-              >
-                <GraduationCap className="h-4 w-4 mr-2" />
-                Ver como Aluno
-              </Button>
-              
-              {/* Meta Kamba */}
-              <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
-                <div className="mb-2">
-                  <p className="text-xs text-muted-foreground mb-1">
-                    {nextLevel ? `Meta: ${nextLevel.name}` : 'Nível Máximo! 🎉'}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${goalProgress}%`,
-                          backgroundColor: nextLevel?.color || '#FFD700'
-                        }}
-                      />
-                    </div>
-                    <span className="font-semibold text-xs" style={{ color: nextLevel?.color || '#FFD700' }}>
-                      {goalProgress.toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-                {currentLevel && (
-                  <p className="text-[10px] text-muted-foreground">
-                    Nível: {currentLevel.name} {currentLevel.emoji}
-                  </p>
-                )}
-                {nextLevel && (
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Falta: {formatPriceForSeller(monthlyGoal - totalRevenueUnfiltered, 'KZ')}
-                  </p>
-                )}
-              </div>
-              
-              {/* Saldo Disponível */}
-              <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  <span className="text-xs text-muted-foreground">Saldo disponível</span>
-                </div>
-                <span className="font-bold text-sm text-foreground">
-                  {formatPriceForSeller(financialData.availableBalance, 'KZ')}
-                </span>
-              </div>
-
-              {/* Total de Vendas */}
-              <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  <span className="text-xs text-muted-foreground">Total Vendas</span>
-                </div>
-                <span className="font-bold text-sm text-foreground">
-                  {statsUnfiltered.totalSales}
-                </span>
-              </div>
-
-              {/* Faturamento Total */}
-              <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                  <span className="text-xs text-muted-foreground">Faturamento</span>
-                </div>
-                <span className="font-bold text-sm text-foreground">
-                  {formatPriceForSeller(statsUnfiltered.totalRevenue, 'KZ')}
-                </span>
-              </div>
-
-              <div className="pt-2 border-t border-border space-y-2">
-                <Button 
-                  onClick={() => {
-                    setShowQuickMenu(false);
-                    setActiveTab('sales-history');
-                  }}
-                  variant="outline"
-                  className="w-full dark:text-white dark:border-white/20"
-                  size="sm"
-                >
-                  Histórico de Vendas
-                </Button>
-                <Button 
-                  onClick={() => {
-                    setShowQuickMenu(false);
-                    setActiveTab('stats');
-                  }}
-                  variant="outline"
-                  className="w-full dark:text-white dark:border-white/20"
-                  size="sm"
-                >
-                  Financeiro
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Content with padding for fixed header and bottom nav */}
@@ -1931,6 +1817,121 @@ export function AppHome() {
                 })}
               </div>
             )}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Quick Menu Drawer */}
+      <Drawer open={showQuickMenu} onOpenChange={setShowQuickMenu}>
+        <DrawerContent className="h-[85vh]">
+          <DrawerHeader>
+            <DrawerTitle>Resumo Financeiro</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pb-4 overflow-auto space-y-4">
+            {/* Botão Ver como Aluno */}
+            <Button 
+              onClick={() => {
+                setShowQuickMenu(false);
+                setActiveTab('my-courses');
+              }}
+              variant="outline"
+              className="w-full dark:text-white dark:border-white/20"
+              size="sm"
+            >
+              <GraduationCap className="h-4 w-4 mr-2" />
+              Ver como Aluno
+            </Button>
+            
+            {/* Meta Kamba */}
+            <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+              <div className="mb-2">
+                <p className="text-xs text-muted-foreground mb-1">
+                  {nextLevel ? `Meta: ${nextLevel.name}` : 'Nível Máximo! 🎉'}
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${goalProgress}%`,
+                        backgroundColor: nextLevel?.color || '#FFD700'
+                      }}
+                    />
+                  </div>
+                  <span className="font-semibold text-xs" style={{ color: nextLevel?.color || '#FFD700' }}>
+                    {goalProgress.toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+              {currentLevel && (
+                <p className="text-[10px] text-muted-foreground">
+                  Nível: {currentLevel.name} {currentLevel.emoji}
+                </p>
+              )}
+              {nextLevel && (
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Falta: {formatPriceForSeller(monthlyGoal - totalRevenueUnfiltered, 'KZ')}
+                </p>
+              )}
+            </div>
+            
+            {/* Saldo Disponível */}
+            <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <span className="text-xs text-muted-foreground">Saldo disponível</span>
+              </div>
+              <span className="font-bold text-sm text-foreground">
+                {formatPriceForSeller(financialData.availableBalance, 'KZ')}
+              </span>
+            </div>
+
+            {/* Total de Vendas */}
+            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <span className="text-xs text-muted-foreground">Total de Vendas</span>
+              </div>
+              <span className="font-bold text-sm text-foreground">
+                {statsUnfiltered.totalSales}
+              </span>
+            </div>
+
+            {/* Faturamento Total */}
+            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                <span className="text-xs text-muted-foreground">Faturamento</span>
+              </div>
+              <span className="font-bold text-sm text-foreground">
+                {formatPriceForSeller(statsUnfiltered.totalRevenue, 'KZ')}
+              </span>
+            </div>
+
+            <div className="pt-2 border-t border-border space-y-2">
+              <Button 
+                onClick={() => {
+                  setShowQuickMenu(false);
+                  setActiveTab('sales-history');
+                }}
+                variant="outline"
+                className="w-full dark:text-white dark:border-white/20"
+                size="sm"
+              >
+                Histórico de Vendas
+              </Button>
+              <Button 
+                onClick={() => {
+                  setShowQuickMenu(false);
+                  setActiveTab('stats');
+                }}
+                variant="outline"
+                className="w-full dark:text-white dark:border-white/20"
+                size="sm"
+              >
+                Financeiro
+              </Button>
+            </div>
           </div>
         </DrawerContent>
       </Drawer>
