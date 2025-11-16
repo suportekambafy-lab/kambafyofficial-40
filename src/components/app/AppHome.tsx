@@ -1596,31 +1596,6 @@ export function AppHome() {
             {/* Sales Chart */}
             <ModernSalesChart />
 
-            {/* My Courses Card */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <GraduationCap className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-base text-foreground">Meus Cursos</h3>
-                      <p className="text-xs text-muted-foreground">Continue seus estudos</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <Button 
-                  onClick={() => setActiveTab('my-courses')}
-                  className="w-full"
-                  variant="outline"
-                >
-                  Ver Cursos Comprados
-                </Button>
-              </CardContent>
-            </Card>
-
             {/* Info Card */}
             <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-primary/5">
               <CardContent className="p-5">
@@ -1794,6 +1769,18 @@ export function AppHome() {
                   size="sm"
                 >
                   Financeiro
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowQuickMenu(false);
+                    setActiveTab('my-courses');
+                  }}
+                  variant="outline"
+                  className="w-full dark:text-white dark:border-white/20"
+                  size="sm"
+                >
+                  <GraduationCap className="h-4 w-4 mr-2" />
+                  Ver como Aluno
                 </Button>
               </div>
             </div>
