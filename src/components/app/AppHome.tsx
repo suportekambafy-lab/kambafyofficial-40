@@ -935,9 +935,7 @@ export function AppHome() {
           });
         }} />;
       case 'profile':
-        return <div className="flex flex-col h-full">
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
+        return <div className="p-4 space-y-4 pb-4">
             <h2 className="text-xl font-bold px-2 text-foreground">Meu Perfil</h2>
             
             {/* User Info Card */}
@@ -1041,11 +1039,10 @@ export function AppHome() {
                 </Button>
               </CardContent>
             </Card>
-            </div>
 
-            {/* Fixed Footer with Version and Logo */}
-            <div className="fixed bottom-16 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border py-4">
-              <div className="flex flex-col items-center gap-3">
+            {/* Footer with Version and Logo - Sticky at bottom */}
+            <div className="mt-8 pt-6 border-t border-border">
+              <div className="flex flex-col items-center gap-3 pb-2">
                 {/* App Version */}
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Info className="h-3 w-3" />
