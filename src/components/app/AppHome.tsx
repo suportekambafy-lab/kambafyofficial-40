@@ -935,7 +935,9 @@ export function AppHome() {
           });
         }} />;
       case 'profile':
-        return <div className="p-4 space-y-4 pb-4">
+        return <div className="flex flex-col h-full">
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
             <h2 className="text-xl font-bold px-2 text-foreground">Meu Perfil</h2>
             
             {/* User Info Card */}
@@ -953,7 +955,7 @@ export function AppHome() {
                       <p className="font-semibold text-base text-foreground truncate">
                         {editingProfile.full_name || user?.email}
                       </p>
-                      {currentLevel && <span className="text-sm">{currentLevel.emoji}</span>}
+                      {currentLevel}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {currentLevel ? `${currentLevel.name}` : 'Vendedor Kambafy'}
@@ -967,17 +969,17 @@ export function AppHome() {
             <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-2">
                 <button onClick={async () => {
-                triggerHaptic('light');
-                const photo = await pickPhoto();
-                if (photo && user) {
-                  // TODO: Upload foto para Supabase Storage e atualizar profile
-                  toast({
-                    title: "Foto Selecionada",
-                    description: "Funcionalidade de upload em desenvolvimento"
-                  });
-                  triggerHaptic('success');
-                }
-              }} className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors">
+                  triggerHaptic('light');
+                  const photo = await pickPhoto();
+                  if (photo && user) {
+                    // TODO: Upload foto para Supabase Storage e atualizar profile
+                    toast({
+                      title: "Foto Selecionada",
+                      description: "Funcionalidade de upload em desenvolvimento"
+                    });
+                    triggerHaptic('success');
+                  }
+                }} className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
                       <Camera className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -1039,10 +1041,11 @@ export function AppHome() {
                 </Button>
               </CardContent>
             </Card>
+            </div>
 
-            {/* Footer with Version and Logo - Sticky at bottom */}
-            <div className="mt-8 pt-6 border-t border-border">
-              <div className="flex flex-col items-center gap-3 pb-2">
+            {/* Fixed Footer with Version and Logo */}
+            <div className="fixed bottom-16 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border py-4">
+              <div className="flex flex-col items-center gap-3">
                 {/* App Version */}
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Info className="h-3 w-3" />
