@@ -34,7 +34,7 @@ interface Order {
 
 export function ModernDashboardHome() {
   const { user } = useAuth();
-  const [timeFilter, setTimeFilter] = useState('7days');
+  const [timeFilter, setTimeFilter] = useState('ultimos-30-dias');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedProduct, setSelectedProduct] = useState('todos');
   const [allOrders, setAllOrders] = useState<Order[]>([]);
