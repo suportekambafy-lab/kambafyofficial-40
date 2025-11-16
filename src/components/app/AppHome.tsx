@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff, GraduationCap } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
@@ -803,95 +804,6 @@ export function AppHome() {
   }, [activeTab, salesStatusFilter, user]);
 
   const renderContent = () => {
-    if (showNotifications) {
-      return (
-        <div className="p-4 space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-xl font-bold text-foreground">Notificações</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowNotifications(false)}
-            >
-              Fechar
-            </Button>
-          </div>
-
-          {notifications.length === 0 ? (
-              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
-                  <Bell className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="font-semibold text-base mb-2 text-foreground">Sem notificações</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Você está em dia com todas as suas atividades
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  🔔 Dica: As notificações são sincronizadas em tempo real com a versão web
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {notifications.map((notification) => {
-                // Mapear tipos do contexto para estilos
-                const getNotificationStyle = (type: string) => {
-                  switch(type) {
-                    case 'sale':
-                    case 'affiliate':
-                      return {
-                        bgColor: 'bg-green-500/10',
-                        iconColor: 'text-green-600 dark:text-green-400'
-                      };
-                    case 'withdrawal':
-                      return {
-                        bgColor: 'bg-blue-500/10',
-                        iconColor: 'text-blue-600 dark:text-blue-400'
-                      };
-                    default:
-                      return {
-                        bgColor: 'bg-yellow-500/10',
-                        iconColor: 'text-yellow-600 dark:text-yellow-400'
-                      };
-                  }
-                };
-                
-                const style = getNotificationStyle(notification.type);
-                
-                return (
-                <Card key={notification.id} className="overflow-hidden border-none shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${style.bgColor}`}>
-                        <Bell className={`h-5 w-5 ${style.iconColor}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm text-foreground mb-1">
-                          {notification.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(notification.timestamp).toLocaleString('pt-AO', {
-                            day: '2-digit',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      );
-    }
 
     if (showEditProfile) {
       return (
@@ -1928,6 +1840,100 @@ export function AppHome() {
           />
         </>
       )}
+
+      {/* Notifications Drawer */}
+      <Drawer open={showNotifications} onOpenChange={setShowNotifications}>
+        <DrawerContent className="h-[85vh]">
+          <DrawerHeader>
+            <div className="flex items-center justify-between">
+              <DrawerTitle>Notificações</DrawerTitle>
+              {unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={markAllAsRead}
+                  className="text-xs"
+                >
+                  Marcar todas
+                </Button>
+              )}
+            </div>
+          </DrawerHeader>
+          <div className="px-4 pb-4 overflow-auto">
+            {notifications.length === 0 ? (
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+                <CardContent className="p-8 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
+                    <Bell className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-base mb-2 text-foreground">Sem notificações</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Você está em dia com todas as suas atividades
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    🔔 Dica: As notificações são sincronizadas em tempo real com a versão web
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {notifications.map((notification) => {
+                  const getNotificationStyle = (type: string) => {
+                    switch(type) {
+                      case 'sale':
+                      case 'affiliate':
+                        return {
+                          bgColor: 'bg-green-500/10',
+                          iconColor: 'text-green-600 dark:text-green-400'
+                        };
+                      case 'withdrawal':
+                        return {
+                          bgColor: 'bg-blue-500/10',
+                          iconColor: 'text-blue-600 dark:text-blue-400'
+                        };
+                      default:
+                        return {
+                          bgColor: 'bg-yellow-500/10',
+                          iconColor: 'text-yellow-600 dark:text-yellow-400'
+                        };
+                    }
+                  };
+                  
+                  const style = getNotificationStyle(notification.type);
+                  
+                  return (
+                    <Card key={notification.id} className="overflow-hidden border-none shadow-sm">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${style.bgColor}`}>
+                            <Bell className={`h-5 w-5 ${style.iconColor}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm text-foreground mb-1">
+                              {notification.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {notification.message}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(notification.timestamp).toLocaleString('pt-AO', {
+                                day: '2-digit',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
       </div>
     </div>
   );
