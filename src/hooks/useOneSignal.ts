@@ -47,6 +47,29 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     
     processRetryQueue();
     
+    // Função para obter o user_id do Supabase como External ID
+    const getSupabaseUserId = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+          console.error('❌ [OneSignal] Erro ao buscar usuário do Supabase:', error);
+          return null;
+        }
+        
+        if (!user) {
+          console.log('⚠️ [OneSignal] Usuário não autenticado no Supabase');
+          return null;
+        }
+        
+        console.log('✅ [OneSignal] User ID do Supabase obtido:', user.id);
+        return user.id;
+      } catch (error) {
+        console.error('❌ [OneSignal] Exceção ao buscar user_id:', error);
+        return null;
+      }
+    };
+    
     // Verificar se temos External ID nativo do WebView (injetado pelo app nativo)
     const checkNativeExternalId = () => {
       const nativeId = (window as any).NATIVE_EXTERNAL_ID;
@@ -55,32 +78,13 @@ export function useOneSignal(options?: UseOneSignalOptions) {
         return nativeId;
       }
       console.log('⚠️ [OneSignal] External ID NATIVO não encontrado em window.NATIVE_EXTERNAL_ID');
-      console.log('⚠️ [OneSignal] Isso significa que o código nativo (Android/iOS) ainda não foi implementado');
-      console.log('⚠️ [OneSignal] Verifique os arquivos: android-implementation.md e ios-implementation.md');
+      console.log('⚠️ [OneSignal] Tentando usar user_id do Supabase como External ID');
       return null;
-    };
-    
-    // Função para gerar/recuperar External ID do localStorage como fallback
-    const getOrCreateFallbackExternalId = () => {
-      const storedId = localStorage.getItem('onesignal_external_id');
-      if (storedId) {
-        console.log('📦 [OneSignal] External ID recuperado do localStorage:', storedId);
-        return storedId;
-      }
-      
-      // Gerar novo UUID
-      const newId = crypto.randomUUID();
-      localStorage.setItem('onesignal_external_id', newId);
-      console.log('🆕 [OneSignal] Novo External ID gerado e salvo:', newId);
-      return newId;
     };
     
     const isNative = Capacitor.isNativePlatform();
     const hasCordovaPlugin = typeof window !== 'undefined' && window.plugins?.OneSignal;
     const platform = Capacitor.getPlatform();
-    const nativeExternalId = checkNativeExternalId();
-    const fallbackExternalId = !nativeExternalId ? getOrCreateFallbackExternalId() : null;
-    const finalExternalId = nativeExternalId || fallbackExternalId;
     
     console.log('🔍 [CRITICAL DEBUG] OneSignal Environment Check:', { 
       isNative, 
@@ -89,60 +93,64 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       hasWindow: typeof window !== 'undefined',
       hasWebOneSignal: typeof window !== 'undefined' && typeof window.OneSignal !== 'undefined',
       hasPlugins: typeof window !== 'undefined' && typeof window.plugins !== 'undefined',
-      userAgent: navigator.userAgent,
-      nativeExternalId,
-      fallbackExternalId,
-      finalExternalId 
+      userAgent: navigator.userAgent
     });
     
-    // IMPORTANTE: No app nativo (Capacitor), APENAS usar Cordova Plugin
-    if (isNative) {
-      console.log('📱 [NATIVE APP] Running in Capacitor - waiting for Cordova Plugin...');
+    // Inicializar OneSignal (aguardar user_id do Supabase)
+    const initializeOneSignal = async () => {
+      const nativeExternalId = checkNativeExternalId();
+      const supabaseUserId = await getSupabaseUserId();
+      const finalExternalId = nativeExternalId || supabaseUserId;
       
-      let attempts = 0;
-      const maxAttempts = 40; // 20 segundos (500ms * 40)
+      if (!finalExternalId) {
+        console.log('⚠️ [OneSignal] Não foi possível obter External ID (usuário não autenticado)');
+        return;
+      }
       
-      const checkPlugin = setInterval(() => {
-        attempts++;
-        const pluginAvailable = window.plugins?.OneSignal;
+      console.log('🎯 [OneSignal] External ID final:', finalExternalId);
+      console.log('🎯 [OneSignal] Fonte:', nativeExternalId ? 'NATIVE' : 'SUPABASE');
+      
+      // IMPORTANTE: No app nativo (Capacitor), APENAS usar Cordova Plugin
+      if (isNative) {
+        console.log('📱 [NATIVE APP] Running in Capacitor - waiting for Cordova Plugin...');
         
-        console.log(`🔍 [NATIVE APP] Check ${attempts}/${maxAttempts}: Plugin available = ${!!pluginAvailable}`);
+        let attempts = 0;
+        const maxAttempts = 40; // 20 segundos (500ms * 40)
         
-        if (pluginAvailable) {
-          clearInterval(checkPlugin);
-          console.log('✅ [NATIVE APP] Cordova Plugin found! Initializing Native SDK...');
-          initializeNativeSDK();
-        } else if (attempts >= maxAttempts) {
-          clearInterval(checkPlugin);
-          console.error('❌ [NATIVE APP] Cordova Plugin NOT found after 20 seconds! OneSignal will NOT work.');
-          console.error('❌ [NATIVE APP] Make sure to run: npx cap sync');
-        }
-      }, 500);
+        const checkPlugin = setInterval(() => {
+          attempts++;
+          const pluginAvailable = window.plugins?.OneSignal;
+          
+          console.log(`🔍 [NATIVE APP] Check ${attempts}/${maxAttempts}: Plugin available = ${!!pluginAvailable}`);
+          
+          if (pluginAvailable) {
+            clearInterval(checkPlugin);
+            console.log('✅ [NATIVE APP] Cordova Plugin found! Initializing Native SDK...');
+            initializeNativeSDK(finalExternalId);
+          } else if (attempts >= maxAttempts) {
+            clearInterval(checkPlugin);
+            console.error('❌ [NATIVE APP] Cordova Plugin NOT found after 20 seconds! OneSignal will NOT work.');
+            console.error('❌ [NATIVE APP] Make sure to run: npx cap sync');
+          }
+        }, 500);
+        
+        return () => clearInterval(checkPlugin);
+      }
       
-      return () => clearInterval(checkPlugin);
-    }
+      // Apenas para web browser (não Capacitor)
+      console.log('🌐 [WEB BROWSER] Not Capacitor - initializing Web SDK...');
+      initializeWebSDK(finalExternalId);
+    };
     
-    // Apenas para web browser (não Capacitor)
-    console.log('🌐 [WEB BROWSER] Not Capacitor - initializing Web SDK...');
-    initializeWebSDK();
+    initializeOneSignal();
   }, []);
 
   // Inicializar OneSignal Web SDK (para WebView e Web)
-  const initializeWebSDK = async () => {
+  const initializeWebSDK = async (externalId: string) => {
     try {
       console.log('🌐 [OneSignal Web SDK] Waiting for OneSignal to be ready...');
       
-      // Verificar External ID (nativo ou fallback)
-      const nativeExternalId = (window as any).NATIVE_EXTERNAL_ID;
-      const fallbackExternalId = !nativeExternalId ? localStorage.getItem('onesignal_external_id') : null;
-      const externalId = nativeExternalId || fallbackExternalId;
-      
-      console.log('🔍 [OneSignal Web SDK] External ID Status:', {
-        nativeExternalId,
-        fallbackExternalId,
-        finalExternalId: externalId,
-        source: nativeExternalId ? 'NATIVE' : 'FALLBACK'
-      });
+      console.log('🔍 [OneSignal Web SDK] External ID fornecido:', externalId);
       
       // Aguardar que o OneSignal esteja disponível (já inicializado pelo script no index.html)
       const waitForOneSignal = () => {
@@ -167,13 +175,12 @@ export function useOneSignal(options?: UseOneSignalOptions) {
 
       // Se temos External ID, fazer login imediatamente
       if (externalId) {
-        const source = nativeExternalId ? 'NATIVO' : 'FALLBACK';
-        console.log(`📱 [OneSignal Web SDK] Fazendo login com External ID ${source}:`, externalId);
+        console.log(`📱 [OneSignal Web SDK] Fazendo login com External ID (Supabase user_id):`, externalId);
         try {
           await OneSignal.login(externalId);
-          console.log(`✅ [OneSignal Web SDK] Login com External ID ${source} bem-sucedido!`);
+          console.log(`✅ [OneSignal Web SDK] Login com External ID bem-sucedido!`);
         } catch (loginError) {
-          console.error(`❌ [OneSignal Web SDK] Erro ao fazer login com External ID ${source}:`, loginError);
+          console.error(`❌ [OneSignal Web SDK] Erro ao fazer login com External ID:`, loginError);
         }
       } else {
         console.error('❌ [OneSignal Web SDK] Nenhum External ID disponível para login!');
@@ -254,7 +261,7 @@ export function useOneSignal(options?: UseOneSignalOptions) {
   };
 
   // Inicializar OneSignal Cordova Plugin (para apps nativos)
-  const initializeNativeSDK = async () => {
+  const initializeNativeSDK = async (externalId: string) => {
     try {
       console.log('🚀 [NATIVE SDK] initializeNativeSDK() called!');
       console.log('🔍 [NATIVE SDK] Checking window.plugins.OneSignal...');
@@ -272,26 +279,15 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       OneSignalPlugin.setAppId(ONESIGNAL_APP_ID);
       console.log('✅ [NATIVE SDK] App ID set successfully');
 
-      // Verificar External ID (nativo ou fallback)
-      const nativeExternalId = (window as any).NATIVE_EXTERNAL_ID;
-      const fallbackExternalId = !nativeExternalId ? localStorage.getItem('onesignal_external_id') : null;
-      const externalId = nativeExternalId || fallbackExternalId;
-      
-      console.log('🔍 [NATIVE SDK] External ID Status:', {
-        nativeExternalId,
-        fallbackExternalId,
-        finalExternalId: externalId,
-        source: nativeExternalId ? 'NATIVE' : 'FALLBACK'
-      });
+      console.log('🔍 [NATIVE SDK] External ID fornecido (Supabase user_id):', externalId);
       
       if (externalId) {
-        const source = nativeExternalId ? 'NATIVO' : 'FALLBACK';
-        console.log(`📱 [NATIVE SDK] Configurando External ID ${source}:`, externalId);
+        console.log(`📱 [NATIVE SDK] Configurando External ID (Supabase user_id):`, externalId);
         try {
           OneSignalPlugin.setExternalUserId(externalId);
-          console.log(`✅ [NATIVE SDK] External ID ${source} configurado com sucesso!`);
+          console.log(`✅ [NATIVE SDK] External ID configurado com sucesso!`);
         } catch (loginError) {
-          console.error(`❌ [NATIVE SDK] Erro ao configurar External ID ${source}:`, loginError);
+          console.error(`❌ [NATIVE SDK] Erro ao configurar External ID:`, loginError);
         }
       } else {
         console.error('❌ [NATIVE SDK] Nenhum External ID disponível!');
