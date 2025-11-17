@@ -36,7 +36,16 @@ verify_jwt = false
 [functions.send-purchase-confirmation]
 verify_jwt = false
 
+[functions.send-seller-notification-email]
+verify_jwt = false
+
+[functions.send-withdrawal-approval-email]
+verify_jwt = false
+
 [functions.send-member-access-email]
+verify_jwt = false
+
+[functions.process-customer-registration]
 verify_jwt = false
 
 [functions.trigger-webhooks]
