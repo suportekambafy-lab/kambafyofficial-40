@@ -76,7 +76,30 @@ export function TwoFactorSettings() {
     setIsLinkingExternalId(true);
 
     try {
-      // Buscar o player_id do perfil
+      // Primeiro, atualizar o Player ID do banco com o atual do OneSignal
+      console.log('🔄 Atualizando Player ID...');
+      
+      // Chamar hook do OneSignal para pegar o player ID atual
+      if (window.OneSignal) {
+        const currentPlayerId = await window.OneSignal.User.PushSubscription.id;
+        console.log('🆔 Player ID atual do OneSignal:', currentPlayerId);
+        
+        if (currentPlayerId) {
+          // Atualizar no banco de dados
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ onesignal_player_id: currentPlayerId })
+            .eq('user_id', user.id);
+            
+          if (updateError) {
+            console.error('❌ Erro ao atualizar Player ID:', updateError);
+          } else {
+            console.log('✅ Player ID atualizado no banco:', currentPlayerId);
+          }
+        }
+      }
+
+      // Buscar o player_id atualizado do perfil
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('onesignal_player_id')
