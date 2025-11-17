@@ -152,38 +152,46 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       
       console.log('🔍 [OneSignal Web SDK] External ID fornecido:', externalId);
       
-      // Aguardar que o OneSignal esteja disponível (já inicializado pelo script no index.html)
-      const waitForOneSignal = () => {
+      // Aguardar que o OneSignal esteja disponível E inicializado
+      const waitForOneSignalReady = async () => {
         return new Promise<void>((resolve) => {
           if (typeof window.OneSignal !== 'undefined') {
-            resolve();
+            // OneSignal existe, agora esperar que esteja totalmente inicializado
+            window.OneSignal.push(() => {
+              console.log('✅ [OneSignal Web SDK] OneSignal is fully initialized!');
+              resolve();
+            });
           } else {
+            // Esperar o objeto OneSignal aparecer primeiro
             const checkInterval = setInterval(() => {
               if (typeof window.OneSignal !== 'undefined') {
                 clearInterval(checkInterval);
-                resolve();
+                window.OneSignal.push(() => {
+                  console.log('✅ [OneSignal Web SDK] OneSignal is fully initialized!');
+                  resolve();
+                });
               }
             }, 100);
           }
         });
       };
 
-      await waitForOneSignal();
+      await waitForOneSignalReady();
       const OneSignal = window.OneSignal;
-      console.log('✅ [OneSignal Web SDK] OneSignal object is ready!');
       setIsInitialized(true);
 
-      // Se temos External ID, fazer login imediatamente
+      // Se temos External ID, configurar via User API (método correto para Web SDK)
       if (externalId) {
-        console.log(`📱 [OneSignal Web SDK] Fazendo login com External ID (Supabase user_id):`, externalId);
+        console.log(`📱 [OneSignal Web SDK] Setting External ID via User.addAlias:`, externalId);
         try {
-          await OneSignal.login(externalId);
-          console.log(`✅ [OneSignal Web SDK] Login com External ID bem-sucedido!`);
-        } catch (loginError) {
-          console.error(`❌ [OneSignal Web SDK] Erro ao fazer login com External ID:`, loginError);
+          // Usar addAlias ao invés de login para Web SDK
+          await OneSignal.User.addAlias('external_id', externalId);
+          console.log(`✅ [OneSignal Web SDK] External ID set successfully!`);
+        } catch (aliasError) {
+          console.error(`❌ [OneSignal Web SDK] Erro ao configurar External ID:`, aliasError);
         }
       } else {
-        console.error('❌ [OneSignal Web SDK] Nenhum External ID disponível para login!');
+        console.error('❌ [OneSignal Web SDK] Nenhum External ID disponível!');
       }
 
       // Verificar permissão do browser primeiro
