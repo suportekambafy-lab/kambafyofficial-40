@@ -113,3 +113,12 @@ verify_jwt = false
 
 [functions.admin-adjust-balance]
 verify_jwt = false
+
+[functions.test-seller-notification]
+verify_jwt = false
+
+[functions.sync-onesignal-player-ids]
+verify_jwt = false
+
+[functions.recover-missing-player-ids]
+verify_jwt = false

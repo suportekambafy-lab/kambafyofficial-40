@@ -30,6 +30,23 @@ export function useOneSignal(options?: UseOneSignalOptions) {
   useEffect(() => {
     console.log('🎯 [useOneSignal] useEffect running!');
     
+    // Processar retry queue primeiro
+    const processRetryQueue = async () => {
+      const retryQueue = JSON.parse(localStorage.getItem('onesignal_retry_queue') || '[]');
+      if (retryQueue.length > 0) {
+        console.log('🔄 [useOneSignal] Found retry queue with', retryQueue.length, 'items');
+        for (const item of retryQueue) {
+          console.log('🔄 [useOneSignal] Retrying Player ID save:', item.playerIdValue);
+          const success = await savePlayerIdToProfile(item.playerIdValue);
+          if (success) {
+            console.log('✅ [useOneSignal] Retry successful for Player ID:', item.playerIdValue);
+          }
+        }
+      }
+    };
+    
+    processRetryQueue();
+    
     // Verificar se temos External ID nativo do WebView (injetado pelo app nativo)
     const checkNativeExternalId = () => {
       const nativeId = (window as any).NATIVE_EXTERNAL_ID;
@@ -332,32 +349,104 @@ export function useOneSignal(options?: UseOneSignalOptions) {
     }
   };
 
-  // Salvar Player ID no perfil do usuário
-  const savePlayerIdToProfile = async (playerIdValue: string) => {
+  // Salvar Player ID no perfil do usuário com retry logic robusto
+  const savePlayerIdToProfile = async (playerIdValue: string, retryCount = 0): Promise<boolean> => {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 1 segundo
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Esperar autenticação estar pronta (até 10 segundos)
+      let user = null;
+      let attempts = 0;
+      const maxAuthAttempts = 20;
+      
+      while (!user && attempts < maxAuthAttempts) {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          user = authUser;
+          break;
+        }
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
       
       if (!user) {
-        console.log('⚠️ No authenticated user, cannot save player ID');
+        console.log('⚠️ [savePlayerIdToProfile] No authenticated user after waiting, saving to retry queue');
+        // Salvar no localStorage para tentar depois
+        const retryQueue = JSON.parse(localStorage.getItem('onesignal_retry_queue') || '[]');
+        retryQueue.push({ playerIdValue, timestamp: Date.now() });
+        localStorage.setItem('onesignal_retry_queue', JSON.stringify(retryQueue));
         return false;
       }
 
-      console.log('💾 Saving Player ID to profile:', playerIdValue);
+      console.log(`💾 [savePlayerIdToProfile] Attempt ${retryCount + 1}/${MAX_RETRIES + 1} - Saving Player ID:`, playerIdValue);
 
+      // Usar UPSERT ao invés de UPDATE para garantir que salva mesmo se não existe
       const { error } = await supabase
         .from('profiles')
-        .update({ onesignal_player_id: playerIdValue })
-        .eq('user_id', user.id);
+        .upsert({ 
+          user_id: user.id,
+          onesignal_player_id: playerIdValue,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id',
+          ignoreDuplicates: false
+        });
 
       if (error) {
-        console.error('❌ Error saving player ID:', error);
+        console.error(`❌ [savePlayerIdToProfile] Error on attempt ${retryCount + 1}:`, error);
+        
+        // Log do erro no Supabase
+        await supabase.from('onesignal_sync_logs').insert([{
+          user_id: user.id,
+          player_id: playerIdValue,
+          action: 'save_player_id',
+          status: 'error',
+          error_message: error.message,
+          metadata: { 
+            retry_count: retryCount, 
+            error_code: error.code,
+            error_details: error.details 
+          } as any
+        }]);
+        
+        // Retry com backoff exponencial
+        if (retryCount < MAX_RETRIES) {
+          const delay = RETRY_DELAY * Math.pow(2, retryCount);
+          console.log(`🔄 [savePlayerIdToProfile] Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return savePlayerIdToProfile(playerIdValue, retryCount + 1);
+        }
+        
         return false;
       }
 
-      console.log('✅ Player ID saved successfully');
+      console.log('✅ [savePlayerIdToProfile] Player ID saved successfully!');
+      
+      // Log de sucesso
+      await supabase.from('onesignal_sync_logs').insert([{
+        user_id: user.id,
+        player_id: playerIdValue,
+        action: 'save_player_id',
+        status: 'success',
+        metadata: { retry_count: retryCount } as any
+      }]);
+      
+      // Limpar retry queue se houver
+      localStorage.removeItem('onesignal_retry_queue');
+      
       return true;
     } catch (error) {
-      console.error('❌ Error in savePlayerIdToProfile:', error);
+      console.error(`❌ [savePlayerIdToProfile] Exception on attempt ${retryCount + 1}:`, error);
+      
+      // Retry em caso de exception
+      if (retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAY * Math.pow(2, retryCount);
+        console.log(`🔄 [savePlayerIdToProfile] Retrying after exception in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return savePlayerIdToProfile(playerIdValue, retryCount + 1);
+      }
+      
       return false;
     }
   };

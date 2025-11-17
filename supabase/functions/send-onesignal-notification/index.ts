@@ -1,3 +1,5 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -13,11 +15,12 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log('📥 Request body recebido:', body);
     
-    const { player_id, external_user_id, title, message, data, image_url, sound } = body;
+    let { player_id, external_user_id, title, message, data, image_url, sound, user_id } = body;
 
     console.log('📱 Sending OneSignal notification:', {
       player_id,
       external_user_id,
+      user_id,
       title,
       message,
       data,
@@ -25,11 +28,49 @@ Deno.serve(async (req) => {
       sound
     });
 
-    // Validar dados obrigatórios - aceitar player_id OU external_user_id
-    if ((!player_id && !external_user_id) || !title || !message) {
+    // Validar dados obrigatórios
+    if (!title || !message) {
       return new Response(
         JSON.stringify({ 
-          error: 'Missing required fields: (player_id OR external_user_id), title, message' 
+          error: 'Missing required fields: title, message' 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    // FALLBACK 1: Se temos user_id mas não temos player_id, buscar no Supabase
+    if (!player_id && user_id) {
+      console.log('🔍 No player_id provided, fetching from Supabase profiles...');
+      
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      
+      const { data: profile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('onesignal_player_id')
+        .eq('user_id', user_id)
+        .single();
+      
+      if (profile?.onesignal_player_id) {
+        player_id = profile.onesignal_player_id;
+        console.log('✅ Found player_id in Supabase:', player_id);
+      } else {
+        console.warn('⚠️ No player_id found in Supabase for user:', user_id);
+      }
+    }
+    
+    // FALLBACK 2: Se ainda não temos player_id nem external_user_id, falhar
+    if (!player_id && !external_user_id) {
+      console.error('❌ No player_id or external_user_id available after fallbacks');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Cannot send notification: no player_id or external_user_id available',
+          fallback_attempted: true
         }),
         { 
           status: 400, 
