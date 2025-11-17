@@ -7,7 +7,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
 import { initializeNativeFeatures } from '@/utils/nativeService';
 import { SEO } from '@/components/SEO';
-import { useOneSignal } from '@/hooks/useOneSignal';
+import { useOneSignalIntegration } from '@/hooks/useOneSignalIntegration';
 import { useRealtimeSellerNotifications } from '@/hooks/useRealtimeSellerNotifications';
 
 const ONBOARDING_KEY = 'kambafy_onboarding_completed';
@@ -18,33 +18,14 @@ export default function AppMobile() {
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
   // Inicializar OneSignal para o app mobile nativo
-  const { isInitialized, playerId, setExternalUserId } = useOneSignal({
-    onNotificationReceived: (notification) => {
-      console.log('📩 [App Mobile] Notification received:', notification);
-    },
-    onNotificationOpened: (notification) => {
-      console.log('🔔 [App Mobile] Notification opened:', notification);
-    }
+  useOneSignalIntegration({
+    appId: '85da5c4b-c2a7-426f-851f-5c7c42afd64a',
+    userId: user?.id,
+    userEmail: user?.email
   });
 
   // Hook para notificações em tempo real do vendedor
   useRealtimeSellerNotifications(user?.id);
-
-  // Vincular user_id com OneSignal External ID quando usuário está autenticado
-  useEffect(() => {
-    if (user?.id && isInitialized) {
-      console.log('🔗 [App Mobile] Vinculando user_id com OneSignal External ID:', user.id);
-      console.log('🔗 [App Mobile] Player ID atual:', playerId);
-      
-      setExternalUserId(user.id).then(success => {
-        if (success) {
-          console.log('✅ [App Mobile] External User ID configurado - Journeys podem funcionar');
-        } else {
-          console.log('⚠️ [App Mobile] External User ID não configurado (tentaremos novamente quando player_id estiver disponível)');
-        }
-      });
-    }
-  }, [user?.id, isInitialized, playerId, setExternalUserId]); // Adicionado playerId como dependência
 
   useEffect(() => {
     // Verificar se há um query parameter para forçar onboarding (útil para desenvolvimento)
