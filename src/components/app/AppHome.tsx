@@ -1521,7 +1521,7 @@ export function AppHome() {
       {/* Notifications Drawer */}
       <Drawer open={showNotifications} onOpenChange={setShowNotifications}>
         <DrawerContent className="h-[85vh] bg-background dark:bg-background">
-          <DrawerHeader className="border-b border-border">
+          <DrawerHeader>
             <div className="flex items-center justify-between">
               <DrawerTitle>Notificações</DrawerTitle>
               {unreadCount > 0 && <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs">
@@ -1600,7 +1600,7 @@ export function AppHome() {
       {/* Quick Menu Drawer */}
       <Drawer open={showQuickMenu} onOpenChange={setShowQuickMenu}>
         <DrawerContent className="h-[85vh] bg-background dark:bg-background">
-          <DrawerHeader className="border-b border-border">
+          <DrawerHeader>
             <DrawerTitle>Resumo Financeiro</DrawerTitle>
           </DrawerHeader>
           <div className="px-4 pb-4 overflow-auto space-y-4">
@@ -1608,13 +1608,13 @@ export function AppHome() {
             <Button onClick={() => {
               setShowQuickMenu(false);
               setActiveTab('my-courses');
-            }} variant="outline" className="w-full dark:text-white dark:border-white/20" size="sm">
+            }} variant="ghost" className="w-full" size="sm">
               <GraduationCap className="h-4 w-4 mr-2" />
               Ver como Aluno
             </Button>
             
             {/* Meta Kamba */}
-            <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+            <div className="p-3 bg-primary/5 rounded-lg">
               <div className="mb-2">
                 <p className="text-xs text-muted-foreground mb-1">
                   {nextLevel ? `Meta: ${nextLevel.name}` : 'Nível Máximo! 🎉'}
@@ -1642,7 +1642,7 @@ export function AppHome() {
             </div>
             
             {/* Saldo Disponível */}
-            <div className="flex items-center justify-between p-3 bg-accent/10 rounded-lg border border-accent/20">
+            <div className="flex items-center justify-between p-3 bg-accent/10 rounded-lg">
               <div className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-accent-foreground" />
                 <span className="text-xs text-muted-foreground">Saldo disponível</span>
@@ -1653,7 +1653,7 @@ export function AppHome() {
             </div>
 
             {/* Total de Vendas */}
-            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg border border-primary/20">
+            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
                 <span className="text-xs text-muted-foreground">Total de Vendas</span>
@@ -1664,7 +1664,7 @@ export function AppHome() {
             </div>
 
             {/* Faturamento Total */}
-            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg border border-primary/20">
+            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-primary" />
                 <span className="text-xs text-muted-foreground">Faturamento</span>
@@ -1674,17 +1674,17 @@ export function AppHome() {
               </span>
             </div>
 
-            <div className="pt-2 border-t border-border space-y-2">
+            <div className="pt-2 space-y-2">
               <Button onClick={() => {
                 setShowQuickMenu(false);
                 setActiveTab('sales-history');
-              }} variant="outline" className="w-full dark:text-white dark:border-white/20" size="sm">
+              }} variant="ghost" className="w-full" size="sm">
                 Histórico de Vendas
               </Button>
               <Button onClick={() => {
                 setShowQuickMenu(false);
                 setActiveTab('stats');
-              }} variant="outline" className="w-full dark:text-white dark:border-white/20" size="sm">
+              }} variant="ghost" className="w-full" size="sm">
                 Financeiro
               </Button>
             </div>
