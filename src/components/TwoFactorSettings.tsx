@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Shield, Mail, AlertTriangle, Link } from "lucide-react";
+import { Shield, Mail, AlertTriangle, Link, Bug } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { use2FA } from "@/hooks/use2FA";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,7 @@ export function TwoFactorSettings() {
   const { settings, loading, enable2FA, disable2FA, loadSettings } = use2FA();
   const [currentStep, setCurrentStep] = useState<'settings' | 'disable_2fa'>('settings');
   const [isLinkingExternalId, setIsLinkingExternalId] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   // Mostrar estado padrão enquanto carrega
   const currentSettings = settings || { enabled: false, method: 'email' };
@@ -136,6 +137,37 @@ export function TwoFactorSettings() {
     }
   };
 
+  const checkOneSignalDebug = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onesignal_player_id')
+        .eq('user_id', user.id)
+        .single();
+
+      const info = {
+        app_id: 'e1a77f24-25aa-4f9d-a0fd-316ecc8885cd',
+        user_id: user.id,
+        player_id: profile?.onesignal_player_id,
+        dashboard_url: 'https://dashboard.onesignal.com/apps/e1a77f24-25aa-4f9d-a0fd-316ecc8885cd/players',
+        search_player_url: `https://dashboard.onesignal.com/apps/e1a77f24-25aa-4f9d-a0fd-316ecc8885cd/players?search=${profile?.onesignal_player_id}`,
+        search_external_url: `https://dashboard.onesignal.com/apps/e1a77f24-25aa-4f9d-a0fd-316ecc8885cd/players?search=${user.id}`,
+      };
+
+      setDebugInfo(info);
+      console.log('🐛 OneSignal Debug Info:', info);
+
+      toast({
+        title: "Debug Info",
+        description: "Informações copiadas para o console. Verifique os links."
+      });
+    } catch (error) {
+      console.error('Erro ao buscar debug info:', error);
+    }
+  };
+
   // Se está no processo de desativação do 2FA
   if (currentStep === 'disable_2fa' && user?.email) {
     return (
@@ -174,23 +206,53 @@ export function TwoFactorSettings() {
           <p className="text-sm text-muted-foreground">
             Vincule seu External ID no OneSignal para receber notificações personalizadas.
           </p>
-          <Button 
-            onClick={linkExternalId}
-            disabled={isLinkingExternalId || !user?.id}
-            className="w-full sm:w-auto"
-          >
-            {isLinkingExternalId ? (
-              <>
-                <LoadingSpinner className="mr-2 h-4 w-4" />
-                Vinculando...
-              </>
-            ) : (
-              <>
-                <Link className="mr-2 h-4 w-4" />
-                Revincular External ID
-              </>
-            )}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              onClick={linkExternalId}
+              disabled={isLinkingExternalId || !user?.id}
+              className="w-full sm:w-auto"
+            >
+              {isLinkingExternalId ? (
+                <>
+                  <LoadingSpinner className="mr-2 h-4 w-4" />
+                  Vinculando...
+                </>
+              ) : (
+                <>
+                  <Link className="mr-2 h-4 w-4" />
+                  Revincular External ID
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={checkOneSignalDebug}
+              disabled={!user?.id}
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              <Bug className="mr-2 h-4 w-4" />
+              Debug Info
+            </Button>
+          </div>
+          {debugInfo && (
+            <div className="mt-4 p-3 bg-muted rounded-lg text-xs font-mono space-y-2">
+              <div><strong>App ID:</strong> {debugInfo.app_id}</div>
+              <div><strong>User ID:</strong> {debugInfo.user_id}</div>
+              <div><strong>Player ID:</strong> {debugInfo.player_id}</div>
+              <div className="pt-2 space-y-1">
+                <div><strong>Dashboard OneSignal:</strong></div>
+                <a href={debugInfo.dashboard_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline block">
+                  Ver todos players →
+                </a>
+                <a href={debugInfo.search_player_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline block">
+                  Buscar por Player ID →
+                </a>
+                <a href={debugInfo.search_external_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline block">
+                  Buscar por External User ID →
+                </a>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
