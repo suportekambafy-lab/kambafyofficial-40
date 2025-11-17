@@ -91,8 +91,13 @@ export function TwoFactorSettings() {
         return;
       }
 
+      console.log('🔗 Vinculando External ID:', {
+        user_id: user.id,
+        player_id: profile.onesignal_player_id
+      });
+
       // Chamar a função edge para vincular o external_id
-      const { error: linkError } = await supabase.functions.invoke('link-onesignal-external-id', {
+      const { data, error: linkError } = await supabase.functions.invoke('link-onesignal-external-id', {
         body: {
           user_id: user.id,
           player_id: profile.onesignal_player_id
@@ -103,16 +108,27 @@ export function TwoFactorSettings() {
         throw linkError;
       }
 
+      console.log('📄 Resposta da vinculação:', data);
+
+      if (!data?.success) {
+        toast({ 
+          title: "Aviso", 
+          description: `OneSignal não vinculou o External ID. ${data?.message || 'Tente novamente.'}`,
+          variant: "destructive" 
+        });
+        return;
+      }
+
       toast({ 
         title: "Sucesso!", 
-        description: "External ID vinculado com sucesso no OneSignal"
+        description: "External ID vinculado e verificado com sucesso no OneSignal"
       });
 
     } catch (error) {
       console.error('Erro ao vincular External ID:', error);
       toast({ 
         title: "Erro", 
-        description: "Falha ao vincular External ID", 
+        description: error.message || "Falha ao vincular External ID", 
         variant: "destructive" 
       });
     } finally {
