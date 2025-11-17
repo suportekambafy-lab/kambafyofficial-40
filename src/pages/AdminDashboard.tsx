@@ -20,8 +20,6 @@ import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalance
 import { SendAppAnnouncementButton } from '@/components/admin/SendAppAnnouncementButton';
 import { ClearAnnouncementButton } from '@/components/admin/ClearAnnouncementButton';
 
-import BunnyToVimeoMigration from '@/components/admin/BunnyToVimeoMigration';
-import { BunnyMigration } from '@/components/admin/BunnyMigration';
 
 interface ModernMetricCardProps {
   title: string;
@@ -545,8 +543,6 @@ export default function AdminDashboard() {
               <SendAppAnnouncementButton />
               <ClearAnnouncementButton />
             </div>
-            <BunnyMigration />
-            <BunnyToVimeoMigration />
           </div>
         </div>
       </div>
