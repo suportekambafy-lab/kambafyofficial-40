@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 declare global {
   interface Window {
     OneSignalDeferred?: Array<(OneSignal: any) => void>;
+    OneSignal?: any;
+    oneSignalInitialized?: boolean;
   }
 }
 
@@ -14,8 +16,12 @@ export const useOneSignal = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    let isSubscribed = true;
-    let scriptAdded = false;
+    // Evitar múltiplas inicializações
+    if (window.oneSignalInitialized) {
+      console.log('ℹ️ OneSignal já foi inicializado');
+      setIsInitialized(true);
+      return;
+    }
 
     const savePlayerIdToProfile = async (playerId: string) => {
       if (!user?.id) {
@@ -40,59 +46,64 @@ export const useOneSignal = () => {
     };
 
     const initOneSignal = async () => {
-      if (!isSubscribed) return;
+      if (window.oneSignalInitialized) return;
 
-      try {
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        
-        window.OneSignalDeferred.push(async function(OneSignal: any) {
-          try {
-            await OneSignal.init({
-              appId: "e1a77f24-25aa-4f9d-a0fd-316ecc8885cd"
-            });
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      
+      window.OneSignalDeferred.push(async function(OneSignal: any) {
+        try {
+          // Marcar como inicializado ANTES de chamar init
+          window.oneSignalInitialized = true;
+          
+          await OneSignal.init({
+            appId: "e1a77f24-25aa-4f9d-a0fd-316ecc8885cd"
+          });
 
-            console.log('✅ OneSignal Web SDK inicializado');
-            
-            if (isSubscribed) {
-              setIsInitialized(true);
+          console.log('✅ OneSignal Web SDK inicializado');
+          setIsInitialized(true);
 
-              // Usar API v16 para obter o subscription ID
+          // Aguardar um pouco para o OneSignal processar
+          setTimeout(async () => {
+            try {
               const subscriptionId = OneSignal.User.PushSubscription.id;
               
-              if (subscriptionId && isSubscribed) {
+              if (subscriptionId) {
                 console.log('🆔 Subscription ID obtido:', subscriptionId);
                 setPlayerId(subscriptionId);
                 if (user) {
-                  savePlayerIdToProfile(subscriptionId);
+                  await savePlayerIdToProfile(subscriptionId);
                 }
+              } else {
+                console.log('⚠️ Subscription ID não disponível ainda');
               }
+            } catch (err) {
+              console.error('❌ Erro ao obter Subscription ID:', err);
             }
-          } catch (error) {
-            console.error('❌ Erro ao inicializar OneSignal:', error);
-          }
-        });
-      } catch (error) {
-        console.error('❌ Erro ao inicializar OneSignal:', error);
-      }
+          }, 1000);
+        } catch (error) {
+          console.error('❌ Erro ao inicializar OneSignal:', error);
+          window.oneSignalInitialized = false;
+        }
+      });
     };
 
-    // Carregar script do OneSignal apenas uma vez
+    // Carregar script do OneSignal apenas uma vez globalmente
     const existingScript = document.querySelector('script[src*="OneSignalSDK"]');
     
-    if (!existingScript && !scriptAdded) {
+    if (!existingScript) {
       const script = document.createElement('script');
       script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
       script.async = true;
       script.onload = () => initOneSignal();
       document.head.appendChild(script);
-      scriptAdded = true;
-    } else if (existingScript) {
-      initOneSignal();
+    } else {
+      // Script já existe, apenas inicializar se ainda não foi
+      if (!window.oneSignalInitialized) {
+        initOneSignal();
+      } else {
+        setIsInitialized(true);
+      }
     }
-
-    return () => {
-      isSubscribed = false;
-    };
   }, [user]);
 
   return {
