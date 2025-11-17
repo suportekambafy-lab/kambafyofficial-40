@@ -37,6 +37,8 @@ import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
 import { useSalesCache } from '@/hooks/useSalesCache';
 import { useOneSignal } from '@/hooks/useOneSignal';
 import { Capacitor } from '@capacitor/core';
+import { NotificationSettings } from '@/components/notifications/NotificationSettings';
+import { TestNotificationButton } from '@/components/testing/TestNotificationButton';
 export function AppHome() {
   const {
     user,
@@ -1122,6 +1124,16 @@ export function AppHome() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Notification Settings */}
+            <div className="space-y-4">
+              <NotificationSettings />
+              
+              {/* Botão de Teste */}
+              <div className="flex justify-center">
+                <TestNotificationButton />
+              </div>
+            </div>
 
             {/* Danger Zone */}
             <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
