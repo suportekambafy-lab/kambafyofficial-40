@@ -1633,34 +1633,34 @@ export function AppHome() {
             </div>
             
             {/* Saldo Disponível */}
-            <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-accent/10 rounded-lg border border-accent/20">
               <div className="flex items-center gap-2">
-                <Wallet className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <Wallet className="h-4 w-4 text-accent-foreground" />
                 <span className="text-xs text-muted-foreground">Saldo disponível</span>
               </div>
-              <span className="font-bold text-sm text-foreground">
+              <span className="font-bold text-sm text-card-foreground">
                 {formatPriceForSeller(financialData.availableBalance, 'KZ')}
               </span>
             </div>
 
             {/* Total de Vendas */}
-            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg border border-primary/20">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
                 <span className="text-xs text-muted-foreground">Total de Vendas</span>
               </div>
-              <span className="font-bold text-sm text-foreground">
+              <span className="font-bold text-sm text-card-foreground">
                 {statsUnfiltered.totalSales}
               </span>
             </div>
 
             {/* Faturamento Total */}
-            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg border border-primary/20">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-primary" />
                 <span className="text-xs text-muted-foreground">Faturamento</span>
               </div>
-              <span className="font-bold text-sm text-foreground">
+              <span className="font-bold text-sm text-card-foreground">
                 {formatPriceForSeller(statsUnfiltered.totalRevenue, 'KZ')}
               </span>
             </div>
