@@ -18,8 +18,6 @@ import { Suspense, lazy } from "react";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AdminPermissionRoute from "./components/AdminPermissionRoute";
 import { useVersionCheck } from "./hooks/useVersionCheck";
-import { useOneSignalIntegration } from "./hooks/useOneSignalIntegration";
-import { useRealtimeSellerNotifications } from "./hooks/useRealtimeSellerNotifications";
 import { supabase } from "@/integrations/supabase/client";
 
 const TestFacebookIntegration = lazy(() => import("./pages/TestFacebookIntegration"));
@@ -59,28 +57,6 @@ const TestLoginComponent = () => {
   );
 };
 
-// Component to initialize OneSignal after auth  
-function OneSignalInitializer() {
-  const { user } = useAuth();
-  const [userId, setUserId] = useState<string | undefined>();
-  
-  useEffect(() => {
-    if (user?.id) {
-      setUserId(user.id);
-    }
-  }, [user]);
-  
-  useOneSignalIntegration({
-    appId: '85da5c4b-c2a7-426f-851f-5c7c42afd64a',
-    userId: user?.id,
-    userEmail: user?.email
-  });
-
-  // Hook para notificações em tempo real do vendedor
-  useRealtimeSellerNotifications(userId);
-
-  return null;
-}
 
 
 // QueryClient otimizado para WebSockets (sem refetch desnecessário)
@@ -164,9 +140,8 @@ const App = () => {
               <AdminAuthProvider>
                 <NotificationProvider>
               <TooltipProvider>
-              <CustomToaster ref={toasterRef} />
+               <CustomToaster ref={toasterRef} />
                <BrowserRouter>
-                 <OneSignalInitializer />
                  {impersonationData && (
                    <ImpersonationBanner
                      targetUserName={impersonationData.targetUser?.full_name || impersonationData.targetUser?.email || 'Usuário'}

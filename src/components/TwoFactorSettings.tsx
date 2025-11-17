@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Shield, Mail, AlertTriangle, Link, Bug } from "lucide-react";
+import { Shield, Mail, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { use2FA } from "@/hooks/use2FA";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,8 +17,6 @@ export function TwoFactorSettings() {
   const { user } = useAuth();
   const { settings, loading, enable2FA, disable2FA, loadSettings } = use2FA();
   const [currentStep, setCurrentStep] = useState<'settings' | 'disable_2fa'>('settings');
-  const [isLinkingExternalId, setIsLinkingExternalId] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   // Mostrar estado padrão enquanto carrega
   const currentSettings = settings || { enabled: false, method: 'email' };
@@ -63,7 +61,31 @@ export function TwoFactorSettings() {
     setCurrentStep('settings');
   };
 
-  const forceSyncPlayerId = async () => {
+  if (loading) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardContent className="flex justify-center items-center py-8">
+          <LoadingSpinner size="lg" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (currentStep === 'disable_2fa') {
+    return (
+      <TwoFactorVerification
+        email={user?.email || ''}
+        onSuccess={handle2FAVerificationSuccess}
+        onCancel={handle2FACancel}
+        purpose="disable"
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      
+      {/* Card de configuração 2FA */}
     if (!user?.id) {
       toast({ 
         title: "Erro", 
