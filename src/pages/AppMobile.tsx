@@ -8,6 +8,7 @@ import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
 import { initializeNativeFeatures } from '@/utils/nativeService';
 import { useOneSignal } from '@/hooks/useOneSignal';
 import { SEO } from '@/components/SEO';
+import { TestOneSignalButton } from '@/components/app/TestOneSignalButton';
 
 const ONBOARDING_KEY = 'kambafy_onboarding_completed';
 
@@ -62,7 +63,16 @@ export default function AppMobile() {
     <>
       <SEO noIndex={true} />
       <SellerThemeProvider>
-        {!user ? <AppLogin /> : <AppHome />}
+        {!user ? (
+          <>
+            <AppLogin />
+            <div className="fixed bottom-4 left-4 right-4 z-50">
+              <TestOneSignalButton />
+            </div>
+          </>
+        ) : (
+          <AppHome />
+        )}
       </SellerThemeProvider>
     </>
   );
