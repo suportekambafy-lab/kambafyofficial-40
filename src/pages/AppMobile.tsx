@@ -6,12 +6,14 @@ import { AppOnboarding } from '@/components/app/AppOnboarding';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
 import { initializeNativeFeatures } from '@/utils/nativeService';
+import { useOneSignal } from '@/hooks/useOneSignal';
 import { SEO } from '@/components/SEO';
 
 const ONBOARDING_KEY = 'kambafy_onboarding_completed';
 
 export default function AppMobile() {
   const { user, loading } = useAuth();
+  const { playerId } = useOneSignal();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
