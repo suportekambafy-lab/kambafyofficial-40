@@ -1608,7 +1608,7 @@ export function AppHome() {
             <Button onClick={() => {
               setShowQuickMenu(false);
               setActiveTab('my-courses');
-            }} variant="ghost" className="w-full" size="sm">
+            }} variant="outline" className="w-full border-border" size="sm">
               <GraduationCap className="h-4 w-4 mr-2" />
               Ver como Aluno
             </Button>
@@ -1678,13 +1678,13 @@ export function AppHome() {
               <Button onClick={() => {
                 setShowQuickMenu(false);
                 setActiveTab('sales-history');
-              }} variant="ghost" className="w-full" size="sm">
+              }} variant="outline" className="w-full border-border" size="sm">
                 Histórico de Vendas
               </Button>
               <Button onClick={() => {
                 setShowQuickMenu(false);
                 setActiveTab('stats');
-              }} variant="ghost" className="w-full" size="sm">
+              }} variant="outline" className="w-full border-border" size="sm">
                 Financeiro
               </Button>
             </div>
