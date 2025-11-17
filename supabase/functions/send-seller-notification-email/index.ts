@@ -1,7 +1,16 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+console.log('🚀 [EMAIL] Iniciando função send-seller-notification-email');
+
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+console.log('🔑 [EMAIL] Resend API Key presente:', !!RESEND_API_KEY);
+
+if (!RESEND_API_KEY) {
+  console.error('❌ [EMAIL] CRITICAL: RESEND_API_KEY não está configurada!');
+}
+
+const resend = new Resend(RESEND_API_KEY);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,12 +30,17 @@ interface SellerNotificationRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('📨 [EMAIL] Recebeu requisição para send-seller-notification-email');
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log('⚙️ [EMAIL] Handling OPTIONS request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('📥 [EMAIL] Fazendo parse do body da requisição');
+    
     const { 
       sellerEmail, 
       sellerName, 
@@ -37,6 +51,14 @@ const handler = async (req: Request): Promise<Response> => {
       customerName,
       customerEmail 
     }: SellerNotificationRequest = await req.json();
+    
+    console.log('✅ [EMAIL] Body parsed com sucesso:', {
+      sellerEmail,
+      productName,
+      orderNumber,
+      amount,
+      currency
+    });
 
     console.log('📧 Enviando email de notificação para vendedor:', {
       sellerEmail,

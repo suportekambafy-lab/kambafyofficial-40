@@ -2,12 +2,26 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0';
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+console.log('🚀 [EMAIL] Iniciando função send-purchase-confirmation');
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-);
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+console.log('🔑 [EMAIL] Resend API Key presente:', !!RESEND_API_KEY);
+
+if (!RESEND_API_KEY) {
+  console.error('❌ [EMAIL] CRITICAL: RESEND_API_KEY não está configurada!');
+}
+
+const resend = new Resend(RESEND_API_KEY);
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+console.log('🔑 [EMAIL] Supabase credentials:', {
+  hasUrl: !!SUPABASE_URL,
+  hasServiceKey: !!SUPABASE_SERVICE_KEY
+});
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // Helper function to send SMS notification
 const sendSMSNotification = async (
