@@ -16,10 +16,17 @@ export const useOneSignal = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Evitar múltiplas inicializações
+    // NUNCA inicializar mais de uma vez globalmente
     if (window.oneSignalInitialized) {
-      console.log('ℹ️ OneSignal já foi inicializado');
+      console.log('ℹ️ OneSignal já foi inicializado anteriormente');
       setIsInitialized(true);
+      return;
+    }
+
+    // Verificar se já existe script carregando
+    const existingScript = document.querySelector('script[src*="OneSignalSDK"]');
+    if (existingScript) {
+      console.log('ℹ️ Script do OneSignal já está sendo carregado');
       return;
     }
 
@@ -45,27 +52,32 @@ export const useOneSignal = () => {
       }
     };
 
-    const initOneSignal = async () => {
-      if (window.oneSignalInitialized) return;
+    const initOneSignal = () => {
+      // Proteção final contra inicialização duplicada
+      if (window.oneSignalInitialized) {
+        console.log('ℹ️ OneSignal já inicializado, pulando...');
+        return;
+      }
+
+      // Marcar como inicializado IMEDIATAMENTE
+      window.oneSignalInitialized = true;
+      console.log('🚀 Iniciando OneSignal pela primeira vez...');
 
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       
       window.OneSignalDeferred.push(async function(OneSignal: any) {
         try {
-          // Marcar como inicializado ANTES de chamar init
-          window.oneSignalInitialized = true;
-          
           await OneSignal.init({
             appId: "e1a77f24-25aa-4f9d-a0fd-316ecc8885cd"
           });
 
-          console.log('✅ OneSignal Web SDK inicializado');
+          console.log('✅ OneSignal Web SDK inicializado com sucesso');
           setIsInitialized(true);
 
-          // Aguardar um pouco para o OneSignal processar
+          // Aguardar processamento do OneSignal
           setTimeout(async () => {
             try {
-              const subscriptionId = OneSignal.User.PushSubscription.id;
+              const subscriptionId = OneSignal.User?.PushSubscription?.id;
               
               if (subscriptionId) {
                 console.log('🆔 Subscription ID obtido:', subscriptionId);
@@ -74,37 +86,48 @@ export const useOneSignal = () => {
                   await savePlayerIdToProfile(subscriptionId);
                 }
               } else {
-                console.log('⚠️ Subscription ID não disponível ainda');
+                console.log('⚠️ Subscription ID não disponível - usuário pode não ter permitido notificações');
               }
             } catch (err) {
               console.error('❌ Erro ao obter Subscription ID:', err);
             }
-          }, 1000);
-        } catch (error) {
+          }, 1500);
+        } catch (error: any) {
           console.error('❌ Erro ao inicializar OneSignal:', error);
-          window.oneSignalInitialized = false;
+          
+          // Se erro for de domínio, informar ao usuário
+          if (error?.message?.includes('Can only be used on')) {
+            console.error('🚨 Configure o domínio atual no painel do OneSignal!');
+          }
+          
+          // Reset flag apenas se não for erro de "já inicializado"
+          if (!error?.message?.includes('already initialized')) {
+            window.oneSignalInitialized = false;
+          }
         }
       });
     };
 
-    // Carregar script do OneSignal apenas uma vez globalmente
-    const existingScript = document.querySelector('script[src*="OneSignalSDK"]');
-    
-    if (!existingScript) {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
-      script.async = true;
-      script.onload = () => initOneSignal();
-      document.head.appendChild(script);
-    } else {
-      // Script já existe, apenas inicializar se ainda não foi
-      if (!window.oneSignalInitialized) {
-        initOneSignal();
-      } else {
-        setIsInitialized(true);
-      }
-    }
-  }, [user]);
+    // Carregar script apenas UMA VEZ
+    console.log('📦 Carregando script do OneSignal...');
+    const script = document.createElement('script');
+    script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
+    script.async = true;
+    script.onload = () => {
+      console.log('✅ Script do OneSignal carregado');
+      initOneSignal();
+    };
+    script.onerror = () => {
+      console.error('❌ Erro ao carregar script do OneSignal');
+      window.oneSignalInitialized = false;
+    };
+    document.head.appendChild(script);
+
+    // Cleanup não remove o script pois queremos manter OneSignal ativo
+    return () => {
+      console.log('🧹 Limpando hook useOneSignal');
+    };
+  }, []); // Array vazio - inicializar APENAS uma vez na montagem
 
   return {
     playerId,
