@@ -35,10 +35,7 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
 import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
 import { useSalesCache } from '@/hooks/useSalesCache';
-import { useOneSignalIntegration } from '@/hooks/useOneSignalIntegration';
 import { Capacitor } from '@capacitor/core';
-import { NotificationSettings } from '@/components/notifications/NotificationSettings';
-import { TestNotificationButton } from '@/components/testing/TestNotificationButton';
 export function AppHome() {
   const {
     user,
@@ -64,12 +61,6 @@ export function AppHome() {
     onNotificationReceived: notification => {
       console.log('Native notification received:', notification);
     }
-  });
-  
-  useOneSignalIntegration({
-    appId: '85da5c4b-c2a7-426f-851f-5c7c42afd64a',
-    userId: user?.id,
-    userEmail: user?.email
   });
   const {
     triggerHaptic
@@ -159,85 +150,32 @@ export function AppHome() {
   const handlePushToggle = async (enabled: boolean) => {
     console.log('🔔 [handlePushToggle] Called with enabled:', enabled);
     
-    const isNative = Capacitor.isNativePlatform();
-    const hasCordovaPlugin = typeof window !== 'undefined' && window.plugins?.OneSignal;
-    
-    console.log('🔔 [handlePushToggle] Detecção de Ambiente:', {
-      isNative,
-      platform: Capacitor.getPlatform(),
-      hasWindow: typeof window !== 'undefined',
-      hasPlugins: typeof window !== 'undefined' && typeof window.plugins !== 'undefined',
-      hasOneSignalPlugin: hasCordovaPlugin,
-      pluginObject: window.plugins?.OneSignal ? 'EXISTS' : 'NULL',
-      oneSignalState: {
-        isInitialized: false,
-        permissionGranted: false,
-        playerId: null
-      }
-    });
-    
     triggerHaptic('light');
     
     if (enabled) {
       try {
-        if (isNative && hasCordovaPlugin) {
-          // 🎯 USAR CORDOVA PLUGIN NATIVO
-          console.log('📱 [handlePushToggle] ✅ USANDO PLUGIN NATIVO');
+        // Usar apenas notificações push nativas
+        const permission = await nativePush.requestPermission();
+        
+        if (permission) {
+          setPushEnabled(true);
+          localStorage.setItem('push_notifications_enabled', 'true');
           
-          const OneSignalPlugin = window.plugins.OneSignal;
-          console.log('📱 [handlePushToggle] Plugin object:', OneSignalPlugin);
-          console.log('📱 [handlePushToggle] Plugin methods:', Object.keys(OneSignalPlugin));
+          await nativePush.sendLocalNotification('Notificações Ativadas! 🎉', 'Você receberá notificações sobre suas vendas e produtos.');
           
-          // Verificar se o método existe
-          if (typeof OneSignalPlugin.promptForPushNotificationsWithUserResponse === 'function') {
-            console.log('📱 [handlePushToggle] Chamando promptForPushNotificationsWithUserResponse...');
-            
-            OneSignalPlugin.promptForPushNotificationsWithUserResponse((accepted: boolean) => {
-              console.log('📱 [handlePushToggle] ✅ Resposta do usuário:', accepted);
-              
-              if (accepted) {
-                setPushEnabled(true);
-                localStorage.setItem('push_notifications_enabled', 'true');
-                
-                nativePush.sendLocalNotification('Notificações Ativadas! 🎉', 'Você receberá notificações sobre suas vendas e produtos.');
-                
-                toast({
-                  title: "Notificações Ativadas",
-                  description: "Você receberá notificações sobre vendas e produtos"
-                });
-                triggerHaptic('success');
-              } else {
-                setPushEnabled(false);
-                toast({
-                  title: "Permissão Negada",
-                  description: "Você pode ativar mais tarde nas configurações",
-                  variant: "destructive"
-                });
-                triggerHaptic('error');
-              }
-            });
-          } else {
-            console.error('❌ [handlePushToggle] Método promptForPushNotificationsWithUserResponse não existe!');
-            console.error('❌ [handlePushToggle] Métodos disponíveis:', Object.keys(OneSignalPlugin));
-            throw new Error('Plugin method not available');
-          }
-        } else {
-          // 🌐 FALLBACK PARA WEB SDK (navegador)
-          console.log('🌐 [handlePushToggle] ⚠️ USANDO WEB SDK (Fallback)');
-          console.log('🌐 [handlePushToggle] Motivo:', {
-            isNative: isNative ? 'SIM' : 'NÃO',
-            hasCordovaPlugin: hasCordovaPlugin ? 'SIM' : 'NÃO'
+          toast({
+            title: "Notificações Ativadas",
+            description: "Você receberá notificações sobre vendas e produtos"
           });
-          
-          console.error('❌ [handlePushToggle] OneSignal Web SDK não disponível - use plugin nativo');
+          triggerHaptic('success');
+        } else {
           setPushEnabled(false);
           toast({
-            title: "Erro",
-            description: "Use o app móvel nativo para notificações.",
+            title: "Permissão Negada",
+            description: "Você pode ativar mais tarde nas configurações",
             variant: "destructive"
           });
           triggerHaptic('error');
-          return;
         }
       } catch (error) {
         console.error('❌ [handlePushToggle] Error:', error);
@@ -1092,16 +1030,6 @@ export function AppHome() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Notification Settings */}
-            <div className="space-y-4">
-              <NotificationSettings />
-              
-              {/* Botão de Teste */}
-              <div className="flex justify-center">
-                <TestNotificationButton />
-              </div>
-            </div>
 
             {/* Danger Zone */}
             <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">

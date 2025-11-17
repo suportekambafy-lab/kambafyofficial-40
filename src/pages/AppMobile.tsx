@@ -7,8 +7,6 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SellerThemeProvider, useSellerTheme } from '@/hooks/useSellerTheme';
 import { initializeNativeFeatures } from '@/utils/nativeService';
 import { SEO } from '@/components/SEO';
-import { useOneSignalIntegration } from '@/hooks/useOneSignalIntegration';
-import { useRealtimeSellerNotifications } from '@/hooks/useRealtimeSellerNotifications';
 
 const ONBOARDING_KEY = 'kambafy_onboarding_completed';
 
@@ -17,15 +15,6 @@ export default function AppMobile() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
-  // Inicializar OneSignal para o app mobile nativo
-  useOneSignalIntegration({
-    appId: '85da5c4b-c2a7-426f-851f-5c7c42afd64a',
-    userId: user?.id,
-    userEmail: user?.email
-  });
-
-  // Hook para notificações em tempo real do vendedor
-  useRealtimeSellerNotifications(user?.id);
 
   useEffect(() => {
     // Verificar se há um query parameter para forçar onboarding (útil para desenvolvimento)
