@@ -19,6 +19,7 @@ import { ResendAllAccessButton } from '@/components/admin/ResendAllAccessButton'
 import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalancesButton';
 import { SendAppAnnouncementButton } from '@/components/admin/SendAppAnnouncementButton';
 import { ClearAnnouncementButton } from '@/components/admin/ClearAnnouncementButton';
+import { RecoverPlayerIdsButton } from '@/components/admin/RecoverPlayerIdsButton';
 import BunnyToVimeoMigration from '@/components/admin/BunnyToVimeoMigration';
 import { BunnyMigration } from '@/components/admin/BunnyMigration';
 
@@ -544,6 +545,7 @@ export default function AdminDashboard() {
               <SendAppAnnouncementButton />
               <ClearAnnouncementButton />
             </div>
+            <RecoverPlayerIdsButton />
             <BunnyMigration />
             <BunnyToVimeoMigration />
           </div>
