@@ -40,6 +40,33 @@ export function SendAppAnnouncementButton() {
   const [isTracking, setIsTracking] = useState(false);
   const [alreadySent, setAlreadySent] = useState<number>(0);
   const [totalUsers, setTotalUsers] = useState<number>(0);
+  const [isClearing, setIsClearing] = useState(false);
+
+  const handleClearBlocked = async () => {
+    try {
+      setIsClearing(true);
+      console.log('🧹 Clearing blocked announcement processes...');
+      
+      const { data, error } = await supabase.functions.invoke('clear-blocked-announcements');
+      
+      if (error) {
+        console.error('Error clearing blocked processes:', error);
+        toast.error('Erro ao limpar processos bloqueados');
+        return;
+      }
+
+      console.log('✅ Cleared blocked processes:', data);
+      toast.success(data.message || 'Processos bloqueados limpos com sucesso');
+      
+      // Refresh page to update state
+      window.location.reload();
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Erro ao limpar processos bloqueados');
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   // Fetch initial stats and check for active process
   useEffect(() => {
@@ -390,6 +417,24 @@ export function SendAppAnnouncementButton() {
                 {progress.status === 'processing' ? '🔄 Processando emails...' : '✅ Concluído'}
               </div>
             </div>
+          )}
+
+          {/* Clear blocked button */}
+          {isTracking && (
+            <Button
+              onClick={handleClearBlocked}
+              disabled={isClearing}
+              variant="destructive"
+              className="w-full"
+              size="sm"
+            >
+              {isClearing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <AlertTriangle className="mr-2 h-4 w-4" />
+              )}
+              Desbloquear Envio
+            </Button>
           )}
 
           <div className="flex gap-3">

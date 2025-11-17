@@ -3,6 +3,9 @@ project_id = "hcbkqygdtzpxvctfdqbd"
 [functions.send-app-announcement]
 verify_jwt = false
 
+[functions.clear-blocked-announcements]
+verify_jwt = false
+
 [functions.create-stripe-product-price]
 verify_jwt = false
 
