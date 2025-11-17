@@ -54,17 +54,52 @@ serve(async (req) => {
       throw new Error(`OneSignal API error: ${JSON.stringify(responseData)}`);
     }
 
-    console.log('✅ [Link External ID] External User ID linked successfully!');
+    // Verificar se foi realmente vinculado fazendo um GET
+    console.log('🔍 [Link External ID] Verificando se external_id foi vinculado...');
+    const verifyResponse = await fetch(`https://onesignal.com/api/v1/players/${player_id}?app_id=${ONESIGNAL_APP_ID}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
+      },
+    });
+
+    const verifyData = await verifyResponse.json();
+    console.log('📄 [Link External ID] Verificação - Player Data:', JSON.stringify(verifyData, null, 2));
+    
+    const actualExternalId = verifyData.external_user_id || verifyData.external_id;
+    console.log('🔍 [Link External ID] External ID atual no player:', actualExternalId);
+
+    if (actualExternalId !== user_id) {
+      console.warn('⚠️ [Link External ID] External ID não foi vinculado! Esperado:', user_id, 'Atual:', actualExternalId);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          message: 'External ID não foi vinculado corretamente',
+          player_id,
+          expected_external_id: user_id,
+          actual_external_id: actualExternalId,
+          player_data: verifyData
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    }
+
+    console.log('✅ [Link External ID] External User ID vinculado e verificado com sucesso!');
     console.log('✅ [Link External ID] Player:', player_id);
     console.log('✅ [Link External ID] External ID:', user_id);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'External User ID linked successfully',
+        message: 'External User ID linked and verified successfully',
         player_id,
         external_user_id: user_id,
-        onesignal_response: responseData
+        onesignal_response: responseData,
+        verification: verifyData
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
