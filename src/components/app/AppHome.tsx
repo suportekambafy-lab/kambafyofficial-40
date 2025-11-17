@@ -147,6 +147,15 @@ export function AppHome() {
   } = useKambaLevels(totalRevenueUnfiltered);
   const monthlyGoal = nextLevel?.threshold || 1000000; // Meta dinâmica baseada no próximo nível
   const goalProgress = kambaProgress;
+  
+  // Apply dark mode class to HTML element for drawer portals
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(isDark ? 'dark' : 'light');
+    console.log('🎨 AppHome: Aplicando tema ao HTML', isDark ? 'dark' : 'light');
+  }, [isDark]);
+  
   const handlePushToggle = async (enabled: boolean) => {
     console.log('🔔 [handlePushToggle] Called with enabled:', enabled);
     
@@ -1511,7 +1520,7 @@ export function AppHome() {
 
       {/* Notifications Drawer */}
       <Drawer open={showNotifications} onOpenChange={setShowNotifications}>
-        <DrawerContent className="h-[85vh] bg-background">
+        <DrawerContent className="h-[85vh] bg-background dark:bg-background">
           <DrawerHeader className="border-b border-border">
             <div className="flex items-center justify-between">
               <DrawerTitle>Notificações</DrawerTitle>
@@ -1590,7 +1599,7 @@ export function AppHome() {
 
       {/* Quick Menu Drawer */}
       <Drawer open={showQuickMenu} onOpenChange={setShowQuickMenu}>
-        <DrawerContent className="h-[85vh] bg-background">
+        <DrawerContent className="h-[85vh] bg-background dark:bg-background">
           <DrawerHeader className="border-b border-border">
             <DrawerTitle>Resumo Financeiro</DrawerTitle>
           </DrawerHeader>
