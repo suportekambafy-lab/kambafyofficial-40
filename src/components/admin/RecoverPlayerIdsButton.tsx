@@ -9,7 +9,9 @@ import { Badge } from '@/components/ui/badge';
 export function RecoverPlayerIdsButton() {
   const { toast } = useToast();
   const [isRecovering, setIsRecovering] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [updateResults, setUpdateResults] = useState<any>(null);
   const [stats, setStats] = useState<{ total: number; withPlayerId: number; withoutPlayerId: number } | null>(null);
 
   const fetchStats = async () => {
@@ -71,6 +73,42 @@ export function RecoverPlayerIdsButton() {
     }
   };
 
+  const updateExternalIds = async () => {
+    setIsUpdating(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('update-onesignal-external-ids');
+
+      if (error) {
+        toast({
+          title: '❌ Erro na atualização',
+          description: error.message,
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      setUpdateResults(data.results);
+      
+      toast({
+        title: '✅ Atualização concluída!',
+        description: `Atualizados: ${data.results.updated} | Não mapeados: ${data.results.not_matched}`,
+      });
+
+      // Atualizar estatísticas
+      await fetchStats();
+    } catch (error: any) {
+      console.error('Error updating external IDs:', error);
+      toast({
+        title: '❌ Erro',
+        description: error.message || 'Erro ao atualizar External IDs',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // Carregar estatísticas ao montar
   useState(() => {
     fetchStats();
@@ -119,6 +157,39 @@ export function RecoverPlayerIdsButton() {
           </div>
         )}
 
+        {/* Resultados da Atualização */}
+        {updateResults && (
+          <div className="rounded-lg border border-border p-4 space-y-2">
+            <h4 className="font-semibold text-sm mb-3">Resultados da Atualização de External IDs</h4>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Total no OneSignal:</span>
+                <Badge variant="secondary">{updateResults.total_players}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-orange-500">Sem External ID:</span>
+                <Badge className="bg-orange-500">{updateResults.without_external_id}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-blue-500">Mapeados:</span>
+                <Badge className="bg-blue-500">{updateResults.matched}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-green-500">Atualizados:</span>
+                <Badge className="bg-green-500">{updateResults.updated}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-yellow-500">Não Mapeados:</span>
+                <Badge className="bg-yellow-500">{updateResults.not_matched}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-destructive">Erros:</span>
+                <Badge variant="destructive">{updateResults.errors}</Badge>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Resultados */}
         {results && (
           <div className="rounded-lg border border-border p-4 space-y-2">
@@ -144,30 +215,65 @@ export function RecoverPlayerIdsButton() {
           </div>
         )}
 
-        {/* Botão de Ação */}
-        <div className="space-y-2">
-          <Button 
-            onClick={recoverPlayerIds}
-            disabled={isRecovering}
-            className="w-full"
-            size="lg"
-          >
-            {isRecovering ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Recuperando...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Recuperar Player IDs (Lote de 100)
-              </>
-            )}
-          </Button>
-          
-          <p className="text-xs text-center text-muted-foreground">
-            Este processo busca na API do OneSignal por usuários que têm external_user_id registrado
-          </p>
+        {/* Botões de Ação */}
+        <div className="space-y-3">
+          <div>
+            <Button 
+              onClick={updateExternalIds}
+              disabled={isUpdating}
+              className="w-full"
+              size="lg"
+            >
+              {isUpdating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Atualizando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Atualizar External IDs no OneSignal
+                </>
+              )}
+            </Button>
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              Vincula os Player IDs existentes no OneSignal com os usuários do Supabase
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Ou</span>
+            </div>
+          </div>
+
+          <div>
+            <Button 
+              onClick={recoverPlayerIds}
+              disabled={isRecovering}
+              className="w-full"
+              size="lg"
+              variant="secondary"
+            >
+              {isRecovering ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Recuperando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Recuperar Player IDs (Lote de 100)
+                </>
+              )}
+            </Button>
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              Busca na API do OneSignal por usuários que já têm external_user_id registrado
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
