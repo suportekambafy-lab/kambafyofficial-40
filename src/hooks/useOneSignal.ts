@@ -15,6 +15,7 @@ export const useOneSignal = () => {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Efeito 1: Inicializar OneSignal UMA ÚNICA VEZ
   useEffect(() => {
     // NUNCA inicializar mais de uma vez globalmente
     if (window.oneSignalInitialized) {
@@ -29,28 +30,6 @@ export const useOneSignal = () => {
       console.log('ℹ️ Script do OneSignal já está sendo carregado');
       return;
     }
-
-    const savePlayerIdToProfile = async (playerId: string) => {
-      if (!user?.id) {
-        console.log('⚠️ Usuário não autenticado, pulando salvamento do Player ID');
-        return;
-      }
-
-      try {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ onesignal_player_id: playerId })
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('❌ Erro ao salvar Player ID:', error);
-        } else {
-          console.log('✅ Player ID salvo no perfil:', playerId);
-        }
-      } catch (error) {
-        console.error('❌ Erro ao salvar Player ID:', error);
-      }
-    };
 
     const initOneSignal = () => {
       // Proteção final contra inicialização duplicada
@@ -82,9 +61,6 @@ export const useOneSignal = () => {
               if (subscriptionId) {
                 console.log('🆔 Subscription ID obtido:', subscriptionId);
                 setPlayerId(subscriptionId);
-                if (user) {
-                  await savePlayerIdToProfile(subscriptionId);
-                }
               } else {
                 console.log('⚠️ Subscription ID não disponível - usuário pode não ter permitido notificações');
               }
@@ -128,6 +104,32 @@ export const useOneSignal = () => {
       console.log('🧹 Limpando hook useOneSignal');
     };
   }, []); // Array vazio - inicializar APENAS uma vez na montagem
+
+  // Efeito 2: Salvar player ID quando usuário fizer login
+  useEffect(() => {
+    if (!user?.id || !playerId) return;
+
+    const savePlayerIdToProfile = async () => {
+      try {
+        console.log('💾 Salvando Player ID no perfil do usuário...', { userId: user.id, playerId });
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update({ onesignal_player_id: playerId })
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('❌ Erro ao salvar Player ID:', error);
+        } else {
+          console.log('✅ Player ID salvo no perfil com sucesso');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao salvar Player ID:', error);
+      }
+    };
+
+    savePlayerIdToProfile();
+  }, [user, playerId]); // Executar quando user ou playerId mudar
 
   return {
     playerId,
