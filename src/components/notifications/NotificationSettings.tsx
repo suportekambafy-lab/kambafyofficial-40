@@ -263,6 +263,13 @@ export function NotificationSettings() {
           </div>
         )}
       </CardContent>
+
+      {/* Diagnóstico Expandível */}
+      {showDiagnostics && (
+        <CardContent className="pt-0">
+          <OneSignalDiagnostics />
+        </CardContent>
+      )}
     </Card>
   );
 }
