@@ -16,9 +16,56 @@ export function NotificationSettings() {
   const [hasPlayerIdInDb, setHasPlayerIdInDb] = useState<boolean | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
 
+  // Verificar Player ID no banco inicialmente
   useEffect(() => {
     checkPlayerIdInDatabase();
   }, []);
+
+  // Atualizar quando o playerId do hook mudar
+  useEffect(() => {
+    if (playerId) {
+      checkPlayerIdInDatabase();
+    }
+  }, [playerId]);
+
+  // Subscribe para mudanças em tempo real na tabela profiles
+  useEffect(() => {
+    const setupRealtimeSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const channel = supabase
+        .channel('profile-player-id-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('🔄 Profile updated in realtime:', payload);
+            const newPlayerIdExists = !!payload.new?.onesignal_player_id;
+            setHasPlayerIdInDb(newPlayerIdExists);
+            
+            if (newPlayerIdExists) {
+              toast({
+                title: '✅ Player ID atualizado!',
+                description: 'Suas notificações estão ativas.',
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    setupRealtimeSubscription();
+  }, [toast]);
 
   const checkPlayerIdInDatabase = async () => {
     try {
