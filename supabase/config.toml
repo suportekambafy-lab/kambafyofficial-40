@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.send-onesignal-notification]
 verify_jwt = false
 
+[functions.trigger-seller-notification]
+verify_jwt = false
+
 [functions.member-area-login]
 verify_jwt = false
 
