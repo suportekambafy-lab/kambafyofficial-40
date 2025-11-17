@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Bell, BellOff, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { Bell, BellOff, RefreshCw, CheckCircle2, XCircle, Link } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useOneSignal } from '@/hooks/useOneSignal';
@@ -11,6 +11,7 @@ export function NotificationSettings() {
   const { toast } = useToast();
   const { playerId, isInitialized, permissionGranted, updatePlayerId } = useOneSignal();
   const [isReactivating, setIsReactivating] = useState(false);
+  const [isLinkingExternalId, setIsLinkingExternalId] = useState(false);
   const [hasPlayerIdInDb, setHasPlayerIdInDb] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -71,6 +72,61 @@ export function NotificationSettings() {
       });
     } finally {
       setIsReactivating(false);
+    }
+  };
+
+  const linkExternalId = async () => {
+    setIsLinkingExternalId(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Buscar player_id do perfil
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onesignal_player_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile?.onesignal_player_id) {
+        toast({
+          title: '⚠️ Player ID não encontrado',
+          description: 'Você precisa ativar as notificações primeiro.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      console.log('🔗 Vinculando External ID:', user.id, 'com Player ID:', profile.onesignal_player_id);
+
+      // Chamar edge function para vincular External ID
+      const { error } = await supabase.functions.invoke('link-onesignal-external-id', {
+        body: { 
+          user_id: user.id,
+          player_id: profile.onesignal_player_id 
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: '✅ External ID vinculado!',
+        description: 'Suas notificações estão configuradas corretamente.',
+      });
+    } catch (error: any) {
+      console.error('Error linking External ID:', error);
+      toast({
+        title: '❌ Erro ao vincular',
+        description: error.message || 'Não foi possível vincular o External ID.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLinkingExternalId(false);
     }
   };
 
@@ -160,15 +216,49 @@ export function NotificationSettings() {
         )}
 
         {notificationStatus === 'active' && (
-          <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-4">
-            <div className="flex items-start gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-green-500">Tudo funcionando!</p>
-                <p className="text-xs text-muted-foreground">
-                  Você receberá uma notificação sempre que fizer uma venda.
-                </p>
+          <div className="space-y-3">
+            <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-4">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-green-500">Tudo funcionando!</p>
+                  <p className="text-xs text-muted-foreground">
+                    Você receberá uma notificação sempre que fizer uma venda.
+                  </p>
+                </div>
               </div>
+            </div>
+
+            <div className="rounded-lg bg-muted p-4 space-y-3">
+              <div className="flex items-start gap-2">
+                <Link className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Vincular External ID</p>
+                  <p className="text-xs text-muted-foreground">
+                    Se as notificações não estão funcionando, clique aqui para revincular seu External ID no OneSignal.
+                  </p>
+                </div>
+              </div>
+              
+              <Button 
+                onClick={linkExternalId}
+                disabled={isLinkingExternalId}
+                className="w-full"
+                variant="outline"
+                size="sm"
+              >
+                {isLinkingExternalId ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Vinculando...
+                  </>
+                ) : (
+                  <>
+                    <Link className="h-4 w-4 mr-2" />
+                    Revincular External ID
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         )}
