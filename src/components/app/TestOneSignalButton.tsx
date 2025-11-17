@@ -13,15 +13,18 @@ export const TestOneSignalButton = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handleTestOneSignal = () => {
+  const handleTestOneSignal = async () => {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     
-    window.OneSignalDeferred.push(function(OneSignal: any) {
-      OneSignal.getUserId(async function(playerId: string | null) {
-        if (!playerId) {
+    window.OneSignalDeferred.push(async function(OneSignal: any) {
+      try {
+        // Usar a API v16 do OneSignal
+        const subscriptionId = OneSignal.User.PushSubscription.id;
+        
+        if (!subscriptionId) {
           toast({
             title: "❌ Erro",
-            description: "Não consegui obter o Player ID do OneSignal.",
+            description: "Não consegui obter o Subscription ID do OneSignal.",
             variant: "destructive"
           });
           return;
@@ -29,45 +32,43 @@ export const TestOneSignalButton = () => {
 
         toast({
           title: "Player ID obtido",
-          description: playerId,
+          description: subscriptionId,
         });
 
-        try {
-          // Usar o user_id do usuário logado, ou "TESTE_USER" se não estiver logado
-          const userId = user?.id || "TESTE_USER";
+        // Usar o user_id do usuário logado, ou "TESTE_USER" se não estiver logado
+        const userId = user?.id || "TESTE_USER";
 
-          const { data, error } = await supabase.functions.invoke('save-onesignal-player-id', {
-            body: {
-              user_id_input: userId,
-              player_id_input: playerId
-            }
-          });
-
-          if (error) {
-            toast({
-              title: "❌ Erro ao salvar",
-              description: error.message,
-              variant: "destructive"
-            });
-            console.error('Erro:', error);
-            return;
+        const { data, error } = await supabase.functions.invoke('save-onesignal-player-id', {
+          body: {
+            user_id_input: userId,
+            player_id_input: subscriptionId
           }
+        });
 
+        if (error) {
           toast({
-            title: "✅ Sucesso!",
-            description: `Player ID salvo: ${JSON.stringify(data, null, 2)}`,
-          });
-          
-          console.log('Resposta do Supabase:', data);
-        } catch (err) {
-          toast({
-            title: "❌ Erro na requisição",
-            description: err instanceof Error ? err.message : 'Erro desconhecido',
+            title: "❌ Erro ao salvar",
+            description: error.message,
             variant: "destructive"
           });
-          console.error('Erro na requisição:', err);
+          console.error('Erro:', error);
+          return;
         }
-      });
+
+        toast({
+          title: "✅ Sucesso!",
+          description: `Player ID salvo: ${JSON.stringify(data, null, 2)}`,
+        });
+        
+        console.log('Resposta do Supabase:', data);
+      } catch (err) {
+        toast({
+          title: "❌ Erro na requisição",
+          description: err instanceof Error ? err.message : 'Erro desconhecido',
+          variant: "destructive"
+        });
+        console.error('Erro na requisição:', err);
+      }
     });
   };
 
