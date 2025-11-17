@@ -19,8 +19,15 @@ import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AdminPermissionRoute from "./components/AdminPermissionRoute";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 import { supabase } from "@/integrations/supabase/client";
+import { useOneSignal } from "./hooks/useOneSignal";
 
 const TestFacebookIntegration = lazy(() => import("./pages/TestFacebookIntegration"));
+
+// OneSignal Initializer Component
+const OneSignalInitializer = () => {
+  useOneSignal();
+  return null;
+};
 
 // Test Components for debugging member area navigation
 const TestAreaComponent = () => {
@@ -137,6 +144,7 @@ const App = () => {
         <QueryClientProvider client={queryClient}>
           <ThemeProvider defaultTheme="light" storageKey="kambafy-ui-theme" forceLightMode={true}>
             <AuthProvider>
+              <OneSignalInitializer />
               <AdminAuthProvider>
                 <NotificationProvider>
               <TooltipProvider>
