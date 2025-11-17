@@ -3773,6 +3773,16 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_onesignal_stats: {
+        Args: never
+        Returns: {
+          failed_syncs_count: number
+          recent_syncs_count: number
+          success_rate: number
+          total_users: number
+          users_with_player_id: number
+        }[]
+      }
       get_order_details_for_admin: {
         Args: { p_order_id: string }
         Returns: {
