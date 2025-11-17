@@ -428,6 +428,42 @@ export function useOneSignal(options?: UseOneSignalOptions) {
         metadata: { retry_count: retryCount } as any
       }]);
       
+      // IMPORTANTE: Vincular External ID automaticamente após salvar Player ID
+      console.log('🔗 [savePlayerIdToProfile] Vinculando External ID automaticamente...');
+      try {
+        const { error: linkError } = await supabase.functions.invoke('link-onesignal-external-id', {
+          body: { 
+            user_id: user.id,
+            player_id: playerIdValue 
+          }
+        });
+        
+        if (linkError) {
+          console.error('❌ [savePlayerIdToProfile] Erro ao vincular External ID:', linkError);
+          
+          // Log do erro
+          await supabase.from('onesignal_sync_logs').insert([{
+            user_id: user.id,
+            player_id: playerIdValue,
+            action: 'link_external_id',
+            status: 'error',
+            error_message: linkError.message
+          }]);
+        } else {
+          console.log('✅ [savePlayerIdToProfile] External ID vinculado com sucesso!');
+          
+          // Log de sucesso
+          await supabase.from('onesignal_sync_logs').insert([{
+            user_id: user.id,
+            player_id: playerIdValue,
+            action: 'link_external_id',
+            status: 'success'
+          }]);
+        }
+      } catch (linkError) {
+        console.error('❌ [savePlayerIdToProfile] Exceção ao vincular External ID:', linkError);
+      }
+      
       // Limpar retry queue se houver
       localStorage.removeItem('onesignal_retry_queue');
       
