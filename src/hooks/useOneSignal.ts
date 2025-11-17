@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+
+declare global {
+  interface Window {
+    OneSignalDeferred?: Array<(OneSignal: any) => void>;
+  }
+}
 
 export const useOneSignal = () => {
   const { user } = useAuth();
@@ -10,50 +15,28 @@ export const useOneSignal = () => {
 
   useEffect(() => {
     const initOneSignal = async () => {
-      if (!Capacitor.isNativePlatform()) {
-        console.log('OneSignal: Not running on native platform');
-        return;
-      }
-
-      const OneSignal = window.plugins?.OneSignal;
-      if (!OneSignal) {
-        console.error('OneSignal plugin not found');
-        return;
-      }
-
       try {
-        // Inicializar OneSignal com o App ID
-        const appId = 'e1a77f24-25aa-4f9d-a0fd-316ecc8885cd';
-        OneSignal.setAppId(appId);
-        console.log('✅ OneSignal inicializado com App ID:', appId);
+        // Inicializar OneSignal Web SDK
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        
+        window.OneSignalDeferred.push(function(OneSignal: any) {
+          OneSignal.init({
+            appId: "e1a77f24-25aa-4f9d-a0fd-316ecc8885cd"
+          });
 
-        // Handler quando notificação é clicada
-        OneSignal.setNotificationOpenedHandler((jsonData) => {
-          console.log('📱 Notificação clicada:', jsonData);
-          
-          // Navegar para tela de vendas se houver dados
-          if (jsonData?.notification?.additionalData?.orderId) {
-            window.location.href = '/vendas';
-          }
+          console.log('✅ OneSignal Web SDK inicializado');
+
+          // Obter Player ID
+          OneSignal.getUserId(function(userId: string | null) {
+            if (userId) {
+              console.log('🆔 Player ID obtido:', userId);
+              setPlayerId(userId);
+              savePlayerIdToProfile(userId);
+            }
+          });
+
+          setIsInitialized(true);
         });
-
-        // Solicitar permissão de notificações
-        OneSignal.promptForPushNotificationsWithUserResponse((accepted) => {
-          console.log('🔔 Permissão de notificações:', accepted ? 'Aceita' : 'Recusada');
-        });
-
-        // Obter Player ID
-        OneSignal.getDeviceState((state) => {
-          const userId = state?.userId;
-          console.log('🆔 Player ID obtido:', userId);
-          
-          if (userId) {
-            setPlayerId(userId);
-            savePlayerIdToProfile(userId);
-          }
-        });
-
-        setIsInitialized(true);
       } catch (error) {
         console.error('❌ Erro ao inicializar OneSignal:', error);
       }
@@ -81,7 +64,19 @@ export const useOneSignal = () => {
       }
     };
 
-    initOneSignal();
+    // Carregar script do OneSignal
+    const script = document.createElement('script');
+    script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
+    script.async = true;
+    document.head.appendChild(script);
+
+    script.onload = () => {
+      initOneSignal();
+    };
+
+    return () => {
+      document.head.removeChild(script);
+    };
   }, [user]);
 
   return {
