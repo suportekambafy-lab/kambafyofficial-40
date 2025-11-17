@@ -5,16 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Shield, Mail, AlertTriangle } from "lucide-react";
+import { Shield, Mail, AlertTriangle, Link } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { use2FA } from "@/hooks/use2FA";
 import { useAuth } from "@/contexts/AuthContext";
 import TwoFactorVerification from "./TwoFactorVerification";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/useCustomToast";
 
 export function TwoFactorSettings() {
   const { user } = useAuth();
   const { settings, loading, enable2FA, disable2FA, loadSettings } = use2FA();
   const [currentStep, setCurrentStep] = useState<'settings' | 'disable_2fa'>('settings');
+  const [isLinkingExternalId, setIsLinkingExternalId] = useState(false);
 
   // Mostrar estado padrão enquanto carrega
   const currentSettings = settings || { enabled: false, method: 'email' };
@@ -59,6 +62,64 @@ export function TwoFactorSettings() {
     setCurrentStep('settings');
   };
 
+  const linkExternalId = async () => {
+    if (!user?.id) {
+      toast({ 
+        title: "Erro", 
+        description: "Usuário não autenticado", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setIsLinkingExternalId(true);
+
+    try {
+      // Buscar o player_id do perfil
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('onesignal_player_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError || !profile?.onesignal_player_id) {
+        toast({ 
+          title: "Erro", 
+          description: "Player ID não encontrado. Ative as notificações primeiro.", 
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      // Chamar a função edge para vincular o external_id
+      const { error: linkError } = await supabase.functions.invoke('link-onesignal-external-id', {
+        body: {
+          user_id: user.id,
+          player_id: profile.onesignal_player_id
+        }
+      });
+
+      if (linkError) {
+        throw linkError;
+      }
+
+      toast({ 
+        title: "Sucesso!", 
+        description: "External ID vinculado com sucesso no OneSignal"
+      });
+
+    } catch (error) {
+      console.error('Erro ao vincular External ID:', error);
+      toast({ 
+        title: "Erro", 
+        description: "Falha ao vincular External ID", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLinkingExternalId(false);
+    }
+  };
+
   // Se está no processo de desativação do 2FA
   if (currentStep === 'disable_2fa' && user?.email) {
     return (
@@ -84,6 +145,38 @@ export function TwoFactorSettings() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      
+      {/* Card para OneSignal */}
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Link className="h-5 w-5 sm:h-6 sm:w-6" />
+            OneSignal External ID
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Vincule seu External ID no OneSignal para receber notificações personalizadas.
+          </p>
+          <Button 
+            onClick={linkExternalId}
+            disabled={isLinkingExternalId || !user?.id}
+            className="w-full sm:w-auto"
+          >
+            {isLinkingExternalId ? (
+              <>
+                <LoadingSpinner className="mr-2 h-4 w-4" />
+                Vinculando...
+              </>
+            ) : (
+              <>
+                <Link className="mr-2 h-4 w-4" />
+                Revincular External ID
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
