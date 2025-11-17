@@ -56,13 +56,22 @@ const handler = async (req: Request): Promise<Response> => {
     // If retention is 50%, then available = total - (total * 0.5)
     // So: available = total * 0.5
     // Therefore: total = available / 0.5
+    // Special case: if targetAvailableBalance = 0, we want total = retained (not zero)
     let requiredTotalBalance: number;
     let newRetainedFixed: number;
 
     if (retentionPercentage > 0) {
       const retentionDecimal = retentionPercentage / 100;
-      requiredTotalBalance = targetAvailableBalance / (1 - retentionDecimal);
-      newRetainedFixed = requiredTotalBalance - targetAvailableBalance;
+      
+      if (targetAvailableBalance === 0) {
+        // Special case: when zeroing available balance, keep retained amount
+        const currentRetainedFixed = profileData?.retained_fixed_amount || 0;
+        requiredTotalBalance = currentRetainedFixed;
+        newRetainedFixed = currentRetainedFixed;
+      } else {
+        requiredTotalBalance = targetAvailableBalance / (1 - retentionDecimal);
+        newRetainedFixed = requiredTotalBalance - targetAvailableBalance;
+      }
     } else {
       requiredTotalBalance = targetAvailableBalance;
       newRetainedFixed = 0;
