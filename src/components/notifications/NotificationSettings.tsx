@@ -6,6 +6,7 @@ import { Bell, BellOff, RefreshCw, CheckCircle2, XCircle, Link } from 'lucide-re
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useOneSignal } from '@/hooks/useOneSignal';
+import { OneSignalDiagnostics } from './OneSignalDiagnostics';
 
 export function NotificationSettings() {
   const { toast } = useToast();
@@ -13,6 +14,7 @@ export function NotificationSettings() {
   const [isReactivating, setIsReactivating] = useState(false);
   const [isLinkingExternalId, setIsLinkingExternalId] = useState(false);
   const [hasPlayerIdInDb, setHasPlayerIdInDb] = useState<boolean | null>(null);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   useEffect(() => {
     checkPlayerIdInDatabase();
@@ -212,6 +214,15 @@ export function NotificationSettings() {
                 </>
               )}
             </Button>
+            
+            <Button 
+              onClick={() => setShowDiagnostics(!showDiagnostics)}
+              variant="ghost"
+              size="sm"
+              className="w-full"
+            >
+              {showDiagnostics ? 'Ocultar' : 'Ver'} Diagnóstico
+            </Button>
           </div>
         )}
 
@@ -260,6 +271,15 @@ export function NotificationSettings() {
                 )}
               </Button>
             </div>
+
+            <Button 
+              onClick={() => setShowDiagnostics(!showDiagnostics)}
+              variant="ghost"
+              size="sm"
+              className="w-full"
+            >
+              {showDiagnostics ? 'Ocultar' : 'Ver'} Diagnóstico
+            </Button>
           </div>
         )}
       </CardContent>
