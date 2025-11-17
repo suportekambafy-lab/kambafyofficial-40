@@ -1796,6 +1796,39 @@ export type Database = {
           },
         ]
       }
+      onesignal_sync_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          player_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          player_id?: string | null
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          player_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       order_bump_items: {
         Row: {
           bump_product_id: string | null

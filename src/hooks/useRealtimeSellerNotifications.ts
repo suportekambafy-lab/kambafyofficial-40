@@ -72,22 +72,41 @@ export function useRealtimeSellerNotifications(userId: string | undefined) {
           try {
             console.log('📲 [OneSignal Push] Preparando notificação push');
             console.log('📲 [OneSignal Push] userId:', userId);
+            
+            // Buscar player_id do perfil para usar como fallback
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('onesignal_player_id')
+              .eq('user_id', userId)
+              .single();
+            
+            const notificationPayload: any = {
+              title: notification.title,
+              message: notification.message,
+              user_id: userId, // Adicionar user_id para fallback na edge function
+              data: {
+                type: 'sale',
+                order_id: notification.order_id,
+                amount: notification.amount,
+                currency: notification.currency,
+                customer_name: (notification as any).customer_name,
+                product_name: (notification as any).product_name,
+                url: '/vendedor#vendas'
+              }
+            };
+            
+            // Se temos player_id salvo, usar
+            if (profile?.onesignal_player_id) {
+              console.log('✅ [OneSignal Push] Usando player_id do perfil:', profile.onesignal_player_id);
+              notificationPayload.player_id = profile.onesignal_player_id;
+            } else {
+              // Fallback para external_user_id
+              console.log('⚠️ [OneSignal Push] Sem player_id, usando external_user_id');
+              notificationPayload.external_user_id = userId;
+            }
 
             const { data: pushData, error: pushError } = await supabase.functions.invoke('send-onesignal-notification', {
-              body: {
-                external_user_id: userId,
-                title: notification.title,
-                message: notification.message,
-                data: {
-                  type: 'sale',
-                  order_id: notification.order_id,
-                  amount: notification.amount,
-                  currency: notification.currency,
-                  customer_name: (notification as any).customer_name,
-                  product_name: (notification as any).product_name,
-                  url: '/vendedor#vendas'
-                }
-              }
+              body: notificationPayload
             });
 
             if (pushError) {
