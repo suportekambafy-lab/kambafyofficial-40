@@ -5,12 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, BellOff, RefreshCw, CheckCircle2, XCircle, Link } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useOneSignal } from '@/hooks/useOneSignal';
+import { useOneSignalIntegration } from '@/hooks/useOneSignalIntegration';
 import { OneSignalDiagnostics } from './OneSignalDiagnostics';
 
 export function NotificationSettings() {
   const { toast } = useToast();
-  const { playerId, isInitialized, permissionGranted, updatePlayerId } = useOneSignal();
+  const { playerId, isInitialized, permissionGranted, updatePlayerId } = { playerId: null, isInitialized: false, permissionGranted: false, updatePlayerId: async () => {} };
   const [isReactivating, setIsReactivating] = useState(false);
   const [isLinkingExternalId, setIsLinkingExternalId] = useState(false);
   const [hasPlayerIdInDb, setHasPlayerIdInDb] = useState<boolean | null>(null);

@@ -18,7 +18,7 @@ import { Suspense, lazy } from "react";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AdminPermissionRoute from "./components/AdminPermissionRoute";
 import { useVersionCheck } from "./hooks/useVersionCheck";
-import { useOneSignal } from "./hooks/useOneSignal";
+import { useOneSignalIntegration } from "./hooks/useOneSignalIntegration";
 import { useRealtimeSellerNotifications } from "./hooks/useRealtimeSellerNotifications";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -64,66 +64,20 @@ function OneSignalInitializer() {
   const { user } = useAuth();
   const [userId, setUserId] = useState<string | undefined>();
   
-  // Monitorar user_id para notificações em tempo real
   useEffect(() => {
     if (user?.id) {
       setUserId(user.id);
     }
   }, [user]);
   
-  const { isInitialized, playerId, savePlayerIdToProfile, setExternalUserId } = useOneSignal({
-    onNotificationReceived: (notification) => {
-      console.log('📩 Notification received in app:', notification);
-    },
-    onNotificationOpened: (notification) => {
-      console.log('🔔 Notification opened:', notification);
-      
-      // Navegar para a página de vendas quando abrir notificação
-      if (notification.data?.type === 'sale') {
-        window.location.href = '/vendedor#vendas';
-      }
-    }
+  useOneSignalIntegration({
+    appId: '85da5c4b-c2a7-426f-851f-5c7c42afd64a',
+    userId: user?.id,
+    userEmail: user?.email
   });
 
-  // Vincular user_id com OneSignal quando usuário está autenticado
-  useEffect(() => {
-    if (user?.id && isInitialized) {
-      console.log('🔗 Vinculando user_id com OneSignal External ID:', user.id);
-      setExternalUserId(user.id).then(success => {
-        if (success) {
-          console.log('✅ External User ID configurado - Journeys do OneSignal podem funcionar');
-        } else {
-          console.log('⚠️ External User ID não configurado - usando notificações push diretas');
-        }
-      });
-    }
-  }, [user?.id, isInitialized, setExternalUserId]);
-
-  // Hook para notificações em tempo real do vendedor (apenas envia push via OneSignal)
+  // Hook para notificações em tempo real do vendedor
   useRealtimeSellerNotifications(userId);
-
-  useEffect(() => {
-    if (isInitialized && playerId) {
-      console.log('✅ OneSignal initialized with Player ID:', playerId);
-    }
-  }, [isInitialized, playerId]);
-
-  // Salvar Player ID quando usuário estiver autenticado e Player ID disponível
-  useEffect(() => {
-    console.log('🔍 OneSignalInitializer check:', { 
-      hasUser: !!user, 
-      hasPlayerId: !!playerId, 
-      hasSaveFunction: !!savePlayerIdToProfile,
-      playerId 
-    });
-    
-    if (user && playerId && savePlayerIdToProfile) {
-      console.log('🔄 User authenticated + Player ID available, saving to Supabase...');
-      savePlayerIdToProfile(playerId).then(success => {
-        console.log('💾 Save result:', success ? 'SUCCESS' : 'FAILED');
-      });
-    }
-  }, [user, playerId, savePlayerIdToProfile]);
 
   return null;
 }

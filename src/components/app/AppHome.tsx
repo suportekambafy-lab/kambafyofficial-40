@@ -35,7 +35,7 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { configureStatusBar } from '@/utils/nativeService';
 import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
 import { useSalesCache } from '@/hooks/useSalesCache';
-import { useOneSignal } from '@/hooks/useOneSignal';
+import { useOneSignalIntegration } from '@/hooks/useOneSignalIntegration';
 import { Capacitor } from '@capacitor/core';
 import { NotificationSettings } from '@/components/notifications/NotificationSettings';
 import { TestNotificationButton } from '@/components/testing/TestNotificationButton';
@@ -65,13 +65,11 @@ export function AppHome() {
       console.log('Native notification received:', notification);
     }
   });
-  const oneSignal = useOneSignal({
-    onNotificationReceived: notification => {
-      console.log('OneSignal notification received:', notification);
-    },
-    onNotificationOpened: notification => {
-      console.log('OneSignal notification opened:', notification);
-    }
+  
+  useOneSignalIntegration({
+    appId: '85da5c4b-c2a7-426f-851f-5c7c42afd64a',
+    userId: user?.id,
+    userEmail: user?.email
   });
   const {
     triggerHaptic
@@ -172,9 +170,9 @@ export function AppHome() {
       hasOneSignalPlugin: hasCordovaPlugin,
       pluginObject: window.plugins?.OneSignal ? 'EXISTS' : 'NULL',
       oneSignalState: {
-        isInitialized: oneSignal.isInitialized,
-        permissionGranted: oneSignal.permissionGranted,
-        playerId: oneSignal.playerId
+        isInitialized: false,
+        permissionGranted: false,
+        playerId: null
       }
     });
     
@@ -231,41 +229,15 @@ export function AppHome() {
             hasCordovaPlugin: hasCordovaPlugin ? 'SIM' : 'NÃO'
           });
           
-          if (!oneSignal.isInitialized) {
-            console.error('❌ [handlePushToggle] OneSignal Web SDK não inicializado');
-            setPushEnabled(false);
-            toast({
-              title: "Erro",
-              description: "Sistema de notificações não está pronto. Tente novamente.",
-              variant: "destructive"
-            });
-            triggerHaptic('error');
-            return;
-          }
-
-          const permission = await oneSignal.requestPermission();
-          console.log('🌐 [handlePushToggle] Resultado da permissão Web SDK:', permission);
-
-          if (permission && oneSignal.permissionGranted) {
-            setPushEnabled(true);
-            localStorage.setItem('push_notifications_enabled', 'true');
-            
-            await nativePush.sendLocalNotification('Notificações Ativadas! 🎉', 'Você receberá notificações sobre suas vendas e produtos.');
-            
-            toast({
-              title: "Notificações Ativadas",
-              description: "Você receberá notificações sobre vendas e produtos"
-            });
-            triggerHaptic('success');
-          } else {
-            setPushEnabled(false);
-            toast({
-              title: "Permissão Negada",
-              description: "Para ativar, permita nas configurações do navegador",
-              variant: "destructive"
-            });
-            triggerHaptic('error');
-          }
+          console.error('❌ [handlePushToggle] OneSignal Web SDK não disponível - use plugin nativo');
+          setPushEnabled(false);
+          toast({
+            title: "Erro",
+            description: "Use o app móvel nativo para notificações.",
+            variant: "destructive"
+          });
+          triggerHaptic('error');
+          return;
         }
       } catch (error) {
         console.error('❌ [handlePushToggle] Error:', error);
@@ -288,16 +260,12 @@ export function AppHome() {
     }
   };
   useEffect(() => {
-    // Verificar se as notificações já estão permitidas ao carregar
+    // Notificações gerenciadas pelo plugin nativo ou novo hook
     const savedPreference = localStorage.getItem('push_notifications_enabled');
-    if (oneSignal.permissionGranted && savedPreference === 'true') {
+    if (savedPreference === 'true') {
       setPushEnabled(true);
-    } else if (oneSignal.permissionGranted && oneSignal.isInitialized) {
-      // Se OneSignal tem permissão mas localStorage não está setado, atualizar
-      setPushEnabled(true);
-      localStorage.setItem('push_notifications_enabled', 'true');
     }
-  }, [oneSignal.permissionGranted, oneSignal.isInitialized]);
+  }, []);
 
   // Auto-refresh quando app volta ao foreground
   useEffect(() => {
