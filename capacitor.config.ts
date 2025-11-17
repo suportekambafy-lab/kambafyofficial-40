@@ -23,7 +23,7 @@ const config: CapacitorConfig = {
       presentationOptions: ["badge", "sound", "alert"],
     },
     OneSignal: {
-      appId: "85da5c4b-c2a7-426f-851f-5c7c42afd64a",
+      appId: "e1a77f24-25aa-4f9d-a0fd-316ecc8885cd",
     },
   },
 };
