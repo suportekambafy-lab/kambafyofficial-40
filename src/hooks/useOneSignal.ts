@@ -220,19 +220,30 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       }
 
       // Tentar obter Player ID de múltiplas fontes
-      console.log('📱 [OneSignal Web SDK] Tentando obter Player ID...');
+      console.log('📱 [OneSignal Web SDK] ===== INICIANDO CAPTURA DE PLAYER ID =====');
+      console.log('📱 [OneSignal Web SDK] OneSignal Object:', OneSignal);
+      console.log('📱 [OneSignal Web SDK] OneSignal.User:', OneSignal.User);
       
       // Método 1: PushSubscription ID
       let subscriptionId = await OneSignal.User.PushSubscription.id;
-      console.log('📱 [OneSignal Web SDK] PushSubscription ID:', subscriptionId);
+      console.log('📱 [OneSignal Web SDK] 🔍 Método 1 - PushSubscription.id:', subscriptionId);
       
       // Método 2: User.onesignalId (pode existir mesmo sem subscription)
       const onesignalId = OneSignal.User?.onesignalId;
-      console.log('📱 [OneSignal Web SDK] OneSignal User ID:', onesignalId);
+      console.log('📱 [OneSignal Web SDK] 🔍 Método 2 - User.onesignalId:', onesignalId);
+      
+      // Método 3: Tentar pegar o ID do estado interno
+      try {
+        const userId = OneSignal.User?.id;
+        console.log('📱 [OneSignal Web SDK] 🔍 Método 3 - User.id:', userId);
+      } catch (e) {
+        console.log('📱 [OneSignal Web SDK] ⚠️ User.id não disponível:', e);
+      }
       
       // Usar o que estiver disponível
       let playerId = subscriptionId || onesignalId;
-      console.log('📱 [OneSignal Web SDK] Player ID detectado:', playerId);
+      console.log('📱 [OneSignal Web SDK] 🎯 Player ID FINAL detectado:', playerId);
+      console.log('📱 [OneSignal Web SDK] 🎯 Fonte:', subscriptionId ? 'PushSubscription' : (onesignalId ? 'onesignalId' : 'NENHUM'));
       
       // Se não tem subscription ID mas tem permissão, fazer opt-in
       if (!subscriptionId && permission) {
@@ -243,7 +254,7 @@ export function useOneSignal(options?: UseOneSignalOptions) {
           await new Promise(resolve => setTimeout(resolve, 2000));
           subscriptionId = await OneSignal.User.PushSubscription.id;
           playerId = subscriptionId;
-          console.log('📱 [OneSignal Web SDK] New Subscription ID after opt-in:', subscriptionId);
+          console.log('📱 [OneSignal Web SDK] ✅ New Subscription ID after opt-in:', subscriptionId);
         } catch (optInError) {
           console.error('❌ [OneSignal Web SDK] Error during opt-in:', optInError);
         }
@@ -251,17 +262,22 @@ export function useOneSignal(options?: UseOneSignalOptions) {
       
       // Salvar Player ID se disponível
       if (playerId) {
-        console.log('💾 [OneSignal Web SDK] Salvando Player ID:', playerId);
+        console.log('💾 [OneSignal Web SDK] ===== INICIANDO SALVAMENTO =====');
+        console.log('💾 [OneSignal Web SDK] Player ID a ser salvo:', playerId);
         setPlayerId(playerId);
+        
         const saved = await savePlayerIdToProfile(playerId);
         if (saved) {
-          console.log('✅ [OneSignal Web SDK] Player ID saved to profile!');
+          console.log('✅ [OneSignal Web SDK] ===== PLAYER ID SALVO COM SUCESSO! =====');
         } else {
-          console.error('❌ [OneSignal Web SDK] Failed to save Player ID to profile!');
+          console.error('❌ [OneSignal Web SDK] ===== FALHA AO SALVAR PLAYER ID! =====');
         }
       } else {
-        console.warn('⚠️ [OneSignal Web SDK] No Player ID available yet.');
-        console.warn('⚠️ [OneSignal Web SDK] User may need to grant notification permission or subscription may not be ready.');
+        console.warn('⚠️ [OneSignal Web SDK] ===== NENHUM PLAYER ID DISPONÍVEL =====');
+        console.warn('⚠️ [OneSignal Web SDK] Motivos possíveis:');
+        console.warn('   1. Usuário não concedeu permissão de notificação');
+        console.warn('   2. OneSignal ainda não criou o subscription');
+        console.warn('   3. OneSignal Web SDK não está completamente inicializado');
       }
 
       // Configurar listeners de notificação
