@@ -63,6 +63,101 @@ export function TwoFactorSettings() {
     setCurrentStep('settings');
   };
 
+  const forceSyncPlayerId = async () => {
+    if (!user?.id) {
+      toast({ 
+        title: "Erro", 
+        description: "Usuário não autenticado", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setIsLinkingExternalId(true);
+
+    try {
+      console.log('🔄 Forçando sincronização do Player ID...');
+      
+      // Pegar o Player ID ATUAL do OneSignal
+      if (!window.OneSignal) {
+        toast({ 
+          title: "Erro", 
+          description: "OneSignal não inicializado", 
+          variant: "destructive" 
+        });
+        setIsLinkingExternalId(false);
+        return;
+      }
+
+      const currentPlayerId = await window.OneSignal.User.PushSubscription.id;
+      console.log('🆔 Player ID atual do OneSignal:', currentPlayerId);
+      
+      if (!currentPlayerId) {
+        toast({ 
+          title: "Erro", 
+          description: "Player ID não encontrado no OneSignal. Ative as notificações primeiro.", 
+          variant: "destructive" 
+        });
+        setIsLinkingExternalId(false);
+        return;
+      }
+
+      // Atualizar no banco de dados
+      console.log('💾 Atualizando Player ID no Supabase...');
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ onesignal_player_id: currentPlayerId })
+        .eq('user_id', user.id);
+        
+      if (updateError) {
+        console.error('❌ Erro ao atualizar Player ID:', updateError);
+        toast({ 
+          title: "Erro ao atualizar", 
+          description: updateError.message, 
+          variant: "destructive" 
+        });
+        setIsLinkingExternalId(false);
+        return;
+      }
+      
+      console.log('✅ Player ID atualizado no banco:', currentPlayerId);
+
+      // Agora vincular o External ID
+      console.log('🔗 Vinculando External ID...');
+      const { error: linkError } = await supabase.functions.invoke('link-onesignal-external-id', {
+        body: {
+          user_id: user.id,
+          player_id: currentPlayerId
+        }
+      });
+
+      if (linkError) {
+        console.error('❌ Erro ao vincular External ID:', linkError);
+        toast({ 
+          title: "Erro ao vincular", 
+          description: linkError.message, 
+          variant: "destructive" 
+        });
+      } else {
+        console.log('✅ External ID vinculado com sucesso!');
+        toast({ 
+          title: "Sucesso!", 
+          description: `Player ID ${currentPlayerId} sincronizado e External ID vinculado!`, 
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Erro ao sincronizar:', error);
+      toast({ 
+        title: "Erro", 
+        description: error instanceof Error ? error.message : "Erro desconhecido", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLinkingExternalId(false);
+    }
+  };
+
   const linkExternalId = async () => {
     if (!user?.id) {
       toast({ 
@@ -76,30 +171,7 @@ export function TwoFactorSettings() {
     setIsLinkingExternalId(true);
 
     try {
-      // Primeiro, atualizar o Player ID do banco com o atual do OneSignal
-      console.log('🔄 Atualizando Player ID...');
-      
-      // Chamar hook do OneSignal para pegar o player ID atual
-      if (window.OneSignal) {
-        const currentPlayerId = await window.OneSignal.User.PushSubscription.id;
-        console.log('🆔 Player ID atual do OneSignal:', currentPlayerId);
-        
-        if (currentPlayerId) {
-          // Atualizar no banco de dados
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ onesignal_player_id: currentPlayerId })
-            .eq('user_id', user.id);
-            
-          if (updateError) {
-            console.error('❌ Erro ao atualizar Player ID:', updateError);
-          } else {
-            console.log('✅ Player ID atualizado no banco:', currentPlayerId);
-          }
-        }
-      }
-
-      // Buscar o player_id atualizado do perfil
+      // Buscar o player_id do perfil
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('onesignal_player_id')
@@ -231,8 +303,26 @@ export function TwoFactorSettings() {
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <Button 
+              onClick={forceSyncPlayerId}
+              disabled={isLinkingExternalId || !user?.id}
+              className="w-full sm:w-auto"
+            >
+              {isLinkingExternalId ? (
+                <>
+                  <LoadingSpinner className="mr-2 h-4 w-4" />
+                  Sincronizando...
+                </>
+              ) : (
+                <>
+                  <Link className="mr-2 h-4 w-4" />
+                  Forçar Sincronização
+                </>
+              )}
+            </Button>
+            <Button 
               onClick={linkExternalId}
               disabled={isLinkingExternalId || !user?.id}
+              variant="outline"
               className="w-full sm:w-auto"
             >
               {isLinkingExternalId ? (
