@@ -21,6 +21,7 @@ serve(async (req) => {
     }
 
     const ONESIGNAL_REST_API_KEY = Deno.env.get('ONESIGNAL_REST_API_KEY');
+    const ONESIGNAL_APP_ID = Deno.env.get('ONESIGNAL_APP_ID') || 'e1a77f24-25aa-4f9d-a0fd-316ecc8885cd';
     
     if (!ONESIGNAL_REST_API_KEY) {
       throw new Error('ONESIGNAL_REST_API_KEY not configured');
@@ -29,7 +30,7 @@ serve(async (req) => {
     // Vincular External User ID ao player via API REST do OneSignal
     console.log('📤 [Link External ID] Calling OneSignal API to link external_id...');
     console.log(`📤 [Link External ID] URL: https://onesignal.com/api/v1/players/${player_id}`);
-    console.log(`📤 [Link External ID] Body: { "external_user_id": "${user_id}" }`);
+    console.log(`📤 [Link External ID] Body:`, { app_id: ONESIGNAL_APP_ID, external_user_id: user_id });
 
     const response = await fetch(`https://onesignal.com/api/v1/players/${player_id}`, {
       method: 'PUT',
@@ -38,6 +39,7 @@ serve(async (req) => {
         'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
       },
       body: JSON.stringify({
+        app_id: ONESIGNAL_APP_ID,
         external_user_id: user_id
       }),
     });
