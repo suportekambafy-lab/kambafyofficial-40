@@ -122,3 +122,6 @@ verify_jwt = false
 
 [functions.recover-missing-player-ids]
 verify_jwt = false
+
+[functions.update-onesignal-external-ids]
+verify_jwt = false
