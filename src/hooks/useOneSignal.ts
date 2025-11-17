@@ -248,6 +248,25 @@ export function useOneSignal(options?: UseOneSignalOptions) {
         options?.onNotificationReceived?.(event);
       });
 
+      // 🔄 LISTENER AUTOMÁTICO: Detectar mudanças no Player ID
+      console.log('🔄 [OneSignal Web SDK] Configurando listener de mudanças no Player ID...');
+      OneSignal.User.PushSubscription.addEventListener('change', async (event: any) => {
+        console.log('🔄 [OneSignal Web SDK] Push Subscription mudou!', event);
+        
+        const newPlayerId = event.current?.id;
+        const previousPlayerId = event.previous?.id;
+        
+        console.log('🆔 Player ID anterior:', previousPlayerId);
+        console.log('🆔 Novo Player ID:', newPlayerId);
+        
+        if (newPlayerId && newPlayerId !== previousPlayerId) {
+          console.log('✅ [OneSignal Web SDK] Novo Player ID detectado! Sincronizando com Supabase...');
+          setPlayerId(newPlayerId);
+          await savePlayerIdToProfile(newPlayerId);
+          console.log('✅ [OneSignal Web SDK] Player ID atualizado automaticamente no Supabase!');
+        }
+      });
+
       console.log('✅ [OneSignal Web SDK] Setup complete!');
 
     } catch (error) {
@@ -316,6 +335,25 @@ export function useOneSignal(options?: UseOneSignalOptions) {
         } else {
           console.error('❌ [NATIVE SDK] NO PLAYER ID (userId) found in device state!');
           console.error('❌ [NATIVE SDK] This is critical - check OneSignal setup');
+        }
+      });
+
+      // 🔄 LISTENER AUTOMÁTICO: Detectar mudanças no Player ID (Native)
+      console.log('🔄 [NATIVE SDK] Configurando listener de mudanças no Player ID...');
+      OneSignalPlugin.addSubscriptionObserver(async (state: any) => {
+        console.log('🔄 [NATIVE SDK] Subscription mudou!', state);
+        
+        const newPlayerId = state.to?.userId;
+        const previousPlayerId = state.from?.userId;
+        
+        console.log('🆔 Player ID anterior:', previousPlayerId);
+        console.log('🆔 Novo Player ID:', newPlayerId);
+        
+        if (newPlayerId && newPlayerId !== previousPlayerId) {
+          console.log('✅ [NATIVE SDK] Novo Player ID detectado! Sincronizando com Supabase...');
+          setPlayerId(newPlayerId);
+          await savePlayerIdToProfile(newPlayerId);
+          console.log('✅ [NATIVE SDK] Player ID atualizado automaticamente no Supabase!');
         }
       });
 
