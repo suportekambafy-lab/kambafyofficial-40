@@ -17,15 +17,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { notification_id, user_id, title, message, order_id, amount, currency } = await req.json()
+    const { notification_id, user_id, title, message, order_id, amount, currency, seller_commission } = await req.json()
 
     console.log('🔔 [Trigger Seller Notification] Iniciando envio de notificação...')
-    console.log('📊 [Trigger Seller Notification] Dados:', { notification_id, user_id, title, order_id })
+    console.log('📊 [Trigger Seller Notification] Dados:', { notification_id, user_id, order_id, seller_commission, amount, currency })
 
-    // Buscar player_id do vendedor
+    // Buscar email do vendedor para usar como external_id
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('onesignal_player_id')
+      .select('email')
       .eq('user_id', user_id)
       .single()
 
@@ -34,34 +34,38 @@ serve(async (req) => {
       throw new Error(`Erro ao buscar perfil do vendedor: ${profileError.message}`)
     }
 
-    if (!profile?.onesignal_player_id) {
-      console.warn('⚠️ [Trigger Seller Notification] Vendedor sem player_id registrado')
+    if (!profile?.email) {
+      console.warn('⚠️ [Trigger Seller Notification] Vendedor sem email registrado')
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Vendedor não tem OneSignal player_id registrado' 
+          error: 'Vendedor não tem email registrado' 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log('✅ [Trigger Seller Notification] Player ID encontrado:', profile.onesignal_player_id)
+    console.log('✅ [Trigger Seller Notification] Email encontrado:', profile.email)
+
+    // Calcular comissão (usar seller_commission se disponível, senão usar amount)
+    const commission = seller_commission || amount;
 
     // Chamar função de envio de notificação OneSignal
     const { data: notificationResult, error: notificationError } = await supabaseClient.functions.invoke(
       'send-onesignal-notification',
       {
         body: {
-          player_id: profile.onesignal_player_id,
-          user_id: user_id,
-          title: title,
-          message: message,
+          external_id: profile.email,
+          title: 'Kambafy - Nova venda',
+          message: `Sua comissão: ${commission} ${currency}`,
           data: {
-            type: 'new_sale',
+            type: 'sale',
             order_id: order_id,
             amount: amount,
+            seller_commission: commission,
             currency: currency,
-            notification_id: notification_id
+            notification_id: notification_id,
+            url: 'https://app.kambafy.com/vendedor/vendas'
           }
         }
       }
@@ -79,7 +83,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         notification_id,
-        player_id: profile.onesignal_player_id,
+        external_id: profile.email,
         result: notificationResult 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
