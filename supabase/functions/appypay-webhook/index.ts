@@ -488,42 +488,43 @@ const handler = async (req: Request): Promise<Response> => {
 
           // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR
           try {
-            console.log('[APPYPAY-WEBHOOK] 📱 Checking OneSignal notification...');
+            console.log('[APPYPAY-WEBHOOK] 📱 Preparando notificação OneSignal...');
             
-            // Buscar OneSignal Player ID do vendedor
+            // Buscar email do vendedor para usar como external_id
             const { data: sellerProfile } = await supabase
               .from('profiles')
-              .select('onesignal_player_id')
+              .select('email')
               .eq('user_id', product?.user_id)
               .single();
             
-            if (sellerProfile?.onesignal_player_id) {
-              console.log('[APPYPAY-WEBHOOK] 📤 Sending OneSignal notification to seller...');
+            if (sellerProfile?.email) {
+              console.log('[APPYPAY-WEBHOOK] 📤 Enviando notificação OneSignal para:', sellerProfile.email);
               
               const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
                 body: {
-                  player_id: sellerProfile.onesignal_player_id,
-                  title: 'Nova venda realizada! 🎉',
-                  message: `Parabéns! ${order.customer_name} comprou ${product?.name || 'um produto'} por ${order.amount} ${order.currency}`,
+                  external_id: sellerProfile.email,
+                  title: 'Kambafy - Nova venda',
+                  message: `Sua comissão: ${order.seller_commission || order.amount} ${order.currency}`,
                   data: {
                     type: 'sale',
                     order_id: order.order_id,
                     amount: order.amount,
+                    seller_commission: order.seller_commission || order.amount,
                     currency: order.currency,
                     customer_name: order.customer_name,
                     product_name: product?.name || '',
-                    url: '/vendedor#vendas'
+                    url: 'https://app.kambafy.com/vendedor/vendas'
                   }
                 }
               });
               
               if (notificationError) {
-                console.error('[APPYPAY-WEBHOOK] ❌ Error sending OneSignal notification:', notificationError);
+                console.error('[APPYPAY-WEBHOOK] ❌ Erro ao enviar notificação OneSignal:', notificationError);
               } else {
-                console.log('[APPYPAY-WEBHOOK] ✅ OneSignal notification sent successfully');
+                console.log('[APPYPAY-WEBHOOK] ✅ Notificação OneSignal enviada com sucesso');
               }
             } else {
-              console.log('[APPYPAY-WEBHOOK] ⚠️ Seller does not have OneSignal Player ID configured');
+              console.log('[APPYPAY-WEBHOOK] ⚠️ Email do vendedor não encontrado');
             }
 
             // 🎯 ENVIAR CUSTOM EVENT PARA ONESIGNAL JOURNEY
