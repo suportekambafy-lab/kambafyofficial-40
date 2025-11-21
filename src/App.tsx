@@ -20,12 +20,18 @@ import AdminPermissionRoute from "./components/AdminPermissionRoute";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 import { supabase } from "@/integrations/supabase/client";
 import { useOneSignal } from "./hooks/useOneSignal";
+import { useOneSignalAutoLink } from "./hooks/useOneSignalAutoLink";
 
 const TestFacebookIntegration = lazy(() => import("./pages/TestFacebookIntegration"));
 
-// OneSignal Initializer Component
+// OneSignal Initializer Component com Auto-Link
 const OneSignalInitializer = () => {
+  const { user } = useAuth();
   useOneSignal();
+  
+  // ✅ Verificação automática de vínculo para TODOS os usuários logados
+  useOneSignalAutoLink(user?.email, user?.id);
+  
   return null;
 };
 

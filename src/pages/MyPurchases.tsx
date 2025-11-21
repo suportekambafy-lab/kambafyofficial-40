@@ -8,12 +8,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { RefundRequestDialog } from '@/components/refunds/RefundRequestDialog';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useOneSignalAutoLink } from '@/hooks/useOneSignalAutoLink';
 
 export default function MyPurchases() {
   const { user } = useAuth();
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+
+  // ✅ Verificação automática de OneSignal (área de compras)
+  useOneSignalAutoLink(user?.email, user?.id);
 
   const loadPurchases = async () => {
     if (!user?.email) {

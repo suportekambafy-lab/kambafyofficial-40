@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { ModernSidebar } from '@/components/modern/ModernSidebar';
@@ -11,6 +10,8 @@ import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { CrispChat } from '@/components/CrispChat';
 import { useSellerData } from '@/hooks/useOptimizedSellerData';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOneSignalAutoLink } from '@/hooks/useOneSignalAutoLink';
 
 // Lazy load páginas para melhor performance com retry logic
 const createLazyWithRetry = (importFn: () => Promise<any>, name: string) => {
@@ -68,6 +69,10 @@ function SellerDashboardContent() {
   const { collapsed, isMobile, sidebarOpen, toggleSidebarOpen, closeSidebar } = useSidebar();
   const { theme } = useSellerTheme();
   const { data: sellerData } = useSellerData();
+  const { user } = useAuth();
+
+  // ✅ Verificação automática de OneSignal (área do vendedor)
+  useOneSignalAutoLink(user?.email, user?.id);
 
   return (
     <div className={`min-h-screen bg-background flex flex-col seller-dashboard overflow-x-hidden max-w-full ${theme === 'dark' ? 'dark' : ''}`}>
