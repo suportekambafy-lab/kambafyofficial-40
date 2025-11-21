@@ -280,26 +280,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Vincular OneSignal external_id automaticamente para usuários já logados
+  // 🔗 Vincular OneSignal external_id automaticamente para TODOS usuários logados
   useEffect(() => {
-    if (user?.email && !loading) {
-      const lastLinkAttempt = localStorage.getItem(`onesignal_link_attempt_${user.email}`);
-      const now = Date.now();
-      const ONE_HOUR = 60 * 60 * 1000;
-      
-      // Tentar vincular apenas uma vez por hora para evitar múltiplas tentativas
-      if (!lastLinkAttempt || (now - parseInt(lastLinkAttempt)) > ONE_HOUR) {
-        console.log('🔗 [Auto] Verificando vínculo OneSignal para usuário logado...');
-        localStorage.setItem(`onesignal_link_attempt_${user.email}`, now.toString());
+    if (!user?.id || !user?.email || loading) return;
+
+    const checkAndLinkOneSignal = async () => {
+      try {
+        console.log('🔍 [Auto] Verificando se usuário tem OneSignal ID vinculado...');
         
-        // Aguardar 2s para garantir que o DOM está pronto e o cookie pode estar disponível
+        // 1. Verificar se o usuário já tem onesignal_player_id no banco
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('onesignal_player_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (profileError) {
+          console.error('❌ [Auto] Erro ao verificar perfil:', profileError);
+          return;
+        }
+        
+        // 2. Se JÁ TEM o ID vinculado, não fazer nada
+        if (profile?.onesignal_player_id) {
+          console.log('✅ [Auto] OneSignal ID já vinculado:', profile.onesignal_player_id);
+          return;
+        }
+        
+        // 3. Se NÃO TEM, tentar vincular (aguardar DOM estar pronto)
+        console.log('⚠️ [Auto] OneSignal ID não encontrado no perfil, tentando vincular...');
+        
+        // Aguardar 3s para garantir que o DOM está pronto e o cookie pode estar disponível
         setTimeout(() => {
           linkOneSignalExternalId(user.email!).catch(err => {
             console.error('❌ [Auto] Erro ao vincular OneSignal:', err);
           });
-        }, 2000);
+        }, 3000);
+        
+      } catch (error) {
+        console.error('❌ [Auto] Erro ao verificar/vincular OneSignal:', error);
       }
-    }
+    };
+
+    checkAndLinkOneSignal();
   }, [user, loading]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
