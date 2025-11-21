@@ -43,6 +43,59 @@ serve(async (req) => {
 
     console.log('Order created successfully:', insertedOrder.id);
 
+    // Enviar notificação OneSignal para o vendedor sobre a referência/transferência gerada
+    if (insertedOrder.status === 'pending' && insertedOrder.product_id) {
+      try {
+        console.log('📤 Buscando informações do vendedor para notificação...');
+        
+        // Buscar produto para obter user_id do vendedor
+        const { data: product, error: productError } = await supabaseAdmin
+          .from('products')
+          .select('user_id, name')
+          .eq('id', insertedOrder.product_id)
+          .single();
+        
+        if (product && product.user_id) {
+          // Buscar perfil do vendedor para pegar email
+          const { data: sellerProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('email, full_name')
+            .eq('user_id', product.user_id)
+            .single();
+          
+          if (sellerProfile?.email) {
+            console.log('📤 Enviando notificação OneSignal para:', sellerProfile.email);
+            
+            const { error: notificationError } = await supabaseAdmin.functions.invoke('send-onesignal-notification', {
+              body: {
+                external_id: sellerProfile.email,
+                title: 'Kambafy - Referência gerada',
+                message: `Sua comissão: ${insertedOrder.seller_commission || insertedOrder.amount} ${insertedOrder.currency}`,
+                data: {
+                  type: 'reference_generated',
+                  order_id: insertedOrder.order_id,
+                  amount: insertedOrder.amount,
+                  seller_commission: insertedOrder.seller_commission || insertedOrder.amount,
+                  currency: insertedOrder.currency,
+                  customer_name: insertedOrder.customer_name,
+                  product_name: product.name,
+                  url: 'https://app.kambafy.com/vendedor/vendas'
+                }
+              }
+            });
+            
+            if (notificationError) {
+              console.log('⚠️ Erro ao enviar notificação OneSignal:', notificationError);
+            } else {
+              console.log('✅ Notificação OneSignal enviada com sucesso');
+            }
+          }
+        }
+      } catch (notifError) {
+        console.log('⚠️ Erro ao processar notificação:', notifError);
+      }
+    }
+
     return new Response(
       JSON.stringify(insertedOrder),
       { 

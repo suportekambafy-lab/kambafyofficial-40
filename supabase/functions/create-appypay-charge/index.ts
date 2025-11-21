@@ -477,6 +477,51 @@ Deno.serve(async (req) => {
         } catch (emailError) {
           logStep("Email error", emailError);
         }
+      } else if (orderStatus === 'pending') {
+        logStep("Payment pending - sending notification to seller about generated reference");
+        
+        // Enviar notificação OneSignal para o vendedor sobre a referência gerada
+        if (product?.user_id) {
+          try {
+            // Buscar perfil do vendedor para pegar email
+            const { data: sellerProfile } = await supabase
+              .from('profiles')
+              .select('email, full_name')
+              .eq('user_id', product.user_id)
+              .single();
+            
+            if (sellerProfile?.email) {
+              logStep('📤 Enviando notificação OneSignal para vendedor sobre referência:', sellerProfile.email);
+              
+              const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
+                body: {
+                  external_id: sellerProfile.email,
+                  title: 'Kambafy - Referência gerada',
+                  message: `Sua comissão: ${orderDataToSave.seller_commission || orderDataToSave.amount} ${orderDataToSave.currency}`,
+                  data: {
+                    type: 'reference_generated',
+                    order_id: orderId,
+                    amount: orderDataToSave.amount,
+                    seller_commission: orderDataToSave.seller_commission || orderDataToSave.amount,
+                    currency: orderDataToSave.currency,
+                    customer_name: customerData.name,
+                    product_name: productNameToUse || '',
+                    reference_number: chargeResult.responseStatus?.reference?.referenceNumber,
+                    url: 'https://app.kambafy.com/vendedor/vendas'
+                  }
+                }
+              });
+              
+              if (notificationError) {
+                logStep('⚠️ Erro ao enviar notificação OneSignal:', notificationError);
+              } else {
+                logStep('✅ Notificação OneSignal enviada com sucesso');
+              }
+            }
+          } catch (notifError) {
+            logStep('⚠️ Erro ao processar notificação:', notifError);
+          }
+        }
       } else {
         logStep("Payment pending - confirmation email will be sent after payment confirmation");
       }

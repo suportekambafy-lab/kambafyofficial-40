@@ -375,6 +375,62 @@ serve(async (req) => {
                   } else {
                     console.log('✅ Multibanco payment details email sent successfully');
                   }
+                  
+                  // Enviar notificação OneSignal para o vendedor sobre a referência Multibanco
+                  try {
+                    console.log('📤 Enviando notificação OneSignal para vendedor sobre Multibanco...');
+                    
+                    // Buscar produto com user_id do vendedor
+                    const { data: productData, error: productFetchError } = await supabase
+                      .from('products')
+                      .select('user_id, name')
+                      .eq('id', order.product_id)
+                      .single();
+                    
+                    if (productData && productData.user_id) {
+                      // Buscar perfil do vendedor
+                      const { data: sellerProfile } = await supabase
+                        .from('profiles')
+                        .select('email, full_name')
+                        .eq('user_id', productData.user_id)
+                        .single();
+                      
+                      if (sellerProfile?.email) {
+                        console.log('📤 Enviando notificação OneSignal para:', sellerProfile.email);
+                        
+                        // Calcular comissão do vendedor (91.01% do valor)
+                        const sellerCommission = (multibancoDetails.amount / 100) * 0.9101;
+                        
+                        const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
+                          body: {
+                            external_id: sellerProfile.email,
+                            title: 'Kambafy - Referência gerada',
+                            message: `Sua comissão: ${sellerCommission.toFixed(2)} ${multibancoDetails.currency.toUpperCase()}`,
+                            data: {
+                              type: 'reference_generated',
+                              order_id: orderId,
+                              amount: (multibancoDetails.amount / 100).toString(),
+                              seller_commission: sellerCommission,
+                              currency: multibancoDetails.currency.toUpperCase(),
+                              customer_name: order.customer_name,
+                              product_name: productData.name,
+                              reference_number: multibancoDetails.reference,
+                              entity: multibancoDetails.entity,
+                              url: 'https://app.kambafy.com/vendedor/vendas'
+                            }
+                          }
+                        });
+                        
+                        if (notificationError) {
+                          console.log('⚠️ Erro ao enviar notificação OneSignal:', notificationError);
+                        } else {
+                          console.log('✅ Notificação OneSignal enviada com sucesso');
+                        }
+                      }
+                    }
+                  } catch (notifError) {
+                    console.log('⚠️ Erro ao processar notificação:', notifError);
+                  }
                 } else {
                   console.log('⚠️ Multibanco details not available yet');
                 }
