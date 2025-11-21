@@ -324,14 +324,19 @@ Deno.serve(async (req) => {
     
     // Para AppyPay Express, adicionar validação extra
     if (paymentMethod === 'express' && chargeResult.responseStatus?.status === 'Success') {
-      logStep('Validação adicional para Express - aguardando 2 segundos...', {
-        transactionId: chargeResult.id
+      logStep('✅ Pagamento Express SUCESSO - validação adicional', {
+        transactionId: chargeResult.id,
+        initialStatus: chargeResult.responseStatus?.status
       });
       
       // Aguardar 2 segundos para AppyPay processar
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       try {
+        logStep('🔍 Verificando status final da transação...', {
+          url: `https://gwy-api.appypay.co.ao/v2.0/transactions/${chargeResult.id}`
+        });
+        
         // Verificar status atualizado da transação
         const verifyResponse = await fetch(
           `https://gwy-api.appypay.co.ao/v2.0/transactions/${chargeResult.id}`,
@@ -344,12 +349,18 @@ Deno.serve(async (req) => {
           }
         );
         
+        logStep('📥 Resposta da verificação recebida', {
+          ok: verifyResponse.ok,
+          status: verifyResponse.status
+        });
+        
         if (verifyResponse.ok) {
           const verifyResult = await verifyResponse.json();
           
-          logStep('Verificação adicional do Express', {
+          logStep('✅ Verificação adicional completada', {
             status: verifyResult.responseStatus?.status,
-            successful: verifyResult.responseStatus?.successful
+            successful: verifyResult.responseStatus?.successful,
+            fullResponse: verifyResult
           });
           
           if (verifyResult.responseStatus?.status === 'Success') {
@@ -357,17 +368,24 @@ Deno.serve(async (req) => {
           } else if (verifyResult.responseStatus?.status === 'Failed') {
             orderStatus = 'failed';
           } else {
-            orderStatus = 'pending'; // Ainda em processamento
+            orderStatus = 'pending';
           }
         } else {
-          logStep('Erro na verificação adicional, usando status inicial', {
-            status: chargeResult.responseStatus?.status
+          const errorText = await verifyResponse.text();
+          logStep('⚠️ ERRO na verificação - usando status inicial', {
+            status: chargeResult.responseStatus?.status,
+            verifyStatus: verifyResponse.status,
+            errorText
           });
-          orderStatus = 'completed'; // Fallback para status inicial
+          orderStatus = 'completed'; // Usar status inicial se verificação falhar
         }
       } catch (verifyError) {
-        console.error('Erro na verificação adicional:', verifyError);
-        orderStatus = 'completed'; // Fallback para status inicial
+        logStep('❌ EXCEPTION na verificação adicional', {
+          error: verifyError,
+          message: verifyError instanceof Error ? verifyError.message : 'Unknown error',
+          stack: verifyError instanceof Error ? verifyError.stack : undefined
+        });
+        orderStatus = 'completed'; // Usar status inicial se houver exception
       }
     }
     // Para referências e outros casos
