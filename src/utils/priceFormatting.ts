@@ -8,6 +8,15 @@ export interface CountryInfo {
   exchangeRate: number;
 }
 
+// Função auxiliar para formatar números no padrão português
+// Ponto para milhares, vírgula para decimais, máximo 2 casas decimais
+export const formatNumberPT = (value: number): string => {
+  return value.toLocaleString('pt-PT', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 export const formatPrice = (
   priceInKZ: number, 
   targetCountry?: CountryInfo,
@@ -20,26 +29,19 @@ export const formatPrice = (
     if (!isNaN(customPrice)) {
       switch (targetCountry.currency) {
         case 'EUR':
-          return `€${customPrice.toFixed(2)}`;
+          return `€${formatNumberPT(customPrice)}`;
         case 'MZN':
-          return `${customPrice.toFixed(2)} MZN`;
+          return `${formatNumberPT(customPrice)} MZN`;
         case 'KZ':
         default:
-          if (useToLocaleString) {
-            return `${parseFloat(customPrice.toString()).toLocaleString('pt-BR')} KZ`;
-          }
-          return `${customPrice.toLocaleString()} KZ`;
+          return `${formatNumberPT(customPrice)} KZ`;
       }
     }
   }
 
   // Se não há país específico, usar formatação padrão KZ
   if (!targetCountry || targetCountry.currency === 'KZ') {
-    // Usar o mesmo formato do ProductCard - parseFloat().toLocaleString('pt-BR')
-    if (useToLocaleString) {
-      return `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;
-    }
-    return `${priceInKZ.toLocaleString()} KZ`;
+    return `${formatNumberPT(priceInKZ)} KZ`;
   }
 
   // Converter preço para a moeda do país (fallback automático)
@@ -47,15 +49,12 @@ export const formatPrice = (
   
   switch (targetCountry.currency) {
     case 'EUR':
-      return `€${convertedPrice.toFixed(2)}`;
+      return `€${formatNumberPT(convertedPrice)}`;
     case 'MZN':
-      return `${convertedPrice.toFixed(2)} MZN`;
+      return `${formatNumberPT(convertedPrice)} MZN`;
     case 'KZ':
     default:
-      if (useToLocaleString) {
-        return `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;
-      }
-      return `${priceInKZ.toLocaleString()} KZ`;
+      return `${formatNumberPT(priceInKZ)} KZ`;
   }
 };
 
@@ -90,7 +89,5 @@ export const formatPriceForSeller = (
     amountInKZ = Math.round(amount * rate);
   }
   
-  return useToLocaleString 
-    ? `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`
-    : `${amountInKZ.toLocaleString()} KZ`;
+  return `${formatNumberPT(amountInKZ)} KZ`;
 };

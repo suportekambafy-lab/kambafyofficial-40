@@ -224,17 +224,18 @@ export const useGeoLocation = () => {
       });
       
       if (!isNaN(customPrice)) {
+        const formattedPrice = customPrice.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         switch (country.currency) {
           case 'EUR':
-            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: €${customPrice.toFixed(2)}`);
-            return `€${customPrice.toFixed(2)}`;
+            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: €${formattedPrice}`);
+            return `€${formattedPrice}`;
           case 'MZN':
-            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: ${customPrice.toFixed(2)} MZN`);
-            return `${customPrice.toFixed(2)} MZN`;
+            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: ${formattedPrice} MZN`);
+            return `${formattedPrice} MZN`;
           case 'KZ':
           default:
-            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: ${parseFloat(customPrice.toString()).toLocaleString('pt-BR')} KZ`);
-            return `${parseFloat(customPrice.toString()).toLocaleString('pt-BR')} KZ`;
+            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: ${formattedPrice} KZ`);
+            return `${formattedPrice} KZ`;
         }
       }
     }
@@ -251,17 +252,18 @@ export const useGeoLocation = () => {
       finalCurrency: country?.currency
     });
     
+    const formattedPrice = convertedPrice.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     switch (country?.currency) {
       case 'EUR':
-        console.log(`🚨 getDisplayPrice - FORMATANDO CONVERSÃO FINAL: €${convertedPrice.toFixed(2)}`);
-        return `€${convertedPrice.toFixed(2)}`;
+        console.log(`🚨 getDisplayPrice - FORMATANDO CONVERSÃO FINAL: €${formattedPrice}`);
+        return `€${formattedPrice}`;
       case 'MZN':
-        console.log(`🚨 getDisplayPrice - FORMATANDO CONVERSÃO FINAL: ${convertedPrice.toFixed(2)} MZN`);
-        return `${convertedPrice.toFixed(2)} MZN`;
+        console.log(`🚨 getDisplayPrice - FORMATANDO CONVERSÃO FINAL: ${formattedPrice} MZN`);
+        return `${formattedPrice} MZN`;
       case 'KZ':
       default:
-        console.log(`🚨 getDisplayPrice - FORMATANDO KZ FINAL: ${parseFloat(convertedPrice.toString()).toLocaleString('pt-BR')} KZ`);
-        return `${parseFloat(convertedPrice.toString()).toLocaleString('pt-BR')} KZ`;
+        console.log(`🚨 getDisplayPrice - FORMATANDO KZ FINAL: ${formattedPrice} KZ`);
+        return `${formattedPrice} KZ`;
     }
   };
 

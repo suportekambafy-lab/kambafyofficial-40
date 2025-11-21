@@ -71,7 +71,7 @@ export function WithdrawalRequestCard({
             </div>
             <div>
               <CardTitle className="text-xl text-gray-900">
-                {Number(request.amount).toLocaleString('pt-AO')} KZ
+                {Number(request.amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ
               </CardTitle>
               <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                 <div className="flex items-center gap-1">

@@ -206,7 +206,7 @@ export const ModulePaymentsDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs sm:text-sm text-muted-foreground">Total Recebido</p>
-              <p className="text-xl sm:text-2xl font-bold">{stats.total.toLocaleString('pt-AO')} AOA</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.total.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AOA</p>
             </div>
             <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           </div>
@@ -301,7 +301,7 @@ export const ModulePaymentsDashboard = () => {
 
                   <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
                     <div className="text-left sm:text-right">
-                      <p className="font-semibold text-sm sm:text-base">{Number(payment.amount).toLocaleString('pt-AO')} {payment.currency}</p>
+                      <p className="font-semibold text-sm sm:text-base">{Number(payment.amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {payment.currency}</p>
                       <p className="text-xs text-muted-foreground capitalize">
                         {payment.payment_method}
                         {payment.payment_method === 'reference' && payment.reference_number && (
@@ -359,7 +359,7 @@ export const ModulePaymentsDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Valor</p>
-                  <p className="font-medium">{Number(selectedPayment.amount).toLocaleString('pt-AO')} {selectedPayment.currency}</p>
+                  <p className="font-medium">{Number(selectedPayment.amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedPayment.currency}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Método de Pagamento</p>
