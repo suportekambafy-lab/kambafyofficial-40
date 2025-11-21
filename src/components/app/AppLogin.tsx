@@ -75,7 +75,8 @@ export function AppLogin() {
     e.preventDefault();
     setError('');
     
-    if (!deviceContext || deviceLoading) {
+    // Aguardar deviceContext apenas se ainda estiver carregando há menos de 3 segundos
+    if (deviceLoading && !deviceContext) {
       setError('Aguarde enquanto verificamos seu dispositivo...');
       return;
     }
