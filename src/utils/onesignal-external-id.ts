@@ -14,13 +14,6 @@ const getCookie = (name: string): string | null => {
 };
 
 /**
- * Verifica se o acesso é via app móvel (user-agent contém "Converta")
- */
-const isAppAccess = (): boolean => {
-  return navigator.userAgent.includes('Converta');
-};
-
-/**
  * Tenta obter o onesignal_push_id do cookie com retry
  */
 const getOneSignalPlayerId = async (maxAttempts: number = 3, delayMs: number = 3000): Promise<string | null> => {
@@ -49,23 +42,17 @@ const getOneSignalPlayerId = async (maxAttempts: number = 3, delayMs: number = 3
  */
 export const linkOneSignalExternalId = async (userEmail: string): Promise<void> => {
   try {
-    // 1. Verificar se é acesso via app
-    if (!isAppAccess()) {
-      console.log('ℹ️ [OneSignal] Não é acesso via app (user-agent não contém "Converta")');
-      return;
-    }
+    console.log('🔍 [OneSignal] Iniciando vinculação de external_id...');
     
-    console.log('📱 [OneSignal] Acesso via app detectado, iniciando vinculação...');
-    
-    // 2. Tentar obter o player_id do cookie (3 tentativas com delay de 3s)
+    // 1. Tentar obter o player_id do cookie (3 tentativas com delay de 3s)
     const playerId = await getOneSignalPlayerId(3, 3000);
     
     if (!playerId) {
-      console.log('⚠️ [OneSignal] Não foi possível obter player_id, abortando vinculação');
+      console.log('ℹ️ [OneSignal] Cookie onesignal_push_id não encontrado, não é acesso via app');
       return;
     }
     
-    // 3. Chamar edge function para vincular external_id
+    // 2. Chamar edge function para vincular external_id
     console.log('🔗 [OneSignal] Chamando edge function para vincular external_id...', {
       player_id: playerId,
       external_id: userEmail
