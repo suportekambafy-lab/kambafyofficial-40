@@ -400,7 +400,7 @@ serve(async (req) => {
             const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
               body: {
                 external_id: sellerProfile.email,
-                title: 'Kambafy - Nova venda',
+                title: 'Kambafy - Venda aprovada',
                 message: `Sua comissão: ${orderData.seller_commission || orderData.amount} ${orderData.currency}`,
                 data: {
                   type: 'sale',

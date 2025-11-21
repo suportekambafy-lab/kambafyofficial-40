@@ -260,7 +260,7 @@ const handler = async (req: Request): Promise<Response> => {
             const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
               body: {
                 external_id: sellerProfile.email,
-                title: 'Kambafy - Nova venda',
+                title: 'Kambafy - Venda aprovada',
                 message: `Sua comissão: ${order.seller_commission || order.amount} ${order.currency}`,
                 data: {
                   type: 'sale',

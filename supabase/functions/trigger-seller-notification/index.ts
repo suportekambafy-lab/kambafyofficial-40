@@ -56,7 +56,7 @@ serve(async (req) => {
       {
         body: {
           external_id: profile.email,
-          title: 'Kambafy - Nova venda',
+          title: 'Kambafy - Venda aprovada',
           message: `Sua comissão: ${currency} ${commission}`,
           data: {
             type: 'sale',
