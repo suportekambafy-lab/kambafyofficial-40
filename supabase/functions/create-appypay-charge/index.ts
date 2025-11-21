@@ -334,7 +334,7 @@ Deno.serve(async (req) => {
       try {
         // Verificar status atualizado da transação
         const verifyResponse = await fetch(
-          `${APPYPAY_API_BASE_URL}/v2.0/transactions/${chargeResult.id}`,
+          `${appyPayApiBaseUrl}/v2.0/transactions/${chargeResult.id}`,
           {
             method: 'GET',
             headers: {
