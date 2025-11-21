@@ -1030,38 +1030,23 @@ const OptimizedCheckout = () => {
                                     all_keys: Object.keys(result)
                                   });
                                   
-                                  // Se o pagamento já está completed, redirecionar imediatamente
-                                  if (result.payment_status === 'completed') {
-                                    console.log('🎉 Payment already COMPLETED! Redirecting immediately...');
-                                    setProcessing(false);
-                                    
-                                    toast({
-                                      title: "Pagamento Aprovado!",
-                                      description: "Seu pagamento foi confirmado com sucesso.",
-                                    });
-                                    
-                                    // Redirecionar imediatamente
-                                    setTimeout(() => {
-                                      navigate(`/checkout-success/${product?.id}?order_id=${result.order_id}&method=appypay`);
-                                    }, 500);
-                                    return;
-                                  }
-                                  
-                                  // Se pending ou failed, fazer polling
-                                  console.log('⏳ Payment status:', result.payment_status, '- Starting polling...');
+                                  // 🚨 CRITICAL: Para Express, NUNCA redirecionar imediatamente
+                                  // Express é SEMPRE assíncrono - usuário confirma no app e webhook atualiza depois
+                                  console.log('⏳ EXPRESS: Aguardando confirmação do usuário no app Multicaixa...');
+                                  console.log('📱 O usuário precisa confirmar o pagamento no app antes de prosseguir');
                                   
                                   // Start polling for payment status
                                   let pollAttempts = 0;
-                                  const maxPollAttempts = 18; // Poll for up to 90 seconds (18 * 5 seconds)
+                                  const maxPollAttempts = 30; // Poll for up to 90 seconds (30 * 3 seconds)
                                   
                                   const pollInterval = setInterval(async () => {
                                     pollAttempts++;
-                                    console.log(`🔍 Polling attempt ${pollAttempts}/${maxPollAttempts} for order ${result.order_id}`);
+                                    console.log(`🔄 [EXPRESS POLLING ${pollAttempts}/${maxPollAttempts}] Verificando confirmação...`);
                                     
                                     try {
                                       const { data: orderStatus, error: pollError } = await supabase
                                         .from('orders')
-                                        .select('status')
+                                        .select('status, payment_method')
                                         .eq('order_id', result.order_id)
                                         .single();
                                       
@@ -1070,12 +1055,16 @@ const OptimizedCheckout = () => {
                                         return;
                                       }
                                       
-                                      console.log('📊 Current order status:', orderStatus?.status);
+                                      console.log('📊 [EXPRESS] Status atual:', {
+                                        status: orderStatus?.status,
+                                        attempt: pollAttempts,
+                                        maxAttempts: maxPollAttempts
+                                      });
                                       
                                       if (orderStatus?.status === 'completed') {
                                         clearInterval(pollInterval);
                                         setProcessing(false);
-                                        console.log('✅ Pagamento Express confirmado!');
+                                        console.log('✅ [EXPRESS] Pagamento CONFIRMADO pelo usuário no app!');
                                         
                                         toast({
                                           title: "Pagamento Aprovado!",
@@ -1083,21 +1072,31 @@ const OptimizedCheckout = () => {
                                           variant: "default",
                                         });
                                         
-                                        // Redirecionar - validação será feita na página de sucesso
+                                        // Redirecionar para página de sucesso
                                         navigate(`/checkout-success/${product?.id}?order_id=${result.order_id}&method=appypay`);
+                                      } else if (orderStatus?.status === 'failed') {
+                                        clearInterval(pollInterval);
+                                        setProcessing(false);
+                                        console.error('❌ [EXPRESS] Pagamento FALHOU ou foi CANCELADO pelo usuário');
+                                        toast({
+                                          title: "Pagamento Não Confirmado",
+                                          description: "O pagamento não foi confirmado no app Multicaixa Express. Tente novamente.",
+                                          variant: "destructive",
+                                        });
                                       } else if (pollAttempts >= maxPollAttempts) {
                                         clearInterval(pollInterval);
                                         setProcessing(false);
-                                        console.log('⏱️ Polling timeout após 90 segundos - pagamento não confirmado');
+                                        console.log('⏱️ [EXPRESS] Timeout (90s) - usuário não confirmou a tempo');
                                         toast({
                                           title: "Tempo Esgotado",
-                                          description: "Não conseguimos confirmar seu pagamento. Por favor, verifique no app Multicaixa Express e aguarde o email de confirmação.",
+                                          description: "Não conseguimos confirmar seu pagamento. Por favor, verifique no app Multicaixa Express.",
+                                          variant: "destructive",
                                         });
                                       }
                                     } catch (pollError) {
-                                      console.error('💥 Polling error:', pollError);
+                                      console.error('💥 [EXPRESS POLLING] Erro:', pollError);
                                     }
-                                  }, 5000); // Poll every 5 seconds
+                                  }, 3000); // Poll every 3 seconds (faster for better UX)
                                   
                                   setProcessing(false);
                                 } else {
