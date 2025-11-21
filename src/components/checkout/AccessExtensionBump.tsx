@@ -118,11 +118,11 @@ export const AccessExtensionBump = ({
               <div className="text-right">
                 {discount > 0 && (
                   <span className="text-sm text-gray-500 line-through mr-2">
-                    {parseFloat(price).toLocaleString('pt-BR')} {currency}
+                    {parseFloat(price).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
                   </span>
                 )}
                 <span className="text-lg font-bold text-green-600">
-                  {parseFloat(discountedPrice).toLocaleString('pt-BR')} {currency}
+                  {parseFloat(discountedPrice).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
                 </span>
               </div>
             </div>

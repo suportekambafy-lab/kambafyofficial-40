@@ -119,7 +119,7 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm md:text-lg font-bold text-checkout-green">
-                {parseFloat(product.price).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
+                {parseFloat(product.price).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ
               </p>
               {isAffiliate && product.affiliate_commission ? (
                 <p className="text-xs text-green-600 font-medium">

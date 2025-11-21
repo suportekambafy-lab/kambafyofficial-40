@@ -80,7 +80,7 @@ export function InAppNotification({ notification, onClose }: InAppNotificationPr
                     <span>Pedido: {notification.order_id}</span>
                     <span>•</span>
                     <span className="font-semibold">
-                      {notification.amount.toLocaleString('pt-AO')} {notification.currency}
+                      {notification.amount.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {notification.currency}
                     </span>
                   </div>
                 )}
