@@ -57,7 +57,7 @@ serve(async (req) => {
         body: {
           external_id: profile.email,
           title: 'Kambafy - Nova venda',
-          message: `Sua comissão: ${commission} ${currency}`,
+          message: `Sua comissão: ${currency}${commission}`,
           data: {
             type: 'sale',
             order_id: order_id,
@@ -65,7 +65,7 @@ serve(async (req) => {
             seller_commission: commission,
             currency: currency,
             notification_id: notification_id,
-            url: 'https://app.kambafy.com/vendedor/vendas'
+            url: 'https://mobile.kambafy.com/app'
           }
         }
       }
