@@ -1001,6 +1001,12 @@ const OptimizedCheckout = () => {
 
                                 const result = appyPayResponse.data;
                                 console.log('📊 AppyPay PARSED result:', JSON.stringify(result, null, 2));
+                                console.log('🔍 CRITICAL - Checking payment_status:', {
+                                  has_payment_status: 'payment_status' in result,
+                                  payment_status_value: result?.payment_status,
+                                  payment_status_type: typeof result?.payment_status,
+                                  result_keys: Object.keys(result || {})
+                                });
                                 
                                 if (!result) {
                                   console.error('❌ No data in AppyPay response');
@@ -1015,10 +1021,13 @@ const OptimizedCheckout = () => {
                                 
                                 if (result.success) {
                                   console.log('✅ AppyPay payment initiated successfully!');
+                                  console.log('📋 RAW RESULT:', result);
                                   console.log('📋 Payment details:', {
                                     order_id: result.order_id,
                                     payment_status: result.payment_status,
-                                    appypay_transaction_id: result.appypay_transaction_id
+                                    payment_status_type: typeof result.payment_status,
+                                    appypay_transaction_id: result.appypay_transaction_id,
+                                    all_keys: Object.keys(result)
                                   });
                                   
                                   // Se o pagamento já está completed, redirecionar imediatamente
