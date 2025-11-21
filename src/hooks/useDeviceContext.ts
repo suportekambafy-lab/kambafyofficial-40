@@ -56,14 +56,22 @@ export const useDeviceContext = () => {
 
   const getIPAndLocation = async () => {
     try {
-      const response = await fetch('https://ipapi.co/json/');
+      // Adicionar timeout de 3 segundos
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch('https://ipapi.co/json/', {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
       const data = await response.json();
       return {
         ipAddress: data.ip || 'Unknown',
         location: `${data.city || 'Unknown'}, ${data.country_name || 'Unknown'}`
       };
     } catch (error) {
-      console.log('Could not fetch IP/location:', error);
+      console.log('Could not fetch IP/location (timeout or error):', error);
       return {
         ipAddress: 'Unknown',
         location: 'Unknown'
@@ -73,20 +81,35 @@ export const useDeviceContext = () => {
 
   useEffect(() => {
     const loadContext = async () => {
-      const { isMobile, browser, os } = detectDevice();
-      const { ipAddress, location } = await getIPAndLocation();
-      const fingerprint = generateFingerprint();
+      try {
+        const { isMobile, browser, os } = detectDevice();
+        const { ipAddress, location } = await getIPAndLocation();
+        const fingerprint = generateFingerprint();
 
-      setContext({
-        fingerprint,
-        ipAddress,
-        location,
-        isMobile,
-        browser,
-        os
-      });
-      
-      setLoading(false);
+        setContext({
+          fingerprint,
+          ipAddress,
+          location,
+          isMobile,
+          browser,
+          os
+        });
+      } catch (error) {
+        console.error('Error loading device context:', error);
+        // Mesmo com erro, cria um contexto com valores default
+        const { isMobile, browser, os } = detectDevice();
+        setContext({
+          fingerprint: generateFingerprint(),
+          ipAddress: 'Unknown',
+          location: 'Unknown',
+          isMobile,
+          browser,
+          os
+        });
+      } finally {
+        // Garantir que loading sempre termina
+        setLoading(false);
+      }
     };
 
     loadContext();
