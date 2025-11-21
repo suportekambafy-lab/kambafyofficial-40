@@ -82,9 +82,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     let paymentVerified = false;
 
-    // Para AppyPay (express ou reference), SEMPRE verificar com a API
-    if (['express', 'reference'].includes(order.payment_method)) {
-      console.log('[CHECK-ORDER-STATUS] AppyPay payment detected - verifying with API...');
+    // Para Multicaixa Express já completado, confiar no status do banco (já foi verificado no create-appypay-charge)
+    if (order.payment_method === 'express' && order.status === 'completed') {
+      console.log('[CHECK-ORDER-STATUS] ✅ Express payment already completed - trusting database status');
+      paymentVerified = true;
+    }
+    // Para referências ou Express pendente, verificar com a API
+    else if (['express', 'reference'].includes(order.payment_method)) {
+      console.log('[CHECK-ORDER-STATUS] AppyPay payment - verifying with API...', {
+        method: order.payment_method,
+        currentStatus: order.status
+      });
       
       // Chamar verify-appypay-order para atualizar status
       const { data: verifyData, error: verifyError } = await supabase.functions.invoke(

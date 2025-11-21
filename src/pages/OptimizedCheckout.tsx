@@ -1033,7 +1033,7 @@ const OptimizedCheckout = () => {
                                     
                                     // Redirecionar imediatamente
                                     setTimeout(() => {
-                                      navigate(`/checkout-success/${product?.id}?orderId=${result.order_id}&method=appypay`);
+                                      navigate(`/checkout-success/${product?.id}?order_id=${result.order_id}&method=appypay`);
                                     }, 500);
                                     return;
                                   }
@@ -1075,7 +1075,7 @@ const OptimizedCheckout = () => {
                                         });
                                         
                                         // Redirecionar - validação será feita na página de sucesso
-                                        navigate(`/checkout-success/${product?.id}?orderId=${result.order_id}&method=appypay`);
+                                        navigate(`/checkout-success/${product?.id}?order_id=${result.order_id}&method=appypay`);
                                       } else if (pollAttempts >= maxPollAttempts) {
                                         clearInterval(pollInterval);
                                         setProcessing(false);
