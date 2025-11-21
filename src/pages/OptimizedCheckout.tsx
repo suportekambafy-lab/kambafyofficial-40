@@ -983,7 +983,7 @@ const OptimizedCheckout = () => {
                                   }
                                 });
 
-                                console.log('📡 AppyPay response:', appyPayResponse);
+                                console.log('📡 AppyPay RAW response:', JSON.stringify(appyPayResponse, null, 2));
 
                                 if (appyPayResponse.error) {
                                   console.error('❌ AppyPay function error:', appyPayResponse.error);
@@ -1000,7 +1000,7 @@ const OptimizedCheckout = () => {
                                 }
 
                                 const result = appyPayResponse.data;
-                                console.log('📊 AppyPay result:', result);
+                                console.log('📊 AppyPay PARSED result:', JSON.stringify(result, null, 2));
                                 
                                 if (!result) {
                                   console.error('❌ No data in AppyPay response');
@@ -1014,7 +1014,32 @@ const OptimizedCheckout = () => {
                                 }
                                 
                                 if (result.success) {
-                                  console.log('✅ AppyPay payment initiated:', result);
+                                  console.log('✅ AppyPay payment initiated successfully!');
+                                  console.log('📋 Payment details:', {
+                                    order_id: result.order_id,
+                                    payment_status: result.payment_status,
+                                    appypay_transaction_id: result.appypay_transaction_id
+                                  });
+                                  
+                                  // Se o pagamento já está completed, redirecionar imediatamente
+                                  if (result.payment_status === 'completed') {
+                                    console.log('🎉 Payment already COMPLETED! Redirecting immediately...');
+                                    setProcessing(false);
+                                    
+                                    toast({
+                                      title: "Pagamento Aprovado!",
+                                      description: "Seu pagamento foi confirmado com sucesso.",
+                                    });
+                                    
+                                    // Redirecionar imediatamente
+                                    setTimeout(() => {
+                                      navigate(`/checkout-success/${product?.id}?orderId=${result.order_id}&method=appypay`);
+                                    }, 500);
+                                    return;
+                                  }
+                                  
+                                  // Se pending ou failed, fazer polling
+                                  console.log('⏳ Payment status:', result.payment_status, '- Starting polling...');
                                   
                                   // Start polling for payment status
                                   let pollAttempts = 0;
