@@ -5,13 +5,19 @@ import { useSubdomain } from '@/hooks/useSubdomain';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { SEO, pageSEO } from "@/components/SEO";
 import { AnnouncementBanner } from "@/components/ui/announcement-banner";
+import { useAuth } from '@/contexts/AuthContext';
+import { useOneSignalAutoLink } from '@/hooks/useOneSignalAutoLink';
 
 const Index = () => {
   const navigate = useNavigate();
   const { currentSubdomain } = useSubdomain();
+  const { user } = useAuth();
   const [showBanner, setShowBanner] = useState(true);
   const [bannerVisible, setBannerVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  // ✅ Verificação automática de OneSignal (na landing page)
+  useOneSignalAutoLink(user?.email, user?.id);
 
   // Se for mobile subdomain, redirecionar para /app
   useEffect(() => {

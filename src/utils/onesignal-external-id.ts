@@ -14,9 +14,9 @@ const getCookie = (name: string): string | null => {
 };
 
 /**
- * Tenta obter o onesignal_push_id do cookie com retry
+ * Tenta obter o onesignal_push_id do cookie com retry AGRESSIVO
  */
-const getOneSignalPlayerId = async (maxAttempts: number = 3, delayMs: number = 3000): Promise<string | null> => {
+const getOneSignalPlayerId = async (maxAttempts: number = 6, delayMs: number = 2000): Promise<string | null> => {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     console.log(`🔍 [OneSignal] Tentativa ${attempt}/${maxAttempts} de obter player_id...`);
     
@@ -39,13 +39,14 @@ const getOneSignalPlayerId = async (maxAttempts: number = 3, delayMs: number = 3
 
 /**
  * Vincula o email do usuário ao external_id do OneSignal
+ * Sistema de retry AGRESSIVO: 6 tentativas com delay de 2s = 12s total
  */
 export const linkOneSignalExternalId = async (userEmail: string): Promise<void> => {
   try {
     console.log('🔍 [OneSignal] Iniciando vinculação de external_id...');
     
-    // 1. Tentar obter o player_id do cookie (3 tentativas com delay de 3s)
-    const playerId = await getOneSignalPlayerId(3, 3000);
+    // 1. Tentar obter o player_id do cookie (6 tentativas com delay de 2s = 12s)
+    const playerId = await getOneSignalPlayerId(6, 2000);
     
     if (!playerId) {
       console.log('ℹ️ [OneSignal] Cookie onesignal_push_id não encontrado, não é acesso via app');
