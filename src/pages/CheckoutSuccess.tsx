@@ -65,6 +65,13 @@ const CheckoutSuccess = () => {
             return;
           }
           
+          // 🚨 CRITICAL: Para Express pendente, continuar polling até webhook confirmar
+          if (data.order.payment_method === 'express' && data.order.status === 'pending') {
+            console.log('⏳ [EXPRESS] Pagamento ainda pendente - continuando polling...');
+            setOrderStatus('pending');
+            return; // Continuar polling
+          }
+          
           // Só considerar 'completed' se TANTO o status quanto a verificação forem verdadeiros
           if (data.order.status === 'completed' && data.paymentVerified === true) {
             console.log('✅ Pagamento confirmado! Verificando upsell...');
@@ -183,23 +190,27 @@ const CheckoutSuccess = () => {
       }
     };
 
-    // Timeout de segurança: 45 segundos
+    // Timeout de segurança: 120 segundos (2 minutos) para Express
     const timeoutId = setTimeout(() => {
       if (orderStatus !== 'completed' && orderStatus !== 'error') {
-        console.log('⏱️ Timeout de verificação (45s) - status:', orderStatus);
+        console.log('⏱️ Timeout de verificação (120s) - status:', orderStatus);
         setVerificationTimeout(true);
-        setOrderStatus('pending');
+        // Manter como pending para continuar mostrando a mensagem
+        if (orderStatus !== 'pending') {
+          setOrderStatus('pending');
+        }
       }
-    }, 45000);
+    }, 120000); // 2 minutos
 
     checkOrderStatus();
 
-    // Poll a cada 15 segundos se ainda estiver pending
+    // Poll a cada 5 segundos se ainda estiver pending (mais rápido para Express)
     const pollInterval = setInterval(() => {
       if (orderStatus === 'pending' || orderStatus === 'verifying') {
+        console.log('🔄 [CHECKOUT-SUCCESS] Polling - verificando status...');
         checkOrderStatus();
       }
-    }, 15000);
+    }, 5000); // 5 segundos para melhor UX
 
     return () => {
       clearTimeout(timeoutId);
