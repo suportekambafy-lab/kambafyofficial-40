@@ -77,8 +77,23 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('[CHECK-ORDER-STATUS] Order found:', {
       order_id: order.order_id,
       status: order.status,
-      payment_method: order.payment_method
+      payment_method: order.payment_method,
+      created_at: order.created_at
     });
+
+    // 🚨 CRITICAL: Para pagamentos Express que falharam, retornar o status failed IMEDIATAMENTE
+    if (order.payment_method === 'express' && order.status === 'failed') {
+      console.log('[CHECK-ORDER-STATUS] ❌ EXPRESS PAYMENT FAILED - returning failed status');
+      return new Response(
+        JSON.stringify({
+          success: true,
+          order,
+          paymentVerified: false,
+          isFailed: true
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     let paymentVerified = false;
 

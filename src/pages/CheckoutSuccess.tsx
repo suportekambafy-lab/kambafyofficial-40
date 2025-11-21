@@ -51,11 +51,19 @@ const CheckoutSuccess = () => {
           console.log('📦 Resposta da validação:', {
             status: data.order.status,
             paymentVerified: data.paymentVerified,
+            isFailed: data.isFailed,
             payment_method: data.order.payment_method
           });
           
           setOrderData(data.order);
           setPaymentVerified(data.paymentVerified === true);
+          
+          // 🚨 VERIFICAR SE É PAGAMENTO FALHADO (Express ou qualquer outro)
+          if (data.order.status === 'failed' || data.isFailed === true) {
+            console.log('❌ PAGAMENTO FALHADO - mostrando erro');
+            setOrderStatus('error');
+            return;
+          }
           
           // Só considerar 'completed' se TANTO o status quanto a verificação forem verdadeiros
           if (data.order.status === 'completed' && data.paymentVerified === true) {
