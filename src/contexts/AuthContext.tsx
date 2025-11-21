@@ -280,6 +280,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Vincular OneSignal external_id automaticamente para usuários já logados
+  useEffect(() => {
+    if (user?.email && !loading) {
+      const lastLinkAttempt = localStorage.getItem(`onesignal_link_attempt_${user.email}`);
+      const now = Date.now();
+      const ONE_HOUR = 60 * 60 * 1000;
+      
+      // Tentar vincular apenas uma vez por hora para evitar múltiplas tentativas
+      if (!lastLinkAttempt || (now - parseInt(lastLinkAttempt)) > ONE_HOUR) {
+        console.log('🔗 [Auto] Verificando vínculo OneSignal para usuário logado...');
+        localStorage.setItem(`onesignal_link_attempt_${user.email}`, now.toString());
+        
+        // Aguardar 2s para garantir que o DOM está pronto e o cookie pode estar disponível
+        setTimeout(() => {
+          linkOneSignalExternalId(user.email!).catch(err => {
+            console.error('❌ [Auto] Erro ao vincular OneSignal:', err);
+          });
+        }, 2000);
+      }
+    }
+  }, [user, loading]);
+
   const signUp = async (email: string, password: string, fullName: string) => {
     console.log('🔑 Iniciando signup:', { email, fullName });
     
