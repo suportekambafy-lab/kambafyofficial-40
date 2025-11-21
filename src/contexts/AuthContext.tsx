@@ -4,6 +4,7 @@ import { User, AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useCustomToast';
 import { BannedUserDialog } from '@/components/BannedUserDialog';
+import { linkOneSignalExternalId } from '@/utils/onesignal-external-id';
 
 interface AuthContextType {
   user: User | null;
@@ -358,6 +359,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // Verificar banimento
               await checkUserBanStatus(customData.user);
               
+              // Vincular OneSignal External ID (se for acesso via app)
+              if (customData.user?.email) {
+                // Executar em background sem bloquear o login
+                linkOneSignalExternalId(customData.user.email).catch(err => {
+                  console.error('Erro ao vincular OneSignal external_id:', err);
+                });
+              }
+              
               return {};
             } else {
               console.log('❌ Custom login returned no valid session');
@@ -375,6 +384,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Verificar se o usuário está banido
       if (data.user) {
         await checkUserBanStatus(data.user);
+      }
+      
+      // Vincular OneSignal External ID (se for acesso via app)
+      if (data.user?.email) {
+        // Executar em background sem bloquear o login
+        linkOneSignalExternalId(data.user.email).catch(err => {
+          console.error('Erro ao vincular OneSignal external_id:', err);
+        });
       }
       
       return {};
