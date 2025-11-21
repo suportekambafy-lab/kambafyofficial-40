@@ -14,17 +14,53 @@ const getCookie = (name: string): string | null => {
 };
 
 /**
- * Tenta obter o onesignal_push_id do cookie com retry AGRESSIVO
+ * Tenta obter o player_id do OneSignal SDK
+ */
+const getOneSignalPlayerIdFromSDK = async (): Promise<string | null> => {
+  try {
+    // @ts-ignore
+    if (window.OneSignal?.User?.PushSubscription?.id) {
+      // @ts-ignore
+      const playerId = window.OneSignal.User.PushSubscription.id;
+      console.log('✅ [OneSignal] Player ID obtido do SDK:', playerId);
+      return playerId;
+    }
+    
+    // @ts-ignore
+    if (window.OneSignal?.User?.PushSubscription?.token) {
+      // @ts-ignore
+      const token = window.OneSignal.User.PushSubscription.token;
+      console.log('✅ [OneSignal] Token obtido do SDK:', token);
+      return token;
+    }
+    
+    console.log('⚠️ [OneSignal] SDK não retornou player_id ou token');
+    return null;
+  } catch (error) {
+    console.error('❌ [OneSignal] Erro ao obter player_id do SDK:', error);
+    return null;
+  }
+};
+
+/**
+ * Tenta obter o onesignal_push_id do cookie OU do SDK com retry AGRESSIVO
  */
 const getOneSignalPlayerId = async (maxAttempts: number = 6, delayMs: number = 2000): Promise<string | null> => {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     console.log(`🔍 [OneSignal] Tentativa ${attempt}/${maxAttempts} de obter player_id...`);
     
-    const playerId = getCookie('onesignal_push_id');
+    // 1. Tentar do cookie primeiro (para acesso via app)
+    const cookiePlayerId = getCookie('onesignal_push_id');
+    if (cookiePlayerId && cookiePlayerId.trim() !== '') {
+      console.log(`✅ [OneSignal] Player ID encontrado no COOKIE na tentativa ${attempt}:`, cookiePlayerId);
+      return cookiePlayerId;
+    }
     
-    if (playerId && playerId.trim() !== '') {
-      console.log(`✅ [OneSignal] Player ID encontrado na tentativa ${attempt}:`, playerId);
-      return playerId;
+    // 2. Tentar do SDK (para acesso via web com OneSignal inicializado)
+    const sdkPlayerId = await getOneSignalPlayerIdFromSDK();
+    if (sdkPlayerId && sdkPlayerId.trim() !== '') {
+      console.log(`✅ [OneSignal] Player ID encontrado no SDK na tentativa ${attempt}:`, sdkPlayerId);
+      return sdkPlayerId;
     }
     
     if (attempt < maxAttempts) {
@@ -33,25 +69,29 @@ const getOneSignalPlayerId = async (maxAttempts: number = 6, delayMs: number = 2
     }
   }
   
-  console.log('❌ [OneSignal] Player ID não encontrado após todas as tentativas');
+  console.log('❌ [OneSignal] Player ID não encontrado após todas as tentativas (cookie e SDK)');
   return null;
 };
 
 /**
  * Vincula o email do usuário ao external_id do OneSignal
  * Sistema de retry AGRESSIVO: 6 tentativas com delay de 2s = 12s total
+ * Funciona tanto via COOKIE (app mobile) quanto via SDK (web)
  */
 export const linkOneSignalExternalId = async (userEmail: string): Promise<void> => {
   try {
-    console.log('🔍 [OneSignal] Iniciando vinculação de external_id...');
+    console.log('🔍 [OneSignal] Iniciando vinculação de external_id para:', userEmail);
     
-    // 1. Tentar obter o player_id do cookie (6 tentativas com delay de 2s = 12s)
+    // 1. Tentar obter o player_id (cookie OU SDK - 6 tentativas com delay de 2s = 12s)
     const playerId = await getOneSignalPlayerId(6, 2000);
     
     if (!playerId) {
-      console.log('ℹ️ [OneSignal] Cookie onesignal_push_id não encontrado, não é acesso via app');
+      console.log('ℹ️ [OneSignal] Player ID não encontrado (nem cookie nem SDK)');
+      console.log('ℹ️ [OneSignal] Usuário pode estar acessando via WEB sem OneSignal ou app sem permissões');
       return;
     }
+    
+    console.log('🎯 [OneSignal] Player ID encontrado! Iniciando vinculação...');
     
     // 2. Chamar edge function para vincular external_id
     console.log('🔗 [OneSignal] Chamando edge function para vincular external_id...', {
