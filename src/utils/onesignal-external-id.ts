@@ -14,62 +14,109 @@ const getCookie = (name: string): string | null => {
 };
 
 /**
- * Tenta obter o player_id do OneSignal SDK
+ * Tenta obter o player_id do OneSignal SDK com múltiplas tentativas
  */
-const getOneSignalPlayerIdFromSDK = async (): Promise<string | null> => {
-  try {
-    // @ts-ignore
-    if (window.OneSignal?.User?.PushSubscription?.id) {
-      // @ts-ignore
-      const playerId = window.OneSignal.User.PushSubscription.id;
-      console.log('✅ [OneSignal] Player ID obtido do SDK:', playerId);
-      return playerId;
+const getOneSignalPlayerIdFromSDK = async (retries: number = 3, delayMs: number = 1000): Promise<string | null> => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`🔍 [OneSignal SDK] Tentativa ${i + 1}/${retries}...`);
+      
+      // @ts-ignore - Método 1: subscription.id (padrão)
+      if (window.OneSignal?.User?.PushSubscription?.id) {
+        // @ts-ignore
+        const playerId = window.OneSignal.User.PushSubscription.id;
+        console.log('✅ [OneSignal SDK] Player ID obtido (subscription.id):', playerId);
+        return playerId;
+      }
+      
+      // @ts-ignore - Método 2: subscription.token
+      if (window.OneSignal?.User?.PushSubscription?.token) {
+        // @ts-ignore
+        const token = window.OneSignal.User.PushSubscription.token;
+        console.log('✅ [OneSignal SDK] Token obtido (subscription.token):', token);
+        return token;
+      }
+      
+      // @ts-ignore - Método 3: onesignalId (fallback)
+      if (window.OneSignal?.User?.onesignalId) {
+        // @ts-ignore
+        const onesignalId = window.OneSignal.User.onesignalId;
+        console.log('✅ [OneSignal SDK] OneSignal ID obtido:', onesignalId);
+        return onesignalId;
+      }
+      
+      if (i < retries - 1) {
+        console.log(`⏳ [OneSignal SDK] Aguardando ${delayMs}ms antes da próxima tentativa...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    } catch (error) {
+      console.error(`❌ [OneSignal SDK] Erro na tentativa ${i + 1}:`, error);
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
     }
-    
-    // @ts-ignore
-    if (window.OneSignal?.User?.PushSubscription?.token) {
-      // @ts-ignore
-      const token = window.OneSignal.User.PushSubscription.token;
-      console.log('✅ [OneSignal] Token obtido do SDK:', token);
-      return token;
-    }
-    
-    console.log('⚠️ [OneSignal] SDK não retornou player_id ou token');
-    return null;
-  } catch (error) {
-    console.error('❌ [OneSignal] Erro ao obter player_id do SDK:', error);
-    return null;
   }
+  
+  console.log('⚠️ [OneSignal SDK] Nenhum ID encontrado após todas as tentativas');
+  return null;
 };
 
 /**
- * Tenta obter o onesignal_push_id do cookie OU do SDK com retry AGRESSIVO
+ * Tenta obter o onesignal_push_id do cookie OU do SDK com retry ULTRA AGRESSIVO
+ * Ordem de prioridade:
+ * 1. Cookie onesignal_push_id (iOS/Android app com OneSignal nativo)
+ * 2. SDK OneSignal.User.PushSubscription.id (Web e app com SDK)
+ * 3. SDK OneSignal.User.onesignalId (Fallback)
  */
-const getOneSignalPlayerId = async (maxAttempts: number = 6, delayMs: number = 2000): Promise<string | null> => {
+const getOneSignalPlayerId = async (maxAttempts: number = 8, delayMs: number = 2500): Promise<string | null> => {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    console.log(`🔍 [OneSignal] Tentativa ${attempt}/${maxAttempts} de obter player_id...`);
+    console.log(`🔍 [OneSignal] === TENTATIVA ${attempt}/${maxAttempts} ===`);
     
-    // 1. Tentar do cookie primeiro (para acesso via app)
+    // 1. PRIORIDADE MÁXIMA: Cookie (funciona melhor em apps nativos)
     const cookiePlayerId = getCookie('onesignal_push_id');
     if (cookiePlayerId && cookiePlayerId.trim() !== '') {
-      console.log(`✅ [OneSignal] Player ID encontrado no COOKIE na tentativa ${attempt}:`, cookiePlayerId);
+      console.log(`✅ [OneSignal COOKIE] Player ID encontrado na tentativa ${attempt}:`, cookiePlayerId);
       return cookiePlayerId;
+    } else {
+      console.log(`⚠️ [OneSignal COOKIE] Cookie 'onesignal_push_id' não encontrado na tentativa ${attempt}`);
     }
     
-    // 2. Tentar do SDK (para acesso via web com OneSignal inicializado)
-    const sdkPlayerId = await getOneSignalPlayerIdFromSDK();
+    // 2. Tentar do SDK (3 tentativas internas com delay de 1s)
+    console.log(`🔍 [OneSignal] Tentando obter do SDK (com retry interno)...`);
+    const sdkPlayerId = await getOneSignalPlayerIdFromSDK(3, 1000);
     if (sdkPlayerId && sdkPlayerId.trim() !== '') {
-      console.log(`✅ [OneSignal] Player ID encontrado no SDK na tentativa ${attempt}:`, sdkPlayerId);
+      console.log(`✅ [OneSignal SDK] Player ID encontrado na tentativa ${attempt}:`, sdkPlayerId);
       return sdkPlayerId;
     }
     
+    // 3. Log detalhado do estado do OneSignal para debug
+    try {
+      // @ts-ignore
+      const oneSignalState = {
+        exists: !!window.OneSignal,
+        hasUser: !!window.OneSignal?.User,
+        hasPushSubscription: !!window.OneSignal?.User?.PushSubscription,
+        subscriptionId: window.OneSignal?.User?.PushSubscription?.id || null,
+        token: window.OneSignal?.User?.PushSubscription?.token || null,
+        onesignalId: window.OneSignal?.User?.onesignalId || null,
+      };
+      console.log(`📊 [OneSignal] Estado atual (tentativa ${attempt}):`, oneSignalState);
+    } catch (err) {
+      console.log('⚠️ [OneSignal] Não foi possível verificar estado:', err);
+    }
+    
     if (attempt < maxAttempts) {
-      console.log(`⏳ [OneSignal] Player ID não encontrado, aguardando ${delayMs}ms...`);
+      console.log(`⏳ [OneSignal] Aguardando ${delayMs}ms antes da próxima tentativa...`);
       await new Promise(resolve => setTimeout(resolve, delayMs));
     }
   }
   
-  console.log('❌ [OneSignal] Player ID não encontrado após todas as tentativas (cookie e SDK)');
+  console.error('❌ [OneSignal] FALHA: Player ID não encontrado após TODAS as tentativas');
+  console.error('❌ [OneSignal] Possíveis causas:');
+  console.error('  - OneSignal não inicializado corretamente no app');
+  console.error('  - Permissões de notificação não concedidas');
+  console.error('  - Cookie não está sendo definido (Android)');
+  console.error('  - Usuário está em modo web sem OneSignal instalado');
   return null;
 };
 
