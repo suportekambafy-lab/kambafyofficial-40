@@ -93,6 +93,8 @@ serve(async (req) => {
     }
 
     // Enviar notificação via OneSignal REST API
+    // IMPORTANTE: OneSignal permite apenas UM método de targeting por requisição
+    // Prioridade: external_id (mais confiável) > subscription_id (player_id)
     const notificationPayload: any = {
       app_id: oneSignalAppId,
       headings: { en: title },
@@ -100,25 +102,25 @@ serve(async (req) => {
       data: data,
     };
 
-    // Enviar para ambos os identificadores quando disponíveis
-    const targets: string[] = [];
+    let targetingMethod = '';
     
-    if (targetPlayerId) {
-      notificationPayload.include_player_ids = [targetPlayerId];
-      targets.push(`player_id: ${targetPlayerId}`);
-      console.log('📱 Adicionando player_id ao payload:', targetPlayerId);
-    }
-    
+    // Prioridade 1: external_id (funciona para web e app, mais confiável)
     if (targetExternalId) {
       notificationPayload.include_aliases = {
         external_id: [targetExternalId]
       };
       notificationPayload.target_channel = 'push';
-      targets.push(`external_id: ${targetExternalId}`);
-      console.log('🔗 Adicionando external_id ao payload:', targetExternalId);
+      targetingMethod = `external_id: ${targetExternalId}`;
+      console.log('🔗 Usando external_id:', targetExternalId);
+    }
+    // Prioridade 2: subscription_id (player_id) - fallback para quando não tem external_id
+    else if (targetPlayerId) {
+      notificationPayload.include_subscription_ids = [targetPlayerId];
+      targetingMethod = `subscription_id: ${targetPlayerId}`;
+      console.log('📱 Usando subscription_id (player_id):', targetPlayerId);
     }
 
-    console.log('📤 Enviando notificação para:', targets.join(' e '));
+    console.log('📤 Enviando notificação via:', targetingMethod);
     console.log('📤 Payload completo:', JSON.stringify(notificationPayload, null, 2));
 
     const oneSignalResponse = await fetch('https://onesignal.com/api/v1/notifications', {
