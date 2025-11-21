@@ -24,13 +24,13 @@ serve(async (req) => {
   try {
     const { userId, external_id, player_id, title, message, data = {} } = await req.json() as NotificationRequest;
 
-    console.log('📱 Enviando notificação:', { userId, external_id, player_id });
+    console.log('📱 Iniciando envio de notificação:', { userId, external_id, player_id });
 
-    let targetIdentifier = external_id || player_id;
-    let useExternalId = !!external_id;
+    let targetPlayerId = player_id;
+    let targetExternalId = external_id;
 
-    // Se não foi fornecido external_id nem player_id, buscar no banco
-    if (!targetIdentifier && userId) {
+    // Se não foram fornecidos, buscar no banco
+    if ((!targetPlayerId || !targetExternalId) && userId) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -52,33 +52,26 @@ serve(async (req) => {
         );
       }
 
-      // Preferir external_id (email) se disponível
-      if (profile.email) {
-        targetIdentifier = profile.email;
-        useExternalId = true;
-        console.log('✅ Using email as external_id:', targetIdentifier);
-      } else if (profile.onesignal_player_id) {
-        targetIdentifier = profile.onesignal_player_id;
-        useExternalId = false;
-        console.log('✅ Using player_id:', targetIdentifier);
-      } else {
-        console.error('❌ Nenhum identificador encontrado');
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'Nenhum identificador OneSignal encontrado' 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      // Buscar player_id se não foi fornecido
+      if (!targetPlayerId && profile.onesignal_player_id) {
+        targetPlayerId = profile.onesignal_player_id;
+        console.log('✅ Player ID encontrado no banco:', targetPlayerId);
+      }
+
+      // Buscar external_id (email) se não foi fornecido
+      if (!targetExternalId && profile.email) {
+        targetExternalId = profile.email;
+        console.log('✅ External ID (email) encontrado no banco:', targetExternalId);
       }
     }
 
-    if (!targetIdentifier) {
-      console.error('❌ Nenhum identificador fornecido');
+    // Verificar se tem pelo menos um identificador
+    if (!targetPlayerId && !targetExternalId) {
+      console.error('❌ Nenhum identificador encontrado');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'É necessário fornecer userId, external_id ou player_id' 
+          error: 'Nenhum identificador OneSignal encontrado (player_id ou external_id)' 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -107,18 +100,25 @@ serve(async (req) => {
       data: data,
     };
 
-    // Usar include_aliases para external_id ou include_player_ids para player_id
-    if (useExternalId) {
+    // Enviar para ambos os identificadores quando disponíveis
+    const targets: string[] = [];
+    
+    if (targetPlayerId) {
+      notificationPayload.include_player_ids = [targetPlayerId];
+      targets.push(`player_id: ${targetPlayerId}`);
+      console.log('📱 Adicionando player_id ao payload:', targetPlayerId);
+    }
+    
+    if (targetExternalId) {
       notificationPayload.include_aliases = {
-        external_id: [targetIdentifier]
+        external_id: [targetExternalId]
       };
       notificationPayload.target_channel = 'push';
-      console.log('📤 Enviando notificação via external_id:', targetIdentifier);
-    } else {
-      notificationPayload.include_player_ids = [targetIdentifier];
-      console.log('📤 Enviando notificação via player_id:', targetIdentifier);
+      targets.push(`external_id: ${targetExternalId}`);
+      console.log('🔗 Adicionando external_id ao payload:', targetExternalId);
     }
 
+    console.log('📤 Enviando notificação para:', targets.join(' e '));
     console.log('📤 Payload completo:', JSON.stringify(notificationPayload, null, 2));
 
     const oneSignalResponse = await fetch('https://onesignal.com/api/v1/notifications', {
