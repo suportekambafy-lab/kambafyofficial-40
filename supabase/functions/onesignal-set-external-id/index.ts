@@ -23,9 +23,57 @@ serve(async (req) => {
       throw new Error('ONESIGNAL_REST_API_KEY não configurada');
     }
 
-    // Chamar API do OneSignal para atualizar o external_id
+    // 1. Primeiro, obter o user_id usando o player_id (subscription_id)
+    console.log('📡 Buscando user_id a partir do player_id...');
+    const getUserResponse = await fetch(
+      `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/subscriptions/${player_id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
+        },
+      }
+    );
+
+    if (!getUserResponse.ok) {
+      const errorData = await getUserResponse.json();
+      console.error('❌ Erro ao buscar user_id:', errorData);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Erro ao buscar user_id',
+          details: errorData
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: getUserResponse.status
+        }
+      );
+    }
+
+    const userData = await getUserResponse.json();
+    const userId = userData.identity?.onesignal_id;
+
+    if (!userId) {
+      console.error('❌ user_id não encontrado na resposta:', userData);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'user_id não encontrado'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      );
+    }
+
+    console.log('✅ user_id encontrado:', userId);
+
+    // 2. Agora atualizar o external_id usando o user_id correto
+    console.log('🔄 Atualizando external_id...');
     const response = await fetch(
-      `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/${player_id}/identity`,
+      `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/${userId}`,
       {
         method: 'PATCH',
         headers: {
