@@ -73,7 +73,7 @@ const Index = () => {
             mobileTitle="Nova Área de Membros"
             action={{
               label: "Conheça Agora",
-              onClick: () => window.open('https://membros.kambafy.com', '_blank')
+              onClick: () => navigate('/auth')
             }}
           />
         </div>
