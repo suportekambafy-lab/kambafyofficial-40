@@ -46,6 +46,75 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error('❌ Erro ao vincular External ID:', responseData);
+      
+      // Se o erro for "user-2" (alias já reivindicado por outro usuário)
+      // Precisamos deletar o alias antigo primeiro e tentar novamente
+      if (responseData.errors?.[0]?.code === 'user-2') {
+        console.log('🔄 External ID já existe em outro device, tentando transferir...');
+        
+        // Deletar o alias usando a API do OneSignal
+        // https://documentation.onesignal.com/reference/delete-alias
+        const deleteResponse = await fetch(
+          `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/external_id:${external_id}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
+            },
+          }
+        );
+        
+        if (deleteResponse.ok) {
+          console.log('✅ Alias antigo deletado, tentando vincular novamente...');
+          
+          // Tentar vincular novamente
+          const retryResponse = await fetch(
+            `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${player_id}/user/identity`,
+            {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
+              },
+              body: JSON.stringify({
+                identity: {
+                  external_id: external_id
+                }
+              }),
+            }
+          );
+          
+          const retryData = await retryResponse.json();
+          
+          if (!retryResponse.ok) {
+            console.error('❌ Erro ao vincular após deletar alias antigo:', retryData);
+            return new Response(
+              JSON.stringify({ 
+                success: false, 
+                error: 'Erro ao vincular External ID após transferência',
+                details: retryData
+              }),
+              { 
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: retryResponse.status
+              }
+            );
+          }
+          
+          console.log('✅ External ID transferido com sucesso!');
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: 'External ID transferido com sucesso!',
+              data: retryData
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } else {
+          console.error('❌ Erro ao deletar alias antigo');
+        }
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
