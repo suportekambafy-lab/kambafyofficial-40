@@ -56,7 +56,7 @@ serve(async (req) => {
           // Buscar o usuário pelo external_id para obter o onesignal_id
           console.log('🔍 Buscando usuário pelo external_id:', external_id);
           const userResponse = await fetch(
-            `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/external_id:${external_id}`,
+            `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/external_id/${external_id}`,
             {
               method: 'GET',
               headers: {
