@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { PlayStoreButton } from "@/components/ui/play-store-button";
 import { AppStoreButton } from "@/components/ui/app-store-button";
 import { BookOpen, DollarSign, Users, Shield, Star, Play, ArrowRight } from 'lucide-react';
+import { ContactForm } from "@/components/ContactForm";
 import { useNavigate } from 'react-router-dom';
 import { SubdomainLink } from "@/components/SubdomainLink";
 import { TopSellersRanking } from "@/components/TopSellersRanking";
@@ -325,6 +326,7 @@ const InteractiveHero: React.FC = () => {
    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
    const [isScrolled, setIsScrolled] = useState<boolean>(false);
+   const [isContactFormOpen, setIsContactFormOpen] = useState<boolean>(false);
 
    const { scrollY } = useScroll();
    useMotionValueEvent(scrollY, "change", (latest) => {
@@ -1074,7 +1076,7 @@ const InteractiveHero: React.FC = () => {
                           Criar Conta Grátis
                           <ArrowRight className="ml-2 w-5 h-5" />
                       </Button>
-                      <Button size="lg" variant="outline" className="border-[#81e76a] text-[#81e76a] hover:bg-[#81e76a]/10 px-8 text-lg">
+                      <Button size="lg" variant="outline" className="border-[#81e76a] text-[#81e76a] hover:bg-[#81e76a]/10 px-8 text-lg" onClick={() => setIsContactFormOpen(true)}>
                           Falar com Especialista
                       </Button>
                   </div>
@@ -1121,6 +1123,11 @@ const InteractiveHero: React.FC = () => {
               </div>
           </footer>
         </main>
+        
+        <ContactForm 
+          open={isContactFormOpen} 
+          onOpenChange={setIsContactFormOpen}
+        />
     </div>
   );
 };
