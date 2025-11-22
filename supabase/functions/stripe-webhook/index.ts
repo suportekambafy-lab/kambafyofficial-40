@@ -10,6 +10,14 @@ const corsHeaders = {
 
 const PLATFORM_COMMISSION_RATE = 0.0899; // 8.99%
 
+// Função para formatar valor monetário no padrão português
+const formatCurrency = (amount: number): string => {
+  return amount.toLocaleString('pt-PT', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 serve(async (req) => {
   console.log('🚀 Stripe webhook called!', req.method);
   
@@ -405,7 +413,7 @@ serve(async (req) => {
                           body: {
                             external_id: sellerProfile.email,
                             title: 'Kambafy - Referência gerada',
-                            message: `Sua comissão: ${sellerCommission.toFixed(2)} ${multibancoDetails.currency.toUpperCase()}`,
+                            message: `Sua comissão: ${formatCurrency(sellerCommission)} ${multibancoDetails.currency.toUpperCase()}`,
                             data: {
                               type: 'reference_generated',
                               order_id: orderId,

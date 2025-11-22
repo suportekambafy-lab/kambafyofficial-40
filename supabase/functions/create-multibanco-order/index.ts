@@ -6,6 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Função para formatar valor monetário no padrão português
+const formatCurrency = (amount: number): string => {
+  return amount.toLocaleString('pt-PT', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -70,7 +78,7 @@ serve(async (req) => {
               body: {
                 external_id: sellerProfile.email,
                 title: 'Kambafy - Referência gerada',
-                message: `Sua comissão: ${insertedOrder.seller_commission || insertedOrder.amount} ${insertedOrder.currency}`,
+                message: `Sua comissão: ${formatCurrency(parseFloat(insertedOrder.seller_commission || insertedOrder.amount))} ${insertedOrder.currency}`,
                 data: {
                   type: 'reference_generated',
                   order_id: insertedOrder.order_id,
