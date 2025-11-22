@@ -48,48 +48,38 @@ serve(async (req) => {
       console.error('❌ Erro ao vincular External ID:', responseData);
       
       // Se o erro for "user-2" (alias já reivindicado por outro usuário)
-      // Usamos o endpoint de Transfer Subscription para mover o external_id
+      // Removemos o external_id do device antigo e tentamos novamente
       if (responseData.errors?.[0]?.code === 'user-2') {
-        console.log('🔄 External ID já existe em outro device, forçando transferência...');
+        console.log('🔄 External ID já existe em outro device, removendo vínculo antigo...');
         
         try {
-          // Buscar o usuário pelo external_id para obter o onesignal_id
-          console.log('🔍 Buscando usuário pelo external_id:', external_id);
-          const userResponse = await fetch(
-            `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/external_id/${external_id}`,
+          // Remover o alias external_id do usuário antigo
+          // https://documentation.onesignal.com/reference/delete-alias
+          console.log('🗑️ Removendo external_id do device antigo...');
+          const deleteResponse = await fetch(
+            `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/external_id/${external_id}/identity/external_id`,
             {
-              method: 'GET',
+              method: 'DELETE',
               headers: {
                 'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
               },
             }
           );
           
-          console.log('📊 Status da busca de usuário:', userResponse.status);
+          console.log('📊 Status da remoção:', deleteResponse.status);
           
-          if (!userResponse.ok) {
-            const userError = await userResponse.json();
-            console.error('❌ Erro ao buscar usuário:', userError);
-            throw new Error(`Falha ao buscar usuário: ${JSON.stringify(userError)}`);
+          if (!deleteResponse.ok) {
+            const deleteError = await deleteResponse.text();
+            console.error('❌ Erro ao remover alias:', deleteError);
+            throw new Error(`Falha ao remover alias: ${deleteError}`);
           }
           
-          const userData = await userResponse.json();
-          console.log('👤 Dados do usuário:', JSON.stringify(userData));
+          console.log('✅ External ID removido do device antigo');
           
-          const onesignalId = userData.identity?.onesignal_id;
-          
-          if (!onesignalId) {
-            console.error('❌ OneSignal ID não encontrado nos dados do usuário');
-            throw new Error('OneSignal ID não encontrado');
-          }
-          
-          console.log('🔍 OneSignal ID encontrado:', onesignalId);
-          
-          // Agora usar o Transfer Subscription endpoint
-          // https://documentation.onesignal.com/reference/transfer-subscription
-          console.log('📤 Transferindo subscription para novo device...');
-          const transferResponse = await fetch(
-            `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${player_id}/owner`,
+          // Agora tentar vincular novamente ao novo device
+          console.log('🔄 Tentando vincular ao novo device...');
+          const retryResponse = await fetch(
+            `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${player_id}/user/identity`,
             {
               method: 'PATCH',
               headers: {
@@ -98,36 +88,34 @@ serve(async (req) => {
               },
               body: JSON.stringify({
                 identity: {
-                  external_id: external_id,
-                  onesignal_id: onesignalId
+                  external_id: external_id
                 }
               }),
             }
           );
           
-          console.log('📊 Status da transferência:', transferResponse.status);
+          const retryData = await retryResponse.json();
+          console.log('📊 Status da nova vinculação:', retryResponse.status);
+          console.log('📦 Dados da nova vinculação:', JSON.stringify(retryData));
           
-          const transferData = await transferResponse.json();
-          console.log('📦 Dados da transferência:', JSON.stringify(transferData));
-          
-          if (!transferResponse.ok) {
-            console.error('❌ Erro ao transferir subscription:', transferData);
-            throw new Error(`Falha na transferência: ${JSON.stringify(transferData)}`);
+          if (!retryResponse.ok) {
+            console.error('❌ Erro ao vincular após remover alias:', retryData);
+            throw new Error(`Falha na nova vinculação: ${JSON.stringify(retryData)}`);
           }
           
-          console.log('✅ Subscription transferida com sucesso!');
+          console.log('✅ External ID transferido com sucesso!');
           return new Response(
             JSON.stringify({ 
               success: true, 
               message: 'External ID transferido com sucesso!',
-              data: transferData
+              data: retryData
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
           
         } catch (transferError) {
           console.error('❌ Erro ao transferir:', transferError);
-          console.error('📋 Stack trace:', transferError.stack);
+          console.error('📋 Detalhes:', transferError.message);
         }
       }
       
