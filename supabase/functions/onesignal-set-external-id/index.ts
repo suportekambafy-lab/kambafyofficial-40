@@ -52,9 +52,9 @@ serve(async (req) => {
       if (responseData.errors?.[0]?.code === 'user-2') {
         console.log('🔄 External ID já existe em outro device, forçando transferência...');
         
-        // Primeiro, tentar obter o OneSignal ID do usuário atual
         try {
           // Buscar o usuário pelo external_id para obter o onesignal_id
+          console.log('🔍 Buscando usuário pelo external_id:', external_id);
           const userResponse = await fetch(
             `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/external_id:${external_id}`,
             {
@@ -65,51 +65,69 @@ serve(async (req) => {
             }
           );
           
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            const onesignalId = userData.identity?.onesignal_id;
-            
-            if (onesignalId) {
-              console.log('🔍 OneSignal ID encontrado:', onesignalId);
-              
-              // Agora usar o Transfer Subscription endpoint
-              // https://documentation.onesignal.com/reference/transfer-subscription
-              const transferResponse = await fetch(
-                `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${player_id}/owner`,
-                {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
-                  },
-                  body: JSON.stringify({
-                    identity: {
-                      external_id: external_id,
-                      onesignal_id: onesignalId
-                    }
-                  }),
-                }
-              );
-              
-              const transferData = await transferResponse.json();
-              
-              if (!transferResponse.ok) {
-                console.error('❌ Erro ao transferir subscription:', transferData);
-              } else {
-                console.log('✅ Subscription transferida com sucesso!');
-                return new Response(
-                  JSON.stringify({ 
-                    success: true, 
-                    message: 'External ID transferido com sucesso!',
-                    data: transferData
-                  }),
-                  { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                );
-              }
-            }
+          console.log('📊 Status da busca de usuário:', userResponse.status);
+          
+          if (!userResponse.ok) {
+            const userError = await userResponse.json();
+            console.error('❌ Erro ao buscar usuário:', userError);
+            throw new Error(`Falha ao buscar usuário: ${JSON.stringify(userError)}`);
           }
+          
+          const userData = await userResponse.json();
+          console.log('👤 Dados do usuário:', JSON.stringify(userData));
+          
+          const onesignalId = userData.identity?.onesignal_id;
+          
+          if (!onesignalId) {
+            console.error('❌ OneSignal ID não encontrado nos dados do usuário');
+            throw new Error('OneSignal ID não encontrado');
+          }
+          
+          console.log('🔍 OneSignal ID encontrado:', onesignalId);
+          
+          // Agora usar o Transfer Subscription endpoint
+          // https://documentation.onesignal.com/reference/transfer-subscription
+          console.log('📤 Transferindo subscription para novo device...');
+          const transferResponse = await fetch(
+            `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${player_id}/owner`,
+            {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
+              },
+              body: JSON.stringify({
+                identity: {
+                  external_id: external_id,
+                  onesignal_id: onesignalId
+                }
+              }),
+            }
+          );
+          
+          console.log('📊 Status da transferência:', transferResponse.status);
+          
+          const transferData = await transferResponse.json();
+          console.log('📦 Dados da transferência:', JSON.stringify(transferData));
+          
+          if (!transferResponse.ok) {
+            console.error('❌ Erro ao transferir subscription:', transferData);
+            throw new Error(`Falha na transferência: ${JSON.stringify(transferData)}`);
+          }
+          
+          console.log('✅ Subscription transferida com sucesso!');
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: 'External ID transferido com sucesso!',
+              data: transferData
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+          
         } catch (transferError) {
           console.error('❌ Erro ao transferir:', transferError);
+          console.error('📋 Stack trace:', transferError.stack);
         }
       }
       
