@@ -229,7 +229,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (newPaymentStatus === 'completed' && payment.status !== 'completed') {
         console.log('[VERIFY-MODULE-PAYMENT] Payment completed - granting module access...');
         
-        // Buscar dados do aluno e módulo
+        // Buscar dados do aluno
         const { data: studentData } = await supabase
           .from('member_area_students')
           .select('cohort_id')
@@ -237,29 +237,40 @@ const handler = async (req: Request): Promise<Response> => {
           .ilike('student_email', payment.student_email)
           .single();
 
-        if (studentData?.cohort_id) {
-          // Buscar módulo
-          const { data: moduleData } = await supabase
-            .from('modules')
-            .select('coming_soon_cohort_ids')
-            .eq('id', payment.module_id)
+        // ✅ Verificar se acesso já existe
+        const { data: existingAccess } = await supabase
+          .from('module_student_access')
+          .select('id')
+          .eq('module_id', payment.module_id)
+          .eq('member_area_id', payment.member_area_id)
+          .eq('student_email', payment.student_email.toLowerCase().trim())
+          .maybeSingle();
+
+        if (existingAccess) {
+          console.log('⚠️ [VERIFY-MODULE-PAYMENT] Access already exists, skipping:', existingAccess.id);
+        } else {
+          // ✅ Conceder acesso individual ao módulo
+          const { data: newAccess, error: accessError } = await supabase
+            .from('module_student_access')
+            .insert({
+              module_id: payment.module_id,
+              member_area_id: payment.member_area_id,
+              student_email: payment.student_email.toLowerCase().trim(),
+              cohort_id: studentData?.cohort_id || null,
+              payment_id: payment.id,
+              granted_at: new Date().toISOString()
+            })
+            .select()
             .single();
 
-          if (moduleData && moduleData.coming_soon_cohort_ids?.includes(studentData.cohort_id)) {
-            const updatedComingSoonCohorts = moduleData.coming_soon_cohort_ids.filter(
-              (id: string) => id !== studentData.cohort_id
-            );
-
-            await supabase
-              .from('modules')
-              .update({
-                coming_soon_cohort_ids: updatedComingSoonCohorts.length > 0 
-                  ? updatedComingSoonCohorts 
-                  : null
-              })
-              .eq('id', payment.module_id);
-
-            console.log('[VERIFY-MODULE-PAYMENT] Module access granted to student');
+          if (accessError) {
+            console.error('❌ [VERIFY-MODULE-PAYMENT] Error granting module access:', accessError);
+          } else {
+            console.log('✅ [VERIFY-MODULE-PAYMENT] Individual module access granted:', {
+              accessId: newAccess.id,
+              studentEmail: payment.student_email,
+              moduleId: payment.module_id
+            });
           }
         }
       }
