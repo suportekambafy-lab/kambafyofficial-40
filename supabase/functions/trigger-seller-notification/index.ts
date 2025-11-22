@@ -50,6 +50,24 @@ serve(async (req) => {
     // Calcular comissão (usar seller_commission se disponível, senão usar amount)
     const commission = seller_commission || amount;
 
+    // Helper para formatar preço como no dashboard
+    const formatPrice = (amount: number, currency: string = 'KZ'): string => {
+      let amountInKZ = amount;
+      
+      if (currency.toUpperCase() !== 'KZ') {
+        const exchangeRates: Record<string, number> = {
+          'EUR': 1100,
+          'MZN': 14.3
+        };
+        const rate = exchangeRates[currency.toUpperCase()] || 1;
+        amountInKZ = Math.round(amount * rate);
+      }
+      
+      return `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`;
+    };
+
+    const formattedPrice = formatPrice(commission, currency);
+
     // Chamar função de envio de notificação OneSignal
     const { data: notificationResult, error: notificationError } = await supabaseClient.functions.invoke(
       'send-onesignal-notification',
@@ -57,7 +75,7 @@ serve(async (req) => {
         body: {
           external_id: profile.email,
           title: 'Kambafy - Venda aprovada',
-          message: `Sua comissão: ${currency} ${commission}`,
+          message: `Sua comissão: ${formattedPrice}`,
           data: {
             type: 'sale',
             order_id: order_id,
