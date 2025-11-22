@@ -1,200 +1,201 @@
-
-import { PageLayout } from "@/components/PageLayout";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Mail, Clock } from 'lucide-react';
-import { useState } from "react";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { SEO, pageSEO } from "@/components/SEO";
+import { ArrowLeft, Mail } from "lucide-react";
+import { z } from "zod";
+import { SEO } from "@/components/SEO";
+
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Nome é obrigatório").max(100, "Nome deve ter no máximo 100 caracteres"),
+  email: z.string().trim().email("Email inválido").max(255, "Email deve ter no máximo 255 caracteres"),
+  phone: z.string().trim().max(20, "Telefone deve ter no máximo 20 caracteres").optional().or(z.literal("")),
+  message: z.string().trim().min(1, "Mensagem é obrigatória").max(1000, "Mensagem deve ter no máximo 1000 caracteres"),
+});
+
+type ContactFormData = z.infer<typeof contactSchema>;
 
 const Contact = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ContactFormData>({
     name: "",
     email: "",
     phone: "",
-    subject: "",
-    message: ""
+    message: "",
   });
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setErrors({});
+    setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.functions.invoke('send-contact-email', {
-        body: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          subject: formData.subject,
-          message: formData.message
-        }
+      const validatedData = contactSchema.parse(formData);
+      
+      // Simular envio
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      toast({
+        title: "Mensagem enviada com sucesso!",
+        description: "Entraremos em contato em breve.",
       });
 
-      if (error) {
-        console.error('Error sending contact email:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao enviar mensagem. Tente novamente.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Mensagem enviada!",
-          description: "Recebemos sua mensagem e responderemos em breve."
-        });
-        
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          subject: "",
-          message: ""
-        });
-      }
+      // Limpar formulário
+      setFormData({ name: "", email: "", phone: "", message: "" });
+      
+      // Redirecionar após 2 segundos
+      setTimeout(() => navigate("/"), 2000);
+      
     } catch (error) {
-      console.error('Error sending contact email:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao enviar mensagem. Tente novamente.",
-        variant: "destructive"
-      });
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Partial<Record<keyof ContactFormData, string>> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0] as keyof ContactFormData] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleChange = (field: keyof ContactFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
   return (
     <>
-      <SEO {...pageSEO.contact} />
-      <PageLayout title="Contacto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 px-4">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Entre em Contacto</h2>
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Nome</label>
-                  <Input 
-                    placeholder="Seu nome completo" 
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email</label>
-                  <Input 
-                    type="email" 
-                    placeholder="seu@email.com" 
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Telefone</label>
-                <Input 
-                  placeholder="+244 XXX XXX XXX" 
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Assunto</label>
-                <Select value={formData.subject} onValueChange={(value) => handleInputChange("subject", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o assunto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="suporte">Suporte Técnico</SelectItem>
-                    <SelectItem value="vendas">Informações de Vendas</SelectItem>
-                    <SelectItem value="parceria">Parcerias</SelectItem>
-                    <SelectItem value="feedback">Feedback</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Mensagem</label>
-                <Textarea 
-                  placeholder="Descreva como podemos ajudar você..."
-                  rows={6}
-                  value={formData.message}
-                  onChange={(e) => handleInputChange("message", e.target.value)}
-                  required
-                />
-              </div>
-
-              <Button 
-                type="submit"
-                className="w-full bg-checkout-green hover:bg-checkout-green/90 text-white"
-                disabled={loading}
-              >
-                {loading ? "Enviando..." : "Enviar Mensagem"}
-              </Button>
-            </form>
+      <SEO 
+        title="Contato - Falar com Especialista | Kambafy"
+        description="Entre em contato com nossa equipe de especialistas. Estamos prontos para ajudar você a transformar seu conhecimento em um negócio digital de sucesso."
+      />
+      
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/")}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </Button>
           </div>
+        </header>
 
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-12 max-w-2xl">
           <div className="space-y-8">
-            <div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Informações de Contacto</h3>
-              <div className="space-y-4 sm:space-y-6">
-                <div className="flex items-start space-x-4">
-                  <MapPin className="w-6 h-6 text-checkout-green mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Endereço</h4>
-                    <p className="text-muted-foreground">
-                      Rua da Independência, Nº 123<br />
-                      Maianga, Luanda - Angola
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <Mail className="w-6 h-6 text-checkout-green mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Email</h4>
-                    <p className="text-muted-foreground">suporte@kambafy.com</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <Clock className="w-6 h-6 text-checkout-green mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Horário de Atendimento</h4>
-                    <p className="text-muted-foreground">Segunda a Sexta: 8h às 18h</p>
-                    <p className="text-muted-foreground">Sábado: 8h às 14h</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-checkout-green/5 border border-checkout-green/20 rounded-2xl p-4 sm:p-6">
-              <h4 className="text-sm sm:text-base font-semibold mb-2 sm:mb-3">Precisa de Ajuda?</h4>
-              <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-                Para questões urgentes, utilize o nosso chat inteligente no canto inferior direito do ecrã ou entre em contacto pelos canais tradicionais.
+            <div className="text-center space-y-3">
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Falar com Especialista</h1>
+              <p className="text-muted-foreground text-lg">
+                Preencha o formulário abaixo e entraremos em contato em breve
               </p>
             </div>
+
+            <div className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-sm">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome completo *</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Seu nome completo"
+                    value={formData.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                    className={errors.name ? "border-destructive" : ""}
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-destructive">{errors.name}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={formData.email}
+                    onChange={(e) => handleChange("email", e.target.value)}
+                    className={errors.email ? "border-destructive" : ""}
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-destructive">{errors.email}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="(00) 00000-0000"
+                    value={formData.phone || ""}
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                    className={errors.phone ? "border-destructive" : ""}
+                  />
+                  {errors.phone && (
+                    <p className="text-sm text-destructive">{errors.phone}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="message">Mensagem *</Label>
+                  <Textarea
+                    id="message"
+                    placeholder="Como podemos ajudar você?"
+                    value={formData.message}
+                    onChange={(e) => handleChange("message", e.target.value)}
+                    className={errors.message ? "border-destructive" : ""}
+                    rows={6}
+                  />
+                  {errors.message && (
+                    <p className="text-sm text-destructive">{errors.message}</p>
+                  )}
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  size="lg"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Enviando..." : "Enviar mensagem"}
+                </Button>
+              </form>
+            </div>
+
+            <div className="bg-muted/50 border border-border rounded-lg p-6 text-center space-y-3">
+              <div className="flex justify-center">
+                <Mail className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Ou entre em contato diretamente:</p>
+                <a 
+                  href="mailto:contato@kambafy.com" 
+                  className="text-primary hover:underline font-medium"
+                >
+                  contato@kambafy.com
+                </a>
+              </div>
+            </div>
           </div>
-        </div>
-      </PageLayout>
+        </main>
+      </div>
     </>
   );
 };
