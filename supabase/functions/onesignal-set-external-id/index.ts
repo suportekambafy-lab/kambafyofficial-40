@@ -50,12 +50,12 @@ serve(async (req) => {
       // Se o erro for "user-2" (alias já reivindicado por outro usuário)
       // Removemos o external_id do device antigo e tentamos novamente
       if (responseData.errors?.[0]?.code === 'user-2') {
-        console.log('🔄 External ID já existe em outro device, removendo vínculo antigo...');
+        console.log('🔄 External ID já existe, removendo do device antigo...');
         
         try {
           // Remover o alias external_id do usuário antigo
           // https://documentation.onesignal.com/reference/delete-alias
-          console.log('🗑️ Removendo external_id do device antigo...');
+          console.log('🗑️ Deletando external_id do device antigo...');
           const deleteResponse = await fetch(
             `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/external_id/${external_id}/identity/external_id`,
             {
@@ -66,18 +66,21 @@ serve(async (req) => {
             }
           );
           
-          console.log('📊 Status da remoção:', deleteResponse.status);
+          console.log('📊 Status da deleção:', deleteResponse.status);
           
           if (!deleteResponse.ok) {
             const deleteError = await deleteResponse.text();
-            console.error('❌ Erro ao remover alias:', deleteError);
-            throw new Error(`Falha ao remover alias: ${deleteError}`);
+            console.error('❌ Erro ao deletar alias:', deleteError);
+            throw new Error(`Falha ao deletar: ${deleteError}`);
           }
           
           console.log('✅ External ID removido do device antigo');
           
-          // Agora tentar vincular novamente ao novo device
-          console.log('🔄 Tentando vincular ao novo device...');
+          // Aguardar um pouco para garantir que o OneSignal processou
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Agora tentar vincular ao novo device
+          console.log('🔄 Vinculando ao novo device...');
           const retryResponse = await fetch(
             `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${player_id}/user/identity`,
             {
@@ -96,11 +99,11 @@ serve(async (req) => {
           
           const retryData = await retryResponse.json();
           console.log('📊 Status da nova vinculação:', retryResponse.status);
-          console.log('📦 Dados da nova vinculação:', JSON.stringify(retryData));
+          console.log('📦 Dados:', JSON.stringify(retryData));
           
           if (!retryResponse.ok) {
-            console.error('❌ Erro ao vincular após remover alias:', retryData);
-            throw new Error(`Falha na nova vinculação: ${JSON.stringify(retryData)}`);
+            console.error('❌ Erro na nova vinculação:', retryData);
+            throw new Error(`Falha na vinculação: ${JSON.stringify(retryData)}`);
           }
           
           console.log('✅ External ID transferido com sucesso!');
@@ -114,7 +117,7 @@ serve(async (req) => {
           );
           
         } catch (transferError) {
-          console.error('❌ Erro ao transferir:', transferError);
+          console.error('❌ Erro:', transferError);
           console.error('📋 Detalhes:', transferError.message);
         }
       }
