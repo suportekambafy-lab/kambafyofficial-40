@@ -67,6 +67,9 @@ export const OptimizedMulticaixaForm: React.FC<OptimizedMulticaixaFormProps> = (
       setPaymentStage('processing');
       setPaymentProgress(50);
 
+      // Calcular seller_commission com taxa de 8.99%
+      const sellerCommission = Math.round(finalAmount * 0.9101 * 100) / 100;
+
       // Background task: Create Multicaixa order
       const { data, error } = await supabase.functions.invoke('create-multibanco-order', {
         body: {
@@ -76,7 +79,8 @@ export const OptimizedMulticaixaForm: React.FC<OptimizedMulticaixaFormProps> = (
           customerEmail: customerInfo.email,
           customerName: customerInfo.fullName,
           productId: product.id,
-          orderId
+          orderId,
+          seller_commission: sellerCommission // Taxa de 8.99% aplicada
         }
       });
 
