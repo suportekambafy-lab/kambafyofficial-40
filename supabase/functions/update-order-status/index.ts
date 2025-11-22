@@ -397,11 +397,30 @@ serve(async (req) => {
           if (sellerProfile?.email) {
             console.log('📤 Enviando notificação OneSignal para:', sellerProfile.email);
             
+            // Helper para formatar preço como no dashboard
+            const formatPrice = (amount: number, currency: string = 'KZ'): string => {
+              let amountInKZ = amount;
+              
+              if (currency.toUpperCase() !== 'KZ') {
+                const exchangeRates: Record<string, number> = {
+                  'EUR': 1100,
+                  'MZN': 14.3
+                };
+                const rate = exchangeRates[currency.toUpperCase()] || 1;
+                amountInKZ = Math.round(amount * rate);
+              }
+              
+              return `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`;
+            };
+            
+            const commissionAmount = orderData.seller_commission || orderData.amount;
+            const formattedPrice = formatPrice(commissionAmount, orderData.currency);
+            
             const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
               body: {
                 external_id: sellerProfile.email,
                 title: 'Kambafy - Venda aprovada',
-                message: `Sua comissão: ${orderData.seller_commission || orderData.amount} ${orderData.currency}`,
+                message: `Sua comissão: ${formattedPrice}`,
                 data: {
                   type: 'sale',
                   order_id: orderId,
