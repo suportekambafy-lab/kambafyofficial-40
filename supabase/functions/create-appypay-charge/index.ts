@@ -480,6 +480,22 @@ Deno.serve(async (req) => {
       } else if (orderStatus === 'pending') {
         logStep("Payment pending - sending notification to seller about generated reference");
         
+        // Helper para formatar preço como no dashboard
+        const formatPrice = (amount: number, currency: string = 'KZ'): string => {
+          let amountInKZ = amount;
+          
+          if (currency.toUpperCase() !== 'KZ') {
+            const exchangeRates: Record<string, number> = {
+              'EUR': 1100,
+              'MZN': 14.3
+            };
+            const rate = exchangeRates[currency.toUpperCase()] || 1;
+            amountInKZ = Math.round(amount * rate);
+          }
+          
+          return `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`;
+        };
+        
         // Enviar notificação OneSignal para o vendedor sobre a referência gerada
         if (product?.user_id) {
           try {
@@ -493,11 +509,14 @@ Deno.serve(async (req) => {
             if (sellerProfile?.email) {
               logStep('📤 Enviando notificação OneSignal para vendedor sobre referência:', sellerProfile.email);
               
+              const commissionAmount = orderDataToSave.seller_commission || orderDataToSave.amount;
+              const formattedPrice = formatPrice(commissionAmount, orderDataToSave.currency);
+              
               const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
                 body: {
                   external_id: sellerProfile.email,
                   title: 'Kambafy - Referência gerada',
-                  message: `Sua comissão: ${orderDataToSave.seller_commission || orderDataToSave.amount} ${orderDataToSave.currency}`,
+                  message: `Sua comissão: ${formattedPrice}`,
                   data: {
                     type: 'reference_generated',
                     order_id: orderId,

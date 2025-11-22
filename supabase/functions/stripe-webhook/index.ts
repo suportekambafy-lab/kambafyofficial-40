@@ -398,14 +398,31 @@ serve(async (req) => {
                       if (sellerProfile?.email) {
                         console.log('📤 Enviando notificação OneSignal para:', sellerProfile.email);
                         
+                        // Helper para formatar preço como no dashboard
+                        const formatPrice = (amount: number, currency: string = 'KZ'): string => {
+                          let amountInKZ = amount;
+                          
+                          if (currency.toUpperCase() !== 'KZ') {
+                            const exchangeRates: Record<string, number> = {
+                              'EUR': 1100,
+                              'MZN': 14.3
+                            };
+                            const rate = exchangeRates[currency.toUpperCase()] || 1;
+                            amountInKZ = Math.round(amount * rate);
+                          }
+                          
+                          return `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`;
+                        };
+                        
                         // Calcular comissão do vendedor (91.01% do valor)
                         const sellerCommission = (multibancoDetails.amount / 100) * 0.9101;
+                        const formattedPrice = formatPrice(sellerCommission, multibancoDetails.currency);
                         
                         const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
                           body: {
                             external_id: sellerProfile.email,
                             title: 'Kambafy - Referência gerada',
-                            message: `Sua comissão: ${sellerCommission.toFixed(2)} ${multibancoDetails.currency.toUpperCase()}`,
+                            message: `Sua comissão: ${formattedPrice}`,
                             data: {
                               type: 'reference_generated',
                               order_id: orderId,
