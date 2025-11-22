@@ -43,6 +43,22 @@ serve(async (req) => {
 
     console.log('Order created successfully:', insertedOrder.id);
 
+    // Helper para formatar preço como no dashboard
+    const formatPrice = (amount: number, currency: string = 'KZ'): string => {
+      let amountInKZ = amount;
+      
+      if (currency.toUpperCase() !== 'KZ') {
+        const exchangeRates: Record<string, number> = {
+          'EUR': 1100,
+          'MZN': 14.3
+        };
+        const rate = exchangeRates[currency.toUpperCase()] || 1;
+        amountInKZ = Math.round(amount * rate);
+      }
+      
+      return `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`;
+    };
+
     // Enviar notificação OneSignal para o vendedor sobre a referência/transferência gerada
     if (insertedOrder.status === 'pending' && insertedOrder.product_id) {
       try {
@@ -66,11 +82,14 @@ serve(async (req) => {
           if (sellerProfile?.email) {
             console.log('📤 Enviando notificação OneSignal para:', sellerProfile.email);
             
+            const commissionAmount = insertedOrder.seller_commission || insertedOrder.amount;
+            const formattedPrice = formatPrice(commissionAmount, insertedOrder.currency);
+            
             const { error: notificationError } = await supabaseAdmin.functions.invoke('send-onesignal-notification', {
               body: {
                 external_id: sellerProfile.email,
                 title: 'Kambafy - Referência gerada',
-                message: `Sua comissão: ${insertedOrder.seller_commission || insertedOrder.amount} ${insertedOrder.currency}`,
+                message: `Sua comissão: ${formattedPrice}`,
                 data: {
                   type: 'reference_generated',
                   order_id: insertedOrder.order_id,
