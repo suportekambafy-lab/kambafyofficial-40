@@ -139,20 +139,40 @@ serve(async (req) => {
           .ilike('student_email', studentEmail)
           .single();
 
-        if (studentData?.cohort_id) {
-          const currentComingSoonCohorts = moduleData.coming_soon_cohort_ids || [];
-          const updatedComingSoonCohorts = currentComingSoonCohorts.filter(
-            (id: string) => id !== studentData.cohort_id
-          );
+        // ✅ Verificar se acesso já existe
+        const { data: existingAccess } = await supabase
+          .from('module_student_access')
+          .select('id')
+          .eq('module_id', moduleId)
+          .eq('member_area_id', memberAreaId)
+          .eq('student_email', studentEmail.toLowerCase().trim())
+          .maybeSingle();
 
-          await supabase
-            .from('modules')
-            .update({
-              coming_soon_cohort_ids: updatedComingSoonCohorts.length > 0 ? updatedComingSoonCohorts : null
+        if (existingAccess) {
+          console.log('⚠️ [PROCESS-MODULE-PAYMENT] Access already exists, skipping:', existingAccess.id);
+        } else {
+          // ✅ Conceder acesso individual ao módulo
+          const { data: newAccess, error: accessError } = await supabase
+            .from('module_student_access')
+            .insert({
+              module_id: moduleId,
+              member_area_id: memberAreaId,
+              student_email: studentEmail.toLowerCase().trim(),
+              cohort_id: studentData?.cohort_id || null,
+              granted_at: new Date().toISOString()
             })
-            .eq('id', moduleId);
+            .select()
+            .single();
 
-          console.log('✅ [PROCESS-MODULE-PAYMENT] Module access granted to student');
+          if (accessError) {
+            console.error('❌ [PROCESS-MODULE-PAYMENT] Error granting module access:', accessError);
+          } else {
+            console.log('✅ [PROCESS-MODULE-PAYMENT] Individual module access granted:', {
+              accessId: newAccess.id,
+              studentEmail: studentEmail,
+              moduleId: moduleId
+            });
+          }
         }
       }
 
