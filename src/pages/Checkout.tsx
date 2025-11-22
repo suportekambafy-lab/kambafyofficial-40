@@ -1089,17 +1089,20 @@ const Checkout = () => {
           const commission_rate = affiliate.commission_rate;
           const commission_decimal = parseFloat(commission_rate.replace('%', '')) / 100;
           affiliate_commission = Math.round(totalAmount * commission_decimal * 100) / 100;
-          seller_commission = Math.round((totalAmount - affiliate_commission) * 100) / 100;
+          // Aplicar taxa de 8.99% no valor restante após comissão do afiliado
+          seller_commission = Math.round((totalAmount - affiliate_commission) * 0.9101 * 100) / 100;
         } else {
           console.log('❌ Nenhum afiliado válido encontrado para o código:', affiliateCode, affiliateError);
           markAsInvalidAffiliate();
-          seller_commission = totalAmount;
+          // Aplicar taxa de 8.99% mesmo quando não há afiliado válido
+          seller_commission = Math.round(totalAmount * 0.9101 * 100) / 100;
           // Limpar código de afiliado inválido e código da session
           clearAffiliateCode();
           affiliate_commission = null;
         }
       } else {
-        seller_commission = totalAmount;
+        // Aplicar taxa de 8.99% mesmo quando não há afiliado
+        seller_commission = Math.round(totalAmount * 0.9101 * 100) / 100;
       }
 
       // Converter valores para KZ para vendedores angolanos
