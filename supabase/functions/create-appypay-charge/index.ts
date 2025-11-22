@@ -23,14 +23,6 @@ const logStep = (step: string, details?: any) => {
   console.log(`[APPYPAY-CHARGE] ${step}${detailsStr}`);
 };
 
-// Função para formatar valor monetário no padrão português
-const formatCurrency = (amount: number): string => {
-  return amount.toLocaleString('pt-PT', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -505,7 +497,7 @@ Deno.serve(async (req) => {
                 body: {
                   external_id: sellerProfile.email,
                   title: 'Kambafy - Referência gerada',
-                  message: `Sua comissão: ${formatCurrency(parseFloat(orderDataToSave.seller_commission || orderDataToSave.amount))} ${orderDataToSave.currency}`,
+                  message: `Sua comissão: ${orderDataToSave.seller_commission || orderDataToSave.amount} ${orderDataToSave.currency}`,
                   data: {
                     type: 'reference_generated',
                     order_id: orderId,

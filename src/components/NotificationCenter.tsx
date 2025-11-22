@@ -63,7 +63,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           id: `withdrawal-${withdrawal.id}`,
           type: 'withdrawal',
           title: 'Novo Saque Pendente',
-          message: `Solicitação de saque no valor de ${Number(withdrawal.amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`,
+          message: `Solicitação de saque no valor de ${Number(withdrawal.amount).toLocaleString('pt-AO')} KZ`,
           amount: Number(withdrawal.amount),
           timestamp: withdrawal.created_at,
           read: false,
@@ -151,7 +151,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           id: `withdrawal-${newWithdrawal.id}`,
           type: 'withdrawal',
           title: 'Novo Saque Pendente',
-          message: `Solicitação de saque no valor de ${Number(newWithdrawal.amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`,
+          message: `Solicitação de saque no valor de ${Number(newWithdrawal.amount).toLocaleString('pt-AO')} KZ`,
           amount: Number(newWithdrawal.amount),
           timestamp: newWithdrawal.created_at,
           read: false,
@@ -163,7 +163,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
         
         toast({
           title: "💰 Novo Saque Pendente",
-          description: `Valor: ${Number(newWithdrawal.amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`,
+          description: `Valor: ${Number(newWithdrawal.amount).toLocaleString('pt-AO')} KZ`,
         });
       })
       .subscribe();
