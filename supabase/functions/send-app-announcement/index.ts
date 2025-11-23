@@ -340,14 +340,20 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: alreadySent, error: sentError } = await supabase
       .from("app_announcement_sent")
       .select("email")
-      .eq("announcement_type", "app_launch");
+      .eq("announcement_type", "app_launch")
+      .limit(10000); // Buscar até 10000 emails já enviados
 
     if (sentError) {
       console.error("[APP_ANNOUNCEMENT] Error checking sent emails:", sentError);
     }
 
     const sentEmails = new Set(alreadySent?.map(r => r.email) || []);
-    const usersToSend = users.filter(user => !sentEmails.has(user.email));
+    
+    // Filtrar usuários válidos (com emails válidos)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const usersToSend = users.filter(user => 
+      !sentEmails.has(user.email) && emailRegex.test(user.email)
+    );
     
     console.log(`[APP_ANNOUNCEMENT] Already sent to ${sentEmails.size} users, will send to ${usersToSend.length} remaining users`);
 
