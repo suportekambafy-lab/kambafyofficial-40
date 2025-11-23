@@ -305,6 +305,9 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (test_mode) {
       query = query.limit(5);
+    } else {
+      // Remove default Supabase limit of 1000
+      query = query.limit(10000);
     }
     
     const { data: users, error: fetchError } = await query;
