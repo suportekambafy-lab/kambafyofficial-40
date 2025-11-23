@@ -316,31 +316,54 @@ const handler = async (req: Request): Promise<Response> => {
       }
       
       allUsers = testUsers || [];
+      console.log(`[APP_ANNOUNCEMENT] Test mode: fetched ${allUsers.length} users`);
     } else {
       // Production mode - buscar todos com paginação
-      while (true) {
+      let fetchMore = true;
+      while (fetchMore) {
+        console.log(`[APP_ANNOUNCEMENT] Fetching page ${page + 1}...`);
+        
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
+        
         const { data: pageUsers, error: fetchError } = await supabase
           .from("profiles")
           .select("user_id, email, full_name")
           .not("email", "is", null)
-          .range(page * pageSize, (page + 1) * pageSize - 1);
+          .range(from, to);
         
         if (fetchError) {
           console.error("[APP_ANNOUNCEMENT] Error fetching users:", fetchError);
           throw new Error(`Failed to fetch users: ${fetchError.message}`);
         }
         
-        if (!pageUsers || pageUsers.length === 0) break;
+        if (!pageUsers || pageUsers.length === 0) {
+          console.log(`[APP_ANNOUNCEMENT] No more users found on page ${page + 1}`);
+          fetchMore = false;
+          break;
+        }
         
         allUsers = allUsers.concat(pageUsers);
-        console.log(`[APP_ANNOUNCEMENT] Fetched page ${page + 1}, total so far: ${allUsers.length}`);
+        console.log(`[APP_ANNOUNCEMENT] Fetched page ${page + 1}: ${pageUsers.length} users, total so far: ${allUsers.length}`);
         
-        if (pageUsers.length < pageSize) break; // Last page
+        // Se recebemos menos que o tamanho da página, é a última página
+        if (pageUsers.length < pageSize) {
+          console.log(`[APP_ANNOUNCEMENT] Last page reached (got ${pageUsers.length} < ${pageSize})`);
+          fetchMore = false;
+        }
+        
         page++;
+        
+        // Limite de segurança para evitar loops infinitos (máx 10 páginas = 10k usuários)
+        if (page >= 10) {
+          console.log("[APP_ANNOUNCEMENT] Safety limit reached (10 pages)");
+          fetchMore = false;
+        }
       }
     }
     
     const users = allUsers;
+    console.log(`[APP_ANNOUNCEMENT] Total users fetched: ${users.length}`);
     
     if (!users || users.length === 0) {
       return new Response(
@@ -367,28 +390,49 @@ const handler = async (req: Request): Promise<Response> => {
     let allSentEmails: Array<{ email: string }> = [];
     page = 0;
     
-    while (true) {
+    let fetchMoreSent = true;
+    while (fetchMoreSent) {
+      console.log(`[APP_ANNOUNCEMENT] Fetching sent emails page ${page + 1}...`);
+      
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      
       const { data: pageSent, error: sentError } = await supabase
         .from("app_announcement_sent")
         .select("email")
         .eq("announcement_type", "app_launch")
-        .range(page * pageSize, (page + 1) * pageSize - 1);
+        .range(from, to);
       
       if (sentError) {
         console.error("[APP_ANNOUNCEMENT] Error checking sent emails:", sentError);
         break;
       }
       
-      if (!pageSent || pageSent.length === 0) break;
+      if (!pageSent || pageSent.length === 0) {
+        console.log(`[APP_ANNOUNCEMENT] No more sent emails on page ${page + 1}`);
+        fetchMoreSent = false;
+        break;
+      }
       
       allSentEmails = allSentEmails.concat(pageSent);
-      console.log(`[APP_ANNOUNCEMENT] Fetched sent emails page ${page + 1}, total so far: ${allSentEmails.length}`);
+      console.log(`[APP_ANNOUNCEMENT] Fetched sent emails page ${page + 1}: ${pageSent.length} emails, total so far: ${allSentEmails.length}`);
       
-      if (pageSent.length < pageSize) break;
+      if (pageSent.length < pageSize) {
+        console.log(`[APP_ANNOUNCEMENT] Last page of sent emails (got ${pageSent.length} < ${pageSize})`);
+        fetchMoreSent = false;
+      }
+      
       page++;
+      
+      // Limite de segurança
+      if (page >= 10) {
+        console.log("[APP_ANNOUNCEMENT] Safety limit reached for sent emails (10 pages)");
+        fetchMoreSent = false;
+      }
     }
 
     const sentEmails = new Set(allSentEmails.map(r => r.email));
+    console.log(`[APP_ANNOUNCEMENT] Total sent emails: ${sentEmails.size}`);
     
     // Filtrar usuários válidos (com emails válidos)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
