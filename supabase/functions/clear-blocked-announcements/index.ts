@@ -1,5 +1,4 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,11 +18,11 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find all processing records
+    // Find all processing records OR completed with suspiciously low counts
     const { data: processingRecords, error: fetchError } = await supabase
       .from("app_announcement_progress")
       .select("*")
-      .eq("status", "processing")
+      .or('status.eq.processing,and(status.eq.completed,total_users.lt.100)')
       .order("started_at", { ascending: false });
 
     if (fetchError) {
@@ -48,14 +47,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`[CLEAR_BLOCKED] Found ${processingRecords.length} blocked processes`);
 
-    // Update all to completed
+    // Update all to failed (not completed, to trigger new send)
     const { error: updateError } = await supabase
       .from("app_announcement_progress")
       .update({
-        status: "completed",
+        status: "failed",
         completed_at: new Date().toISOString()
       })
-      .eq("status", "processing");
+      .or('status.eq.processing,and(status.eq.completed,total_users.lt.100)');
 
     if (updateError) {
       console.error("[CLEAR_BLOCKED] Error updating records:", updateError);
@@ -92,4 +91,4 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-serve(handler);
+Deno.serve(handler);

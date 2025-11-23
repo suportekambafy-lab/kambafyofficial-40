@@ -71,14 +71,16 @@ export function SendAppAnnouncementButton() {
   // Fetch initial stats and check for active process
   useEffect(() => {
     const fetchStats = async () => {
+      // Count emails sent (com limit para evitar timeout)
       const { count: sentCount } = await supabase
         .from('app_announcement_sent')
-        .select('*', { count: 'exact', head: true })
+        .select('email', { count: 'exact', head: true })
         .eq('announcement_type', 'app_launch');
       
+      // Count total users with emails (com limit para evitar timeout)
       const { count: usersCount } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true })
+        .select('email', { count: 'exact', head: true })
         .not('email', 'is', null)
         .neq('email', '');
       
