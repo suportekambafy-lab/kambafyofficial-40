@@ -296,25 +296,51 @@ const handler = async (req: Request): Promise<Response> => {
         .lt("started_at", tenMinutesAgo);
     }
 
-    // Fetch users with emails from profiles
-    let query = supabase
-      .from("profiles")
-      .select("user_id, email, full_name")
-      .not("email", "is", null);
+    // Fetch ALL users with emails from profiles (with pagination)
+    console.log("[APP_ANNOUNCEMENT] Fetching all users with emails...");
+    let allUsers: Array<{ user_id: string; email: string; full_name: string | null }> = [];
+    let page = 0;
+    const pageSize = 1000;
     
     if (test_mode) {
-      query = query.limit(5);
+      // Test mode - apenas 5 usuários
+      const { data: testUsers, error: fetchError } = await supabase
+        .from("profiles")
+        .select("user_id, email, full_name")
+        .not("email", "is", null)
+        .limit(5);
+      
+      if (fetchError) {
+        console.error("[APP_ANNOUNCEMENT] Error fetching users:", fetchError);
+        throw new Error(`Failed to fetch users: ${fetchError.message}`);
+      }
+      
+      allUsers = testUsers || [];
     } else {
-      // Remove default Supabase limit of 1000
-      query = query.limit(10000);
+      // Production mode - buscar todos com paginação
+      while (true) {
+        const { data: pageUsers, error: fetchError } = await supabase
+          .from("profiles")
+          .select("user_id, email, full_name")
+          .not("email", "is", null)
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+        
+        if (fetchError) {
+          console.error("[APP_ANNOUNCEMENT] Error fetching users:", fetchError);
+          throw new Error(`Failed to fetch users: ${fetchError.message}`);
+        }
+        
+        if (!pageUsers || pageUsers.length === 0) break;
+        
+        allUsers = allUsers.concat(pageUsers);
+        console.log(`[APP_ANNOUNCEMENT] Fetched page ${page + 1}, total so far: ${allUsers.length}`);
+        
+        if (pageUsers.length < pageSize) break; // Last page
+        page++;
+      }
     }
     
-    const { data: users, error: fetchError } = await query;
-
-    if (fetchError) {
-      console.error("[APP_ANNOUNCEMENT] Error fetching users:", fetchError);
-      throw new Error(`Failed to fetch users: ${fetchError.message}`);
-    }
+    const users = allUsers;
     
     if (!users || users.length === 0) {
       return new Response(
@@ -336,18 +362,33 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`[APP_ANNOUNCEMENT] Found ${users.length} users to notify`);
 
-    // Check which emails have already received this announcement
-    const { data: alreadySent, error: sentError } = await supabase
-      .from("app_announcement_sent")
-      .select("email")
-      .eq("announcement_type", "app_launch")
-      .limit(10000); // Buscar até 10000 emails já enviados
-
-    if (sentError) {
-      console.error("[APP_ANNOUNCEMENT] Error checking sent emails:", sentError);
+    // Check which emails have already received this announcement (with pagination)
+    console.log("[APP_ANNOUNCEMENT] Fetching sent emails...");
+    let allSentEmails: Array<{ email: string }> = [];
+    page = 0;
+    
+    while (true) {
+      const { data: pageSent, error: sentError } = await supabase
+        .from("app_announcement_sent")
+        .select("email")
+        .eq("announcement_type", "app_launch")
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+      
+      if (sentError) {
+        console.error("[APP_ANNOUNCEMENT] Error checking sent emails:", sentError);
+        break;
+      }
+      
+      if (!pageSent || pageSent.length === 0) break;
+      
+      allSentEmails = allSentEmails.concat(pageSent);
+      console.log(`[APP_ANNOUNCEMENT] Fetched sent emails page ${page + 1}, total so far: ${allSentEmails.length}`);
+      
+      if (pageSent.length < pageSize) break;
+      page++;
     }
 
-    const sentEmails = new Set(alreadySent?.map(r => r.email) || []);
+    const sentEmails = new Set(allSentEmails.map(r => r.email));
     
     // Filtrar usuários válidos (com emails válidos)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
