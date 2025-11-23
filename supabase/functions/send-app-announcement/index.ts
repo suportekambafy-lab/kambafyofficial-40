@@ -249,29 +249,52 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Check if there's already an active processing job
+    // Check if there's an active processing job from the last 10 minutes
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { data: activeProgress } = await supabase
       .from("app_announcement_progress")
       .select("*")
       .eq("announcement_type", "app_launch")
       .eq("status", "processing")
+      .gte("started_at", tenMinutesAgo)
       .order("started_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (activeProgress) {
-      console.log("[APP_ANNOUNCEMENT] There is already an active sending process");
+      console.log("[APP_ANNOUNCEMENT] There is already an active sending process from the last 10 minutes");
       return new Response(
         JSON.stringify({ 
           error: "Already processing", 
-          message: "Já existe um envio em andamento. Aguarde a conclusão.",
-          progressId: activeProgress.id 
+          message: "Já existe um envio em andamento dos últimos 10 minutos. Aguarde a conclusão.",
+          progressId: activeProgress.id,
+          startedAt: activeProgress.started_at
         }),
         { 
           status: 409, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
       );
+    }
+
+    // Auto-cleanup stuck processes older than 10 minutes
+    const { data: stuckProcesses } = await supabase
+      .from("app_announcement_progress")
+      .select("id")
+      .eq("status", "processing")
+      .lt("started_at", tenMinutesAgo);
+
+    if (stuckProcesses && stuckProcesses.length > 0) {
+      console.log(`[APP_ANNOUNCEMENT] Cleaning up ${stuckProcesses.length} stuck processes`);
+      await supabase
+        .from("app_announcement_progress")
+        .update({
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("status", "processing")
+        .lt("started_at", tenMinutesAgo);
     }
 
     // Fetch users with emails from profiles
