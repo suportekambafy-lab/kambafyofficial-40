@@ -48,11 +48,14 @@ export default function ProxyLinkGenerator() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    console.log('📁 File selected:', file?.name, file?.type);
     if (file) {
       if (file.type.startsWith('video/')) {
         setSelectedFile(file);
         setGeneratedLink('');
+        console.log('✅ Video file accepted');
       } else {
+        console.error('❌ Invalid file type:', file.type);
         toast({
           title: 'Erro',
           message: 'Por favor, selecione um arquivo de vídeo',
@@ -63,13 +66,20 @@ export default function ProxyLinkGenerator() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    console.log('🚀 handleUpload called');
+    
+    if (!selectedFile) {
+      console.error('❌ No file selected');
+      return;
+    }
+
+    console.log('📤 Starting upload process for:', selectedFile.name);
 
     try {
       setUploading(true);
       setProgress(10);
 
-      console.log('Creating video entry in Bunny...');
+      console.log('📞 Calling bunny-video-upload edge function...');
       
       // Step 1: Create video entry in Bunny
       const { data: videoData, error: createError } = await supabase.functions.invoke('bunny-video-upload', {
@@ -79,11 +89,14 @@ export default function ProxyLinkGenerator() {
         }
       });
 
+      console.log('📥 Edge function response:', { videoData, createError });
+
       if (createError || !videoData) {
+        console.error('❌ Failed to create video:', createError);
         throw new Error(createError?.message || 'Failed to create video');
       }
 
-      console.log('Video created:', videoData);
+      console.log('✅ Video created successfully:', videoData);
       setProgress(30);
 
       // Step 2: Upload video file using TUS
