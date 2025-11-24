@@ -108,7 +108,7 @@ export default function ProxyLinkGenerator() {
           filetype: selectedFile.type,
         },
         headers: {
-          'AccessKey': videoData.accessKey,
+          'AuthorizationSignature': videoData.accessKey,
         },
         onError: (error) => {
           console.error('Upload failed:', error);
