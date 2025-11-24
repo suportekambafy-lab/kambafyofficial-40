@@ -916,6 +916,89 @@ export type Database = {
           },
         ]
       }
+      external_payments: {
+        Row: {
+          amount: number
+          appypay_transaction_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          order_id: string
+          partner_id: string
+          payment_method: string
+          reference_entity: string | null
+          reference_number: string | null
+          status: string
+          updated_at: string | null
+          webhook_attempts: number | null
+          webhook_last_error: string | null
+          webhook_sent: boolean | null
+          webhook_sent_at: string | null
+        }
+        Insert: {
+          amount: number
+          appypay_transaction_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id: string
+          partner_id: string
+          payment_method: string
+          reference_entity?: string | null
+          reference_number?: string | null
+          status?: string
+          updated_at?: string | null
+          webhook_attempts?: number | null
+          webhook_last_error?: string | null
+          webhook_sent?: boolean | null
+          webhook_sent_at?: string | null
+        }
+        Update: {
+          amount?: number
+          appypay_transaction_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string
+          partner_id?: string
+          payment_method?: string
+          reference_entity?: string | null
+          reference_number?: string | null
+          status?: string
+          updated_at?: string | null
+          webhook_attempts?: number | null
+          webhook_last_error?: string | null
+          webhook_sent?: boolean | null
+          webhook_sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_payments_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       facebook_api_settings: {
         Row: {
           access_token: string
@@ -2153,6 +2236,8 @@ export type Database = {
           total_revenue: number | null
           total_transactions: number | null
           updated_at: string
+          webhook_events: string[] | null
+          webhook_secret: string | null
           webhook_url: string | null
           website: string | null
         }
@@ -2173,6 +2258,8 @@ export type Database = {
           total_revenue?: number | null
           total_transactions?: number | null
           updated_at?: string
+          webhook_events?: string[] | null
+          webhook_secret?: string | null
           webhook_url?: string | null
           website?: string | null
         }
@@ -2193,6 +2280,8 @@ export type Database = {
           total_revenue?: number | null
           total_transactions?: number | null
           updated_at?: string
+          webhook_events?: string[] | null
+          webhook_secret?: string | null
           webhook_url?: string | null
           website?: string | null
         }
