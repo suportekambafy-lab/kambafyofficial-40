@@ -3512,7 +3512,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      webhook_status: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          order_id: string | null
+          partner_name: string | null
+          payment_status: string | null
+          updated_at: string | null
+          webhook_attempts: number | null
+          webhook_last_error: string | null
+          webhook_sent: boolean | null
+          webhook_sent_at: string | null
+          webhook_url: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_approve_product: {
@@ -4003,6 +4018,10 @@ export type Database = {
           is_valid: boolean
           role: string
         }[]
+      }
+      verify_webhook_signature: {
+        Args: { payload: string; secret: string; signature: string }
+        Returns: boolean
       }
     }
     Enums: {
