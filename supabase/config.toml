@@ -140,3 +140,9 @@ verify_jwt = false
 
 [functions.update-onesignal-external-ids]
 verify_jwt = false
+
+[functions.kambafy-payments-api]
+verify_jwt = false
+
+[functions.process-external-payment-webhooks]
+verify_jwt = false
