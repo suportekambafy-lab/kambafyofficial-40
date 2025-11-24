@@ -3,8 +3,9 @@ import { Upload, Link2, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { useBunnyUpload } from '@/hooks/useBunnyUpload';
 import { useCustomToast } from '@/hooks/useCustomToast';
+import { supabase } from '@/integrations/supabase/client';
+import * as tus from 'tus-js-client';
 
 interface VideoHistory {
   title: string;
@@ -21,7 +22,7 @@ export default function ProxyLinkGenerator() {
   const [generatedLink, setGeneratedLink] = useState('');
   const [progress, setProgress] = useState(0);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
-  const { uploadFile, uploading } = useBunnyUpload();
+  const [uploading, setUploading] = useState(false);
   const { toast } = useCustomToast();
 
   // Load history from localStorage
@@ -65,24 +66,57 @@ export default function ProxyLinkGenerator() {
     if (!selectedFile) return;
 
     try {
-      const bunnyUrl = await uploadFile(selectedFile, {
-        onProgress: setProgress,
+      setUploading(true);
+      setProgress(10);
+
+      console.log('Creating video entry in Bunny...');
+      
+      // Step 1: Create video entry in Bunny
+      const { data: videoData, error: createError } = await supabase.functions.invoke('bunny-video-upload', {
+        body: {
+          fileName: selectedFile.name,
+          title: title || selectedFile.name,
+        }
       });
 
-      if (bunnyUrl) {
-        // Extract video ID from Bunny URL
-        // Format: https://iframe.mediadelivery.net/embed/{libraryId}/{videoId}
-        const videoIdMatch = bunnyUrl.match(/embed\/[^\/]+\/([^?]+)/);
-        const videoId = videoIdMatch?.[1];
+      if (createError || !videoData) {
+        throw new Error(createError?.message || 'Failed to create video');
+      }
 
-        if (videoId) {
-          // Generate proxy link
-          const proxyLink = `https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/bunny-proxy/video/${videoId}/playlist.m3u8`;
+      console.log('Video created:', videoData);
+      setProgress(30);
+
+      // Step 2: Upload video file using TUS
+      const upload = new tus.Upload(selectedFile, {
+        endpoint: videoData.uploadUrl,
+        retryDelays: [0, 3000, 5000, 10000, 20000],
+        metadata: {
+          filename: selectedFile.name,
+          filetype: selectedFile.type,
+        },
+        headers: {
+          'AccessKey': videoData.accessKey,
+        },
+        onError: (error) => {
+          console.error('Upload failed:', error);
+          throw error;
+        },
+        onProgress: (bytesUploaded, bytesTotal) => {
+          const percentage = 30 + ((bytesUploaded / bytesTotal) * 60);
+          setProgress(Math.round(percentage));
+          console.log(`Upload progress: ${Math.round(percentage)}%`);
+        },
+        onSuccess: () => {
+          console.log('Upload completed successfully');
+          
+          // Generate proxy link using the videoId
+          const proxyLink = `https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/bunny-proxy/video/${videoData.videoId}/playlist.m3u8`;
+          
+          setProgress(100);
           setGeneratedLink(proxyLink);
-          saveToHistory(title, proxyLink);
+          saveToHistory(title || selectedFile.name, proxyLink);
 
           toast({
-            title: 'Sucesso',
             message: 'Link do proxy gerado com sucesso!',
             variant: 'success',
           });
@@ -90,11 +124,24 @@ export default function ProxyLinkGenerator() {
           // Reset form
           setTitle('');
           setSelectedFile(null);
-          setProgress(0);
+          setUploading(false);
+          
+          setTimeout(() => setProgress(0), 1000);
         }
-      }
-    } catch (error) {
+      });
+
+      // Start the upload
+      upload.start();
+
+    } catch (error: any) {
       console.error('Error generating proxy link:', error);
+      toast({
+        title: 'Erro',
+        message: error.message || 'Erro ao fazer upload do vídeo',
+        variant: 'error',
+      });
+      setUploading(false);
+      setProgress(0);
     }
   };
 
