@@ -19,6 +19,7 @@ import { ResendAllAccessButton } from '@/components/admin/ResendAllAccessButton'
 import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalancesButton';
 import { SendAppAnnouncementButton } from '@/components/admin/SendAppAnnouncementButton';
 import { ClearAnnouncementButton } from '@/components/admin/ClearAnnouncementButton';
+import ProxyLinkGenerator from '@/components/admin/ProxyLinkGenerator';
 
 
 interface ModernMetricCardProps {
@@ -371,6 +372,8 @@ export default function AdminDashboard() {
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <ProxyLinkGenerator />
+          
           <ModernMetricCard
             title="Total de Usuários"
             subtitle="Usuários ativos na plataforma"
