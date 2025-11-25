@@ -46,6 +46,8 @@ interface FormData {
   accessDurationDescription: string;
   subscriptionConfig?: {
     is_subscription: boolean;
+    product_type?: 'course' | 'software';
+    member_area_id?: string;
     renewal_type: 'manual' | 'automatic';
     interval: 'day' | 'week' | 'month' | 'year';
     interval_count: number;
@@ -55,6 +57,9 @@ interface FormData {
     stripe_product_id?: string;
     allow_reactivation: boolean;
     reactivation_discount_percentage: number;
+    webhook_url?: string;
+    webhook_secret?: string;
+    webhook_events?: string[];
   };
 }
 
@@ -98,6 +103,17 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
   const [memberAreas, setMemberAreas] = useState<any[]>([]);
   const [newTag, setNewTag] = useState("");
 
+  // Extrair o subtipo de assinatura (course ou software)
+  const getSubscriptionType = (type: string): 'course' | 'software' | undefined => {
+    if (type?.startsWith('Assinatura-')) {
+      return type.split('-')[1] as 'course' | 'software';
+    }
+    return undefined;
+  };
+
+  const subscriptionType = getSubscriptionType(selectedType || "");
+  const isSubscription = selectedType?.startsWith('Assinatura-');
+
   const [formData, setFormData] = useState<FormData>({
     name: "",
     type: selectedType || "E-book",
@@ -120,7 +136,9 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
     accessDurationValue: null,
     accessDurationDescription: "",
     subscriptionConfig: {
-      is_subscription: selectedType === "Assinatura",
+      is_subscription: isSubscription,
+      product_type: subscriptionType,
+      member_area_id: undefined,
       renewal_type: 'manual',
       interval: 'month',
       interval_count: 1,
@@ -128,7 +146,10 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
       grace_period_days: 7,
       stripe_price_id: '',
       allow_reactivation: true,
-      reactivation_discount_percentage: 0
+      reactivation_discount_percentage: 0,
+      webhook_url: '',
+      webhook_secret: '',
+      webhook_events: []
     }
   });
 
@@ -158,6 +179,9 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
 
   useEffect(() => {
     if (editingProduct) {
+      const editSubscriptionType = getSubscriptionType(editingProduct.type);
+      const editIsSubscription = editingProduct.type?.startsWith('Assinatura-');
+      
       setFormData({
         name: editingProduct.name || "",
         type: editingProduct.type || selectedType || "E-book",
@@ -180,7 +204,9 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         accessDurationValue: editingProduct.access_duration_value || null,
         accessDurationDescription: editingProduct.access_duration_description || "",
         subscriptionConfig: editingProduct.subscription_config || {
-          is_subscription: selectedType === "Assinatura",
+          is_subscription: editIsSubscription,
+          product_type: editSubscriptionType,
+          member_area_id: undefined,
           renewal_type: 'manual',
           interval: 'month',
           interval_count: 1,
@@ -188,7 +214,10 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
           grace_period_days: 7,
           stripe_price_id: '',
           allow_reactivation: true,
-          reactivation_discount_percentage: 0
+          reactivation_discount_percentage: 0,
+          webhook_url: '',
+          webhook_secret: '',
+          webhook_events: []
         }
       });
     }
@@ -258,8 +287,19 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         return true;
 
       case 5:
+        // Validação para Curso normal
         if (formData.type === "Curso" && !formData.memberAreaId) {
           toast.error("Selecione uma área de membros para o curso");
+          return false;
+        }
+        // Validação para Assinatura de Curso
+        if (formData.type === "Assinatura-course" && !formData.subscriptionConfig?.member_area_id) {
+          toast.error("Selecione uma área de membros para o curso");
+          return false;
+        }
+        // Validação para Assinatura de Software
+        if (formData.type === "Assinatura-software" && !formData.subscriptionConfig?.webhook_url?.trim()) {
+          toast.error("URL do webhook é obrigatória para software");
           return false;
         }
         if (formData.type === "E-book" && !formData.shareLink.trim()) {
@@ -267,7 +307,9 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
           return false;
         }
         // Para "Link de Pagamento", o link é opcional
-        if (formData.type !== "Curso" && formData.type !== "Link de Pagamento" && !formData.shareLink.trim()) {
+        if (formData.type !== "Curso" && formData.type !== "Link de Pagamento" && 
+            formData.type !== "Assinatura-course" && formData.type !== "Assinatura-software" && 
+            !formData.shareLink.trim()) {
           toast.error("Link de compartilhamento é obrigatório");
           return false;
         }
@@ -296,7 +338,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
       let subscriptionConfigWithStripe = formData.subscriptionConfig;
 
       // ✅ SE FOR ASSINATURA, criar produto no Stripe automaticamente
-      if (formData.type === "Assinatura" && formData.subscriptionConfig?.is_subscription) {
+      if (formData.type?.startsWith('Assinatura-') && formData.subscriptionConfig?.is_subscription) {
         // Validar preço antes de criar no Stripe
         const priceValue = parseFloat(formData.price);
         if (!formData.price || isNaN(priceValue) || priceValue <= 0) {
@@ -343,11 +385,11 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         price: formData.price,
         compare_at_price: formData.compareAtPrice || null,
         description: formData.description,
-        share_link: formData.type === "Curso" ? null : formData.shareLink,
+        share_link: (formData.type === "Curso" || formData.type === "Assinatura-course" || formData.type === "Assinatura-software") ? null : formData.shareLink,
         cover: formData.cover,
         commission: formData.commission,
         tags: formData.tags,
-        member_area_id: formData.type === "Curso" ? formData.memberAreaId : null,
+        member_area_id: (formData.type === "Curso") ? formData.memberAreaId : null,
         payment_methods: formData.paymentMethods as any,
         fantasy_name: formData.fantasyName || null,
         custom_prices: formData.customPrices,
@@ -747,11 +789,13 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                 />
               </div>
 
-              {formData.type === "Assinatura" && (
+              {formData.type?.startsWith('Assinatura-') && (
                 <div className="mt-6">
                   <SubscriptionConfig
                     value={formData.subscriptionConfig || {
                       is_subscription: true,
+                      product_type: subscriptionType,
+                      member_area_id: undefined,
                       renewal_type: 'manual',
                       interval: 'month',
                       interval_count: 1,
@@ -759,7 +803,10 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                       grace_period_days: 7,
                       stripe_price_id: '',
                       allow_reactivation: true,
-                      reactivation_discount_percentage: 0
+                      reactivation_discount_percentage: 0,
+                      webhook_url: '',
+                      webhook_secret: '',
+                      webhook_events: []
                     }}
                     onChange={(config) => setFormData({ ...formData, subscriptionConfig: config })}
                   />
@@ -789,6 +836,86 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              ) : formData.type === "Assinatura-course" ? (
+                <div>
+                  <Label htmlFor="subscriptionMemberAreaId">Área de Membros *</Label>
+                  <Select 
+                    value={formData.subscriptionConfig?.member_area_id || ""} 
+                    onValueChange={(value) => setFormData({ 
+                      ...formData, 
+                      subscriptionConfig: { 
+                        ...formData.subscriptionConfig!, 
+                        member_area_id: value 
+                      } 
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma área de membros" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {memberAreas.map((area) => (
+                        <SelectItem key={area.id} value={area.id}>
+                          {area.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Os assinantes terão acesso a esta área de membros enquanto a assinatura estiver ativa
+                  </p>
+                </div>
+              ) : formData.type === "Assinatura-software" ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="webhookUrl">URL do Webhook *</Label>
+                    <Input
+                      id="webhookUrl"
+                      value={formData.subscriptionConfig?.webhook_url || ""}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        subscriptionConfig: { 
+                          ...formData.subscriptionConfig!, 
+                          webhook_url: e.target.value 
+                        } 
+                      })}
+                      placeholder="https://seu-software.com/webhook"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      URL que receberá notificações sobre eventos da assinatura
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="webhookSecret">Segredo do Webhook (opcional)</Label>
+                    <Input
+                      id="webhookSecret"
+                      type="password"
+                      value={formData.subscriptionConfig?.webhook_secret || ""}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        subscriptionConfig: { 
+                          ...formData.subscriptionConfig!, 
+                          webhook_secret: e.target.value 
+                        } 
+                      })}
+                      placeholder="Segredo para validar webhooks"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Use para validar que as requisições vêm do Kambafy
+                    </p>
+                  </div>
+
+                  <div className="bg-muted/50 border rounded-lg p-4">
+                    <h4 className="font-medium mb-2">Eventos que serão enviados:</h4>
+                    <ul className="text-sm space-y-1 text-muted-foreground">
+                      <li>• subscription.created - Nova assinatura criada</li>
+                      <li>• subscription.activated - Assinatura ativada</li>
+                      <li>• subscription.canceled - Assinatura cancelada</li>
+                      <li>• subscription.renewed - Assinatura renovada</li>
+                      <li>• subscription.expired - Assinatura expirada</li>
+                    </ul>
+                  </div>
                 </div>
               ) : formData.type === "E-book" ? (
                 <div className="max-w-md">
