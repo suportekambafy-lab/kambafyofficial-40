@@ -166,34 +166,20 @@ async function createPayment(
     // Obter token OAuth AppyPay
     const oauthToken = await getAppyPayOAuthToken();
 
-    let appypayResponse: any;
-    let expiresAt: string | null = null;
+    // Criar cobrança com AppyPay
+    const appypayResponse = await createAppyPayCharge(oauthToken, {
+      amount,
+      paymentMethod,
+      phoneNumber,
+      customerName,
+      customerEmail,
+      orderId,
+    });
 
-    if (paymentMethod === 'express') {
-      // Express: USSD via telefone
-      appypayResponse = await createExpressCharge(oauthToken, {
-        amount,
-        phoneNumber: phoneNumber!,
-        customerName,
-        customerEmail,
-        orderId,
-      });
-
-      // Express: expira em 5 minutos
-      expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-
-    } else if (paymentMethod === 'reference') {
-      // Reference: Gerar entidade + referência
-      appypayResponse = await createReferenceCharge(oauthToken, {
-        amount,
-        customerName,
-        customerEmail,
-        orderId,
-      });
-
-      // Reference: expira em 48 horas
-      expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-    }
+    // Definir expiração
+    const expiresAt = paymentMethod === 'express'
+      ? new Date(Date.now() + 5 * 60 * 1000).toISOString()  // 5 minutos
+      : new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();  // 48 horas
 
     // Salvar no banco
     const { data: payment, error: insertError } = await supabaseAdmin
@@ -388,23 +374,21 @@ async function listPayments(req: Request, partner: any, supabaseAdmin: any, star
 async function getAppyPayOAuthToken(): Promise<string> {
   const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
   const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
-  const authBaseUrl = Deno.env.get('APPYPAY_AUTH_BASE_URL');
-  const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
-  const resource = Deno.env.get('APPYPAY_RESOURCE');
-  const grantType = Deno.env.get('APPYPAY_GRANT_TYPE') || 'client_credentials';
+  const resource = Deno.env.get('APPYPAY_RESOURCE') || 'https://gwy-api.appypay.co.ao/';
 
-  if (!clientId || !clientSecret || !authBaseUrl || !apiBaseUrl) {
+  if (!clientId || !clientSecret) {
     throw new Error('AppyPay credentials not configured');
   }
 
+  const tokenUrl = 'https://login.microsoftonline.com/auth.appypay.co.ao/oauth2/token';
   const tokenParams = new URLSearchParams({
-    grant_type: grantType,
+    grant_type: 'client_credentials',
     client_id: clientId,
     client_secret: clientSecret,
-    resource: resource || apiBaseUrl
+    resource: resource
   });
 
-  const response = await fetch(authBaseUrl, {
+  const response = await fetch(tokenUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -422,86 +406,62 @@ async function getAppyPayOAuthToken(): Promise<string> {
   return data.access_token;
 }
 
-// Helper: Criar cobrança Express
-async function createExpressCharge(token: string, data: {
+// Helper: Criar cobrança AppyPay (Express ou Reference)
+async function createAppyPayCharge(token: string, data: {
   amount: number;
-  phoneNumber: string;
+  paymentMethod: 'express' | 'reference';
+  phoneNumber?: string;
   customerName: string;
   customerEmail: string;
   orderId: string;
 }) {
-  const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
-  if (!apiBaseUrl) {
-    throw new Error('APPYPAY_API_BASE_URL not configured');
-  }
+  // Gerar merchantTransactionId (máx 15 chars alfanuméricos)
+  const now = new Date();
+  const timestamp = now.getDate().toString().padStart(2, '0') + 
+                   now.getHours().toString().padStart(2, '0') + 
+                   now.getMinutes().toString().padStart(2, '0');
+  const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
+  const merchantTxId = `TR${timestamp}${randomSuffix}`;
 
-  const response = await fetch(`${apiBaseUrl}/payments/express`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      amount: data.amount,
-      phone_number: data.phoneNumber,
-      customer_name: data.customerName,
-      customer_email: data.customerEmail,
-      external_reference: data.orderId,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('❌ Express charge error:', errorText);
-    throw new Error(`Failed to create express charge: ${response.status}`);
-  }
-
-  const result = await response.json();
-  return {
-    transactionId: result.transaction_id || result.id,
-    entity: null,
-    reference: null,
+  const payload: any = {
+    amount: data.amount,
+    currency: 'AOA',
+    description: `Payment for order ${data.orderId}`,
+    merchantTransactionId: merchantTxId,
+    paymentMethod: data.paymentMethod === 'express' 
+      ? 'GPO_b1cfa3d3-f34a-4cfa-bcff-d52829991567'
+      : 'REF_96ee61a9-e9ff-4030-8be6-0b775e847e5f'
   };
-}
 
-// Helper: Criar cobrança por Referência
-async function createReferenceCharge(token: string, data: {
-  amount: number;
-  customerName: string;
-  customerEmail: string;
-  orderId: string;
-}) {
-  const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
-  if (!apiBaseUrl) {
-    throw new Error('APPYPAY_API_BASE_URL not configured');
+  // Adicionar phoneNumber para Express
+  if (data.paymentMethod === 'express' && data.phoneNumber) {
+    payload.paymentInfo = { phoneNumber: data.phoneNumber };
   }
 
-  const response = await fetch(`${apiBaseUrl}/payments/reference`, {
+  const response = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Accept-Language': 'pt-BR'
     },
-    body: JSON.stringify({
-      amount: data.amount,
-      customer_name: data.customerName,
-      customer_email: data.customerEmail,
-      external_reference: data.orderId,
-      expires_in: 48, // horas
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('❌ Reference charge error:', errorText);
-    throw new Error(`Failed to create reference charge: ${response.status}`);
+    console.error('❌ AppyPay charge error:', errorText);
+    throw new Error(`Failed to create AppyPay charge: ${response.status} - ${errorText}`);
   }
 
   const result = await response.json();
+  
+  // Estrutura de resposta da AppyPay v2.0
   return {
-    transactionId: result.transaction_id || result.id,
-    entity: result.entity,
-    reference: result.reference,
+    transactionId: result.id,
+    entity: result.responseStatus?.reference?.entity || null,
+    reference: result.responseStatus?.reference?.referenceNumber || null,
   };
 }
 
