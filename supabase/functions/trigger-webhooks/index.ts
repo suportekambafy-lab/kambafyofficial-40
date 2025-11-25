@@ -34,7 +34,9 @@ Deno.serve(async (req) => {
 
     console.log('🔔 Triggering webhooks for event:', event, 'user_id:', user_id);
 
-    // Buscar webhooks ativos que escutam este evento
+    const webhooksToTrigger: any[] = [];
+
+    // 1. Buscar webhooks da tabela webhook_settings
     let query = supabase
       .from('webhook_settings')
       .select('*')
@@ -58,7 +60,46 @@ Deno.serve(async (req) => {
       throw webhookError;
     }
 
-    if (!webhooks || webhooks.length === 0) {
+    if (webhooks && webhooks.length > 0) {
+      webhooksToTrigger.push(...webhooks);
+      console.log(`📦 Found ${webhooks.length} webhooks from webhook_settings`);
+    }
+
+    // 2. Se for evento de assinatura, verificar se há webhook configurado no produto
+    if (payload.product_id && event.startsWith('subscription.')) {
+      console.log('🔍 Checking for subscription webhook in product config');
+      
+      const { data: product, error: productError } = await supabase
+        .from('products')
+        .select('subscription_config, user_id')
+        .eq('id', payload.product_id)
+        .single();
+
+      if (!productError && product?.subscription_config) {
+        const subConfig = product.subscription_config;
+        
+        // Verificar se webhook está habilitado e configurado para este evento
+        if (
+          subConfig.webhook_enabled && 
+          subConfig.webhook_url && 
+          subConfig.webhook_events?.includes(event)
+        ) {
+          webhooksToTrigger.push({
+            id: `subscription-webhook-${payload.product_id}`,
+            url: subConfig.webhook_url,
+            secret: subConfig.webhook_secret || null,
+            events: subConfig.webhook_events,
+            active: true,
+            user_id: product.user_id,
+            headers: {},
+            timeout: 30
+          });
+          console.log('✅ Added subscription webhook from product config:', subConfig.webhook_url);
+        }
+      }
+    }
+
+    if (webhooksToTrigger.length === 0) {
       console.log('📭 No active webhooks found');
       return new Response(JSON.stringify({ 
         message: 'No active webhooks found',
@@ -69,10 +110,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`📦 Found ${webhooks.length} webhooks to process`);
+    console.log(`📦 Total webhooks to process: ${webhooksToTrigger.length}`);
 
     const results = await Promise.allSettled(
-      webhooks.map(async (webhook) => {
+      webhooksToTrigger.map(async (webhook) => {
         // Verificar se o webhook escuta este evento
         const events = webhook.events || [];
         if (!events.includes(event)) {
@@ -181,7 +222,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       message: 'Webhooks processed',
       event,
-      triggered: webhooks.length,
+      triggered: webhooksToTrigger.length,
       successful,
       failed,
       skipped,

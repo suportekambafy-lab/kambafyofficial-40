@@ -4,6 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Check } from "lucide-react";
 export interface SubscriptionConfigData {
   is_subscription: boolean;
@@ -16,6 +17,11 @@ export interface SubscriptionConfigData {
   stripe_product_id?: string; // Gerado automaticamente
   allow_reactivation: boolean;
   reactivation_discount_percentage: number;
+  // Webhook para integrações (opcional - para vendedores de software)
+  webhook_enabled?: boolean;
+  webhook_url?: string;
+  webhook_secret?: string;
+  webhook_events?: string[];
 }
 interface SubscriptionConfigProps {
   value: SubscriptionConfigData;
@@ -178,6 +184,94 @@ export default function SubscriptionConfig({
                     {value.reactivation_discount_percentage > 0 && ` (${value.reactivation_discount_percentage}% desconto)`}
                   </li>}
               </ul>
+            </div>
+
+            {/* Webhook para Integração com Software Externo */}
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="webhook_enabled">Integração com Software Externo</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Configure webhooks para receber notificações automáticas de pagamento (opcional)
+                  </p>
+                </div>
+                <Switch
+                  id="webhook_enabled"
+                  checked={value.webhook_enabled || false}
+                  onCheckedChange={(checked) => handleChange('webhook_enabled', checked)}
+                />
+              </div>
+
+              {value.webhook_enabled && (
+                <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+                  <div className="space-y-2">
+                    <Label htmlFor="webhook_url">URL do Webhook</Label>
+                    <Input
+                      id="webhook_url"
+                      placeholder="https://seuapp.com/api/kambafy/webhook"
+                      value={value.webhook_url || ''}
+                      onChange={(e) => handleChange('webhook_url', e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      URL onde seu software receberá as notificações
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="webhook_secret">Secret (Opcional)</Label>
+                    <Input
+                      id="webhook_secret"
+                      type="password"
+                      placeholder="Digite um secret para validação HMAC"
+                      value={value.webhook_secret || ''}
+                      onChange={(e) => handleChange('webhook_secret', e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use para validar a autenticidade dos webhooks
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Eventos para Notificar</Label>
+                    <div className="space-y-2">
+                      {[
+                        { id: 'subscription.created', label: '✨ Nova assinatura criada' },
+                        { id: 'subscription.renewed', label: '🔄 Assinatura renovada' },
+                        { id: 'subscription.cancelled', label: '❌ Assinatura cancelada' },
+                        { id: 'payment.success', label: '✅ Pagamento aprovado' },
+                        { id: 'payment.failed', label: '⚠️ Pagamento falhou' },
+                      ].map((event) => (
+                        <div key={event.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={event.id}
+                            checked={(value.webhook_events || []).includes(event.id)}
+                            onCheckedChange={(checked) => {
+                              const currentEvents = value.webhook_events || [];
+                              const newEvents = checked
+                                ? [...currentEvents, event.id]
+                                : currentEvents.filter((e) => e !== event.id);
+                              handleChange('webhook_events', newEvents);
+                            }}
+                          />
+                          <Label htmlFor={event.id} className="text-sm font-normal cursor-pointer">
+                            {event.label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Selecione quais eventos devem acionar o webhook
+                    </p>
+                  </div>
+
+                  <div className="bg-muted p-3 rounded-lg">
+                    <p className="text-xs text-muted-foreground">
+                      💡 <strong>Exemplo de payload:</strong> Seu software receberá um POST com dados do
+                      cliente, status da assinatura e informações de pagamento.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </>}
       </CardContent>
