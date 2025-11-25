@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Check } from "lucide-react";
 export interface SubscriptionConfigData {
   is_subscription: boolean;
+  product_type?: 'course' | 'software'; // Tipo do produto
+  member_area_id?: string; // Para cursos - área de membros associada
   renewal_type: 'manual' | 'automatic';
   interval: 'day' | 'week' | 'month' | 'year';
   interval_count: number;
@@ -57,6 +59,25 @@ export default function SubscriptionConfig({
         </div>
 
         {value.is_subscription && <>
+            {/* Tipo de Produto */}
+            <div className="space-y-2">
+              <Label>Tipo de Produto</Label>
+              <Select value={value.product_type || 'course'} onValueChange={val => handleChange('product_type', val)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="course">📚 Curso / Conteúdo Educacional</SelectItem>
+                  <SelectItem value="software">💻 Software / SaaS</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {value.product_type === 'software' 
+                  ? 'Software requer integração via webhook para controle de acesso'
+                  : 'Cursos podem ser vinculados a uma área de membros'}
+              </p>
+            </div>
+
             {/* Exemplos Práticos */}
             <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
               <h4 className="font-semibold text-sm mb-2">💡 Exemplos comuns:</h4>
@@ -186,23 +207,25 @@ export default function SubscriptionConfig({
               </ul>
             </div>
 
-            {/* Webhook para Integração com Software Externo */}
-            <div className="space-y-4 pt-4 border-t">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="webhook_enabled">Integração com Software Externo</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Configure webhooks para receber notificações automáticas de pagamento (opcional)
-                  </p>
+            {/* Configuração específica por tipo de produto */}
+            {value.product_type === 'software' ? (
+              // Webhook para Software
+              <div className="space-y-4 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="webhook_enabled">Integração com Software Externo</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Configure webhooks para receber notificações automáticas de pagamento
+                    </p>
+                  </div>
+                  <Switch
+                    id="webhook_enabled"
+                    checked={value.webhook_enabled || false}
+                    onCheckedChange={(checked) => handleChange('webhook_enabled', checked)}
+                  />
                 </div>
-                <Switch
-                  id="webhook_enabled"
-                  checked={value.webhook_enabled || false}
-                  onCheckedChange={(checked) => handleChange('webhook_enabled', checked)}
-                />
-              </div>
 
-              {value.webhook_enabled && (
+                {value.webhook_enabled && (
                 <div className="space-y-4 pl-4 border-l-2 border-primary/20">
                   <div className="space-y-2">
                     <Label htmlFor="webhook_url">URL do Webhook</Label>
@@ -272,7 +295,27 @@ export default function SubscriptionConfig({
                   </div>
                 </div>
               )}
-            </div>
+              </div>
+            ) : (
+              // Área de Membros para Curso
+              <div className="space-y-4 pt-4 border-t">
+                <div className="space-y-2">
+                  <Label htmlFor="member_area_id">Área de Membros (Opcional)</Label>
+                  <Select value={value.member_area_id || ''} onValueChange={val => handleChange('member_area_id', val || undefined)}>
+                    <SelectTrigger id="member_area_id">
+                      <SelectValue placeholder="Selecione uma área de membros" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhuma</SelectItem>
+                      {/* TODO: Buscar áreas de membros do usuário */}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Vincule esta assinatura a uma área de membros existente para liberar acesso automático
+                  </p>
+                </div>
+              </div>
+            )}
           </>}
       </CardContent>
     </Card>;
