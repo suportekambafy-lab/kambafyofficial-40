@@ -388,22 +388,28 @@ async function listPayments(req: Request, partner: any, supabaseAdmin: any, star
 async function getAppyPayOAuthToken(): Promise<string> {
   const clientId = Deno.env.get('APPYPAY_CLIENT_ID');
   const clientSecret = Deno.env.get('APPYPAY_CLIENT_SECRET');
+  const authBaseUrl = Deno.env.get('APPYPAY_AUTH_BASE_URL');
+  const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
+  const resource = Deno.env.get('APPYPAY_RESOURCE');
+  const grantType = Deno.env.get('APPYPAY_GRANT_TYPE') || 'client_credentials';
 
-  if (!clientId || !clientSecret) {
+  if (!clientId || !clientSecret || !authBaseUrl || !apiBaseUrl) {
     throw new Error('AppyPay credentials not configured');
   }
 
-  const tokenUrl = 'https://api.appypay.ao/v1/oauth/token';
-  const response = await fetch(tokenUrl, {
+  const tokenParams = new URLSearchParams({
+    grant_type: grantType,
+    client_id: clientId,
+    client_secret: clientSecret,
+    resource: resource || apiBaseUrl
+  });
+
+  const response = await fetch(authBaseUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: clientId,
-      client_secret: clientSecret,
-    }),
+    body: tokenParams,
   });
 
   if (!response.ok) {
@@ -424,7 +430,12 @@ async function createExpressCharge(token: string, data: {
   customerEmail: string;
   orderId: string;
 }) {
-  const response = await fetch('https://api.appypay.ao/v1/payments/express', {
+  const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
+  if (!apiBaseUrl) {
+    throw new Error('APPYPAY_API_BASE_URL not configured');
+  }
+
+  const response = await fetch(`${apiBaseUrl}/payments/express`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -460,7 +471,12 @@ async function createReferenceCharge(token: string, data: {
   customerEmail: string;
   orderId: string;
 }) {
-  const response = await fetch('https://api.appypay.ao/v1/payments/reference', {
+  const apiBaseUrl = Deno.env.get('APPYPAY_API_BASE_URL');
+  if (!apiBaseUrl) {
+    throw new Error('APPYPAY_API_BASE_URL not configured');
+  }
+
+  const response = await fetch(`${apiBaseUrl}/payments/reference`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
