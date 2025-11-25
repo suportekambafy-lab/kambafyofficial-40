@@ -42,7 +42,7 @@ export default function ProductTypeSelector({ onClose, onSelectType }: ProductTy
                 className="group relative overflow-hidden rounded-lg border bg-card p-6 text-left transition-all hover:border-primary hover:shadow-lg"
               >
                 <div className="flex flex-col gap-2">
-                  <span className="font-semibold text-lg">📚 Curso / Conteúdo Educacional</span>
+                  <span className="font-semibold text-lg">Curso / Conteúdo Educacional</span>
                   <span className="text-sm text-muted-foreground">
                     Pode ser vinculado a uma área de membros existente
                   </span>
@@ -55,7 +55,7 @@ export default function ProductTypeSelector({ onClose, onSelectType }: ProductTy
                 className="group relative overflow-hidden rounded-lg border bg-card p-6 text-left transition-all hover:border-primary hover:shadow-lg"
               >
                 <div className="flex flex-col gap-2">
-                  <span className="font-semibold text-lg">💻 Software / SaaS</span>
+                  <span className="font-semibold text-lg">Software / SaaS</span>
                   <span className="text-sm text-muted-foreground">
                     Requer integração via webhook para controle de acesso
                   </span>
