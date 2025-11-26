@@ -71,29 +71,50 @@ const getStepTitle = (stepId: number, productType: string) => {
     { id: 4, title: "Configurações", description: "Tags, categoria e suporte" },
   ];
   
-  if (stepId === 5) {
+  if (stepId === 5 && productType?.startsWith('Assinatura-')) {
+    return { id: 5, title: "Configuração de Assinatura", description: "Defina os termos da assinatura" };
+  }
+  
+  if (stepId === 6 || (stepId === 5 && !productType?.startsWith('Assinatura-'))) {
     switch (productType) {
       case "Curso":
-        return { id: 5, title: "Área de Membros", description: "Selecione a área de membros" };
+      case "Assinatura-course":
+        return { id: stepId, title: "Área de Membros", description: "Selecione a área de membros" };
       case "E-book":
-        return { id: 5, title: "Arquivo do E-book", description: "Upload do arquivo PDF" };
+        return { id: stepId, title: "Arquivo do E-book", description: "Upload do arquivo PDF" };
       case "Link de Pagamento":
-        return { id: 5, title: "Link de Entrega", description: "Link opcional do produto" };
+        return { id: stepId, title: "Link de Entrega", description: "Link opcional do produto" };
+      case "Assinatura-software":
+        return { id: stepId, title: "Configuração do Software", description: "Configure o webhook" };
       default:
-        return { id: 5, title: "Conteúdo do Produto", description: "Link de compartilhamento" };
+        return { id: stepId, title: "Conteúdo do Produto", description: "Link de compartilhamento" };
     }
   }
   
   return baseSteps[stepId - 1];
 };
 
-const STEPS = [
-  { id: 1, title: "Informações Básicas", description: "Nome e descrição" },
-  { id: 2, title: "Preço", description: "Defina os valores" },
-  { id: 3, title: "Métodos de Pagamento", description: "Formas de recebimento" },
-  { id: 4, title: "Configurações", description: "Tags, categoria e suporte" },
-  { id: 5, title: "Conteúdo", description: "Link ou área de membros" }
-];
+const getSteps = (productType: string) => {
+  const baseSteps = [
+    { id: 1, title: "Informações Básicas", description: "Nome e descrição" },
+    { id: 2, title: "Preço", description: "Defina os valores" },
+    { id: 3, title: "Métodos de Pagamento", description: "Formas de recebimento" },
+    { id: 4, title: "Configurações", description: "Tags, categoria e suporte" },
+  ];
+
+  if (productType?.startsWith('Assinatura-')) {
+    return [
+      ...baseSteps,
+      { id: 5, title: "Assinatura", description: "Configure a recorrência" },
+      { id: 6, title: "Conteúdo", description: "Link ou área de membros" }
+    ];
+  }
+
+  return [
+    ...baseSteps,
+    { id: 5, title: "Conteúdo", description: "Link ou área de membros" }
+  ];
+};
 
 export default function StepperProductForm({ editingProduct, onSuccess, onCancel, selectedType }: StepperProductFormProps) {
   const { user } = useAuth();
@@ -102,6 +123,8 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
   const [saving, setSaving] = useState(false);
   const [memberAreas, setMemberAreas] = useState<any[]>([]);
   const [newTag, setNewTag] = useState("");
+  
+  const STEPS = getSteps(selectedType || "");
 
   // Extrair o subtipo de assinatura (course ou software)
   const getSubscriptionType = (type: string): 'course' | 'software' | undefined => {
@@ -264,29 +287,30 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
           toast.error("Categoria é obrigatória");
           return false;
         }
-        
-        // Validação de configurações de assinatura
-        if (formData.subscriptionConfig?.is_subscription) {
-          if (formData.subscriptionConfig.interval_count < 1) {
+        return true;
+
+      case 5:
+        // Validação apenas para produtos de assinatura
+        if (formData.type?.startsWith('Assinatura-')) {
+          if (formData.subscriptionConfig?.interval_count < 1) {
             toast.error("O intervalo de cobrança deve ser maior que zero");
             return false;
           }
           
-          if (formData.subscriptionConfig.trial_days < 0) {
+          if (formData.subscriptionConfig?.trial_days < 0) {
             toast.error("O período de teste não pode ser negativo");
             return false;
           }
           
-          if (formData.subscriptionConfig.reactivation_discount_percentage < 0 || 
-              formData.subscriptionConfig.reactivation_discount_percentage > 100) {
+          if (formData.subscriptionConfig?.reactivation_discount_percentage < 0 || 
+              formData.subscriptionConfig?.reactivation_discount_percentage > 100) {
             toast.error("O desconto de reativação deve estar entre 0% e 100%");
             return false;
           }
         }
-        
         return true;
 
-      case 5:
+      case 6:
         // Validação para Curso normal
         if (formData.type === "Curso" && !formData.memberAreaId) {
           toast.error("Selecione uma área de membros para o curso");
@@ -788,35 +812,34 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                   placeholder="+244 900 000 000"
                 />
               </div>
-
-              {formData.type?.startsWith('Assinatura-') && (
-                <div className="mt-6">
-                  <SubscriptionConfig
-                    value={formData.subscriptionConfig || {
-                      is_subscription: true,
-                      product_type: subscriptionType,
-                      member_area_id: undefined,
-                      renewal_type: 'manual',
-                      interval: 'month',
-                      interval_count: 1,
-                      trial_days: 0,
-                      grace_period_days: 7,
-                      stripe_price_id: '',
-                      allow_reactivation: true,
-                      reactivation_discount_percentage: 0,
-                      webhook_url: '',
-                      webhook_secret: '',
-                      webhook_events: []
-                    }}
-                    onChange={(config) => setFormData({ ...formData, subscriptionConfig: config })}
-                  />
-                </div>
-              )}
             </>
           )}
 
-          {/* Etapa 5: Conteúdo */}
-          {currentStep === 5 && (
+          {/* Etapa 5: Configuração de Assinatura (apenas para produtos de assinatura) */}
+          {currentStep === 5 && formData.type?.startsWith('Assinatura-') && (
+            <SubscriptionConfig
+              value={formData.subscriptionConfig || {
+                is_subscription: true,
+                product_type: subscriptionType,
+                member_area_id: undefined,
+                renewal_type: 'manual',
+                interval: 'month',
+                interval_count: 1,
+                trial_days: 0,
+                grace_period_days: 7,
+                stripe_price_id: '',
+                allow_reactivation: true,
+                reactivation_discount_percentage: 0,
+                webhook_url: '',
+                webhook_secret: '',
+                webhook_events: []
+              }}
+              onChange={(config) => setFormData({ ...formData, subscriptionConfig: config })}
+            />
+          )}
+
+          {/* Etapa 6 (ou 5 para não-assinaturas): Conteúdo */}
+          {((currentStep === 6 && formData.type?.startsWith('Assinatura-')) || (currentStep === 5 && !formData.type?.startsWith('Assinatura-'))) && (
             <>
               {formData.type === "Curso" ? (
                 <div>
