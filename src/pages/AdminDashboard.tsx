@@ -19,6 +19,7 @@ import { ResendAllAccessButton } from '@/components/admin/ResendAllAccessButton'
 import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalancesButton';
 import { SendAppAnnouncementButton } from '@/components/admin/SendAppAnnouncementButton';
 import { ClearAnnouncementButton } from '@/components/admin/ClearAnnouncementButton';
+import { BulkProductAccessButton } from '@/components/admin/BulkProductAccessButton';
 import ProxyLinkGenerator from '@/components/admin/ProxyLinkGenerator';
 
 
@@ -266,11 +267,11 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-3">
               <NotificationCenter />
-            <div className="flex gap-2">
-              <ResendAllAccessButton />
-              <RecalculateBalancesButton />
-            </div>
-            <RecalculateBalancesButton />
+              <div className="flex gap-2">
+                <BulkProductAccessButton />
+                <ResendAllAccessButton />
+                <RecalculateBalancesButton />
+              </div>
               <Button
                 onClick={logout}
                 variant="outline"
