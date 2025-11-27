@@ -477,6 +477,67 @@ Deno.serve(async (req) => {
         } catch (emailError) {
           logStep("Email error", emailError);
         }
+        
+        // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR SOBRE VENDA APROVADA
+        if (product?.user_id) {
+          try {
+            // Helper para formatar preço
+            const formatPrice = (amount: number, currency: string = 'KZ'): string => {
+              let amountInKZ = amount;
+              
+              if (currency.toUpperCase() !== 'KZ') {
+                const exchangeRates: Record<string, number> = {
+                  'EUR': 1100,
+                  'MZN': 14.3
+                };
+                const rate = exchangeRates[currency.toUpperCase()] || 1;
+                amountInKZ = Math.round(amount * rate);
+              }
+              
+              return `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`;
+            };
+            
+            // Buscar perfil do vendedor
+            const { data: sellerProfile } = await supabase
+              .from('profiles')
+              .select('email, full_name')
+              .eq('user_id', product.user_id)
+              .single();
+            
+            if (sellerProfile?.email) {
+              logStep('📤 Enviando notificação OneSignal para vendedor sobre venda aprovada:', sellerProfile.email);
+              
+              const commissionAmount = orderDataToSave.seller_commission || orderDataToSave.amount;
+              const formattedPrice = formatPrice(commissionAmount, orderDataToSave.currency);
+              
+              const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
+                body: {
+                  external_id: sellerProfile.email,
+                  title: 'Kambafy - Venda aprovada',
+                  message: `Sua comissão: ${formattedPrice}`,
+                  data: {
+                    type: 'sale',
+                    order_id: orderId,
+                    amount: orderDataToSave.amount,
+                    seller_commission: orderDataToSave.seller_commission || orderDataToSave.amount,
+                    currency: orderDataToSave.currency,
+                    customer_name: customerData.name,
+                    product_name: productNameToUse || '',
+                    url: 'https://app.kambafy.com/vendedor/vendas'
+                  }
+                }
+              });
+              
+              if (notificationError) {
+                logStep('⚠️ Erro ao enviar notificação OneSignal:', notificationError);
+              } else {
+                logStep('✅ Notificação OneSignal enviada com sucesso');
+              }
+            }
+          } catch (notifError) {
+            logStep('⚠️ Erro ao processar notificação:', notifError);
+          }
+        }
       } else if (orderStatus === 'pending') {
         logStep("Payment pending - sending notification to seller about generated reference");
         
