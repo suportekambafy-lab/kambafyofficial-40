@@ -640,6 +640,70 @@ serve(async (req) => {
                 console.error('❌ Error in email sending process:', emailError);
               }
 
+              // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR
+              try {
+                console.log('[STRIPE-WEBHOOK] 📱 Preparando notificação OneSignal...');
+                
+                // Buscar email do vendedor para usar como external_id
+                const { data: sellerProfile } = await supabase
+                  .from('profiles')
+                  .select('email')
+                  .eq('user_id', product?.user_id)
+                  .single();
+                
+                if (sellerProfile?.email) {
+                  console.log('[STRIPE-WEBHOOK] 📤 Enviando notificação OneSignal para:', sellerProfile.email);
+                  
+                  // Helper para formatar preço como no dashboard
+                  const formatPrice = (amount: number, currency: string = 'KZ'): string => {
+                    let amountInKZ = amount;
+                    
+                    if (currency.toUpperCase() !== 'KZ') {
+                      const exchangeRates: Record<string, number> = {
+                        'EUR': 1100,
+                        'MZN': 14.3
+                      };
+                      const rate = exchangeRates[currency.toUpperCase()] || 1;
+                      amountInKZ = Math.round(amount * rate);
+                    }
+                    
+                    return `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`;
+                  };
+                  
+                  const orderAmount = parseFloat(paymentIntent.metadata.original_amount || (paymentIntent.amount / 100).toString());
+                  const commissionAmount = order.seller_commission || orderAmount;
+                  const formattedPrice = formatPrice(commissionAmount, paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase());
+                  
+                  const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
+                    body: {
+                      external_id: sellerProfile.email,
+                      title: 'Kambafy - Venda aprovada',
+                      message: `Sua comissão: ${formattedPrice}`,
+                      data: {
+                        type: 'sale',
+                        order_id: orderId,
+                        amount: orderAmount.toString(),
+                        seller_commission: commissionAmount,
+                        currency: paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase(),
+                        customer_name: order.customer_name,
+                        url: 'https://app.kambafy.com/vendedor/vendas'
+                      }
+                    }
+                  });
+                  
+                  if (notificationError) {
+                    console.error('[STRIPE-WEBHOOK] ❌ Erro ao enviar notificação OneSignal:', notificationError);
+                  } else {
+                    console.log('[STRIPE-WEBHOOK] ✅ Notificação OneSignal enviada com sucesso');
+                  }
+                } else {
+                  console.log('[STRIPE-WEBHOOK] ⚠️ Email do vendedor não encontrado');
+                }
+              } catch (notifError) {
+                console.error('[STRIPE-WEBHOOK] ❌ Error in OneSignal notification process:', notifError);
+                // Não falhar a operação principal por erro de notificação
+              }
+
               // Enviar email de acesso à área de membros para o produto principal
               try {
                 console.log('🔍 Checking if main product has member area...');
