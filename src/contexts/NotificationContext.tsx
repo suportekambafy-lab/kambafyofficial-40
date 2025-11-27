@@ -125,7 +125,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       data: { userId: user.id } 
     });
 
-    // Listen for new orders (sales)
+    // Listen for new orders (sales) - both INSERT and UPDATE to 'completed'
     const ordersChannel = supabase
       .channel('user-orders')
       .on(
@@ -142,13 +142,54 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             data: payload.new 
           });
 
-          addNotification({
-            type: 'sale',
-            title: '🎉 Nova Venda!',
-            message: `Vendeu ${payload.new.customer_name ? `para ${payload.new.customer_name}` : 'um produto'} - ${payload.new.amount} ${payload.new.currency || 'KZ'}`,
-            actionUrl: '/vendas',
-            data: payload.new
+          // Só notificar se for pending (outros status serão notificados no UPDATE)
+          if (payload.new.status === 'pending') {
+            addNotification({
+              type: 'sale',
+              title: '🎉 Nova Venda Pendente!',
+              message: `Aguardando pagamento de ${payload.new.customer_name || 'cliente'} - ${payload.new.amount} ${payload.new.currency || 'KZ'}`,
+              actionUrl: '/vendas',
+              data: payload.new
+            });
+          } else if (payload.new.status === 'completed') {
+            // Venda já foi paga imediatamente (ex: Stripe)
+            addNotification({
+              type: 'sale',
+              title: '🎉 Nova Venda Aprovada!',
+              message: `Vendeu para ${payload.new.customer_name || 'cliente'} - ${payload.new.amount} ${payload.new.currency || 'KZ'}`,
+              actionUrl: '/vendas',
+              data: payload.new
+            });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          logger.info('Order status updated', { 
+            component: 'NotificationProvider', 
+            data: { old: payload.old, new: payload.new } 
           });
+
+          // Só notificar quando status mudar de pending/processing para completed
+          const oldStatus = payload.old.status;
+          const newStatus = payload.new.status;
+          
+          if (oldStatus !== 'completed' && newStatus === 'completed') {
+            addNotification({
+              type: 'sale',
+              title: '🎉 Venda Aprovada!',
+              message: `Pagamento confirmado de ${payload.new.customer_name || 'cliente'} - ${payload.new.amount} ${payload.new.currency || 'KZ'}`,
+              actionUrl: '/vendas',
+              data: payload.new
+            });
+          }
         }
       )
       .subscribe();
