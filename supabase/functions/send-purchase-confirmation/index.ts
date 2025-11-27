@@ -185,6 +185,34 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // Fetch seller profile early for all email templates
+    let sellerProfile = null;
+    let productData = null;
+
+    if (sellerId) {
+      const { data: profile, error: sellerError } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('user_id', sellerId)
+        .single();
+
+      if (!sellerError && profile) {
+        sellerProfile = profile;
+      }
+    }
+
+    if (productId) {
+      const { data: product, error: productError } = await supabase
+        .from('products')
+        .select('sales, type, fantasy_name')
+        .eq('id', productId)
+        .single();
+
+      if (!productError && product) {
+        productData = product;
+      }
+    }
+
     // Check if this is a pending reference payment
     const isPendingReference = paymentMethod === 'reference' && paymentStatus === 'pending';
     
@@ -384,10 +412,8 @@ const handler = async (req: Request): Promise<Response> => {
 
         console.log('=== FETCHING SELLER AND PRODUCT DATA ===');
         
-        let sellerProfile = null;
-        let productData = null;
-
-        if (sellerId) {
+        // Use variables from outer scope if already fetched, otherwise fetch them
+        if (!sellerProfile && sellerId) {
           const { data: profile, error: sellerError } = await supabase
             .from('profiles')
             .select('full_name, email')
@@ -399,7 +425,7 @@ const handler = async (req: Request): Promise<Response> => {
           }
         }
 
-        if (productId) {
+        if (!productData && productId) {
           const { data: product, error: productError } = await supabase
             .from('products')
             .select('sales, type, fantasy_name')

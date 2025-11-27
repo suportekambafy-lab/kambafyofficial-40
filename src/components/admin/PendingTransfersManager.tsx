@@ -558,7 +558,7 @@ export function PendingTransfersManager() {
         console.log('🔍 Status final verificado no banco:', verifyOrder);
       }
 
-      // Enviar notificação para o vendedor se aprovado
+          // Enviar notificação para o vendedor se aprovado
       if (action === 'approve') {
         try {
           console.log('📬 Enviando notificação para o vendedor...');
@@ -588,8 +588,8 @@ export function PendingTransfersManager() {
             console.log('✅ Notificação salva no banco de dados');
           }
 
-          // 2. Buscar dados do vendedor para enviar email
-          console.log('📧 Buscando dados do vendedor para email...');
+          // 2. Buscar dados do vendedor para enviar email e notificação push
+          console.log('📧 Buscando dados do vendedor...');
           const { data: sellerProfile, error: sellerError } = await supabase
             .from('profiles')
             .select('full_name, email')
@@ -619,9 +619,41 @@ export function PendingTransfersManager() {
             } else {
               console.log('✅ Email de notificação enviado para o vendedor');
             }
+
+            // 4. 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PUSH
+            try {
+              console.log('📱 Enviando notificação OneSignal push...');
+              
+              const formattedPrice = `${parseFloat(sellerCommission.toString()).toLocaleString('pt-BR')} ${orderData.currency || 'KZ'}`;
+              
+              const { error: pushError } = await supabase.functions.invoke('send-onesignal-notification', {
+                body: {
+                  external_id: sellerProfile.email,
+                  title: 'Kambafy - Venda aprovada',
+                  message: `Sua comissão: ${formattedPrice}`,
+                  data: {
+                    type: 'sale',
+                    order_id: orderData.order_id,
+                    amount: orderData.amount,
+                    seller_commission: sellerCommission,
+                    currency: orderData.currency || 'KZ',
+                    customer_name: orderData.customer_name,
+                    url: 'https://app.kambafy.com/vendedor/vendas'
+                  }
+                }
+              });
+              
+              if (pushError) {
+                console.error('❌ Erro ao enviar notificação OneSignal:', pushError);
+              } else {
+                console.log('✅ Notificação OneSignal enviada com sucesso');
+              }
+            } catch (pushNotifError) {
+              console.error('❌ Erro no processo de notificação OneSignal:', pushNotifError);
+            }
           }
           
-          console.log('✅ Notificação completa enviada para o vendedor');
+          console.log('✅ Notificações completas enviadas para o vendedor');
         } catch (notificationError) {
           console.error('⚠️ Erro ao enviar notificação para vendedor:', notificationError);
         }
