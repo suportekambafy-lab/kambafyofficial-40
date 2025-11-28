@@ -142,7 +142,7 @@ export function BulkProductAccessButton() {
                         <li>Produtos de Destino: <strong>{results.target_products?.map((p: any) => p.name).join(', ')}</strong></li>
                         <li>✅ Acessos concedidos na tabela customer_access</li>
                         <li>📧 Emails de confirmação enviados</li>
-                        <li>📚 Alunos adicionados às áreas de membros</li>
+                        <li>📚 Alunos adicionados às áreas de membros (Turma A)</li>
                         <li>Order ID: <code className="text-xs bg-purple-100 px-1 py-0.5 rounded">{results.bulk_order_id}</code></li>
                       </ul>
                     </div>
@@ -170,7 +170,7 @@ export function BulkProductAccessButton() {
                                   <div className="text-sm font-medium truncate">{result.customer_name}</div>
                                   <div className="text-xs text-muted-foreground">{result.customer_email}</div>
                                   <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                                    ✅ Acesso | 📧 Email | 📚 Área de membros
+                                    ✅ Acesso | 📧 Email | 📚 Turma A
                                   </div>
                                 </div>
                               </div>
