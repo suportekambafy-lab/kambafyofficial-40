@@ -130,6 +130,7 @@ Deno.serve(async (req) => {
 
         defaultCohort = cohorts && cohorts.length > 0 ? cohorts[0] : null;
         console.log(`🎓 Default cohort: ${defaultCohort ? defaultCohort.name : 'N/A'}`);
+      }
 
       // Buscar quem já tem acesso a este produto específico
       const { data: existingAccess, error: existingError } = await supabase
