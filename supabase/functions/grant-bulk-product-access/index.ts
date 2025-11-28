@@ -181,9 +181,10 @@ Deno.serve(async (req) => {
 
       for (const customer of customersNeedingAccess) {
         try {
+          // Usar upsert para evitar erro de duplicate key
           const { error: insertError } = await supabase
             .from('customer_access')
-            .insert({
+            .upsert({
               customer_email: customer.customer_email.toLowerCase().trim(),
               customer_name: customer.customer_name,
               product_id: targetProduct.id,
@@ -191,6 +192,9 @@ Deno.serve(async (req) => {
               is_active: true,
               access_granted_at: new Date().toISOString(),
               access_expires_at: accessExpiresAt
+            }, {
+              onConflict: 'customer_email,product_id',
+              ignoreDuplicates: false
             });
 
           if (insertError) {
@@ -201,11 +205,13 @@ Deno.serve(async (req) => {
               success: false,
               error: insertError.message
             });
-          } else {
-            console.log(`✅ Access granted to ${customer.customer_email} for "${targetProduct.name}"`);
+            continue; // Pular para o próximo cliente
+          }
 
-            // Adicionar à área de membros se existir
-            if (memberArea) {
+          console.log(`✅ Access granted to ${customer.customer_email} for "${targetProduct.name}"`);
+
+          // Adicionar à área de membros se existir (independente de já ter acesso)
+          if (memberArea) {
               const studentData: any = {
                 member_area_id: memberArea.id,
                 student_email: customer.customer_email.toLowerCase().trim(),
@@ -285,12 +291,12 @@ Deno.serve(async (req) => {
               console.error(`⚠️ Failed to send email to ${customer.customer_email}:`, emailError);
             }
 
-            productResults.push({
-              customer_email: customer.customer_email,
-              customer_name: customer.customer_name,
-              success: true
-            });
-          }
+          productResults.push({
+            customer_email: customer.customer_email,
+            customer_name: customer.customer_name,
+            success: true
+          });
+
         } catch (error) {
           console.error(`❌ Exception for ${customer.customer_email}:`, error);
           productResults.push({
