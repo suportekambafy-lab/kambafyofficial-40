@@ -20,6 +20,7 @@ import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalance
 import { SendAppAnnouncementButton } from '@/components/admin/SendAppAnnouncementButton';
 import { ClearAnnouncementButton } from '@/components/admin/ClearAnnouncementButton';
 import { BulkProductAccessButton } from '@/components/admin/BulkProductAccessButton';
+import { AddStudentsToCohortButton } from '@/components/admin/AddStudentsToCohortButton';
 import ProxyLinkGenerator from '@/components/admin/ProxyLinkGenerator';
 
 
@@ -269,6 +270,7 @@ export default function AdminDashboard() {
               <NotificationCenter />
               <div className="flex gap-2">
                 <BulkProductAccessButton />
+                <AddStudentsToCohortButton />
                 <ResendAllAccessButton />
                 <RecalculateBalancesButton />
               </div>

@@ -149,3 +149,7 @@ verify_jwt = false
 
 [functions.grant-bulk-product-access]
 verify_jwt = false
+
+[functions.add-students-to-cohorts]
+verify_jwt = false
+
