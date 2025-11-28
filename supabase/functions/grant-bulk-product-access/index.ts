@@ -117,6 +117,20 @@ Deno.serve(async (req) => {
       const memberArea = memberAreas && memberAreas.length > 0 ? memberAreas[0] : null;
       console.log(`📚 Member area: ${memberArea ? memberArea.name : 'N/A'}`);
 
+      // Buscar "Turma A" (turma padrão) para esta área de membros
+      let defaultCohort = null;
+      if (memberArea) {
+        const { data: cohorts } = await supabase
+          .from('member_area_cohorts')
+          .select('id, name')
+          .eq('member_area_id', memberArea.id)
+          .eq('status', 'active')
+          .eq('name', 'Turma A')
+          .limit(1);
+
+        defaultCohort = cohorts && cohorts.length > 0 ? cohorts[0] : null;
+        console.log(`🎓 Default cohort: ${defaultCohort ? defaultCohort.name : 'N/A'}`);
+
       // Buscar quem já tem acesso a este produto específico
       const { data: existingAccess, error: existingError } = await supabase
         .from('customer_access')
@@ -191,22 +205,29 @@ Deno.serve(async (req) => {
 
             // Adicionar à área de membros se existir
             if (memberArea) {
+              const studentData: any = {
+                member_area_id: memberArea.id,
+                student_email: customer.customer_email.toLowerCase().trim(),
+                student_name: customer.customer_name,
+                access_granted_at: new Date().toISOString()
+              };
+
+              // Adicionar cohort_id se houver Turma A
+              if (defaultCohort) {
+                studentData.cohort_id = defaultCohort.id;
+              }
+
               const { error: studentError } = await supabase
                 .from('member_area_students')
-                .upsert({
-                  member_area_id: memberArea.id,
-                  student_email: customer.customer_email.toLowerCase().trim(),
-                  student_name: customer.customer_name,
-                  access_granted_at: new Date().toISOString()
-                }, {
+                .upsert(studentData, {
                   onConflict: 'member_area_id,student_email',
-                  ignoreDuplicates: true
+                  ignoreDuplicates: false
                 });
 
               if (studentError) {
                 console.error(`⚠️ Failed to add ${customer.customer_email} to member area:`, studentError);
               } else {
-                console.log(`📚 Added ${customer.customer_email} to member area "${memberArea.name}"`);
+                console.log(`📚 Added ${customer.customer_email} to "${memberArea.name}"${defaultCohort ? ` (${defaultCohort.name})` : ''}`);
               }
             }
 
@@ -282,6 +303,24 @@ Deno.serve(async (req) => {
 
       const successCount = productResults.filter(r => r.success).length;
       const failureCount = productResults.filter(r => !r.success).length;
+
+      // Atualizar contador da turma com o número correto de alunos
+      if (defaultCohort) {
+        const { count } = await supabase
+          .from('member_area_students')
+          .select('*', { count: 'exact', head: true })
+          .eq('member_area_id', memberArea.id)
+          .eq('cohort_id', defaultCohort.id);
+
+        if (count !== null) {
+          await supabase
+            .from('member_area_cohorts')
+            .update({ current_students: count })
+            .eq('id', defaultCohort.id);
+          
+          console.log(`📊 Updated cohort "${defaultCohort.name}" count to ${count}`);
+        }
+      }
 
       allResults.push({
         product_id: targetProduct.id,
