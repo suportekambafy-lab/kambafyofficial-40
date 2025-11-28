@@ -30,9 +30,10 @@ Deno.serve(async (req) => {
     );
 
     const payload: WebhookPayload = await req.json();
-    const { event, data, user_id } = payload;
+    const { event, user_id, product_id, order_id, ...restData } = payload;
 
     console.log('🔔 Triggering webhooks for event:', event, 'user_id:', user_id);
+    console.log('📦 Payload data:', { product_id, order_id, ...restData });
 
     const webhooksToTrigger: any[] = [];
 
@@ -123,13 +124,20 @@ Deno.serve(async (req) => {
 
         console.log(`🚀 Sending webhook to: ${webhook.url}`);
 
+        // Construir o payload com todos os dados relevantes
         const webhookPayload = {
           event,
           timestamp: new Date().toISOString(),
-          data,
+          data: {
+            ...restData,
+            order_id,
+            product_id,
+          },
           webhook_id: webhook.id,
           version: "1.0"
         };
+        
+        console.log('📤 Webhook payload:', JSON.stringify(webhookPayload, null, 2));
 
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
