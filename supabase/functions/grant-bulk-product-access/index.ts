@@ -150,12 +150,10 @@ Deno.serve(async (req) => {
         customer => !existingEmails.has(customer.customer_email.toLowerCase())
       );
 
-      console.log(`🎯 ${customersNeedingAccess.length} customers need access to "${targetProduct.name}"`);
+      console.log(`🎯 ${customersNeedingAccess.length} customers need NEW access to "${targetProduct.name}"`);
+      console.log(`📊 ${existingEmails.size} customers already have access and will be added to member area`);
 
-      if (customersNeedingAccess.length === 0) {
-        console.log(`✅ All customers already have access to "${targetProduct.name}"`);
-        continue;
-      }
+      // Processar clientes que precisam de NOVO acesso ao produto
 
       // Calcular data de expiração baseada nas configurações do produto
       let accessExpiresAt = null;
@@ -307,6 +305,51 @@ Deno.serve(async (req) => {
           });
         }
       }
+
+      // Agora adicionar à área de membros TODOS que já têm acesso (mas não foram processados acima)
+      console.log(`\n🔄 Adding existing customers to member area...`);
+      let addedToArea = 0;
+      
+      for (const customer of sourceAccess) {
+        // Se já foi processado acima, pular
+        if (!existingEmails.has(customer.customer_email.toLowerCase())) {
+          continue;
+        }
+
+        try {
+          if (memberArea) {
+            const studentData: any = {
+              member_area_id: memberArea.id,
+              student_email: customer.customer_email.toLowerCase().trim(),
+              student_name: customer.customer_name,
+              access_granted_at: new Date().toISOString()
+            };
+
+            // Adicionar cohort_id se houver Turma A
+            if (defaultCohort) {
+              studentData.cohort_id = defaultCohort.id;
+            }
+
+            const { error: studentError } = await supabase
+              .from('member_area_students')
+              .upsert(studentData, {
+                onConflict: 'member_area_id,student_email',
+                ignoreDuplicates: false
+              });
+
+            if (!studentError) {
+              console.log(`📚 Added ${customer.customer_email} to "${memberArea.name}"${defaultCohort ? ` (${defaultCohort.name})` : ''}`);
+              addedToArea++;
+            } else {
+              console.error(`⚠️ Failed to add ${customer.customer_email} to member area:`, studentError);
+            }
+          }
+        } catch (error) {
+          console.error(`❌ Exception adding ${customer.customer_email} to area:`, error);
+        }
+      }
+
+      console.log(`✅ Added ${addedToArea} existing customers to member area`);
 
       const successCount = productResults.filter(r => r.success).length;
       const failureCount = productResults.filter(r => !r.success).length;
