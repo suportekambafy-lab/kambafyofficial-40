@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0';
+import { Resend } from 'npm:resend@2.0.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -35,6 +36,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
     console.log('🔍 Validating products...');
     
@@ -105,6 +107,15 @@ Deno.serve(async (req) => {
 
     for (const targetProduct of targetProducts) {
       console.log(`\n📦 Processing target product: "${targetProduct.name}" (${targetProduct.id})`);
+
+      // Buscar área de membros associada ao produto
+      const { data: memberAreas } = await supabase
+        .from('member_areas')
+        .select('id, name, url')
+        .eq('user_id', targetProduct.user_id);
+
+      const memberArea = memberAreas && memberAreas.length > 0 ? memberAreas[0] : null;
+      console.log(`📚 Member area: ${memberArea ? memberArea.name : 'N/A'}`);
 
       // Buscar quem já tem acesso a este produto específico
       const { data: existingAccess, error: existingError } = await supabase
@@ -177,6 +188,81 @@ Deno.serve(async (req) => {
             });
           } else {
             console.log(`✅ Access granted to ${customer.customer_email} for "${targetProduct.name}"`);
+
+            // Adicionar à área de membros se existir
+            if (memberArea) {
+              const { error: studentError } = await supabase
+                .from('member_area_students')
+                .upsert({
+                  member_area_id: memberArea.id,
+                  student_email: customer.customer_email.toLowerCase().trim(),
+                  student_name: customer.customer_name,
+                  access_granted_at: new Date().toISOString()
+                }, {
+                  onConflict: 'member_area_id,student_email',
+                  ignoreDuplicates: true
+                });
+
+              if (studentError) {
+                console.error(`⚠️ Failed to add ${customer.customer_email} to member area:`, studentError);
+              } else {
+                console.log(`📚 Added ${customer.customer_email} to member area "${memberArea.name}"`);
+              }
+            }
+
+            // Enviar email de confirmação
+            try {
+              const emailHtml = `
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <meta charset="utf-8">
+                    <style>
+                      body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                      .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                      .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                      .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                      .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="container">
+                      <div class="header">
+                        <h1>🎉 Novo Acesso Liberado!</h1>
+                      </div>
+                      <div class="content">
+                        <p>Olá, <strong>${customer.customer_name}</strong>!</p>
+                        <p>Temos uma ótima notícia! Você recebeu acesso ao produto:</p>
+                        <h2 style="color: #667eea; margin: 20px 0;">${targetProduct.name}</h2>
+                        <p>Este acesso foi liberado manualmente e já está disponível para você.</p>
+                        ${memberArea ? `
+                          <p>Acesse sua área de membros agora:</p>
+                          <a href="https://app.kambafy.com/area/${memberArea.url}" class="button">Acessar Área de Membros</a>
+                        ` : ''}
+                        <p>Aproveite todo o conteúdo disponível!</p>
+                      </div>
+                      <div class="footer">
+                        <p>Esta é uma mensagem automática da Kambafy</p>
+                        <p>© ${new Date().getFullYear()} Kambafy - Todos os direitos reservados</p>
+                      </div>
+                    </div>
+                  </body>
+                </html>
+              `;
+
+              await resend.emails.send({
+                from: 'Kambafy <noreply@kambafy.com>',
+                to: [customer.customer_email],
+                subject: `🎉 Novo acesso liberado: ${targetProduct.name}`,
+                html: emailHtml
+              });
+
+              console.log(`📧 Email sent to ${customer.customer_email}`);
+            } catch (emailError) {
+              console.error(`⚠️ Failed to send email to ${customer.customer_email}:`, emailError);
+            }
+
             productResults.push({
               customer_email: customer.customer_email,
               customer_name: customer.customer_name,

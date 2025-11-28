@@ -29,7 +29,7 @@ export function BulkProductAccessButton() {
     setIsLoading(true);
     try {
       toast.info('🔄 Processando...', {
-        description: 'Identificando clientes e concedendo acessos...'
+        description: 'Concedendo acessos, adicionando às áreas e enviando emails...'
       });
 
       console.log('🚀 Calling grant-bulk-product-access...');
@@ -54,7 +54,7 @@ export function BulkProductAccessButton() {
       if (data.success) {
         const summary = data.summary || {};
         toast.success(`✅ Processo concluído!`, {
-          description: `${summary.total_granted || 0} acessos concedidos para ${summary.total_target_products || 0} produtos`
+          description: `${summary.total_granted || 0} acessos concedidos, emails enviados e alunos adicionados às áreas`
         });
       } else {
         toast.warning('⚠️ Concluído com avisos', {
@@ -87,7 +87,7 @@ export function BulkProductAccessButton() {
         ) : (
           <>
             <UserPlus className="mr-2 h-4 w-4" />
-            Dar Acesso: Milionário → Marca + Google
+            Dar Acesso + Enviar Emails
           </>
         )}
       </Button>
@@ -97,10 +97,10 @@ export function BulkProductAccessButton() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <UserPlus className="h-5 w-5 text-purple-600" />
-              Resultados da Concessão de Acesso em Lote
+              Acesso em Massa: Milionário → Marca + Google
             </DialogTitle>
             <DialogDescription>
-              Acesso concedido de "{results?.source_product?.name}" para {results?.target_products?.length || 0} produtos
+              Acessos concedidos, emails enviados e alunos adicionados às áreas de membros
             </DialogDescription>
           </DialogHeader>
           
@@ -140,7 +140,10 @@ export function BulkProductAccessButton() {
                       <ul className="list-disc list-inside space-y-1 text-sm">
                         <li>Produto de Origem: <strong>{results.source_product?.name}</strong></li>
                         <li>Produtos de Destino: <strong>{results.target_products?.map((p: any) => p.name).join(', ')}</strong></li>
-                        <li>Order ID de Referência: <code className="text-xs bg-purple-100 px-1 py-0.5 rounded">{results.bulk_order_id}</code></li>
+                        <li>✅ Acessos concedidos na tabela customer_access</li>
+                        <li>📧 Emails de confirmação enviados</li>
+                        <li>📚 Alunos adicionados às áreas de membros</li>
+                        <li>Order ID: <code className="text-xs bg-purple-100 px-1 py-0.5 rounded">{results.bulk_order_id}</code></li>
                       </ul>
                     </div>
                   </AlertDescription>
@@ -166,6 +169,9 @@ export function BulkProductAccessButton() {
                                 <div className="flex-1 min-w-0">
                                   <div className="text-sm font-medium truncate">{result.customer_name}</div>
                                   <div className="text-xs text-muted-foreground">{result.customer_email}</div>
+                                  <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                    ✅ Acesso | 📧 Email | 📚 Área de membros
+                                  </div>
                                 </div>
                               </div>
                             </div>
