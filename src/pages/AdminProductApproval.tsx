@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -118,6 +119,36 @@ export default function AdminProductApproval() {
     }).format(numPrice);
   };
 
+  const handleApproveAll = async () => {
+    const pendingProducts = filteredProducts?.filter(p => !p.admin_approved) || [];
+    
+    if (pendingProducts.length === 0) {
+      toast({
+        title: "Nenhum produto pendente",
+        description: "Todos os produtos já foram aprovados",
+      });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Deseja aprovar ${pendingProducts.length} produto(s) de uma vez?`
+    );
+
+    if (!confirmed) return;
+
+    for (const product of pendingProducts) {
+      await toggleMarketplaceMutation.mutateAsync({
+        productId: product.id,
+        isApproved: true,
+      });
+    }
+
+    toast({
+      title: "Sucesso",
+      description: `${pendingProducts.length} produto(s) aprovado(s)`,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -145,13 +176,20 @@ export default function AdminProductApproval() {
         </p>
       </div>
 
-      <div className="mb-6">
+      <div className="flex items-center gap-4 mb-6">
         <Input
           placeholder="Buscar por nome do produto ou vendedor..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-md"
         />
+        <Button
+          onClick={handleApproveAll}
+          disabled={toggleMarketplaceMutation.isPending || (filteredProducts?.filter(p => !p.admin_approved).length === 0)}
+          variant="default"
+        >
+          Aprovar Todos ({filteredProducts?.filter(p => !p.admin_approved).length || 0})
+        </Button>
       </div>
 
       {!filteredProducts || filteredProducts.length === 0 ? (
