@@ -532,7 +532,7 @@ const handler = async (req: Request): Promise<Response> => {
                     currency: order.currency,
                     customer_name: order.customer_name,
                     product_name: product?.name || '',
-                    url: 'https://app.kambafy.com/vendedor/vendas'
+                    url: 'https://mobile.kambafy.com/app'
                   }
                 }
               });

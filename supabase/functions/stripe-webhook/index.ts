@@ -433,7 +433,7 @@ serve(async (req) => {
                               product_name: productData.name,
                               reference_number: multibancoDetails.reference,
                               entity: multibancoDetails.entity,
-                              url: 'https://app.kambafy.com/vendedor/vendas'
+                              url: 'https://mobile.kambafy.com/app'
                             }
                           }
                         });

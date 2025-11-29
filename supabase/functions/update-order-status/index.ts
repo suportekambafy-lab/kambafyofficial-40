@@ -429,7 +429,7 @@ serve(async (req) => {
                   currency: orderData.currency,
                   customer_name: orderData.customer_name,
                   product_name: product.name,
-                  url: 'https://app.kambafy.com/vendedor/vendas'
+                  url: 'https://mobile.kambafy.com/app'
                 }
               }
             });

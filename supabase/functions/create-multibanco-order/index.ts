@@ -98,7 +98,7 @@ serve(async (req) => {
                   currency: insertedOrder.currency,
                   customer_name: insertedOrder.customer_name,
                   product_name: product.name,
-                  url: 'https://app.kambafy.com/vendedor/vendas'
+                  url: 'https://mobile.kambafy.com/app'
                 }
               }
             });
