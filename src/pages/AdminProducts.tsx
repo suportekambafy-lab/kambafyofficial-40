@@ -480,6 +480,78 @@ export default function AdminProducts() {
     }
   };
 
+  const handleApproveAll = async () => {
+    const pendingProducts = products.filter(p => 
+      !p.admin_approved && 
+      p.status !== 'Banido' && 
+      p.status !== 'Rascunho' && 
+      p.status !== 'Em Revisão' && 
+      !p.revision_requested
+    );
+    
+    if (pendingProducts.length === 0) {
+      toast.info("Nenhum produto pendente para aprovar");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Deseja aprovar ${pendingProducts.length} produto(s) pendente(s) de uma vez?`
+    );
+
+    if (!confirmed) return;
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const product of pendingProducts) {
+      try {
+        const { data: productData } = await supabase
+          .from('products')
+          .select('*, profiles!inner(email, full_name)')
+          .eq('id', product.id)
+          .single();
+        
+        const { error } = await supabase.rpc('admin_approve_product', {
+          product_id: product.id,
+          admin_id: admin?.id || null,
+          p_admin_email: admin?.email || null
+        });
+        
+        if (error) {
+          console.error('Erro ao aprovar produto:', product.name, error);
+          errorCount++;
+          continue;
+        }
+        
+        if (productData) {
+          await supabase.functions.invoke('send-product-approval-notification', {
+            body: {
+              sellerEmail: productData.profiles.email,
+              sellerName: productData.profiles.full_name || 'Vendedor',
+              productName: productData.name,
+              productUrl: productData.share_link || undefined
+            }
+          });
+        }
+        
+        successCount++;
+      } catch (error) {
+        console.error('Erro ao aprovar produto:', product.name, error);
+        errorCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`✅ ${successCount} produto(s) aprovado(s) com sucesso!`);
+    }
+    
+    if (errorCount > 0) {
+      toast.error(`❌ Erro ao aprovar ${errorCount} produto(s)`);
+    }
+
+    await loadProducts();
+  };
+
   const getStatusBadge = (product: ProductWithProfile) => {
     // Rascunho tem prioridade
     if (product.status === 'Rascunho') {
@@ -642,6 +714,17 @@ export default function AdminProducts() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Botão Aprovar Todos */}
+            <Button
+              onClick={handleApproveAll}
+              disabled={processingId !== null || products.filter(p => !p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested).length === 0}
+              variant="default"
+              size="sm"
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
+            >
+              Aprovar Todos ({products.filter(p => !p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested).length})
+            </Button>
           </div>
         </div>
 
