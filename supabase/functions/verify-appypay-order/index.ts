@@ -288,7 +288,7 @@ const handler = async (req: Request): Promise<Response> => {
                   seller_commission: order.seller_commission || order.amount,
                   currency: order.currency,
                   customer_name: order.customer_name,
-                  url: 'https://app.kambafy.com/vendedor/vendas'
+                  url: 'https://mobile.kambafy.com/app'
                 }
               }
             });

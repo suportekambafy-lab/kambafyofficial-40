@@ -523,7 +523,7 @@ Deno.serve(async (req) => {
                     currency: orderDataToSave.currency,
                     customer_name: customerData.name,
                     product_name: productNameToUse || '',
-                    url: 'https://app.kambafy.com/vendedor/vendas'
+                    url: 'https://mobile.kambafy.com/app'
                   }
                 }
               });
@@ -587,7 +587,7 @@ Deno.serve(async (req) => {
                     customer_name: customerData.name,
                     product_name: productNameToUse || '',
                     reference_number: chargeResult.responseStatus?.reference?.referenceNumber,
-                    url: 'https://app.kambafy.com/vendedor/vendas'
+                    url: 'https://mobile.kambafy.com/app'
                   }
                 }
               });
