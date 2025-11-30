@@ -12,17 +12,17 @@ interface OnboardingSlide {
 
 const slides: OnboardingSlide[] = [
   {
-    icon: <Sparkles className="w-16 h-16 text-primary" />,
+    icon: <Sparkles className="w-16 h-16 text-checkout-green" />,
     title: "Bem-vindo ao Kambafy",
     description: "A plataforma completa para gerenciar seu negócio digital de forma simples e eficiente."
   },
   {
-    icon: <Zap className="w-16 h-16 text-primary" />,
+    icon: <Zap className="w-16 h-16 text-checkout-green" />,
     title: "Gestão Simplificada",
     description: "Controle vendas, produtos e clientes em um único lugar, com interface intuitiva."
   },
   {
-    icon: <Shield className="w-16 h-16 text-primary" />,
+    icon: <Shield className="w-16 h-16 text-checkout-green" />,
     title: "Seguro e Confiável",
     description: "Seus dados protegidos com a mais alta tecnologia de segurança."
   }
