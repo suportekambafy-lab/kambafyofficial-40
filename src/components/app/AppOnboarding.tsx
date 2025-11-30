@@ -11,17 +11,17 @@ interface OnboardingSlide {
 
 const slides: OnboardingSlide[] = [
   {
-    icon: <Sparkles className="w-16 h-16 text-checkout-green" />,
+    icon: <Sparkles className="w-16 h-16 text-primary" />,
     title: "Bem-vindo ao Kambafy",
     description: "A plataforma completa para gerenciar seu negócio digital de forma simples e eficiente."
   },
   {
-    icon: <Zap className="w-16 h-16 text-checkout-green" />,
+    icon: <Zap className="w-16 h-16 text-primary" />,
     title: "Gestão Simplificada",
     description: "Controle vendas, produtos e clientes em um único lugar, com interface intuitiva."
   },
   {
-    icon: <Shield className="w-16 h-16 text-checkout-green" />,
+    icon: <Shield className="w-16 h-16 text-primary" />,
     title: "Seguro e Confiável",
     description: "Seus dados protegidos com a mais alta tecnologia de segurança."
   }
@@ -50,7 +50,7 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col">
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary/90" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted" />
       
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
@@ -73,8 +73,8 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleSkip}
-              className="text-white/90 hover:text-white hover:bg-white/10 backdrop-blur-sm"
+            onClick={handleSkip}
+              className="text-foreground/70 hover:text-foreground hover:bg-foreground/10 backdrop-blur-sm"
             >
               Pular
             </Button>
@@ -101,8 +101,8 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
               transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
             >
               <div className="relative">
-                <div className="absolute inset-0 bg-white/20 rounded-[32px] blur-xl" />
-                <div className="relative w-28 h-28 bg-white rounded-[32px] flex items-center justify-center shadow-2xl backdrop-blur-sm">
+                <div className="absolute inset-0 bg-primary/20 rounded-[32px] blur-xl" />
+                <div className="relative w-28 h-28 bg-card rounded-[32px] flex items-center justify-center shadow-2xl backdrop-blur-sm">
                   {slides[currentSlide].icon}
                 </div>
               </div>
@@ -113,7 +113,7 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="text-4xl font-bold text-white leading-tight"
+              className="text-4xl font-bold text-foreground leading-tight"
             >
               {slides[currentSlide].title}
             </motion.h1>
@@ -123,7 +123,7 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-lg text-white/90 leading-relaxed px-4"
+              className="text-lg text-muted-foreground leading-relaxed px-4"
             >
               {slides[currentSlide].description}
             </motion.p>
@@ -141,8 +141,8 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
               onClick={() => setCurrentSlide(index)}
               className={`h-2.5 rounded-full transition-all duration-300 ${
                 index === currentSlide 
-                  ? 'w-10 bg-white shadow-lg' 
-                  : 'w-2.5 bg-white/40 hover:bg-white/60'
+                  ? 'w-10 bg-primary shadow-lg' 
+                  : 'w-2.5 bg-foreground/40 hover:bg-foreground/60'
               }`}
               whileHover={{ scale: 1.2 }}
               whileTap={{ scale: 0.9 }}
@@ -158,7 +158,7 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
         >
           <button
             onClick={handleNext}
-            className="w-full h-14 bg-white text-primary rounded-2xl font-bold text-[17px] flex items-center justify-center gap-2 shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+            className="w-full h-14 bg-primary text-primary-foreground rounded-2xl font-bold text-[17px] flex items-center justify-center gap-2 shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
           >
             {isLastSlide ? (
               <>
