@@ -299,7 +299,11 @@ export function AppLogin() {
             </Button>
 
             <Button
-              onClick={() => setView('email-login')}
+              type="button"
+              onClick={() => {
+                console.log('Botão Email clicado');
+                setView('email-login');
+              }}
               variant="outline"
               className="w-full h-14 bg-transparent hover:bg-white/10 text-white border-white/30 rounded-2xl font-semibold text-base"
             >
