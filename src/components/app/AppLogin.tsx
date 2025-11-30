@@ -284,10 +284,11 @@ export function AppLogin() {
           </div>
 
           {/* Login Buttons */}
-          <div className="w-full max-w-md space-y-3">
+          <div className="w-full max-w-md space-y-3 relative z-50">
             <button
+              type="button"
               onClick={handleGoogleLogin}
-              className="w-full h-14 bg-white hover:bg-gray-100 text-gray-900 rounded-2xl font-semibold text-base shadow-lg border border-white/20 flex items-center justify-center transition-colors"
+              className="w-full h-14 bg-white hover:bg-gray-100 text-gray-900 rounded-2xl font-semibold text-base shadow-lg border border-white/20 flex items-center justify-center transition-colors relative z-10"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -299,16 +300,22 @@ export function AppLogin() {
             </button>
 
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🔘 Botão Email clicado!');
+              type="button"
+              onMouseDown={() => {
+                console.log('🖱️ Mouse down no botão!');
+              }}
+              onClick={() => {
+                console.log('🔘 CLIQUE NO BOTÃO EMAIL!');
                 setView('email-login');
               }}
-              className="w-full h-14 bg-transparent hover:bg-white/10 text-white border border-white/30 rounded-2xl font-semibold text-base flex items-center justify-center transition-colors"
+              onTouchStart={() => {
+                console.log('👆 Touch no botão!');
+                setView('email-login');
+              }}
+              className="w-full h-14 bg-transparent hover:bg-white/10 text-white border border-white/30 rounded-2xl font-semibold text-base flex items-center justify-center transition-colors relative z-10 cursor-pointer"
             >
-              <Mail className="w-5 h-5 mr-3" />
-              Continuar com Email
+              <Mail className="w-5 h-5 mr-3 pointer-events-none" />
+              <span className="pointer-events-none">Continuar com Email</span>
             </button>
           </div>
         </div>
