@@ -359,7 +359,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
 
   return (
     <>
-      <div className="h-16 bg-card border-b border-border/30 dark:border-border/20 z-20 flex items-center justify-between px-4 md:px-6 shadow-sm transition-colors duration-300">
+      <div className="h-16 bg-gradient-to-r from-card via-card/95 to-card border-b border-border/20 backdrop-blur-sm z-20 flex items-center justify-between px-4 md:px-6 shadow-sm transition-all duration-300">
         {/* Left side */}
         <div className="flex items-center gap-2">
           {/* Mobile menu button */}
@@ -368,7 +368,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
               variant="ghost"
               size="icon"
               onClick={onToggleSidebar}
-              className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl md:hidden"
+              className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 hover:scale-105 rounded-xl md:hidden transition-all duration-200"
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -386,21 +386,21 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                   placeholder="Buscar produtos, vendas, financeiro..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-10 pl-10 pr-4 rounded-xl border-border bg-card"
+                  className="w-full h-10 pl-10 pr-4 rounded-xl border-border/40 bg-background/50 backdrop-blur-sm focus:bg-background focus:border-primary/40 transition-all duration-200"
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => {
                     setTimeout(() => setShowSuggestions(false), 150);
                   }}
                 />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors duration-200" />
                 
                 {/* Search Suggestions */}
                 {showSuggestions && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="absolute top-12 left-0 w-full border rounded-md shadow-sm overflow-hidden bg-card mt-1 z-50"
+                    initial={{ opacity: 0, height: 0, y: -10 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -10 }}
+                    className="absolute top-12 left-0 w-full border border-border/40 rounded-xl shadow-lg overflow-hidden bg-card/95 backdrop-blur-md mt-1 z-50"
                   >
                     <motion.ul>
                       {searchActions
@@ -410,7 +410,8 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                           key={action.id}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="px-3 py-2 flex items-center justify-between hover:bg-accent cursor-pointer rounded-md"
+                          whileHover={{ x: 4 }}
+                          className="mx-1 px-3 py-2.5 flex items-center justify-between hover:bg-primary/10 cursor-pointer rounded-lg transition-all duration-200"
                           onClick={() => handleActionSelect(action.id)}
                         >
                           <div className="flex items-center gap-2 justify-between">
@@ -447,26 +448,26 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
           <SellerNotificationCenter />
 
           {/* Divider */}
-          <div className="h-6 w-px bg-black/30 dark:bg-white/20 mx-2" />
+          <div className="h-6 w-px bg-gradient-to-b from-transparent via-border to-transparent mx-2" />
 
           {/* User menu - Desktop Dropdown, Mobile Drawer */}
           {isMobile ? (
             <>
               <Button 
                 variant="ghost" 
-                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200"
+                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-primary/10 hover:scale-105 rounded-xl transition-all duration-200"
                 onClick={() => {
                   console.log('Avatar clicked - opening drawer');
                   setAvatarDrawerOpen(true);
                 }}
               >
-                <Avatar className="h-8 w-8 ring-2 ring-border">
+                <Avatar className="h-8 w-8 ring-2 ring-primary/20 shadow-sm">
                   <AvatarImage 
                     src={profileAvatar} 
                     alt={profileName || user?.email}
                     className="object-cover"
                   />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-sm font-semibold">
                     {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
