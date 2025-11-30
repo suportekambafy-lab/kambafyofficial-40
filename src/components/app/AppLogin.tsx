@@ -104,7 +104,27 @@ export function AppLogin() {
       console.log('🔐 Iniciando login...');
       
       const { error } = await signIn(email, password);
-      if (error) throw error;
+      
+      if (error) {
+        console.error('❌ Erro no login:', error);
+        let errorMessage = 'Erro ao fazer login. Tente novamente.';
+        
+        if (error.message?.includes('Invalid login credentials')) {
+          errorMessage = 'Email ou palavra-passe incorretos.';
+        } else if (error.message?.includes('Email not confirmed')) {
+          errorMessage = 'Por favor, confirme seu email antes de fazer login.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setError(errorMessage);
+        toast({
+          title: "Erro ao fazer login",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        return;
+      }
 
       console.log('✅ Login bem-sucedido!');
       
@@ -122,10 +142,12 @@ export function AppLogin() {
         }
       }
     } catch (error: any) {
-      console.error('❌ Erro no login:', error);
+      console.error('❌ Erro inesperado no login:', error);
+      const errorMessage = error?.message || 'Erro inesperado ao fazer login.';
+      setError(errorMessage);
       toast({
         title: "Erro",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
