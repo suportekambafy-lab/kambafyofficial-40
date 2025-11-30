@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { BiometricService } from '@/utils/biometricService';
 import { BiometryType } from 'capacitor-native-biometric';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PoliciesModal } from './PoliciesModal';
 
 type LoginView = 'onboarding' | 'email-login';
 
@@ -45,6 +46,8 @@ export function AppLogin() {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricType, setBiometricType] = useState<BiometryType | null>(null);
   const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [policyType, setPolicyType] = useState<'terms' | 'privacy'>('terms');
   const { signIn, resetPassword } = useAuth();
   const { toast } = useToast();
   const { context: deviceContext, loading: deviceLoading } = useDeviceContext();
@@ -331,13 +334,25 @@ export function AppLogin() {
           </p>
           <p className="text-xs text-muted-foreground/70">
             Ao registar-se aceita os nossos{' '}
-            <a href="/termos" className="underline hover:text-foreground transition-colors">
+            <button
+              onClick={() => {
+                setPolicyType('terms');
+                setShowPolicyModal(true);
+              }}
+              className="underline hover:text-foreground transition-colors"
+            >
               Termos de Utilização
-            </a>{' '}
+            </button>{' '}
             e a nossa{' '}
-            <a href="/privacidade" className="underline hover:text-foreground transition-colors">
+            <button
+              onClick={() => {
+                setPolicyType('privacy');
+                setShowPolicyModal(true);
+              }}
+              className="underline hover:text-foreground transition-colors"
+            >
               Política de Privacidade
-            </a>
+            </button>
             .
           </p>
         </div>
@@ -487,13 +502,25 @@ export function AppLogin() {
         </p>
         <p className="text-xs text-muted-foreground/70">
           Ao registar-se aceita os nossos{' '}
-          <a href="/termos" className="underline hover:text-foreground transition-colors">
+          <button
+            onClick={() => {
+              setPolicyType('terms');
+              setShowPolicyModal(true);
+            }}
+            className="underline hover:text-foreground transition-colors"
+          >
             Termos de Utilização
-          </a>{' '}
+          </button>{' '}
           e a nossa{' '}
-          <a href="/privacidade" className="underline hover:text-foreground transition-colors">
+          <button
+            onClick={() => {
+              setPolicyType('privacy');
+              setShowPolicyModal(true);
+            }}
+            className="underline hover:text-foreground transition-colors"
+          >
             Política de Privacidade
-          </a>
+          </button>
           .
         </p>
       </div>
@@ -543,6 +570,13 @@ export function AppLogin() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Policies Modal */}
+      <PoliciesModal
+        isOpen={showPolicyModal}
+        onClose={() => setShowPolicyModal(false)}
+        policyType={policyType}
+      />
     </div>
   );
 }
