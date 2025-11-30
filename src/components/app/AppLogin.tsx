@@ -247,14 +247,6 @@ export function AppLogin() {
       <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-white flex flex-col relative overflow-hidden">
         {/* Background gradient effect */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-checkout-green/10 via-transparent to-transparent" />
-        
-        {/* Close button */}
-        <button
-          onClick={() => window.history.back()}
-          className="absolute top-6 right-6 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-20">
