@@ -49,89 +49,155 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">
+    <div className="min-h-screen relative overflow-hidden flex flex-col">
+      {/* Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-checkout-green via-checkout-green/95 to-checkout-green/90" />
+      
+      {/* Decorative Elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+
       {/* Header */}
-      <div className="p-6 flex justify-between items-center">
-        <div className="h-12 flex items-center justify-center">
-          <img src={kambafyIcon} alt="Kambafy" className="h-full w-auto" />
-        </div>
+      <div className="relative z-10 p-6 flex justify-between items-center">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="h-12 flex items-center justify-center"
+        >
+          <img src={kambafyIcon} alt="Kambafy" className="h-full w-auto drop-shadow-lg" />
+        </motion.div>
         {!isLastSlide && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleSkip}
-            className="text-muted-foreground"
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
           >
-            Pular
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSkip}
+              className="text-white/90 hover:text-white hover:bg-white/10 backdrop-blur-sm"
+            >
+              Pular
+            </Button>
+          </motion.div>
         )}
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-24">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-24">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="text-center space-y-6 max-w-sm"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -20 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="text-center space-y-8 max-w-md"
           >
-            {/* Icon */}
-            <div className="flex justify-center">
-              <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center">
-                {slides[currentSlide].icon}
+            {/* Icon Container */}
+            <motion.div 
+              className="flex justify-center"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-white/20 rounded-[32px] blur-xl" />
+                <div className="relative w-28 h-28 bg-white rounded-[32px] flex items-center justify-center shadow-2xl backdrop-blur-sm">
+                  {slides[currentSlide].icon}
+                </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Title */}
-            <h1 className="text-3xl font-bold text-foreground">
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-4xl font-bold text-white leading-tight"
+            >
               {slides[currentSlide].title}
-            </h1>
+            </motion.h1>
 
             {/* Description */}
-            <p className="text-lg text-muted-foreground leading-relaxed">
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-lg text-white/90 leading-relaxed px-4"
+            >
               {slides[currentSlide].description}
-            </p>
+            </motion.p>
           </motion.div>
         </AnimatePresence>
       </div>
 
       {/* Footer */}
-      <div className="p-6 space-y-4">
+      <div className="relative z-10 p-6 space-y-6">
         {/* Dots Indicator */}
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-2.5">
           {slides.map((_, index) => (
-            <div
+            <motion.button
               key={index}
-              className={`h-2 rounded-full transition-all ${
+              onClick={() => setCurrentSlide(index)}
+              className={`h-2.5 rounded-full transition-all duration-300 ${
                 index === currentSlide 
-                  ? 'w-8 bg-primary' 
-                  : 'w-2 bg-primary/30'
+                  ? 'w-10 bg-white shadow-lg' 
+                  : 'w-2.5 bg-white/40 hover:bg-white/60'
               }`}
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
             />
           ))}
         </div>
 
         {/* Next Button */}
-        <Button
-          onClick={handleNext}
-          size="lg"
-          className="w-full h-14 text-lg font-semibold"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
         >
-          {isLastSlide ? (
-            <>
-              <Check className="w-5 h-5 mr-2" />
-              Começar
-            </>
-          ) : (
-            <>
-              Próximo
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </>
-          )}
-        </Button>
+          <button
+            onClick={handleNext}
+            style={{
+              width: '100%',
+              height: '56px',
+              backgroundColor: 'white',
+              color: 'hsl(152, 57%, 40%)',
+              borderRadius: '16px',
+              fontWeight: '700',
+              fontSize: '17px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)';
+            }}
+          >
+            {isLastSlide ? (
+              <>
+                <Check className="w-5 h-5" />
+                <span>Começar</span>
+              </>
+            ) : (
+              <>
+                <span>Próximo</span>
+                <ChevronRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
+        </motion.div>
       </div>
     </div>
   );
