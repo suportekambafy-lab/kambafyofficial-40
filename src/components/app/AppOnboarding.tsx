@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Sparkles, Shield, Zap, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import kambafyIcon from '@/assets/kambafy-icon.png';
 
 interface OnboardingSlide {
   icon: React.ReactNode;
@@ -64,7 +63,7 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
           animate={{ opacity: 1, x: 0 }}
           className="h-12 flex items-center justify-center"
         >
-          <img src={kambafyIcon} alt="Kambafy" className="h-full w-auto drop-shadow-lg" />
+          <img src="/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png" alt="Kambafy" className="h-14 w-auto drop-shadow-lg" />
         </motion.div>
         {!isLastSlide && (
           <motion.div
