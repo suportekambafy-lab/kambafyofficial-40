@@ -335,21 +335,27 @@ export function AppLogin() {
           <p className="text-xs text-muted-foreground/70">
             Ao registar-se aceita os nossos{' '}
             <button
-              onClick={() => {
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                console.log('🔘 Terms button clicked');
                 setPolicyType('terms');
                 setShowPolicyModal(true);
               }}
-              className="underline hover:text-foreground transition-colors"
+              className="underline hover:text-foreground transition-colors cursor-pointer"
             >
               Termos de Utilização
             </button>{' '}
             e a nossa{' '}
             <button
-              onClick={() => {
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                console.log('🔘 Privacy button clicked');
                 setPolicyType('privacy');
                 setShowPolicyModal(true);
               }}
-              className="underline hover:text-foreground transition-colors"
+              className="underline hover:text-foreground transition-colors cursor-pointer"
             >
               Política de Privacidade
             </button>
@@ -503,21 +509,27 @@ export function AppLogin() {
         <p className="text-xs text-muted-foreground/70">
           Ao registar-se aceita os nossos{' '}
           <button
-            onClick={() => {
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              console.log('🔘 Terms button clicked');
               setPolicyType('terms');
               setShowPolicyModal(true);
             }}
-            className="underline hover:text-foreground transition-colors"
+            className="underline hover:text-foreground transition-colors cursor-pointer"
           >
             Termos de Utilização
           </button>{' '}
           e a nossa{' '}
           <button
-            onClick={() => {
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              console.log('🔘 Privacy button clicked');
               setPolicyType('privacy');
               setShowPolicyModal(true);
             }}
-            className="underline hover:text-foreground transition-colors"
+            className="underline hover:text-foreground transition-colors cursor-pointer"
           >
             Política de Privacidade
           </button>
