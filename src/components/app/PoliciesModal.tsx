@@ -10,6 +10,8 @@ interface PoliciesModalProps {
 }
 
 export function PoliciesModal({ isOpen, onClose, policyType }: PoliciesModalProps) {
+  console.log('🔍 PoliciesModal render:', { isOpen, policyType });
+  
   const content = {
     terms: {
       title: "Termos de Utilização",
@@ -110,13 +112,13 @@ export function PoliciesModal({ isOpen, onClose, policyType }: PoliciesModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh]">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[85vh] z-[200]">
         <DialogHeader>
-          <DialogTitle className="text-2xl">{title}</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl">{title}</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[60vh] pr-4">
+        <ScrollArea className="h-[65vh] pr-4">
           <div 
-            className="prose prose-sm dark:prose-invert max-w-none"
+            className="prose prose-sm dark:prose-invert max-w-none text-foreground"
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
         </ScrollArea>
