@@ -261,9 +261,9 @@ export function AppLogin() {
           {/* Logo */}
           <div className="mb-8">
             <img 
-              src="/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png" 
+              src="/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" 
               alt="Kambafy" 
-              className="h-12 w-auto"
+              className="h-16 w-auto"
             />
           </div>
 
