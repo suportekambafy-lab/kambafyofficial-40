@@ -331,11 +331,11 @@ export function AppLogin() {
           </p>
           <p className="text-xs text-muted-foreground/70">
             Ao registar-se aceita os nossos{' '}
-            <a href="/terms" className="underline hover:text-foreground transition-colors">
+            <a href="/termos" className="underline hover:text-foreground transition-colors">
               Termos de Utilização
             </a>{' '}
             e a nossa{' '}
-            <a href="/privacy" className="underline hover:text-foreground transition-colors">
+            <a href="/privacidade" className="underline hover:text-foreground transition-colors">
               Política de Privacidade
             </a>
             .
@@ -487,11 +487,11 @@ export function AppLogin() {
         </p>
         <p className="text-xs text-muted-foreground/70">
           Ao registar-se aceita os nossos{' '}
-          <a href="/terms" className="underline hover:text-foreground transition-colors">
+          <a href="/termos" className="underline hover:text-foreground transition-colors">
             Termos de Utilização
           </a>{' '}
           e a nossa{' '}
-          <a href="/privacy" className="underline hover:text-foreground transition-colors">
+          <a href="/privacidade" className="underline hover:text-foreground transition-colors">
             Política de Privacidade
           </a>
           .
