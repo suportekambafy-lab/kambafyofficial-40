@@ -244,9 +244,9 @@ export function AppLogin() {
 
   if (view === 'onboarding') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-white flex flex-col relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted text-foreground flex flex-col relative overflow-hidden">
         {/* Background gradient effect */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-checkout-green/10 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-20">
@@ -271,7 +271,7 @@ export function AppLogin() {
                 <div className={`w-32 h-32 rounded-3xl bg-gradient-to-br ${onboardingSlides[currentSlide].gradient} flex items-center justify-center shadow-2xl`}>
                   {(() => {
                     const IconComponent = onboardingSlides[currentSlide].icon;
-                    return <IconComponent className="w-16 h-16 text-white" />;
+                    return <IconComponent className="w-16 h-16 text-primary-foreground" />;
                   })()}
                 </div>
               </div>
@@ -284,7 +284,7 @@ export function AppLogin() {
                   key={index}
                   onClick={() => setCurrentSlide(index)}
                   className={`h-2 rounded-full transition-all ${
-                    index === currentSlide ? 'w-8 bg-white' : 'w-2 bg-white/30'
+                    index === currentSlide ? 'w-8 bg-primary' : 'w-2 bg-foreground/30'
                   }`}
                 />
               ))}
@@ -299,23 +299,7 @@ export function AppLogin() {
                 console.log('🔵 Google button clicked');
                 handleGoogleLogin();
               }}
-              style={{
-                width: '100%',
-                height: '56px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'white',
-                color: '#1f2937',
-                borderRadius: '16px',
-                fontWeight: '600',
-                fontSize: '16px',
-                cursor: 'pointer',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                position: 'relative',
-                zIndex: 101
-              }}
+              className="w-full h-14 flex items-center justify-center bg-card text-card-foreground rounded-2xl font-semibold text-base cursor-pointer border border-border shadow-lg hover:bg-accent transition-colors"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" style={{ pointerEvents: 'none' }}>
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -332,22 +316,7 @@ export function AppLogin() {
                 console.log('📧 EMAIL BUTTON CLICKED!');
                 setView('email-login');
               }}
-              style={{
-                width: '100%',
-                height: '56px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'transparent',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '16px',
-                color: 'white',
-                fontWeight: '600',
-                fontSize: '16px',
-                cursor: 'pointer',
-                position: 'relative',
-                zIndex: 101
-              }}
+              className="w-full h-14 flex items-center justify-center bg-transparent border border-border rounded-2xl text-foreground font-semibold text-base cursor-pointer hover:bg-accent transition-colors"
             >
               <Mail className="w-5 h-5 mr-3" style={{ pointerEvents: 'none' }} />
               <span style={{ pointerEvents: 'none' }}>Continuar com Email</span>
@@ -355,18 +324,18 @@ export function AppLogin() {
           </div>
         </div>
 
-        {/* Footer */}
+          {/* Footer */}
         <div className="pb-8 px-6 text-center space-y-2 relative z-10">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Nós Valorizamos a Sua Privacidade
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground/70">
             Ao registar-se aceita os nossos{' '}
-            <a href="/terms" className="underline hover:text-white transition-colors">
+            <a href="/terms" className="underline hover:text-foreground transition-colors">
               Termos de Utilização
             </a>{' '}
             e a nossa{' '}
-            <a href="/privacy" className="underline hover:text-white transition-colors">
+            <a href="/privacy" className="underline hover:text-foreground transition-colors">
               Política de Privacidade
             </a>
             .
@@ -378,9 +347,9 @@ export function AppLogin() {
 
   // Email Login View
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-white flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted text-foreground flex flex-col relative overflow-hidden">
       {/* Background gradient effect */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-checkout-green/10 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
       
       {/* Header with back button */}
       <div className="relative z-10 px-6 py-6 flex items-center">
@@ -394,7 +363,7 @@ export function AppLogin() {
               setView('onboarding');
             }
           }}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-colors"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-accent/50 hover:bg-accent backdrop-blur-sm transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -411,12 +380,12 @@ export function AppLogin() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center space-y-4"
           >
-            <div className="w-20 h-20 bg-checkout-green/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="w-10 h-10 text-checkout-green" />
+            <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-xl font-semibold">Email Enviado!</h2>
-            <p className="text-gray-400 text-sm">
-              Enviamos instruções para <strong className="text-white">{email}</strong>. 
+            <p className="text-muted-foreground text-sm">
+              Enviamos instruções para <strong className="text-foreground">{email}</strong>. 
               Verifique sua caixa de entrada e spam.
             </p>
           </motion.div>
@@ -424,7 +393,7 @@ export function AppLogin() {
           <form onSubmit={isForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-6 max-w-md mx-auto w-full">
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm text-gray-400">
+              <Label htmlFor="email" className="text-sm text-muted-foreground">
                 Email
               </Label>
               <Input
@@ -433,7 +402,7 @@ export function AppLogin() {
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-14 bg-white/5 border-white/10 text-white placeholder:text-gray-500 rounded-xl focus:border-checkout-green focus:ring-checkout-green"
+                className="h-14 bg-accent/50 border-border text-foreground placeholder:text-muted-foreground rounded-xl focus:border-primary focus:ring-primary"
                 disabled={isLoading}
                 required
               />
@@ -442,7 +411,7 @@ export function AppLogin() {
             {/* Password (only for login) */}
             {!isForgotPassword && (
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm text-gray-400">
+                <Label htmlFor="password" className="text-sm text-muted-foreground">
                   Palavra-passe
                 </Label>
                 <div className="relative">
@@ -452,14 +421,14 @@ export function AppLogin() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-14 bg-white/5 border-white/10 text-white placeholder:text-gray-500 rounded-xl pr-12 focus:border-checkout-green focus:ring-checkout-green"
+                    className="h-14 bg-accent/50 border-border text-foreground placeholder:text-muted-foreground rounded-xl pr-12 focus:border-primary focus:ring-primary"
                     disabled={isLoading}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -469,7 +438,7 @@ export function AppLogin() {
 
             {/* Error Message */}
             {error && (
-              <p className="text-sm text-red-400 text-center bg-red-500/10 py-2 rounded-lg">{error}</p>
+              <p className="text-sm text-destructive text-center bg-destructive/10 py-2 rounded-lg">{error}</p>
             )}
 
             {/* Submit Button */}
@@ -479,7 +448,7 @@ export function AppLogin() {
                   type="button"
                   onClick={handleBiometricLogin}
                   disabled={isLoading}
-                  className="h-14 w-14 bg-white/10 hover:bg-white/20 border-white/20 rounded-xl flex-shrink-0"
+                  className="h-14 w-14 bg-accent/50 hover:bg-accent border-border rounded-xl flex-shrink-0"
                 >
                   <Fingerprint className="h-6 w-6" />
                 </Button>
@@ -487,7 +456,7 @@ export function AppLogin() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 h-14 bg-gray-600 hover:bg-gray-500 text-white rounded-xl font-semibold text-base"
+                className="flex-1 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold text-base"
               >
                 {isLoading 
                   ? 'Aguarde...' 
@@ -501,7 +470,7 @@ export function AppLogin() {
                 <button
                   type="button"
                   onClick={() => setIsForgotPassword(true)}
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Esqueceu-se da Palavra-passe?
                 </button>
@@ -513,16 +482,16 @@ export function AppLogin() {
 
       {/* Footer */}
       <div className="pb-8 px-6 text-center space-y-2 relative z-10">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Nós Valorizamos a Sua Privacidade
         </p>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground/70">
           Ao registar-se aceita os nossos{' '}
-          <a href="/terms" className="underline hover:text-white transition-colors">
+          <a href="/terms" className="underline hover:text-foreground transition-colors">
             Termos de Utilização
           </a>{' '}
           e a nossa{' '}
-          <a href="/privacy" className="underline hover:text-white transition-colors">
+          <a href="/privacy" className="underline hover:text-foreground transition-colors">
             Política de Privacidade
           </a>
           .
@@ -536,34 +505,34 @@ export function AppLogin() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-6"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-6"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-gray-900 rounded-2xl p-6 max-w-sm w-full border border-white/10 shadow-2xl"
+              className="bg-card rounded-2xl p-6 max-w-sm w-full border border-border shadow-2xl"
             >
               <div className="space-y-4">
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <Fingerprint className="h-5 w-5 text-checkout-green" />
+                    <Fingerprint className="h-5 w-5 text-primary" />
                     Ativar {BiometricService.getBiometryTypeName(biometricType)}?
                   </h3>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     Deseja usar {BiometricService.getBiometryTypeName(biometricType)} para entrar mais rapidamente na próxima vez?
                   </p>
                 </div>
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
-                    className="flex-1 bg-transparent border-white/20 hover:bg-white/10"
+                    className="flex-1"
                     onClick={() => setShowBiometricPrompt(false)}
                   >
                     Agora não
                   </Button>
                   <Button
-                    className="flex-1 bg-checkout-green hover:bg-checkout-green/90"
+                    className="flex-1 bg-primary hover:bg-primary/90"
                     onClick={handleEnableBiometric}
                   >
                     Ativar
