@@ -362,6 +362,13 @@ export function AppLogin() {
             .
           </p>
         </div>
+
+        {/* Policies Modal */}
+        <PoliciesModal
+          isOpen={showPolicyModal}
+          onClose={() => setShowPolicyModal(false)}
+          policyType={policyType}
+        />
       </div>
     );
   }
