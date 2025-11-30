@@ -19,7 +19,7 @@ const onboardingSlides = [
   {
     title: 'Venda seus produtos digitais com facilidade',
     icon: ShoppingBag,
-    gradient: 'from-emerald-500 to-teal-600'
+    gradient: 'from-orange-500 to-red-600'
   },
   {
     title: 'Gerencie suas vendas em tempo real',
