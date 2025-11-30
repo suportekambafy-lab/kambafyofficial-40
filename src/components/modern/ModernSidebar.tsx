@@ -197,88 +197,96 @@ export function ModernSidebar({
               animate={{ x: 0 }}
               exit={{ x: -320 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="fixed left-0 top-0 h-screen w-80 bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-xl"
+              className="fixed left-0 top-0 h-screen w-80 bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 border-r border-sidebar-border/20 flex flex-col z-50 shadow-2xl backdrop-blur-sm"
             >
               {/* Header */}
-              <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
+              <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/20 backdrop-blur-sm">
               <img 
                 src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
                 alt="Kambafy" 
-                className="h-16 w-auto"
+                className="h-16 w-auto drop-shadow-sm"
               />
                 
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onClose}
-                  className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-primary/10 hover:scale-110 rounded-lg transition-all duration-200"
                 >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
 
               {/* Progress bar above navigation */}
-              <div className="px-4 py-2 border-b border-sidebar-border/30 dark:border-sidebar/30">
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
+              <div className="px-4 py-3 border-b border-sidebar-border/20 bg-gradient-to-r from-transparent via-primary/5 to-transparent">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground/70">
                     <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
-                    <span>{progressPercent.toFixed(0)}%</span>
+                    <span className="text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
                   </div>
-                  <div className="w-full h-1.5 bg-sidebar-accent rounded-full">
-                    <div 
-                      className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500" 
-                      style={{ width: `${progressPercent}%` }}
+                  <div className="w-full h-2 bg-sidebar-accent/50 rounded-full overflow-hidden shadow-inner">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercent}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className="h-full bg-gradient-to-r from-primary via-primary/90 to-primary rounded-full shadow-lg" 
                     />
                   </div>
                 </div>
               </div>
 
               {/* Navigation */}
-              <nav className="flex-1 px-3 py-3 space-y-1">
-                {menuItems.map((item) => (
-                  <NavLink
+              <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide">
+                {menuItems.map((item, index) => (
+                  <motion.div
                     key={item.href}
-                    to={item.href}
-                    onClick={handleItemClick}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${
-                        isActive 
-                          ? "bg-primary/10 text-primary border-l-2 border-primary ml-1" 
-                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                      }`
-                    }
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
                   >
-                    <item.icon className="w-4 h-4 flex-shrink-0" />
-                    <span className="whitespace-nowrap">{item.label}</span>
-                  </NavLink>
+                    <NavLink
+                      to={item.href}
+                      onClick={handleItemClick}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                          isActive 
+                            ? "bg-gradient-to-r from-primary/15 to-primary/10 text-primary shadow-sm scale-[1.02]" 
+                            : "text-sidebar-foreground/70 hover:bg-primary/10 hover:text-sidebar-foreground hover:scale-[1.02]"
+                        }`
+                      }
+                    >
+                      <item.icon className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" />
+                      <span className="whitespace-nowrap">{item.label}</span>
+                    </NavLink>
+                  </motion.div>
                 ))}
               </nav>
 
               {/* Bottom Section Mobile */}
-              <div className="border-t border-sidebar-border/30 dark:border-sidebar/30 p-3 space-y-1">
+              <div className="border-t border-sidebar-border/20 p-3 space-y-1 bg-gradient-to-b from-transparent to-sidebar-accent/30">
                 {bottomItems.map((item) => (
                   <NavLink
                     key={item.href}
                     to={item.href}
                     onClick={handleItemClick}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                         isActive 
-                          ? "bg-primary/10 text-primary" 
-                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                          ? "bg-gradient-to-r from-primary/15 to-primary/10 text-primary shadow-sm" 
+                          : "text-sidebar-foreground/70 hover:bg-primary/10 hover:text-sidebar-foreground hover:scale-[1.02]"
                       }`
                     }
                   >
-                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
                     <span className="whitespace-nowrap">{item.label}</span>
                   </NavLink>
                 ))}
                 
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:scale-[1.02] w-full"
                 >
-                  <LogOut className="w-4 h-4 flex-shrink-0" />
+                  <LogOut className="w-5 h-5 flex-shrink-0" />
                   <span className="whitespace-nowrap">Sair</span>
                 </button>
               </div>
@@ -293,21 +301,21 @@ export function ModernSidebar({
   return (
     <div
       style={{ width: collapsed ? 80 : 320 }}
-      className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border/30 dark:border-sidebar/30 flex flex-col z-50 shadow-sm transition-all duration-300"
+      className="fixed left-0 top-0 h-screen bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 border-r border-sidebar-border/20 flex flex-col z-50 shadow-xl backdrop-blur-sm transition-all duration-300"
     >
       {/* Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/30 dark:border-sidebar/30">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/20 backdrop-blur-sm">
         {!collapsed ? (
           <img 
             src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
             alt="Kambafy" 
-            className="h-16 w-auto"
+            className="h-16 w-auto drop-shadow-sm"
           />
         ) : (
           <img
             src={isDark ? "/kambafy-icon-dark.png" : "/kambafy-icon-light.png"}
             alt="Kambafy"
-            className="w-8 h-8"
+            className="w-8 h-8 drop-shadow-sm"
           />
         )}
         
@@ -315,36 +323,40 @@ export function ModernSidebar({
           variant="ghost"
           size="icon"
           onClick={onToggle}
-          className="flex-shrink-0"
+          className="flex-shrink-0 hover:bg-primary/10 hover:scale-110 rounded-lg transition-all duration-200"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
 
       {/* Progress bar above navigation */}
-      <div className={`border-b border-sidebar-border/30 dark:border-sidebar/30 ${collapsed ? 'px-2 py-2' : 'px-4 py-2'}`}>
+      <div className={`border-b border-sidebar-border/20 bg-gradient-to-r from-transparent via-primary/5 to-transparent ${collapsed ? 'px-2 py-2' : 'px-4 py-3'}`}>
         {collapsed ? (
           // Versão compacta horizontal quando fechado
-          <div className="flex flex-col items-center gap-1" title={`${formatCurrency(dashboardData.totalRevenue)} / ${formatCurrency(nextGoal)} KZ - ${progressPercent.toFixed(0)}%`}>
-            <div className="w-full h-1.5 bg-sidebar-accent rounded-full">
-              <div 
-                className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500" 
-                style={{ width: `${progressPercent}%` }}
+          <div className="flex flex-col items-center gap-1.5" title={`${formatCurrency(dashboardData.totalRevenue)} / ${formatCurrency(nextGoal)} KZ - ${progressPercent.toFixed(0)}%`}>
+            <div className="w-full h-2 bg-sidebar-accent/50 rounded-full overflow-hidden shadow-inner">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercent}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="h-full bg-gradient-to-r from-primary via-primary/90 to-primary rounded-full shadow-sm" 
               />
             </div>
-            <span className="text-[10px] text-sidebar-foreground/60 text-center">{progressPercent.toFixed(0)}%</span>
+            <span className="text-[10px] text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
           </div>
         ) : (
           // Versão completa quando aberto
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground/70">
               <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
-              <span>{progressPercent.toFixed(0)}%</span>
+              <span className="text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
             </div>
-            <div className="w-full h-1.5 bg-sidebar-accent rounded-full">
-              <div 
-                className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500" 
-                style={{ width: `${progressPercent}%` }}
+            <div className="w-full h-2 bg-sidebar-accent/50 rounded-full overflow-hidden shadow-inner">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercent}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="h-full bg-gradient-to-r from-primary via-primary/90 to-primary rounded-full shadow-lg" 
               />
             </div>
           </div>
@@ -352,54 +364,60 @@ export function ModernSidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-3 space-y-1">
-        {menuItems.map((item) => (
-           <NavLink
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide">
+        {menuItems.map((item, index) => (
+           <motion.div
              key={item.href}
-             to={item.href}
-             className={({ isActive }) =>
-               `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${
-                 isActive 
-                   ? "bg-primary/10 text-primary dark:text-white border-l-2 border-primary ml-1" 
-                   : "text-sidebar-foreground/70 dark:text-white/70 hover:bg-sidebar-accent hover:text-sidebar-foreground dark:hover:text-white"
-               }`
-             }
-            title={collapsed ? item.label : undefined}
-          >
-            <item.icon className="w-4 h-4 flex-shrink-0" />
-            <AnimatePresence>
-              {!collapsed && (
-                <motion.span
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: "auto" }}
-                  exit={{ opacity: 0, width: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="whitespace-nowrap overflow-hidden"
-                >
-                  {item.label}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </NavLink>
+             initial={{ opacity: 0, x: -20 }}
+             animate={{ opacity: 1, x: 0 }}
+             transition={{ delay: index * 0.03 }}
+           >
+             <NavLink
+               to={item.href}
+               className={({ isActive }) =>
+                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                   isActive 
+                     ? "bg-gradient-to-r from-primary/15 to-primary/10 text-primary shadow-sm scale-[1.02]" 
+                     : "text-sidebar-foreground/70 hover:bg-primary/10 hover:text-sidebar-foreground hover:scale-[1.02]"
+                 }`
+               }
+              title={collapsed ? item.label : undefined}
+            >
+             <item.icon className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" />
+             <AnimatePresence>
+               {!collapsed && (
+                 <motion.span
+                   initial={{ opacity: 0, width: 0 }}
+                   animate={{ opacity: 1, width: "auto" }}
+                   exit={{ opacity: 0, width: 0 }}
+                   transition={{ duration: 0.2 }}
+                   className="whitespace-nowrap overflow-hidden"
+                 >
+                   {item.label}
+                 </motion.span>
+               )}
+             </AnimatePresence>
+           </NavLink>
+           </motion.div>
         ))}
       </nav>
 
       {/* Bottom Section */}
-      <div className="border-t border-sidebar-border/30 dark:border-sidebar/30 p-3 space-y-1">
+      <div className="border-t border-sidebar-border/20 p-3 space-y-1 bg-gradient-to-b from-transparent to-sidebar-accent/30">
         {bottomItems.map((item) => (
           <NavLink
             key={item.href}
             to={item.href}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
                 isActive 
-                  ? "bg-primary/10 text-primary" 
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  ? "bg-gradient-to-r from-primary/15 to-primary/10 text-primary shadow-sm" 
+                  : "text-sidebar-foreground/70 hover:bg-primary/10 hover:text-sidebar-foreground hover:scale-[1.02]"
               }`
             }
             title={collapsed ? item.label : undefined}
           >
-            <item.icon className="w-4 h-4 flex-shrink-0" />
+            <item.icon className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" />
             <AnimatePresence>
               {!collapsed && (
                 <motion.span
@@ -418,10 +436,10 @@ export function ModernSidebar({
         
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:scale-[1.02] w-full group"
           title={collapsed ? "Sair" : undefined}
         >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <LogOut className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" />
           <AnimatePresence>
             {!collapsed && (
               <motion.span
