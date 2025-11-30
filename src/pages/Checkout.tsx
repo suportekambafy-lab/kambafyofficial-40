@@ -2501,6 +2501,15 @@ const Checkout = () => {
                 <p className="text-sm text-gray-600">Todos os direitos reservados.</p>
               </div>
             </div>
+            
+            <div className="border-t border-gray-200 pt-4 mt-4">
+              <h5 className="font-semibold text-gray-700 mb-2">Política de Reembolso</h5>
+              <div className="text-xs text-gray-600 max-w-2xl mx-auto space-y-1">
+                <p>🇦🇴 <strong>Angola:</strong> 7 dias de garantia para reembolso</p>
+                <p>🇪🇺 <strong>Europa:</strong> 14 dias de garantia para reembolso</p>
+              </div>
+            </div>
+            
             <p className="text-xs text-gray-500 max-w-2xl mx-auto">
               Ao clicar em Comprar agora, eu declaro que li e concordo (1) com a Kambafy está processando este pedido em nome de{' '}
               <span className="text-green-600">
