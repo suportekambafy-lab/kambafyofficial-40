@@ -50,7 +50,7 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col">
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-checkout-green via-checkout-green/95 to-checkout-green/90" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary/90" />
       
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
@@ -90,7 +90,7 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             className="text-center space-y-8 max-w-md"
           >
             {/* Icon Container */}
@@ -98,7 +98,7 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
               className="flex justify-center"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
             >
               <div className="relative">
                 <div className="absolute inset-0 bg-white/20 rounded-[32px] blur-xl" />
@@ -112,7 +112,7 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
             <motion.h1 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.15 }}
               className="text-4xl font-bold text-white leading-tight"
             >
               {slides[currentSlide].title}
@@ -122,7 +122,7 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
             <motion.p 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.2 }}
               className="text-lg text-white/90 leading-relaxed px-4"
             >
               {slides[currentSlide].description}
@@ -154,35 +154,11 @@ export function AppOnboarding({ onComplete }: AppOnboardingProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.25 }}
         >
           <button
             onClick={handleNext}
-            style={{
-              width: '100%',
-              height: '56px',
-              backgroundColor: 'white',
-              color: 'hsl(152, 57%, 40%)',
-              borderRadius: '16px',
-              fontWeight: '700',
-              fontSize: '17px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)';
-            }}
+            className="w-full h-14 bg-white text-primary rounded-2xl font-bold text-[17px] flex items-center justify-center gap-2 shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
           >
             {isLastSlide ? (
               <>
