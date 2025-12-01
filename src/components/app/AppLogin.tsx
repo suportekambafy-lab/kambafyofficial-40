@@ -212,20 +212,28 @@ export function AppLogin() {
     }
   };
   const handleGoogleLogin = async () => {
+    console.log('🔵 handleGoogleLogin iniciado');
     try {
-      const {
-        error
-      } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/app`
         }
       });
-      if (error) throw error;
+      
+      console.log('🔵 Google OAuth response:', { data, error });
+      
+      if (error) {
+        console.error('❌ Google OAuth error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Google OAuth success, redirecting...');
     } catch (error: any) {
+      console.error('❌ Google login error caught:', error);
       toast({
-        title: "Erro",
-        description: "Não foi possível conectar com Google",
+        title: "Erro no login Google",
+        description: error?.message || "Não foi possível conectar com Google. Verifique as configurações.",
         variant: "destructive"
       });
     }
