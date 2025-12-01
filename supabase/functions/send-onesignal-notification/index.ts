@@ -102,6 +102,23 @@ serve(async (req) => {
       data: data,
     };
 
+    // Detectar palavras-chave para som personalizado
+    const keywordPatterns = ['Venda aprovada', 'Referência gerada', 'Comissão'];
+    const messageWithTitle = `${title} ${message}`.toLowerCase();
+    const hasKeyword = keywordPatterns.some(keyword => 
+      messageWithTitle.includes(keyword.toLowerCase())
+    );
+
+    if (hasKeyword) {
+      // Adicionar som personalizado para iOS
+      notificationPayload.ios_sound = 'venda_alerta.wav';
+      
+      // Adicionar channel ID para Android
+      notificationPayload.android_channel_id = 'CANAL_VENDA';
+      
+      console.log('🔔 Som personalizado adicionado - Palavra-chave detectada');
+    }
+
     let targetingMethod = '';
     
     // Prioridade 1: external_id (funciona para web e app, mais confiável)
