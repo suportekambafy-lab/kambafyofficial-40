@@ -102,30 +102,6 @@ serve(async (req) => {
       data: data,
     };
 
-    // Detectar palavras-chave para som personalizado
-    const keywordPatterns = [
-      'Venda aprovada', 
-      'Referência gerada', 
-      'Comissão',
-      'Nova venda',
-      'Nova comissão'
-    ];
-    const messageWithTitle = `${title} ${message}`.toLowerCase();
-    const hasKeyword = keywordPatterns.some(keyword => 
-      messageWithTitle.includes(keyword.toLowerCase())
-    );
-
-    if (hasKeyword) {
-      // Adicionar som personalizado para iOS
-      notificationPayload.ios_sound = 'venda_alerta.wav';
-      
-      // NOTA: android_channel_id foi removido temporariamente porque o canal "CANAL_VENDA" 
-      // precisa ser criado primeiro no código do app Android (via Capacitor)
-      // Para adicionar de volta: notificationPayload.android_channel_id = 'CANAL_VENDA';
-      
-      console.log('🔔 Som personalizado adicionado - Palavra-chave detectada');
-    }
-
     let targetingMethod = '';
     
     // Prioridade 1: external_id (funciona para web e app, mais confiável)
