@@ -94,8 +94,64 @@ export const useOneSignal = () => {
     savePlayerIdToProfile();
   }, [user, playerId]); // Executar quando user ou playerId mudar
 
+  // Função para ativar notificações
+  const enableNotifications = async (): Promise<boolean> => {
+    try {
+      if (!window.OneSignal || !isInitialized) {
+        console.warn('⚠️ OneSignal não inicializado');
+        return false;
+      }
+
+      // Solicitar permissão
+      await window.OneSignal.Notifications.requestPermission();
+      
+      // Verificar se foi concedida
+      const permission = await window.OneSignal.Notifications.permission;
+      console.log('🔔 Permissão OneSignal:', permission);
+      
+      return permission;
+    } catch (error) {
+      console.error('❌ Erro ao ativar notificações:', error);
+      return false;
+    }
+  };
+
+  // Função para desativar notificações
+  const disableNotifications = async (): Promise<void> => {
+    try {
+      if (!window.OneSignal || !isInitialized) {
+        console.warn('⚠️ OneSignal não inicializado');
+        return;
+      }
+
+      // Desativar push
+      await window.OneSignal.User.PushSubscription.optOut();
+      console.log('🔕 Notificações OneSignal desativadas');
+    } catch (error) {
+      console.error('❌ Erro ao desativar notificações:', error);
+    }
+  };
+
+  // Verificar status da permissão
+  const checkPermissionStatus = async (): Promise<boolean> => {
+    try {
+      if (!window.OneSignal || !isInitialized) {
+        return false;
+      }
+
+      const permission = await window.OneSignal.Notifications.permission;
+      return permission === true;
+    } catch (error) {
+      console.error('❌ Erro ao verificar permissão:', error);
+      return false;
+    }
+  };
+
   return {
     playerId,
     isInitialized,
+    enableNotifications,
+    disableNotifications,
+    checkPermissionStatus,
   };
 };
