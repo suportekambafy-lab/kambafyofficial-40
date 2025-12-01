@@ -222,14 +222,14 @@ export function ModernSidebar({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground/70">
                     <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
-                    <span className="text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
+                    <span className="text-yellow-500 font-semibold">{progressPercent.toFixed(0)}%</span>
                   </div>
-                  <div className="w-full h-2 bg-sidebar-accent/50 rounded-full overflow-hidden shadow-inner">
+                  <div className="w-full h-2 bg-white rounded-full overflow-hidden shadow-inner">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${progressPercent}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
-                      className="h-full bg-gradient-to-r from-primary via-primary/90 to-primary rounded-full shadow-lg" 
+                      className="h-full bg-yellow-500 rounded-full shadow-lg" 
                     />
                   </div>
                 </div>
@@ -334,29 +334,29 @@ export function ModernSidebar({
         {collapsed ? (
           // Versão compacta horizontal quando fechado
           <div className="flex flex-col items-center gap-1.5" title={`${formatCurrency(dashboardData.totalRevenue)} / ${formatCurrency(nextGoal)} KZ - ${progressPercent.toFixed(0)}%`}>
-            <div className="w-full h-2 bg-sidebar-accent/50 rounded-full overflow-hidden shadow-inner">
+            <div className="w-full h-2 bg-white rounded-full overflow-hidden shadow-inner">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-primary via-primary/90 to-primary rounded-full shadow-sm" 
+                className="h-full bg-yellow-500 rounded-full shadow-sm" 
               />
             </div>
-            <span className="text-[10px] text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
+            <span className="text-[10px] text-yellow-500 font-semibold">{progressPercent.toFixed(0)}%</span>
           </div>
         ) : (
           // Versão completa quando aberto
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground/70">
               <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
-              <span className="text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
+              <span className="text-yellow-500 font-semibold">{progressPercent.toFixed(0)}%</span>
             </div>
-            <div className="w-full h-2 bg-sidebar-accent/50 rounded-full overflow-hidden shadow-inner">
+            <div className="w-full h-2 bg-white rounded-full overflow-hidden shadow-inner">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-primary via-primary/90 to-primary rounded-full shadow-lg" 
+                className="h-full bg-yellow-500 rounded-full shadow-lg" 
               />
             </div>
           </div>
