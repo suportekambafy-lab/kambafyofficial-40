@@ -43,6 +43,8 @@ export function AppLogin() {
   const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [policyType, setPolicyType] = useState<'terms' | 'privacy'>('terms');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  
   const {
     signIn,
     resetPassword
@@ -56,6 +58,27 @@ export function AppLogin() {
   } = useDeviceContext();
   const { theme } = useTheme();
   console.log('🔍 AppLogin renderizado - View atual:', view);
+
+  // Detectar modo escuro
+  useEffect(() => {
+    const checkTheme = () => {
+      const isDark = document.documentElement.classList.contains('dark') || 
+                     localStorage.getItem('seller-theme') === 'dark' ||
+                     theme === 'dark';
+      setIsDarkMode(isDark);
+    };
+    
+    checkTheme();
+    
+    // Observar mudanças no tema
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+    
+    return () => observer.disconnect();
+  }, [theme]);
 
   // Auto-rotate slides
   useEffect(() => {
@@ -253,7 +276,7 @@ export function AppLogin() {
             <img 
               alt="Kambafy" 
               className="h-16 w-auto" 
-              src={theme === 'dark' ? kambafyLogoGray : "/lovable-uploads/27fc8e20-d6cd-443c-8c75-b5ddb1de9f23.png"} 
+              src={isDarkMode ? kambafyLogoGray : "/lovable-uploads/27fc8e20-d6cd-443c-8c75-b5ddb1de9f23.png"} 
             />
           </div>
 
