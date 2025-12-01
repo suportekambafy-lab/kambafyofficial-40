@@ -217,7 +217,7 @@ export function AppLogin() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://mobile.kambafy.com'
+          redirectTo: `${window.location.origin}/app`
         }
       });
       
