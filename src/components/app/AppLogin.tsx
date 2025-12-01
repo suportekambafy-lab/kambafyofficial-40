@@ -12,6 +12,8 @@ import { BiometricService } from '@/utils/biometricService';
 import { BiometryType } from 'capacitor-native-biometric';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PoliciesModal } from './PoliciesModal';
+import { useTheme } from 'next-themes';
+import kambafyLogoGray from '@/assets/kambafy-logo-gray.png';
 type LoginView = 'onboarding' | 'email-login';
 const onboardingSlides = [{
   title: 'Venda seus produtos digitais com facilidade',
@@ -52,6 +54,7 @@ export function AppLogin() {
     context: deviceContext,
     loading: deviceLoading
   } = useDeviceContext();
+  const { theme } = useTheme();
   console.log('🔍 AppLogin renderizado - View atual:', view);
 
   // Auto-rotate slides
@@ -247,7 +250,11 @@ export function AppLogin() {
         <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-20">
           {/* Logo */}
           <div className="mb-8">
-            <img alt="Kambafy" className="h-16 w-auto" src="/lovable-uploads/27fc8e20-d6cd-443c-8c75-b5ddb1de9f23.png" />
+            <img 
+              alt="Kambafy" 
+              className="h-16 w-auto" 
+              src={theme === 'dark' ? kambafyLogoGray : "/lovable-uploads/27fc8e20-d6cd-443c-8c75-b5ddb1de9f23.png"} 
+            />
           </div>
 
           {/* Onboarding Slides */}
