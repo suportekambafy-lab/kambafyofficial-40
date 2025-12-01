@@ -103,7 +103,13 @@ serve(async (req) => {
     };
 
     // Detectar palavras-chave para som personalizado
-    const keywordPatterns = ['Venda aprovada', 'Referência gerada', 'Comissão'];
+    const keywordPatterns = [
+      'Venda aprovada', 
+      'Referência gerada', 
+      'Comissão',
+      'Nova venda',
+      'Nova comissão'
+    ];
     const messageWithTitle = `${title} ${message}`.toLowerCase();
     const hasKeyword = keywordPatterns.some(keyword => 
       messageWithTitle.includes(keyword.toLowerCase())
@@ -113,11 +119,13 @@ serve(async (req) => {
       // Adicionar som personalizado para iOS
       notificationPayload.ios_sound = 'venda_alerta.wav';
       
-      // NOTA: android_channel_id foi removido temporariamente porque o canal "CANAL_VENDA" 
-      // precisa ser criado primeiro no código do app Android (via Capacitor)
-      // Para adicionar de volta: notificationPayload.android_channel_id = 'CANAL_VENDA';
+      // Adicionar channel ID para Android
+      // IMPORTANTE: O canal "CANAL_VENDA" precisa ser criado no código nativo Android
+      // com o som personalizado configurado. Veja SONS_NOTIFICACAO.md para instruções.
+      notificationPayload.android_channel_id = 'CANAL_VENDA';
       
-      console.log('🔔 Som personalizado adicionado - Palavra-chave detectada');
+      console.log('🔔 Som personalizado adicionado - iOS: venda_alerta.wav | Android: CANAL_VENDA');
+      console.log('🎯 Palavra-chave detectada no texto:', keywordPatterns.find(k => messageWithTitle.includes(k.toLowerCase())));
     }
 
     let targetingMethod = '';
