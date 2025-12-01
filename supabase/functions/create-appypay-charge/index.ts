@@ -477,6 +477,34 @@ Deno.serve(async (req) => {
         } catch (emailError) {
           logStep("Email error", emailError);
         }
+
+        // 🎯 DISPARAR WEBHOOKS PERSONALIZADOS PARA PAGAMENTO COMPLETADO
+        try {
+          logStep("Triggering custom webhooks for completed payment");
+          
+          const { error: webhookError } = await supabase.functions.invoke('trigger-webhooks', {
+            body: {
+              event: 'payment.success',
+              user_id: product?.user_id,
+              product_id: productId,
+              order_id: orderId,
+              amount: orderDataToSave.amount,
+              currency: orderDataToSave.currency,
+              customer_email: customerData.email,
+              customer_name: customerData.name,
+              payment_method: paymentMethod,
+              status: 'completed'
+            }
+          });
+
+          if (webhookError) {
+            logStep("Error triggering webhooks", webhookError);
+          } else {
+            logStep("Custom webhooks triggered successfully");
+          }
+        } catch (webhookError) {
+          logStep("Webhook error", webhookError);
+        }
         
         // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR SOBRE VENDA APROVADA
         if (product?.user_id) {
