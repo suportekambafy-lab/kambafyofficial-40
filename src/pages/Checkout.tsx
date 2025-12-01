@@ -24,6 +24,7 @@ import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 import { TermsModal } from "@/components/checkout/TermsModal";
 import { PrivacyModal } from "@/components/checkout/PrivacyModal";
+import { RefundPolicyModal } from "@/components/checkout/RefundPolicyModal";
 import { countTotalSales } from "@/utils/orderUtils";
 
 // Importar componentes otimizados
@@ -2502,14 +2503,6 @@ const Checkout = () => {
               </div>
             </div>
             
-            <div className="border-t border-gray-200 pt-4 mt-4">
-              <h5 className="font-semibold text-gray-700 mb-2">Política de Reembolso</h5>
-              <div className="text-xs text-gray-600 max-w-2xl mx-auto space-y-1">
-                <p>🇦🇴 <strong>Angola:</strong> 7 dias de garantia para reembolso</p>
-                <p>🇪🇺 <strong>Europa:</strong> 14 dias de garantia para reembolso</p>
-              </div>
-            </div>
-            
             <p className="text-xs text-gray-500 max-w-2xl mx-auto">
               Ao clicar em Comprar agora, eu declaro que li e concordo (1) com a Kambafy está processando este pedido em nome de{' '}
               <span className="text-green-600">
@@ -2517,10 +2510,13 @@ const Checkout = () => {
               </span> não possui responsabilidade pelo conteúdo e/ou faz controle prévio deste (li) com os{' '}
               <TermsModal>
                 <span className="underline cursor-pointer">Termos de uso</span>
-              </TermsModal> e{' '}
+              </TermsModal>,{' '}
               <PrivacyModal>
                 <span className="underline cursor-pointer">Política de privacidade</span>
-              </PrivacyModal>.
+              </PrivacyModal> e{' '}
+              <RefundPolicyModal>
+                <span className="underline cursor-pointer">Política de reembolso</span>
+              </RefundPolicyModal>.
             </p>
           </div>
         </div>
