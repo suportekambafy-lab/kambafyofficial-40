@@ -218,7 +218,7 @@ export function ModernSidebar({
               </div>
 
               {/* Progress bar above navigation */}
-              <div className="px-4 py-3 border-b border-sidebar-border/20 bg-gradient-to-r from-transparent via-primary/5 to-transparent">
+              <div className="px-4 py-3 border-b border-sidebar-border/20">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground/70">
                     <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
@@ -330,7 +330,7 @@ export function ModernSidebar({
       </div>
 
       {/* Progress bar above navigation */}
-      <div className={`border-b border-sidebar-border/20 bg-gradient-to-r from-transparent via-primary/5 to-transparent ${collapsed ? 'px-2 py-2' : 'px-4 py-3'}`}>
+      <div className={`border-b border-sidebar-border/20 ${collapsed ? 'px-2 py-2' : 'px-4 py-3'}`}>
         {collapsed ? (
           // Versão compacta horizontal quando fechado
           <div className="flex flex-col items-center gap-1.5" title={`${formatCurrency(dashboardData.totalRevenue)} / ${formatCurrency(nextGoal)} KZ - ${progressPercent.toFixed(0)}%`}>
