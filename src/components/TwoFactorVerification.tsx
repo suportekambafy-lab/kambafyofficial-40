@@ -47,22 +47,58 @@ const TwoFactorVerification = ({
     
     setResendLoading(true);
     try {
-      console.log('📧 Reenviando código de confirmação do Supabase');
-      
-      // Usar resend nativo do Supabase para signup
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
+      // Para contextos customizados, usar a edge function send-2fa-code
+      if (context !== 'login' && context !== 'bank_details_change' && context !== 'withdrawal' && context !== 'password_change' && context !== 'disable_2fa') {
+        console.log('📧 Reenviando código de confirmação do Supabase (signup)');
+        
+        // Usar resend nativo do Supabase para signup
+        const { error } = await supabase.auth.resend({
+          type: 'signup',
+          email: email,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+          }
+        });
+
+        if (error) {
+          throw error;
         }
-      });
 
-      if (error) {
-        throw error;
+        console.log('✅ Código reenviado com sucesso pelo Supabase');
+      } else {
+        console.log('📧 Enviando código 2FA via edge function - contexto:', context);
+        
+        // Mapear contexto para event_type
+        const eventTypeMap = {
+          'login': 'admin_login',
+          'bank_details_change': 'bank_details_change',
+          'withdrawal': 'withdrawal',
+          'password_change': 'password_change',
+          'disable_2fa': 'disable_2fa'
+        };
+        
+        const eventType = eventTypeMap[context as keyof typeof eventTypeMap];
+        
+        const { data, error } = await supabase.functions.invoke('send-2fa-code', {
+          body: {
+            email: email,
+            event_type: eventType,
+            user_email: email
+          }
+        });
+
+        if (error) {
+          console.error('❌ Erro ao chamar edge function:', error);
+          throw error;
+        }
+
+        if (!data.success) {
+          throw new Error(data.message || 'Erro ao enviar código');
+        }
+
+        console.log('✅ Código enviado com sucesso via edge function');
       }
-
-      console.log('✅ Código reenviado com sucesso pelo Supabase');
+      
       setCodeAlreadySent(true);
       setInitialSendComplete(true);
       toast({
@@ -72,7 +108,7 @@ const TwoFactorVerification = ({
 
       setTimeLeft(300); // Reset timer
     } catch (error) {
-      console.error('❌ Erro ao reenviar código:', error);
+      console.error('❌ Erro ao enviar código:', error);
       toast({
         title: "Erro",
         description: "Erro ao enviar código. Tente novamente.",
@@ -81,16 +117,23 @@ const TwoFactorVerification = ({
     } finally {
       setResendLoading(false);
     }
-  }, [email, toast]);
+  }, [email, toast, context]);
 
-  // Marcar que o código já foi enviado automaticamente pelo Supabase
+  // Enviar código automaticamente se necessário
   useEffect(() => {
-    if (!skipInitialSend) {
-      console.log('🔒 Email de confirmação já enviado pelo Supabase no signup');
-      setCodeAlreadySent(true);
-      setInitialSendComplete(true);
+    if (!skipInitialSend && !initialSendComplete) {
+      // Para signup, o código já foi enviado pelo Supabase
+      if (context !== 'login' && context !== 'bank_details_change' && context !== 'withdrawal' && context !== 'password_change' && context !== 'disable_2fa') {
+        console.log('🔒 Email de confirmação já enviado pelo Supabase no signup');
+        setCodeAlreadySent(true);
+        setInitialSendComplete(true);
+      } else {
+        // Para contextos customizados, enviar código automaticamente
+        console.log('🔒 Enviando código automaticamente para contexto:', context);
+        sendVerificationCode();
+      }
     }
-  }, [skipInitialSend]);
+  }, [skipInitialSend, initialSendComplete, context, sendVerificationCode]);
 
   // Countdown timer
   useEffect(() => {
