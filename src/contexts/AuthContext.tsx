@@ -182,6 +182,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session.user);
         
+        // Verificar se é uma nova conta criada via Google OAuth
+        if (event === 'SIGNED_IN' && session?.user) {
+          const userCreatedAt = new Date(session.user.created_at);
+          const now = new Date();
+          const secondsSinceCreation = (now.getTime() - userCreatedAt.getTime()) / 1000;
+          
+          // Se a conta foi criada há menos de 10 segundos, é um novo registro via Google
+          if (secondsSinceCreation < 10) {
+            console.log('❌ Nova conta detectada via Google OAuth - bloqueando');
+            toast({
+              title: "Cadastro não permitido",
+              description: "Google é apenas para login. Cadastre-se primeiro com email e senha.",
+              variant: "destructive"
+            });
+            
+            // Deslogar o usuário
+            await supabase.auth.signOut();
+            clearAuth();
+            setLoading(false);
+            return;
+          }
+        }
+        
         // Verificar se o usuário está banido - mas sem blocking
         if (session?.user) {
           // Fazer isso em background sem await para não bloquear
