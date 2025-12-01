@@ -53,8 +53,6 @@ export const useGeoLocation = () => {
 
   const fetchExchangeRates = async () => {
     try {
-      console.log('Fetching real-time exchange rates...');
-      
       // Using a free API that doesn't require authentication
       const response = await fetch('https://api.exchangerate-api.com/v4/latest/AOA');
       
@@ -63,20 +61,17 @@ export const useGeoLocation = () => {
       }
       
       const data = await response.json();
-      console.log('Exchange rates data:', data);
       
       const updatedCountries = { ...SUPPORTED_COUNTRIES };
       
       // Update EUR rate with safety margin
       if (data.rates.EUR) {
         updatedCountries.PT.exchangeRate = data.rates.EUR * SAFETY_MARGIN;
-        console.log(`Updated EUR rate with safety margin: 1 KZ = ${updatedCountries.PT.exchangeRate} EUR (original: ${data.rates.EUR})`);
       }
       
       // Update MZN rate with safety margin
       if (data.rates.MZN) {
         updatedCountries.MZ.exchangeRate = data.rates.MZN * SAFETY_MARGIN;
-        console.log(`Updated MZN rate with safety margin: 1 KZ = ${updatedCountries.MZ.exchangeRate} MZN (original: ${data.rates.MZN})`);
       }
 
       
@@ -98,49 +93,33 @@ export const useGeoLocation = () => {
       }
       
     } catch (err) {
-      console.error('Error fetching exchange rates:', err);
-      // Keep fallback rates if API fails
-      console.log('Using fallback exchange rates');
+      // Keep fallback rates if API fails - silent fail
     }
   };
 
   const detectCountryByIP = async () => {
     try {
-      console.log('🌍 Starting IP detection...');
       const response = await fetch('https://ipapi.co/json/');
-      console.log('🌍 IP API response:', response.status);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
       
       const data = await response.json();
-      console.log('🌍 IP Location data:', data);
-      
       const countryCode = data.country_code;
-      console.log('🌍 Detected country code:', countryCode);
-      
       const detectedCountry = supportedCountries[countryCode];
       
       if (detectedCountry) {
-        console.log(`🌍 Found supported country: ${detectedCountry.name} (${countryCode})`);
         setUserCountry(detectedCountry);
-        
-        // Detectar idioma automaticamente baseado no país
         const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
         setDetectedLanguage(language);
-        console.log(`🌍 Auto-detected language: ${language} for country ${countryCode}`);
-        
-        // Aplicar idioma automaticamente na aplicação
         applyLanguage(language);
       } else {
-        console.log(`🌍 Country ${countryCode} not supported, defaulting to Angola`);
         setUserCountry(supportedCountries.AO);
         setDetectedLanguage('pt');
         applyLanguage('pt');
       }
     } catch (err) {
-      console.error('🌍 Error detecting country:', err);
       setError('Erro ao detectar localização');
       setUserCountry(supportedCountries.AO);
       setDetectedLanguage('pt');
@@ -169,19 +148,9 @@ export const useGeoLocation = () => {
   const convertPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): number => {
     const country = targetCountry || userCountry;
     
-    console.log('💰 CONVERT PRICE DEBUG:', {
-      priceInKZ,
-      country: country?.code,
-      currency: country?.currency,
-      exchangeRate: country?.exchangeRate,
-      customPrices,
-      hasCustomPrice: !!(customPrices && customPrices[country?.code])
-    });
-    
     // Verificar se há preço customizado para o país
     if (customPrices && customPrices[country.code]) {
       const customPrice = parseFloat(customPrices[country.code]);
-      console.log('💰 USING CUSTOM PRICE:', customPrice, 'for', country.code);
       if (!isNaN(customPrice)) {
         return customPrice;
       }
@@ -189,78 +158,39 @@ export const useGeoLocation = () => {
     
     // API retorna taxa: 1 KZ = X EUR, então multiplicamos para converter
     const convertedValue = priceInKZ * country.exchangeRate;
-    console.log('💰 CONVERSION CALCULATION:', {
-      priceInKZ,
-      exchangeRate: country?.exchangeRate,
-      convertedValue,
-      rounded: Math.round(convertedValue * 100) / 100
-    });
     return Math.round(convertedValue * 100) / 100;
   };
 
   const formatPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): string => {
     const country = targetCountry || userCountry;
     
-    console.log('🏷️ FORMAT PRICE DEBUG - DETAILED:', {
-      priceInKZ,
-      countryCode: country?.code,
-      countryName: country?.name,
-      countryCurrency: country?.currency,
-      exchangeRate: country?.exchangeRate,
-      customPrices,
-      hasCustomPriceForCountry: !!(customPrices && customPrices[country?.code]),
-      actualCustomPrice: customPrices?.[country?.code]
-    });
-    
     // Verificar se há preço customizado para o país
     if (customPrices && customPrices[country.code]) {
       const customPrice = parseFloat(customPrices[country.code]);
-      console.log('✅ USANDO PREÇO CUSTOMIZADO:', {
-        originalPrice: priceInKZ,
-        customPrice,
-        country: country.code,
-        currency: country.currency,
-        rawCustomValue: customPrices[country.code]
-      });
       
       if (!isNaN(customPrice)) {
         switch (country.currency) {
           case 'EUR':
-            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: €${customPrice.toFixed(2)}`);
             return `€${customPrice.toFixed(2)}`;
           case 'MZN':
-            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: ${customPrice.toFixed(2)} MZN`);
             return `${customPrice.toFixed(2)} MZN`;
           case 'KZ':
           default:
-            console.log(`🚨 FORMATANDO PREÇO CUSTOMIZADO FINAL: ${parseFloat(customPrice.toString()).toLocaleString('pt-BR')} KZ`);
             return `${parseFloat(customPrice.toString()).toLocaleString('pt-BR')} KZ`;
         }
       }
     }
     
-    console.log('⚠️ USANDO PREÇO CONVERTIDO AUTOMATICAMENTE (não tem customizado)');
-
     // If no custom price, use automatic conversion
     const convertedPrice = convertPrice(priceInKZ, country);
     
-    console.log('🔢 CONVERSION RESULT:', {
-      originalPriceKZ: priceInKZ,
-      convertedPrice,
-      exchangeRate: country?.exchangeRate,
-      finalCurrency: country?.currency
-    });
-    
     switch (country?.currency) {
       case 'EUR':
-        console.log(`🚨 getDisplayPrice - FORMATANDO CONVERSÃO FINAL: €${convertedPrice.toFixed(2)}`);
         return `€${convertedPrice.toFixed(2)}`;
       case 'MZN':
-        console.log(`🚨 getDisplayPrice - FORMATANDO CONVERSÃO FINAL: ${convertedPrice.toFixed(2)} MZN`);
         return `${convertedPrice.toFixed(2)} MZN`;
       case 'KZ':
       default:
-        console.log(`🚨 getDisplayPrice - FORMATANDO KZ FINAL: ${parseFloat(convertedPrice.toString()).toLocaleString('pt-BR')} KZ`);
         return `${parseFloat(convertedPrice.toString()).toLocaleString('pt-BR')} KZ`;
     }
   };
@@ -270,7 +200,6 @@ export const useGeoLocation = () => {
     if (country) {
       setUserCountry(country);
       localStorage.setItem('userCountry', countryCode);
-      console.log(`Manually changed to: ${country.name}`);
       
       // Atualizar idioma quando país é alterado manualmente
       const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
@@ -282,29 +211,19 @@ export const useGeoLocation = () => {
   // Função para aplicar idioma na aplicação
   const applyLanguage = (language: string) => {
     try {
-      // Definir atributo lang no HTML
       document.documentElement.lang = language;
-      
-      // Salvar no localStorage para persistência
       localStorage.setItem('detectedLanguage', language);
-      
-      console.log(`Language applied: ${language}`);
     } catch (error) {
-      console.error('Error applying language:', error);
+      // Silent fail
     }
   };
 
   useEffect(() => {
     const initializeGeoLocation = async () => {
-      console.log('🌍 Initializing geolocation hook...');
-      console.log('🌍 SUPPORTED COUNTRIES:', SUPPORTED_COUNTRIES);
-      
       // Verificar se já temos dados salvos para evitar flash de loading
       const storedCountry = localStorage.getItem('userCountry');
       const storedRates = localStorage.getItem('exchangeRates');
       const lastUpdate = localStorage.getItem('ratesLastUpdate');
-      
-      console.log('💾 CACHED DATA:', { storedCountry, storedRates, lastUpdate });
       
       // Se temos dados recentes (menos de 1 hora), usar imediatamente
       const now = Date.now();
@@ -317,8 +236,6 @@ export const useGeoLocation = () => {
           const rates = JSON.parse(storedRates);
           
           if (countryData && rates) {
-            console.log('🌍 Using cached data to prevent flash - checkout can now load immediately');
-            console.log('🌍 CACHED COUNTRY DATA:', countryData);
             setUserCountry(countryData);
             
             // Aplicar taxas salvas
@@ -340,16 +257,14 @@ export const useGeoLocation = () => {
             return;
           }
         } catch (error) {
-          console.error('Error loading cached data:', error);
+          // Silent fail, proceed to fresh detection
         }
       }
       
       // Se não temos dados em cache, fazer detecção normal
-      console.log('🌍 NO CACHED DATA - Starting fresh detection');
       await detectCountryByIP();
       await fetchExchangeRates();
       setIsReady(true);
-      console.log('🌍 Geolocation fully ready with real exchange rates - checkout can now load');
     };
     
     initializeGeoLocation();
