@@ -19,6 +19,7 @@ import { getPaymentMethodsByCountry } from "@/utils/paymentMethods";
 import { SEO } from "@/components/SEO";
 import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
+import { logger } from "@/utils/productionLogger";
 
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
@@ -78,7 +79,7 @@ const Checkout = () => {
     clearAffiliateCode
   } = useAffiliateTracking();
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(false); // Não iniciar com loading
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -436,84 +437,83 @@ const Checkout = () => {
         });
       }
     }
-    const loadProduct = async () => {
-      if (!productId) {
-        console.error('No productId provided');
-        setError("ID do produto não fornecido");
-        setLoading(false);
-        return;
-      }
+    // ⚡ OTIMIZAÇÃO: Carregar produto e settings em paralelo
+    const loadCheckoutData = async () => {
+      if (!productId) return;
+      
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       const isUUID = uuidRegex.test(productId);
-      console.log(`Loading product ${isUUID ? 'by UUID' : 'by slug'}:`, productId);
+      
       try {
-        const {
-          data: productData,
-          error: productError
-        } = await supabase.from('products').select(`
+        // Carregar produto e settings simultaneamente
+        const [productResult, settingsResult] = await Promise.all([
+          supabase.from('products').select(`
             *,
             member_areas (
               id,
               name,
               url
             )
-          `).eq(isUUID ? 'id' : 'slug', productId).maybeSingle();
-        console.log('🔍 DEBUGGING PRODUCT QUERY RESULT (CHECKOUT.TSX):', {
-          productData,
-          hasCustomPrices: !!productData?.custom_prices,
-          customPricesValue: productData?.custom_prices,
-          customPricesType: typeof productData?.custom_prices,
-          customPricesKeys: productData?.custom_prices ? Object.keys(productData.custom_prices) : 'N/A',
-          productError
-        });
-        console.log('Product query result:', {
-          productData,
-          productError
-        });
+          `).eq(isUUID ? 'id' : 'slug', productId).maybeSingle(),
+          
+          // Carregar settings em paralelo
+          (async () => {
+            let actualProductId = productId;
+            if (!isUUID) {
+              const { data } = await supabase.from('products').select('id').eq('slug', productId).maybeSingle();
+              if (data) actualProductId = data.id;
+            }
+            return supabase.from('checkout_customizations').select('*').eq('product_id', actualProductId).maybeSingle();
+          })()
+        ]);
+
+        const { data: productData, error: productError } = productResult;
+        
+        // Processar produto
         if (productError) {
-          console.error('Error loading product:', productError);
+          logger.error('Error loading product', { component: 'Checkout', data: productError });
           setError(`Erro ao carregar produto: ${productError.message}`);
           setProduct(null);
           setTimeout(() => setProductNotFound(true), 2000);
         } else if (!productData) {
-          console.log('No product found with ID:', productId);
           setTimeout(() => {
             setError("Produto não encontrado");
             setProductNotFound(true);
           }, 2000);
           setProduct(null);
         } else if (productData?.status === 'Rascunho') {
-          console.log('Product is in draft:', productId);
           setTimeout(() => {
             setError("Este produto ainda está em desenvolvimento e não está disponível para compra");
             setProductNotFound(true);
           }, 2000);
           setProduct(null);
         } else if (productData?.status === 'Pendente') {
-          console.log('Product is under review:', productId);
           setTimeout(() => {
             setError("Este produto está em revisão e não está disponível para compra no momento");
             setProductNotFound(true);
           }, 2000);
           setProduct(null);
         } else if (productData?.status === 'Inativo') {
-          console.log('Product is inactive:', productId);
           setProduct(productData);
           setError("");
         } else if (productData?.status === 'Banido') {
-          console.log('Product is banned:', productId);
           setProduct(productData);
           setError("");
         } else {
-          console.log('Product loaded successfully:', productData);
           setProduct(productData);
           setError("");
-
-          // Aplicar SEO imediatamente quando o produto carrega
           setProductSEO(productData);
         }
+
+        // Processar settings
+        const { data: settingsData, error: settingsError } = settingsResult;
+        if (settingsError) {
+          logger.error('Error loading checkout settings', { component: 'Checkout', data: settingsError });
+        } else if (settingsData?.settings) {
+          setCheckoutSettings(settingsData.settings);
+        }
       } catch (error) {
-        console.error('Unexpected error loading product:', error);
+        logger.error('Unexpected error loading checkout data', { component: 'Checkout', data: error });
         setTimeout(() => {
           setError("Erro inesperado ao carregar produto");
           setProductNotFound(true);
@@ -521,62 +521,8 @@ const Checkout = () => {
         setProduct(null);
       }
     };
-    const loadCheckoutSettings = async () => {
-      if (!productId) {
-        console.log('No productId provided for checkout settings');
-        return;
-      }
-      try {
-        console.log('🔍 DEBUG: Loading checkout settings for product:', productId);
-
-        // Primeiro vamos verificar se a tabela existe
-        const {
-          data: tableExists
-        } = await supabase.from('checkout_customizations').select('id').limit(1);
-        console.log('📋 Table checkout_customizations exists, sample data:', tableExists);
-
-        // Primeiro buscar o produto para obter o ID correto
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        const isUUID = uuidRegex.test(productId);
-        let actualProductId = productId;
-        if (!isUUID) {
-          const {
-            data: productData
-          } = await supabase.from('products').select('id').eq('slug', productId).maybeSingle();
-          if (productData) {
-            actualProductId = productData.id;
-          }
-        }
-        const {
-          data,
-          error
-        } = await supabase.from('checkout_customizations').select('*').eq('product_id', actualProductId).maybeSingle();
-        console.log('🎯 Checkout settings query result for product', productId, ':', {
-          data,
-          error
-        });
-        if (error) {
-          console.error('❌ Error loading checkout settings:', error);
-        } else if (data?.settings) {
-          console.log('✅ Found checkout settings:', data.settings);
-          console.log('📊 Settings breakdown:');
-          const settings = data.settings as any;
-          console.log('- Banner enabled:', settings.banner?.enabled);
-          console.log('- Countdown enabled:', settings.countdown?.enabled);
-          console.log('- Social proof enabled:', settings.socialProof?.enabled);
-          console.log('- Reviews enabled:', settings.reviews?.enabled);
-          setCheckoutSettings(settings);
-        } else {
-          console.log('ℹ️ No checkout settings found for product:', productId);
-          console.log('💡 Check if checkout customization was configured for this product in the Apps section');
-        }
-      } catch (error) {
-        console.error('💥 Unexpected error loading checkout settings:', error);
-      }
-    };
-    console.log('🚀 Loading product and settings immediately...');
-    loadProduct();
-    loadCheckoutSettings();
+    
+    loadCheckoutData();
   }, [productId, navigate, toast]); // Carregar imediatamente, sem esperar geo
   
   // Carregar informações da turma (APENAS se houver cohortId na URL)
