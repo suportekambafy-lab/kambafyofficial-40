@@ -218,6 +218,8 @@ export const useWebhookSettings = (productId?: string) => {
       const testPayload = {
         event: "test.webhook",
         timestamp: new Date().toISOString(),
+        email: "teste@kambafy.com",
+        name: "Cliente Teste",
         data: {
           message: "Teste de webhook da Kambafy",
           test_id: Math.random().toString(36).substr(2, 9),
