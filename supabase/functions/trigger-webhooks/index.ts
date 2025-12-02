@@ -137,8 +137,8 @@ Deno.serve(async (req) => {
         const webhookPayload = {
           event,
           timestamp: new Date().toISOString(),
-          email, // Campo no nível superior para compatibilidade
-          name,  // Campo no nível superior para compatibilidade
+          ...(email && { email }), // Only include if exists
+          ...(name && { name }),   // Only include if exists
           data: {
             ...restData,
             order_id,
