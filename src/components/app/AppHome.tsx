@@ -1099,12 +1099,28 @@ export function AppHome() {
 
                 <div className="h-px bg-border mx-3" />
 
-                <button onClick={() => signOut()} className="w-full flex items-center justify-between p-3 hover:bg-destructive/5 rounded-lg transition-colors">
+                <button onClick={() => {
+                  if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
+                    alert('Funcionalidade de encerramento de conta em desenvolvimento.');
+                  }
+                }} className="w-full flex items-center justify-between p-3 hover:bg-destructive/5 rounded-lg transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center">
-                      <LogOut className="h-4 w-4 text-destructive" />
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </div>
-                    <span className="font-medium text-sm text-destructive">Sair da conta</span>
+                    <span className="font-medium text-sm text-destructive">Encerrar Conta</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+
+                <div className="h-px bg-border mx-3" />
+
+                <button onClick={() => signOut()} className="w-full flex items-center justify-between p-3 hover:bg-destructive/5 rounded-lg transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-orange-500/10 flex items-center justify-center">
+                      <LogOut className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <span className="font-medium text-sm text-foreground">Sair da conta</span>
                   </div>
                 </button>
               </CardContent>
