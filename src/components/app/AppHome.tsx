@@ -1128,7 +1128,7 @@ export function AppHome() {
 
             {/* App Version & Logo */}
             <div className="flex flex-col items-center gap-2 pt-4">
-              <img src={isDark ? kambafyIconGreen : "/positivo-logo.svg"} alt="Logo" className="h-12 w-auto opacity-60" />
+              <img src={kambafyIconGreen} alt="Logo" className="h-12 w-auto opacity-60" />
               <span className="text-xs text-muted-foreground">Versão 1.1</span>
             </div>
           </div>;
