@@ -453,6 +453,9 @@ const Checkout = () => {
               id,
               name,
               url
+            ),
+            profiles!products_user_id_fkey (
+              full_name
             )
           `).eq(isUUID ? 'id' : 'slug', productId).maybeSingle(),
           
@@ -2452,7 +2455,7 @@ const Checkout = () => {
             <p className="text-xs text-gray-500 max-w-2xl mx-auto">
               Ao clicar em Comprar agora, eu declaro que li e concordo (1) com a Kambafy está processando este pedido em nome de{' '}
               <span className="text-green-600">
-                {product?.fantasy_name || 'produtor'}
+                {product?.fantasy_name || product?.profiles?.full_name || 'produtor'}
               </span> não possui responsabilidade pelo conteúdo e/ou faz controle prévio deste (li) com os{' '}
               <TermsModal>
                 <span className="underline cursor-pointer">Termos de uso</span>
