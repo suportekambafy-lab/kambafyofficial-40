@@ -488,10 +488,10 @@ Deno.serve(async (req) => {
               user_id: product?.user_id,
               product_id: productId,
               order_id: orderId,
+              email: customerData.email,
+              name: customerData.name,
               amount: orderDataToSave.amount,
               currency: orderDataToSave.currency,
-              customer_email: customerData.email,
-              customer_name: customerData.name,
               payment_method: paymentMethod,
               status: 'completed'
             }
