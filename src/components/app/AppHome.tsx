@@ -1042,12 +1042,27 @@ export function AppHome() {
             <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-4">
-                  <Avatar className="w-16 h-16 rounded-2xl flex-shrink-0">
-                    <AvatarImage src={profileAvatar} alt="Profile" />
-                    <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
-                      {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-12 h-12 object-contain" /> : <User className="h-8 w-8 text-primary" />}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative cursor-pointer" onClick={async () => {
+                    triggerHaptic('light');
+                    const photo = await pickPhoto();
+                    if (photo && user) {
+                      toast({
+                        title: "Foto Selecionada",
+                        description: "Funcionalidade de upload em desenvolvimento"
+                      });
+                      triggerHaptic('success');
+                    }
+                  }}>
+                    <Avatar className="w-16 h-16 rounded-2xl flex-shrink-0 hover:opacity-80 transition-opacity">
+                      <AvatarImage src={profileAvatar} alt="Profile" />
+                      <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
+                        {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-12 h-12 object-contain" /> : <User className="h-8 w-8 text-primary" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
+                      <Camera className="w-3 h-3" />
+                    </div>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <p className="font-semibold text-base text-foreground truncate">
@@ -1059,35 +1074,6 @@ export function AppHome() {
                     </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions - Camera & Share */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-2">
-                <button onClick={async () => {
-                triggerHaptic('light');
-                const photo = await pickPhoto();
-                if (photo && user) {
-                  // TODO: Upload foto para Supabase Storage e atualizar profile
-                  toast({
-                    title: "Foto Selecionada",
-                    description: "Funcionalidade de upload em desenvolvimento"
-                  });
-                  triggerHaptic('success');
-                }
-              }} className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                      <Camera className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-medium text-foreground">Mudar Avatar</p>
-                      <p className="text-xs text-muted-foreground">Tire ou escolha uma foto</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
               </CardContent>
             </Card>
 
