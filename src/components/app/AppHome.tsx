@@ -169,10 +169,8 @@ export function AppHome() {
         const platform = Capacitor.getPlatform();
         
         if (platform === 'ios') {
-          // iOS: Abre as configurações do app via URL scheme
           window.open('app-settings:', '_system');
         } else if (platform === 'android') {
-          // Android: Mostra instrução para acessar configurações manualmente
           toast({
             title: "Configurações de Notificação",
             description: "Acesse: Configurações > Apps > Kambafy > Notificações"
@@ -193,60 +191,54 @@ export function AppHome() {
       return;
     }
     
-    // Web: usar API nativa do navegador
+    // Web: SEMPRE usar API nativa do navegador para mostrar popup de permissão
     if (enabled) {
       try {
-        if (oneSignalInitialized) {
-          console.log('🔔 Solicitando permissão OneSignal...');
-          const permission = await enableNotifications();
-          if (permission) {
-            setPushEnabled(true);
-            localStorage.setItem('push_notifications_enabled', 'true');
-            toast({
-              title: "Notificações Ativadas",
-              description: "Você receberá notificações sobre vendas e produtos"
-            });
-            triggerHaptic('success');
-          } else {
-            setPushEnabled(false);
-            toast({
-              title: "Permissão Negada",
-              description: "Você pode ativar mais tarde nas configurações do dispositivo",
-              variant: "destructive"
-            });
-            triggerHaptic('error');
+        console.log('🔔 Solicitando permissão via API nativa do navegador...');
+        
+        if (!('Notification' in window)) {
+          toast({
+            title: "Não Suportado",
+            description: "Este navegador não suporta notificações push",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Mostrar o popup de permissão do navegador
+        const permission = await Notification.requestPermission();
+        console.log('🔔 Resultado da permissão:', permission);
+        
+        if (permission === 'granted') {
+          setPushEnabled(true);
+          localStorage.setItem('push_notifications_enabled', 'true');
+          
+          // Se OneSignal estiver disponível, ativar também
+          if (oneSignalInitialized) {
+            await enableNotifications();
           }
+          
+          toast({
+            title: "Notificações Ativadas",
+            description: "Você receberá notificações sobre vendas e produtos"
+          });
+          triggerHaptic('success');
+        } else if (permission === 'denied') {
+          setPushEnabled(false);
+          toast({
+            title: "Permissão Negada",
+            description: "Você bloqueou as notificações. Acesse as configurações do navegador para reativar.",
+            variant: "destructive"
+          });
+          triggerHaptic('error');
         } else {
-          console.log('🔔 Usando API nativa do navegador...');
-          
-          if (!('Notification' in window)) {
-            toast({
-              title: "Não Suportado",
-              description: "Este navegador não suporta notificações push",
-              variant: "destructive"
-            });
-            return;
-          }
-          
-          const permission = await Notification.requestPermission();
-          
-          if (permission === 'granted') {
-            setPushEnabled(true);
-            localStorage.setItem('push_notifications_enabled', 'true');
-            toast({
-              title: "Notificações Ativadas",
-              description: "Você receberá notificações sobre vendas e produtos"
-            });
-            triggerHaptic('success');
-          } else {
-            setPushEnabled(false);
-            toast({
-              title: "Permissão Negada",
-              description: "Acesse as configurações do navegador para reativar",
-              variant: "destructive"
-            });
-            triggerHaptic('error');
-          }
+          setPushEnabled(false);
+          toast({
+            title: "Permissão Não Concedida",
+            description: "Você pode ativar mais tarde",
+            variant: "destructive"
+          });
+          triggerHaptic('error');
         }
       } catch (error) {
         console.error('❌ [handlePushToggle] Error:', error);
