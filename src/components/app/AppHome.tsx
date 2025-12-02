@@ -1063,9 +1063,7 @@ export function AppHome() {
                 <CardContent className="p-0">
                   <button onClick={() => setShowEditProfile(true)} className="w-full flex items-center justify-between px-5 py-5 hover:bg-accent rounded-xl transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-primary-foreground">
-                        <Settings className="h-6 w-6 text-primary" />
-                      </div>
+                      <Settings className="h-6 w-6 text-primary" />
                       <span className="font-medium text-base text-foreground">Dados Pessoais</span>
                     </div>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -1077,9 +1075,7 @@ export function AppHome() {
                 <CardContent className="p-0">
                   <div className="w-full flex items-center justify-between px-5 py-5">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-primary-foreground">
-                        <Bell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                      </div>
+                      <Bell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                       <span className="font-medium text-base text-foreground">Notificações Push</span>
                     </div>
                     <Switch checked={pushEnabled} onCheckedChange={checked => {
@@ -1098,9 +1094,7 @@ export function AppHome() {
                   }
                 }} className="w-full flex items-center justify-between px-5 py-5 hover:bg-destructive/5 rounded-xl transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-primary-foreground">
-                        <Trash2 className="h-6 w-6 text-destructive" />
-                      </div>
+                      <Trash2 className="h-6 w-6 text-destructive" />
                       <span className="font-medium text-base text-destructive">Encerrar Conta</span>
                     </div>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -1112,9 +1106,7 @@ export function AppHome() {
                 <CardContent className="p-0">
                   <button onClick={() => signOut()} className="w-full flex items-center justify-between px-5 py-5 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-xl transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-primary-foreground">
-                        <LogOut className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                      </div>
+                      <LogOut className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                       <span className="font-medium text-base text-orange-600 dark:text-orange-400">Sair da conta</span>
                     </div>
                   </button>
