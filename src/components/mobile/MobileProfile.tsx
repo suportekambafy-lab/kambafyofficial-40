@@ -1,12 +1,11 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, ArrowRight, DollarSign, LogOut, User, Camera } from 'lucide-react';
+import { DollarSign, LogOut, User, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function MobileProfile() {
@@ -88,75 +87,53 @@ export function MobileProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-4 space-y-6">
-        {/* User Info */}
-        <div className="text-center py-6">
-          <div className="relative w-20 h-20 mx-auto mb-4">
-            <Avatar 
-              className="w-20 h-20 cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={handleAvatarClick}
-            >
-              <AvatarImage src={user?.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-muted text-muted-foreground">
-                <User className="w-8 h-8" />
-              </AvatarFallback>
-            </Avatar>
-            {uploading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
-                <Camera className="w-6 h-6 text-white" />
-              </div>
-            )}
-          </div>
-          <p className="text-muted-foreground">{user?.email}</p>
-        </div>
-
-        {/* Switch Account */}
-        <Card className="rounded-2xl">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-                <span className="text-foreground">Mudar para painel de cliente</span>
-              </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
+    <div className="min-h-screen bg-gray-50 p-4">
+      {/* User Info */}
+      <div className="text-center py-4">
+        <div className="relative w-20 h-20 mx-auto mb-3">
+          <Avatar 
+            className="w-20 h-20 cursor-pointer hover:opacity-80 transition-opacity border-2 border-primary/20"
+            onClick={handleAvatarClick}
+          >
+            <AvatarImage src={user?.user_metadata?.avatar_url} />
+            <AvatarFallback className="bg-muted text-muted-foreground">
+              <User className="w-8 h-8" />
+            </AvatarFallback>
+          </Avatar>
+          {uploading ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+              <Camera className="w-6 h-6 text-white animate-pulse" />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Notifications */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Notificações</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <DollarSign className="h-5 w-5 text-muted-foreground" />
-                <span className="text-foreground">Vendas aprovadas</span>
-              </div>
-              <Switch defaultChecked />
+          ) : (
+            <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 shadow-md">
+              <Camera className="w-3.5 h-3.5" />
             </div>
-          </div>
+          )}
         </div>
-
-        {/* Data Preferences */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Preferências de dados</h3>
-        </div>
-
-        {/* Logout Button - Prominently displayed */}
-        <Card className="rounded-2xl border-red-200">
-          <CardContent className="p-0">
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start p-4 text-left text-red-600 hover:bg-red-50 hover:text-red-700 rounded-2xl"
-              onClick={handleSignOut}
-            >
-              <LogOut className="h-5 w-5 mr-3" />
-              <span className="font-medium">Sair</span>
-            </Button>
-          </CardContent>
-        </Card>
+        <p className="text-muted-foreground text-sm">{user?.email}</p>
       </div>
+
+      {/* Notifications */}
+      <div className="mt-4">
+        <h3 className="text-base font-semibold mb-3">Notificações</h3>
+        <div className="flex items-center justify-between py-2">
+          <div className="flex items-center space-x-3">
+            <DollarSign className="h-5 w-5 text-muted-foreground" />
+            <span className="text-foreground text-sm">Vendas aprovadas</span>
+          </div>
+          <Switch defaultChecked />
+        </div>
+      </div>
+
+      {/* Logout Button */}
+      <Button 
+        variant="ghost" 
+        className="w-full justify-start mt-6 text-left text-red-600 hover:bg-red-50 hover:text-red-700"
+        onClick={handleSignOut}
+      >
+        <LogOut className="h-5 w-5 mr-3" />
+        <span className="font-medium">Sair</span>
+      </Button>
     </div>
   );
 }
