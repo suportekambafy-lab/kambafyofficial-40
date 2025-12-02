@@ -482,27 +482,34 @@ Deno.serve(async (req) => {
         try {
           logStep("Triggering custom webhooks for completed payment");
           
-          const { error: webhookError } = await supabase.functions.invoke('trigger-webhooks', {
-            body: {
-              event: 'payment.success',
-              user_id: product?.user_id,
-              product_id: productId,
-              order_id: orderId,
-              email: customerData.email,
-              name: customerData.name,
-              amount: orderDataToSave.amount,
-              currency: orderDataToSave.currency,
-              payment_method: paymentMethod,
-              status: 'completed'
-            }
+          const webhookPayload = {
+            event: 'payment.success',
+            user_id: product?.user_id,
+            product_id: productId,
+            order_id: orderId,
+            email: customerData.email,
+            name: customerData.name,
+            amount: orderDataToSave.amount,
+            currency: orderDataToSave.currency,
+            payment_method: paymentMethod,
+            status: 'completed'
+          };
+          
+          console.log('📤 Payload sendo enviado para trigger-webhooks:', JSON.stringify(webhookPayload, null, 2));
+          
+          const { data: webhookData, error: webhookError } = await supabase.functions.invoke('trigger-webhooks', {
+            body: webhookPayload
           });
+          
+          console.log('📥 Resposta do trigger-webhooks:', { data: webhookData, error: webhookError });
 
           if (webhookError) {
             logStep("Error triggering webhooks", webhookError);
           } else {
-            logStep("Custom webhooks triggered successfully");
+            logStep("Custom webhooks triggered successfully", webhookData);
           }
         } catch (webhookError) {
+          console.error("Webhook error details:", webhookError);
           logStep("Webhook error", webhookError);
         }
         
