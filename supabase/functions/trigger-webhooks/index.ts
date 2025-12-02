@@ -125,9 +125,15 @@ Deno.serve(async (req) => {
         console.log(`🚀 Sending webhook to: ${webhook.url}`);
 
         // Construir o payload com todos os dados relevantes
+        // Extrair campos importantes para o nível superior (compatibilidade)
+        const email = restData.email || restData.customer_email;
+        const name = restData.name || restData.customer_name;
+        
         const webhookPayload = {
           event,
           timestamp: new Date().toISOString(),
+          email, // Campo no nível superior para compatibilidade
+          name,  // Campo no nível superior para compatibilidade
           data: {
             ...restData,
             order_id,
