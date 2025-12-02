@@ -75,9 +75,9 @@ export function AppHome() {
   const {
     isOnline
   } = useNetworkStatus();
-  
+
   // OneSignal hook
-  const { 
+  const {
     isInitialized: oneSignalInitialized,
     enableNotifications,
     disableNotifications,
@@ -147,7 +147,7 @@ export function AppHome() {
   } = useKambaLevels(totalRevenueUnfiltered);
   const monthlyGoal = nextLevel?.threshold || 1000000; // Meta dinâmica baseada no próximo nível
   const goalProgress = kambaProgress;
-  
+
   // Apply dark mode class to HTML element for drawer portals
   useEffect(() => {
     const root = window.document.documentElement;
@@ -155,12 +155,9 @@ export function AppHome() {
     root.classList.add(isDark ? 'dark' : 'light');
     console.log('🎨 AppHome: Aplicando tema ao HTML', isDark ? 'dark' : 'light');
   }, [isDark]);
-  
   const handlePushToggle = async (enabled: boolean) => {
     console.log('🔔 [handlePushToggle] Called with enabled:', enabled);
-    
     triggerHaptic('light');
-    
     if (!oneSignalInitialized) {
       toast({
         title: "OneSignal não inicializado",
@@ -169,22 +166,18 @@ export function AppHome() {
       });
       return;
     }
-    
     if (enabled) {
       try {
         console.log('🔔 Solicitando permissão OneSignal...');
         const permission = await enableNotifications();
-        
         if (permission) {
           setPushEnabled(true);
           localStorage.setItem('push_notifications_enabled', 'true');
-          
           toast({
             title: "Notificações Ativadas",
             description: "Você receberá notificações sobre vendas e produtos"
           });
           triggerHaptic('success');
-          
           console.log('✅ Notificações OneSignal ativadas com sucesso');
         } else {
           setPushEnabled(false);
@@ -209,16 +202,13 @@ export function AppHome() {
       try {
         console.log('🔕 Desativando notificações OneSignal...');
         await disableNotifications();
-        
         setPushEnabled(false);
         localStorage.setItem('push_notifications_enabled', 'false');
-        
         toast({
           title: "Notificações Desativadas",
           description: "Você não receberá mais notificações push"
         });
         triggerHaptic('light');
-        
         console.log('✅ Notificações OneSignal desativadas');
       } catch (error) {
         console.error('❌ Erro ao desativar:', error);
@@ -230,13 +220,11 @@ export function AppHome() {
       if (oneSignalInitialized) {
         const hasPermission = await checkPermissionStatus();
         setPushEnabled(hasPermission);
-        
         if (hasPermission) {
           localStorage.setItem('push_notifications_enabled', 'true');
         }
       }
     };
-    
     checkInitialPermission();
   }, [oneSignalInitialized]);
 
@@ -1055,13 +1043,10 @@ export function AppHome() {
                       </p>
                     </div>
                   </div>
-                  <Switch 
-                    checked={pushEnabled} 
-                    onCheckedChange={(checked) => {
-                      console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
-                      handlePushToggle(checked);
-                    }} 
-                  />
+                  <Switch checked={pushEnabled} onCheckedChange={checked => {
+                  console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
+                  handlePushToggle(checked);
+                }} />
                 </div>
               </CardContent>
             </Card>
@@ -1102,7 +1087,7 @@ export function AppHome() {
             {/* App Version */}
             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2">
               <Info className="h-3 w-3" />
-              <span>Versão 1.0.0</span>
+              <span>Versão 1.1</span>
             </div>
 
             {/* Logo */}
