@@ -80,22 +80,10 @@ export function ContinueWatching({ memberAreaId, studentEmail, onLessonSelect }:
       
       console.log('📧 Buscando progresso para email:', normalizedEmail);
 
-      // Buscar a última aula assistida (qualquer progresso, ordenado por última visualização)
+      // Buscar o progresso mais recente (sem join com lessons devido a RLS)
       const { data: progressData, error: progressError } = await supabase
         .from('lesson_progress')
-        .select(`
-          lesson_id,
-          progress_percentage,
-          video_current_time,
-          last_watched_at,
-          lessons!inner (
-            id,
-            title,
-            duration,
-            module_id,
-            member_area_id
-          )
-        `)
+        .select('lesson_id, progress_percentage, video_current_time, last_watched_at')
         .eq('member_area_id', memberAreaId)
         .eq('user_email', normalizedEmail)
         .order('last_watched_at', { ascending: false })
@@ -116,7 +104,26 @@ export function ContinueWatching({ memberAreaId, studentEmail, onLessonSelect }:
         return;
       }
 
-      const lesson = progressData.lessons as any;
+      // Buscar detalhes da aula usando RPC (bypassa RLS)
+      const { data: lessonsData, error: lessonsError } = await supabase
+        .rpc('get_lessons_for_student', {
+          p_student_email: normalizedEmail,
+          p_member_area_id: memberAreaId
+        });
+
+      if (lessonsError) {
+        console.error('❌ Erro ao buscar aulas:', lessonsError);
+        setLastLesson(null);
+        return;
+      }
+
+      const lesson = lessonsData?.find((l: any) => l.id === progressData.lesson_id);
+      
+      if (!lesson) {
+        console.log('ℹ️ Aula não encontrada');
+        setLastLesson(null);
+        return;
+      }
       
       const lessonData = {
         id: lesson.id,
@@ -143,14 +150,18 @@ export function ContinueWatching({ memberAreaId, studentEmail, onLessonSelect }:
     if (!lastLesson) return;
     
     try {
-      // Buscar dados completos da aula
-      const { data: lessonData, error } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('id', lastLesson.id)
-        .single();
+      const normalizedEmail = studentEmail.toLowerCase().trim();
+      
+      // Buscar dados completos da aula usando RPC (bypassa RLS)
+      const { data: lessonsData, error } = await supabase
+        .rpc('get_lessons_for_student', {
+          p_student_email: normalizedEmail,
+          p_member_area_id: memberAreaId
+        });
       
       if (error) throw error;
+      
+      const lessonData = lessonsData?.find((l: any) => l.id === lastLesson.id);
       
       if (lessonData && onLessonSelect) {
         // Processar dados da aula para converter JSON

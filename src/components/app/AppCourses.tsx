@@ -77,15 +77,18 @@ export function AppCourses({ onCourseSelect }: AppCoursesProps) {
         .eq('user_email', user.email.toLowerCase())
         .in('member_area_id', Array.from(memberAreaIds));
 
-      // Buscar total de aulas por área
-      const { data: lessonsData } = await supabase
-        .from('lessons')
-        .select('id, member_area_id')
-        .in('member_area_id', Array.from(memberAreaIds))
-        .eq('status', 'published');
+      // Buscar total de aulas por área usando RPC (bypassa RLS)
+      const lessonsCountByArea: Record<string, number> = {};
+      for (const areaId of Array.from(memberAreaIds)) {
+        const { data: lessonsData } = await supabase
+          .rpc('get_lessons_for_student', {
+            p_student_email: user.email.toLowerCase(),
+            p_member_area_id: areaId
+          });
+        lessonsCountByArea[areaId] = lessonsData?.length || 0;
+      }
 
       const coursesWithProgress = memberAreas?.map(area => {
-        const areaLessons = lessonsData?.filter(l => l.member_area_id === area.id) || [];
         const areaProgress = progressData?.filter(p => p.member_area_id === area.id) || [];
         const completedLessons = areaProgress.filter(p => p.completed).length;
         const lastActivity = areaProgress.length > 0 
@@ -97,7 +100,7 @@ export function AppCourses({ onCourseSelect }: AppCoursesProps) {
           name: area.name,
           logo_url: area.logo_url,
           hero_image_url: area.hero_image_url,
-          totalLessons: areaLessons.length,
+          totalLessons: lessonsCountByArea[area.id] || 0,
           completedLessons,
           lastActivity
         };
