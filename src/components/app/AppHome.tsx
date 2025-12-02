@@ -1035,9 +1035,9 @@ export function AppHome() {
           });
         }} />;
       case 'profile':
-        return <div className="p-4 space-y-4">
+        return <div className="p-4 space-y-2">
             {/* User Info */}
-            <div className="flex items-center space-x-4 pb-3">
+            <div className="flex items-center space-x-3 pb-2">
               <div className="relative cursor-pointer" onClick={async () => {
                 triggerHaptic('light');
                 const photo = await pickPhoto();
@@ -1049,50 +1049,50 @@ export function AppHome() {
                   triggerHaptic('success');
                 }
               }}>
-                <Avatar className="w-20 h-20 rounded-2xl flex-shrink-0 hover:opacity-80 transition-opacity">
+                <Avatar className="w-14 h-14 rounded-xl flex-shrink-0 hover:opacity-80 transition-opacity">
                   <AvatarImage src={profileAvatar} alt="Profile" />
-                  <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
-                    {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-14 h-14 object-contain" /> : <User className="h-10 w-10 text-primary" />}
+                  <AvatarFallback className="rounded-xl bg-gradient-to-br from-primary/10 to-primary/5">
+                    {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-10 h-10 object-contain" /> : <User className="h-7 w-7 text-primary" />}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 shadow-md">
-                  <Camera className="w-4 h-4" />
+                <div className="absolute -bottom-0.5 -right-0.5 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
+                  <Camera className="w-3 h-3" />
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-lg text-foreground truncate">
+                <p className="font-semibold text-base text-foreground truncate">
                   {editingProfile.full_name || user?.email}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {currentLevel ? `${currentLevel.name}` : 'Vendedor Kambafy'}
                 </p>
               </div>
             </div>
 
             {/* Settings Cards */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
                 <CardContent className="p-0">
-                  <button onClick={() => setShowEditProfile(true)} className="w-full flex items-center justify-between p-5 hover:bg-accent rounded-xl transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Settings className="h-6 w-6 text-primary" />
+                  <button onClick={() => setShowEditProfile(true)} className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent rounded-xl transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Settings className="h-4 w-4 text-primary" />
                       </div>
-                      <span className="font-medium text-foreground text-base">Dados Pessoais</span>
+                      <span className="font-medium text-foreground text-sm">Dados Pessoais</span>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </CardContent>
               </Card>
 
               <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
                 <CardContent className="p-0">
-                  <div className="w-full flex items-center justify-between p-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
-                        <Bell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  <div className="w-full flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <Bell className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <span className="font-medium text-foreground text-base">Notificações Push</span>
+                      <span className="font-medium text-foreground text-sm">Notificações Push</span>
                     </div>
                     <Switch checked={pushEnabled} onCheckedChange={checked => {
                       console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
@@ -1108,26 +1108,26 @@ export function AppHome() {
                     if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
                       alert('Funcionalidade de encerramento de conta em desenvolvimento.');
                     }
-                  }} className="w-full flex items-center justify-between p-5 hover:bg-destructive/5 rounded-xl transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
-                        <Trash2 className="h-6 w-6 text-destructive" />
+                  }} className="w-full flex items-center justify-between px-4 py-3 hover:bg-destructive/5 rounded-xl transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center">
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </div>
-                      <span className="font-medium text-destructive text-base">Encerrar Conta</span>
+                      <span className="font-medium text-destructive text-sm">Encerrar Conta</span>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </CardContent>
               </Card>
 
               <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
                 <CardContent className="p-0">
-                  <button onClick={() => signOut()} className="w-full flex items-center justify-between p-5 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-xl transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center">
-                        <LogOut className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                  <button onClick={() => signOut()} className="w-full flex items-center justify-between px-4 py-3 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-xl transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <LogOut className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                       </div>
-                      <span className="font-medium text-orange-600 dark:text-orange-400 text-base">Sair da conta</span>
+                      <span className="font-medium text-orange-600 dark:text-orange-400 text-sm">Sair da conta</span>
                     </div>
                   </button>
                 </CardContent>
@@ -1135,9 +1135,9 @@ export function AppHome() {
             </div>
 
             {/* App Version & Logo */}
-            <div className="flex flex-col items-center gap-2 pt-4">
-              <img src={kambafyIconGreen} alt="Logo" className="h-12 w-auto opacity-60" />
-              <span className="text-xs text-muted-foreground">Versão 1.1</span>
+            <div className="flex flex-col items-center gap-1 pt-2">
+              <img src={kambafyIconGreen} alt="Logo" className="h-8 w-auto opacity-50" />
+              <span className="text-[10px] text-muted-foreground">Versão 1.1</span>
             </div>
           </div>;
       case 'sales-history':
