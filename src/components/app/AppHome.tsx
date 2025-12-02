@@ -158,35 +158,74 @@ export function AppHome() {
   const handlePushToggle = async (enabled: boolean) => {
     console.log('🔔 [handlePushToggle] Called with enabled:', enabled);
     triggerHaptic('light');
-    if (!oneSignalInitialized) {
-      toast({
-        title: "OneSignal não inicializado",
-        description: "Aguarde alguns segundos e tente novamente",
-        variant: "destructive"
-      });
-      return;
-    }
+    
     if (enabled) {
       try {
-        console.log('🔔 Solicitando permissão OneSignal...');
-        const permission = await enableNotifications();
-        if (permission) {
-          setPushEnabled(true);
-          localStorage.setItem('push_notifications_enabled', 'true');
-          toast({
-            title: "Notificações Ativadas",
-            description: "Você receberá notificações sobre vendas e produtos"
-          });
-          triggerHaptic('success');
-          console.log('✅ Notificações OneSignal ativadas com sucesso');
+        // Tentar usar OneSignal primeiro, se disponível
+        if (oneSignalInitialized) {
+          console.log('🔔 Solicitando permissão OneSignal...');
+          const permission = await enableNotifications();
+          if (permission) {
+            setPushEnabled(true);
+            localStorage.setItem('push_notifications_enabled', 'true');
+            toast({
+              title: "Notificações Ativadas",
+              description: "Você receberá notificações sobre vendas e produtos"
+            });
+            triggerHaptic('success');
+            console.log('✅ Notificações OneSignal ativadas com sucesso');
+          } else {
+            setPushEnabled(false);
+            toast({
+              title: "Permissão Negada",
+              description: "Você pode ativar mais tarde nas configurações do dispositivo",
+              variant: "destructive"
+            });
+            triggerHaptic('error');
+          }
         } else {
-          setPushEnabled(false);
-          toast({
-            title: "Permissão Negada",
-            description: "Você pode ativar mais tarde nas configurações do dispositivo",
-            variant: "destructive"
-          });
-          triggerHaptic('error');
+          // Fallback para API nativa do navegador
+          console.log('🔔 OneSignal não disponível, usando API nativa...');
+          
+          if (!('Notification' in window)) {
+            toast({
+              title: "Não Suportado",
+              description: "Este navegador não suporta notificações push",
+              variant: "destructive"
+            });
+            triggerHaptic('error');
+            return;
+          }
+          
+          const permission = await Notification.requestPermission();
+          console.log('🔔 Permissão nativa:', permission);
+          
+          if (permission === 'granted') {
+            setPushEnabled(true);
+            localStorage.setItem('push_notifications_enabled', 'true');
+            toast({
+              title: "Notificações Ativadas",
+              description: "Você receberá notificações sobre vendas e produtos"
+            });
+            triggerHaptic('success');
+            console.log('✅ Notificações nativas ativadas com sucesso');
+          } else if (permission === 'denied') {
+            setPushEnabled(false);
+            toast({
+              title: "Permissão Negada",
+              description: "Você bloqueou as notificações. Acesse as configurações do navegador para reativar.",
+              variant: "destructive"
+            });
+            triggerHaptic('error');
+          } else {
+            setPushEnabled(false);
+            toast({
+              title: "Permissão Não Concedida",
+              description: "Você pode ativar mais tarde nas configurações",
+              variant: "destructive"
+            });
+            triggerHaptic('error');
+          }
         }
       } catch (error) {
         console.error('❌ [handlePushToggle] Error:', error);
@@ -200,8 +239,10 @@ export function AppHome() {
       }
     } else {
       try {
-        console.log('🔕 Desativando notificações OneSignal...');
-        await disableNotifications();
+        if (oneSignalInitialized) {
+          console.log('🔕 Desativando notificações OneSignal...');
+          await disableNotifications();
+        }
         setPushEnabled(false);
         localStorage.setItem('push_notifications_enabled', 'false');
         toast({
@@ -209,7 +250,7 @@ export function AppHome() {
           description: "Você não receberá mais notificações push"
         });
         triggerHaptic('light');
-        console.log('✅ Notificações OneSignal desativadas');
+        console.log('✅ Notificações desativadas');
       } catch (error) {
         console.error('❌ Erro ao desativar:', error);
       }
