@@ -1073,6 +1073,18 @@ export function AppHome() {
 
               <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
                 <CardContent className="p-0">
+                  <button onClick={() => setActiveTab('courses')} className="w-full flex items-center justify-between px-5 py-5 hover:bg-accent rounded-xl transition-colors">
+                    <div className="flex items-center gap-4">
+                      <GraduationCap className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                      <span className="font-medium text-base text-foreground">Ver como aluno</span>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+                <CardContent className="p-0">
                   <div className="w-full flex items-center justify-between px-5 py-5">
                     <div className="flex items-center gap-4">
                       <Bell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
