@@ -36,9 +36,32 @@ export const useNotifications = () => {
 };
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    // Carregar notificações do localStorage ao iniciar
+    try {
+      const saved = localStorage.getItem('app_notifications');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Converter timestamps de string para Date
+        return parsed.map((n: any) => ({
+          ...n,
+          timestamp: new Date(n.timestamp)
+        }));
+      }
+    } catch (e) {
+      console.error('Error loading notifications from localStorage:', e);
+    }
+    return [];
+  });
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Persistir notificações no localStorage
+  useEffect(() => {
+    if (notifications.length > 0) {
+      localStorage.setItem('app_notifications', JSON.stringify(notifications));
+    }
+  }, [notifications]);
 
   // Gerar ID único para notificações
   const generateId = () => Math.random().toString(36).substr(2, 9);
