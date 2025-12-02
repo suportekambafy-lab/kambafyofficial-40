@@ -159,9 +159,43 @@ export function AppHome() {
     console.log('🔔 [handlePushToggle] Called with enabled:', enabled);
     triggerHaptic('light');
     
+    const isNative = Capacitor.isNativePlatform();
+    
+    // Se estiver em plataforma nativa, abrir configurações do dispositivo
+    if (isNative) {
+      try {
+        console.log('📱 Abrindo configurações nativas do dispositivo...');
+        
+        const platform = Capacitor.getPlatform();
+        
+        if (platform === 'ios') {
+          // iOS: Abre as configurações do app via URL scheme
+          window.open('app-settings:', '_system');
+        } else if (platform === 'android') {
+          // Android: Mostra instrução para acessar configurações manualmente
+          toast({
+            title: "Configurações de Notificação",
+            description: "Acesse: Configurações > Apps > Kambafy > Notificações"
+          });
+        }
+        
+        toast({
+          title: "Configurações",
+          description: "Gerencie as notificações nas configurações do seu dispositivo"
+        });
+      } catch (error) {
+        console.error('❌ Erro ao abrir configurações:', error);
+        toast({
+          title: "Configurações",
+          description: "Acesse as configurações do dispositivo para gerenciar notificações"
+        });
+      }
+      return;
+    }
+    
+    // Web: usar API nativa do navegador
     if (enabled) {
       try {
-        // Tentar usar OneSignal primeiro, se disponível
         if (oneSignalInitialized) {
           console.log('🔔 Solicitando permissão OneSignal...');
           const permission = await enableNotifications();
@@ -173,7 +207,6 @@ export function AppHome() {
               description: "Você receberá notificações sobre vendas e produtos"
             });
             triggerHaptic('success');
-            console.log('✅ Notificações OneSignal ativadas com sucesso');
           } else {
             setPushEnabled(false);
             toast({
@@ -184,8 +217,7 @@ export function AppHome() {
             triggerHaptic('error');
           }
         } else {
-          // Fallback para API nativa do navegador
-          console.log('🔔 OneSignal não disponível, usando API nativa...');
+          console.log('🔔 Usando API nativa do navegador...');
           
           if (!('Notification' in window)) {
             toast({
@@ -193,12 +225,10 @@ export function AppHome() {
               description: "Este navegador não suporta notificações push",
               variant: "destructive"
             });
-            triggerHaptic('error');
             return;
           }
           
           const permission = await Notification.requestPermission();
-          console.log('🔔 Permissão nativa:', permission);
           
           if (permission === 'granted') {
             setPushEnabled(true);
@@ -208,20 +238,11 @@ export function AppHome() {
               description: "Você receberá notificações sobre vendas e produtos"
             });
             triggerHaptic('success');
-            console.log('✅ Notificações nativas ativadas com sucesso');
-          } else if (permission === 'denied') {
-            setPushEnabled(false);
-            toast({
-              title: "Permissão Negada",
-              description: "Você bloqueou as notificações. Acesse as configurações do navegador para reativar.",
-              variant: "destructive"
-            });
-            triggerHaptic('error');
           } else {
             setPushEnabled(false);
             toast({
-              title: "Permissão Não Concedida",
-              description: "Você pode ativar mais tarde nas configurações",
+              title: "Permissão Negada",
+              description: "Acesse as configurações do navegador para reativar",
               variant: "destructive"
             });
             triggerHaptic('error');
@@ -240,7 +261,6 @@ export function AppHome() {
     } else {
       try {
         if (oneSignalInitialized) {
-          console.log('🔕 Desativando notificações OneSignal...');
           await disableNotifications();
         }
         setPushEnabled(false);
@@ -250,7 +270,6 @@ export function AppHome() {
           description: "Você não receberá mais notificações push"
         });
         triggerHaptic('light');
-        console.log('✅ Notificações desativadas');
       } catch (error) {
         console.error('❌ Erro ao desativar:', error);
       }
