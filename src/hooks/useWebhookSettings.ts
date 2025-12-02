@@ -265,8 +265,7 @@ export const useWebhookSettings = (productId?: string) => {
           event_type: 'test.webhook',
           payload: testPayload,
           response_status: response.status,
-          response_body: responseText,
-          success: response.ok
+          response_body: responseText
         });
       }
 
@@ -352,8 +351,7 @@ export const useWebhookSettings = (productId?: string) => {
           event_type: eventType,
           payload,
           response_status: response.status,
-          response_body: responseText,
-          success: response.ok
+          response_body: responseText
         });
       }
 
