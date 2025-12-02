@@ -160,6 +160,7 @@ export function AppHome() {
     triggerHaptic('light');
     
     const isNative = Capacitor.isNativePlatform();
+    console.log('📱 isNative:', isNative);
     
     // Se estiver em plataforma nativa, abrir configurações do dispositivo
     if (isNative) {
@@ -191,10 +192,10 @@ export function AppHome() {
       return;
     }
     
-    // Web: SEMPRE usar API nativa do navegador para mostrar popup de permissão
+    // Web: usar API nativa do navegador
     if (enabled) {
       try {
-        console.log('🔔 Solicitando permissão via API nativa do navegador...');
+        console.log('🔔 Verificando suporte a notificações...');
         
         if (!('Notification' in window)) {
           toast({
@@ -205,15 +206,27 @@ export function AppHome() {
           return;
         }
         
-        // Mostrar o popup de permissão do navegador
-        const permission = await Notification.requestPermission();
-        console.log('🔔 Resultado da permissão:', permission);
+        // Verificar status atual da permissão
+        const currentPermission = Notification.permission;
+        console.log('🔔 Status atual da permissão:', currentPermission);
         
-        if (permission === 'granted') {
+        if (currentPermission === 'denied') {
+          // Permissão já foi negada - não podemos solicitar novamente
+          setPushEnabled(false);
+          toast({
+            title: "Notificações Bloqueadas",
+            description: "Clique no ícone 🔒 na barra de endereço do navegador para desbloquear as notificações",
+            variant: "destructive",
+          });
+          triggerHaptic('error');
+          return;
+        }
+        
+        if (currentPermission === 'granted') {
+          // Já tem permissão
           setPushEnabled(true);
           localStorage.setItem('push_notifications_enabled', 'true');
           
-          // Se OneSignal estiver disponível, ativar também
           if (oneSignalInitialized) {
             await enableNotifications();
           }
@@ -223,19 +236,32 @@ export function AppHome() {
             description: "Você receberá notificações sobre vendas e produtos"
           });
           triggerHaptic('success');
-        } else if (permission === 'denied') {
-          setPushEnabled(false);
+          return;
+        }
+        
+        // Status é 'default' - podemos solicitar permissão
+        console.log('🔔 Solicitando permissão ao navegador...');
+        const permission = await Notification.requestPermission();
+        console.log('🔔 Resultado da permissão:', permission);
+        
+        if (permission === 'granted') {
+          setPushEnabled(true);
+          localStorage.setItem('push_notifications_enabled', 'true');
+          
+          if (oneSignalInitialized) {
+            await enableNotifications();
+          }
+          
           toast({
-            title: "Permissão Negada",
-            description: "Você bloqueou as notificações. Acesse as configurações do navegador para reativar.",
-            variant: "destructive"
+            title: "Notificações Ativadas",
+            description: "Você receberá notificações sobre vendas e produtos"
           });
-          triggerHaptic('error');
+          triggerHaptic('success');
         } else {
           setPushEnabled(false);
           toast({
-            title: "Permissão Não Concedida",
-            description: "Você pode ativar mais tarde",
+            title: "Permissão Negada",
+            description: "Você pode ativar nas configurações do navegador",
             variant: "destructive"
           });
           triggerHaptic('error');
