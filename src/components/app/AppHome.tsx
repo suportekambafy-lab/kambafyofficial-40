@@ -1069,62 +1069,70 @@ export function AppHome() {
               </div>
             </div>
 
-            {/* All Options in One Card */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-2">
-                <button onClick={() => setShowEditProfile(true)} className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Settings className="h-5 w-5 text-primary" />
+            {/* Settings Cards */}
+            <div className="space-y-3">
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+                <CardContent className="p-0">
+                  <button onClick={() => setShowEditProfile(true)} className="w-full flex items-center justify-between p-5 hover:bg-accent rounded-xl transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Settings className="h-6 w-6 text-primary" />
+                      </div>
+                      <span className="font-medium text-foreground text-base">Dados Pessoais</span>
                     </div>
-                    <span className="font-medium text-foreground">Dados Pessoais</span>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </CardContent>
+              </Card>
 
-                <div className="h-px bg-border mx-4" />
-
-                <div className="w-full flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                      <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+                <CardContent className="p-0">
+                  <div className="w-full flex items-center justify-between p-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <Bell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <span className="font-medium text-foreground text-base">Notificações Push</span>
                     </div>
-                    <span className="font-medium text-foreground">Notificações Push</span>
+                    <Switch checked={pushEnabled} onCheckedChange={checked => {
+                      console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
+                      handlePushToggle(checked);
+                    }} />
                   </div>
-                  <Switch checked={pushEnabled} onCheckedChange={checked => {
-                    console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
-                    handlePushToggle(checked);
-                  }} />
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="h-px bg-border mx-4" />
-
-                <button onClick={() => {
-                  if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
-                    alert('Funcionalidade de encerramento de conta em desenvolvimento.');
-                  }
-                }} className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                      <Trash2 className="h-5 w-5 text-destructive" />
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+                <CardContent className="p-0">
+                  <button onClick={() => {
+                    if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
+                      alert('Funcionalidade de encerramento de conta em desenvolvimento.');
+                    }
+                  }} className="w-full flex items-center justify-between p-5 hover:bg-destructive/5 rounded-xl transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                        <Trash2 className="h-6 w-6 text-destructive" />
+                      </div>
+                      <span className="font-medium text-destructive text-base">Encerrar Conta</span>
                     </div>
-                    <span className="font-medium text-destructive">Encerrar Conta</span>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </CardContent>
+              </Card>
 
-                <div className="h-px bg-border mx-4" />
-
-                <button onClick={() => signOut()} className="w-full flex items-center justify-between p-4 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                      <LogOut className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+                <CardContent className="p-0">
+                  <button onClick={() => signOut()} className="w-full flex items-center justify-between p-5 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-xl transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <LogOut className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <span className="font-medium text-orange-600 dark:text-orange-400 text-base">Sair da conta</span>
                     </div>
-                    <span className="font-medium text-orange-600 dark:text-orange-400">Sair da conta</span>
-                  </div>
-                </button>
-              </CardContent>
-            </Card>
+                  </button>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* App Version & Logo */}
             <div className="flex flex-col items-center gap-2 pt-4">
