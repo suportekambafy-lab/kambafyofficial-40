@@ -1035,128 +1035,85 @@ export function AppHome() {
           });
         }} />;
       case 'profile':
-        return <div className="p-4 space-y-4">
-            <h2 className="text-xl font-bold px-2 text-foreground">Meu Perfil</h2>
-            
-            {/* User Info Card */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-4">
-                  <div className="relative cursor-pointer" onClick={async () => {
-                    triggerHaptic('light');
-                    const photo = await pickPhoto();
-                    if (photo && user) {
-                      toast({
-                        title: "Foto Selecionada",
-                        description: "Funcionalidade de upload em desenvolvimento"
-                      });
-                      triggerHaptic('success');
-                    }
-                  }}>
-                    <Avatar className="w-16 h-16 rounded-2xl flex-shrink-0 hover:opacity-80 transition-opacity">
-                      <AvatarImage src={profileAvatar} alt="Profile" />
-                      <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
-                        {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-12 h-12 object-contain" /> : <User className="h-8 w-8 text-primary" />}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
-                      <Camera className="w-3 h-3" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1">
-                      <p className="font-semibold text-base text-foreground truncate">
-                        {editingProfile.full_name || user?.email}
-                      </p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {currentLevel ? `${currentLevel.name}` : 'Vendedor Kambafy'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Settings Options */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-2">
-                <button onClick={() => setShowEditProfile(true)} className="w-full flex items-center justify-between p-4 hover:bg-accent rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Settings className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-medium text-foreground">Dados Pessoais</p>
-                      <p className="text-xs text-muted-foreground">Ver e editar informações</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
-
-                <div className="h-px bg-border my-1" />
-
-                <div className="w-full flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                      <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-medium text-foreground">Notificações Push</p>
-                      <p className="text-xs text-muted-foreground">
-                        {pushEnabled ? 'Ativadas' : 'Desativadas'}
-                      </p>
-                    </div>
-                  </div>
-                  <Switch checked={pushEnabled} onCheckedChange={checked => {
-                  console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
-                  handlePushToggle(checked);
-                }} />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Danger Zone */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-2">
-                <button onClick={() => {
-                if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
-                  // TODO: Implementar lógica de encerramento de conta
-                  alert('Funcionalidade de encerramento de conta em desenvolvimento.');
+        return <div className="p-4 space-y-3">
+            {/* User Info */}
+            <div className="flex items-center space-x-4 pb-2">
+              <div className="relative cursor-pointer" onClick={async () => {
+                triggerHaptic('light');
+                const photo = await pickPhoto();
+                if (photo && user) {
+                  toast({
+                    title: "Foto Selecionada",
+                    description: "Funcionalidade de upload em desenvolvimento"
+                  });
+                  triggerHaptic('success');
                 }
-              }} className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                      <Trash2 className="h-5 w-5 text-destructive" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-medium text-destructive">Encerrar Conta</p>
-                      <p className="text-xs text-muted-foreground">Eliminar permanentemente</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
-              </CardContent>
-            </Card>
-
-            {/* Logout Button */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-4">
-                <Button variant="outline" className="w-full h-11 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20 transition-colors" onClick={() => signOut()}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  <span className="font-medium">Sair da conta</span>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* App Version */}
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2">
-              <Info className="h-3 w-3" />
-              <span>Versão 1.1</span>
+              }}>
+                <Avatar className="w-16 h-16 rounded-2xl flex-shrink-0 hover:opacity-80 transition-opacity">
+                  <AvatarImage src={profileAvatar} alt="Profile" />
+                  <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
+                    {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-12 h-12 object-contain" /> : <User className="h-8 w-8 text-primary" />}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
+                  <Camera className="w-3 h-3" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-base text-foreground truncate">
+                  {editingProfile.full_name || user?.email}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {currentLevel ? `${currentLevel.name}` : 'Vendedor Kambafy'}
+                </p>
+              </div>
             </div>
 
-            {/* Logo */}
-            <div className="flex justify-center pt-4 pb-2">
-              <img src={isDark ? kambafyIconGreen : "/positivo-logo.svg"} alt={isDark ? "Kambafy" : "Positivo"} className="h-16 w-auto" />
+            {/* All Options in One Card */}
+            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
+              <CardContent className="p-1">
+                <button onClick={() => setShowEditProfile(true)} className="w-full flex items-center justify-between p-3 hover:bg-accent rounded-lg transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Settings className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="font-medium text-sm text-foreground">Dados Pessoais</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+
+                <div className="h-px bg-border mx-3" />
+
+                <div className="w-full flex items-center justify-between p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Bell className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <span className="font-medium text-sm text-foreground">Notificações Push</span>
+                  </div>
+                  <Switch checked={pushEnabled} onCheckedChange={checked => {
+                    console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
+                    handlePushToggle(checked);
+                  }} />
+                </div>
+
+                <div className="h-px bg-border mx-3" />
+
+                <button onClick={() => signOut()} className="w-full flex items-center justify-between p-3 hover:bg-destructive/5 rounded-lg transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center">
+                      <LogOut className="h-4 w-4 text-destructive" />
+                    </div>
+                    <span className="font-medium text-sm text-destructive">Sair da conta</span>
+                  </div>
+                </button>
+              </CardContent>
+            </Card>
+
+            {/* App Version & Logo */}
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <img src={isDark ? kambafyIconGreen : "/positivo-logo.svg"} alt="Logo" className="h-10 w-auto opacity-60" />
+              <span className="text-xs text-muted-foreground">Versão 1.1</span>
             </div>
           </div>;
       case 'sales-history':
