@@ -158,17 +158,14 @@ export function AppHome() {
   const handlePushToggle = async (enabled: boolean) => {
     console.log('🔔 [handlePushToggle] Called with enabled:', enabled);
     triggerHaptic('light');
-    
     const isNative = Capacitor.isNativePlatform();
     console.log('📱 isNative:', isNative);
-    
+
     // Se estiver em plataforma nativa, abrir configurações do dispositivo
     if (isNative) {
       try {
         console.log('📱 Abrindo configurações nativas do dispositivo...');
-        
         const platform = Capacitor.getPlatform();
-        
         if (platform === 'ios') {
           window.open('app-settings:', '_system');
         } else if (platform === 'android') {
@@ -177,7 +174,6 @@ export function AppHome() {
             description: "Acesse: Configurações > Apps > Kambafy > Notificações"
           });
         }
-        
         toast({
           title: "Configurações",
           description: "Gerencie as notificações nas configurações do seu dispositivo"
@@ -191,12 +187,11 @@ export function AppHome() {
       }
       return;
     }
-    
+
     // Web: usar API nativa do navegador
     if (enabled) {
       try {
         console.log('🔔 Verificando suporte a notificações...');
-        
         if (!('Notification' in window)) {
           toast({
             title: "Não Suportado",
@@ -205,32 +200,28 @@ export function AppHome() {
           });
           return;
         }
-        
+
         // Verificar status atual da permissão
         const currentPermission = Notification.permission;
         console.log('🔔 Status atual da permissão:', currentPermission);
-        
         if (currentPermission === 'denied') {
           // Permissão já foi negada - não podemos solicitar novamente
           setPushEnabled(false);
           toast({
             title: "Notificações Bloqueadas",
             description: "Clique no ícone 🔒 na barra de endereço do navegador para desbloquear as notificações",
-            variant: "destructive",
+            variant: "destructive"
           });
           triggerHaptic('error');
           return;
         }
-        
         if (currentPermission === 'granted') {
           // Já tem permissão
           setPushEnabled(true);
           localStorage.setItem('push_notifications_enabled', 'true');
-          
           if (oneSignalInitialized) {
             await enableNotifications();
           }
-          
           toast({
             title: "Notificações Ativadas",
             description: "Você receberá notificações sobre vendas e produtos"
@@ -238,20 +229,17 @@ export function AppHome() {
           triggerHaptic('success');
           return;
         }
-        
+
         // Status é 'default' - podemos solicitar permissão
         console.log('🔔 Solicitando permissão ao navegador...');
         const permission = await Notification.requestPermission();
         console.log('🔔 Resultado da permissão:', permission);
-        
         if (permission === 'granted') {
           setPushEnabled(true);
           localStorage.setItem('push_notifications_enabled', 'true');
-          
           if (oneSignalInitialized) {
             await enableNotifications();
           }
-          
           toast({
             title: "Notificações Ativadas",
             description: "Você receberá notificações sobre vendas e produtos"
@@ -1039,16 +1027,16 @@ export function AppHome() {
             {/* User Info */}
             <div className="flex items-center space-x-4 pb-2">
               <div className="relative cursor-pointer" onClick={async () => {
-                triggerHaptic('light');
-                const photo = await pickPhoto();
-                if (photo && user) {
-                  toast({
-                    title: "Foto Selecionada",
-                    description: "Funcionalidade de upload em desenvolvimento"
-                  });
-                  triggerHaptic('success');
-                }
-              }}>
+              triggerHaptic('light');
+              const photo = await pickPhoto();
+              if (photo && user) {
+                toast({
+                  title: "Foto Selecionada",
+                  description: "Funcionalidade de upload em desenvolvimento"
+                });
+                triggerHaptic('success');
+              }
+            }}>
                 <Avatar className="w-16 h-16 rounded-xl flex-shrink-0 hover:opacity-80 transition-opacity">
                   <AvatarImage src={profileAvatar} alt="Profile" />
                   <AvatarFallback className="rounded-xl bg-gradient-to-br from-primary/10 to-primary/5">
@@ -1075,7 +1063,7 @@ export function AppHome() {
                 <CardContent className="p-0">
                   <button onClick={() => setShowEditProfile(true)} className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-accent rounded-xl transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-foreground">
                         <Settings className="h-5 w-5 text-primary" />
                       </div>
                       <span className="font-medium text-foreground">Dados Pessoais</span>
@@ -1089,15 +1077,15 @@ export function AppHome() {
                 <CardContent className="p-0">
                   <div className="w-full flex items-center justify-between px-4 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-foreground">
                         <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <span className="font-medium text-foreground">Notificações Push</span>
                     </div>
                     <Switch checked={pushEnabled} onCheckedChange={checked => {
-                      console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
-                      handlePushToggle(checked);
-                    }} />
+                    console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
+                    handlePushToggle(checked);
+                  }} />
                   </div>
                 </CardContent>
               </Card>
@@ -1105,12 +1093,12 @@ export function AppHome() {
               <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
                 <CardContent className="p-0">
                   <button onClick={() => {
-                    if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
-                      alert('Funcionalidade de encerramento de conta em desenvolvimento.');
-                    }
-                  }} className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-destructive/5 rounded-xl transition-colors">
+                  if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
+                    alert('Funcionalidade de encerramento de conta em desenvolvimento.');
+                  }
+                }} className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-destructive/5 rounded-xl transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-foreground">
                         <Trash2 className="h-5 w-5 text-destructive" />
                       </div>
                       <span className="font-medium text-destructive">Encerrar Conta</span>
@@ -1124,7 +1112,7 @@ export function AppHome() {
                 <CardContent className="p-0">
                   <button onClick={() => signOut()} className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-xl transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-foreground">
                         <LogOut className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                       </div>
                       <span className="font-medium text-orange-600 dark:text-orange-400">Sair da conta</span>
