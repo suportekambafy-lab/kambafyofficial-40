@@ -36,104 +36,118 @@ export const useNotifications = () => {
 };
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>(() => {
-    // Carregar notificações do localStorage ao iniciar
-    try {
-      const saved = localStorage.getItem('app_notifications');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Converter timestamps de string para Date
-        return parsed.map((n: any) => ({
-          ...n,
-          timestamp: new Date(n.timestamp)
-        }));
-      }
-    } catch (e) {
-      console.error('Error loading notifications from localStorage:', e);
-    }
-    return [];
-  });
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Persistir notificações no localStorage
-  useEffect(() => {
-    if (notifications.length > 0) {
-      localStorage.setItem('app_notifications', JSON.stringify(notifications));
-    }
-  }, [notifications]);
+  // Buscar notificações do banco de dados
+  const fetchNotifications = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('seller_notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-  // Gerar ID único para notificações
-  const generateId = () => Math.random().toString(36).substr(2, 9);
-
-  // Adicionar notificação
-  const addNotification = async (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: generateId(),
-      timestamp: new Date(),
-      read: false
-    };
-
-    setNotifications(prev => [newNotification, ...prev.slice(0, 49)]); // Manter últimas 50
-
-    // Mostrar toast para notificações importantes
-    if (notification.type === 'sale' || notification.type === 'withdrawal') {
-      toast({
-        title: notification.title,
-        description: notification.message,
-      });
-    }
-
-    // Enviar notificação nativa se estiver em plataforma nativa
-    const isNative = Capacitor.isNativePlatform();
-    if (isNative && (notification.type === 'sale' || notification.type === 'withdrawal' || notification.type === 'affiliate')) {
-      try {
-        const { LocalNotifications } = await import('@capacitor/local-notifications');
-        
-        await LocalNotifications.schedule({
-          notifications: [
-            {
-              title: notification.title,
-              body: notification.message,
-              id: Date.now(),
-              schedule: { at: new Date(Date.now() + 100) },
-              sound: 'default',
-              smallIcon: 'res://drawable/ic_notification',
-              extra: notification.data
-            }
-          ]
-        });
-      } catch (error) {
-        console.error('Error sending native notification:', error);
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        return;
       }
-    }
 
-    logger.info('New notification added', { 
-      component: 'NotificationProvider', 
-      data: { type: notification.type, title: notification.title } 
-    });
+      // Converter para o formato do contexto
+      const formattedNotifications: Notification[] = (data || []).map(n => ({
+        id: n.id,
+        type: n.type === 'payment_approved' || n.type === 'new_sale' ? 'sale' : 
+              n.type === 'withdrawal_processed' ? 'withdrawal' : 
+              n.type === 'affiliate_commission' ? 'affiliate' : 'system',
+        title: n.title,
+        message: n.message,
+        timestamp: new Date(n.created_at),
+        read: n.read || false,
+        data: { order_id: n.order_id, amount: n.amount, currency: n.currency }
+      }));
+
+      setNotifications(formattedNotifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Carregar notificações quando o usuário logar
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+    } else {
+      setNotifications([]);
+    }
+  }, [user]);
+
+  // Adicionar notificação (para compatibilidade - recarrega do banco)
+  const addNotification = async (_notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    // As notificações agora são criadas pelo backend (webhooks)
+    // Esta função apenas recarrega as notificações do banco
+    await fetchNotifications();
   };
 
   // Marcar como lida
-  const markAsRead = (id: string) => {
+  const markAsRead = async (id: string) => {
     setNotifications(prev =>
       prev.map(notification =>
         notification.id === id ? { ...notification, read: true } : notification
       )
     );
+    
+    // Atualizar no banco
+    try {
+      await supabase
+        .from('seller_notifications')
+        .update({ read: true })
+        .eq('id', id);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
   // Marcar todas como lidas
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    if (!user) return;
+    
     setNotifications(prev =>
       prev.map(notification => ({ ...notification, read: true }))
     );
+    
+    // Atualizar no banco
+    try {
+      await supabase
+        .from('seller_notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
   };
 
   // Remover notificação
-  const clearNotification = (id: string) => {
+  const clearNotification = async (id: string) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
+    
+    // Remover do banco
+    try {
+      await supabase
+        .from('seller_notifications')
+        .delete()
+        .eq('id', id);
+    } catch (error) {
+      console.error('Error clearing notification:', error);
+    }
   };
 
   // Calcular não lidas
@@ -148,160 +162,71 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       data: { userId: user.id } 
     });
 
-    // Listen for new orders (sales) - both INSERT and UPDATE to 'completed'
-    const ordersChannel = supabase
-      .channel('user-orders')
+    // Listen for new seller_notifications
+    const notificationsChannel = supabase
+      .channel('seller-notifications-realtime')
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'orders',
+          table: 'seller_notifications',
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          logger.info('New order received', { 
+          logger.info('New seller notification received', { 
             component: 'NotificationProvider', 
             data: payload.new 
           });
 
-          // Só notificar se for pending (outros status serão notificados no UPDATE)
-          if (payload.new.status === 'pending') {
-            addNotification({
-              type: 'sale',
-              title: '🎉 Nova Venda Pendente!',
-              message: `Aguardando pagamento de ${payload.new.customer_name || 'cliente'} - ${payload.new.amount} ${payload.new.currency || 'KZ'}`,
-              actionUrl: '/vendas',
-              data: payload.new
-            });
-          } else if (payload.new.status === 'completed') {
-            // Venda já foi paga imediatamente (ex: Stripe)
-            addNotification({
-              type: 'sale',
-              title: '🎉 Nova Venda Aprovada!',
-              message: `Vendeu para ${payload.new.customer_name || 'cliente'} - ${payload.new.amount} ${payload.new.currency || 'KZ'}`,
-              actionUrl: '/vendas',
-              data: payload.new
-            });
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          logger.info('Order status updated', { 
-            component: 'NotificationProvider', 
-            data: { old: payload.old, new: payload.new } 
+          const n = payload.new as any;
+          const newNotification: Notification = {
+            id: n.id,
+            type: n.type === 'payment_approved' || n.type === 'new_sale' ? 'sale' : 
+                  n.type === 'withdrawal_processed' ? 'withdrawal' : 
+                  n.type === 'affiliate_commission' ? 'affiliate' : 'system',
+            title: n.title,
+            message: n.message,
+            timestamp: new Date(n.created_at),
+            read: false,
+            data: { order_id: n.order_id, amount: n.amount, currency: n.currency }
+          };
+
+          setNotifications(prev => [newNotification, ...prev.slice(0, 49)]);
+
+          // Mostrar toast
+          toast({
+            title: n.title,
+            description: n.message,
           });
 
-          // Só notificar quando status mudar de pending/processing para completed
-          const oldStatus = payload.old.status;
-          const newStatus = payload.new.status;
-          
-          if (oldStatus !== 'completed' && newStatus === 'completed') {
-            addNotification({
-              type: 'sale',
-              title: '🎉 Venda Aprovada!',
-              message: `Pagamento confirmado de ${payload.new.customer_name || 'cliente'} - ${payload.new.amount} ${payload.new.currency || 'KZ'}`,
-              actionUrl: '/vendas',
-              data: payload.new
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Listen for withdrawal updates
-    const withdrawalsChannel = supabase
-      .channel('user-withdrawals')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'withdrawal_requests',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          logger.info('Withdrawal status updated', { 
-            component: 'NotificationProvider', 
-            data: payload.new 
-          });
-
-          const status = payload.new.status;
-          if (status === 'aprovado') {
-            addNotification({
-              type: 'withdrawal',
-              title: '✅ Saque Aprovado',
-              message: `Seu saque de ${payload.new.amount} KZ foi aprovado!`,
-              actionUrl: '/financeiro',
-              data: payload.new
-            });
-          } else if (status === 'rejeitado') {
-            addNotification({
-              type: 'withdrawal',
-              title: '❌ Saque Rejeitado',
-              message: `Seu saque de ${payload.new.amount} KZ foi rejeitado.`,
-              actionUrl: '/financeiro',
-              data: payload.new
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Listen for affiliate commissions
-    const affiliateChannel = supabase
-      .channel('user-affiliate-orders')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'orders',
-          filter: `affiliate_code=neq.null`
-        },
-        async (payload) => {
-          // Check if this user is the affiliate for this order
-          if (payload.new.affiliate_code) {
-            const { data: affiliate } = await supabase
-              .from('affiliates')
-              .select('affiliate_user_id')
-              .eq('affiliate_code', payload.new.affiliate_code)
-              .eq('affiliate_user_id', user.id)
-              .single();
-
-            if (affiliate) {
-              logger.info('New affiliate commission', { 
-                component: 'NotificationProvider', 
-                data: payload.new 
+          // Enviar notificação nativa se estiver em plataforma nativa
+          const isNative = Capacitor.isNativePlatform();
+          if (isNative) {
+            import('@capacitor/local-notifications').then(({ LocalNotifications }) => {
+              LocalNotifications.schedule({
+                notifications: [
+                  {
+                    title: n.title,
+                    body: n.message,
+                    id: Date.now(),
+                    schedule: { at: new Date(Date.now() + 100) },
+                    sound: 'default',
+                    smallIcon: 'res://drawable/ic_notification',
+                    extra: { order_id: n.order_id }
+                  }
+                ]
               });
-
-              addNotification({
-                type: 'affiliate',
-                title: '💰 Nova Comissão!',
-                message: `Recebeu comissão de ${payload.new.affiliate_commission} KZ`,
-                actionUrl: '/meus-afiliados',
-                data: payload.new
-              });
-            }
+            }).catch(err => console.error('Error sending native notification:', err));
           }
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(ordersChannel);
-      supabase.removeChannel(withdrawalsChannel);
-      supabase.removeChannel(affiliateChannel);
+      supabase.removeChannel(notificationsChannel);
     };
-  }, [user]);
+  }, [user, toast]);
 
   const contextValue: NotificationContextType = {
     notifications,
