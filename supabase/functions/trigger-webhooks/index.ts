@@ -131,14 +131,16 @@ Deno.serve(async (req) => {
         // Extrair campos importantes para o nível superior (compatibilidade)
         const email = restData.email || restData.customer_email;
         const name = restData.name || restData.customer_name;
+        const phone = restData.phone || restData.customer_phone;
         
-        console.log('🔍 Campos extraídos para webhook:', { email, name, restData });
+        console.log('🔍 Campos extraídos para webhook:', { email, name, phone, restData });
         
         const webhookPayload = {
           event,
           timestamp: new Date().toISOString(),
           ...(email && { email }), // Only include if exists
           ...(name && { name }),   // Only include if exists
+          ...(phone && { phone }), // Only include if exists
           data: {
             ...restData,
             order_id,
