@@ -103,6 +103,7 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
   const [moduleForPayment, setModuleForPayment] = useState<Module | null>(null);
   // Estado para dados da área quando acesso é verificado
   const [verifiedMemberArea, setVerifiedMemberArea] = useState<any>(null);
+  const [userProfileAvatar, setUserProfileAvatar] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
   // Obter dados da área de membros (autenticada ou verificada)
@@ -138,6 +139,29 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
     lessonsCount: lessons.length,
     modulesCount: modules.length
   });
+
+  // Buscar avatar do perfil do usuário
+  useEffect(() => {
+    const fetchUserAvatar = async () => {
+      const userEmail = user?.email;
+      if (!userEmail) return;
+      
+      // Se já tem avatar do OAuth, não precisa buscar
+      if (user?.user_metadata?.avatar_url || user?.user_metadata?.picture) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('email', userEmail.toLowerCase().trim())
+        .maybeSingle();
+      
+      if (profile?.avatar_url) {
+        setUserProfileAvatar(profile.avatar_url);
+      }
+    };
+    
+    fetchUserAvatar();
+  }, [user?.email, user?.user_metadata?.avatar_url, user?.user_metadata?.picture]);
 
   // REMOVER verificação de acesso automática - apenas carregar se há dados necessários
   // useEffect(() => {
@@ -761,7 +785,7 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
           onLogout={handleLogout}
           userEmail={user?.email || (verifiedEmail ? decodeURIComponent(verifiedEmail) : undefined)}
           userName={user?.user_metadata?.full_name || user?.user_metadata?.name || (verifiedEmail ? decodeURIComponent(verifiedEmail).split('@')[0] : undefined)}
-          userAvatar={user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
+          userAvatar={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || userProfileAvatar || undefined}
         />
       )}
       

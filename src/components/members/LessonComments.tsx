@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MessageCircle, Send, Clock, Trash2, CheckSquare, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +16,7 @@ interface Comment {
   user_name: string;
   parent_comment_id?: string | null;
   replies?: Comment[];
+  avatar_url?: string | null;
 }
 
 interface LessonCommentsProps {
@@ -57,13 +58,35 @@ export function LessonComments({
         return;
       }
 
+      // Buscar avatares dos usuários baseados nos emails únicos
+      const uniqueEmails = [...new Set(data?.map(c => c.user_email?.toLowerCase().trim()).filter(Boolean))];
+      let avatarMap: Record<string, string> = {};
+      
+      if (uniqueEmails.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('email, avatar_url')
+          .in('email', uniqueEmails);
+        
+        profiles?.forEach(profile => {
+          if (profile.email && profile.avatar_url) {
+            avatarMap[profile.email.toLowerCase().trim()] = profile.avatar_url;
+          }
+        });
+      }
+
       // Organizar comentários em estrutura hierárquica
       const topLevelComments: Comment[] = [];
       const commentMap: Record<string, Comment> = {};
 
-      // Primeiro, criar o mapa de comentários
+      // Primeiro, criar o mapa de comentários com avatares
       data?.forEach(comment => {
-        commentMap[comment.id] = { ...comment, replies: [] };
+        const email = comment.user_email?.toLowerCase().trim();
+        commentMap[comment.id] = { 
+          ...comment, 
+          replies: [],
+          avatar_url: email ? avatarMap[email] || null : null
+        };
       });
 
       // Organizar hierarquia
@@ -320,6 +343,9 @@ export function LessonComments({
           </div>
         )}
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-gray-700 flex-shrink-0">
+          {comment.avatar_url && (
+            <AvatarImage src={comment.avatar_url} alt={comment.user_name} />
+          )}
           <AvatarFallback className="bg-emerald-600 text-white text-xs sm:text-sm">
             {getInitials(comment.user_name)}
           </AvatarFallback>
