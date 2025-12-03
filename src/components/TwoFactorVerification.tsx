@@ -29,10 +29,28 @@ const TwoFactorVerification = ({
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutos
   const [codeAlreadySent, setCodeAlreadySent] = useState(false);
   const [initialSendComplete, setInitialSendComplete] = useState(skipInitialSend);
   const { toast } = useToast();
+  
+  // Chave única para o timer baseada no contexto e email
+  const timerKey = `2fa_timer_${context}_${email}`;
+  
+  // Inicializar o timer a partir do sessionStorage ou 300 segundos
+  const getInitialTimeLeft = () => {
+    const stored = sessionStorage.getItem(timerKey);
+    if (stored) {
+      const { timeLeft: savedTime, timestamp } = JSON.parse(stored);
+      const elapsed = Math.floor((Date.now() - timestamp) / 1000);
+      const remaining = savedTime - elapsed;
+      if (remaining > 0) {
+        return remaining;
+      }
+    }
+    return 300; // 5 minutos
+  };
+  
+  const [timeLeft, setTimeLeft] = useState(getInitialTimeLeft);
 
   console.log('🔒 TwoFactorVerification render - context:', context);
   console.log('🔒 TwoFactorVerification render - email:', email);
@@ -136,13 +154,28 @@ const TwoFactorVerification = ({
     }
   }, [skipInitialSend, initialSendComplete, context, sendVerificationCode]);
 
-  // Countdown timer
+  // Countdown timer - persistir no sessionStorage
   useEffect(() => {
     if (timeLeft > 0) {
+      // Salvar tempo restante no sessionStorage
+      sessionStorage.setItem(timerKey, JSON.stringify({
+        timeLeft,
+        timestamp: Date.now()
+      }));
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
+    } else {
+      // Timer expirou, limpar do sessionStorage
+      sessionStorage.removeItem(timerKey);
     }
-  }, [timeLeft]);
+  }, [timeLeft, timerKey]);
+  
+  // Limpar timer do sessionStorage quando o componente é desmontado (só se verificação foi bem sucedida)
+  useEffect(() => {
+    return () => {
+      // Não limpar aqui pois queremos preservar ao navegar
+    };
+  }, []);
 
   const verifyCode = async () => {
     if (code.length !== 6) {
@@ -206,6 +239,9 @@ const TwoFactorVerification = ({
           description: "Código verificado com sucesso.",
         });
 
+        // Limpar timer do sessionStorage após verificação bem sucedida
+        sessionStorage.removeItem(timerKey);
+        
         console.log('✅ Chamando onVerificationSuccess');
         onVerificationSuccess();
         return;
@@ -234,6 +270,9 @@ const TwoFactorVerification = ({
         description: "Email confirmado com sucesso.",
       });
 
+      // Limpar timer do sessionStorage após verificação bem sucedida
+      sessionStorage.removeItem(timerKey);
+      
       console.log('✅ Chamando onVerificationSuccess');
       onVerificationSuccess();
     } catch (error: any) {
@@ -258,6 +297,8 @@ const TwoFactorVerification = ({
   const handleBackClick = (e: React.MouseEvent) => {
     e.preventDefault();
     console.log('⬅️ Voltando da verificação 2FA');
+    // Limpar timer do sessionStorage ao cancelar
+    sessionStorage.removeItem(timerKey);
     onBack();
   };
 
