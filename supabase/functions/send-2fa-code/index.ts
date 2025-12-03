@@ -239,6 +239,102 @@ const handler = async (req: Request): Promise<Response> => {
         `;
         break;
       
+      case 'bank_details_change':
+        subject = 'Código de verificação - Alteração de IBAN';
+        htmlContent = `
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #f59e0b;">Alteração de Dados Bancários</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Você solicitou a alteração do seu IBAN. Para confirmar esta ação, use o código abaixo:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #dc2626; font-size: 14px;"><strong>⚠️ Se você não solicitou esta alteração, não compartilhe este código e entre em contato conosco imediatamente.</strong></p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+        break;
+      
+      case 'withdrawal':
+        subject = 'Código de verificação - Solicitação de Saque';
+        htmlContent = `
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #16a34a;">Confirmação de Saque</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Você solicitou um saque da sua conta. Para confirmar esta operação, use o código abaixo:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #dc2626; font-size: 14px;"><strong>⚠️ Se você não solicitou este saque, não compartilhe este código e entre em contato conosco imediatamente.</strong></p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+        break;
+      
+      case 'password_change':
+        subject = 'Código de verificação - Alteração de Senha';
+        htmlContent = `
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #f59e0b;">Alteração de Senha</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Você solicitou a alteração da sua senha. Para confirmar, use o código abaixo:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #dc2626; font-size: 14px;"><strong>⚠️ Se você não solicitou esta alteração, sua conta pode estar em risco. Entre em contato conosco.</strong></p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+        break;
+      
+      case 'disable_2fa':
+        subject = 'Código de verificação - Desativar 2FA';
+        htmlContent = `
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #dc2626;">Desativar Autenticação de 2 Fatores</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Você solicitou desativar a autenticação de dois fatores. Para confirmar, use o código abaixo:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #dc2626; font-size: 14px;"><strong>⚠️ Atenção: Desativar o 2FA reduz a segurança da sua conta. Se você não solicitou isso, entre em contato conosco imediatamente.</strong></p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+        break;
+      
       default:
         subject = 'Código de verificação - KambaPay';
         htmlContent = `
