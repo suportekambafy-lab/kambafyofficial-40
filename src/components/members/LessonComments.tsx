@@ -89,16 +89,20 @@ export function LessonComments({
       let avatarMap: Record<string, string> = {};
       
       if (uniqueEmails.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('email, avatar_url')
-          .in('email', uniqueEmails);
-        
-        profiles?.forEach(profile => {
-          if (profile.email && profile.avatar_url) {
-            avatarMap[profile.email.toLowerCase().trim()] = profile.avatar_url;
+        // Buscar avatares usando ilike para cada email para ser case-insensitive
+        for (const email of uniqueEmails) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, avatar_url')
+            .ilike('email', email)
+            .maybeSingle();
+          
+          if (profile?.email && profile?.avatar_url) {
+            avatarMap[email] = profile.avatar_url;
           }
-        });
+        }
+        
+        console.log('👤 Avatar map loaded:', avatarMap);
       }
 
       // Organizar comentários em estrutura hierárquica

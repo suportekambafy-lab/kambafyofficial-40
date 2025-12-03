@@ -15,7 +15,7 @@ interface TwoFactorVerificationProps {
   email: string;
   onVerificationSuccess: () => void;
   onBack: () => void;
-  context?: 'login' | 'bank_details_change' | 'withdrawal' | 'password_change' | 'disable_2fa';
+  context?: 'login' | 'bank_details_change' | 'withdrawal' | 'password_change' | 'disable_2fa' | 'member_area_login';
   skipInitialSend?: boolean;
 }
 
@@ -48,7 +48,7 @@ const TwoFactorVerification = ({
     setResendLoading(true);
     try {
       // Para contextos customizados, usar a edge function send-2fa-code
-      if (context !== 'login' && context !== 'bank_details_change' && context !== 'withdrawal' && context !== 'password_change' && context !== 'disable_2fa') {
+      if (context !== 'login' && context !== 'bank_details_change' && context !== 'withdrawal' && context !== 'password_change' && context !== 'disable_2fa' && context !== 'member_area_login') {
         console.log('📧 Reenviando código de confirmação do Supabase (signup)');
         
         // Usar resend nativo do Supabase para signup
@@ -74,7 +74,8 @@ const TwoFactorVerification = ({
           'bank_details_change': 'bank_details_change',
           'withdrawal': 'withdrawal',
           'password_change': 'password_change',
-          'disable_2fa': 'disable_2fa'
+          'disable_2fa': 'disable_2fa',
+          'member_area_login': 'member_area_login'
         };
         
         const eventType = eventTypeMap[context as keyof typeof eventTypeMap];

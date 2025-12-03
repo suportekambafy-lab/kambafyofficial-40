@@ -22,6 +22,7 @@ interface MemberAreaSlideMenuProps {
   userEmail?: string;
   userName?: string;
   userAvatar?: string;
+  isOwner?: boolean;
 }
 export function MemberAreaSlideMenu({
   lessons,
@@ -36,7 +37,8 @@ export function MemberAreaSlideMenu({
   onLogout,
   userEmail,
   userName,
-  userAvatar
+  userAvatar,
+  isOwner = false
 }: MemberAreaSlideMenuProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [open, setOpen] = useState(false);
@@ -109,9 +111,19 @@ export function MemberAreaSlideMenu({
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-white text-lg truncate">
-                  {userName || 'Estudante'}
-                </h3>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="font-semibold text-white text-lg truncate">
+                    {userName || 'Estudante'}
+                  </h3>
+                  {isOwner && (
+                    <span title="Professor verificado" className="flex-shrink-0">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" aria-label="Verificado">
+                        <circle cx="12" cy="12" r="10" fill="#1D9BF0" />
+                        <path d="M9.5 12.5L11 14L15 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-1 text-gray-400 text-sm">
                   <Mail className="w-3 h-3" />
                   <p className="truncate">{userEmail || 'Email não disponível'}</p>

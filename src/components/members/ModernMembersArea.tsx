@@ -104,6 +104,7 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
   // Estado para dados da área quando acesso é verificado
   const [verifiedMemberArea, setVerifiedMemberArea] = useState<any>(null);
   const [userProfileAvatar, setUserProfileAvatar] = useState<string | null>(null);
+  const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
   // Obter dados da área de membros (autenticada ou verificada)
@@ -140,28 +141,53 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
     modulesCount: modules.length
   });
 
-  // Buscar avatar do perfil do usuário
+  // Buscar avatar do perfil do usuário e email do dono
   useEffect(() => {
-    const fetchUserAvatar = async () => {
+    const fetchUserAvatarAndOwner = async () => {
       const userEmail = user?.email;
+      
+      // Buscar email do dono da área
+      if (memberAreaId && !ownerEmail) {
+        const { data: memberAreaData } = await supabase
+          .from('member_areas')
+          .select('user_id')
+          .eq('id', memberAreaId)
+          .single();
+        
+        if (memberAreaData?.user_id) {
+          const { data: ownerProfile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('user_id', memberAreaData.user_id)
+            .single();
+          
+          if (ownerProfile?.email) {
+            setOwnerEmail(ownerProfile.email.toLowerCase().trim());
+          }
+        }
+      }
+      
       if (!userEmail) return;
       
       // Se já tem avatar do OAuth, não precisa buscar
       if (user?.user_metadata?.avatar_url || user?.user_metadata?.picture) return;
       
+      // Tentar buscar avatar usando ilike para ser case-insensitive
       const { data: profile } = await supabase
         .from('profiles')
         .select('avatar_url')
-        .eq('email', userEmail.toLowerCase().trim())
+        .ilike('email', userEmail.toLowerCase().trim())
         .maybeSingle();
+      
+      console.log('👤 Avatar fetch result:', { email: userEmail, profile });
       
       if (profile?.avatar_url) {
         setUserProfileAvatar(profile.avatar_url);
       }
     };
     
-    fetchUserAvatar();
-  }, [user?.email, user?.user_metadata?.avatar_url, user?.user_metadata?.picture]);
+    fetchUserAvatarAndOwner();
+  }, [user?.email, user?.user_metadata?.avatar_url, user?.user_metadata?.picture, memberAreaId, ownerEmail]);
 
   // REMOVER verificação de acesso automática - apenas carregar se há dados necessários
   // useEffect(() => {
@@ -768,6 +794,10 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
   // Obter email verificado dos query params
   const urlParams = new URLSearchParams(window.location.search);
   const verifiedEmail = urlParams.get('email');
+  
+  // Determinar se o usuário atual é o dono da área
+  const currentUserEmail = user?.email || (verifiedEmail ? decodeURIComponent(verifiedEmail).toLowerCase().trim() : null);
+  const isOwner = currentUserEmail && ownerEmail && currentUserEmail.toLowerCase().trim() === ownerEmail;
 
   return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral - Ocultar quando embutido no app */}
@@ -786,6 +816,7 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
           userEmail={user?.email || (verifiedEmail ? decodeURIComponent(verifiedEmail) : undefined)}
           userName={user?.user_metadata?.full_name || user?.user_metadata?.name || (verifiedEmail ? decodeURIComponent(verifiedEmail).split('@')[0] : undefined)}
           userAvatar={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || userProfileAvatar || undefined}
+          isOwner={isOwner || false}
         />
       )}
       
