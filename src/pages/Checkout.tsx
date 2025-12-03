@@ -809,6 +809,7 @@ const Checkout = () => {
             currency: 'KZ',
             customer_email: formData.email,
             customer_name: formData.fullName,
+            customer_phone: formData.phone || null,
             product_id: product.id,
             product_name: product.name,
             payment_method: 'stripe',
@@ -840,6 +841,7 @@ const Checkout = () => {
             product_name: product.name,
             customer_email: formData.email,
             customer_name: formData.fullName,
+            customer_phone: formData.phone || null,
             price: totalAmountInKZ.toString(),
             currency: 'KZ',
             timestamp: new Date().toISOString()
@@ -1474,6 +1476,7 @@ const Checkout = () => {
                   currency: userCountry.currency,
                   customer_email: formData.email,
                   customer_name: formData.fullName,
+                  customer_phone: formData.phone || null,
                   product_id: product.id,
                   product_name: product.name,
                   payment_method: selectedPayment,
@@ -1505,6 +1508,7 @@ const Checkout = () => {
                   product_name: product.name,
                   customer_email: formData.email,
                   customer_name: formData.fullName,
+                  customer_phone: formData.phone || null,
                   price: totalAmount.toString(),
                   currency: userCountry.currency,
                   timestamp: new Date().toISOString()
