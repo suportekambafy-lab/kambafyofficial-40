@@ -4,11 +4,12 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogIn, Mail, BookOpen } from 'lucide-react';
+import { LogIn, Mail, BookOpen, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { useDebounced } from '@/hooks/useDebounced';
 import { useTheme } from '@/hooks/useTheme';
+import TwoFactorVerification from '@/components/TwoFactorVerification';
 import kambafyLogo from '@/assets/kambafy-logo-gray.svg';
 
 export default function ModernMembersLogin() {
@@ -20,6 +21,9 @@ export default function ModernMembersLogin() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [memberArea, setMemberArea] = useState<any>(null);
+  const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
   const id = useId();
   
   useEffect(() => {
@@ -37,6 +41,48 @@ export default function ModernMembersLogin() {
       setEmail(decodeURIComponent(emailFromUrl).toLowerCase().trim());
     }
   }, [location.search]);
+
+  // Buscar email do dono da área
+  useEffect(() => {
+    const fetchOwnerEmail = async () => {
+      if (!memberAreaId) return;
+      
+      const { data: memberAreaData } = await supabase
+        .from('member_areas')
+        .select('user_id')
+        .eq('id', memberAreaId)
+        .single();
+      
+      if (memberAreaData?.user_id) {
+        const { data: ownerProfile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('user_id', memberAreaData.user_id)
+          .single();
+        
+        if (ownerProfile?.email) {
+          setOwnerEmail(ownerProfile.email.toLowerCase().trim());
+          console.log('👤 Email do dono da área:', ownerProfile.email);
+        }
+      }
+    };
+    
+    fetchOwnerEmail();
+  }, [memberAreaId]);
+  
+  // Função para completar login após 2FA
+  const completeLogin = (emailToUse: string) => {
+    toast({
+      title: "✅ Acesso autorizado!",
+      message: "Bem-vindo à área de membros",
+      variant: "success",
+    });
+    
+    setTimeout(() => {
+      console.log('🔄 Navegando para área de membros após login:', memberAreaId);
+      navigate(`/area/${memberAreaId}?verified=true&email=${encodeURIComponent(emailToUse)}`);
+    }, 800);
+  };
   
   // Debounced function para validação e acesso
   const { debouncedFunc: debouncedAccess } = useDebounced(
@@ -63,6 +109,15 @@ export default function ModernMembersLogin() {
           }, 800);
           return;
         }
+
+        // Verificar se é o email do dono - exigir 2FA
+        if (ownerEmail && normalizedEmail === ownerEmail) {
+          console.log('🔐 Email do dono detectado - exigindo 2FA');
+          setPendingEmail(normalizedEmail);
+          setRequires2FA(true);
+          setIsSubmitting(false);
+          return;
+        }
         
         // Para outros emails, verificar se tem acesso à área de membros
         const { data: studentAccess, error } = await supabase
@@ -81,17 +136,7 @@ export default function ModernMembersLogin() {
           return;
         }
 
-        toast({
-          title: "✅ Acesso autorizado!",
-          message: "Bem-vindo à área de membros",
-          variant: "success",
-        });
-        
-        // Navegar para a área de membros com acesso verificado
-        setTimeout(() => {
-          console.log('🔄 Navegando para área de membros após login:', memberAreaId);
-          navigate(`/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`);
-        }, 800);
+        completeLogin(normalizedEmail);
         
       } catch (error: any) {
         console.error('Erro ao verificar acesso:', error);
@@ -150,6 +195,62 @@ export default function ModernMembersLogin() {
     // Usar função debounced para evitar múltiplas chamadas
     debouncedAccess(email.trim());
   };
+
+  // Mostrar tela de 2FA se necessário
+  if (requires2FA && pendingEmail) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <img 
+            src={kambafyLogo} 
+            alt="Kambafy" 
+            className="h-20 w-auto opacity-60"
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="w-full max-w-md"
+        >
+          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 shadow-2xl">
+            <div className="flex flex-col items-center gap-2 mb-6">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-emerald-500/50 bg-emerald-500/10">
+                <Shield className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div className="text-center">
+                <h1 className="text-lg font-semibold tracking-tight text-white">
+                  Verificação de Segurança
+                </h1>
+                <p className="text-sm text-zinc-400 mt-1">
+                  Como dono desta área, você precisa verificar sua identidade
+                </p>
+              </div>
+            </div>
+
+            <TwoFactorVerification
+              email={pendingEmail}
+              context="member_area_login"
+              onVerificationSuccess={() => {
+                setRequires2FA(false);
+                completeLogin(pendingEmail);
+              }}
+              onBack={() => {
+                setRequires2FA(false);
+                setPendingEmail('');
+              }}
+            />
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">

@@ -215,6 +215,30 @@ const handler = async (req: Request): Promise<Response> => {
         `;
         break;
       
+      case 'member_area_login':
+        subject = 'Código de verificação - Acesso Área de Membros';
+        htmlContent = `
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #16a34a;">Verificação de Segurança</h2>
+                <p style="margin: 0 0 25px; color: #475569;">Detectamos uma tentativa de login como proprietário da área de membros. Para sua segurança, confirme sua identidade com o código:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #64748b; font-size: 14px;">Se você não fez essa tentativa de login, alguém pode estar tentando acessar sua área. Entre em contato conosco.</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+        break;
+      
       default:
         subject = 'Código de verificação - KambaPay';
         htmlContent = `
