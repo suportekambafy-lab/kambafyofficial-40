@@ -225,11 +225,30 @@ export default function AdminSales() {
 
   // Filtrar e buscar vendas
   const filteredOrders = useMemo(() => {
+    const search = searchTerm.toLowerCase().trim();
+    
     return orders.filter((order) => {
+      // Verificar se o termo de busca está vazio
+      if (!search) {
+        const matchesStatus = statusFilter === 'todos' || order.status === statusFilter;
+        return matchesStatus;
+      }
+      
+      // Buscar por nome, email ou ID do pedido (com null checks)
+      const customerName = (order.customer_name || '').toLowerCase();
+      const customerEmail = (order.customer_email || '').toLowerCase();
+      const orderId = (order.order_id || '').toLowerCase();
+      const customerPhone = (order.customer_phone || '').toLowerCase();
+      const productName = (order.products?.name || '').toLowerCase();
+      const sellerName = (order.seller?.full_name || '').toLowerCase();
+      
       const matchesSearch = 
-        order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.order_id.toLowerCase().includes(searchTerm.toLowerCase());
+        customerName.includes(search) ||
+        customerEmail.includes(search) ||
+        orderId.includes(search) ||
+        customerPhone.includes(search) ||
+        productName.includes(search) ||
+        sellerName.includes(search);
       
       const matchesStatus = statusFilter === 'todos' || order.status === statusFilter;
       
