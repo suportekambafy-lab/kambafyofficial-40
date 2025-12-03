@@ -25,7 +25,8 @@ import {
   Hash,
   ExternalLink,
   ArrowLeft,
-  UserX
+  UserX,
+  CheckCheck
 } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
@@ -67,6 +68,7 @@ export default function AdminIdentityVerification() {
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [selectedUserForBan, setSelectedUserForBan] = useState<{ id: string; name: string; email: string } | null>(null);
   const [isBanning, setIsBanning] = useState(false);
+  const [isApprovingAll, setIsApprovingAll] = useState(false);
 
   const loadVerifications = async () => {
     try {
@@ -201,6 +203,82 @@ export default function AdminIdentityVerification() {
       });
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  const approveAllPending = async () => {
+    const pendingVerifications = verifications.filter(v => v.status === 'pendente');
+    
+    if (pendingVerifications.length === 0) {
+      toast({
+        title: 'Aviso',
+        message: 'Não há verificações pendentes para aprovar',
+        variant: 'warning'
+      });
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja aprovar ${pendingVerifications.length} verificação(ões) pendente(s)?`)) {
+      return;
+    }
+
+    try {
+      setIsApprovingAll(true);
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const verification of pendingVerifications) {
+        try {
+          const { error } = await supabase.rpc('admin_update_identity_verification', {
+            p_verification_id: verification.id,
+            p_status: 'aprovado',
+            p_rejection_reason: null,
+            p_admin_id: admin?.id || null,
+            p_admin_email: admin?.email || null
+          });
+
+          if (error) {
+            console.error('Erro ao aprovar verificação:', verification.id, error);
+            errorCount++;
+          } else {
+            successCount++;
+            
+            // Registrar log administrativo
+            if (admin?.id) {
+              try {
+                await supabase.from('admin_logs').insert({
+                  admin_id: admin.id,
+                  action: 'kyc_approve_bulk',
+                  target_type: 'identity_verification',
+                  target_id: verification.id,
+                  details: { bulk_action: true }
+                });
+              } catch (logErr) {
+                console.warn('Falha ao registrar log:', logErr);
+              }
+            }
+          }
+        } catch (err) {
+          errorCount++;
+        }
+      }
+
+      toast({
+        title: 'Concluído',
+        message: `${successCount} aprovada(s)${errorCount > 0 ? `, ${errorCount} erro(s)` : ''}`,
+        variant: errorCount > 0 ? 'warning' : 'success'
+      });
+
+      await loadVerifications();
+    } catch (error) {
+      console.error('Erro ao aprovar verificações em massa:', error);
+      toast({
+        title: 'Erro',
+        message: 'Erro ao processar aprovações em massa',
+        variant: 'error'
+      });
+    } finally {
+      setIsApprovingAll(false);
     }
   };
 
@@ -415,19 +493,41 @@ export default function AdminIdentityVerification() {
       {/* Main Content - Responsivo */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Filters - Responsivo */}
-        <div className="mb-4 sm:mb-6">
-          <Label htmlFor="status-filter" className="text-xs sm:text-sm">Filtrar por Status</Label>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos</SelectItem>
-              <SelectItem value="pendente">Pendente</SelectItem>
-              <SelectItem value="aprovado">Aprovado</SelectItem>
-              <SelectItem value="rejeitado">Rejeitado</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end gap-3">
+          <div>
+            <Label htmlFor="status-filter" className="text-xs sm:text-sm">Filtrar por Status</Label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="pendente">Pendente</SelectItem>
+                <SelectItem value="aprovado">Aprovado</SelectItem>
+                <SelectItem value="rejeitado">Rejeitado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {verifications.filter(v => v.status === 'pendente').length > 0 && (
+            <Button
+              onClick={approveAllPending}
+              disabled={isApprovingAll}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isApprovingAll ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Aprovando...
+                </>
+              ) : (
+                <>
+                  <CheckCheck className="h-4 w-4 mr-2" />
+                  Aprovar Todos ({verifications.filter(v => v.status === 'pendente').length})
+                </>
+              )}
+            </Button>
+          )}
         </div>
 
         {/* Verifications List - Responsivo */}
