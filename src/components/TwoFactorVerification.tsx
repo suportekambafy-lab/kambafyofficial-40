@@ -33,6 +33,9 @@ const TwoFactorVerification = ({
   const [initialSendComplete, setInitialSendComplete] = useState(skipInitialSend);
   const { toast } = useToast();
   
+  // Ref para evitar envio duplicado de código
+  const initialSendRef = useRef(false);
+  
   // Chave única para o timer baseada no contexto e email
   const timerKey = `2fa_timer_${context}_${email}`;
   
@@ -140,6 +143,11 @@ const TwoFactorVerification = ({
 
   // Enviar código automaticamente se necessário
   useEffect(() => {
+    // Evitar envio duplicado usando ref
+    if (initialSendRef.current) {
+      return;
+    }
+    
     if (!skipInitialSend && !initialSendComplete) {
       // Para signup, o código já foi enviado pelo Supabase
       if (context !== 'login' && context !== 'bank_details_change' && context !== 'withdrawal' && context !== 'password_change' && context !== 'disable_2fa' && context !== 'member_area_login') {
@@ -147,6 +155,8 @@ const TwoFactorVerification = ({
         setCodeAlreadySent(true);
         setInitialSendComplete(true);
       } else {
+        // Marcar como enviando para evitar duplicação
+        initialSendRef.current = true;
         // Para contextos customizados, enviar código automaticamente
         console.log('🔒 Enviando código automaticamente para contexto:', context);
         sendVerificationCode();
