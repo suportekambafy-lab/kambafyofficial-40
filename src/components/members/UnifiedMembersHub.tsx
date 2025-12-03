@@ -18,6 +18,7 @@ import {
   Award,
   Sparkles
 } from 'lucide-react';
+import { MemberNotificationBell } from './MemberNotificationBell';
 
 type FilterType = 'all' | 'in-progress' | 'completed' | 'not-started';
 
@@ -108,15 +109,34 @@ export default function UnifiedMembersHub() {
                 </p>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={logout}
-              className="text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all text-xs h-8"
-            >
-              <LogOut className="w-3.5 h-3.5 mr-1.5" />
-              Sair
-            </Button>
+            <div className="flex items-center gap-2">
+              {studentEmail && (
+                <MemberNotificationBell 
+                  studentEmail={studentEmail}
+                  onNotificationClick={(notification) => {
+                    // Se a notificação tem lesson_id, navegar para a área/aula
+                    if (notification.data?.lesson_id) {
+                      const area = memberAreas.find(a => a.memberAreaId === notification.member_area_id);
+                      if (area) {
+                        const baseUrl = window.location.hostname.includes('localhost') 
+                          ? window.location.origin 
+                          : 'https://membros.kambafy.com';
+                        window.location.href = `${baseUrl}/area/${notification.member_area_id}?verified=true&email=${encodeURIComponent(studentEmail)}&lesson=${notification.data.lesson_id}`;
+                      }
+                    }
+                  }}
+                />
+              )}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={logout}
+                className="text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all text-xs h-8"
+              >
+                <LogOut className="w-3.5 h-3.5 mr-1.5" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
       </motion.header>
