@@ -124,7 +124,7 @@ const TwoFactorVerification = ({
   useEffect(() => {
     if (!skipInitialSend && !initialSendComplete) {
       // Para signup, o código já foi enviado pelo Supabase
-      if (context !== 'login' && context !== 'bank_details_change' && context !== 'withdrawal' && context !== 'password_change' && context !== 'disable_2fa') {
+      if (context !== 'login' && context !== 'bank_details_change' && context !== 'withdrawal' && context !== 'password_change' && context !== 'disable_2fa' && context !== 'member_area_login') {
         console.log('🔒 Email de confirmação já enviado pelo Supabase no signup');
         setCodeAlreadySent(true);
         setInitialSendComplete(true);
@@ -161,7 +161,7 @@ const TwoFactorVerification = ({
       console.log('🔍 Código:', code);
       
       // Para admin_login e outros contextos customizados, usar edge function
-      if (context === 'login' || context === 'bank_details_change' || context === 'withdrawal' || context === 'password_change' || context === 'disable_2fa') {
+      if (context === 'login' || context === 'bank_details_change' || context === 'withdrawal' || context === 'password_change' || context === 'disable_2fa' || context === 'member_area_login') {
         console.log('🔍 Usando edge function verify-2fa-code para contexto:', context);
         
         // Mapear contexto para event_type
@@ -170,7 +170,8 @@ const TwoFactorVerification = ({
           'bank_details_change': 'bank_details_change',
           'withdrawal': 'withdrawal',
           'password_change': 'password_change',
-          'disable_2fa': 'disable_2fa'
+          'disable_2fa': 'disable_2fa',
+          'member_area_login': 'member_area_login'
         };
         
         const eventType = eventTypeMap[context];
