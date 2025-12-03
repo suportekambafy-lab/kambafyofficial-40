@@ -1417,6 +1417,53 @@ export type Database = {
           },
         ]
       }
+      member_area_notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          member_area_id: string
+          message: string
+          read: boolean | null
+          student_email: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          member_area_id: string
+          message: string
+          read?: boolean | null
+          student_email: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          member_area_id?: string
+          message?: string
+          read?: boolean | null
+          student_email?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_area_notifications_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_area_offers: {
         Row: {
           created_at: string

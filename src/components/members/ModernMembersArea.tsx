@@ -19,6 +19,7 @@ import { LessonComments } from './LessonComments';
 import { MemberAreaOffers } from './MemberAreaOffers';
 import { ModulePaymentModal } from './ModulePaymentModal';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
+import { MemberNotificationBell } from './MemberNotificationBell';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMemberLessonProgress } from '@/hooks/useMemberLessonProgress';
@@ -861,6 +862,21 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
                   </p>
                 </div>
               </div>
+              {/* Sino de Notificações */}
+              {memberAreaId && (user?.email || verifiedEmail) && (
+                <MemberNotificationBell 
+                  studentEmail={user?.email || (verifiedEmail ? decodeURIComponent(verifiedEmail) : '')}
+                  memberAreaId={memberAreaId}
+                  onNotificationClick={(notification) => {
+                    if (notification.data?.lesson_id) {
+                      const lesson = lessons.find(l => l.id === notification.data.lesson_id);
+                      if (lesson) {
+                        setSelectedLesson(lesson);
+                      }
+                    }
+                  }}
+                />
+              )}
             </motion.div>
 
             {/* Course Hero */}
