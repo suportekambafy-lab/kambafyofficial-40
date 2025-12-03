@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { MessageCircle, Send, Clock, Trash2, CheckSquare, Square } from 'lucide-react';
+import { MessageCircle, Send, Clock, Trash2, CheckSquare, Square, BadgeCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -17,6 +17,7 @@ interface Comment {
   parent_comment_id?: string | null;
   replies?: Comment[];
   avatar_url?: string | null;
+  is_owner?: boolean;
 }
 
 interface LessonCommentsProps {
@@ -39,6 +40,7 @@ export function LessonComments({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAreaOwner, setIsAreaOwner] = useState(false);
+  const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [commentsEnabled, setCommentsEnabled] = useState(true);
   const [selectedComments, setSelectedComments] = useState<Set<string>>(new Set());
@@ -47,6 +49,30 @@ export function LessonComments({
   const loadComments = async () => {
     try {
       setIsLoading(true);
+      
+      // Primeiro buscar o email do dono da área
+      let ownerEmailLocal = ownerEmail;
+      if (!ownerEmailLocal && memberAreaId) {
+        const { data: memberArea } = await supabase
+          .from('member_areas')
+          .select('user_id')
+          .eq('id', memberAreaId)
+          .single();
+        
+        if (memberArea?.user_id) {
+          const { data: ownerProfile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('user_id', memberArea.user_id)
+            .single();
+          
+          if (ownerProfile?.email) {
+            ownerEmailLocal = ownerProfile.email.toLowerCase().trim();
+            setOwnerEmail(ownerEmailLocal);
+          }
+        }
+      }
+      
       const { data, error } = await supabase
         .from('lesson_comments')
         .select('*')
@@ -79,13 +105,15 @@ export function LessonComments({
       const topLevelComments: Comment[] = [];
       const commentMap: Record<string, Comment> = {};
 
-      // Primeiro, criar o mapa de comentários com avatares
+      // Primeiro, criar o mapa de comentários com avatares e verificar se é dono
       data?.forEach(comment => {
         const email = comment.user_email?.toLowerCase().trim();
+        const isOwnerComment = email && ownerEmailLocal && email === ownerEmailLocal;
         commentMap[comment.id] = { 
           ...comment, 
           replies: [],
-          avatar_url: email ? avatarMap[email] || null : null
+          avatar_url: email ? avatarMap[email] || null : null,
+          is_owner: isOwnerComment
         };
       });
 
@@ -352,8 +380,16 @@ export function LessonComments({
         </Avatar>
         
         <div className="flex-1 min-w-0 space-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <p className="font-medium text-white text-sm truncate">{comment.user_name || 'Usuário'}</p>
+            {comment.is_owner && (
+              <span title="Professor verificado" className="flex-shrink-0">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" aria-label="Verificado">
+                  <circle cx="12" cy="12" r="10" fill="#1D9BF0" />
+                  <path d="M9.5 12.5L11 14L15 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
+              </span>
+            )}
           </div>
           
           <p className="text-xs text-gray-400 flex items-center gap-1">
