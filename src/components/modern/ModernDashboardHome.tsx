@@ -470,22 +470,25 @@ export function ModernDashboardHome() {
         </div>
 
         {/* Total Sales Card - Compact */}
-        <div className="bg-card rounded-xl border border-border/40 p-4 shadow-sm" data-onboarding="revenue-card">
-          <p className="text-xs text-muted-foreground mb-0.5">Total em vendas</p>
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-              {showValues.revenue 
-                ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` 
-                : "••••••••"}
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowValues(prev => ({ ...prev, revenue: !prev.revenue }))}
-              className="h-8 w-8 p-0 rounded-full hover:bg-secondary"
-            >
-              {showValues.revenue ? <Eye className="h-4 w-4 text-muted-foreground" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
-            </Button>
+        <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden" data-onboarding="revenue-card">
+          <div className="w-1 bg-emerald-500 shrink-0" />
+          <div className="flex-1 p-4">
+            <p className="text-xs text-muted-foreground mb-0.5">Total em vendas</p>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                {showValues.revenue 
+                  ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` 
+                  : "••••••••"}
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowValues(prev => ({ ...prev, revenue: !prev.revenue }))}
+                className="h-8 w-8 p-0 rounded-full hover:bg-secondary"
+              >
+                {showValues.revenue ? <Eye className="h-4 w-4 text-muted-foreground" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+              </Button>
+            </div>
           </div>
         </div>
 
