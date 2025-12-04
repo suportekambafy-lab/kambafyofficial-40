@@ -288,12 +288,12 @@ export function ModernSidebar({
       className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col z-50 shadow-card transition-all duration-300"
     >
       {/* Header */}
-      <div className="h-[70px] flex items-center justify-between px-4 border-b border-sidebar-border">
+      <div className="h-[60px] flex items-center justify-between px-4">
         {!collapsed ? (
           <img 
             src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
             alt="Kambafy" 
-            className="h-10 w-auto"
+            className="h-8 w-auto"
           />
         ) : (
           <img
@@ -314,7 +314,7 @@ export function ModernSidebar({
       </div>
 
       {/* Progress Section */}
-      <div className={`border-b border-sidebar-border ${collapsed ? 'px-2 py-3' : 'px-4 py-4'}`}>
+      <div className={`${collapsed ? 'px-2 py-2' : 'px-4 py-2'}`}>
         {collapsed ? (
           <div className="flex flex-col items-center gap-1.5" title={`${formatCurrency(dashboardData.totalRevenue)} / ${formatCurrency(nextGoal)} KZ`}>
             <div className="w-full h-1.5 bg-sidebar-accent rounded-full overflow-hidden">
@@ -328,7 +328,7 @@ export function ModernSidebar({
             <span className="text-[10px] text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
               <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
               <span className="text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
@@ -346,13 +346,13 @@ export function ModernSidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto overflow-x-visible scrollbar-hide">
+      <nav className="flex-1 py-2 space-y-0.5 overflow-y-auto scrollbar-hide">
         {menuItems.map((item) => (
           <NavLink
             key={item.href}
             to={item.href}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-all duration-150 group relative overflow-visible ${
+              `flex items-center gap-3 mx-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-all duration-150 group relative ${
                 isActive 
                   ? "bg-sidebar-accent text-primary" 
                   : "text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -363,10 +363,8 @@ export function ModernSidebar({
             {({ isActive }) => (
               <>
                 {isActive && (
-                  <motion.div
-                    layoutId="activeIndicator"
-                    className="absolute -left-6 top-1/2 -translate-y-1/2 w-[3px] h-7 bg-primary rounded-r-full"
-                    transition={{ duration: 0.2 }}
+                  <div
+                    className="absolute -left-3 top-0 bottom-0 w-[3px] bg-primary rounded-r-full"
                   />
                 )}
                 <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
