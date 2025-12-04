@@ -158,9 +158,9 @@ export default function AdminDashboard() {
 
       // Buscar soma total diretamente no banco para evitar limite de paginação
       const { data: revenueData } = await supabase
-        .rpc('get_total_revenue_stats');
+        .rpc('get_total_revenue_stats' as any);
 
-      const totalRevenue = revenueData?.total_revenue || 0;
+      const totalRevenue = (revenueData as any)?.[0]?.total_revenue || 0;
       const companyCommission = totalRevenue * 0.08;
       const sellersEarnings = totalRevenue * 0.92;
 
