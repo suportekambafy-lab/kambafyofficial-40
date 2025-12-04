@@ -1337,7 +1337,18 @@ export function AppHome() {
             </Card>
 
             {/* Sales Chart */}
-            <ModernSalesChart />
+            <ModernSalesChart 
+              timeFilter={
+                timeFilter === 'today' ? 'hoje' :
+                timeFilter === 'yesterday' ? 'ontem' :
+                timeFilter === '7d' ? 'ultimos-7-dias' :
+                timeFilter === '30d' ? 'ultimos-30-dias' :
+                timeFilter === '90d' ? 'ultimos-30-dias' :
+                timeFilter === 'custom' ? 'custom' :
+                'ultimos-7-dias'
+              }
+              customDateRange={customDateRange.from && customDateRange.to ? { from: customDateRange.from, to: customDateRange.to } : null}
+            />
 
             {/* Info Card */}
             <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-primary/5">
