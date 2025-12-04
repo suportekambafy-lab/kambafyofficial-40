@@ -20,6 +20,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
+				'sans': ['Inter', 'SF Pro', 'Helvetica Neue', 'sans-serif'],
 				'bricolage': ['Bricolage Grotesque', 'sans-serif'],
 				'montserrat': ['Montserrat', 'sans-serif'],
 			},
@@ -170,6 +171,9 @@ export default {
 					"0px 1px 0px 0px rgba(25, 28, 33, 0.02)",
 					"0px 0px 0px 1px rgba(25, 28, 33, 0.08)",
 				].join(", "),
+				'card': '0 4px 12px rgba(0, 0, 0, 0.06)',
+				'card-hover': '0 8px 24px rgba(0, 0, 0, 0.1)',
+				'lg-soft': '0 8px 24px rgba(0, 0, 0, 0.08)',
 			},
 		}
 	},

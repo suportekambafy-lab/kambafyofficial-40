@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Bell, 
   ChevronDown, 
   ChevronUp,
   Settings, 
@@ -16,21 +15,15 @@ import {
   Package,
   TrendingUp,
   DollarSign,
-  Users,
-  Store,
   Zap,
-  BarChart3,
-  UserPlus,
-  Home
+  Home,
+  Command
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AvatarDrawer } from '@/components/ui/avatar-drawer';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
-import { Input } from '@/components/ui/input';
-import { ActionSearchBar, type Action } from '@/components/ui/action-search-bar';
-import { NotificationCenter } from '@/components/ui/notification-center';
 import { SellerNotificationCenter } from '@/components/SellerNotificationCenter';
 
 interface ModernTopBarProps {
@@ -44,124 +37,18 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isDark, setTheme } = useSellerTheme();
-  const [searchExpanded, setSearchExpanded] = useState(false); // Mobile starts collapsed
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [dashboardData, setDashboardData] = useState({
-    totalRevenue: 0,
-  });
   const [profileAvatar, setProfileAvatar] = useState("");
   const [profileName, setProfileName] = useState("");
-  const [notifications, setNotifications] = useState<Array<{id: string, message: string, action: string}>>([]);
-  const [recentSalesCount, setRecentSalesCount] = useState(0);
   const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
-      loadDashboardData();
       loadProfileData();
-      checkNotifications();
-      loadRecentSales();
-      
-      // ✅ WebSocket já configurado abaixo, removendo polling desnecessário
-
-      // Set up real-time subscription for new orders
-      const channel = supabase
-        .channel('orders-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'orders',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('New sale detected:', payload);
-            loadRecentSales();
-            loadDashboardData();
-          }
-        )
-        .subscribe();
-      
-      return () => {
-        supabase.removeChannel(channel);
-      };
     }
   }, [user]);
-
-  const loadRecentSales = async () => {
-    if (!user) return;
-
-    try {
-      const twentyFourHoursAgo = new Date();
-      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          products!inner(
-            user_id
-          )
-        `)
-        .eq('products.user_id', user.id)
-        .eq('status', 'completed')
-        .neq('payment_method', 'member_access')
-        .gte('created_at', twentyFourHoursAgo.toISOString());
-
-      if (error) {
-        console.error('Error loading recent sales:', error);
-        return;
-      }
-
-      setRecentSalesCount(orders?.length || 0);
-    } catch (error) {
-      console.error('Error loading recent sales:', error);
-    }
-  };
-
-  const loadDashboardData = async () => {
-    if (!user) return;
-
-    try {
-      const { data: allOrders, error: ordersError } = await supabase
-        .from('orders')
-        .select(`
-          amount,
-          currency,
-          products!inner(
-            user_id
-          )
-        `)
-        .eq('products.user_id', user.id)
-        .eq('status', 'completed')
-        .neq('payment_method', 'member_access');
-
-      if (ordersError) {
-        console.error('Error loading orders:', ordersError);
-        return;
-      }
-
-      // Buscar saldo real do customer_balances (fonte de verdade)
-      const { data: balanceData, error: balanceError } = await supabase
-        .from('customer_balances')
-        .select('balance')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (balanceError) {
-        console.error('Error loading balance:', balanceError);
-      }
-
-      const totalRevenue = balanceData?.balance || 0;
-
-      setDashboardData({ totalRevenue });
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    }
-  };
 
   const loadProfileData = async () => {
     if (!user) return;
@@ -187,75 +74,6 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
     }
   };
 
-  const checkNotifications = async () => {
-    if (!user) return;
-
-    try {
-      const notifications: Array<{id: string, message: string, action: string}> = [];
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('iban, full_name, avatar_url')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (!profile?.iban) {
-        notifications.push({
-          id: 'iban',
-          message: 'Configure seu IBAN para começar a receber',
-          action: '/vendedor/financeiro'
-        });
-      }
-
-      if (!profile?.full_name || !profile?.avatar_url) {
-        notifications.push({
-          id: 'profile',
-          message: 'Configure seu perfil',
-          action: '/vendedor/configuracoes'
-        });
-      }
-
-      // Add recent sales notification
-      if (recentSalesCount > 0) {
-        notifications.push({
-          id: 'recent_sales',
-          message: `${recentSalesCount} vendas nas últimas 24 horas`,
-          action: '/vendedor/vendas'
-        });
-      }
-
-      // Check for pending affiliate requests
-      const { data: affiliateRequests, error: affiliateError } = await supabase
-        .from('affiliates')
-        .select('id, affiliate_name, product_id, products(name)')
-        .eq('user_id', user.id)
-        .eq('status', 'pendente');
-
-      if (!affiliateError && affiliateRequests && affiliateRequests.length > 0) {
-        notifications.push({
-          id: 'affiliate_requests',
-          message: `${affiliateRequests.length} ${affiliateRequests.length === 1 ? 'novo pedido' : 'novos pedidos'} de afiliação`,
-          action: '/vendedor/afiliados'
-        });
-      }
-
-      setNotifications(notifications);
-    } catch (error) {
-      console.error('Error checking notifications:', error);
-    }
-  };
-
-  // Update notifications when recent sales count changes
-  useEffect(() => {
-    if (user) {
-      checkNotifications();
-    }
-  }, [recentSalesCount, user]);
-
-  const handleNotificationClick = (action: string) => {
-    navigate(action);
-  };
-
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -273,67 +91,14 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
     }
   };
 
-  const toggleTheme = () => {
-    setTheme(isDark ? 'light' : 'dark');
-  };
-
-  const searchActions: Action[] = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: <Home className="h-4 w-4 text-blue-500" />,
-      description: 'Principal',
-      short: '⌘D',
-      end: 'Navigation'
-    },
-    {
-      id: 'produtos',
-      label: 'Produtos',
-      icon: <Package className="h-4 w-4 text-green-500" />,
-      description: 'Principal',
-      short: '⌘P',
-      end: 'Navigation'
-    },
-    {
-      id: 'vendas',
-      label: 'Vendas',
-      icon: <TrendingUp className="h-4 w-4 text-orange-500" />,
-      description: 'Principal',
-      short: '⌘V',
-      end: 'Navigation'
-    },
-    {
-      id: 'financeiro',
-      label: 'Financeiro',
-      icon: <DollarSign className="h-4 w-4 text-purple-500" />,
-      description: 'Principal',
-      short: '⌘F',
-      end: 'Navigation'
-    },
-    {
-      id: 'apps',
-      label: 'Apps',
-      icon: <Zap className="h-4 w-4 text-yellow-500" />,
-      description: 'Ferramentas',
-      short: '⌘A',
-      end: 'Navigation'
-    },
-    {
-      id: 'configuracoes',
-      label: 'Configurações',
-      icon: <Settings className="h-4 w-4 text-gray-500" />,
-      description: 'Configurações',
-      short: '⌘S',
-      end: 'Settings'
-    },
-    {
-      id: 'ajuda',
-      label: 'Ajuda',
-      icon: <HelpCircle className="h-4 w-4 text-blue-400" />,
-      description: 'Configurações',
-      short: '⌘H',
-      end: 'Help'
-    }
+  const searchActions = [
+    { id: 'dashboard', label: 'Dashboard', icon: <Home className="h-4 w-4 text-primary" />, short: '⌘D' },
+    { id: 'produtos', label: 'Produtos', icon: <Package className="h-4 w-4 text-primary" />, short: '⌘P' },
+    { id: 'vendas', label: 'Vendas', icon: <TrendingUp className="h-4 w-4 text-primary" />, short: '⌘V' },
+    { id: 'financeiro', label: 'Financeiro', icon: <DollarSign className="h-4 w-4 text-primary" />, short: '⌘F' },
+    { id: 'apps', label: 'Apps', icon: <Zap className="h-4 w-4 text-primary" />, short: '⌘A' },
+    { id: 'configuracoes', label: 'Configurações', icon: <Settings className="h-4 w-4 text-muted-foreground" />, short: '⌘S' },
+    { id: 'ajuda', label: 'Ajuda', icon: <HelpCircle className="h-4 w-4 text-muted-foreground" />, short: '⌘H' }
   ];
 
   const handleActionSelect = (actionId: string) => {
@@ -351,175 +116,154 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
     if (path) {
       navigate(path);
       setShowSuggestions(false);
-      if (isMobile) {
-        setSearchExpanded(false);
-      }
+      setSearchQuery("");
     }
   };
 
   return (
-    <>
-      <div className="h-16 bg-gradient-to-r from-card via-card/95 to-card border-b border-border/20 backdrop-blur-sm z-20 flex items-center justify-between px-4 md:px-6 shadow-sm transition-all duration-300">
-        {/* Left side */}
-        <div className="flex items-center gap-2">
-          {/* Mobile menu button */}
-          {isMobile && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleSidebar}
-              className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 hover:scale-105 rounded-xl md:hidden transition-all duration-200"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          )}
-        </div>
+    <div className="h-[70px] bg-card border-b border-border flex items-center justify-between px-4 md:px-6 sticky top-0 z-20">
+      {/* Left side */}
+      <div className="flex items-center gap-3">
+        {/* Mobile menu button */}
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleSidebar}
+            className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl md:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
 
-        {/* Right side */}
-        <div className="flex items-center gap-2 flex-1 justify-end">
-          {/* Search Bar - Only on Desktop */}
-          {!isMobile && (
-            <div className="flex items-center transition-all duration-300 w-80 max-w-[400px] relative">
-              <div className="relative w-full">
-                <Input
-                  type="text"
-                  placeholder="Buscar produtos, vendas, financeiro..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-10 pl-10 pr-4 rounded-xl border-border/40 bg-background/50 backdrop-blur-sm focus:bg-background focus:border-primary/40 transition-all duration-200"
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => {
-                    setTimeout(() => setShowSuggestions(false), 150);
-                  }}
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors duration-200" />
-                
-                {/* Search Suggestions */}
-                {showSuggestions && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, y: -10 }}
-                    animate={{ opacity: 1, height: "auto", y: 0 }}
-                    exit={{ opacity: 0, height: 0, y: -10 }}
-                    className="absolute top-12 left-0 w-full border border-border/40 rounded-xl shadow-lg overflow-hidden bg-card/95 backdrop-blur-md mt-1 z-50"
-                  >
-                    <motion.ul>
-                      {searchActions
-                        .filter(action => !searchQuery || action.label.toLowerCase().includes(searchQuery.toLowerCase()))
-                        .map((action) => (
-                        <motion.li
-                          key={action.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          whileHover={{ x: 4 }}
-                          className="mx-1 px-3 py-2.5 flex items-center justify-between hover:bg-primary/10 cursor-pointer rounded-lg transition-all duration-200"
-                          onClick={() => handleActionSelect(action.id)}
-                        >
-                          <div className="flex items-center gap-2 justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground">
-                                {action.icon}
-                              </span>
-                              <span className="text-sm font-medium text-foreground">
-                                {action.label}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {action.description}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              {action.short}
-                            </span>
-                          </div>
-                        </motion.li>
-                      ))}
-                    </motion.ul>
-                  </motion.div>
-                )}
+        {/* Search Bar - Pill shaped */}
+        {!isMobile && (
+          <div className="relative w-[320px]">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Pesquisar"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-10 pl-11 pr-16 rounded-full border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground">
+                <Command className="h-3 w-3" />
+                <span>K</span>
               </div>
             </div>
-          )}
+            
+            {/* Search Suggestions Dropdown */}
+            <AnimatePresence>
+              {showSuggestions && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute top-full left-0 w-full mt-2 border border-border rounded-xl bg-card shadow-lg overflow-hidden z-50"
+                >
+                  <div className="py-2">
+                    {searchActions
+                      .filter(action => !searchQuery || action.label.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .map((action) => (
+                        <button
+                          key={action.id}
+                          onClick={() => handleActionSelect(action.id)}
+                          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-accent transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            {action.icon}
+                            <span className="text-sm font-medium text-foreground">{action.label}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">{action.short}</span>
+                        </button>
+                      ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
 
-          {/* Theme Toggle */}
-          <ThemeToggle />
+      {/* Right side */}
+      <div className="flex items-center gap-2">
+        {/* Theme Toggle */}
+        <ThemeToggle />
 
-          {/* Seller Notifications */}
-          <SellerNotificationCenter />
+        {/* Notifications */}
+        <SellerNotificationCenter />
 
-          {/* Divider */}
-          <div className="h-6 w-px bg-gradient-to-b from-transparent via-border to-transparent mx-2" />
+        {/* Divider */}
+        <div className="h-6 w-px bg-border mx-2" />
 
-          {/* User menu - Desktop Dropdown, Mobile Drawer */}
-          {isMobile ? (
-            <>
-              <Button 
-                variant="ghost" 
-                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-primary/10 hover:scale-105 rounded-xl transition-all duration-200"
-                onClick={() => {
-                  console.log('Avatar clicked - opening drawer');
-                  setAvatarDrawerOpen(true);
-                }}
-              >
-                <Avatar className="h-8 w-8 ring-2 ring-primary/20 shadow-sm">
-                  <AvatarImage 
-                    src={profileAvatar} 
-                    alt={profileName || user?.email}
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-sm font-semibold">
-                    {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden sm:inline text-sm font-medium truncate max-w-28">
-                  {profileName || user?.email}
-                </span>
-                <ChevronDown className="h-3 w-3" />
-              </Button>
-              <AvatarDrawer
-                isOpen={avatarDrawerOpen}
-                onClose={() => setAvatarDrawerOpen(false)}
-                profileAvatar={profileAvatar}
-                profileName={profileName}
-                isMobile={isMobile}
-              />
-            </>
-          ) : (
-            <div className="relative">
-              <button 
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-3 h-10 px-3 text-foreground hover:bg-accent rounded-xl transition-all duration-200"
-              >
-                <Avatar className="h-8 w-8 ring-2 ring-border">
-                  <AvatarImage 
-                    src={profileAvatar} 
-                    alt={profileName || user?.email}
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
-                    {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden sm:inline text-sm font-medium truncate max-w-28">
-                  {profileName || user?.email}
-                </span>
-                {userMenuOpen ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-              
+        {/* User menu */}
+        {isMobile ? (
+          <>
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-2 h-10 px-2 hover:bg-accent rounded-xl"
+              onClick={() => setAvatarDrawerOpen(true)}
+            >
+              <Avatar className="h-8 w-8 ring-2 ring-border">
+                <AvatarImage src={profileAvatar} alt={profileName || user?.email} className="object-cover" />
+                <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                  {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            </Button>
+            <AvatarDrawer
+              isOpen={avatarDrawerOpen}
+              onClose={() => setAvatarDrawerOpen(false)}
+              profileAvatar={profileAvatar}
+              profileName={profileName}
+              isMobile={isMobile}
+            />
+          </>
+        ) : (
+          <div className="relative">
+            <button 
+              onClick={() => setUserMenuOpen(!userMenuOpen)}
+              className="flex items-center gap-2.5 h-10 px-2 hover:bg-accent rounded-xl transition-colors"
+            >
+              <Avatar className="h-8 w-8 ring-2 ring-border">
+                <AvatarImage src={profileAvatar} alt={profileName || user?.email} className="object-cover" />
+                <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                  {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
+                {profileName || user?.email?.split('@')[0]}
+              </span>
+              {userMenuOpen ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+            
+            <AnimatePresence>
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-card p-2 shadow-xl z-[100]">
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-card p-1.5 shadow-lg z-[100]"
+                >
                   <button
                     onClick={() => {
                       navigate('/vendedor/configuracoes');
                       setUserMenuOpen(false);
                     }}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
                   >
-                    <Settings className="h-4 w-4" />
+                    <Settings className="h-4 w-4 text-muted-foreground" />
                     <span>Configurações</span>
                   </button>
                   <button
@@ -527,9 +271,9 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                       navigate('/vendedor/ajuda');
                       setUserMenuOpen(false);
                     }}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
                   >
-                    <HelpCircle className="h-4 w-4" />
+                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
                     <span>Ajuda</span>
                   </button>
                   <div className="my-1 h-px bg-border" />
@@ -538,18 +282,17 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                       handleSignOut();
                       setUserMenuOpen(false);
                     }}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Sair</span>
                   </button>
-                </div>
+                </motion.div>
               )}
-            </div>
-          )}
-        </div>
+            </AnimatePresence>
+          </div>
+        )}
       </div>
-
-    </>
+    </div>
   );
 }

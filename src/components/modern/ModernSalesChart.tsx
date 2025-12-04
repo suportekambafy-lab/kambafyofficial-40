@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,12 +15,13 @@ export function ModernSalesChart() {
   const { user } = useAuth();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalValue, setTotalValue] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     if (user) {
       fetchChartData();
       
-      // Set up real-time subscription for chart updates
       const channel = supabase
         .channel('chart-orders-changes')
         .on(
@@ -48,7 +49,6 @@ export function ModernSalesChart() {
     try {
       setLoading(true);
       
-      // Buscar produtos do usuário primeiro
       const { data: userProducts, error: productsError } = await supabase
         .from('products')
         .select('id')
@@ -63,12 +63,8 @@ export function ModernSalesChart() {
         return;
       }
 
-      // Buscar vendas dos últimos 7 dias usando product_id
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-      // Vendas recuperadas removidas - sistema de recuperação desabilitado
-      const recoveredOrderIds = new Set();
 
       const { data: orders, error } = await supabase
         .from('orders')
@@ -82,10 +78,8 @@ export function ModernSalesChart() {
         return;
       }
 
-      // Processar dados por dia
       const salesByDay: { [key: string]: number } = {};
       
-      // Inicializar todos os dias com 0
       for (let i = 6; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
@@ -93,23 +87,21 @@ export function ModernSalesChart() {
         salesByDay[dayKey] = 0;
       }
 
-      // Somar vendas por dia
+      let total = 0;
       orders?.forEach(order => {
         const orderDate = new Date(order.created_at);
         const dayKey = orderDate.toISOString().split('T')[0];
         
-        // ✅ Usar seller_commission se disponível, senão descontar 8% do amount
         let amount = parseFloat(order.seller_commission?.toString() || '0');
         if (amount === 0) {
           const grossAmount = parseFloat(order.amount || '0');
-          amount = grossAmount * 0.92; // Descontar 8% da plataforma
+          amount = grossAmount * 0.92;
         }
         
-        // Converter para KZ se necessário (APENAS UMA VEZ)
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
-            'EUR': 1053, // 1 EUR = ~1053 KZ
-            'MZN': 14.3  // 1 MZN = ~14.3 KZ
+            'EUR': 1053,
+            'MZN': 14.3
           };
           const rate = exchangeRates[order.currency.toUpperCase()] || 1;
           amount = Math.round(amount * rate);
@@ -118,11 +110,14 @@ export function ModernSalesChart() {
         if (salesByDay[dayKey] !== undefined) {
           salesByDay[dayKey] += amount;
         }
+        total += amount;
       });
 
-      // Converter para formato do gráfico
+      setTotalValue(total);
+      setTotalCount(orders?.length || 0);
+
       const formattedData: ChartData[] = Object.entries(salesByDay).map(([date, amount]) => ({
-        day: new Date(date).toLocaleDateString('pt-BR', { weekday: 'short' }),
+        day: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
         vendas: Math.round(amount)
       }));
 
@@ -137,40 +132,67 @@ export function ModernSalesChart() {
   const chartConfig = {
     vendas: {
       label: "Vendas",
-      color: "#10b981"
+      color: "hsl(var(--primary))"
     }
   };
 
   return (
-    <Card className="rounded-2xl shadow-sm w-full max-w-full overflow-hidden">
-      <CardHeader>
-        <CardTitle className="text-base sm:text-lg">Vendas dos Últimos 7 Dias</CardTitle>
+    <Card className="rounded-[14px] shadow-card border border-border/50 w-full overflow-hidden">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[13px] text-muted-foreground font-medium">Total em transações recebidas</p>
+            <h2 className="text-2xl md:text-[30px] font-bold text-foreground mt-1">
+              {totalValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
+            </h2>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              <span className="font-medium text-foreground">{totalCount}</span> transações no período selecionado
+            </p>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="p-3 sm:p-4 overflow-x-hidden">
+      <CardContent className="p-4 pt-2">
         {loading ? (
-          <div className="h-48 sm:h-64 flex items-center justify-center">
+          <div className="h-48 sm:h-56 flex items-center justify-center">
             <span className="text-muted-foreground text-sm">Carregando...</span>
           </div>
         ) : (
-          <ChartContainer config={chartConfig} className="h-48 sm:h-64 w-full">
-            <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+          <ChartContainer config={chartConfig} className="h-48 sm:h-56 w-full">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
               <XAxis 
                 dataKey="day" 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                dy={10}
               />
-              <YAxis hide />
+              <YAxis 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                tickFormatter={(value) => value >= 1000 ? `${(value/1000).toFixed(0)}K` : value}
+                width={40}
+              />
               <ChartTooltip
                 content={<ChartTooltipContent />}
                 formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']}
               />
-              <Bar 
+              <Area 
+                type="monotone"
                 dataKey="vendas" 
-                fill="var(--color-vendas)"
-                radius={[4, 4, 0, 0]}
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorVendas)"
               />
-            </BarChart>
+            </AreaChart>
           </ChartContainer>
         )}
       </CardContent>
