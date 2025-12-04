@@ -199,29 +199,60 @@ export default function AdminDashboard() {
           startDate = subDays(endDate, 7);
       }
 
-      // ✅ Usar queries individuais com count para evitar limite de 1000 rows
-      const statusesToCount = ['completed', 'pending', 'failed', 'expired', 'cancelled'];
-      const countPromises = statusesToCount.map(status =>
+      // ✅ Buscar contagens de forma mais robusta
+      const [completedRes, pendingRes, failedRes, expiredRes, cancelledRes] = await Promise.all([
         supabase
           .from('orders')
-          .select('*', { count: 'exact', head: true })
+          .select('id', { count: 'exact' })
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
           .neq('payment_method', 'member_access')
-          .eq('status', status)
-      );
-
-      const results = await Promise.all(countPromises);
+          .eq('status', 'completed'),
+        supabase
+          .from('orders')
+          .select('id', { count: 'exact' })
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .neq('payment_method', 'member_access')
+          .eq('status', 'pending'),
+        supabase
+          .from('orders')
+          .select('id', { count: 'exact' })
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .neq('payment_method', 'member_access')
+          .eq('status', 'failed'),
+        supabase
+          .from('orders')
+          .select('id', { count: 'exact' })
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .neq('payment_method', 'member_access')
+          .eq('status', 'expired'),
+        supabase
+          .from('orders')
+          .select('id', { count: 'exact' })
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .neq('payment_method', 'member_access')
+          .eq('status', 'cancelled')
+      ]);
       
       const statusCounts = {
-        success: results[0].count || 0,
-        pending: results[1].count || 0,
-        failed: results[2].count || 0,
-        expired: results[3].count || 0,
-        cancelled: results[4].count || 0
+        success: completedRes.count ?? 0,
+        pending: pendingRes.count ?? 0,
+        failed: failedRes.count ?? 0,
+        expired: expiredRes.count ?? 0,
+        cancelled: cancelledRes.count ?? 0
       };
       
-      console.log('📊 Status counts carregados:', statusCounts);
+      console.log('📊 Status counts carregados:', statusCounts, {
+        completedRes: completedRes.count,
+        pendingRes: pendingRes.count,
+        failedRes: failedRes.count,
+        expiredRes: expiredRes.count,
+        cancelledRes: cancelledRes.count
+      });
       setOrderStats(statusCounts);
     } catch (error) {
       console.error('Error loading status data:', error);
