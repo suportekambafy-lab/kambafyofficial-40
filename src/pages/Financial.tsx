@@ -359,141 +359,101 @@ export default function Financial() {
         )}
 
         {/* Cards de Saldo */}
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
           {/* Saldo Total */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Saldo Total</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20">
-                  <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-2xl sm:text-3xl font-bold whitespace-nowrap">
-                    {formatCurrency(financialData.totalBalance)}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Total de ganhos
-                  </p>
+          <div className="bg-card rounded-xl shadow-card border border-border/50 flex overflow-hidden">
+            <div className="w-1 bg-blue-500 shrink-0" />
+            <div className="flex-1 p-4 flex items-center justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="text-muted-foreground text-sm font-medium mb-1">Saldo Total</p>
+                <h3 className="text-2xl font-bold text-foreground tracking-tight truncate">
+                  {formatCurrency(financialData.totalBalance)}
+                </h3>
+                <div className="mt-2 text-muted-foreground">
+                  <TrendingUp className="w-4 h-4" />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Valor Retido */}
           {financialData.retentionPercentage > 0 && (
-            <Card className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Valor Retido</CardTitle>
-                  <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20">
-                    {financialData.retentionPercentage}%
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/20">
-                    <Shield className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                  </div>
-                <div className="flex-1 min-w-0">
-                    <div className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 whitespace-nowrap">
-                      {formatCurrency(financialData.retainedAmount)}
-                    </div>
-                    <p className="text-sm text-orange-800 dark:text-orange-200">
-                      Retenção administrativa
-                    </p>
+            <div className="bg-card rounded-xl shadow-card border border-orange-500/50 flex overflow-hidden">
+              <div className="w-1 bg-orange-500 shrink-0" />
+              <div className="flex-1 p-4 flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-muted-foreground text-sm font-medium mb-1">Valor Retido</p>
+                  <h3 className="text-2xl font-bold text-orange-600 dark:text-orange-400 tracking-tight truncate">
+                    {formatCurrency(financialData.retainedAmount)}
+                  </h3>
+                  <div className="mt-2 text-muted-foreground">
+                    <Shield className="w-4 h-4" />
                   </div>
                 </div>
-                {financialData.retentionReason && (
-                  <div className="mt-3 p-2 bg-orange-100 dark:bg-orange-900/30 rounded text-xs text-orange-900 dark:text-orange-100">
-                    <span className="font-semibold">Motivo:</span> {financialData.retentionReason}
-                  </div>
-                )}
-                {financialData.retentionReleaseDate && (
-                  <div className="mt-2 p-2 bg-green-100 dark:bg-green-900/30 rounded text-xs text-green-900 dark:text-green-100">
-                    <span className="font-semibold">Liberação automática:</span>{' '}
-                    {new Date(financialData.retentionReleaseDate).toLocaleDateString('pt-PT', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric'
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20 shrink-0">
+                  {financialData.retentionPercentage}%
+                </Badge>
+              </div>
+            </div>
           )}
 
           {/* Saldo Disponível */}
-          <HighlightedCard>
-            <HighlightedCardHeader>
-              <div className="flex items-center justify-between">
-                <HighlightedCardTitle>Disponível para Saque</HighlightedCardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowValues(prev => ({ ...prev, available: !prev.available }))}
-                >
-                  {showValues.available ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </Button>
-              </div>
-            </HighlightedCardHeader>
-            <HighlightedCardContent>
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/20">
-                  <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-2xl sm:text-3xl font-bold whitespace-nowrap">
-                    {showValues.available ? formatCurrency(financialData.availableBalance) : '••••••'}
-                  </div>
+          <div className="bg-card rounded-xl shadow-card border border-primary/30 flex overflow-hidden">
+            <div className="w-1 bg-primary shrink-0" />
+            <div className="flex-1 p-4 flex items-center justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="text-muted-foreground text-sm font-medium mb-1">Disponível para Saque</p>
+                <h3 className="text-2xl font-bold text-foreground tracking-tight truncate">
+                  {showValues.available ? formatCurrency(financialData.availableBalance) : '••••••'}
+                </h3>
+                <div className="mt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowValues(prev => ({ ...prev, available: !prev.available }))}
+                    className="h-8 w-8 p-0"
+                  >
+                    {showValues.available ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </Button>
                 </div>
               </div>
               {canWithdraw && (
                 <Button
                   onClick={() => setWithdrawalModalOpen(true)}
-                  className="w-full mt-4"
+                  size="sm"
+                  className="shrink-0"
                 >
                   <PiggyBank className="h-4 w-4 mr-2" />
-                  Solicitar Saque
+                  Sacar
                 </Button>
               )}
-            </HighlightedCardContent>
-          </HighlightedCard>
-        </div>
+            </div>
+          </div>
 
-        {/* Total Sacado - Card separado */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Total Sacado</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowValues(prev => ({ ...prev, withdrawn: !prev.withdrawn }))}
-              >
-                {showValues.withdrawn ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/20">
-                <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-2xl sm:text-3xl font-bold break-words">
+          {/* Total Sacado */}
+          <div className="bg-card rounded-xl shadow-card border border-border/50 flex overflow-hidden">
+            <div className="w-1 bg-emerald-500 shrink-0" />
+            <div className="flex-1 p-4 flex items-center justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="text-muted-foreground text-sm font-medium mb-1">Total Sacado</p>
+                <h3 className="text-2xl font-bold text-foreground tracking-tight truncate">
                   {showValues.withdrawn ? formatCurrency(financialData.withdrawnAmount) : '••••••'}
+                </h3>
+                <div className="mt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowValues(prev => ({ ...prev, withdrawn: !prev.withdrawn }))}
+                    className="h-8 w-8 p-0"
+                  >
+                    {showValues.withdrawn ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </Button>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Saques aprovados
-                </p>
               </div>
+              <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Informações Bancárias */}
         <BankingInfo />
