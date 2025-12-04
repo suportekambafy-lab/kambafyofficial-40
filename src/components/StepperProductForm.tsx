@@ -835,6 +835,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                 webhook_events: []
               }}
               onChange={(config) => setFormData({ ...formData, subscriptionConfig: config })}
+              productId={editingProduct?.id}
             />
           )}
 
