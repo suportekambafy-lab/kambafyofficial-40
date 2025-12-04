@@ -147,7 +147,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           </div>
 
           {/* Carousel with Navigation */}
-          <div className="relative">
+          <div className="relative overflow-hidden">
             {/* Left Arrow */}
             <Button
               variant="outline"
@@ -177,16 +177,13 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseLeave}
-              className="flex gap-5 pb-4 md:mx-12"
+              className="flex gap-5 pb-4 md:px-14 overflow-x-auto"
               style={{ 
-                overflowX: 'auto',
                 WebkitOverflowScrolling: 'touch',
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
                 cursor: isDragging ? 'grabbing' : 'grab',
-                userSelect: 'none',
-                touchAction: 'pan-x',
-                minWidth: 0
+                userSelect: 'none'
               }}
             >
               {visibleLevels.map((level, index) => {
