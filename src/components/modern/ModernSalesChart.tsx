@@ -289,8 +289,49 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
 
   return (
     <div className="flex flex-col md:flex-row gap-3">
+      {/* KPI Cards - First on mobile, second on desktop */}
+      <div className="flex flex-row md:flex-col gap-2 md:w-40 order-first md:order-last">
+        <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-xs text-muted-foreground">Pedidos feitos</span>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
+              ordersTrend >= 0 
+                ? 'bg-emerald-100 text-emerald-700' 
+                : 'bg-red-100 text-red-600'
+            }`}>
+              {ordersTrend >= 0 ? '+' : ''}{ordersTrend}
+              {ordersTrend >= 0 
+                ? <TrendingUp className="w-2.5 h-2.5" /> 
+                : <TrendingDown className="w-2.5 h-2.5" />
+              }
+            </span>
+          </div>
+          <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
+          <p className="text-xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-xs text-muted-foreground">Pedidos pagos</span>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
+              paidTrend >= 0 
+                ? 'bg-emerald-100 text-emerald-700' 
+                : 'bg-red-100 text-red-600'
+            }`}>
+              {paidTrend >= 0 ? '+' : ''}{paidTrend}
+              {paidTrend >= 0 
+                ? <TrendingUp className="w-2.5 h-2.5" /> 
+                : <TrendingDown className="w-2.5 h-2.5" />
+              }
+            </span>
+          </div>
+          <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
+          <p className="text-xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
+        </div>
+      </div>
+
       {/* Chart Card */}
-      <Card className="flex-1 rounded-xl shadow-sm border border-border/40 bg-card overflow-hidden">
+      <Card className="flex-1 rounded-xl shadow-sm border border-border/40 bg-card overflow-hidden order-last md:order-first">
         <CardHeader className="pb-1 px-4 pt-3">
           <div className="flex items-center gap-2 text-muted-foreground">
             <BarChart3 className="w-4 h-4" />
@@ -353,47 +394,6 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
           )}
         </CardContent>
       </Card>
-
-      {/* KPI Cards */}
-      <div className="flex flex-row md:flex-col gap-2 md:w-40">
-        <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
-          <div className="flex items-center justify-between mb-0.5">
-            <span className="text-xs text-muted-foreground">Pedidos feitos</span>
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
-              ordersTrend >= 0 
-                ? 'bg-emerald-100 text-emerald-700' 
-                : 'bg-red-100 text-red-600'
-            }`}>
-              {ordersTrend >= 0 ? '+' : ''}{ordersTrend}
-              {ordersTrend >= 0 
-                ? <TrendingUp className="w-2.5 h-2.5" /> 
-                : <TrendingDown className="w-2.5 h-2.5" />
-              }
-            </span>
-          </div>
-          <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
-          <p className="text-xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
-        </div>
-
-        <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
-          <div className="flex items-center justify-between mb-0.5">
-            <span className="text-xs text-muted-foreground">Pedidos pagos</span>
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
-              paidTrend >= 0 
-                ? 'bg-emerald-100 text-emerald-700' 
-                : 'bg-red-100 text-red-600'
-            }`}>
-              {paidTrend >= 0 ? '+' : ''}{paidTrend}
-              {paidTrend >= 0 
-                ? <TrendingUp className="w-2.5 h-2.5" /> 
-                : <TrendingDown className="w-2.5 h-2.5" />
-              }
-            </span>
-          </div>
-          <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
-          <p className="text-xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
-        </div>
-      </div>
     </div>
   );
 }
