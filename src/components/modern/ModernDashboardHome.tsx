@@ -494,7 +494,7 @@ export function ModernDashboardHome() {
 
         {/* Chart Section - Full Width */}
         <div className="w-full">
-          <ModernSalesChart timeFilter={timeFilter} />
+          <ModernSalesChart timeFilter={timeFilter} customDateRange={customDateRange} />
         </div>
 
         {/* Recent Sales and Achievements Grid */}
