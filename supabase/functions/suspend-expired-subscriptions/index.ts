@@ -78,6 +78,46 @@ serve(async (req) => {
         .eq('customer_email', sub.customer_email)
         .eq('product_id', sub.product_id);
 
+      // 📢 DISPARAR WEBHOOK subscription.payment_failed
+      logStep(`Triggering subscription.payment_failed webhook for ${sub.customer_email}`);
+      
+      try {
+        const webhookPayload = {
+          event: 'subscription.payment_failed',
+          user_id: sub.products?.user_id,
+          product_id: sub.product_id,
+          subscription_id: sub.id,
+          // Dados do cliente
+          customer_email: sub.customer_email,
+          customer_name: sub.customer_name,
+          // Dados da assinatura
+          product_name: sub.products?.name,
+          subscription_interval: config.interval || 'month',
+          subscription_interval_count: config.interval_count || 1,
+          // Status e datas
+          status: 'past_due',
+          expired_at: sub.current_period_end,
+          suspension_date: new Date().toISOString(),
+          grace_period_days: gracePeriodDays,
+          grace_period_end: gracePeriodEnd,
+          // Ação recomendada
+          action_required: 'payment_renewal',
+          message: `Assinatura expirada. ${gracePeriodDays > 0 ? `Período de graça: ${gracePeriodDays} dias.` : 'Acesso bloqueado.'}`
+        };
+
+        const { error: webhookError } = await supabaseClient.functions.invoke('trigger-webhooks', {
+          body: webhookPayload
+        });
+
+        if (webhookError) {
+          logStep(`Error triggering webhook for ${sub.id}`, webhookError);
+        } else {
+          logStep(`✅ Webhook subscription.payment_failed triggered for ${sub.customer_email}`);
+        }
+      } catch (webhookErr) {
+        logStep(`Error in webhook trigger`, webhookErr);
+      }
+
       // Gerar token de reativação
       const { data: token } = await supabaseClient
         .rpc('generate_renewal_token', { p_subscription_id: sub.id });

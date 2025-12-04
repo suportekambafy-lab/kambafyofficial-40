@@ -258,6 +258,8 @@ export default function SubscriptionConfig({
                     <Label>Eventos para Notificar</Label>
                     <div className="space-y-2">
                       {[
+                        { id: 'subscription.paid', label: '💰 Assinatura paga (pagamento confirmado)' },
+                        { id: 'subscription.payment_failed', label: '🚫 Pagamento não efetuado (expirou)' },
                         { id: 'subscription.created', label: '✨ Nova assinatura criada' },
                         { id: 'subscription.renewed', label: '🔄 Assinatura renovada' },
                         { id: 'subscription.cancelled', label: '❌ Assinatura cancelada' },
