@@ -466,24 +466,79 @@ const handler = async (req: Request): Promise<Response> => {
           }
 
           // Trigger webhooks for payment success
+          const webhookPayload = {
+            event: 'payment.success',
+            user_id: product?.user_id,
+            product_id: order.product_id,
+            order_id: order.order_id,
+            amount: order.amount,
+            currency: order.currency,
+            customer_email: order.customer_email,
+            customer_name: order.customer_name,
+            customer_phone: order.customer_phone,
+            payment_method: order.payment_method,
+            status: 'completed',
+            product_name: product?.name,
+            paid_at: new Date().toISOString()
+          };
+
           const { error: webhookError } = await supabase.functions.invoke('trigger-webhooks', {
-            body: {
-              event: 'payment.success',
-              user_id: product?.user_id,
-              product_id: order.product_id,
-              order_id: order.order_id,
-              amount: order.amount,
-              currency: order.currency,
-              customer_email: order.customer_email,
-              payment_method: order.payment_method,
-              status: 'completed' // ✅ Adicionar status explícito
-            }
+            body: webhookPayload
           });
 
           if (webhookError) {
             console.error('[APPYPAY-WEBHOOK] Error triggering webhooks:', webhookError);
           } else {
             console.log('[APPYPAY-WEBHOOK] Webhooks triggered successfully');
+          }
+
+          // Se for produto de assinatura, disparar webhook específico de assinatura
+          if (product?.subscription_config?.is_subscription) {
+            console.log('[APPYPAY-WEBHOOK] 📢 Triggering subscription.paid webhook...');
+            
+            const subscriptionWebhookPayload = {
+              event: 'subscription.paid',
+              user_id: product?.user_id,
+              product_id: order.product_id,
+              order_id: order.order_id,
+              // Dados do cliente
+              customer_email: order.customer_email,
+              customer_name: order.customer_name,
+              customer_phone: order.customer_phone,
+              // Dados do pagamento
+              amount: order.amount,
+              currency: order.currency,
+              payment_method: order.payment_method,
+              // Dados da assinatura
+              subscription_interval: product.subscription_config.interval || 'month',
+              subscription_interval_count: product.subscription_config.interval_count || 1,
+              product_name: product?.name,
+              // Timestamps
+              paid_at: new Date().toISOString(),
+              // Próximo pagamento (estimativa baseada no intervalo)
+              next_payment_date: (() => {
+                const next = new Date();
+                const interval = product.subscription_config.interval || 'month';
+                const count = product.subscription_config.interval_count || 1;
+                switch (interval) {
+                  case 'day': next.setDate(next.getDate() + count); break;
+                  case 'week': next.setDate(next.getDate() + (count * 7)); break;
+                  case 'month': next.setMonth(next.getMonth() + count); break;
+                  case 'year': next.setFullYear(next.getFullYear() + count); break;
+                }
+                return next.toISOString();
+              })()
+            };
+
+            const { error: subWebhookError } = await supabase.functions.invoke('trigger-webhooks', {
+              body: subscriptionWebhookPayload
+            });
+
+            if (subWebhookError) {
+              console.error('[APPYPAY-WEBHOOK] Error triggering subscription webhook:', subWebhookError);
+            } else {
+              console.log('[APPYPAY-WEBHOOK] ✅ Subscription webhook triggered successfully');
+            }
           }
 
           // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR
