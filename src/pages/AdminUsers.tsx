@@ -1,16 +1,32 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, UserX, UserCheck, User, Calendar, Mail, Shield, Search, LogIn } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { 
+  UserX, UserCheck, User, Calendar, Mail, Shield, Search, LogIn, 
+  Loader2, Users, UserPlus, Ban, MoreHorizontal, ChevronLeft, ChevronRight 
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BanUserDialog } from '@/components/BanUserDialog';
 import { Send } from 'lucide-react';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { cn } from '@/lib/utils';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface UserProfile {
   id: string;
@@ -28,7 +44,6 @@ interface UserProfile {
 
 export default function AdminUsers() {
   const { admin } = useAdminAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +52,8 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [sendingEmails, setSendingEmails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     if (admin) {
@@ -312,12 +329,24 @@ export default function AdminUsers() {
 
   const getStatusBadge = (banned: boolean | null, isCreator: boolean | null) => {
     if (banned) {
-      return <Badge className="bg-red-100 text-red-800 border-red-200">Banido</Badge>;
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
+          Banido
+        </span>
+      );
     }
     if (isCreator) {
-      return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Criador</Badge>;
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
+          Criador
+        </span>
+      );
     }
-    return <Badge className="bg-green-100 text-green-800 border-green-200">Ativo</Badge>;
+    return (
+      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+        Ativo
+      </span>
+    );
   };
 
   // Filtrar usuários baseado na busca
@@ -328,197 +357,257 @@ export default function AdminUsers() {
     return nameMatch || emailMatch;
   });
 
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Stats
+  const totalUsers = users.length;
+  const activeUsers = users.filter(u => !u.banned).length;
+  const bannedUsers = users.filter(u => u.banned).length;
+  const creators = users.filter(u => u.is_creator).length;
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Carregando usuários...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-[hsl(var(--admin-primary))]" />
+          <p className="text-[hsl(var(--admin-text-secondary))]">Carregando usuários...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/admin')}
-              className="flex items-center gap-2 hover:bg-accent"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar ao Dashboard
-            </Button>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-foreground">Gerenciar Usuários</h1>
-              <p className="text-muted-foreground mt-1">
-                {filteredUsers.length} {filteredUsers.length === 1 ? 'usuário' : 'usuários'} cadastrados
-              </p>
-            </div>
+    <AdminLayout 
+      title="Utilizadores" 
+      description="Gerencie todos os utilizadores da plataforma."
+    >
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-[hsl(var(--admin-bg))] flex items-center justify-center">
+            <Users className="h-5 w-5 text-[hsl(var(--admin-text-secondary))]" />
           </div>
-
-          {/* Campo de Busca */}
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Buscar por nome ou email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-12 text-base"
-            />
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Total de utilizadores</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{totalUsers.toLocaleString()}</p>
           </div>
-
-          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-1">
-                    Enviar Links de Redefinição de Senha
-                  </h3>
-                  <p className="text-sm text-slate-600">
-                    Envia emails para todos os usuários que precisam definir uma senha permanente
-                  </p>
-                </div>
-                <Button
-                  onClick={sendBulkPasswordResetEmails}
-                  disabled={sendingEmails}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {sendingEmails ? 'Enviando...' : 'Enviar Emails'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredUsers.map((user) => (
-            <Card key={user.id} className="shadow-lg border-0 bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow">
-              <CardHeader className="pb-4">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                      {user.avatar_url ? (
-                        <img 
-                          src={user.avatar_url} 
-                          alt={user.full_name || 'Avatar'}
-                          className="h-12 w-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <User className="h-6 w-6 text-white" />
-                      )}
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg text-slate-900">
-                        {user.full_name || 'Usuário sem nome'}
-                      </CardTitle>
-                      <div className="flex items-center gap-2 mt-1">
-                        {user.is_creator && <Shield className="h-4 w-4 text-purple-600" />}
-                        <span className="text-sm text-slate-600 capitalize">
-                          {user.is_creator ? 'Criador' : 'Usuário'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {getStatusBadge(user.banned, user.is_creator)}
-                </div>
-
-                <div className="space-y-2 text-sm text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    <span>{user.email || 'Email não disponível'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>Cadastrado em {new Date(user.created_at).toLocaleDateString('pt-AO')}</span>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent>
-                {user.bio && (
-                  <div className="mb-4">
-                    <h4 className="font-medium text-slate-900 mb-2">Bio:</h4>
-                    <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg line-clamp-3">
-                      {user.bio}
-                    </p>
-                  </div>
-                )}
-
-                {user.account_holder && (
-                  <div className="mb-4 text-sm">
-                    <span className="font-medium text-slate-900">Titular da Conta:</span>
-                    <span className="ml-2 text-slate-600">{user.account_holder}</span>
-                  </div>
-                )}
-
-                <div className="flex flex-col gap-3 pt-4 border-t border-slate-200">
-                  <Button
-                    onClick={() => handleImpersonateUser(user)}
-                    disabled={processingId === user.id}
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 shadow-sm"
-                  >
-                    <LogIn className="h-4 w-4 mr-2" />
-                    {processingId === user.id ? 'Entrando...' : 'Entrar como Usuário'}
-                  </Button>
-                  
-                  {user.banned ? (
-                    <Button
-                      onClick={() => updateUserStatus(user.id, false)}
-                      disabled={processingId === user.id}
-                      className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-0 shadow-sm"
-                    >
-                      <UserCheck className="h-4 w-4 mr-2" />
-                      {processingId === user.id ? 'Desbloqueando...' : 'Desbloquear'}
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => handleBanUser(user)}
-                      disabled={processingId === user.id}
-                      className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 shadow-sm"
-                    >
-                      <UserX className="h-4 w-4 mr-2" />
-                      {processingId === user.id ? 'Banindo...' : 'Banir Usuário'}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          
-          {filteredUsers.length === 0 && (
-            <Card className="col-span-3 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardContent className="text-center py-16">
-                <User className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">
-                  {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
-                </h3>
-                <p className="text-slate-600">
-                  {searchTerm 
-                    ? 'Tente buscar com outros termos.' 
-                    : 'Não há usuários cadastrados no sistema.'}
-                </p>
-              </CardContent>
-            </Card>
-          )}
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center">
+            <UserCheck className="h-5 w-5 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Ativos</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{activeUsers.toLocaleString()}</p>
+          </div>
         </div>
 
-        <BanUserDialog
-          isOpen={banDialogOpen}
-          onClose={() => {
-            setBanDialogOpen(false);
-            setSelectedUser(null);
-          }}
-          onConfirm={handleConfirmBan}
-          userName={selectedUser?.full_name || 'Usuário'}
-          isLoading={processingId === selectedUser?.id}
-        />
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center">
+            <Ban className="h-5 w-5 text-red-500" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Banidos</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{bannedUsers.toLocaleString()}</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center">
+            <UserPlus className="h-5 w-5 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Criadores</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{creators.toLocaleString()}</p>
+          </div>
+        </div>
       </div>
-    </div>
+
+      {/* Table Card */}
+      <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))]">
+        {/* Table Header */}
+        <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[hsl(var(--admin-border))]">
+          <h3 className="font-semibold text-[hsl(var(--admin-text))]">Lista de utilizadores</h3>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className="relative">
+              <Input
+                placeholder="Pesquisar utilizador..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-52 pl-3 pr-10 h-9 bg-white border-[hsl(var(--admin-border))] rounded-lg"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
+            </div>
+
+            {/* Send Emails Button */}
+            <Button 
+              onClick={sendBulkPasswordResetEmails}
+              disabled={sendingEmails}
+              className="h-9 gap-2 bg-[hsl(var(--admin-primary))] hover:bg-[hsl(var(--admin-primary))]/90 text-white"
+            >
+              <Send className="h-4 w-4" />
+              {sendingEmails ? 'Enviando...' : 'Enviar Reset'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-[hsl(var(--admin-border))] hover:bg-transparent">
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Utilizador</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Email</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Data de registro</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Estado</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12 text-[hsl(var(--admin-text-secondary))]">
+                    Nenhum utilizador encontrado
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedUsers.map((user) => (
+                  <TableRow key={user.id} className="border-b border-[hsl(var(--admin-border))] hover:bg-[hsl(var(--admin-bg))]/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-[hsl(var(--admin-primary))] flex items-center justify-center">
+                          {user.avatar_url ? (
+                            <img 
+                              src={user.avatar_url} 
+                              alt={user.full_name || 'Avatar'}
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <User className="h-5 w-5 text-white" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-[hsl(var(--admin-text))]">
+                            {user.full_name || 'Sem nome'}
+                          </p>
+                          {user.is_creator && (
+                            <div className="flex items-center gap-1 text-xs text-purple-600">
+                              <Shield className="h-3 w-3" />
+                              Criador
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-[hsl(var(--admin-text-secondary))]">
+                      {user.email || 'N/A'}
+                    </TableCell>
+                    <TableCell className="text-[hsl(var(--admin-text-secondary))]">
+                      {new Date(user.created_at).toLocaleDateString('pt-AO')}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(user.banned, user.is_creator)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 border-[hsl(var(--admin-border))]"
+                          onClick={() => handleImpersonateUser(user)}
+                          disabled={processingId === user.id}
+                        >
+                          <LogIn className="h-4 w-4 mr-1" />
+                          Entrar
+                        </Button>
+                        {user.banned ? (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                            onClick={() => updateUserStatus(user.id, false)}
+                            disabled={processingId === user.id}
+                          >
+                            <UserCheck className="h-4 w-4 mr-1" />
+                            Desbloquear
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 text-red-600 border-red-200 hover:bg-red-50"
+                            onClick={() => handleBanUser(user)}
+                            disabled={processingId === user.id}
+                          >
+                            <UserX className="h-4 w-4 mr-1" />
+                            Banir
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        <div className="p-4 flex items-center justify-between border-t border-[hsl(var(--admin-border))]">
+          <p className="text-sm text-[hsl(var(--admin-text-secondary))]">
+            {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredUsers.length)} de {filteredUsers.length.toLocaleString()}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-8 w-8 border-[hsl(var(--admin-border))]" 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-8 w-8 border-[hsl(var(--admin-border))]"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Select value={String(itemsPerPage)} onValueChange={(v) => setCurrentPage(1)}>
+              <SelectTrigger className="w-16 h-8 border-[hsl(var(--admin-border))]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      <BanUserDialog
+        isOpen={banDialogOpen}
+        onClose={() => {
+          setBanDialogOpen(false);
+          setSelectedUser(null);
+        }}
+        onConfirm={handleConfirmBan}
+        userName={selectedUser?.full_name || 'Usuário'}
+        isLoading={processingId === selectedUser?.id}
+      />
+    </AdminLayout>
   );
 }
