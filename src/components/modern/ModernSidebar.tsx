@@ -196,7 +196,7 @@ export function ModernSidebar({
               <img 
                 src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
                 alt="Kambafy" 
-                className="h-10 w-auto"
+                className="h-[60px] w-auto"
               />
               <Button
                 variant="ghost"
@@ -209,18 +209,18 @@ export function ModernSidebar({
             </div>
 
             {/* Progress Section */}
-            <div className="px-4 py-4 border-b border-sidebar-border">
-              <div className="space-y-2">
+            <div className="px-4 py-2 border-b border-sidebar-border">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
                   <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
-                  <span className="text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
+                  <span className="text-yellow-500 font-semibold">{progressPercent.toFixed(0)}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-sidebar-accent rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${progressPercent}%` }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="h-full bg-primary rounded-full" 
+                    className="h-full bg-yellow-500 rounded-full" 
                   />
                 </div>
               </div>
