@@ -55,7 +55,7 @@ export default function SellerRefunds() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-2 mb-3">
+        <h1 className="text-3xl font-bold flex items-center gap-2 mb-3 text-foreground">
           <AlertCircle className="h-8 w-8" />
           Gerenciar Reembolsos
         </h1>
