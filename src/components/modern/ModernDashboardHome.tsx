@@ -497,8 +497,14 @@ export function ModernDashboardHome() {
           <ModernSalesChart timeFilter={timeFilter} />
         </div>
 
-        {/* Recent Sales Section */}
-        <ModernRecentSales />
+        {/* Recent Sales and Achievements Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Sales Section */}
+          <ModernRecentSales />
+          
+          {/* Achievements Section */}
+          <ModernKambaAchievements />
+        </div>
       </div>
     </>
   );
