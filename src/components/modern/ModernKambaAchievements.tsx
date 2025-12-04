@@ -115,9 +115,7 @@ export function ModernKambaAchievements() {
                   {progress.toFixed(0)}%
                 </span>
               </div>
-              <Progress value={progress} className="h-1.5 sm:h-2" style={{
-            '--progress-background': nextLevel.color
-          } as React.CSSProperties} />
+              <Progress value={progress} className="h-1.5 sm:h-2 [&>div]:bg-yellow-500" />
               <div className="flex justify-between text-[10px] sm:text-xs text-muted-foreground">
                 <span>{formatCurrency(totalRevenue)}</span>
                 <span>{formatCurrency(nextLevel.threshold)}</span>
