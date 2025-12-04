@@ -43,16 +43,20 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   'bank_transfer': 'Transferência',
 };
 
-// Generate color for unknown methods
-const getMethodColor = (name: string): string => {
-  if (PAYMENT_METHOD_COLORS[name]) return PAYMENT_METHOD_COLORS[name];
-  // Generate consistent color based on name
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash % 360);
-  return `hsl(${hue}, 65%, 55%)`;
+// Generate color based on rank - green for highest %, red for lowest %
+const RANK_COLORS = [
+  '#4CAF50', // Green - highest
+  '#8BC34A', // Light green
+  '#FFC107', // Yellow/amber
+  '#FF9800', // Orange
+  '#FF5722', // Deep orange
+  '#F44336', // Red - lowest
+];
+
+const getColorByRank = (index: number, total: number): string => {
+  if (total === 1) return RANK_COLORS[0];
+  const colorIndex = Math.min(Math.floor((index / (total - 1)) * (RANK_COLORS.length - 1)), RANK_COLORS.length - 1);
+  return RANK_COLORS[colorIndex];
 };
 
 type FilterOption = 'today' | 'week' | 'month' | 'all';
@@ -140,14 +144,20 @@ export function ModernPaymentMethodsChart() {
         total++;
       });
 
-      const chartData: PaymentMethodData[] = Object.entries(methodCounts)
+      const sortedMethods = Object.entries(methodCounts)
         .map(([name, value]) => ({
           name,
           value,
           percentage: total > 0 ? Math.round((value / total) * 100) : 0,
-          color: getMethodColor(name)
+          color: '' // Will be set after sorting
         }))
         .sort((a, b) => b.value - a.value);
+
+      // Assign colors based on rank (green=highest, red=lowest)
+      const chartData: PaymentMethodData[] = sortedMethods.map((item, index) => ({
+        ...item,
+        color: getColorByRank(index, sortedMethods.length)
+      }));
 
       setData(chartData);
       setAnimationKey(prev => prev + 1);
