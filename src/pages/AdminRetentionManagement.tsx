@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Shield, Search, Filter, TrendingDown, RefreshCw } from 'lucide-react';
+import { Shield, Search, Filter, TrendingDown, RefreshCw, ArrowLeft } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { SellerRetentionDialog } from '@/components/admin/SellerRetentionDialog';
@@ -14,6 +14,7 @@ import { SEO } from '@/components/SEO';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface SellerWithRetention {
   user_id: string;
@@ -149,42 +150,17 @@ export default function AdminRetentionManagement() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
+      <AdminLayout title="Gestão de Retenção" description={`${sellers.length} vendedores com retenção ativa`}>
+        <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Carregando...</p>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <SEO
-        title="Gestão de Retenção - Admin Kambafy"
-        description="Gerenciar retenções de saldo"
-        noIndex
-      />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/admin')} className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Voltar
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-                <Shield className="h-8 w-8" />
-                Gestão de Retenção
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                {sellers.length} vendedores com retenção ativa
-              </p>
-            </div>
-          </div>
-        </div>
+    <AdminLayout title="Gestão de Retenção" description={`${sellers.length} vendedores com retenção ativa`}>
+      <SEO title="Gestão de Retenção - Admin Kambafy" description="Gerenciar retenções de saldo" noIndex />
 
         {/* Cards de Resumo */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
@@ -396,6 +372,6 @@ export default function AdminRetentionManagement() {
           }}
         />
       )}
-    </div>
+    </AdminLayout>
   );
 }

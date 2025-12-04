@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AdminNotificationCenter } from "@/components/AdminNotificationCenter";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
 interface Partner {
   id: string;
@@ -146,25 +147,20 @@ export default function AdminPartners() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
+      <AdminLayout title="Gestão de Parceiros" description="Gerir aplicações e parceiros da API KambaPay">
         <div className="flex items-center justify-center h-64">
           <div className="text-lg">Carregando parceiros...</div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Gestão de Parceiros</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Gerir aplicações e parceiros da API KambaPay
-          </p>
+    <AdminLayout title="Gestão de Parceiros" description="Gerir aplicações e parceiros da API KambaPay">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex justify-end">
+          <AdminNotificationCenter />
         </div>
-        <AdminNotificationCenter />
-      </div>
 
       {/* Stats - Responsivo */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -379,6 +375,7 @@ export default function AdminPartners() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
 interface Product {
   id: string;
@@ -151,8 +152,7 @@ export default function AdminProductApproval() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Controle do Marketplace</h1>
+      <AdminLayout title="Controle do Marketplace" description={`Gerencie quais produtos aparecem no marketplace`}>
         <div className="grid gap-4">
           {[...Array(5)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -163,19 +163,12 @@ export default function AdminProductApproval() {
             </Card>
           ))}
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Controle do Marketplace</h1>
-        <p className="text-muted-foreground">
-          Gerencie quais produtos aparecem no marketplace - Total: {products?.length || 0} produtos
-        </p>
-      </div>
-
+    <AdminLayout title="Controle do Marketplace" description={`Gerencie quais produtos aparecem no marketplace - Total: ${products?.length || 0} produtos`}>
       <div className="flex items-center gap-4 mb-6">
         <Input
           placeholder="Buscar por nome do produto ou vendedor..."
@@ -274,6 +267,6 @@ export default function AdminProductApproval() {
           ))}
         </div>
       )}
-    </div>
+    </AdminLayout>
   );
 }
