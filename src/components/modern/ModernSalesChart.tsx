@@ -141,7 +141,7 @@ export function ModernSalesChart() {
       <CardHeader className="pb-1 px-4 pt-4">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs text-muted-foreground font-medium">Total em transações recebidas</p>
+            <p className="text-xs text-muted-foreground font-medium">Vendas dos últimos 7 dias</p>
             <h2 className="text-xl md:text-2xl font-bold text-foreground mt-0.5">
               {totalValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
             </h2>
