@@ -137,27 +137,27 @@ export function ModernSalesChart() {
   };
 
   return (
-    <Card className="rounded-[14px] shadow-card border border-border/50 w-full overflow-hidden">
-      <CardHeader className="pb-2">
+    <Card className="rounded-[14px] shadow-card border border-border/50 w-full overflow-hidden h-full">
+      <CardHeader className="pb-1 px-4 pt-4">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[13px] text-muted-foreground font-medium">Total em transações recebidas</p>
-            <h2 className="text-2xl md:text-[30px] font-bold text-foreground mt-1">
+            <p className="text-xs text-muted-foreground font-medium">Total em transações recebidas</p>
+            <h2 className="text-xl md:text-2xl font-bold text-foreground mt-0.5">
               {totalValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
             </h2>
-            <p className="text-[13px] text-muted-foreground mt-1">
-              <span className="font-medium text-foreground">{totalCount}</span> transações no período selecionado
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">{totalCount}</span> transações (7 dias)
             </p>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
+      <CardContent className="px-4 pb-4 pt-1">
         {loading ? (
-          <div className="h-48 sm:h-56 flex items-center justify-center">
+          <div className="h-[180px] flex items-center justify-center">
             <span className="text-muted-foreground text-sm">Carregando...</span>
           </div>
         ) : (
-          <ChartContainer config={chartConfig} className="h-48 sm:h-56 w-full">
+          <ChartContainer config={chartConfig} className="h-[180px] w-full">
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
