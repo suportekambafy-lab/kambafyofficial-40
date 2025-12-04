@@ -18,7 +18,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import { BankingInfo } from "@/components/BankingInfo";
 import { useCustomToast } from '@/hooks/useCustomToast';
@@ -270,9 +270,7 @@ export default function Financial() {
   if (loading) {
     return (
       <OptimizedPageWrapper>
-        <div className="flex justify-center items-center min-h-[400px]">
-          <LoadingSpinner />
-        </div>
+        <PageSkeleton variant="financial" />
       </OptimizedPageWrapper>
     );
   }

@@ -14,7 +14,7 @@ import DeleteProductModal from '@/components/DeleteProductModal';
 import RequestRevisionModal from '@/components/RequestRevisionModal';
 import { useOptimizedQuery } from '@/hooks/useOptimizedQuery';
 import { ProductCard } from '@/components/ProductCard';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 
 interface Product {
   id: string;
@@ -346,9 +346,7 @@ export default function Products() {
   if (loading) {
     return (
       <div className="p-3 md:p-6 overflow-x-hidden">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <LoadingSpinner text="Carregando produtos..." />
-        </div>
+        <PageSkeleton variant="products" />
       </div>
     );
   }

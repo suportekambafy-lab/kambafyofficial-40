@@ -24,7 +24,7 @@ import { MemberAreaCreationForm } from "@/components/MemberAreaCreationForm";
 import { MemberAreaOffersManager } from "@/components/MemberAreaOffersManager";
 import { useNavigate } from "react-router-dom";
 import type { Lesson, Module, MemberArea, ComplementaryLink, LessonMaterial } from "@/types/memberArea";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 import { LessonLinksManager } from '@/components/LessonLinksManager';
@@ -1031,9 +1031,7 @@ export default function Members() {
     }
   };
   if (loading) {
-    return <div className="p-3 md:p-6 flex items-center justify-center">
-        <LoadingSpinner text="Carregando..." />
-      </div>;
+    return <PageSkeleton variant="members" />;
   }
   if (!user) {
     return <div className="p-3 md:p-6 flex items-center justify-center">
@@ -1365,8 +1363,10 @@ export default function Members() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 md:space-y-4">
-                {loadingProducts ? <div className="text-center py-6 md:py-8">
-                    <LoadingSpinner size="sm" text="Carregando cursos..." />
+                {loadingProducts ? <div className="text-center py-6 md:py-8 space-y-3">
+                    <div className="animate-pulse space-y-3">
+                      {[1,2,3].map(i => <div key={i} className="h-12 bg-muted rounded-lg" />)}
+                    </div>
                   </div> : products.length > 0 ? <div className="space-y-2 md:space-y-3">
                     {products.map(product => <div key={product.id} className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between p-3 border rounded-lg hover:bg-gray-50">
                         <div className="flex items-center gap-2 md:gap-3 flex-1">
@@ -2393,8 +2393,10 @@ export default function Members() {
 
             <Card>
               <CardContent className="p-0">
-                {loadingProducts ? <div className="text-center py-6 md:py-8">
-                    <LoadingSpinner size="sm" text="Carregando cursos..." />
+                {loadingProducts ? <div className="text-center py-6 md:py-8 space-y-3">
+                    <div className="animate-pulse space-y-3 p-4">
+                      {[1,2,3].map(i => <div key={i} className="h-16 bg-muted rounded-lg" />)}
+                    </div>
                   </div> : <>
                     {/* Versão móvel - Cards */}
                     <div className="block md:hidden">
