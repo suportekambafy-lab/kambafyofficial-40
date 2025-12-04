@@ -325,13 +325,13 @@ export function ModernSidebar({
                 className="h-full bg-yellow-500 rounded-full" 
               />
             </div>
-            <span className="text-[10px] text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
+            <span className="text-[10px] text-yellow-500 font-semibold">{progressPercent.toFixed(0)}%</span>
           </div>
         ) : (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
               <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
-              <span className="text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
+              <span className="text-yellow-500 font-semibold">{progressPercent.toFixed(0)}%</span>
             </div>
             <div className="w-full h-1.5 bg-sidebar-accent rounded-full overflow-hidden">
               <motion.div 
