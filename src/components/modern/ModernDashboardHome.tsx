@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Capacitor } from '@capacitor/core';
-import { ModernMetricCard } from './ModernMetricCard';
 import { ModernSalesChart } from './ModernSalesChart';
 import { ModernPaymentMethodsChart } from './ModernPaymentMethodsChart';
 import { ModernRecentSales } from './ModernRecentSales';
@@ -11,9 +10,8 @@ import { AppDownloadBanner } from './AppDownloadBanner';
 import { ProductFilter } from '@/components/ProductFilter';
 import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-period-selector';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
-import { OnboardingTrigger } from '@/components/onboarding/OnboardingTrigger';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
-import { DollarSign, ShoppingBag, TrendingUp, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -473,51 +471,30 @@ export function ModernDashboardHome() {
           </div>
         </div>
 
-        {/* Metric Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-onboarding="revenue-card">
-          <ModernMetricCard
-            title="Vendas realizadas"
-            value={showValues.revenue ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` : "••••••••"}
-            icon={<Eye className="w-4 h-4" />}
-            trend={calculateTrend(dashboardData.totalRevenue, dashboardData.previousRevenue)}
-            trendUp={dashboardData.totalRevenue >= dashboardData.previousRevenue}
-            accentColor="bg-primary"
-            action={
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowValues(prev => ({ ...prev, revenue: !prev.revenue }))}
-                className="h-8 w-8 p-0 rounded-lg hover:bg-secondary"
-              >
-                {showValues.revenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </Button>
-            }
-          />
-
-          <ModernMetricCard
-            title="Itens vendidos"
-            value={showValues.sales ? `${dashboardData.totalSales}` : "••••"}
-            icon={<Eye className="w-4 h-4" />}
-            trend={calculateTrend(dashboardData.totalSales, dashboardData.previousSales)}
-            trendUp={dashboardData.totalSales >= dashboardData.previousSales}
-            accentColor="bg-blue-500"
-            action={
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowValues(prev => ({ ...prev, sales: !prev.sales }))}
-                className="h-8 w-8 p-0 rounded-lg hover:bg-secondary"
-              >
-                {showValues.sales ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </Button>
-            }
-          />
+        {/* Total Sales Card - Prominent Display */}
+        <div className="bg-card rounded-[14px] border border-border/40 p-5 shadow-sm" data-onboarding="revenue-card">
+          <p className="text-sm text-muted-foreground mb-1">Total em vendas</p>
+          <div className="flex items-center justify-between">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+              {showValues.revenue 
+                ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` 
+                : "••••••••"}
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowValues(prev => ({ ...prev, revenue: !prev.revenue }))}
+              className="h-9 w-9 p-0 rounded-full hover:bg-secondary"
+            >
+              {showValues.revenue ? <Eye className="h-5 w-5 text-muted-foreground" /> : <EyeOff className="h-5 w-5 text-muted-foreground" />}
+            </Button>
+          </div>
         </div>
 
         {/* Chart Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
-            <ModernSalesChart />
+            <ModernSalesChart timeFilter={timeFilter} />
           </div>
           <ModernPaymentMethodsChart />
         </div>
