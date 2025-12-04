@@ -153,3 +153,5 @@ verify_jwt = false
 [functions.add-students-to-cohorts]
 verify_jwt = false
 
+[functions.test-webhook-event]
+verify_jwt = false
