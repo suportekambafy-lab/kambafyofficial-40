@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ShoppingCart, Search, RefreshCw, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building, Calendar, Package, User, DollarSign, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import professionalManImage from "@/assets/professional-man.jpg";
@@ -339,9 +339,7 @@ export default function Sales() {
     });
   };
   return <OptimizedPageWrapper skeletonVariant="list">
-      {loading ? <div className="p-3 md:p-6 flex items-center justify-center min-h-96">
-          <LoadingSpinner text="Carregando vendas..." />
-        </div> : <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
+      {loading ? <PageSkeleton variant="sales" /> : <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
       {/* Header com total de vendas */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
