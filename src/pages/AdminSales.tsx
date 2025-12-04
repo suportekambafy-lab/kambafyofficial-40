@@ -477,8 +477,8 @@ export default function AdminSales() {
             <TableHeader>
               <TableRow className="border-b border-[hsl(var(--admin-border))] hover:bg-transparent">
                 <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">ID da transação</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Produto</TableHead>
                 <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Montante ↑</TableHead>
-                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Liquidação</TableHead>
                 <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Data ↓</TableHead>
                 <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Método de pagamento</TableHead>
                 <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Estado</TableHead>
@@ -498,10 +498,12 @@ export default function AdminSales() {
                     <TableCell className="font-mono text-sm text-[hsl(var(--admin-text))]">
                       {order.order_id?.slice(0, 12) || 'N/A'}
                     </TableCell>
+                    <TableCell className="text-[hsl(var(--admin-text))] max-w-[200px] truncate" title={order.products?.name || 'N/A'}>
+                      {order.products?.name || 'N/A'}
+                    </TableCell>
                     <TableCell className="font-medium text-[hsl(var(--admin-text))]">
                       {formatCurrency(parseFloat(order.amount), order.currency || 'KZ')}
                     </TableCell>
-                    <TableCell className="text-[hsl(var(--admin-text-secondary))]">N/A</TableCell>
                     <TableCell className="text-[hsl(var(--admin-text-secondary))]">
                       {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                     </TableCell>
