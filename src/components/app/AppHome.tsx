@@ -1322,20 +1322,6 @@ export function AppHome() {
               </CardContent>
             </Card>
 
-            {/* Quick Stats */}
-            <Card className="overflow-hidden rounded-xl border-l-[6px] shadow-sm bg-card" style={{
-              borderLeftColor: 'hsl(142, 76%, 36%)'
-            }}>
-              <CardContent className="p-4">
-                <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">Vendas líquidas</div>
-                  <div className="text-xl font-bold tracking-tight text-foreground">
-                    {loading ? '...' : formatPriceForSeller(stats.totalRevenue, 'KZ')}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Pedidos feitos e pagos */}
             <div className="grid grid-cols-2 gap-3">
               <Card className="overflow-hidden rounded-xl shadow-sm bg-card">
