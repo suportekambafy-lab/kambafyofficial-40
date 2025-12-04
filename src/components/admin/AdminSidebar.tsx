@@ -96,9 +96,9 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
       <div className="p-5 flex items-center justify-between border-b border-[hsl(var(--admin-border))]">
         <div className="flex items-center gap-3">
           {collapsed ? (
-            <img src={kambabyLogo} alt="Kambafy" className="h-10 w-10 object-contain" />
+            <img src={kambabyLogo} alt="Kambafy" className="h-12 w-12 object-contain" />
           ) : (
-            <img src={kambabyLogo} alt="Kambafy" className="h-8 object-contain" />
+            <img src={kambabyLogo} alt="Kambafy" className="h-14 object-contain" />
           )}
         </div>
         <button 
