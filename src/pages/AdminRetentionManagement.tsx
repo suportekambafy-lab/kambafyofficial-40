@@ -161,9 +161,10 @@ export default function AdminRetentionManagement() {
   return (
     <AdminLayout title="Gestão de Retenção" description={`${sellers.length} vendedores com retenção ativa`}>
       <SEO title="Gestão de Retenção - Admin Kambafy" description="Gerenciar retenções de saldo" noIndex />
-
+      
+      <div className="space-y-6">
         {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
