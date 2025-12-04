@@ -101,7 +101,7 @@ export function ModernKambaAchievements() {
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-3 sm:space-y-4 overflow-x-hidden">
+        <CardContent className="space-y-3 sm:space-y-4 overflow-x-hidden pb-3 sm:pb-4">
           {/* Nível atual */}
           
 
@@ -123,12 +123,12 @@ export function ModernKambaAchievements() {
             </div>}
 
           {/* Níveis conquistados */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <p className="text-xs sm:text-sm font-medium text-foreground">
               Selos Conquistados ({achievedLevels.length}/{allLevels.length})
             </p>
             <TooltipProvider>
-              <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6">
+              <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6">
                 {allLevels.map(level => {
                   const isAchieved = totalRevenue >= level.threshold;
                   return (
