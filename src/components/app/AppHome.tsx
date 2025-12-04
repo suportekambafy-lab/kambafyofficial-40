@@ -1386,7 +1386,7 @@ export function AppHome() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   return <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-background pb-28 pt-0 overflow-x-hidden">
+      <div className="min-h-screen bg-white dark:bg-background pb-28 pt-0 overflow-x-hidden">
         {/* Fixed Header - Similar to Landing */}
         <header className="fixed top-0 left-0 right-0 z-50">
         <nav className="px-2 pt-2">
