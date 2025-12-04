@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
@@ -14,6 +14,18 @@ interface ChartData {
 interface ModernSalesChartProps {
   timeFilter?: string;
 }
+
+const getFilterLabel = (filter: string) => {
+  const labels: Record<string, string> = {
+    'hoje': 'Hoje',
+    'ontem': 'Ontem',
+    'ultimos-7-dias': 'Últimos 7 dias',
+    'ultimos-30-dias': 'Últimos 30 dias',
+    'este-mes': 'Este mês',
+    'custom': 'Período personalizado'
+  };
+  return labels[filter] || 'Todos';
+};
 
 export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps) {
   const { user } = useAuth();
@@ -55,24 +67,68 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
       
       if (userProductIds.length === 0) {
         setChartData([]);
+        setOrdersCount(0);
+        setPaidOrdersCount(0);
+        setOrdersTrend(0);
+        setPaidTrend(0);
         return;
       }
 
       // Determine date range based on filter
       const now = new Date();
       let startDate = new Date();
+      let endDate = new Date();
       let prevStartDate = new Date();
       let prevEndDate = new Date();
+      let daysInPeriod = 1;
 
-      if (timeFilter === 'hoje') {
-        startDate.setHours(0, 0, 0, 0);
-        prevStartDate = new Date(startDate);
-        prevStartDate.setDate(prevStartDate.getDate() - 1);
-        prevEndDate = new Date(startDate);
-      } else {
-        startDate.setDate(now.getDate() - 7);
-        prevStartDate.setDate(now.getDate() - 14);
-        prevEndDate.setDate(now.getDate() - 7);
+      switch (timeFilter) {
+        case 'hoje':
+          startDate.setHours(0, 0, 0, 0);
+          endDate = now;
+          prevStartDate = new Date(startDate);
+          prevStartDate.setDate(prevStartDate.getDate() - 1);
+          prevEndDate = new Date(startDate);
+          daysInPeriod = 1;
+          break;
+        case 'ontem':
+          startDate = new Date(now);
+          startDate.setDate(startDate.getDate() - 1);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(startDate);
+          endDate.setHours(23, 59, 59, 999);
+          prevStartDate = new Date(startDate);
+          prevStartDate.setDate(prevStartDate.getDate() - 1);
+          prevEndDate = new Date(startDate);
+          daysInPeriod = 1;
+          break;
+        case 'ultimos-7-dias':
+          startDate.setDate(now.getDate() - 7);
+          endDate = now;
+          prevStartDate.setDate(now.getDate() - 14);
+          prevEndDate.setDate(now.getDate() - 7);
+          daysInPeriod = 7;
+          break;
+        case 'ultimos-30-dias':
+          startDate.setDate(now.getDate() - 30);
+          endDate = now;
+          prevStartDate.setDate(now.getDate() - 60);
+          prevEndDate.setDate(now.getDate() - 30);
+          daysInPeriod = 30;
+          break;
+        case 'este-mes':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          endDate = now;
+          prevStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          prevEndDate = new Date(now.getFullYear(), now.getMonth(), 0);
+          daysInPeriod = now.getDate();
+          break;
+        default:
+          startDate.setDate(now.getDate() - 7);
+          endDate = now;
+          prevStartDate.setDate(now.getDate() - 14);
+          prevEndDate.setDate(now.getDate() - 7);
+          daysInPeriod = 7;
       }
 
       // Fetch current period orders
@@ -81,6 +137,7 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
         .select('created_at, amount, seller_commission, currency, product_id, status')
         .in('product_id', userProductIds)
         .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString())
         .order('created_at', { ascending: true });
 
       // Fetch previous period for trend comparison
@@ -121,8 +178,8 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
       });
       setTotalValue(total);
 
-      // Group data by hour for today, or by day for week
-      if (timeFilter === 'hoje') {
+      // Group data by hour for today/yesterday, or by day for longer periods
+      if (timeFilter === 'hoje' || timeFilter === 'ontem') {
         const salesByHour: { [key: string]: number } = {};
         for (let i = 0; i < 24; i += 2) {
           const hourKey = `${i.toString().padStart(2, '0')}:00`;
@@ -155,9 +212,9 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
         }));
         setChartData(formattedData);
       } else {
-        // Weekly view
+        // Daily view for longer periods
         const salesByDay: { [key: string]: number } = {};
-        for (let i = 6; i >= 0; i--) {
+        for (let i = daysInPeriod - 1; i >= 0; i--) {
           const date = new Date();
           date.setDate(date.getDate() - i);
           const dayKey = date.toISOString().split('T')[0];
@@ -203,6 +260,8 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
     }
   };
 
+  const filterLabel = getFilterLabel(timeFilter);
+
   return (
     <Card className="rounded-[14px] shadow-sm border border-border/40 bg-card overflow-hidden">
       <CardHeader className="pb-2 px-5 pt-5">
@@ -242,12 +301,12 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
                   tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
                   tickFormatter={value => {
                     if (value === 0) return '0';
+                    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                     if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
                     return value.toString();
                   }}
-                  width={45}
+                  width={50}
                   domain={[0, 'auto']}
-                  ticks={[0, 125, 250, 375, 500]}
                 />
                 <ChartTooltip 
                   content={<ChartTooltipContent />} 
@@ -283,8 +342,8 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
                     }
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground">Todos</span>
-                <p className="text-2xl font-bold text-foreground">{ordersCount}</p>
+                <span className="text-xs text-muted-foreground">{filterLabel}</span>
+                <p className="text-2xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
               </div>
 
               <div className="bg-secondary/30 rounded-xl p-4">
@@ -295,15 +354,15 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
                       ? 'bg-emerald-100 text-emerald-700' 
                       : 'bg-red-100 text-red-600'
                   }`}>
-                    {paidTrend >= 0 ? '+' : ''}{paidTrend < 0 ? paidTrend.toString().replace('-', '-0') : paidTrend.toString().padStart(2, '0')}
+                    {paidTrend >= 0 ? '+' : ''}{paidTrend}
                     {paidTrend >= 0 
                       ? <TrendingUp className="w-3 h-3" /> 
                       : <TrendingDown className="w-3 h-3" />
                     }
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground">Todos</span>
-                <p className="text-2xl font-bold text-foreground">{paidOrdersCount}</p>
+                <span className="text-xs text-muted-foreground">{filterLabel}</span>
+                <p className="text-2xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
               </div>
             </div>
           </>
