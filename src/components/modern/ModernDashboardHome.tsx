@@ -501,26 +501,22 @@ export function ModernDashboardHome() {
             <div className="w-full">
               <ModernSalesChart timeFilter={timeFilter} />
             </div>
-
-            {/* Recent Sales - Only on mobile/tablet, hidden on xl */}
-            <div className="xl:hidden">
-              <ModernRecentSales />
-            </div>
           </div>
 
           {/* Right Column - Sidebar (only visible on xl screens) */}
-          <div className="hidden xl:flex xl:flex-col xl:w-[320px] xl:flex-shrink-0 gap-4">
-            {/* Achievements Card */}
+          <div className="hidden xl:block xl:w-[320px] xl:flex-shrink-0">
             <ModernKambaAchievements />
-            
-            {/* Recent Sales */}
-            <ModernRecentSales />
           </div>
 
-          {/* Achievements - Only on mobile/tablet, hidden on xl */}
+          {/* Achievements - Only on mobile/tablet */}
           <div className="xl:hidden">
             <ModernKambaAchievements />
           </div>
+        </div>
+
+        {/* Recent Sales - Full width at bottom */}
+        <div className="w-full">
+          <ModernRecentSales />
         </div>
       </div>
     </>
