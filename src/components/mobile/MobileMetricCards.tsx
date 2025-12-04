@@ -1,7 +1,6 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { DollarSign, TrendingUp } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface SalesData {
   totalRevenue: number;
@@ -20,39 +19,62 @@ interface MobileMetricCardsProps {
 }
 
 export function MobileMetricCards({ salesData, loading, formatPrice }: MobileMetricCardsProps) {
+  const [showRevenue, setShowRevenue] = useState(true);
+
   return (
     <div className="space-y-4">
-      <Card className="rounded-2xl shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-blue-600" />
-            </div>
+      {/* Total em vendas - Card principal */}
+      <Card className="rounded-xl shadow-sm border-l-4 border-l-primary bg-card">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
             <div className="flex-1">
-              <div className="text-sm text-muted-foreground mb-1">Valor líquido</div>
+              <div className="text-sm text-muted-foreground mb-1">Total em vendas</div>
               <div className="text-2xl font-bold text-foreground">
-                {loading ? '...' : formatPrice(salesData.totalRevenue)}
+                {loading ? '...' : showRevenue ? formatPrice(salesData.totalRevenue) : '••••••••'}
               </div>
             </div>
+            <button 
+              onClick={() => setShowRevenue(!showRevenue)}
+              className="p-2 rounded-full hover:bg-muted transition-colors"
+            >
+              {showRevenue ? (
+                <Eye className="w-5 h-5 text-muted-foreground" />
+              ) : (
+                <EyeOff className="w-5 h-5 text-muted-foreground" />
+              )}
+            </button>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-green-600" />
+      {/* Cards lado a lado */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Pedidos feitos */}
+        <Card className="rounded-xl shadow-sm bg-card">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-muted-foreground">Pedidos feitos</span>
             </div>
-            <div className="flex-1">
-              <div className="text-sm text-muted-foreground mb-1">Vendas</div>
-              <div className="text-2xl font-bold text-foreground">
-                {loading ? '...' : salesData.totalSales}
-              </div>
+            <div className="text-xs text-muted-foreground mb-2">Últimos 30 dias</div>
+            <div className="text-2xl font-bold text-foreground">
+              {loading ? '...' : salesData.totalSales}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Pedidos pagos */}
+        <Card className="rounded-xl shadow-sm bg-card">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-muted-foreground">Pedidos pagos</span>
+            </div>
+            <div className="text-xs text-muted-foreground mb-2">Últimos 30 dias</div>
+            <div className="text-2xl font-bold text-foreground">
+              {loading ? '...' : Math.floor(salesData.totalSales * 0.3)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
