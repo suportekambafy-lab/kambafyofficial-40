@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { 
-  ArrowLeft, 
   TrendingUp, 
   Users, 
   DollarSign, 
@@ -20,7 +19,8 @@ import {
   CreditCard,
   AlertCircle,
   Filter,
-  BarChart3
+  BarChart3,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BanUserDialog } from '@/components/BanUserDialog';
@@ -28,6 +28,7 @@ import { SEO } from '@/components/SEO';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SellerRetentionDialog } from '@/components/admin/SellerRetentionDialog';
 import { Shield } from 'lucide-react';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface SellerReport {
   user_id: string;
@@ -50,7 +51,6 @@ interface SellerReport {
 
 export default function AdminSellerReports() {
   const { admin } = useAdminAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [sellers, setSellers] = useState<SellerReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -355,48 +355,25 @@ export default function AdminSellerReports() {
     return matchesSearch && matchesFilter;
   });
 
+  if (!admin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Carregando relatórios...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
+        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <AdminLayout title="Relatórios de Vendedores" description={`Análise completa de ${sellers.length} vendedores`}>
       <SEO 
         title="Relatórios de Vendedores - Admin Kambafy"
         description="Análise detalhada de vendedores da plataforma"
         noIndex
       />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/admin')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-                <BarChart3 className="h-8 w-8" />
-                Relatórios de Vendedores
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Análise completa de {sellers.length} vendedores na plataforma
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Filtros */}
         <Card className="mb-6">
@@ -634,7 +611,6 @@ export default function AdminSellerReports() {
             ))}
           </div>
         )}
-      </div>
 
       {/* Dialog de Banimento */}
       <BanUserDialog
@@ -662,6 +638,6 @@ export default function AdminSellerReports() {
           }}
         />
       )}
-    </div>
+    </AdminLayout>
   );
 }

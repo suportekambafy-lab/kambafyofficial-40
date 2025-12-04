@@ -3,18 +3,16 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Navigate } from 'react-router-dom';
 import { PendingTransfersManager } from '@/components/admin/PendingTransfersManager';
 import { SEO } from '@/components/SEO';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { Loader2 } from 'lucide-react';
 
 export default function AdminPaymentApprovals() {
   const { admin, loading } = useAdminAuth();
-  const navigate = useNavigate();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
+        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
       </div>
     );
   }
@@ -24,35 +22,16 @@ export default function AdminPaymentApprovals() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <AdminLayout 
+      title="Aprovar Pagamentos" 
+      description="Gerencie transferências bancárias pendentes"
+    >
       <SEO 
         title="Aprovar Pagamentos - Admin | Kambafy"
         description="Painel de aprovação de pagamentos por transferência bancária"
+        noIndex
       />
-      
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <div className="mb-4 sm:mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/admin')}
-            className="mb-3 sm:mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Voltar ao Dashboard</span>
-            <span className="sm:hidden">Voltar</span>
-          </Button>
-          
-          <div className="flex items-center gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Aprovar Pagamentos</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Gerencie transferências bancárias pendentes</p>
-            </div>
-          </div>
-        </div>
-
-        <PendingTransfersManager />
-      </div>
-    </div>
+      <PendingTransfersManager />
+    </AdminLayout>
   );
 }
