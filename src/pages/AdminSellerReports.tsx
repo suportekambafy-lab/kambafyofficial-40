@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { 
   TrendingUp, 
@@ -17,17 +16,31 @@ import {
   Wallet,
   ShoppingBag,
   CreditCard,
-  AlertCircle,
-  Filter,
-  BarChart3,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Shield,
+  MoreHorizontal
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BanUserDialog } from '@/components/BanUserDialog';
 import { SEO } from '@/components/SEO';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SellerRetentionDialog } from '@/components/admin/SellerRetentionDialog';
-import { Shield } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface SellerReport {
@@ -61,7 +74,8 @@ export default function AdminSellerReports() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'banned' | 'creator'>('all');
   const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
   const [sellerToManage, setSellerToManage] = useState<SellerReport | null>(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   useEffect(() => {
     if (admin) {
       loadSellersReport();
@@ -355,6 +369,48 @@ export default function AdminSellerReports() {
     return matchesSearch && matchesFilter;
   });
 
+  // Pagination
+  const totalPages = Math.ceil(filteredSellers.length / itemsPerPage);
+  const paginatedSellers = filteredSellers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Stats
+  const totalRevenue = sellers.reduce((sum, s) => sum + s.total_revenue, 0);
+  const totalSales = sellers.reduce((sum, s) => sum + s.total_sales, 0);
+  const totalWithdrawals = sellers.reduce((sum, s) => sum + s.total_withdrawals, 0);
+
+  const getStatusBadge = (banned: boolean | null, isCreator: boolean | null, retention?: number) => {
+    if (banned) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
+          Banido
+        </span>
+      );
+    }
+    if (retention && retention > 0) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
+          <Shield className="h-3 w-3 mr-1" />
+          Retenção {retention}%
+        </span>
+      );
+    }
+    if (isCreator) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
+          Criador
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+        Ativo
+      </span>
+    );
+  };
+
   if (!admin) {
     return <Navigate to="/admin/login" replace />;
   }
@@ -375,242 +431,215 @@ export default function AdminSellerReports() {
         noIndex
       />
 
-        {/* Filtros */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Buscar por nome ou email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <div className="w-full sm:w-[200px]">
-                <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
-                  <SelectTrigger>
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="active">Ativos</SelectItem>
-                    <SelectItem value="creator">Criadores</SelectItem>
-                    <SelectItem value="banned">Banidos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Total Vendedores
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{sellers.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {filteredSellers.length} visíveis com filtros
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4" />
-                Total de Vendas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {sellers.reduce((sum, s) => sum + s.total_sales, 0)}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Transações completadas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Receita Total
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {sellers.reduce((sum, s) => sum + s.total_revenue, 0).toLocaleString('pt-AO')} KZ
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Valor bruto gerado
-              </p>
-            </CardContent>
-          </Card>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-[hsl(var(--admin-bg))] flex items-center justify-center">
+            <Users className="h-5 w-5 text-[hsl(var(--admin-text-secondary))]" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Total Vendedores</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{sellers.length.toLocaleString()}</p>
+          </div>
         </div>
 
-        {/* Lista de Vendedores */}
-        {filteredSellers.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">Nenhum vendedor encontrado</p>
-              <p className="text-muted-foreground">Tente ajustar os filtros de busca</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSellers.map((seller) => (
-              <Card key={seller.user_id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                    <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold">
-                        {seller.full_name?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base truncate">
-                          {seller.full_name || 'Sem nome'}
-                        </CardTitle>
-                        <CardDescription className="text-xs truncate">
-                          {seller.email}
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      {seller.banned && (
-                        <Badge variant="destructive">Banido</Badge>
-                      )}
-                      {seller.is_creator && !seller.banned && (
-                        <Badge className="bg-purple-600">Criador</Badge>
-                      )}
-                      {!seller.banned && !seller.is_creator && (
-                        <Badge variant="secondary">Ativo</Badge>
-                      )}
-                      {seller.balance_retention_percentage && seller.balance_retention_percentage > 0 && (
-                        <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20">
-                          <Shield className="h-3 w-3 mr-1" />
-                          Retenção {seller.balance_retention_percentage}%
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center">
+            <ShoppingBag className="h-5 w-5 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Total Vendas</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{totalSales.toLocaleString()}</p>
+          </div>
+        </div>
 
-                <CardContent className="space-y-4">
-                  {/* Métricas */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-                        <ShoppingBag className="h-3 w-3" />
-                        Vendas
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center">
+            <DollarSign className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Receita Total</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{totalRevenue.toLocaleString('pt-AO')} KZ</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center">
+            <Wallet className="h-5 w-5 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Total Saques</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{totalWithdrawals.toLocaleString('pt-AO')} KZ</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Card */}
+      <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))]">
+        {/* Table Header */}
+        <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[hsl(var(--admin-border))]">
+          <h3 className="font-semibold text-[hsl(var(--admin-text))]">Lista de vendedores</h3>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className="relative">
+              <Input
+                placeholder="Pesquisar vendedor..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-52 pl-3 pr-10 h-9 bg-white border-[hsl(var(--admin-border))] rounded-lg"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
+            </div>
+
+            {/* Filter */}
+            <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
+              <SelectTrigger className="w-32 h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Ativos</SelectItem>
+                <SelectItem value="creator">Criadores</SelectItem>
+                <SelectItem value="banned">Banidos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-[hsl(var(--admin-border))] hover:bg-transparent">
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Vendedor</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Vendas</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Receita</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Saldo</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Produtos</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Estado</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedSellers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-12 text-[hsl(var(--admin-text-secondary))]">
+                    Nenhum vendedor encontrado
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedSellers.map((seller) => (
+                  <TableRow key={seller.user_id} className="border-b border-[hsl(var(--admin-border))] hover:bg-[hsl(var(--admin-bg))]/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-[hsl(var(--admin-primary))] flex items-center justify-center">
+                          {seller.avatar_url ? (
+                            <img 
+                              src={seller.avatar_url} 
+                              alt={seller.full_name || 'Avatar'}
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-white font-bold">
+                              {seller.full_name?.charAt(0).toUpperCase() || 'U'}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-[hsl(var(--admin-text))]">
+                            {seller.full_name || 'Sem nome'}
+                          </p>
+                          <p className="text-sm text-[hsl(var(--admin-text-secondary))]">
+                            {seller.email}
+                          </p>
+                        </div>
                       </div>
-                      <div className="font-bold text-lg">{seller.total_sales}</div>
-                    </div>
+                    </TableCell>
+                    <TableCell className="text-[hsl(var(--admin-text))]">
+                      {seller.total_sales}
+                    </TableCell>
+                    <TableCell className="text-[hsl(var(--admin-text))] font-medium">
+                      {seller.total_revenue.toLocaleString('pt-AO')} KZ
+                    </TableCell>
+                    <TableCell className="text-emerald-600 font-medium">
+                      {seller.available_balance.toLocaleString('pt-AO')} KZ
+                    </TableCell>
+                    <TableCell className="text-[hsl(var(--admin-text))]">
+                      {seller.active_products}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(seller.banned, seller.is_creator, seller.balance_retention_percentage)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => {
+                            setSellerToManage(seller);
+                            setRetentionDialogOpen(true);
+                          }}>
+                            <Shield className="h-4 w-4 mr-2" />
+                            Gerenciar Retenção
+                          </DropdownMenuItem>
+                          {seller.banned ? (
+                            <DropdownMenuItem onClick={() => updateUserStatus(seller.user_id, false)}>
+                              <UserCheck className="h-4 w-4 mr-2" />
+                              Desbloquear
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem 
+                              onClick={() => handleBanUser(seller)}
+                              className="text-red-600"
+                            >
+                              <UserX className="h-4 w-4 mr-2" />
+                              Banir
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-                        <Package className="h-3 w-3" />
-                        Produtos
-                      </div>
-                      <div className="font-bold text-lg">{seller.active_products}</div>
-                    </div>
-
-                    <div className="bg-muted/50 rounded-lg p-3 col-span-2">
-                      <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-                        <DollarSign className="h-3 w-3" />
-                        Receita Total
-                      </div>
-                      <div className="font-bold text-lg">
-                        {seller.total_revenue.toLocaleString('pt-AO')} KZ
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Detalhes Financeiros */}
-                  <div className="space-y-2 pt-2 border-t">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <CreditCard className="h-3 w-3" />
-                        Saques
-                      </span>
-                      <span className="font-medium">
-                        {seller.total_withdrawals.toLocaleString('pt-AO')} KZ
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Wallet className="h-3 w-3" />
-                        Saldo
-                      </span>
-                      <span className="font-medium text-green-600">
-                        {seller.available_balance.toLocaleString('pt-AO')} KZ
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        Taxas
-                      </span>
-                      <span className="font-medium text-orange-600">
-                        {seller.total_fees.toLocaleString('pt-AO')} KZ
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Ações */}
-                  <div className="pt-2 space-y-2">
-                    <Button
-                      onClick={() => {
-                        setSellerToManage(seller);
-                        setRetentionDialogOpen(true);
-                      }}
-                      className="w-full"
-                      variant="outline"
-                    >
-                      <Shield className="h-4 w-4 mr-2" />
-                      Gerenciar Retenção
-                    </Button>
-                    
-                    {seller.banned ? (
-                      <Button
-                        onClick={() => updateUserStatus(seller.user_id, false)}
-                        disabled={processingId === seller.user_id}
-                        className="w-full"
-                        variant="outline"
-                      >
-                        <UserCheck className="h-4 w-4 mr-2" />
-                        {processingId === seller.user_id ? 'Processando...' : 'Desbloquear'}
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => handleBanUser(seller)}
-                        disabled={processingId === seller.user_id}
-                        className="w-full"
-                        variant="destructive"
-                      >
-                        <UserX className="h-4 w-4 mr-2" />
-                        {processingId === seller.user_id ? 'Processando...' : 'Banir Usuário'}
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="p-4 flex items-center justify-between border-t border-[hsl(var(--admin-border))]">
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">
+              Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredSellers.length)} de {filteredSellers.length}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-[hsl(var(--admin-text))]">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
+      </div>
 
       {/* Dialog de Banimento */}
       <BanUserDialog
