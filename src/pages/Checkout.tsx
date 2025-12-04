@@ -20,6 +20,7 @@ import { SEO } from "@/components/SEO";
 import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { logger } from "@/utils/productionLogger";
+import { getSubscriptionIntervalText } from "@/utils/priceFormatting";
 
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
@@ -2035,6 +2036,14 @@ const Checkout = () => {
                             : 'text-2xl'
                         }`}>
                           {getDisplayPrice(finalProductPrice, true)}
+                          {product.subscription_config?.is_subscription && (
+                            <span className="text-base font-normal text-gray-500">
+                              {' / '}{getSubscriptionIntervalText(
+                                product.subscription_config.interval || 'month',
+                                product.subscription_config.interval_count || 1
+                              )}
+                            </span>
+                          )}
                         </div>
                         {product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price) && (
                           <div className="text-base sm:text-lg text-gray-500 line-through whitespace-nowrap">

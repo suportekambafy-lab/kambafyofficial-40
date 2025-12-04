@@ -94,3 +94,20 @@ export const formatPriceForSeller = (
     ? `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`
     : `${amountInKZ.toLocaleString()} KZ`;
 };
+
+// Helper para obter o texto do intervalo de assinatura
+export const getSubscriptionIntervalText = (interval: string, intervalCount: number = 1): string => {
+  const intervals: Record<string, { singular: string; plural: string }> = {
+    'day': { singular: 'dia', plural: 'dias' },
+    'week': { singular: 'semana', plural: 'semanas' },
+    'month': { singular: 'mês', plural: 'meses' },
+    'year': { singular: 'ano', plural: 'anos' }
+  };
+  
+  const intervalInfo = intervals[interval] || intervals['month'];
+  
+  if (intervalCount === 1) {
+    return intervalInfo.singular;
+  }
+  return `${intervalCount} ${intervalInfo.plural}`;
+};

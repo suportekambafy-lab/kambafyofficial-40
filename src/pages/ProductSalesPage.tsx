@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { Helmet } from "react-helmet-async";
 import useEmblaCarousel from "embla-carousel-react";
 import { useGeoLocation } from "@/hooks/useGeoLocation";
-import { formatPrice } from "@/utils/priceFormatting";
+import { formatPrice, getSubscriptionIntervalText } from "@/utils/priceFormatting";
 import kambaFyLogo from "@/assets/kambafy-marketplace-logo.png";
 
 interface Product {
@@ -36,6 +36,11 @@ interface Product {
   seo_description?: string;
   seo_keywords?: string[];
   custom_prices?: Record<string, string>;
+  subscription_config?: {
+    is_subscription?: boolean;
+    interval?: string;
+    interval_count?: number;
+  };
   profiles?: {
     full_name: string;
     business_name?: string;
@@ -645,9 +650,14 @@ export default function ProductSalesPage() {
                       <div className="text-3xl font-bold text-primary mb-1">
                         {priceFormatted}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        por mês
-                      </div>
+                      {product.subscription_config?.is_subscription && (
+                        <div className="text-sm text-muted-foreground">
+                          por {getSubscriptionIntervalText(
+                            product.subscription_config.interval || 'month',
+                            product.subscription_config.interval_count || 1
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* CTA Button */}
@@ -728,7 +738,15 @@ export default function ProductSalesPage() {
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-xs text-muted-foreground">Preço</div>
+                <div className="text-xs text-muted-foreground">
+                  {product.subscription_config?.is_subscription 
+                    ? `por ${getSubscriptionIntervalText(
+                        product.subscription_config.interval || 'month',
+                        product.subscription_config.interval_count || 1
+                      )}`
+                    : 'Preço'
+                  }
+                </div>
                 <div className="text-xl font-bold text-primary">
                   {priceFormatted}
                 </div>

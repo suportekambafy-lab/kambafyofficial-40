@@ -31,6 +31,7 @@ import { ResourceHints } from "@/components/checkout/ResourceHints";
 import { OptimizedProductImage } from "@/components/checkout/OptimizedProductImage";
 import { OptimizedPaymentLogo } from "@/components/checkout/OptimizedPaymentLogo";
 import { usePaymentMethodPrefetch } from "@/hooks/usePaymentMethodPrefetch";
+import { getSubscriptionIntervalText } from "@/utils/priceFormatting";
 
 // Lazy load apenas componentes não-críticos
 const OptimizedCustomBanner = lazy(() => 
@@ -88,6 +89,12 @@ const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
     return formatPrice(priceInKZ, userCountry, product?.custom_prices);
   };
 
+  // Verificar se é assinatura e obter configuração
+  const subscriptionConfig = product?.subscription_config;
+  const isSubscription = subscriptionConfig?.is_subscription;
+  const subscriptionInterval = subscriptionConfig?.interval || 'month';
+  const subscriptionIntervalCount = subscriptionConfig?.interval_count || 1;
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-8">
       <div className="flex flex-col md:flex-row gap-6">
@@ -112,6 +119,11 @@ const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
           <div className="flex items-center gap-4 mb-4">
             <span className="text-3xl font-bold text-primary">
               {getDisplayPrice(parseFloat(product.price))}
+              {isSubscription && (
+                <span className="text-lg font-normal text-gray-500">
+                  {' / '}{getSubscriptionIntervalText(subscriptionInterval, subscriptionIntervalCount)}
+                </span>
+              )}
             </span>
             {product.sales && (
               <div className="flex items-center gap-1">
