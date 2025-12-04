@@ -471,11 +471,11 @@ export function ModernDashboardHome() {
 
         {/* Total Sales Card - Compact */}
         <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden" data-onboarding="revenue-card">
-          <div className="w-1 bg-[hsl(var(--checkout-green-dark))] shrink-0" />
+          <div className="w-1 bg-emerald-500 shrink-0" />
           <div className="flex-1 p-4">
             <p className="text-xs text-muted-foreground mb-0.5">Total em vendas</p>
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl md:text-3xl font-bold text-[hsl(var(--checkout-green-dark))]">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                 {showValues.revenue 
                   ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` 
                   : "••••••••"}
