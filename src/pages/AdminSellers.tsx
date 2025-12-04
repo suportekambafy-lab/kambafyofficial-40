@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 
 interface UserReport {
   user_id: string;
@@ -128,10 +129,8 @@ export default function AdminSellers() {
 
   if (loading) {
     return (
-      <AdminLayout title="Todos os Usuários" description={`${users.length} usuários cadastrados`}>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
+      <AdminLayout title="Todos os Usuários" description="Carregando dados...">
+        <AdminPageSkeleton variant="cards" />
       </AdminLayout>
     );
   }

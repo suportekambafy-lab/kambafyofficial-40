@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 
 interface SellerReport {
   user_id: string;
@@ -417,9 +418,9 @@ export default function AdminSellerReports() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
-        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
-      </div>
+      <AdminLayout title="Relatórios de Vendedores" description="Carregando dados...">
+        <AdminPageSkeleton variant="table" />
+      </AdminLayout>
     );
   }
 

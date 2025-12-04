@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 import {
   Select,
   SelectContent,
@@ -347,12 +348,9 @@ export default function AdminSales() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-[hsl(var(--admin-primary))]" />
-          <p className="text-[hsl(var(--admin-text-secondary))]">Carregando vendas...</p>
-        </div>
-      </div>
+      <AdminLayout title="Transações" description="Carregando dados...">
+        <AdminPageSkeleton variant="table" />
+      </AdminLayout>
     );
   }
 

@@ -12,6 +12,7 @@ import { useBulkWithdrawalProcessor } from '@/hooks/useBulkWithdrawalProcessor';
 import { WithdrawalRequestCard } from '@/components/admin/WithdrawalRequestCard';
 import { SEO } from '@/components/SEO';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 export default function AdminWithdrawals() {
   const { admin } = useAdminAuth();
   const { requests, rawRequests, loading, loadWithdrawalRequests } = useWithdrawalRequests();
@@ -85,9 +86,9 @@ export default function AdminWithdrawals() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
-        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
-      </div>
+      <AdminLayout title="Gerenciar Saques" description="Carregando dados...">
+        <AdminPageSkeleton variant="table" />
+      </AdminLayout>
     );
   }
 
