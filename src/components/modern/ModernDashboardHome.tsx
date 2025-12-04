@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Capacitor } from '@capacitor/core';
 import { ModernSalesChart } from './ModernSalesChart';
-import { ModernPaymentMethodsChart } from './ModernPaymentMethodsChart';
 import { ModernRecentSales } from './ModernRecentSales';
 import { ModernKambaAchievements } from './ModernKambaAchievements';
 import { AppDownloadBanner } from './AppDownloadBanner';
@@ -13,8 +12,7 @@ import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
-import { formatPriceForSeller } from '@/utils/priceFormatting';
+import { startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns';
 import { countTotalSales } from '@/utils/orderUtils';
 
 interface Order {
@@ -491,12 +489,9 @@ export function ModernDashboardHome() {
           </div>
         </div>
 
-        {/* Chart Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
-            <ModernSalesChart timeFilter={timeFilter} />
-          </div>
-          <ModernPaymentMethodsChart />
+        {/* Chart Section - Full Width */}
+        <div className="w-full">
+          <ModernSalesChart timeFilter={timeFilter} />
         </div>
 
         {/* Recent Sales & Achievements */}
