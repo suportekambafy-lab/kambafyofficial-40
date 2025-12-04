@@ -105,7 +105,7 @@ export default function Sales() {
   const loadingRef = useRef(false); // Controle via ref para evitar loops
   
   // ✅ VERSÃO DO CÓDIGO - Incrementar quando houver mudança importante
-  const CODE_VERSION = 'v2.11'; // Fix: "Vendas Registradas" agora conta items (com order bumps) igual aos outros cards
+  const CODE_VERSION = 'v2.12'; // Fix: Filtro canceladas inclui 'failed' e 'cancelled'
   const hasLoadedRef = useRef(false); // ✅ Controle para executar apenas uma vez automaticamente
   const lastCodeVersionRef = useRef<string | null>(null);
 
@@ -161,7 +161,12 @@ export default function Sales() {
       filtered = filtered.filter(sale => sale.customer_name.toLowerCase().includes(searchLower) || sale.customer_email.toLowerCase().includes(searchLower) || sale.order_id.toLowerCase().includes(searchLower) || sale.products?.name.toLowerCase().includes(searchLower));
     }
     if (statusFilter !== "todos") {
-      filtered = filtered.filter(sale => sale.status === statusFilter);
+      // ✅ FIX: "failed" inclui tanto 'failed' quanto 'cancelled'
+      if (statusFilter === "failed") {
+        filtered = filtered.filter(sale => sale.status === 'failed' || sale.status === 'cancelled');
+      } else {
+        filtered = filtered.filter(sale => sale.status === statusFilter);
+      }
     }
     if (paymentFilter !== "todos") {
       filtered = filtered.filter(sale => sale.payment_method === paymentFilter);
@@ -262,7 +267,7 @@ export default function Sales() {
       return <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
           Pendente
         </Badge>;
-    } else if (status === 'failed') {
+    } else if (status === 'failed' || status === 'cancelled') {
       return <Badge variant="destructive" className="text-xs">
           Cancelado
         </Badge>;
