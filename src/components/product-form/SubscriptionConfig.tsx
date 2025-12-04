@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Check, Play, Send, CheckCircle, XCircle, Settings2 } from "lucide-react";
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 export interface SubscriptionConfigData {
   is_subscription: boolean;
   product_type?: 'course' | 'software'; // Tipo do produto
@@ -28,16 +32,102 @@ export interface SubscriptionConfigData {
 interface SubscriptionConfigProps {
   value: SubscriptionConfigData;
   onChange: (config: SubscriptionConfigData) => void;
+  productId?: string;
 }
+
+const availableTestEvents = [
+  { id: 'subscription.paid', name: 'Assinatura Paga', description: 'Simula pagamento confirmado (dar acesso)' },
+  { id: 'subscription.payment_failed', name: 'Pagamento Não Efetuado', description: 'Simula expiração sem renovação (revogar acesso)' },
+  { id: 'subscription.created', name: 'Nova Assinatura', description: 'Simula criação de nova assinatura' },
+  { id: 'subscription.renewed', name: 'Assinatura Renovada', description: 'Simula renovação da assinatura' },
+  { id: 'subscription.cancelled', name: 'Assinatura Cancelada', description: 'Simula cancelamento da assinatura' },
+];
+
 export default function SubscriptionConfig({
   value,
-  onChange
+  onChange,
+  productId
 }: SubscriptionConfigProps) {
+  const { toast } = useToast();
+  const [selectedTestEvent, setSelectedTestEvent] = useState('subscription.paid');
+  const [eventTestLoading, setEventTestLoading] = useState(false);
+  const [lastTestResult, setLastTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
   const handleChange = (field: keyof SubscriptionConfigData, newValue: any) => {
     onChange({
       ...value,
       [field]: newValue
     });
+  };
+
+  const handleTestEvent = async () => {
+    if (!productId) {
+      toast({
+        title: "Erro",
+        description: "Salve o produto primeiro para testar webhooks",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!value.webhook_url) {
+      toast({
+        title: "Erro",
+        description: "Configure a URL do webhook primeiro",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setEventTestLoading(true);
+    setLastTestResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('test-webhook-event', {
+        body: {
+          event_type: selectedTestEvent,
+          product_id: productId,
+          webhook_url: value.webhook_url,
+          webhook_secret: value.webhook_secret
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setLastTestResult({ 
+          success: true, 
+          message: `Evento "${selectedTestEvent}" enviado com sucesso! Status: ${data.status}` 
+        });
+        toast({
+          title: "Teste enviado",
+          description: `Evento ${selectedTestEvent} enviado com sucesso`,
+        });
+      } else {
+        setLastTestResult({ 
+          success: false, 
+          message: `Falha ao enviar evento. Status: ${data.status}` 
+        });
+        toast({
+          title: "Falha no teste",
+          description: `Status HTTP: ${data.status}`,
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      console.error('Error testing webhook event:', error);
+      setLastTestResult({ 
+        success: false, 
+        message: error.message || "Erro ao enviar teste" 
+      });
+      toast({
+        title: "Erro",
+        description: error.message || "Falha ao testar webhook",
+        variant: "destructive"
+      });
+    } finally {
+      setEventTestLoading(false);
+    }
   };
   return <Card>
       <CardHeader>
@@ -226,77 +316,168 @@ export default function SubscriptionConfig({
                 </div>
 
                 {value.webhook_enabled && (
-                <div className="space-y-4 pl-4 border-l-2 border-primary/20">
-                  <div className="space-y-2">
-                    <Label htmlFor="webhook_url">URL do Webhook</Label>
-                    <Input
-                      id="webhook_url"
-                      placeholder="https://seuapp.com/api/kambafy/webhook"
-                      value={value.webhook_url || ''}
-                      onChange={(e) => handleChange('webhook_url', e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      URL onde seu software receberá as notificações
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="webhook_secret">Secret (Opcional)</Label>
-                    <Input
-                      id="webhook_secret"
-                      type="password"
-                      placeholder="Digite um secret para validação HMAC"
-                      value={value.webhook_secret || ''}
-                      onChange={(e) => handleChange('webhook_secret', e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Use para validar a autenticidade dos webhooks
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Eventos para Notificar</Label>
-                    <div className="space-y-2">
-                      {[
-                        { id: 'subscription.paid', label: '💰 Assinatura paga (pagamento confirmado)' },
-                        { id: 'subscription.payment_failed', label: '🚫 Pagamento não efetuado (expirou)' },
-                        { id: 'subscription.created', label: '✨ Nova assinatura criada' },
-                        { id: 'subscription.renewed', label: '🔄 Assinatura renovada' },
-                        { id: 'subscription.cancelled', label: '❌ Assinatura cancelada' },
-                        { id: 'payment.success', label: '✅ Pagamento aprovado' },
-                        { id: 'payment.failed', label: '⚠️ Pagamento falhou' },
-                      ].map((event) => (
-                        <div key={event.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={event.id}
-                            checked={(value.webhook_events || []).includes(event.id)}
-                            onCheckedChange={(checked) => {
-                              const currentEvents = value.webhook_events || [];
-                              const newEvents = checked
-                                ? [...currentEvents, event.id]
-                                : currentEvents.filter((e) => e !== event.id);
-                              handleChange('webhook_events', newEvents);
-                            }}
+                  <Tabs defaultValue="configurar" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="configurar" className="gap-2">
+                        <Settings2 className="h-4 w-4" />
+                        Configurar
+                      </TabsTrigger>
+                      <TabsTrigger value="testar" className="gap-2">
+                        <Play className="h-4 w-4" />
+                        Testar
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="configurar" className="space-y-4 mt-4">
+                      <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+                        <div className="space-y-2">
+                          <Label htmlFor="webhook_url">URL do Webhook</Label>
+                          <Input
+                            id="webhook_url"
+                            placeholder="https://seuapp.com/api/kambafy/webhook"
+                            value={value.webhook_url || ''}
+                            onChange={(e) => handleChange('webhook_url', e.target.value)}
                           />
-                          <Label htmlFor={event.id} className="text-sm font-normal cursor-pointer">
-                            {event.label}
-                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            URL onde seu software receberá as notificações. Use https://webhook.site para testes.
+                          </p>
                         </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Selecione quais eventos devem acionar o webhook
-                    </p>
-                  </div>
 
-                  <div className="bg-muted p-3 rounded-lg">
-                    <p className="text-xs text-muted-foreground">
-                      💡 <strong>Exemplo de payload:</strong> Seu software receberá um POST com dados do
-                      cliente, status da assinatura e informações de pagamento.
-                    </p>
-                  </div>
-                </div>
-              )}
+                        <div className="space-y-2">
+                          <Label htmlFor="webhook_secret">Secret (Opcional)</Label>
+                          <Input
+                            id="webhook_secret"
+                            type="password"
+                            placeholder="Digite um secret para validação HMAC"
+                            value={value.webhook_secret || ''}
+                            onChange={(e) => handleChange('webhook_secret', e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Use para validar a autenticidade dos webhooks
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Eventos para Notificar</Label>
+                          <div className="space-y-2">
+                            {[
+                              { id: 'subscription.paid', label: '💰 Assinatura paga (pagamento confirmado)' },
+                              { id: 'subscription.payment_failed', label: '🚫 Pagamento não efetuado (expirou)' },
+                              { id: 'subscription.created', label: '✨ Nova assinatura criada' },
+                              { id: 'subscription.renewed', label: '🔄 Assinatura renovada' },
+                              { id: 'subscription.cancelled', label: '❌ Assinatura cancelada' },
+                              { id: 'payment.success', label: '✅ Pagamento aprovado' },
+                              { id: 'payment.failed', label: '⚠️ Pagamento falhou' },
+                            ].map((event) => (
+                              <div key={event.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={event.id}
+                                  checked={(value.webhook_events || []).includes(event.id)}
+                                  onCheckedChange={(checked) => {
+                                    const currentEvents = value.webhook_events || [];
+                                    const newEvents = checked
+                                      ? [...currentEvents, event.id]
+                                      : currentEvents.filter((e) => e !== event.id);
+                                    handleChange('webhook_events', newEvents);
+                                  }}
+                                />
+                                <Label htmlFor={event.id} className="text-sm font-normal cursor-pointer">
+                                  {event.label}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Selecione quais eventos devem acionar o webhook
+                          </p>
+                        </div>
+
+                        <div className="bg-muted p-3 rounded-lg">
+                          <p className="text-xs text-muted-foreground">
+                            💡 <strong>Exemplo de payload:</strong> Seu software receberá um POST com dados do
+                            cliente, status da assinatura e informações de pagamento.
+                          </p>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="testar" className="space-y-4 mt-4">
+                      <div className="space-y-4 p-4 border border-primary/20 bg-primary/5 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Play className="h-5 w-5 text-primary" />
+                          <h4 className="font-semibold">Testar Webhook</h4>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground">
+                          Simule eventos de webhook para testar a integração com seu software:
+                        </p>
+
+                        {!value.webhook_url ? (
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-700 dark:text-yellow-400 p-3 rounded-lg text-sm">
+                            ⚠️ Configure a URL do webhook na aba "Configurar" antes de testar.
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex gap-3">
+                              <div className="flex-1">
+                                <Select value={selectedTestEvent} onValueChange={setSelectedTestEvent}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o evento" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {availableTestEvents.map((event) => (
+                                      <SelectItem key={event.id} value={event.id}>
+                                        {event.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <Button 
+                                onClick={handleTestEvent}
+                                disabled={eventTestLoading || !productId}
+                                className="gap-2"
+                              >
+                                <Send className="h-4 w-4" />
+                                {eventTestLoading ? "Enviando..." : "Enviar Teste"}
+                              </Button>
+                            </div>
+
+                            {!productId && (
+                              <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-700 dark:text-yellow-400 p-3 rounded-lg text-sm">
+                                ⚠️ Salve o produto primeiro para poder testar webhooks.
+                              </div>
+                            )}
+
+                            {lastTestResult && (
+                              <div className={`flex items-center gap-2 p-3 rounded-lg ${
+                                lastTestResult.success 
+                                  ? 'bg-green-500/10 text-green-700 dark:text-green-400' 
+                                  : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                              }`}>
+                                {lastTestResult.success ? (
+                                  <CheckCircle className="h-5 w-5" />
+                                ) : (
+                                  <XCircle className="h-5 w-5" />
+                                )}
+                                <span className="text-sm">{lastTestResult.message}</span>
+                              </div>
+                            )}
+
+                            <div className="text-xs text-muted-foreground space-y-1 bg-muted p-3 rounded-lg">
+                              <p className="font-medium mb-2">Descrição dos eventos:</p>
+                              {availableTestEvents.map((event) => (
+                                <p key={event.id}>
+                                  <strong>{event.name}</strong> - {event.description}
+                                </p>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                )}
               </div>
             ) : (
               // Área de Membros para Curso
