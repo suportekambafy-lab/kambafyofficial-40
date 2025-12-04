@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { DonutChart, DonutChartSegment } from "@/components/ui/donut-chart";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { PieChart as PieChartIcon, ChevronDown, MoreHorizontal } from 'lucide-react';
@@ -19,17 +19,6 @@ interface PaymentMethodData {
   color: string;
 }
 
-const PAYMENT_METHOD_COLORS: Record<string, string> = {
-  'TPA': '#4CAF50',
-  'Referência': '#FFB347',
-  'M-Pesa': '#00AEEF',
-  'Multicaixa Express': '#D9534F',
-  'Cartão': '#4CAF50',
-  'Stripe': '#635BFF',
-  'PayPal': '#003087',
-  'Transferência': '#2196F3',
-};
-
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   'card': 'Cartão',
   'stripe': 'Stripe',
@@ -43,13 +32,12 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   'bank_transfer': 'Transferência',
 };
 
-// Generate color based on rank - green for highest %, red for lowest %
 const RANK_COLORS = [
-  '#4CAF50', // Green - highest
-  '#00AEEF', // Blue
-  '#FFC107', // Yellow/amber
-  '#FF9800', // Orange
-  '#F44336', // Red - lowest
+  '#4CAF50',
+  '#00AEEF',
+  '#FFC107',
+  '#FF9800',
+  '#F44336',
 ];
 
 const getColorByRank = (index: number, total: number): string => {
@@ -72,7 +60,7 @@ export function ModernPaymentMethodsChart() {
   const [data, setData] = useState<PaymentMethodData[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterOption>('week');
-  const [animationKey, setAnimationKey] = useState(0);
+  const [hoveredSegment, setHoveredSegment] = useState<DonutChartSegment | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -116,7 +104,6 @@ export function ModernPaymentMethodsChart() {
         return;
       }
 
-      // Fetch orders for user's products AND orders with user's products as order bumps
       let query = supabase
         .from('orders')
         .select('payment_method, product_id, order_bump_data')
@@ -136,10 +123,8 @@ export function ModernPaymentMethodsChart() {
         const method = order.payment_method?.toLowerCase() || '';
         if (!method) return;
         
-        // Check if main product belongs to user
         const isMainProduct = userProductIds.includes(order.product_id);
         
-        // Check if any order bump product belongs to user
         let hasUserBumpProduct = false;
         if (order.order_bump_data && Array.isArray(order.order_bump_data)) {
           hasUserBumpProduct = order.order_bump_data.some((bump: any) => 
@@ -160,18 +145,16 @@ export function ModernPaymentMethodsChart() {
           name,
           value,
           percentage: total > 0 ? Math.round((value / total) * 100) : 0,
-          color: '' // Will be set after sorting
+          color: ''
         }))
         .sort((a, b) => b.value - a.value);
 
-      // Assign colors based on rank (green=highest, red=lowest)
       const chartData: PaymentMethodData[] = sortedMethods.map((item, index) => ({
         ...item,
         color: getColorByRank(index, sortedMethods.length)
       }));
 
       setData(chartData);
-      setAnimationKey(prev => prev + 1);
     } catch (error) {
       console.error('Error fetching payment methods:', error);
     } finally {
@@ -179,30 +162,14 @@ export function ModernPaymentMethodsChart() {
     }
   };
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    if (percent < 0.07) return null;
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  const donutData: DonutChartSegment[] = data.map(item => ({
+    value: item.value,
+    color: item.color,
+    label: item.name,
+    percentage: item.percentage
+  }));
 
-    return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor="middle" 
-        dominantBaseline="central"
-        style={{ 
-          fontSize: '11px', 
-          fontWeight: 600,
-          textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-        }}
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
+  const totalTransactions = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <Card className="rounded-[18px] bg-card border-0 shadow-[0_2px_6px_rgba(0,0,0,0.05)] overflow-hidden h-full">
@@ -267,56 +234,35 @@ export function ModernPaymentMethodsChart() {
             </motion.div>
           ) : (
             <motion.div
-              key={`chart-${animationKey}`}
+              key="chart"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
+              className="flex flex-col items-center"
             >
-              <div className="h-[150px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={data}
-                      cx="50%"
-                      cy="50%"
-                  innerRadius={35}
-                  outerRadius={70}
-                      paddingAngle={2}
-                      dataKey="value"
-                      labelLine={false}
-                      label={renderCustomizedLabel}
-                      animationBegin={0}
-                      animationDuration={800}
-                      animationEasing="ease-out"
-                    >
-                      {data.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.color}
-                          stroke="none"
-                          style={{ cursor: 'pointer' }}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const item = payload[0].payload as PaymentMethodData;
-                          return (
-                            <div className="bg-popover border border-border rounded-xl px-4 py-3 shadow-lg">
-                              <p className="text-sm font-semibold text-foreground">{item.name}</p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {item.value} transações ({item.percentage}%)
-                              </p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              <DonutChart
+                data={donutData}
+                size={140}
+                strokeWidth={28}
+                animationDuration={0.8}
+                animationDelayPerSegment={0.1}
+                onSegmentHover={setHoveredSegment}
+                centerContent={
+                  <div className="text-center">
+                    {hoveredSegment ? (
+                      <>
+                        <p className="text-lg font-bold text-foreground">{hoveredSegment.percentage}%</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">{hoveredSegment.label}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-lg font-bold text-foreground">{totalTransactions}</p>
+                        <p className="text-[10px] text-muted-foreground">Total</p>
+                      </>
+                    )}
+                  </div>
+                }
+              />
 
               {/* Legend */}
               <motion.div 
