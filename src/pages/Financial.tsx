@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HighlightedCard, HighlightedCardHeader, HighlightedCardTitle, HighlightedCardContent } from "@/components/ui/highlighted-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, TrendingUp, RefreshCw, Download, PiggyBank, Shield, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { DollarSign, RefreshCw, Download, PiggyBank, Shield, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -289,17 +289,22 @@ export default function Financial() {
 
         {/* Cards de Saldo */}
         <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
-          {/* Saldo Total */}
-          <div className="bg-card rounded-xl shadow-card border border-border/50 flex overflow-hidden">
-            <div className="w-1 bg-blue-500 shrink-0" />
+          {/* Total Sacado */}
+          <div className="bg-card rounded-xl shadow-card border border-emerald-500/50 flex overflow-hidden">
+            <div className="w-1 bg-emerald-500 shrink-0" />
             <div className="flex-1 p-4 flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-muted-foreground text-sm font-medium mb-1">Saldo Total</p>
-                <h3 className="text-2xl font-bold text-foreground tracking-tight truncate">
-                  {formatCurrency(financialData.totalBalance)}
+                <p className="text-muted-foreground text-sm font-medium mb-1">Total Sacado</p>
+                <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight truncate">
+                  {showValues.withdrawn ? formatCurrency(financialData.withdrawnAmount) : '••••••'}
                 </h3>
-                <div className="mt-2 text-muted-foreground">
-                  <TrendingUp className="w-4 h-4" />
+                <div className="mt-2">
+                  <Button variant="ghost" size="sm" onClick={() => setShowValues(prev => ({
+                  ...prev,
+                  withdrawn: !prev.withdrawn
+                }))} className="h-8 w-8 p-0">
+                    {showValues.withdrawn ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -355,17 +360,8 @@ export default function Financial() {
 
         {/* Histórico de Saques */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardHeader className="pb-4">
             <CardTitle className="text-base sm:text-lg">Histórico de Saques</CardTitle>
-            <div className="flex items-center gap-2 text-right">
-              <div>
-                <p className="text-xs text-muted-foreground">Total Sacado</p>
-                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                  {formatCurrency(financialData.withdrawnAmount)}
-                </p>
-              </div>
-              
-            </div>
           </CardHeader>
           <CardContent>
             {withdrawalRequests.length === 0 ? <div className="text-center py-8 text-muted-foreground">
