@@ -1251,10 +1251,16 @@ const Checkout = () => {
     }
 
     // ✅ VERIFICAR SE É ASSINATURA - redirecionar para Stripe Subscription Checkout
+    // APENAS se o método de pagamento selecionado for Stripe (card, klarna, multibanco)
     if (product.subscription_config?.is_subscription && product.subscription_config?.stripe_price_id) {
-      console.log('📦 Product is subscription, redirecting to Stripe subscription checkout');
-      await handleSubscriptionCheckout();
-      return;
+      // Se for método Stripe, usar checkout de assinatura Stripe
+      if (['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPayment)) {
+        console.log('📦 Product is subscription with Stripe payment, redirecting to Stripe subscription checkout');
+        await handleSubscriptionCheckout();
+        return;
+      }
+      // Para AppyPay (express, reference), continuar com o fluxo normal de pagamento único
+      console.log('📦 Product is subscription but using AppyPay payment method - processing as single payment');
     }
 
     // Para métodos Stripe, o processamento é feito pelo componente StripeCardPayment
