@@ -46,10 +46,9 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 // Generate color based on rank - green for highest %, red for lowest %
 const RANK_COLORS = [
   '#4CAF50', // Green - highest
-  '#8BC34A', // Light green
+  '#00AEEF', // Blue
   '#FFC107', // Yellow/amber
   '#FF9800', // Orange
-  '#FF5722', // Deep orange
   '#F44336', // Red - lowest
 ];
 
