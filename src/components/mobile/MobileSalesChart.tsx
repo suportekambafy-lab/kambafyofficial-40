@@ -5,7 +5,6 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ShoppingCart, CheckCircle } from 'lucide-react';
 
 interface ChartData {
   day: string;
@@ -16,60 +15,12 @@ export function MobileSalesChart() {
   const { user } = useAuth();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalOrders, setTotalOrders] = useState(0);
-  const [completedOrders, setCompletedOrders] = useState(0);
 
   useEffect(() => {
     if (user) {
       fetchChartData();
-      fetchOrderCounts();
     }
   }, [user]);
-
-  const fetchOrderCounts = async () => {
-    if (!user) return;
-
-    try {
-      // Buscar produtos do usuário primeiro
-      const { data: userProducts, error: productsError } = await supabase
-        .from('products')
-        .select('id')
-        .eq('user_id', user.id);
-
-      if (productsError) throw productsError;
-
-      const userProductIds = userProducts?.map(p => p.id) || [];
-      
-      if (userProductIds.length === 0) {
-        setTotalOrders(0);
-        setCompletedOrders(0);
-        return;
-      }
-
-      // Contar total de pedidos
-      const { count: totalCount, error: totalError } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .in('product_id', userProductIds);
-
-      if (!totalError && totalCount !== null) {
-        setTotalOrders(totalCount);
-      }
-
-      // Contar pedidos pagos
-      const { count: completedCount, error: completedError } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .in('product_id', userProductIds)
-        .eq('status', 'completed');
-
-      if (!completedError && completedCount !== null) {
-        setCompletedOrders(completedCount);
-      }
-    } catch (error) {
-      console.error('Error fetching order counts:', error);
-    }
-  };
 
   const fetchChartData = async () => {
     if (!user) return;
@@ -163,58 +114,36 @@ export function MobileSalesChart() {
 
   return (
     <Card className="rounded-2xl shadow-sm">
-      <CardHeader className="py-2 px-3">
-        <CardTitle className="text-sm">Desempenho - Últimos 7 Dias</CardTitle>
+      <CardHeader>
+        <CardTitle className="text-lg">Vendas dos Últimos 7 Dias</CardTitle>
       </CardHeader>
-      <CardContent className="p-2">
-        <div className="flex gap-2">
-          {/* Chart section */}
-          <div className="flex-1 min-w-0">
-            {loading ? (
-              <div className="h-32 flex items-center justify-center">
-                <span className="text-gray-500 text-sm">Carregando...</span>
-              </div>
-            ) : (
-              <ChartContainer config={chartConfig} className="h-32 w-full">
-                <BarChart data={chartData} width={300} height={128} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                  <XAxis 
-                    dataKey="day" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10 }}
-                  />
-                  <YAxis hide />
-                  <ChartTooltip
-                    content={<ChartTooltipContent />}
-                    formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']}
-                  />
-                  <Bar 
-                    dataKey="vendas" 
-                    fill="var(--color-vendas)"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ChartContainer>
-            )}
+      <CardContent className="p-4">
+        {loading ? (
+          <div className="h-48 flex items-center justify-center">
+            <span className="text-gray-500">Carregando...</span>
           </div>
-
-          {/* KPI Cards */}
-          <div className="flex flex-col gap-2 w-24 shrink-0">
-            {/* Pedidos feitos */}
-            <div className="bg-blue-50 rounded-lg p-2 flex flex-col items-center justify-center flex-1">
-              <ShoppingCart className="h-4 w-4 text-blue-600 mb-1" />
-              <span className="text-lg font-bold text-blue-900">{totalOrders.toLocaleString()}</span>
-              <span className="text-[10px] text-blue-600 text-center leading-tight">Pedidos feitos</span>
-            </div>
-
-            {/* Pedidos pagos */}
-            <div className="bg-green-50 rounded-lg p-2 flex flex-col items-center justify-center flex-1">
-              <CheckCircle className="h-4 w-4 text-green-600 mb-1" />
-              <span className="text-lg font-bold text-green-900">{completedOrders.toLocaleString()}</span>
-              <span className="text-[10px] text-green-600 text-center leading-tight">Pedidos pagos</span>
-            </div>
-          </div>
-        </div>
+        ) : (
+          <ChartContainer config={chartConfig} className="h-48 w-full">
+            <BarChart data={chartData} width={500} height={192} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+              <XAxis 
+                dataKey="day" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis hide />
+              <ChartTooltip
+                content={<ChartTooltipContent />}
+                formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']}
+              />
+              <Bar 
+                dataKey="vendas" 
+                fill="var(--color-vendas)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );
