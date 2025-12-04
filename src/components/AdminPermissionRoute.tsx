@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { AlertCircle } from 'lucide-react';
@@ -17,6 +17,7 @@ export default function AdminPermissionRoute({
   requiredPermission,
   requireSuperAdmin = false 
 }: AdminPermissionRouteProps) {
+  const navigate = useNavigate();
   const { admin, loading: authLoading, loginStep } = useAdminAuth();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -173,7 +174,7 @@ export default function AdminPermissionRoute({
                 Voltar
               </Button>
               <Button 
-                onClick={() => window.location.href = '/admin'}
+                onClick={() => navigate('/admin')}
                 className="flex-1"
               >
                 Ir para Dashboard

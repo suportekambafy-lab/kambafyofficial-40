@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,7 +19,13 @@ interface AdminHeaderProps {
 }
 
 export function AdminHeader({ title, description, sidebarCollapsed }: AdminHeaderProps) {
+  const navigate = useNavigate();
   const { admin, logout } = useAdminAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/admin/login', { replace: true });
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -89,7 +96,7 @@ export function AdminHeader({ title, description, sidebarCollapsed }: AdminHeade
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              onClick={logout}
+              onClick={handleLogout}
               className="text-red-600 focus:text-red-600 focus:bg-red-50"
             >
               <LogOut className="h-4 w-4 mr-2" />

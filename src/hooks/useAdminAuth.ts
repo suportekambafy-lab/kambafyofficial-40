@@ -1,5 +1,5 @@
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { AdminUser } from '@/types/admin';
 
@@ -323,21 +323,18 @@ export const useAdminAuthHook = () => {
     setLoginStep('credentials');
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     // Fazer logout também do Supabase Auth
     await supabase.auth.signOut();
     
     setAdmin(null);
     localStorage.removeItem('admin_session');
-    localStorage.removeItem('admin_jwt'); // Limpar JWT também
-    localStorage.removeItem('admin_permissions_timestamp'); // Limpar timestamp de permissões
-    localStorage.removeItem('impersonation_data'); // Limpar impersonation
+    localStorage.removeItem('admin_jwt');
+    localStorage.removeItem('admin_permissions_timestamp');
+    localStorage.removeItem('impersonation_data');
     setPendingLoginData(null);
     setLoginStep('credentials');
-    
-    // Redirecionar para login admin
-    window.location.href = '/admin/login';
-  };
+  }, []);
 
   return { 
     admin, 

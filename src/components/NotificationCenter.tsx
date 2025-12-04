@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, X, DollarSign, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,6 +24,7 @@ interface NotificationCenterProps {
 }
 
 export function NotificationCenter({ className }: NotificationCenterProps) {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -369,7 +371,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
                     onClick={() => {
                       markAsRead(notification.id);
                       if (notification.actionUrl) {
-                        window.location.href = notification.actionUrl;
+                        navigate(notification.actionUrl);
                       }
                     }}
                   >
@@ -407,7 +409,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
                   className="w-full text-sm"
                   onClick={() => {
                     setIsOpen(false);
-                    window.location.href = '/admin/logs';
+                    navigate('/admin/logs');
                   }}
                 >
                   Ver todas as atividades
