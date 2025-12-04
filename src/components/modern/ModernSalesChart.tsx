@@ -288,23 +288,23 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
   const filterLabel = getFilterLabel(timeFilter);
 
   return (
-    <Card className="rounded-[14px] shadow-sm border border-border/40 bg-card overflow-hidden">
-      <CardHeader className="pb-2 px-5 pt-5">
-        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+    <Card className="rounded-xl shadow-sm border border-border/40 bg-card overflow-hidden">
+      <CardHeader className="pb-1 px-4 pt-3">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <BarChart3 className="w-4 h-4" />
           <span className="text-sm font-medium">Desempenho de vendas</span>
         </div>
       </CardHeader>
       
-      <CardContent className="px-5 pb-5">
+      <CardContent className="px-4 pb-3">
         {loading ? (
-          <div className="h-[220px] flex items-center justify-center">
+          <div className="h-[180px] flex items-center justify-center">
             <span className="text-muted-foreground text-sm">Carregando...</span>
           </div>
         ) : (
           <>
-            <ChartContainer config={chartConfig} className="h-[220px] w-full">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <ChartContainer config={chartConfig} className="h-[180px] w-full">
+              <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorVendasGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.16} />
@@ -316,21 +316,21 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
                   dataKey="time" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
-                  dy={10}
+                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} 
+                  dy={5}
                   interval="preserveStartEnd"
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
+                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} 
                   tickFormatter={value => {
                     if (value === 0) return '0';
                     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                     if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
                     return value.toString();
                   }}
-                  width={50}
+                  width={45}
                   domain={[0, 'auto']}
                 />
                 <ChartTooltip 
@@ -344,50 +344,50 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
                   strokeWidth={2} 
                   fillOpacity={1} 
                   fill="url(#colorVendasGradient)"
-                  dot={{ fill: 'hsl(var(--primary))', stroke: 'white', strokeWidth: 2, r: 4 }}
-                  activeDot={{ fill: 'hsl(var(--primary))', stroke: 'white', strokeWidth: 2, r: 6 }}
+                  dot={{ fill: 'hsl(var(--primary))', stroke: 'white', strokeWidth: 2, r: 3 }}
+                  activeDot={{ fill: 'hsl(var(--primary))', stroke: 'white', strokeWidth: 2, r: 5 }}
                 />
               </AreaChart>
             </ChartContainer>
 
             {/* KPI Stats Row */}
-            <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border/50">
-              <div className="bg-secondary/30 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">Pedidos feitos</span>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
+            <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-border/50">
+              <div className="bg-secondary/30 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="text-xs text-muted-foreground">Pedidos feitos</span>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
                     ordersTrend >= 0 
                       ? 'bg-emerald-100 text-emerald-700' 
                       : 'bg-red-100 text-red-600'
                   }`}>
                     {ordersTrend >= 0 ? '+' : ''}{ordersTrend}
                     {ordersTrend >= 0 
-                      ? <TrendingUp className="w-3 h-3" /> 
-                      : <TrendingDown className="w-3 h-3" />
+                      ? <TrendingUp className="w-2.5 h-2.5" /> 
+                      : <TrendingDown className="w-2.5 h-2.5" />
                     }
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground">{filterLabel}</span>
-                <p className="text-2xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
+                <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
+                <p className="text-xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
               </div>
 
-              <div className="bg-secondary/30 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">Pedidos pagos</span>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
+              <div className="bg-secondary/30 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="text-xs text-muted-foreground">Pedidos pagos</span>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
                     paidTrend >= 0 
                       ? 'bg-emerald-100 text-emerald-700' 
                       : 'bg-red-100 text-red-600'
                   }`}>
                     {paidTrend >= 0 ? '+' : ''}{paidTrend}
                     {paidTrend >= 0 
-                      ? <TrendingUp className="w-3 h-3" /> 
-                      : <TrendingDown className="w-3 h-3" />
+                      ? <TrendingUp className="w-2.5 h-2.5" /> 
+                      : <TrendingDown className="w-2.5 h-2.5" />
                     }
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground">{filterLabel}</span>
-                <p className="text-2xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
+                <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
+                <p className="text-xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
               </div>
             </div>
           </>
