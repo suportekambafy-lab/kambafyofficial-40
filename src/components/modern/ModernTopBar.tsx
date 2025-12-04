@@ -137,10 +137,14 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
         )}
       </div>
 
-      {/* Center - Search Bar */}
-      {!isMobile && (
-        <div className="flex-1 flex justify-center">
-          <div className="relative w-[400px]">
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Right side */}
+      <div className="flex items-center gap-2">
+        {/* Search Bar */}
+        {!isMobile && (
+          <div className="relative w-[280px]">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
@@ -148,7 +152,7 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                 placeholder="Pesquisar"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-11 pr-16 rounded-full border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+                className="w-full h-9 pl-11 pr-14 rounded-full border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
               />
@@ -189,11 +193,8 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
               )}
             </AnimatePresence>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Right side */}
-      <div className="flex items-center gap-2">
         {/* Theme Toggle */}
         <ThemeToggle />
 
