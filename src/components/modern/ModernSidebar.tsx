@@ -346,13 +346,13 @@ export function ModernSidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto scrollbar-hide">
+      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto overflow-x-visible scrollbar-hide">
         {menuItems.map((item) => (
           <NavLink
             key={item.href}
             to={item.href}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-all duration-150 group relative ${
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-all duration-150 group relative overflow-visible ${
                 isActive 
                   ? "bg-sidebar-accent text-primary" 
                   : "text-sidebar-foreground hover:bg-sidebar-accent/50"
