@@ -25,35 +25,35 @@ export function ModernMetricCard({
 }: ModernMetricCardProps) {
   return (
     <div className={cn(
-      "bg-card rounded-[14px] p-4 shadow-card border border-border/50 w-full max-w-full overflow-hidden transition-all duration-200 hover:shadow-card-hover",
+      "bg-card rounded-xl p-3 shadow-card border border-border/50 w-full max-w-full overflow-hidden transition-all duration-200 hover:shadow-card-hover",
       variant === 'highlight' && "border-primary/30 bg-gradient-to-br from-card to-secondary/30",
       className
     )}>
-      <div className="flex items-start justify-between mb-3 min-w-0">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-primary shrink-0">
+      <div className="flex items-center justify-between mb-2 min-w-0">
+        <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-primary shrink-0">
           {icon}
         </div>
         {trend && (
           <div className={cn(
-            "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
+            "flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded-full",
             trendUp ? "text-primary bg-secondary" : "text-destructive bg-destructive/10"
           )}>
-            {trendUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+            {trendUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
             {trend}
           </div>
         )}
       </div>
       
       <div className="min-w-0">
-        <h3 className="text-[26px] font-bold text-foreground tracking-tight truncate mb-1">
+        <h3 className="text-lg font-bold text-foreground tracking-tight truncate">
           {value}
         </h3>
-        <p className="text-muted-foreground text-[13px] font-medium truncate">
+        <p className="text-muted-foreground text-[11px] font-medium truncate">
           {title}
         </p>
         
         {action && (
-          <div className="mt-3">
+          <div className="mt-2">
             {action}
           </div>
         )}
