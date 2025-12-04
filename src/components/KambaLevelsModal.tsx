@@ -2,11 +2,14 @@ import React, { useRef } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { useKambaLevels } from "@/hooks/useKambaLevels";
 import { X, Lock, LockOpen, Target, ChevronLeft, ChevronRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface KambaLevelsModalProps {
   open: boolean;
@@ -20,7 +23,19 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
   totalRevenue
 }) => {
   const { currentLevel, nextLevel, progress, allLevels } = useKambaLevels(totalRevenue);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const handleScrollLeft = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: -280, behavior: 'smooth' });
+    }
+  };
+
+  const handleScrollRight = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: 280, behavior: 'smooth' });
+    }
+  };
 
   const formatCurrency = (value: number) => {
     const parts = value.toFixed(2).split('.');
@@ -43,11 +58,14 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
     return totalRevenue >= levelThreshold;
   };
 
-  const visibleLevels = allLevels;
-  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-[1200px] h-auto max-h-[90vh] p-0 overflow-hidden bg-background rounded-2xl md:rounded-3xl border-border/50">
+      <DialogContent className="w-[95vw] max-w-[1200px] max-h-[90vh] p-0 overflow-hidden bg-background rounded-2xl md:rounded-3xl border-border/50">
+        <VisuallyHidden>
+          <DialogTitle>Próximas conquistas</DialogTitle>
+          <DialogDescription>Visualize suas conquistas e próximos marcos</DialogDescription>
+        </VisuallyHidden>
+        
         {/* Close Button */}
         <button
           onClick={() => onOpenChange(false)}
@@ -57,7 +75,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           <X className="h-5 w-5 md:h-6 md:w-6 text-foreground" />
         </button>
 
-        <div className="p-6 md:p-8 lg:p-10 space-y-6">
+        <div className="p-6 md:p-8 lg:p-10 space-y-6 overflow-y-auto max-h-[85vh]">
           {/* Header */}
           <div className="space-y-2 pr-8">
             <h2 className="text-xl md:text-2xl font-bold text-foreground">Próximas conquistas</h2>
@@ -88,57 +106,41 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
             </div>
           </div>
 
-          {/* Carousel with Navigation */}
+          {/* Carousel Container */}
           <div className="relative">
-            {/* Left Arrow */}
+            {/* Navigation Buttons */}
             <Button
               variant="outline"
               size="icon"
-              onClick={() => {
-                if (scrollRef.current) {
-                  scrollRef.current.scrollLeft -= 300;
-                }
-              }}
-              className="absolute -left-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background shadow-lg border-border/50 hover:bg-muted hidden md:flex items-center justify-center"
+              onClick={handleScrollLeft}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 shadow-lg border-border/50 hover:bg-muted hidden md:flex items-center justify-center"
               aria-label="Anterior"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
 
-            {/* Right Arrow */}
             <Button
               variant="outline"
               size="icon"
-              onClick={() => {
-                if (scrollRef.current) {
-                  scrollRef.current.scrollLeft += 300;
-                }
-              }}
-              className="absolute -right-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background shadow-lg border-border/50 hover:bg-muted hidden md:flex items-center justify-center"
+              onClick={handleScrollRight}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 shadow-lg border-border/50 hover:bg-muted hidden md:flex items-center justify-center"
               aria-label="Próximo"
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
 
-            {/* Cards Carousel */}
+            {/* Scrollable Cards Container */}
             <div 
-              ref={scrollRef}
-              className="flex gap-5 pb-4 px-2 md:px-8"
-              style={{ 
-                overflowX: 'scroll',
-                scrollBehavior: 'smooth',
-                WebkitOverflowScrolling: 'touch',
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none'
-              }}
+              ref={carouselRef}
+              className="carousel-scroll flex gap-5 pb-4 md:mx-12 overflow-x-auto"
             >
-              {visibleLevels.map((level, index) => {
+              {allLevels.map((level, index) => {
                 const achieved = isAchieved(level.threshold);
                 
                 return (
                   <div
                     key={level.id}
-                    className={`relative rounded-2xl p-5 transition-all duration-300 flex-shrink-0 snap-start w-[260px] min-h-[380px] flex flex-col ${
+                    className={`relative rounded-2xl p-5 transition-all duration-300 flex-shrink-0 w-[260px] min-h-[380px] flex flex-col ${
                       achieved 
                         ? 'bg-gradient-to-b from-[#0B4F6C] to-[#0C557A]' 
                         : 'bg-gradient-to-b from-gray-600 to-gray-700'
