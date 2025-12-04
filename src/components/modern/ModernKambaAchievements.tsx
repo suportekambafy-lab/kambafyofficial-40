@@ -130,7 +130,7 @@ export function ModernKambaAchievements() {
               Selos Conquistados ({achievedLevels.length}/{allLevels.length})
             </p>
             <TooltipProvider>
-              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {allLevels.map(level => {
                 const isAchieved = totalRevenue >= level.threshold;
                 return <Tooltip key={level.id}>
