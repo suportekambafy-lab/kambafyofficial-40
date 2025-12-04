@@ -10,7 +10,6 @@ import {
   CreditCard,
   UserCheck,
   Calendar,
-  Shield,
   Settings,
   ChevronDown,
   Smartphone,
@@ -18,6 +17,7 @@ import {
   PanelLeft,
   Wrench
 } from 'lucide-react';
+import kambabyLogo from '@/assets/kambafy-logo.png';
 
 interface AdminSidebarProps {
   collapsed?: boolean;
@@ -95,11 +95,10 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
       {/* Logo */}
       <div className="p-5 flex items-center justify-between border-b border-[hsl(var(--admin-border))]">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-gradient-to-br from-[hsl(var(--admin-primary))] to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Shield className="text-white h-5 w-5" />
-          </div>
-          {!collapsed && (
-            <span className="font-bold text-lg text-[hsl(var(--admin-text))]">Kambafy</span>
+          {collapsed ? (
+            <img src={kambabyLogo} alt="Kambafy" className="h-10 w-10 object-contain" />
+          ) : (
+            <img src={kambabyLogo} alt="Kambafy" className="h-8 object-contain" />
           )}
         </div>
         <button 

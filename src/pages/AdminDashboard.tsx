@@ -108,7 +108,8 @@ const STATUS_COLORS = {
   success: 'hsl(145 63% 42%)',
   pending: 'hsl(38 92% 50%)',
   failed: 'hsl(4 90% 58%)',
-  expired: 'hsl(0 0% 70%)'
+  expired: 'hsl(0 0% 70%)',
+  cancelled: 'hsl(280 60% 50%)'
 };
 
 export default function AdminDashboard() {
@@ -118,9 +119,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('week');
   const [volumeFilter, setVolumeFilter] = useState('7days');
-  const [orderStats, setOrderStats] = useState({ success: 0, pending: 0, failed: 0, expired: 0 });
+  const [orderStats, setOrderStats] = useState({ success: 0, pending: 0, failed: 0, expired: 0, cancelled: 0 });
   const [volumeData, setVolumeData] = useState<{ date: string; volume: number; count: number }[]>([]);
   const [volumeLoading, setVolumeLoading] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   const loadVolumeData = useCallback(async () => {
     setVolumeLoading(true);
@@ -177,6 +179,48 @@ export default function AdminDashboard() {
     }
   }, [volumeFilter]);
 
+  const loadStatusData = useCallback(async () => {
+    setStatusLoading(true);
+    try {
+      let startDate: Date;
+      const endDate = new Date();
+      
+      switch (statusFilter) {
+        case 'week':
+          startDate = subDays(endDate, 7);
+          break;
+        case 'month':
+          startDate = startOfMonth(endDate);
+          break;
+        case 'year':
+          startDate = startOfYear(endDate);
+          break;
+        default:
+          startDate = subDays(endDate, 7);
+      }
+
+      const { data: orderStatusData } = await supabase
+        .from('orders')
+        .select('status')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString())
+        .neq('payment_method', 'member_access');
+
+      const statusCounts = {
+        success: orderStatusData?.filter(o => o.status === 'completed').length || 0,
+        pending: orderStatusData?.filter(o => o.status === 'pending').length || 0,
+        failed: orderStatusData?.filter(o => o.status === 'failed').length || 0,
+        expired: orderStatusData?.filter(o => o.status === 'expired').length || 0,
+        cancelled: orderStatusData?.filter(o => o.status === 'cancelled').length || 0
+      };
+      setOrderStats(statusCounts);
+    } catch (error) {
+      console.error('Error loading status data:', error);
+    } finally {
+      setStatusLoading(false);
+    }
+  }, [statusFilter]);
+
   useEffect(() => {
     if (admin) {
       loadStats();
@@ -188,6 +232,12 @@ export default function AdminDashboard() {
       loadVolumeData();
     }
   }, [admin, volumeFilter, loadVolumeData]);
+
+  useEffect(() => {
+    if (admin) {
+      loadStatusData();
+    }
+  }, [admin, statusFilter, loadStatusData]);
 
   const loadStats = async () => {
     try {
@@ -207,19 +257,6 @@ export default function AdminDashboard() {
           .neq('payment_method', 'member_access')
       ]);
 
-      // Order status breakdown
-      const { data: orderStatusData } = await supabase
-        .from('orders')
-        .select('status')
-        .neq('payment_method', 'member_access');
-
-      const statusCounts = {
-        success: orderStatusData?.filter(o => o.status === 'completed').length || 0,
-        pending: orderStatusData?.filter(o => o.status === 'pending').length || 0,
-        failed: orderStatusData?.filter(o => o.status === 'failed').length || 0,
-        expired: orderStatusData?.filter(o => o.status === 'expired').length || 0
-      };
-      setOrderStats(statusCounts);
 
       // Buscar soma total diretamente no banco para evitar limite de paginação
       const { data: revenueData } = await supabase
@@ -272,7 +309,8 @@ export default function AdminDashboard() {
     { name: 'Sucesso', value: orderStats.success, color: STATUS_COLORS.success },
     { name: 'Pendente', value: orderStats.pending, color: STATUS_COLORS.pending },
     { name: 'Falhou', value: orderStats.failed, color: STATUS_COLORS.failed },
-    { name: 'Expirado', value: orderStats.expired, color: STATUS_COLORS.expired }
+    { name: 'Expirado', value: orderStats.expired, color: STATUS_COLORS.expired },
+    { name: 'Cancelado', value: orderStats.cancelled, color: STATUS_COLORS.cancelled }
   ].filter(d => d.value > 0);
 
   const totalOrders = pieData.reduce((sum, d) => sum + d.value, 0);
@@ -407,7 +445,11 @@ export default function AdminDashboard() {
           }
         >
           <div className="h-64">
-            {totalOrders > 0 ? (
+            {statusLoading ? (
+              <div className="h-full flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
+              </div>
+            ) : totalOrders > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -444,7 +486,7 @@ export default function AdminDashboard() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-[hsl(var(--admin-text-secondary))]">
-                <p>Sem dados de transações</p>
+                <p>Sem dados de transações para o período</p>
               </div>
             )}
           </div>
