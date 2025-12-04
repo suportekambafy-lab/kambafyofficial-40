@@ -473,14 +473,14 @@ export function ModernDashboardHome() {
         </div>
 
         {/* Metric Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" data-onboarding="revenue-card">
+        <div className="grid grid-cols-1 gap-3" data-onboarding="revenue-card">
           <ModernMetricCard
             title="Total disponível"
             value={showValues.revenue ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` : "••••••••"}
-            icon={<DollarSign className="w-5 h-5" />}
+            icon={<Eye className="w-4 h-4" />}
             trend={calculateTrend(dashboardData.totalRevenue, dashboardData.previousRevenue)}
             trendUp={dashboardData.totalRevenue >= dashboardData.previousRevenue}
-            variant="highlight"
+            accentColor="bg-primary"
             action={
               <Button
                 variant="ghost"
@@ -496,9 +496,10 @@ export function ModernDashboardHome() {
           <ModernMetricCard
             title="Transações completas"
             value={showValues.sales ? `${dashboardData.totalSales}` : "••••"}
-            icon={<ShoppingBag className="w-5 h-5" />}
+            icon={<Eye className="w-4 h-4" />}
             trend={calculateTrend(dashboardData.totalSales, dashboardData.previousSales)}
             trendUp={dashboardData.totalSales >= dashboardData.previousSales}
+            accentColor="bg-blue-500"
             action={
               <Button
                 variant="ghost"
