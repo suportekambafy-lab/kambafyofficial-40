@@ -139,7 +139,7 @@ export function ModernKambaAchievements() {
                           <img 
                             src={level.badge} 
                             alt={level.name} 
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg" 
+                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg" 
                             onClick={(e) => {
                               // Force tooltip to show on mobile tap
                               e.preventDefault();
