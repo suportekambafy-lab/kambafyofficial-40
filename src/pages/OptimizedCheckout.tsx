@@ -349,6 +349,55 @@ const OptimizedCheckout = () => {
   const phoneRequiredMethods = ['express', 'transfer'];
   const isPhoneRequired = phoneRequiredMethods.includes(selectedPayment);
 
+  // Função para checkout de assinatura
+  const handleSubscriptionCheckout = async () => {
+    if (!product || !productId) return;
+
+    const subscriptionConfig = product.subscription_config;
+    if (!subscriptionConfig?.is_subscription || !subscriptionConfig?.stripe_price_id) {
+      console.error('❌ Product is not configured as subscription');
+      toast({
+        title: "Erro",
+        description: "Produto não configurado corretamente para assinatura",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      console.log('🔄 Starting subscription checkout for:', product.name);
+      
+      const { data, error: invokeError } = await supabase.functions.invoke('create-subscription-checkout', {
+        body: {
+          productId: productId,
+          customerEmail: formData.email.trim().toLowerCase(),
+          customerName: formData.fullName.trim(),
+          paymentMethod: selectedPayment
+        }
+      });
+
+      if (invokeError) {
+        throw new Error(invokeError.message);
+      }
+
+      if (data?.url) {
+        console.log('✅ Redirecting to Stripe subscription checkout:', data.url);
+        window.location.href = data.url;
+      } else {
+        throw new Error('URL de checkout não retornada');
+      }
+    } catch (err: any) {
+      console.error('❌ Subscription checkout error:', err);
+      toast({
+        title: "Erro ao criar checkout",
+        description: err.message || "Erro ao processar assinatura",
+        variant: "destructive"
+      });
+      setProcessing(false);
+    }
+  };
+
   // Mostrar skeleton checkout enquanto carrega - sem tela branca
   const showingSkeleton = loading || !product;
 
@@ -781,8 +830,46 @@ const OptimizedCheckout = () => {
                   {/* Renderização condicional dos componentes de pagamento */}
                   {selectedPayment && finalPaymentMethods.find(m => m.id === selectedPayment) && (
                     <div className="mt-6">
-                      {/* Métodos tradicionais para Portugal e Moçambique */}
-                      {!['AO'].includes(userCountry?.code || '') && ['card', 'klarna', 'multibanco'].includes(selectedPayment) && (
+                      {/* Botão de Assinatura para produtos de assinatura */}
+                      {!['AO'].includes(userCountry?.code || '') && 
+                       product?.subscription_config?.is_subscription && 
+                       product?.subscription_config?.stripe_price_id && 
+                       ['card', 'klarna', 'multibanco'].includes(selectedPayment) && (
+                        <div className="space-y-4">
+                          <Button
+                            onClick={handleSubscriptionCheckout}
+                            disabled={!formData.fullName || !formData.email || !formData.phone || processing}
+                            className="w-full h-12 font-semibold bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            {processing ? (
+                              <div className="flex items-center justify-center">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                PROCESSANDO...
+                              </div>
+                            ) : (
+                              <>
+                                ASSINAR POR {totalPrice}
+                                {product.subscription_config.interval && (
+                                  <span className="ml-1">
+                                    / {getSubscriptionIntervalText(
+                                      product.subscription_config.interval,
+                                      product.subscription_config.interval_count || 1
+                                    )}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </Button>
+                          <p className="text-xs text-center text-gray-500">
+                            Pagamento recorrente via Stripe. Pode cancelar a qualquer momento.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Métodos tradicionais para Portugal e Moçambique - Pagamentos únicos (não assinatura) */}
+                      {!['AO'].includes(userCountry?.code || '') && 
+                       ['card', 'klarna', 'multibanco'].includes(selectedPayment) && 
+                       !(product?.subscription_config?.is_subscription && product?.subscription_config?.stripe_price_id) && (
                         <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded"></div>}>
                           <StripeCardPayment
                             paymentMethod={selectedPayment}

@@ -1175,6 +1175,55 @@ const Checkout = () => {
       variant: "success"
     });
   };
+  // Função para checkout de assinatura
+  const handleSubscriptionCheckout = async () => {
+    if (!product || !productId) return;
+
+    const subscriptionConfig = product.subscription_config;
+    if (!subscriptionConfig?.is_subscription || !subscriptionConfig?.stripe_price_id) {
+      console.error('❌ Product is not configured as subscription');
+      toast({
+        title: "Erro",
+        message: "Produto não configurado corretamente para assinatura",
+        variant: "error"
+      });
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      console.log('🔄 Starting subscription checkout for:', product.name);
+      
+      const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
+        body: {
+          productId: productId,
+          customerEmail: formData.email.trim().toLowerCase(),
+          customerName: formData.fullName.trim(),
+          paymentMethod: selectedPayment
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data?.url) {
+        console.log('✅ Redirecting to Stripe subscription checkout:', data.url);
+        window.location.href = data.url;
+      } else {
+        throw new Error('URL de checkout não retornada');
+      }
+    } catch (error: any) {
+      console.error('❌ Subscription checkout error:', error);
+      toast({
+        title: "Erro ao criar checkout",
+        message: error.message || "Erro ao processar assinatura",
+        variant: "error"
+      });
+      setProcessing(false);
+    }
+  };
+
   const handlePurchase = async () => {
     console.log('🚀 HandlePurchase called with:', {
       selectedPayment,
@@ -1198,6 +1247,13 @@ const Checkout = () => {
         message: "Produto não encontrado",
         variant: "error"
       });
+      return;
+    }
+
+    // ✅ VERIFICAR SE É ASSINATURA - redirecionar para Stripe Subscription Checkout
+    if (product.subscription_config?.is_subscription && product.subscription_config?.stripe_price_id) {
+      console.log('📦 Product is subscription, redirecting to Stripe subscription checkout');
+      await handleSubscriptionCheckout();
       return;
     }
 
@@ -2204,7 +2260,41 @@ const Checkout = () => {
                 </div>
               )}
 
-              {['card', 'klarna', 'multibanco'].includes(selectedPayment) && <div className="mt-6">
+              {/* Botão de Assinatura para produtos de assinatura */}
+              {product?.subscription_config?.is_subscription && product?.subscription_config?.stripe_price_id && ['card', 'klarna', 'multibanco'].includes(selectedPayment) && (
+                <div className="mt-6">
+                  <Button
+                    onClick={handleSubscriptionCheckout}
+                    disabled={!formData.fullName || !formData.email || !formData.phone || processing}
+                    className="w-full h-12 font-semibold bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {processing ? (
+                      <div className="flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        PROCESSANDO...
+                      </div>
+                    ) : (
+                      <>
+                        ASSINAR POR {getDisplayPrice(totalPrice, true)}
+                        {product.subscription_config.interval && (
+                          <span className="ml-1">
+                            / {getSubscriptionIntervalText(
+                              product.subscription_config.interval,
+                              product.subscription_config.interval_count || 1
+                            )}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-center text-gray-500 mt-2">
+                    Pagamento recorrente via Stripe. Pode cancelar a qualquer momento.
+                  </p>
+                </div>
+              )}
+
+              {/* Componente Stripe para pagamentos únicos (não assinatura) */}
+              {['card', 'klarna', 'multibanco'].includes(selectedPayment) && !(product?.subscription_config?.is_subscription && product?.subscription_config?.stripe_price_id) && <div className="mt-6">
                   <OptimizedStripeCardPayment amount={totalPrice} originalAmountKZ={originalPriceKZ} currency={userCountry.currency} productId={productId || ''} customerData={{
                 name: formData.fullName,
                 email: formData.email,

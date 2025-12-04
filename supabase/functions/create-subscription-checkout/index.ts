@@ -89,14 +89,15 @@ serve(async (req) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${req.headers.get('origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get('origin')}/cancel`,
+      success_url: `${req.headers.get('origin')}/checkout/${productId}/success?session_id={CHECKOUT_SESSION_ID}&subscription=true`,
+      cancel_url: `${req.headers.get('origin')}/checkout/${productId}?canceled=true`,
       metadata: {
         product_id: productId,
         seller_user_id: product.user_id,
         customer_email: customerEmail,
         customer_name: customerName || '',
         cohort_id: cohortId || '',
+        is_subscription: 'true',
       },
     };
 
