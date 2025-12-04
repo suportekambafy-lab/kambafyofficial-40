@@ -361,7 +361,7 @@ export default function Financial() {
         )}
 
         {/* Cards de Saldo */}
-        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
           {/* Saldo Total */}
           <Card>
             <CardHeader>
@@ -373,7 +373,7 @@ export default function Financial() {
                   <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-2xl sm:text-3xl font-bold break-words">
+                  <div className="text-2xl sm:text-3xl font-bold whitespace-nowrap">
                     {formatCurrency(financialData.totalBalance)}
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -400,8 +400,8 @@ export default function Financial() {
                   <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/20">
                     <Shield className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 break-words">
+                <div className="flex-1 min-w-0">
+                    <div className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 whitespace-nowrap">
                       {formatCurrency(financialData.retainedAmount)}
                     </div>
                     <p className="text-sm text-orange-800 dark:text-orange-200">
@@ -448,7 +448,7 @@ export default function Financial() {
                   <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-2xl sm:text-3xl font-bold break-words">
+                  <div className="text-2xl sm:text-3xl font-bold whitespace-nowrap">
                     {showValues.available ? formatCurrency(financialData.availableBalance) : '••••••'}
                   </div>
                 </div>
