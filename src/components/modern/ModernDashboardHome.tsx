@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Capacitor } from '@capacitor/core';
 import { ModernMetricCard } from './ModernMetricCard';
 import { ModernSalesChart } from './ModernSalesChart';
+import { ModernPaymentMethodsChart } from './ModernPaymentMethodsChart';
 import { ModernRecentSales } from './ModernRecentSales';
 import { ModernKambaAchievements } from './ModernKambaAchievements';
 import { AppDownloadBanner } from './AppDownloadBanner';
@@ -514,8 +515,11 @@ export function ModernDashboardHome() {
         </div>
 
         {/* Chart Section */}
-        <div className="w-full">
-          <ModernSalesChart />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <ModernSalesChart />
+          </div>
+          <ModernPaymentMethodsChart />
         </div>
 
         {/* Recent Sales & Achievements */}
