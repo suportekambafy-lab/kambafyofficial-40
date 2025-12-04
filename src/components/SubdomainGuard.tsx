@@ -15,6 +15,12 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     const currentPath = location.pathname + location.search + location.hash;
     const hostname = window.location.hostname;
     
+    // ✅ OTIMIZAÇÃO: Skip TOTAL para rotas admin em subdomínio admin
+    // Isso evita QUALQUER verificação desnecessária que poderia causar reload
+    if (currentSubdomain === 'admin' && currentPath.startsWith('/admin')) {
+      return; // Navegação interna do React Router - ZERO interferência
+    }
+    
     // 🔍 Debug logging - Informações básicas
     console.log('🔍 SubdomainGuard: Analisando rota', {
       currentPath,
