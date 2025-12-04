@@ -382,8 +382,71 @@ export function AppHome() {
       const productIds = products?.map(p => p.id) || [];
       const activeProducts = products?.filter(p => p.status === 'Ativo') || [];
 
-      // Store products for display
-      setProducts(products || []);
+      // ✅ Buscar vendas de order bumps para produtos do usuário (igual à Web)
+      let orderBumpSalesMap: Record<string, number> = {};
+      
+      if (productIds.length > 0) {
+        // Buscar settings onde o bump_product_id é um dos produtos do usuário
+        const { data: bumpSettings } = await supabase
+          .from('order_bump_settings')
+          .select('bump_product_id, bump_product_name')
+          .in('bump_product_id', productIds);
+        
+        if (bumpSettings && bumpSettings.length > 0) {
+          // Criar mapa de bump_product_name (normalizado) -> bump_product_id
+          const bumpNameToProductId: Record<string, string> = {};
+          for (const setting of bumpSettings) {
+            if (setting.bump_product_name && setting.bump_product_id) {
+              const normalizedName = setting.bump_product_name.toLowerCase().trim();
+              bumpNameToProductId[normalizedName] = setting.bump_product_id;
+            }
+          }
+          
+          // Buscar todas as orders com order_bump_data
+          const { data: ordersWithBumps } = await supabase
+            .from('orders')
+            .select('order_bump_data')
+            .in('status', ['completed', 'paid'])
+            .not('order_bump_data', 'is', null);
+          
+          if (ordersWithBumps) {
+            for (const order of ordersWithBumps) {
+              try {
+                let bumpData: any = order.order_bump_data;
+                
+                // Parse múltiplo para lidar com string JSON escapada
+                while (typeof bumpData === 'string') {
+                  try {
+                    bumpData = JSON.parse(bumpData);
+                  } catch {
+                    break;
+                  }
+                }
+                
+                const bumpProductName = bumpData?.bump_product_name as string | undefined;
+                if (bumpProductName) {
+                  const normalizedBumpName = bumpProductName.toLowerCase().trim();
+                  
+                  // Verificar se este bump_product_name corresponde a um produto do usuário
+                  const matchedProductId = bumpNameToProductId[normalizedBumpName];
+                  if (matchedProductId) {
+                    orderBumpSalesMap[matchedProductId] = (orderBumpSalesMap[matchedProductId] || 0) + 1;
+                  }
+                }
+              } catch (e) {
+                // Ignorar erros de parse
+              }
+            }
+          }
+        }
+      }
+
+      // Store products for display (com vendas de order bump incluídas)
+      const productsWithBumpSales = (products || []).map(product => ({
+        ...product,
+        sales: (product.sales || 0) + (orderBumpSalesMap[product.id] || 0)
+      }));
+      setProducts(productsWithBumpSales);
 
       // ✅ Buscar códigos de afiliado do usuário (igual à Web)
       const {
