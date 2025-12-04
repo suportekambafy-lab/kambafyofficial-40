@@ -289,7 +289,7 @@ export default function Financial() {
         {/* Cards de Saldo */}
         <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
           {/* Total Sacado */}
-          <div className="bg-card rounded-xl shadow-card border border-emerald-500/50 flex overflow-hidden">
+          <div className="bg-card rounded-xl shadow-card border border-border/50 flex overflow-hidden">
             <div className="w-1 bg-emerald-500 shrink-0" />
             <div className="flex-1 p-4 flex items-center justify-between">
               <div className="min-w-0 flex-1">
@@ -310,7 +310,7 @@ export default function Financial() {
           </div>
 
           {/* Valor Retido */}
-          {financialData.retentionPercentage > 0 && <div className="bg-card rounded-xl shadow-card border border-orange-500/50 flex overflow-hidden">
+          {financialData.retentionPercentage > 0 && <div className="bg-card rounded-xl shadow-card border border-border/50 flex overflow-hidden">
               <div className="w-1 bg-orange-500 shrink-0" />
               <div className="flex-1 p-4 flex items-center justify-between">
                 <div className="min-w-0 flex-1">
@@ -329,7 +329,7 @@ export default function Financial() {
             </div>}
 
           {/* Saldo Disponível */}
-          <div className="bg-card rounded-xl shadow-card border border-primary/30 flex overflow-hidden">
+          <div className="bg-card rounded-xl shadow-card border border-border/50 flex overflow-hidden">
             <div className="w-1 bg-primary shrink-0" />
             <div className="flex-1 p-4 flex items-center justify-between">
               <div className="min-w-0 flex-1">
