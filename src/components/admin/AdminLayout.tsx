@@ -1,5 +1,4 @@
 import React from 'react';
-import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
 import { cn } from '@/lib/utils';
 import { useAdminSidebar } from '@/contexts/AdminSidebarContext';
@@ -10,15 +9,16 @@ interface AdminLayoutProps {
   description?: string;
 }
 
+/**
+ * Layout de página admin (Header + Main content)
+ * O Sidebar é renderizado pelo AdminLayoutWrapper (persistente)
+ * Este componente é usado DENTRO das rotas filhas
+ */
 export function AdminLayout({ children, title, description }: AdminLayoutProps) {
-  const { collapsed, toggleCollapsed } = useAdminSidebar();
+  const { collapsed } = useAdminSidebar();
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--admin-bg))]">
-      <AdminSidebar 
-        collapsed={collapsed} 
-        onToggle={toggleCollapsed} 
-      />
+    <>
       <AdminHeader 
         title={title} 
         description={description}
@@ -30,6 +30,6 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
       )}>
         {children}
       </main>
-    </div>
+    </>
   );
 }

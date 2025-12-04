@@ -3,10 +3,11 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, TrendingUp, DollarSign, FileText } from 'lucide-react';
+import { Users, TrendingUp, DollarSign, FileText, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface UserReport {
   user_id: string;
@@ -127,36 +128,16 @@ export default function AdminSellers() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
+      <AdminLayout title="Todos os Usuários" description={`${users.length} usuários cadastrados`}>
+        <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Carregando usuários...</p>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 hover:bg-accent self-start"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Voltar ao Dashboard</span>
-            <span className="sm:hidden">Voltar</span>
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Todos os Usuários</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              {users.length} {users.length === 1 ? 'usuário cadastrado' : 'usuários cadastrados'}
-            </p>
-          </div>
-        </div>
+    <AdminLayout title="Todos os Usuários" description={`${users.length} ${users.length === 1 ? 'usuário cadastrado' : 'usuários cadastrados'}`}>
 
         {/* Resumo Geral - Responsivo */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
@@ -301,9 +282,8 @@ export default function AdminSellers() {
                 <p className="text-sm sm:text-base text-slate-600">Não há usuários cadastrados no sistema.</p>
               </CardContent>
             </Card>
-          )}
-        </div>
+        )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }
