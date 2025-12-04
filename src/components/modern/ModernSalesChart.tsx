@@ -1,21 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
+
 interface ChartData {
-  day: string;
+  time: string;
   vendas: number;
 }
-export function ModernSalesChart() {
-  const {
-    user
-  } = useAuth();
+
+interface ModernSalesChartProps {
+  timeFilter?: string;
+}
+
+export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps) {
+  const { user } = useAuth();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalValue, setTotalValue] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
+  const [ordersCount, setOrdersCount] = useState(0);
+  const [paidOrdersCount, setPaidOrdersCount] = useState(0);
+  const [ordersTrend, setOrdersTrend] = useState(0);
+  const [paidTrend, setPaidTrend] = useState(0);
+
   useEffect(() => {
     if (user) {
       fetchChartData();
@@ -30,128 +39,276 @@ export function ModernSalesChart() {
         supabase.removeChannel(channel);
       };
     }
-  }, [user]);
+  }, [user, timeFilter]);
+
   const fetchChartData = async () => {
     if (!user) return;
     try {
       setLoading(true);
-      const {
-        data: userProducts,
-        error: productsError
-      } = await supabase.from('products').select('id').eq('user_id', user.id);
+      const { data: userProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+      
       if (productsError) throw productsError;
       const userProductIds = userProducts?.map(p => p.id) || [];
+      
       if (userProductIds.length === 0) {
         setChartData([]);
         return;
       }
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const {
-        data: orders,
-        error
-      } = await supabase.from('orders').select('created_at, amount, seller_commission, currency, product_id, order_id').in('product_id', userProductIds).eq('status', 'completed').gte('created_at', sevenDaysAgo.toISOString()).order('created_at', {
-        ascending: true
-      });
-      if (error) {
-        return;
+
+      // Determine date range based on filter
+      const now = new Date();
+      let startDate = new Date();
+      let prevStartDate = new Date();
+      let prevEndDate = new Date();
+
+      if (timeFilter === 'hoje') {
+        startDate.setHours(0, 0, 0, 0);
+        prevStartDate = new Date(startDate);
+        prevStartDate.setDate(prevStartDate.getDate() - 1);
+        prevEndDate = new Date(startDate);
+      } else {
+        startDate.setDate(now.getDate() - 7);
+        prevStartDate.setDate(now.getDate() - 14);
+        prevEndDate.setDate(now.getDate() - 7);
       }
-      const salesByDay: {
-        [key: string]: number;
-      } = {};
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dayKey = date.toISOString().split('T')[0];
-        salesByDay[dayKey] = 0;
-      }
+
+      // Fetch current period orders
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select('created_at, amount, seller_commission, currency, product_id, status')
+        .in('product_id', userProductIds)
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: true });
+
+      // Fetch previous period for trend comparison
+      const { data: prevOrders } = await supabase
+        .from('orders')
+        .select('status')
+        .in('product_id', userProductIds)
+        .gte('created_at', prevStartDate.toISOString())
+        .lt('created_at', prevEndDate.toISOString());
+
+      if (error) return;
+
+      // Calculate totals
+      const allOrders = orders || [];
+      const completedOrders = allOrders.filter(o => o.status === 'completed');
+      const prevAllOrders = prevOrders || [];
+      const prevCompletedOrders = prevAllOrders.filter(o => o.status === 'completed');
+
+      setOrdersCount(allOrders.length);
+      setPaidOrdersCount(completedOrders.length);
+      setOrdersTrend(allOrders.length - prevAllOrders.length);
+      setPaidTrend(completedOrders.length - prevCompletedOrders.length);
+
+      // Calculate total revenue from completed orders
       let total = 0;
-      orders?.forEach(order => {
-        const orderDate = new Date(order.created_at);
-        const dayKey = orderDate.toISOString().split('T')[0];
+      completedOrders.forEach(order => {
         let amount = parseFloat(order.seller_commission?.toString() || '0');
         if (amount === 0) {
           const grossAmount = parseFloat(order.amount || '0');
           amount = grossAmount * 0.92;
         }
         if (order.currency && order.currency !== 'KZ') {
-          const exchangeRates: Record<string, number> = {
-            'EUR': 1053,
-            'MZN': 14.3
-          };
+          const exchangeRates: Record<string, number> = { 'EUR': 1053, 'MZN': 14.3 };
           const rate = exchangeRates[order.currency.toUpperCase()] || 1;
           amount = Math.round(amount * rate);
-        }
-        if (salesByDay[dayKey] !== undefined) {
-          salesByDay[dayKey] += amount;
         }
         total += amount;
       });
       setTotalValue(total);
-      setTotalCount(orders?.length || 0);
-      const formattedData: ChartData[] = Object.entries(salesByDay).map(([date, amount]) => ({
-        day: new Date(date).toLocaleDateString('pt-BR', {
-          day: '2-digit',
-          month: '2-digit'
-        }),
-        vendas: Math.round(amount)
-      }));
-      setChartData(formattedData);
+
+      // Group data by hour for today, or by day for week
+      if (timeFilter === 'hoje') {
+        const salesByHour: { [key: string]: number } = {};
+        for (let i = 0; i < 24; i += 2) {
+          const hourKey = `${i.toString().padStart(2, '0')}:00`;
+          salesByHour[hourKey] = 0;
+        }
+
+        completedOrders.forEach(order => {
+          const orderDate = new Date(order.created_at);
+          const hour = Math.floor(orderDate.getHours() / 2) * 2;
+          const hourKey = `${hour.toString().padStart(2, '0')}:00`;
+          
+          let amount = parseFloat(order.seller_commission?.toString() || '0');
+          if (amount === 0) {
+            const grossAmount = parseFloat(order.amount || '0');
+            amount = grossAmount * 0.92;
+          }
+          if (order.currency && order.currency !== 'KZ') {
+            const exchangeRates: Record<string, number> = { 'EUR': 1053, 'MZN': 14.3 };
+            const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+            amount = Math.round(amount * rate);
+          }
+          if (salesByHour[hourKey] !== undefined) {
+            salesByHour[hourKey] += amount;
+          }
+        });
+
+        const formattedData: ChartData[] = Object.entries(salesByHour).map(([time, amount]) => ({
+          time,
+          vendas: Math.round(amount)
+        }));
+        setChartData(formattedData);
+      } else {
+        // Weekly view
+        const salesByDay: { [key: string]: number } = {};
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          const dayKey = date.toISOString().split('T')[0];
+          salesByDay[dayKey] = 0;
+        }
+
+        completedOrders.forEach(order => {
+          const orderDate = new Date(order.created_at);
+          const dayKey = orderDate.toISOString().split('T')[0];
+          
+          let amount = parseFloat(order.seller_commission?.toString() || '0');
+          if (amount === 0) {
+            const grossAmount = parseFloat(order.amount || '0');
+            amount = grossAmount * 0.92;
+          }
+          if (order.currency && order.currency !== 'KZ') {
+            const exchangeRates: Record<string, number> = { 'EUR': 1053, 'MZN': 14.3 };
+            const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+            amount = Math.round(amount * rate);
+          }
+          if (salesByDay[dayKey] !== undefined) {
+            salesByDay[dayKey] += amount;
+          }
+        });
+
+        const formattedData: ChartData[] = Object.entries(salesByDay).map(([date, amount]) => ({
+          time: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+          vendas: Math.round(amount)
+        }));
+        setChartData(formattedData);
+      }
     } catch (error) {
-      // Error silently handled
+      console.error('Error fetching chart data:', error);
     } finally {
       setLoading(false);
     }
   };
+
   const chartConfig = {
     vendas: {
       label: "Vendas",
       color: "hsl(var(--primary))"
     }
   };
-  return <Card className="rounded-[14px] shadow-card border border-border/50 w-full overflow-hidden h-full">
-      <CardHeader className="pb-1 px-4 pt-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs text-muted-foreground font-medium">Vendas dos últimos 7 dias</p>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground mt-0.5">
-              {totalValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{totalCount}</span> transações 
-            </p>
-          </div>
+
+  return (
+    <Card className="rounded-[14px] shadow-sm border border-border/40 bg-card overflow-hidden">
+      <CardHeader className="pb-2 px-5 pt-5">
+        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <BarChart3 className="w-4 h-4" />
+          <span className="text-sm font-medium">Desempenho de vendas</span>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-4 pt-1">
-        {loading ? <div className="h-[180px] flex items-center justify-center">
+      
+      <CardContent className="px-5 pb-5">
+        {loading ? (
+          <div className="h-[220px] flex items-center justify-center">
             <span className="text-muted-foreground text-sm">Carregando...</span>
-          </div> : <ChartContainer config={chartConfig} className="h-[180px] w-full">
-            <AreaChart data={chartData} margin={{
-          top: 10,
-          right: 10,
-          left: 10,
-          bottom: 0
-        }}>
-              <defs>
-                <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{
-            fontSize: 11,
-            fill: 'hsl(var(--muted-foreground))'
-          }} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tick={{
-            fontSize: 11,
-            fill: 'hsl(var(--muted-foreground))'
-          }} tickFormatter={value => value >= 1000 ? `${(value / 1000).toFixed(0)}K` : value} width={40} />
-              <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']} />
-              <Area type="monotone" dataKey="vendas" stroke="hsl(var(--primary))" strokeWidth={2} fillOpacity={1} fill="url(#colorVendas)" />
-            </AreaChart>
-          </ChartContainer>}
+          </div>
+        ) : (
+          <>
+            <ChartContainer config={chartConfig} className="h-[220px] w-full">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorVendasGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.16} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <XAxis 
+                  dataKey="time" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
+                  dy={10}
+                  interval="preserveStartEnd"
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
+                  tickFormatter={value => {
+                    if (value === 0) return '0';
+                    if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+                    return value.toString();
+                  }}
+                  width={45}
+                  domain={[0, 'auto']}
+                  ticks={[0, 125, 250, 375, 500]}
+                />
+                <ChartTooltip 
+                  content={<ChartTooltipContent />} 
+                  formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']} 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="vendas" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={2} 
+                  fillOpacity={1} 
+                  fill="url(#colorVendasGradient)"
+                  dot={{ fill: 'hsl(var(--primary))', stroke: 'white', strokeWidth: 2, r: 4 }}
+                  activeDot={{ fill: 'hsl(var(--primary))', stroke: 'white', strokeWidth: 2, r: 6 }}
+                />
+              </AreaChart>
+            </ChartContainer>
+
+            {/* KPI Stats Row */}
+            <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border/50">
+              <div className="bg-secondary/30 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-muted-foreground">Pedidos feitos</span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
+                    ordersTrend >= 0 
+                      ? 'bg-emerald-100 text-emerald-700' 
+                      : 'bg-red-100 text-red-600'
+                  }`}>
+                    {ordersTrend >= 0 ? '+' : ''}{ordersTrend}
+                    {ordersTrend >= 0 
+                      ? <TrendingUp className="w-3 h-3" /> 
+                      : <TrendingDown className="w-3 h-3" />
+                    }
+                  </span>
+                </div>
+                <span className="text-xs text-muted-foreground">Todos</span>
+                <p className="text-2xl font-bold text-foreground">{ordersCount}</p>
+              </div>
+
+              <div className="bg-secondary/30 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-muted-foreground">Pedidos pagos</span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
+                    paidTrend >= 0 
+                      ? 'bg-emerald-100 text-emerald-700' 
+                      : 'bg-red-100 text-red-600'
+                  }`}>
+                    {paidTrend >= 0 ? '+' : ''}{paidTrend < 0 ? paidTrend.toString().replace('-', '-0') : paidTrend.toString().padStart(2, '0')}
+                    {paidTrend >= 0 
+                      ? <TrendingUp className="w-3 h-3" /> 
+                      : <TrendingDown className="w-3 h-3" />
+                    }
+                  </span>
+                </div>
+                <span className="text-xs text-muted-foreground">Todos</span>
+                <p className="text-2xl font-bold text-foreground">{paidOrdersCount}</p>
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
-    </Card>;
+    </Card>
+  );
 }
