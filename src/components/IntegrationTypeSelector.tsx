@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Facebook, Settings, Palette, Plus, HelpCircle, Mail, Construction } from 'lucide-react';
+import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle, Mail, Construction } from 'lucide-react';
 
 export interface IntegrationType {
   id: string;
@@ -24,6 +24,13 @@ const integrationTypes: IntegrationType[] = [
     description: 'Configure Pixel ID e API de Conversões em um só lugar',
     icon: ({ className }: { className?: string }) => <Facebook className={className} />,
     color: 'text-blue-600'
+  },
+  {
+    id: 'webhook',
+    name: 'Webhook',
+    description: 'Selecione eventos personalizados e receba notificações em tempo real',
+    icon: ({ className }: { className?: string }) => <Webhook className={className} />,
+    color: 'text-orange-600'
   },
   {
     id: 'order-bump',
