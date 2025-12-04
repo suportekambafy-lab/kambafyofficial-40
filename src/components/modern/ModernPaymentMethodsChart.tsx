@@ -120,8 +120,7 @@ export function ModernPaymentMethodsChart() {
       let total = 0;
       
       orders?.forEach(order => {
-        const method = order.payment_method?.toLowerCase() || '';
-        if (!method) return;
+        const method = order.payment_method?.toLowerCase() || 'outro';
         
         const label = PAYMENT_METHOD_LABELS[method] || 
           method.charAt(0).toUpperCase() + method.slice(1).replace(/_/g, ' ');
