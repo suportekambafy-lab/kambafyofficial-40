@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { PieChart as PieChartIcon, ChevronDown, MoreHorizontal } from 'lucide-react';
@@ -25,17 +25,34 @@ const PAYMENT_METHOD_COLORS: Record<string, string> = {
   'M-Pesa': '#00AEEF',
   'Multicaixa Express': '#D9534F',
   'Cartão': '#4CAF50',
-  'Outro': '#9E9E9E',
+  'Stripe': '#635BFF',
+  'PayPal': '#003087',
+  'Transferência': '#2196F3',
 };
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   'card': 'Cartão',
-  'stripe': 'Cartão',
+  'stripe': 'Stripe',
   'reference': 'Referência',
   'mpesa': 'M-Pesa',
   'multicaixa_express': 'Multicaixa Express',
   'express': 'Multicaixa Express',
   'tpa': 'TPA',
+  'paypal': 'PayPal',
+  'transfer': 'Transferência',
+  'bank_transfer': 'Transferência',
+};
+
+// Generate color for unknown methods
+const getMethodColor = (name: string): string => {
+  if (PAYMENT_METHOD_COLORS[name]) return PAYMENT_METHOD_COLORS[name];
+  // Generate consistent color based on name
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 65%, 55%)`;
 };
 
 type FilterOption = 'today' | 'week' | 'month' | 'all';
@@ -113,8 +130,12 @@ export function ModernPaymentMethodsChart() {
       let total = 0;
       
       orders?.forEach(order => {
-        const method = order.payment_method?.toLowerCase() || 'outro';
-        const label = PAYMENT_METHOD_LABELS[method] || 'Outro';
+        const method = order.payment_method?.toLowerCase() || '';
+        if (!method) return; // Skip orders without payment method
+        
+        // Get label or capitalize the method name
+        const label = PAYMENT_METHOD_LABELS[method] || 
+          method.charAt(0).toUpperCase() + method.slice(1).replace(/_/g, ' ');
         methodCounts[label] = (methodCounts[label] || 0) + 1;
         total++;
       });
@@ -124,7 +145,7 @@ export function ModernPaymentMethodsChart() {
           name,
           value,
           percentage: total > 0 ? Math.round((value / total) * 100) : 0,
-          color: PAYMENT_METHOD_COLORS[name] || PAYMENT_METHOD_COLORS['Outro']
+          color: getMethodColor(name)
         }))
         .sort((a, b) => b.value - a.value);
 
@@ -252,9 +273,26 @@ export function ModernPaymentMethodsChart() {
                           key={`cell-${index}`} 
                           fill={entry.color}
                           stroke="none"
+                          style={{ cursor: 'pointer' }}
                         />
                       ))}
                     </Pie>
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const item = payload[0].payload as PaymentMethodData;
+                          return (
+                            <div className="bg-popover border border-border rounded-xl px-4 py-3 shadow-lg">
+                              <p className="text-sm font-semibold text-foreground">{item.name}</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {item.value} transações ({item.percentage}%)
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
