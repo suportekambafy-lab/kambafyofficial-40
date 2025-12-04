@@ -11,6 +11,7 @@ interface ModernMetricCardProps {
   className?: string;
   action?: React.ReactNode;
   variant?: 'default' | 'highlight';
+  accentColor?: string;
 }
 
 export function ModernMetricCard({ 
@@ -21,40 +22,46 @@ export function ModernMetricCard({
   trendUp = true,
   className,
   action,
-  variant = 'default'
+  variant = 'default',
+  accentColor = 'bg-primary'
 }: ModernMetricCardProps) {
   return (
     <div className={cn(
-      "bg-card rounded-xl p-3 shadow-card border border-border/50 w-full max-w-full overflow-hidden transition-all duration-200 hover:shadow-card-hover",
-      variant === 'highlight' && "border-primary/30 bg-gradient-to-br from-card to-secondary/30",
+      "bg-card rounded-xl shadow-card border border-border/50 w-full max-w-full overflow-hidden transition-all duration-200 hover:shadow-card-hover flex",
+      variant === 'highlight' && "border-primary/30",
       className
     )}>
-      <div className="flex items-center justify-between mb-2 min-w-0">
-        <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-primary shrink-0">
-          {icon}
+      {/* Colored left border */}
+      <div className={cn("w-1 rounded-l-xl shrink-0", accentColor)} />
+      
+      {/* Content */}
+      <div className="flex-1 p-4 flex items-center justify-between min-w-0">
+        <div className="min-w-0 flex-1">
+          <p className="text-muted-foreground text-sm font-medium mb-1">
+            {title}
+          </p>
+          <h3 className="text-2xl font-bold text-foreground tracking-tight truncate">
+            {value}
+          </h3>
+          {action && (
+            <div className="mt-2">
+              {icon}
+            </div>
+          )}
+          {!action && (
+            <div className="mt-2 text-muted-foreground">
+              {icon}
+            </div>
+          )}
         </div>
+        
         {trend && (
           <div className={cn(
-            "flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded-full",
-            trendUp ? "text-primary bg-secondary" : "text-destructive bg-destructive/10"
+            "flex items-center gap-1 text-sm font-medium shrink-0 ml-4",
+            trendUp ? "text-primary" : "text-destructive"
           )}>
-            {trendUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+            {trendUp ? <TrendingDown className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
             {trend}
-          </div>
-        )}
-      </div>
-      
-      <div className="min-w-0">
-        <h3 className="text-lg font-bold text-foreground tracking-tight truncate">
-          {value}
-        </h3>
-        <p className="text-muted-foreground text-[11px] font-medium truncate">
-          {title}
-        </p>
-        
-        {action && (
-          <div className="mt-2">
-            {action}
           </div>
         )}
       </div>
