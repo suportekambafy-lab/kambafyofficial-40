@@ -1,109 +1,128 @@
 import React, { useState, useEffect } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Card, CardContent, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import type { AdminStats } from '@/types/admin';
 import { 
-  Users, Package, ShoppingCart, LogOut, Shield, Menu, Globe, 
-  ArrowUpRight, ArrowDownRight, Sparkles, TrendingUp, Wallet,
-  CheckCircle, AlertCircle, Clock, DollarSign
+  ArrowUpRight,
+  TrendingUp,
+  DollarSign,
+  Users,
+  Package,
+  ShoppingCart,
+  Clock,
+  CheckCircle,
+  MoreHorizontal,
+  Loader2
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
-import { NotificationCenter } from '@/components/NotificationCenter';
 import { cn } from '@/lib/utils';
-import AdminDrawer from '@/components/admin/AdminDrawer';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
-import { ResendAllAccessButton } from '@/components/admin/ResendAllAccessButton';
-import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalancesButton';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SendAppAnnouncementButton } from '@/components/admin/SendAppAnnouncementButton';
 import { ClearAnnouncementButton } from '@/components/admin/ClearAnnouncementButton';
 import { BulkProductAccessButton } from '@/components/admin/BulkProductAccessButton';
 import { AddStudentsToCohortButton } from '@/components/admin/AddStudentsToCohortButton';
-import ProxyLinkGenerator from '@/components/admin/ProxyLinkGenerator';
+import { ResendAllAccessButton } from '@/components/admin/ResendAllAccessButton';
+import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalancesButton';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-
-interface ModernMetricCardProps {
+// Metric Card Component - Style like reference
+interface MetricCardProps {
   title: string;
-  subtitle: string;
   value: string;
-  icon: React.ReactNode;
-  trend?: { value: string; isUp: boolean };
-  gradient: string;
-  iconBg: string;
+  subtitle: string;
+  variant?: 'primary' | 'default';
+  icon?: React.ReactNode;
 }
 
-function ModernMetricCard({ 
-  title, 
-  subtitle,
-  value, 
-  icon, 
-  trend,
-  gradient,
-  iconBg
-}: ModernMetricCardProps) {
+function MetricCard({ title, value, subtitle, variant = 'default', icon }: MetricCardProps) {
+  const isPrimary = variant === 'primary';
+  
   return (
-    <Card className="group relative overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-500 animate-fade-in">
-      {/* Background Gradient */}
-      <div className={cn("absolute inset-0 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500", gradient)} />
-      
-      <CardContent className="relative p-6">
-        <div className="flex items-start justify-between mb-6">
-          {/* Icon Container */}
+    <div className={cn(
+      "rounded-2xl p-6 transition-all duration-300 hover:shadow-lg",
+      isPrimary 
+        ? "bg-[hsl(var(--admin-primary))] text-white" 
+        : "bg-[hsl(var(--admin-card-bg))] border border-[hsl(var(--admin-border))]"
+    )}>
+      <div className="flex items-start justify-between mb-4">
+        <h3 className={cn(
+          "text-sm font-medium",
+          isPrimary ? "text-white/90" : "text-[hsl(var(--admin-text-secondary))]"
+        )}>
+          {title}
+        </h3>
+        {icon && (
           <div className={cn(
-            "relative p-3.5 rounded-2xl shadow-sm group-hover:scale-110 transition-transform duration-500",
-            iconBg
+            "h-8 w-8 rounded-lg flex items-center justify-center",
+            isPrimary ? "bg-white/20" : "bg-[hsl(var(--admin-bg))]"
           )}>
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl" />
             {icon}
           </div>
-          
-          {/* Trend Badge */}
-          {trend && (
-            <div className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm",
-              trend.isUp 
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
-                : "bg-rose-50 text-rose-700 border border-rose-200"
-            )}>
-              {trend.isUp ? (
-                <ArrowUpRight className="w-4 h-4" />
-              ) : (
-                <ArrowDownRight className="w-4 h-4" />
-              )}
-              <span>{trend.value}</span>
-            </div>
-          )}
-        </div>
-        
-        {/* Content */}
-        <div className="space-y-2">
-          <h3 className="text-3xl font-bold text-foreground tracking-tight">
-            {value}
-          </h3>
-          <div className="space-y-0.5">
-            <p className="text-sm font-semibold text-foreground/90">
-              {title}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {subtitle}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        )}
+      </div>
+      <div className={cn(
+        "text-3xl font-bold mb-1",
+        isPrimary ? "text-white" : "text-[hsl(var(--admin-text))]"
+      )}>
+        {value}
+      </div>
+      <p className={cn(
+        "text-sm",
+        isPrimary ? "text-white/70" : "text-[hsl(var(--admin-text-secondary))]"
+      )}>
+        {subtitle}
+      </p>
+    </div>
   );
 }
 
+// Chart Card Component
+interface ChartCardProps {
+  title: string;
+  children: React.ReactNode;
+  filter?: React.ReactNode;
+}
+
+function ChartCard({ title, children, filter }: ChartCardProps) {
+  return (
+    <div className="bg-[hsl(var(--admin-card-bg))] rounded-2xl border border-[hsl(var(--admin-border))] p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-[hsl(var(--admin-bg))] flex items-center justify-center">
+            <TrendingUp className="h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
+          </div>
+          <h3 className="font-semibold text-[hsl(var(--admin-text))]">{title}</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          {filter}
+          <button className="p-2 hover:bg-[hsl(var(--admin-bg))] rounded-lg transition-colors">
+            <MoreHorizontal className="h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
+          </button>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// Status Pie Chart Data
+const STATUS_COLORS = {
+  success: 'hsl(145 63% 42%)',
+  pending: 'hsl(38 92% 50%)',
+  failed: 'hsl(4 90% 58%)',
+  expired: 'hsl(0 0% 70%)'
+};
+
 export default function AdminDashboard() {
-  const { admin, logout } = useAdminAuth();
+  const { admin } = useAdminAuth();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [companyFinancials, setCompanyFinancials] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [usersByCountry, setUsersByCountry] = useState<Array<{country: string; count: number; flag: string}>>([]);
-  const [selectedCountry, setSelectedCountry] = useState<string>('todos');
+  const [statusFilter, setStatusFilter] = useState('week');
+  const [volumeFilter, setVolumeFilter] = useState('7days');
+  const [orderStats, setOrderStats] = useState({ success: 0, pending: 0, failed: 0, expired: 0 });
 
   useEffect(() => {
     if (admin) {
@@ -113,58 +132,14 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      // Buscar todas as withdrawal_requests usando a função admin
-      const { data: allWithdrawals, error: withdrawalsError } = await supabase
+      const { data: allWithdrawals } = await supabase
         .rpc('get_all_withdrawal_requests_for_admin');
 
-      if (withdrawalsError) {
-        console.error('Error loading withdrawals:', withdrawalsError);
-      }
-
-      // Contar saques pendentes
       const pendingWithdrawals = allWithdrawals?.filter(w => w.status === 'pendente').length || 0;
-      
-      // Calcular total pago
       const totalPaidOut = allWithdrawals
         ?.filter(w => w.status === 'aprovado')
         .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-      // Dados por país
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('country')
-        .not('country', 'is', null);
-
-      const countryMapping: Record<string, string> = {
-        'AO': '🇦🇴',
-        'PT': '🇵🇹', 
-        'MZ': '🇲🇿',
-        'BR': '🇧🇷',
-        'Angola': '🇦🇴',
-        'Portugal': '🇵🇹',
-        'Moçambique': '🇲🇿',
-        'Brasil': '🇧🇷'
-      };
-
-      const countryStats = profilesData?.reduce((acc: Record<string, number>, profile) => {
-        const country = profile.country;
-        if (country) {
-          acc[country] = (acc[country] || 0) + 1;
-        }
-        return acc;
-      }, {}) || {};
-
-      const formattedCountryStats = Object.entries(countryStats)
-        .map(([country, count]) => ({
-          country,
-          count: count as number,
-          flag: countryMapping[country] || '🌍'
-        }))
-        .sort((a, b) => b.count - a.count);
-
-      setUsersByCountry(formattedCountryStats);
-
-      // Buscar estatísticas básicas
       const [usersRes, productsRes, ordersRes] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }),
@@ -173,7 +148,20 @@ export default function AdminDashboard() {
           .neq('payment_method', 'member_access')
       ]);
 
-      // Métricas financeiras
+      // Order status breakdown
+      const { data: orderStatusData } = await supabase
+        .from('orders')
+        .select('status')
+        .neq('payment_method', 'member_access');
+
+      const statusCounts = {
+        success: orderStatusData?.filter(o => o.status === 'completed').length || 0,
+        pending: orderStatusData?.filter(o => o.status === 'pending').length || 0,
+        failed: orderStatusData?.filter(o => o.status === 'failed').length || 0,
+        expired: orderStatusData?.filter(o => o.status === 'expired').length || 0
+      };
+      setOrderStats(statusCounts);
+
       const { data: allOrders } = await supabase
         .from('orders')
         .select('amount, created_at')
@@ -184,11 +172,7 @@ export default function AdminDashboard() {
       const companyCommission = totalRevenue * 0.08;
       const sellersEarnings = totalRevenue * 0.92;
 
-      setCompanyFinancials({
-        totalRevenue,
-        companyCommission,
-        sellersEarnings
-      });
+      setCompanyFinancials({ totalRevenue, companyCommission, sellersEarnings });
 
       setStats({
         total_users: usersRes.count || 0,
@@ -217,20 +201,30 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
-            <Sparkles className="absolute inset-0 m-auto h-6 w-6 text-blue-600 animate-pulse" />
-          </div>
-          <p className="text-foreground/60 font-medium">Carregando painel administrativo...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-[hsl(var(--admin-primary))]" />
+          <p className="text-[hsl(var(--admin-text-secondary))]">Carregando painel administrativo...</p>
         </div>
       </div>
     );
   }
 
+  // Prepare pie chart data
+  const pieData = [
+    { name: 'Sucesso', value: orderStats.success, color: STATUS_COLORS.success },
+    { name: 'Pendente', value: orderStats.pending, color: STATUS_COLORS.pending },
+    { name: 'Falhou', value: orderStats.failed, color: STATUS_COLORS.failed },
+    { name: 'Expirado', value: orderStats.expired, color: STATUS_COLORS.expired }
+  ].filter(d => d.value > 0);
+
+  const totalOrders = pieData.reduce((sum, d) => sum + d.value, 0);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <AdminLayout 
+      title="Painel de Controlo" 
+      description="Visão geral da aplicação, indicadores e resumos de transações."
+    >
       <SEO 
         title="Kambafy Admin – Dashboard" 
         description="Dashboard administrativo com métricas e relatórios" 
@@ -238,320 +232,222 @@ export default function AdminDashboard() {
         noIndex 
       />
 
-      {/* Modern Header */}
-      <div className="bg-white/80 backdrop-blur-xl shadow-sm border-b border-gray-200/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4 sm:py-5">
-            <div className="flex items-center space-x-4">
-              <Button
-                onClick={() => setDrawerOpen(true)}
-                variant="outline"
-                size="icon"
-                className="hover:bg-accent hover:scale-105 transition-all duration-300"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="h-12 w-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Shield className="text-white h-6 w-6" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 h-4 w-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground tracking-tight">Painel Administrativo</h1>
-                  <p className="text-sm text-muted-foreground">
-                    Bem-vindo, <span className="font-semibold text-foreground">{admin.full_name || admin.email}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <NotificationCenter />
-              <div className="flex gap-2">
-                <BulkProductAccessButton />
-                <AddStudentsToCohortButton />
-                <ResendAllAccessButton />
-                <RecalculateBalancesButton />
-              </div>
-              <Button
-                onClick={logout}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 hover:bg-destructive/10 hover:border-destructive hover:text-destructive transition-all duration-300"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sair</span>
-              </Button>
-            </div>
-          </div>
-        </div>
+      {/* Quick Actions */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <BulkProductAccessButton />
+        <AddStudentsToCohortButton />
+        <ResendAllAccessButton />
+        <RecalculateBalancesButton />
+        <SendAppAnnouncementButton />
+        <ClearAnnouncementButton />
       </div>
 
-      {/* Admin Drawer */}
-      <AdminDrawer 
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        stats={stats || undefined}
-        usersByCountry={usersByCountry}
-        selectedCountry={selectedCountry}
-        onCountrySelect={setSelectedCountry}
-      />
+      {/* Main Metric Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <MetricCard
+          title="Total de Transações"
+          value={stats?.total_transactions?.toLocaleString('pt-BR') || '0'}
+          subtitle={`Total processado até ${new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}`}
+          variant="primary"
+          icon={<ArrowUpRight className="h-4 w-4 text-white" />}
+        />
+        <MetricCard
+          title="Montante Cobrado"
+          value={companyFinancials?.totalRevenue?.toLocaleString('pt-BR', { 
+            style: 'currency', 
+            currency: 'AOA',
+            notation: 'compact',
+            maximumFractionDigits: 2
+          }) || '0 AOA'}
+          subtitle={`Montante cobrado até ${new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}`}
+          icon={<DollarSign className="h-4 w-4 text-[hsl(var(--admin-warning))]" />}
+        />
+        <MetricCard
+          title="Total de Usuários"
+          value={stats?.total_users?.toLocaleString('pt-BR') || '0'}
+          subtitle="Usuários ativos na plataforma"
+          icon={<Users className="h-4 w-4 text-[hsl(var(--admin-primary))]" />}
+        />
+        <MetricCard
+          title="Produtos Cadastrados"
+          value={stats?.total_products?.toLocaleString('pt-BR') || '0'}
+          subtitle="Total de produtos na plataforma"
+          icon={<Package className="h-4 w-4 text-purple-500" />}
+        />
+      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Sparkles className="h-6 w-6 text-indigo-600" />
-            <h2 className="text-2xl font-bold text-foreground">Visão Geral do Sistema</h2>
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Volume Chart */}
+        <ChartCard 
+          title="Volume de transações"
+          filter={
+            <Select value={volumeFilter} onValueChange={setVolumeFilter}>
+              <SelectTrigger className="w-36 h-9 bg-white border-[hsl(var(--admin-border))]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7days">Últimos 7 Dias</SelectItem>
+                <SelectItem value="month">Este mês</SelectItem>
+                <SelectItem value="year">Este ano</SelectItem>
+              </SelectContent>
+            </Select>
+          }
+        >
+          <div className="h-64 flex items-center justify-center text-[hsl(var(--admin-text-secondary))]">
+            <div className="text-center">
+              <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-30" />
+              <p>Gráfico de volume em breve</p>
+            </div>
           </div>
-          <p className="text-muted-foreground">
-            Acompanhe o desempenho da plataforma em tempo real
+        </ChartCard>
+
+        {/* Status Pie Chart */}
+        <ChartCard 
+          title="Estados"
+          filter={
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-36 h-9 bg-white border-[hsl(var(--admin-border))]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">Esta Semana</SelectItem>
+                <SelectItem value="month">Este mês</SelectItem>
+                <SelectItem value="year">Este ano</SelectItem>
+              </SelectContent>
+            </Select>
+          }
+        >
+          <div className="h-64">
+            {totalOrders > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                    labelLine={false}
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => [value, 'Transações']}
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid hsl(220 13% 91%)',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36}
+                    formatter={(value) => (
+                      <span className="text-sm text-[hsl(var(--admin-text-secondary))]">{value}</span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-[hsl(var(--admin-text-secondary))]">
+                <p>Sem dados de transações</p>
+              </div>
+            )}
+          </div>
+        </ChartCard>
+      </div>
+
+      {/* Financial Cards Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-[hsl(var(--admin-card-bg))] rounded-2xl border border-[hsl(var(--admin-border))] p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <DollarSign className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-[hsl(var(--admin-text))]">Receita Total</h3>
+              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">Volume processado</p>
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">
+            {companyFinancials?.totalRevenue?.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA' }) || 'KZ 0'}
           </p>
         </div>
 
-        {/* Country Filter */}
-        {usersByCountry.length > 0 && (
-          <Card className="mb-8 border-0 shadow-md">
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-indigo-100 rounded-lg">
-                    <Globe className="h-5 w-5 text-indigo-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">Distribuição Global</h3>
-                    <p className="text-sm text-muted-foreground">Usuários por país</p>
-                  </div>
-                </div>
-                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                  <SelectTrigger className="w-full sm:w-56">
-                    <SelectValue placeholder="Selecionar país" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">
-                      <div className="flex items-center gap-2">
-                        <span>🌍</span>
-                        <span>Todos os países</span>
-                      </div>
-                    </SelectItem>
-                    {usersByCountry.map((country) => (
-                      <SelectItem key={country.country} value={country.country}>
-                        <div className="flex items-center gap-2">
-                          <span>{country.flag}</span>
-                          <span>{country.country}</span>
-                          <span className="text-muted-foreground">({country.count})</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {usersByCountry.map((country) => (
-                  <div
-                    key={country.country}
-                    className={cn(
-                      "group p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105",
-                      selectedCountry === country.country 
-                        ? "bg-indigo-50 border-indigo-500" 
-                        : "bg-white border-gray-200 hover:border-indigo-300"
-                    )}
-                    onClick={() => setSelectedCountry(country.country)}
-                  >
-                    <div className="text-center space-y-2">
-                      <div className="text-3xl mb-2">{country.flag}</div>
-                      <div className="text-xs font-medium text-muted-foreground truncate">{country.country}</div>
-                      <div className="text-xl font-bold text-foreground">{country.count}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <ProxyLinkGenerator />
-          
-          <ModernMetricCard
-            title="Total de Usuários"
-            subtitle="Usuários ativos na plataforma"
-            value={stats?.total_users?.toLocaleString('pt-BR') || '0'}
-            icon={<Users className="h-6 w-6 text-white" />}
-            gradient="bg-gradient-to-br from-blue-500 to-indigo-600"
-            iconBg="bg-gradient-to-br from-blue-500 to-indigo-600"
-            trend={{ value: '+12%', isUp: true }}
-          />
-
-          <ModernMetricCard
-            title="Produtos Cadastrados"
-            subtitle="Total de produtos na plataforma"
-            value={stats?.total_products?.toLocaleString('pt-BR') || '0'}
-            icon={<Package className="h-6 w-6 text-white" />}
-            gradient="bg-gradient-to-br from-purple-500 to-pink-600"
-            iconBg="bg-gradient-to-br from-purple-500 to-pink-600"
-            trend={{ value: '+8%', isUp: true }}
-          />
-
-          <ModernMetricCard
-            title="Transações Realizadas"
-            subtitle="Total de vendas concluídas"
-            value={stats?.total_transactions?.toLocaleString('pt-BR') || '0'}
-            icon={<ShoppingCart className="h-6 w-6 text-white" />}
-            gradient="bg-gradient-to-br from-emerald-500 to-teal-600"
-            iconBg="bg-gradient-to-br from-emerald-500 to-teal-600"
-            trend={{ value: '+24%', isUp: true }}
-          />
-        </div>
-
-        {/* Financial Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-500">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-emerald-100 rounded-xl">
-                  <DollarSign className="h-6 w-6 text-emerald-600" />
-                </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <TrendingUp className="w-4 h-4" />
-                  <span>+18%</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-muted-foreground mb-1">Receita Total</p>
-                <h3 className="text-2xl font-bold text-foreground mb-1">
-                  {companyFinancials?.totalRevenue?.toLocaleString('pt-BR', { 
-                    style: 'currency', 
-                    currency: 'AOA' 
-                  }) || 'KZ 0'}
-                </h3>
-                <CardDescription>Volume total processado</CardDescription>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-500">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <Wallet className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-muted-foreground mb-1">Comissão da Plataforma</p>
-                <h3 className="text-2xl font-bold text-foreground mb-1">
-                  {companyFinancials?.companyCommission?.toLocaleString('pt-BR', { 
-                    style: 'currency', 
-                    currency: 'AOA' 
-                  }) || 'KZ 0'}
-                </h3>
-                <CardDescription>8,99% sobre vendas (receita líquida)</CardDescription>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-500">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-purple-100 rounded-xl">
-                  <Users className="h-6 w-6 text-purple-600" />
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-muted-foreground mb-1">Ganhos dos Vendedores</p>
-                <h3 className="text-2xl font-bold text-foreground mb-1">
-                  {companyFinancials?.sellersEarnings?.toLocaleString('pt-BR', { 
-                    style: 'currency', 
-                    currency: 'AOA' 
-                  }) || 'KZ 0'}
-                </h3>
-                <CardDescription>92% repassado aos vendedores</CardDescription>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Withdrawals Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card 
-            className="border-0 shadow-md hover:shadow-xl transition-all duration-500 cursor-pointer hover:scale-[1.02]"
-            onClick={() => setDrawerOpen(true)}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-amber-100 rounded-xl">
-                    <Clock className="h-6 w-6 text-amber-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Saques Pendentes</h3>
-                    <p className="text-sm text-muted-foreground">Aguardando aprovação</p>
-                  </div>
-                </div>
-                {stats && stats.pending_withdrawals > 0 && (
-                  <span className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-full text-sm font-semibold">
-                    <AlertCircle className="h-4 w-4" />
-                    {stats.pending_withdrawals}
-                  </span>
-                )}
-              </div>
-              <div className="text-3xl font-bold text-foreground">
-                {stats?.pending_withdrawals || 0}
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Clique para gerenciar solicitações
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border-0 shadow-md hover:shadow-xl transition-all duration-500 cursor-pointer hover:scale-[1.02]"
-            onClick={() => setDrawerOpen(true)}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-emerald-100 rounded-xl">
-                    <CheckCircle className="h-6 w-6 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Total Pago</h3>
-                    <p className="text-sm text-muted-foreground">Saques aprovados e processados</p>
-                  </div>
-                </div>
-              </div>
-              <div className="text-3xl font-bold text-foreground">
-                {stats?.total_paid_out?.toLocaleString('pt-BR', { 
-                  style: 'currency', 
-                  currency: 'AOA' 
-                }) || 'KZ 0'}
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Clique para ver histórico completo
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* System Tools Section */}
-        <div className="mt-8">
-          <div className="flex items-center gap-3 mb-6">
-            <Sparkles className="h-6 w-6 text-indigo-600" />
-            <h2 className="text-2xl font-bold text-foreground">Ferramentas do Sistema</h2>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <SendAppAnnouncementButton />
-              <ClearAnnouncementButton />
+        <div className="bg-[hsl(var(--admin-card-bg))] rounded-2xl border border-[hsl(var(--admin-border))] p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-[hsl(var(--admin-text))]">Comissão Plataforma</h3>
+              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">8,99% sobre vendas</p>
             </div>
           </div>
+          <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">
+            {companyFinancials?.companyCommission?.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA' }) || 'KZ 0'}
+          </p>
+        </div>
+
+        <div className="bg-[hsl(var(--admin-card-bg))] rounded-2xl border border-[hsl(var(--admin-border))] p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-10 w-10 rounded-xl bg-purple-100 flex items-center justify-center">
+              <Users className="h-5 w-5 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-[hsl(var(--admin-text))]">Ganhos Vendedores</h3>
+              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">92% repassado</p>
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">
+            {companyFinancials?.sellersEarnings?.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA' }) || 'KZ 0'}
+          </p>
         </div>
       </div>
-    </div>
+
+      {/* Withdrawals Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-[hsl(var(--admin-card-bg))] rounded-2xl border border-[hsl(var(--admin-border))] p-6 hover:shadow-lg transition-all cursor-pointer">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
+              <Clock className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-[hsl(var(--admin-text))]">Saques Pendentes</h3>
+              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">Aguardando aprovação</p>
+            </div>
+            {stats && stats.pending_withdrawals > 0 && (
+              <span className="ml-auto px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-semibold">
+                {stats.pending_withdrawals}
+              </span>
+            )}
+          </div>
+          <p className="text-3xl font-bold text-[hsl(var(--admin-text))]">
+            {stats?.pending_withdrawals || 0}
+          </p>
+        </div>
+
+        <div className="bg-[hsl(var(--admin-card-bg))] rounded-2xl border border-[hsl(var(--admin-border))] p-6 hover:shadow-lg transition-all cursor-pointer">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <CheckCircle className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-[hsl(var(--admin-text))]">Total Pago</h3>
+              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">Saques aprovados</p>
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-[hsl(var(--admin-text))]">
+            {stats?.total_paid_out?.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA' }) || 'KZ 0'}
+          </p>
+        </div>
+      </div>
+    </AdminLayout>
   );
 }

@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Download, Filter, ShoppingCart, DollarSign, TrendingUp, Eye, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Search, Download, Filter, ShoppingCart, DollarSign, TrendingUp, Eye, CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import {
   Select,
   SelectContent,
@@ -81,7 +82,6 @@ const formatCurrency = (amount: number, currencyCode: string) => {
 
 export default function AdminSales() {
   const { admin } = useAdminAuth();
-  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -328,46 +328,26 @@ export default function AdminSales() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-          <p className="text-gray-600">Carregando vendas...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-[hsl(var(--admin-primary))]" />
+          <p className="text-[hsl(var(--admin-text-secondary))]">Carregando vendas...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <AdminLayout 
+      title="Transações" 
+      description={`Todas as transações realizadas - ${orders.length} vendas`}
+    >
       <SEO 
         title="Kambafy Admin – Vendas" 
         description="Gestão de vendas da plataforma" 
         canonical="https://kambafy.com/admin/sales" 
         noIndex 
       />
-
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/admin')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Dashboard
-          </Button>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-12 w-12 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-              <ShoppingCart className="text-white h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Vendas da Plataforma</h1>
-              <p className="text-sm text-gray-600">Todas as transações realizadas - {orders.length} vendas</p>
-            </div>
-          </div>
-        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -539,7 +519,6 @@ export default function AdminSales() {
             </div>
           </CardContent>
         </Card>
-      </div>
 
       {/* Order Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
@@ -555,51 +534,51 @@ export default function AdminSales() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">ID do Pedido</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">ID do Pedido</p>
                   <p className="font-mono font-semibold">{selectedOrder.order_id}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Status</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Status</p>
                   <div className="mt-1">{getStatusBadge(selectedOrder.status)}</div>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Cliente</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Cliente</p>
                   <p className="font-medium">{selectedOrder.customer_name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Email</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Email</p>
                   <p className="text-sm">{selectedOrder.customer_email}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Telefone</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Telefone</p>
                   <p className="text-sm">{selectedOrder.customer_phone || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Vendedor</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Vendedor</p>
                   <p className="font-medium">{selectedOrder.seller?.full_name || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Método de Pagamento</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Método de Pagamento</p>
                   <p className="text-sm capitalize">{selectedOrder.payment_method?.replace('_', ' ') || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Valor</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Valor</p>
                   <p className="font-semibold text-lg">
                     {formatCurrency(parseFloat(selectedOrder.amount), selectedOrder.currency || 'KZ')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Moeda</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Moeda</p>
                   <p className="font-medium">{selectedOrder.currency}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Data de Criação</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Data de Criação</p>
                   <p className="text-sm">
                     {format(new Date(selectedOrder.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Última Atualização</p>
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Última Atualização</p>
                   <p className="text-sm">
                     {format(new Date(selectedOrder.updated_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
                   </p>
@@ -608,8 +587,8 @@ export default function AdminSales() {
 
               {selectedOrder.order_bump_data && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">Order Bumps</p>
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))] mb-2">Order Bumps</p>
+                  <div className="bg-[hsl(var(--admin-bg))] rounded-lg p-3">
                     <pre className="text-xs overflow-auto">
                       {JSON.stringify(selectedOrder.order_bump_data, null, 2)}
                     </pre>
@@ -620,6 +599,6 @@ export default function AdminSales() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminLayout>
   );
 }

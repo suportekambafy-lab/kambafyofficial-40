@@ -84,6 +84,20 @@ export default {
 					green: 'hsl(var(--card-border-green))',
 					yellow: 'hsl(var(--card-border-yellow))'
 				},
+				admin: {
+					bg: 'hsl(var(--admin-bg))',
+					'sidebar-bg': 'hsl(var(--admin-sidebar-bg))',
+					primary: 'hsl(var(--admin-primary))',
+					text: 'hsl(var(--admin-text))',
+					'text-secondary': 'hsl(var(--admin-text-secondary))',
+					border: 'hsl(var(--admin-border))',
+					'card-bg': 'hsl(var(--admin-card-bg))',
+					'active-bg': 'hsl(var(--admin-active-bg))',
+					success: 'hsl(var(--admin-success))',
+					warning: 'hsl(var(--admin-warning))',
+					error: 'hsl(var(--admin-error))',
+					pending: 'hsl(var(--admin-pending))'
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
