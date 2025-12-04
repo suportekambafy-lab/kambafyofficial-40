@@ -87,7 +87,7 @@ export function ModernKambaAchievements() {
   };
   return <>
       <Card className="bg-card shadow-sm border border-border w-full max-w-full overflow-hidden">
-        <CardHeader className="pb-3 sm:pb-4">
+        <CardHeader className="pb-2 pt-4 px-4 sm:px-6">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-1.5 sm:gap-2 min-w-0">
               <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 shrink-0" />
@@ -101,12 +101,12 @@ export function ModernKambaAchievements() {
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-3 sm:space-y-4 overflow-x-hidden pb-3 sm:pb-4">
+        <CardContent className="space-y-3 overflow-x-hidden pb-4 pt-0 px-4 sm:px-6">
           {/* Nível atual */}
           
 
           {/* Progresso para próximo nível */}
-          {nextLevel && <div className="space-y-2">
+          {nextLevel && <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs sm:text-sm">
                 <span className="text-muted-foreground truncate">
                   Progresso para {nextLevel.name}
@@ -128,7 +128,7 @@ export function ModernKambaAchievements() {
               Selos Conquistados ({achievedLevels.length}/{allLevels.length})
             </p>
             <TooltipProvider>
-              <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6">
+              <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6">
                 {allLevels.map(level => {
                   const isAchieved = totalRevenue >= level.threshold;
                   return (
@@ -138,13 +138,13 @@ export function ModernKambaAchievements() {
                           <img 
                             src={level.badge} 
                             alt={level.name} 
-                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl" 
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg" 
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                             }}
                           />
-                          {!isAchieved && <div className="absolute inset-0 bg-slate-500/20 rounded-xl" />}
+                          {!isAchieved && <div className="absolute inset-0 bg-slate-500/20 rounded-lg" />}
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="z-50">
