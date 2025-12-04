@@ -19,12 +19,6 @@ import { cn } from '@/lib/utils';
 import { SEO } from '@/components/SEO';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SendAppAnnouncementButton } from '@/components/admin/SendAppAnnouncementButton';
-import { ClearAnnouncementButton } from '@/components/admin/ClearAnnouncementButton';
-import { BulkProductAccessButton } from '@/components/admin/BulkProductAccessButton';
-import { AddStudentsToCohortButton } from '@/components/admin/AddStudentsToCohortButton';
-import { ResendAllAccessButton } from '@/components/admin/ResendAllAccessButton';
-import { RecalculateBalancesButton } from '@/components/admin/RecalculateBalancesButton';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 // Metric Card Component - Style like reference
@@ -232,15 +226,6 @@ export default function AdminDashboard() {
         noIndex 
       />
 
-      {/* Quick Actions */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <BulkProductAccessButton />
-        <AddStudentsToCohortButton />
-        <ResendAllAccessButton />
-        <RecalculateBalancesButton />
-        <SendAppAnnouncementButton />
-        <ClearAnnouncementButton />
-      </div>
 
       {/* Main Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

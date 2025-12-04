@@ -15,7 +15,8 @@ import {
   ChevronDown,
   Smartphone,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Wrench
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -69,6 +70,11 @@ const menuItems = [
     href: '/admin/payment-approvals',
     label: 'Aprovar Pagamentos',
     icon: CreditCard,
+  },
+  {
+    href: '/admin/extras',
+    label: 'Extras',
+    icon: Wrench,
   },
   {
     href: '/admin/management',
