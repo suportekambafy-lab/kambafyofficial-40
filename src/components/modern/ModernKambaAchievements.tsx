@@ -93,7 +93,7 @@ export function ModernKambaAchievements() {
               <h3 className="text-lg font-bold text-foreground">Minha evolução</h3>
               <p className="text-xs text-muted-foreground mt-0.5">Atualizado diariamente</p>
             </div>
-            {currentLevel && <Badge variant="outline" className="bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 px-3 py-1">
+            {currentLevel && <Badge variant="outline" className="bg-secondary text-primary border-primary/30 px-3 py-1">
                 <Crown className="w-3.5 h-3.5 mr-1.5" />
                 {currentLevel.name}
               </Badge>}
@@ -102,19 +102,19 @@ export function ModernKambaAchievements() {
           {/* Main Illustration */}
           <div className="flex justify-center py-4">
             <div className="relative">
-              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-400/20 to-cyan-400/20 flex items-center justify-center animate-pulse">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/30 to-cyan-500/30 flex items-center justify-center">
-                  <Rocket className="w-10 h-10 text-blue-500" />
+              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center animate-pulse">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center">
+                  <Rocket className="w-10 h-10 text-primary" />
                 </div>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent rounded-full blur-xl" />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent rounded-full blur-xl" />
             </div>
           </div>
 
           {/* Current Revenue */}
           <div className="text-center space-y-1">
             <div className="flex items-center justify-center gap-2">
-              <span className="text-2xl font-bold text-orange-500">
+              <span className="text-2xl font-bold text-primary">
                 {showRevenue ? formatCurrency(totalRevenue) : '••••••'}
               </span>
               <Button variant="ghost" size="sm" onClick={() => setShowRevenue(!showRevenue)} className="h-7 w-7 p-0">
@@ -125,16 +125,16 @@ export function ModernKambaAchievements() {
           </div>
 
           {/* Progress Block */}
-          {nextLevel && <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+          {nextLevel && <div className="bg-secondary/50 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-orange-500" />
+                <Target className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium text-foreground">Você está conseguindo!</span>
               </div>
               
               <div className="space-y-2">
-                <Progress value={progress} className="h-2 bg-muted [&>div]:bg-foreground dark:[&>div]:bg-white" />
+                <Progress value={progress} className="h-2 bg-muted [&>div]:bg-primary" />
                 <p className="text-xs text-muted-foreground">
-                  Fature <span className="text-orange-500 font-semibold">{formatCurrencyShort(nextLevel.threshold)}</span> e desbloqueie o {nextLevel.name}
+                  Fature <span className="text-primary font-semibold">{formatCurrencyShort(nextLevel.threshold)}</span> e desbloqueie o {nextLevel.name}
                 </p>
               </div>
             </div>}
@@ -143,8 +143,8 @@ export function ModernKambaAchievements() {
           
 
           {/* CTA Button */}
-          <Button variant="outline" onClick={() => setShowModal(true)} className="w-full h-12 bg-muted/50 hover:bg-muted border-border/50">
-            <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
+          <Button variant="outline" onClick={() => setShowModal(true)} className="w-full h-12 bg-secondary/50 hover:bg-secondary border-primary/20">
+            <Trophy className="w-4 h-4 mr-2 text-primary" />
             <span className="font-medium">Ver próximas conquistas</span>
           </Button>
         </CardContent>
