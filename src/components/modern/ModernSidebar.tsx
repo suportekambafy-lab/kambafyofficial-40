@@ -322,7 +322,7 @@ export function ModernSidebar({
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="h-full bg-primary rounded-full" 
+                className="h-full bg-yellow-500 rounded-full" 
               />
             </div>
             <span className="text-[10px] text-primary font-semibold">{progressPercent.toFixed(0)}%</span>
@@ -338,7 +338,7 @@ export function ModernSidebar({
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="h-full bg-primary rounded-full" 
+                className="h-full bg-yellow-500 rounded-full" 
               />
             </div>
           </div>
