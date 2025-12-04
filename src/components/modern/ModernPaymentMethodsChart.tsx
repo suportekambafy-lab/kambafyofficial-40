@@ -107,7 +107,8 @@ export function ModernPaymentMethodsChart() {
       let query = supabase
         .from('orders')
         .select('payment_method, product_id, order_bump_data')
-        .eq('status', 'completed');
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
 
       const dateFilter = getDateFilter();
       if (dateFilter) {
