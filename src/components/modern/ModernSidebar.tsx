@@ -288,7 +288,7 @@ export function ModernSidebar({
       className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col z-50 shadow-card transition-all duration-300"
     >
       {/* Header */}
-      <div className="h-[60px] flex items-center justify-between px-4">
+      <div className="h-[70px] flex items-center justify-between px-4 border-b border-sidebar-border">
         {!collapsed ? (
           <img 
             src={isDark ? "/lovable-uploads/5e875bc1-8187-4fab-ae01-ab403e30d124.png" : "/lovable-uploads/6c4df954-d45e-4bb6-b6e3-107e576f37b9.png"}
