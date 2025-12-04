@@ -365,11 +365,11 @@ export function ModernSidebar({
                 {isActive && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full"
+                    className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"
                     transition={{ duration: 0.2 }}
                   />
                 )}
-                <item.icon className="w-[18px] h-[18px] flex-shrink-0 ml-1" />
+                <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
                 <AnimatePresence>
                   {!collapsed && (
                     <motion.span
