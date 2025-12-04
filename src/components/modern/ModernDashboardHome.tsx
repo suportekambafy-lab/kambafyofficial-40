@@ -476,7 +476,7 @@ export function ModernDashboardHome() {
         {/* Metric Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-onboarding="revenue-card">
           <ModernMetricCard
-            title="Total disponível"
+            title="Vendas realizadas"
             value={showValues.revenue ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` : "••••••••"}
             icon={<Eye className="w-4 h-4" />}
             trend={calculateTrend(dashboardData.totalRevenue, dashboardData.previousRevenue)}
