@@ -57,6 +57,7 @@ All colors MUST be HSL.
 
     /* Kambafy brand colors */
     --checkout-green: 94 55% 55%;
+    --checkout-green-dark: 94 60% 38%;
     --checkout-green-light: 94 55% 75%;
     --checkout-secure: 121 26% 22%;
     --checkout-orange: 25 95% 53%;
@@ -147,6 +148,7 @@ All colors MUST be HSL.
     
     /* Dark mode Kambafy colors */
     --checkout-green: 94 55% 55%;
+    --checkout-green-dark: 94 55% 45%;
     --checkout-green-light: 94 55% 70%;
     --checkout-secure: 121 30% 25%;
     --checkout-orange: 25 80% 50%;
