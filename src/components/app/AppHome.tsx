@@ -1322,30 +1322,19 @@ export function AppHome() {
               </CardContent>
             </Card>
 
-            {/* Pedidos feitos e pagos */}
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="overflow-hidden rounded-xl shadow-sm bg-card">
-                <CardContent className="p-4">
-                  <div className="space-y-1">
-                    <div className="text-xs font-medium text-muted-foreground">Pedidos feitos</div>
-                    <div className="text-lg font-bold tracking-tight text-foreground">
-                      {loading ? '...' : stats.totalSales}
-                    </div>
+            {/* Quick Stats */}
+            <Card className="overflow-hidden rounded-xl border-l-[6px] shadow-sm bg-card" style={{
+              borderLeftColor: 'hsl(142, 76%, 36%)'
+            }}>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <div className="text-xs font-medium text-muted-foreground">Vendas líquidas</div>
+                  <div className="text-xl font-bold tracking-tight text-foreground">
+                    {loading ? '...' : formatPriceForSeller(stats.totalRevenue, 'KZ')}
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="overflow-hidden rounded-xl shadow-sm bg-card">
-                <CardContent className="p-4">
-                  <div className="space-y-1">
-                    <div className="text-xs font-medium text-muted-foreground">Pedidos pagos</div>
-                    <div className="text-lg font-bold tracking-tight text-foreground">
-                      {loading ? '...' : stats.totalSales}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Sales Chart */}
             <ModernSalesChart />
