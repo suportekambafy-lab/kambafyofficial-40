@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, FileText, Eye, Download, Filter, Copy, Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { FileText, Eye, Download, Filter, Copy, Search, Loader2 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BanProductModal from '@/components/BanProductModal';
@@ -16,6 +16,7 @@ import { SEO } from '@/components/SEO';
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 import { getProductImageUrl } from '@/utils/imageUtils';
 import { getFileUrl } from '@/utils/fileUtils';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface ProductWithProfile {
   id: string;
@@ -49,7 +50,6 @@ interface ProductWithProfile {
 
 export default function AdminProducts() {
   const { admin } = useAdminAuth();
-  const navigate = useNavigate();
   const [products, setProducts] = useState<ProductWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -657,83 +657,66 @@ export default function AdminProducts() {
     return statusMatch && searchMatch;
   });
 
+  if (!admin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Carregando produtos...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
+        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <AdminLayout title="Gerenciar Produtos" description="Revisar e aprovar produtos">
       <SEO title="Kambafy Admin – Produtos" description="Revisar, aprovar e banir produtos com justificativa" canonical="https://kambafy.com/admin/products" noIndex />
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 hover:bg-accent self-start"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Voltar ao Dashboard</span>
-            <span className="sm:hidden">Voltar</span>
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gerenciar Produtos</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">Revisar e aprovar produtos</p>
-          </div>
-          
-          {/* Pesquisa e Filtros - Responsivo */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-            {/* Campo de pesquisa */}
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Pesquisar produtos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 w-full"
-              />
-            </div>
-            
-            {/* Filtro de status */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos ({products.length})</SelectItem>
-                  <SelectItem value="pendente">Aprovar Produtos ({products.filter(p => p.status === 'Pendente' || (!p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested)).length})</SelectItem>
-                  <SelectItem value="rascunho">Rascunhos ({products.filter(p => p.status === 'Rascunho').length})</SelectItem>
-                  <SelectItem value="ativo">Ativos ({products.filter(p => p.status === 'Ativo').length})</SelectItem>
-                  <SelectItem value="banido">Banidos ({products.filter(p => p.status === 'Banido').length})</SelectItem>
-                  <SelectItem value="inativo">Inativos ({products.filter(p => p.status === 'Inativo').length})</SelectItem>
-                  <SelectItem value="em_revisao">Em Revisão ({products.filter(p => p.status === 'Em Revisão').length})</SelectItem>
-                  <SelectItem value="revisao">Revisão Solicitada ({products.filter(p => p.revision_requested === true).length})</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Botão Aprovar Todos */}
-            <Button
-              onClick={handleApproveAll}
-              disabled={processingId === 'approving-all' || products.filter(p => !p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested).length === 0}
-              variant="default"
-              size="sm"
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
-            >
-              {processingId === 'approving-all' ? 'Aprovando...' : `Aprovar Todos (${products.filter(p => !p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested).length})`}
-            </Button>
-          </div>
+      
+      {/* Pesquisa e Filtros */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
+          <Input
+            type="text"
+            placeholder="Pesquisar produtos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 w-full bg-[hsl(var(--admin-card-bg))] border-[hsl(var(--admin-border))]"
+          />
         </div>
+        
+        {/* Filtro de status */}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Filter className="h-4 w-4 text-[hsl(var(--admin-text-secondary))] hidden sm:block" />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-40 bg-[hsl(var(--admin-card-bg))] border-[hsl(var(--admin-border))]">
+              <SelectValue placeholder="Filtrar por status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos ({products.length})</SelectItem>
+              <SelectItem value="pendente">Aprovar Produtos ({products.filter(p => p.status === 'Pendente' || (!p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested)).length})</SelectItem>
+              <SelectItem value="rascunho">Rascunhos ({products.filter(p => p.status === 'Rascunho').length})</SelectItem>
+              <SelectItem value="ativo">Ativos ({products.filter(p => p.status === 'Ativo').length})</SelectItem>
+              <SelectItem value="banido">Banidos ({products.filter(p => p.status === 'Banido').length})</SelectItem>
+              <SelectItem value="inativo">Inativos ({products.filter(p => p.status === 'Inativo').length})</SelectItem>
+              <SelectItem value="em_revisao">Em Revisão ({products.filter(p => p.status === 'Em Revisão').length})</SelectItem>
+              <SelectItem value="revisao">Revisão Solicitada ({products.filter(p => p.revision_requested === true).length})</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Botão Aprovar Todos */}
+        <Button
+          onClick={handleApproveAll}
+          disabled={processingId === 'approving-all' || products.filter(p => !p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested).length === 0}
+          variant="default"
+          size="sm"
+          className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
+        >
+          {processingId === 'approving-all' ? 'Aprovando...' : `Aprovar Todos (${products.filter(p => !p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested).length})`}
+        </Button>
+      </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((product) => (
@@ -924,7 +907,6 @@ export default function AdminProducts() {
             </Card>
           )}
         </div>
-      </div>
 
       {/* Modal de Banimento */}
       <BanProductModal
@@ -946,6 +928,6 @@ export default function AdminProducts() {
           loading={processingId === selectedProductForReview.id}
         />
       )}
-    </div>
+    </AdminLayout>
   );
 }

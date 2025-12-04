@@ -4,16 +4,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, DollarSign, RefreshCw, CheckCircle, XCircle, CheckSquare, Square } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { DollarSign, RefreshCw, CheckCircle, XCircle, CheckSquare, Square, Loader2 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import { useWithdrawalRequests } from '@/hooks/useWithdrawalRequests';
 import { useWithdrawalProcessor } from '@/hooks/useWithdrawalProcessor';
 import { useBulkWithdrawalProcessor } from '@/hooks/useBulkWithdrawalProcessor';
 import { WithdrawalRequestCard } from '@/components/admin/WithdrawalRequestCard';
 import { SEO } from '@/components/SEO';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 export default function AdminWithdrawals() {
   const { admin } = useAdminAuth();
-  const navigate = useNavigate();
   const { requests, rawRequests, loading, loadWithdrawalRequests } = useWithdrawalRequests();
   const { processingId, notes, setNotes, processRequest } = useWithdrawalProcessor(() => {
     // Recarregar dados imediatamente após processamento
@@ -79,46 +79,33 @@ export default function AdminWithdrawals() {
   // Filtrar apenas solicitações pendentes para numeração (apenas do conjunto filtrado)
   const pendingRequests = filteredRequests.filter(request => request.status === 'pendente');
 
+  if (!admin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-          <p className="text-gray-600">Carregando solicitações de saque...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
+        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <AdminLayout title="Gerenciar Saques" description="Aprovar ou rejeitar solicitações">
       <SEO title="Kambafy Admin – Saques" description="Aprovar ou rejeitar solicitações de saque dos vendedores" canonical="https://kambafy.com/admin/withdrawals" noIndex />
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 hover:bg-accent self-start"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Voltar ao Dashboard</span>
-            <span className="sm:hidden">Voltar</span>
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gerenciar Saques</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">Aprovar ou rejeitar solicitações</p>
-          </div>
-          <Button 
-            onClick={loadWithdrawalRequests}
-            disabled={loading}
-            size="sm"
-            className="flex items-center gap-2 self-start sm:self-auto"
-          >
-            <RefreshCw className={`${loading ? 'animate-spin' : ''} h-4 w-4`} />
-            <span className="hidden sm:inline">Atualizar</span>
-          </Button>
-        </div>
+      
+      <div className="flex justify-end mb-4">
+        <Button 
+          onClick={loadWithdrawalRequests}
+          disabled={loading}
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`${loading ? 'animate-spin' : ''} h-4 w-4`} />
+          Atualizar
+        </Button>
+      </div>
 
         {/* Filtros - Responsivo */}
         <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 shadow-sm mb-4 sm:mb-6">
@@ -301,8 +288,7 @@ export default function AdminWithdrawals() {
               </CardContent>
             </Card>
           )}
-        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

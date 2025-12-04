@@ -13,6 +13,7 @@ import { useCustomToast } from '@/hooks/useCustomToast';
 import { format } from 'date-fns';
 import { SEO } from '@/components/SEO';
 import { BanUserDialog } from '@/components/BanUserDialog';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { 
   Shield, 
   CheckCircle, 
@@ -24,11 +25,11 @@ import {
   Calendar,
   Hash,
   ExternalLink,
-  ArrowLeft,
   UserX,
-  CheckCheck
+  CheckCheck,
+  Loader2
 } from 'lucide-react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 interface IdentityVerification {
   id: string;
@@ -52,7 +53,6 @@ interface IdentityVerification {
 export default function AdminIdentityVerification() {
   const { admin } = useAdminAuth();
   const { toast } = useCustomToast();
-  const navigate = useNavigate();
   const [verifications, setVerifications] = useState<IdentityVerification[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -450,48 +450,15 @@ export default function AdminIdentityVerification() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="text-gray-600">Carregando verificações...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
+        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <AdminLayout title="Verificação de Identidade" description="Gerencie verificações KYC dos vendedores">
       <SEO title="Kambafy Admin – KYC" description="Aprovar ou reprovar verificações de identidade" canonical="https://kambafy.com/admin/identity" noIndex />
-      {/* Header - Responsivo */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4 sm:py-6">
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/admin')}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span className="hidden sm:inline">Voltar</span>
-              </Button>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Shield className="text-white h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-                <div>
-                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Verificação de Identidade</h1>
-                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Gerencie verificações dos vendedores</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content - Responsivo */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Filters - Responsivo */}
         <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end gap-3">
           <div>
@@ -765,7 +732,6 @@ export default function AdminIdentityVerification() {
             ))
           )}
         </div>
-      </div>
 
       {/* Document Modal */}
       <Dialog open={documentModal.isOpen} onOpenChange={(open) => setDocumentModal(prev => ({...prev, isOpen: open}))}>
@@ -867,6 +833,6 @@ export default function AdminIdentityVerification() {
         userName={selectedUserForBan?.name || ''}
         isLoading={isBanning}
       />
-    </div>
+    </AdminLayout>
   );
 }

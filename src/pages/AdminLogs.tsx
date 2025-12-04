@@ -2,12 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import type { AdminLog } from '@/types/admin';
-import { ArrowLeft, Clock, Activity, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Clock, Activity, User, Loader2 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface AdminLogWithUser extends AdminLog {
   admin_users?: {
@@ -18,7 +18,6 @@ interface AdminLogWithUser extends AdminLog {
 
 export default function AdminLogs() {
   const { admin } = useAdminAuth();
-  const navigate = useNavigate();
   const [logs, setLogs] = useState<AdminLogWithUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,38 +76,21 @@ export default function AdminLogs() {
     );
   };
 
+  if (!admin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Carregando logs administrativos...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
+        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 hover:bg-accent self-start"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Voltar ao Dashboard</span>
-            <span className="sm:hidden">Voltar</span>
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Logs de Ações</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">Histórico de ações administrativas</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
+    <AdminLayout title="Logs de Ações" description="Histórico de ações administrativas">
+      <div className="space-y-4">
           {logs.map((log) => (
             <Card key={log.id} className="shadow-lg border bg-card hover:shadow-xl transition-shadow">
               <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
@@ -169,8 +151,7 @@ export default function AdminLogs() {
               </CardContent>
             </Card>
           )}
-        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
