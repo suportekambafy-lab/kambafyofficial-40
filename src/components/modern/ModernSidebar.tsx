@@ -365,7 +365,7 @@ export function ModernSidebar({
                 {isActive && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"
+                    className="absolute -left-6 top-1/2 -translate-y-1/2 w-[3px] h-7 bg-primary rounded-r-full"
                     transition={{ duration: 0.2 }}
                   />
                 )}
