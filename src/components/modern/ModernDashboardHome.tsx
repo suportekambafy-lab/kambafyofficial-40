@@ -495,7 +495,7 @@ export function ModernDashboardHome() {
           />
 
           <ModernMetricCard
-            title="Transações completas"
+            title="Itens vendidos"
             value={showValues.sales ? `${dashboardData.totalSales}` : "••••"}
             icon={<Eye className="w-4 h-4" />}
             trend={calculateTrend(dashboardData.totalSales, dashboardData.previousSales)}
