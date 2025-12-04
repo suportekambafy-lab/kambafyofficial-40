@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 import {
   Table,
   TableBody,
@@ -180,14 +181,7 @@ export default function MeusAfiliados() {
   };
 
   if (loading) {
-    return (
-      <div className="p-4 md:p-6 flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span>Carregando afiliados...</span>
-        </div>
-      </div>
-    );
+    return <PageSkeleton variant="affiliates" />;
   }
 
   return (

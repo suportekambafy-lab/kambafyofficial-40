@@ -10,7 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarDrawer } from "@/components/ui/avatar-drawer";
@@ -321,9 +321,7 @@ export default function MeusAcessos() {
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <LoadingSpinner text="Carregando seus acessos..." />
-                </div>
+                <PageSkeleton variant="accesses" />
               ) : accesses.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4">
                   <div className="text-center space-y-4">

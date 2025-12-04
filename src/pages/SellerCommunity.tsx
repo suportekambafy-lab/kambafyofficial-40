@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { PageLayout } from "@/components/PageLayout";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare,
@@ -709,9 +710,7 @@ export default function SellerCommunity() {
 
         {/* Posts Grid */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+          <PageSkeleton variant="list" />
         ) : filteredPosts.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
