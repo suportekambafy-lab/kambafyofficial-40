@@ -98,6 +98,7 @@ const AdminRetentionManagement = createLazyWithRetry(() => import('@/pages/Admin
 const AdminIdentityVerification = createLazyWithRetry(() => import('@/pages/AdminIdentityVerification'), "AdminIdentityVerification");
 const AdminPaymentApprovals = createLazyWithRetry(() => import('@/pages/AdminPaymentApprovals'), "AdminPaymentApprovals");
 const AdminManagement = createLazyWithRetry(() => import('@/pages/AdminManagement'), "AdminManagement");
+const AdminExtras = createLazyWithRetry(() => import('@/pages/AdminExtras'), "AdminExtras");
 
 // Partner pages - lazy load with retry
 const PartnersApply = createLazyWithRetry(() => import('@/pages/PartnersApply'), "PartnersApply");
@@ -192,6 +193,7 @@ export const OptimizedRoutes = {
   AdminIdentityVerification: withLazyLoading(AdminIdentityVerification, 'dashboard'),
   AdminPaymentApprovals: withLazyLoading(AdminPaymentApprovals, 'financial'),
   AdminManagement: withLazyLoading(AdminManagement, 'settings'),
+  AdminExtras: withLazyLoading(AdminExtras, 'dashboard'),
   
   // Partner routes
   PartnersApply: withLazyLoading(PartnersApply, 'settings'),
