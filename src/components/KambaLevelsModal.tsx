@@ -166,7 +166,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseLeave}
-              className="flex gap-5 pb-4 overflow-x-auto flex-1"
+              className="flex gap-5 pb-4 overflow-x-auto min-w-0 flex-1"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 scrollbarWidth: 'none',
