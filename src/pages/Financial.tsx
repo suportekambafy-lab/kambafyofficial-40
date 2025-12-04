@@ -188,12 +188,11 @@ export default function Financial() {
     });
   };
   const formatCurrency = (value: number) => {
-    // Formatar com . para milhares e , para decimais (formato português)
-    const formatted = value.toLocaleString('pt-PT', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-    return `${formatted} Kz`;
+    // Formatar com . para milhares e , para decimais
+    const parts = value.toFixed(2).split('.');
+    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const decimalPart = parts[1];
+    return `${integerPart},${decimalPart} Kz`;
   };
   const getStatusBadge = (status: string) => {
     const statusConfig = {
