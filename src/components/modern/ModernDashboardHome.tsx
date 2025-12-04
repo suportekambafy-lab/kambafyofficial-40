@@ -473,7 +473,7 @@ export function ModernDashboardHome() {
         </div>
 
         {/* Metric Cards Grid */}
-        <div className="grid grid-cols-1 gap-3" data-onboarding="revenue-card">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-onboarding="revenue-card">
           <ModernMetricCard
             title="Total disponível"
             value={showValues.revenue ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` : "••••••••"}
