@@ -95,44 +95,51 @@ export default function Products() {
       }
 
       // Buscar vendas de order bumps para produtos do usuário
-      // Primeiro, obter order_bump_settings onde o produto é usado como bump
-      const allProductIds = [
-        ...(ownProducts || []).map(p => p.id),
-        ...affiliateProducts.map(p => p.id)
-      ];
+      // Criar mapa de nome do produto para ID
+      const allProducts = [...(ownProducts || []), ...affiliateProducts];
+      const productNameToId: Record<string, string> = {};
+      allProducts.forEach(p => {
+        // Normalizar nome para match (lowercase, trim)
+        const normalizedName = p.name.toLowerCase().trim();
+        productNameToId[normalizedName] = p.id;
+      });
       
       let orderBumpSalesMap: Record<string, number> = {};
       
-      if (allProductIds.length > 0) {
-        // Buscar order_bump_settings para saber quais produtos são order bumps
-        const { data: bumpSettings } = await supabase
-          .from('order_bump_settings')
-          .select('product_id, bump_product_id')
-          .in('bump_product_id', allProductIds);
-        
-        if (bumpSettings && bumpSettings.length > 0) {
-          // Para cada produto que é usado como bump, contar as orders completadas
-          // que têm order_bump_data para o produto principal
-          const mainProductIds = [...new Set(bumpSettings.map(bs => bs.product_id))];
-          
-          const { data: ordersWithBumps } = await supabase
-            .from('orders')
-            .select('product_id, order_bump_data')
-            .in('product_id', mainProductIds)
-            .in('status', ['completed', 'paid'])
-            .not('order_bump_data', 'is', null);
-          
-          if (ordersWithBumps) {
-            // Mapear vendas de bump para cada bump_product_id
-            for (const order of ordersWithBumps) {
-              // Encontrar qual bump_product_id corresponde a este product_id
-              const relatedBumps = bumpSettings.filter(bs => bs.product_id === order.product_id);
-              for (const bump of relatedBumps) {
-                if (bump.bump_product_id) {
-                  orderBumpSalesMap[bump.bump_product_id] = (orderBumpSalesMap[bump.bump_product_id] || 0) + 1;
+      // Buscar todas as orders com order_bump_data
+      const { data: ordersWithBumps } = await supabase
+        .from('orders')
+        .select('order_bump_data')
+        .in('status', ['completed', 'paid'])
+        .not('order_bump_data', 'is', null);
+      
+      if (ordersWithBumps) {
+        for (const order of ordersWithBumps) {
+          try {
+            // order_bump_data pode ser string JSON ou objeto
+            let bumpData: any = order.order_bump_data;
+            if (typeof bumpData === 'string') {
+              bumpData = JSON.parse(bumpData);
+            }
+            
+            const bumpProductName = bumpData?.bump_product_name as string | undefined;
+            if (bumpProductName) {
+              // Tentar match pelo nome normalizado
+              const normalizedBumpName = bumpProductName.toLowerCase().trim();
+              
+              // Procurar produto que corresponde ao nome do bump
+              for (const [productName, productId] of Object.entries(productNameToId)) {
+                // Match exato ou parcial (contém)
+                if (normalizedBumpName === productName || 
+                    normalizedBumpName.includes(productName) || 
+                    productName.includes(normalizedBumpName)) {
+                  orderBumpSalesMap[productId] = (orderBumpSalesMap[productId] || 0) + 1;
+                  break; // Apenas um match por order
                 }
               }
             }
+          } catch (e) {
+            // Ignorar erros de parse
           }
         }
       }
