@@ -130,18 +130,19 @@ export function ModernKambaAchievements() {
               Selos Conquistados ({achievedLevels.length}/{allLevels.length})
             </p>
             <TooltipProvider>
-              <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-                {allLevels.map((level, index) => {
-                const isAchieved = totalRevenue >= level.threshold;
-                return <Tooltip key={level.id}>
+              <div className="space-y-3 sm:space-y-4">
+                {/* First row - 2 badges */}
+                <div className="flex justify-center gap-4 sm:gap-6">
+                  {allLevels.slice(0, 2).map(level => {
+                    const isAchieved = totalRevenue >= level.threshold;
+                    return <Tooltip key={level.id}>
                       <TooltipTrigger asChild>
-                        <div className={`relative transition-all duration-200 cursor-help touch-manipulation ${isAchieved ? 'scale-100' : 'scale-90 opacity-40'} ${index < 2 ? 'basis-[calc(50%-0.5rem)]' : 'basis-[calc(33.33%-0.5rem)]'} flex justify-center`}>
+                        <div className={`relative transition-all duration-200 cursor-help touch-manipulation ${isAchieved ? 'scale-100' : 'scale-90 opacity-40'}`}>
                           <img 
                             src={level.badge} 
                             alt={level.name} 
                             className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl" 
                             onClick={(e) => {
-                              // Force tooltip to show on mobile tap
                               e.preventDefault();
                               e.stopPropagation();
                             }}
@@ -153,7 +154,33 @@ export function ModernKambaAchievements() {
                         <p className="text-xs">{level.name} - {formatCurrency(level.threshold)}</p>
                       </TooltipContent>
                     </Tooltip>;
-              })}
+                  })}
+                </div>
+                {/* Second row - 3 badges */}
+                <div className="flex justify-center gap-4 sm:gap-6">
+                  {allLevels.slice(2, 5).map(level => {
+                    const isAchieved = totalRevenue >= level.threshold;
+                    return <Tooltip key={level.id}>
+                      <TooltipTrigger asChild>
+                        <div className={`relative transition-all duration-200 cursor-help touch-manipulation ${isAchieved ? 'scale-100' : 'scale-90 opacity-40'}`}>
+                          <img 
+                            src={level.badge} 
+                            alt={level.name} 
+                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                          />
+                          {!isAchieved && <div className="absolute inset-0 bg-slate-500/20 rounded-xl" />}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="z-50">
+                        <p className="text-xs">{level.name} - {formatCurrency(level.threshold)}</p>
+                      </TooltipContent>
+                    </Tooltip>;
+                  })}
+                </div>
               </div>
             </TooltipProvider>
           </div>
