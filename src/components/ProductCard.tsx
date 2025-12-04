@@ -118,7 +118,7 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
           
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm md:text-lg font-bold text-checkout-green">
+              <p className="text-sm md:text-lg font-bold text-[hsl(var(--checkout-green-dark))]">
                 {parseFloat(product.price).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
               </p>
               {isAffiliate && product.affiliate_commission ? (
