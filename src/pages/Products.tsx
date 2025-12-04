@@ -130,10 +130,16 @@ export default function Products() {
           if (ordersWithBumps) {
             for (const order of ordersWithBumps) {
               try {
-                // order_bump_data pode ser string JSON ou objeto
+                // order_bump_data pode ser string JSON escapada dentro do JSONB
                 let bumpData: any = order.order_bump_data;
-                if (typeof bumpData === 'string') {
-                  bumpData = JSON.parse(bumpData);
+                
+                // Parse múltiplo para lidar com string JSON escapada
+                while (typeof bumpData === 'string') {
+                  try {
+                    bumpData = JSON.parse(bumpData);
+                  } catch {
+                    break;
+                  }
                 }
                 
                 const bumpProductName = bumpData?.bump_product_name as string | undefined;
