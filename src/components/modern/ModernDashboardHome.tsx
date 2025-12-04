@@ -448,75 +448,62 @@ export function ModernDashboardHome() {
           </p>
         </div>
 
-        {/* Main Layout - Desktop: 2 columns, Mobile: single column */}
-        <div className="flex flex-col xl:flex-row gap-4">
-          
-          {/* Left Column - Main Content */}
-          <div className="flex-1 space-y-3 min-w-0">
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-2 max-w-full">
-              <div className="flex-1 min-w-0">
-                <CustomPeriodSelector
-                  value={timeFilter}
-                  onValueChange={setTimeFilter}
-                  onCustomRangeChange={setCustomDateRange}
-                />
-              </div>
-
-              <div className="flex-1 min-w-0 space-y-1.5">
-                <label className="text-[13px] font-medium text-foreground">
-                  Produto
-                </label>
-                <ProductFilter 
-                  value={selectedProduct} 
-                  onValueChange={setSelectedProduct}
-                />
-              </div>
-            </div>
-
-            {/* Total Sales Card - Compact */}
-            <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden" data-onboarding="revenue-card">
-              <div className="w-1 bg-emerald-500 shrink-0" />
-              <div className="flex-1 p-4">
-                <p className="text-xs text-muted-foreground mb-0.5">Total em vendas</p>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    {showValues.revenue 
-                      ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` 
-                      : "••••••••"}
-                  </h2>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowValues(prev => ({ ...prev, revenue: !prev.revenue }))}
-                    className="h-8 w-8 p-0 rounded-full hover:bg-secondary"
-                  >
-                    {showValues.revenue ? <Eye className="h-4 w-4 text-muted-foreground" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Chart Section */}
-            <div className="w-full">
-              <ModernSalesChart timeFilter={timeFilter} />
-            </div>
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-2 max-w-full">
+          <div className="flex-1 min-w-0">
+            <CustomPeriodSelector
+              value={timeFilter}
+              onValueChange={setTimeFilter}
+              onCustomRangeChange={setCustomDateRange}
+            />
           </div>
 
-          {/* Right Column - Sidebar (only visible on xl screens) */}
-          <div className="hidden xl:block xl:w-[320px] xl:flex-shrink-0">
-            <ModernKambaAchievements />
-          </div>
-
-          {/* Achievements - Only on mobile/tablet */}
-          <div className="xl:hidden">
-            <ModernKambaAchievements />
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <label className="text-[13px] font-medium text-foreground">
+              Produto
+            </label>
+            <ProductFilter 
+              value={selectedProduct} 
+              onValueChange={setSelectedProduct}
+            />
           </div>
         </div>
 
-        {/* Recent Sales - Full width at bottom */}
+        {/* Total Sales Card - Compact */}
+        <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden" data-onboarding="revenue-card">
+          <div className="w-1 bg-emerald-500 shrink-0" />
+          <div className="flex-1 p-4">
+            <p className="text-xs text-muted-foreground mb-0.5">Total em vendas</p>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                {showValues.revenue 
+                  ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` 
+                  : "••••••••"}
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowValues(prev => ({ ...prev, revenue: !prev.revenue }))}
+                className="h-8 w-8 p-0 rounded-full hover:bg-secondary"
+              >
+                {showValues.revenue ? <Eye className="h-4 w-4 text-muted-foreground" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart Section - Full Width */}
         <div className="w-full">
+          <ModernSalesChart timeFilter={timeFilter} />
+        </div>
+
+        {/* Recent Sales and Achievements Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Sales Section */}
           <ModernRecentSales />
+          
+          {/* Achievements Section */}
+          <ModernKambaAchievements />
         </div>
       </div>
     </>
