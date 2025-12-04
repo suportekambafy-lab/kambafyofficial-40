@@ -177,12 +177,14 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseLeave}
-              className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide md:mx-12"
+              className="flex gap-5 pb-4 md:mx-12 overflow-x-scroll"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
-                scrollBehavior: 'smooth',
-                cursor: 'grab',
-                userSelect: 'none'
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                cursor: isDragging ? 'grabbing' : 'grab',
+                userSelect: 'none',
+                touchAction: 'pan-x'
               }}
             >
               {visibleLevels.map((level, index) => {
