@@ -438,21 +438,21 @@ export function ModernDashboardHome() {
       <div className="p-3 md:p-4 space-y-3 bg-background min-h-full max-w-full overflow-x-hidden">
         <AppDownloadBanner />
         
+        {/* Header */}
+        <div data-onboarding="dashboard-header">
+          <h1 className="text-lg md:text-xl font-semibold text-foreground">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground text-xs">
+            Acompanhe o desempenho do seu negócio
+          </p>
+        </div>
+
         {/* Main Layout - Desktop: 2 columns, Mobile: single column */}
         <div className="flex flex-col xl:flex-row gap-4">
           
           {/* Left Column - Main Content */}
           <div className="flex-1 space-y-3 min-w-0">
-            {/* Header */}
-            <div data-onboarding="dashboard-header">
-              <h1 className="text-lg md:text-xl font-semibold text-foreground">
-                Dashboard
-              </h1>
-              <p className="text-muted-foreground text-xs">
-                Acompanhe o desempenho do seu negócio
-              </p>
-            </div>
-
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-2 max-w-full">
               <div className="flex-1 min-w-0">
