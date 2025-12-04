@@ -123,21 +123,18 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
   return (
     <div className="h-[70px] bg-card border-b border-border flex items-center px-4 md:px-6 sticky top-0 z-20">
       {/* Left side - Mobile menu */}
-      <div className="flex items-center">
-        {/* Mobile menu button */}
-        {isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggleSidebar}
-            className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        )}
-      </div>
+      {isMobile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleSidebar}
+          className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      )}
 
-      {/* Spacer */}
+      {/* Spacer - pushes everything to the right */}
       <div className="flex-1" />
 
       {/* Right side */}
