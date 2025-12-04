@@ -131,35 +131,60 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
           daysInPeriod = 7;
       }
 
-      // Fetch current period orders
+      // Fetch counts using count queries (no 1000 row limit)
+      const [
+        { count: totalOrdersCount },
+        { count: paidOrdersCountResult },
+        { count: prevTotalCount },
+        { count: prevPaidCount }
+      ] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .in('product_id', userProductIds)
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString()),
+        supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .in('product_id', userProductIds)
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .eq('status', 'completed'),
+        supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .in('product_id', userProductIds)
+          .gte('created_at', prevStartDate.toISOString())
+          .lt('created_at', prevEndDate.toISOString()),
+        supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .in('product_id', userProductIds)
+          .gte('created_at', prevStartDate.toISOString())
+          .lt('created_at', prevEndDate.toISOString())
+          .eq('status', 'completed')
+      ]);
+
+      // Set counts from direct queries
+      setOrdersCount(totalOrdersCount || 0);
+      setPaidOrdersCount(paidOrdersCountResult || 0);
+      setOrdersTrend((totalOrdersCount || 0) - (prevTotalCount || 0));
+      setPaidTrend((paidOrdersCountResult || 0) - (prevPaidCount || 0));
+
+      // Fetch orders for chart data (limited to recent for visualization)
       const { data: orders, error } = await supabase
         .from('orders')
         .select('created_at, amount, seller_commission, currency, product_id, status')
         .in('product_id', userProductIds)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString())
+        .eq('status', 'completed')
         .order('created_at', { ascending: true });
-
-      // Fetch previous period for trend comparison
-      const { data: prevOrders } = await supabase
-        .from('orders')
-        .select('status')
-        .in('product_id', userProductIds)
-        .gte('created_at', prevStartDate.toISOString())
-        .lt('created_at', prevEndDate.toISOString());
 
       if (error) return;
 
-      // Calculate totals
-      const allOrders = orders || [];
-      const completedOrders = allOrders.filter(o => o.status === 'completed');
-      const prevAllOrders = prevOrders || [];
-      const prevCompletedOrders = prevAllOrders.filter(o => o.status === 'completed');
-
-      setOrdersCount(allOrders.length);
-      setPaidOrdersCount(completedOrders.length);
-      setOrdersTrend(allOrders.length - prevAllOrders.length);
-      setPaidTrend(completedOrders.length - prevCompletedOrders.length);
+      const completedOrders = orders || [];
 
       // Calculate total revenue from completed orders
       let total = 0;
