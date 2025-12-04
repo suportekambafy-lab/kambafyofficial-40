@@ -1323,39 +1323,25 @@ export function AppHome() {
             </Card>
 
             {/* Quick Stats */}
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <Card className="overflow-hidden rounded-xl border-l-[6px] shadow-sm bg-card" style={{
-              borderLeftColor: 'hsl(142, 76%, 36%)'
-            }}>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="text-sm font-medium text-muted-foreground">Faturamento Total</div>
-                      <div className="flex items-center gap-1 text-sm font-semibold text-primary">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>+100%</span>
-                      </div>
-                    </div>
-                    <div className="text-3xl font-bold tracking-tight text-foreground">
+                borderLeftColor: 'hsl(142, 76%, 36%)'
+              }}>
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium text-muted-foreground">Vendas líquidas</div>
+                    <div className="text-xl font-bold tracking-tight text-foreground">
                       {loading ? '...' : formatPriceForSeller(stats.totalRevenue, 'KZ')}
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden rounded-xl border-l-[6px] shadow-sm bg-card" style={{
-              borderLeftColor: 'hsl(142, 76%, 36%)'
-            }}>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="text-sm font-medium text-muted-foreground">Total de Vendas</div>
-                      <div className="flex items-center gap-1 text-sm font-semibold text-primary">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>+100%</span>
-                      </div>
-                    </div>
-                    <div className="text-3xl font-bold tracking-tight text-foreground">
+              <Card className="overflow-hidden rounded-xl shadow-sm bg-card">
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium text-muted-foreground">Total de Vendas</div>
+                    <div className="text-xl font-bold tracking-tight text-foreground">
                       {loading ? '...' : stats.totalSales}
                     </div>
                   </div>
