@@ -3559,6 +3559,18 @@ export type Database = {
       }
     }
     Views: {
+      balance_audit_discrepancies: {
+        Row: {
+          calculated_balance: number | null
+          discrepancy: number | null
+          email: string | null
+          full_name: string | null
+          stored_balance: number | null
+          total_transactions: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       webhook_status: {
         Row: {
           created_at: string | null
@@ -3718,6 +3730,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      auto_fix_balance_discrepancy: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       calculate_access_expiration: {
         Args: {
           base_date?: string
@@ -3737,9 +3753,14 @@ export type Database = {
           seller_commission: number
         }[]
       }
+      check_balance_health: { Args: never; Returns: Json }
       check_customer_access: {
         Args: { p_customer_email: string; p_product_id: string }
         Returns: boolean
+      }
+      cleanup_duplicate_transactions_and_create_index: {
+        Args: never
+        Returns: Json
       }
       cleanup_expired_impersonation_sessions: {
         Args: never
@@ -3808,6 +3829,7 @@ export type Database = {
         }
         Returns: string
       }
+      fix_all_balance_discrepancies: { Args: never; Returns: Json }
       fix_all_transfer_seller_commission: {
         Args: never
         Returns: {
