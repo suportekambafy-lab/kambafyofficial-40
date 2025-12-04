@@ -94,10 +94,54 @@ export default function Products() {
         affiliateProducts = productsData || [];
       }
 
-      // Combinar e marcar produtos de afiliação
+      // Buscar vendas de order bumps para produtos do usuário
+      // Primeiro, obter order_bump_settings onde o produto é usado como bump
+      const allProductIds = [
+        ...(ownProducts || []).map(p => p.id),
+        ...affiliateProducts.map(p => p.id)
+      ];
+      
+      let orderBumpSalesMap: Record<string, number> = {};
+      
+      if (allProductIds.length > 0) {
+        // Buscar order_bump_settings para saber quais produtos são order bumps
+        const { data: bumpSettings } = await supabase
+          .from('order_bump_settings')
+          .select('product_id, bump_product_id')
+          .in('bump_product_id', allProductIds);
+        
+        if (bumpSettings && bumpSettings.length > 0) {
+          // Para cada produto que é usado como bump, contar as orders completadas
+          // que têm order_bump_data para o produto principal
+          const mainProductIds = [...new Set(bumpSettings.map(bs => bs.product_id))];
+          
+          const { data: ordersWithBumps } = await supabase
+            .from('orders')
+            .select('product_id, order_bump_data')
+            .in('product_id', mainProductIds)
+            .in('status', ['completed', 'paid'])
+            .not('order_bump_data', 'is', null);
+          
+          if (ordersWithBumps) {
+            // Mapear vendas de bump para cada bump_product_id
+            for (const order of ordersWithBumps) {
+              // Encontrar qual bump_product_id corresponde a este product_id
+              const relatedBumps = bumpSettings.filter(bs => bs.product_id === order.product_id);
+              for (const bump of relatedBumps) {
+                if (bump.bump_product_id) {
+                  orderBumpSalesMap[bump.bump_product_id] = (orderBumpSalesMap[bump.bump_product_id] || 0) + 1;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Combinar e marcar produtos de afiliação, adicionando vendas de order bump
       const ownProductsMarked = (ownProducts || []).map(product => ({
         ...product,
-        is_affiliate: false
+        is_affiliate: false,
+        sales: (product.sales || 0) + (orderBumpSalesMap[product.id] || 0)
       }));
 
       const affiliateProductsMarked = affiliateProducts.map(product => {
@@ -106,7 +150,8 @@ export default function Products() {
           ...product,
           is_affiliate: true,
           affiliate_commission: relation?.commission_rate || '10%',
-          affiliate_code: relation?.affiliate_code
+          affiliate_code: relation?.affiliate_code,
+          sales: (product.sales || 0) + (orderBumpSalesMap[product.id] || 0)
         };
       });
 
