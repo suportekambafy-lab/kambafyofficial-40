@@ -130,23 +130,23 @@ export function ModernKambaAchievements() {
               Selos Conquistados ({achievedLevels.length}/{allLevels.length})
             </p>
             <TooltipProvider>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                {allLevels.map(level => {
+              <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+                {allLevels.map((level, index) => {
                 const isAchieved = totalRevenue >= level.threshold;
                 return <Tooltip key={level.id}>
                       <TooltipTrigger asChild>
-                        <div className={`relative transition-all duration-200 cursor-help touch-manipulation ${isAchieved ? 'scale-100' : 'scale-90 opacity-40'}`}>
+                        <div className={`relative transition-all duration-200 cursor-help touch-manipulation ${isAchieved ? 'scale-100' : 'scale-90 opacity-40'} ${index < 2 ? 'basis-[calc(50%-0.5rem)]' : 'basis-[calc(33.33%-0.5rem)]'} flex justify-center`}>
                           <img 
                             src={level.badge} 
                             alt={level.name} 
-                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg" 
+                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl" 
                             onClick={(e) => {
                               // Force tooltip to show on mobile tap
                               e.preventDefault();
                               e.stopPropagation();
                             }}
                           />
-                          {!isAchieved && <div className="absolute inset-0 bg-slate-500/20 rounded-lg" />}
+                          {!isAchieved && <div className="absolute inset-0 bg-slate-500/20 rounded-xl" />}
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="z-50">
