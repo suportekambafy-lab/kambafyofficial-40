@@ -147,27 +147,16 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           </div>
 
           {/* Carousel with Navigation */}
-          <div className="relative overflow-hidden">
+          <div className="flex items-center gap-2">
             {/* Left Arrow */}
             <Button
               variant="outline"
               size="icon"
               onClick={scrollLeft}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background shadow-lg border-border/50 hover:bg-muted hidden md:flex"
+              className="flex-shrink-0 h-10 w-10 rounded-full bg-background shadow-lg border-border/50 hover:bg-muted hidden md:flex"
               aria-label="Anterior"
             >
               <ChevronLeft className="h-5 w-5" />
-            </Button>
-
-            {/* Right Arrow */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={scrollRight}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background shadow-lg border-border/50 hover:bg-muted hidden md:flex"
-              aria-label="Próximo"
-            >
-              <ChevronRight className="h-5 w-5" />
             </Button>
 
             {/* Cards Carousel */}
@@ -177,7 +166,7 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseLeave}
-              className="flex gap-5 pb-4 md:px-14 overflow-x-auto"
+              className="flex gap-5 pb-4 overflow-x-auto flex-1"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 scrollbarWidth: 'none',
@@ -269,6 +258,17 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
                 );
               })}
             </div>
+
+            {/* Right Arrow */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={scrollRight}
+              className="flex-shrink-0 h-10 w-10 rounded-full bg-background shadow-lg border-border/50 hover:bg-muted hidden md:flex"
+              aria-label="Próximo"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </DialogContent>
