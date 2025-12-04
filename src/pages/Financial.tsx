@@ -188,11 +188,12 @@ export default function Financial() {
     });
   };
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-AO', {
-      style: 'currency',
-      currency: 'AOA',
-      minimumFractionDigits: 2
-    }).format(value);
+    // Formatar com . para milhares e , para decimais (formato português)
+    const formatted = value.toLocaleString('pt-PT', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    return `${formatted} Kz`;
   };
   const getStatusBadge = (status: string) => {
     const statusConfig = {
