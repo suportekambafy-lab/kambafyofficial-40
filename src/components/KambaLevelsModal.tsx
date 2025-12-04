@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,64 +21,6 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
 }) => {
   const { currentLevel, nextLevel, progress, allLevels } = useKambaLevels(totalRevenue);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const mouseCoords = useRef({
-    startX: 0,
-    scrollLeft: 0
-  });
-
-  const scrollLeft = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    const element = scrollRef.current;
-    if (!element) return;
-    
-    const startX = e.pageX - element.offsetLeft;
-    const scrollLeft = element.scrollLeft;
-    mouseCoords.current = { startX, scrollLeft };
-    setIsDragging(true);
-    element.style.cursor = 'grabbing';
-    element.style.scrollSnapType = 'none';
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    const element = scrollRef.current;
-    if (!element) return;
-    
-    e.preventDefault();
-    const x = e.pageX - element.offsetLeft;
-    const walkX = (x - mouseCoords.current.startX) * 1.5;
-    element.scrollLeft = mouseCoords.current.scrollLeft - walkX;
-  };
-
-  const handleMouseUp = () => {
-    const element = scrollRef.current;
-    if (element) {
-      element.style.cursor = 'grab';
-      element.style.scrollSnapType = 'x mandatory';
-    }
-    setIsDragging(false);
-  };
-
-  const handleMouseLeave = () => {
-    const element = scrollRef.current;
-    if (isDragging && element) {
-      element.style.cursor = 'grab';
-      element.style.scrollSnapType = 'x mandatory';
-    }
-    setIsDragging(false);
-  };
 
   const formatCurrency = (value: number) => {
     const parts = value.toFixed(2).split('.');
@@ -147,32 +89,47 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
           </div>
 
           {/* Carousel with Navigation */}
-          <div className="flex items-center gap-2">
+          <div className="relative">
             {/* Left Arrow */}
             <Button
               variant="outline"
               size="icon"
-              onClick={scrollLeft}
-              className="flex-shrink-0 h-10 w-10 rounded-full bg-background shadow-lg border-border/50 hover:bg-muted hidden md:flex"
+              onClick={() => {
+                if (scrollRef.current) {
+                  scrollRef.current.scrollLeft -= 300;
+                }
+              }}
+              className="absolute -left-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background shadow-lg border-border/50 hover:bg-muted hidden md:flex items-center justify-center"
               aria-label="Anterior"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
 
+            {/* Right Arrow */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                if (scrollRef.current) {
+                  scrollRef.current.scrollLeft += 300;
+                }
+              }}
+              className="absolute -right-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background shadow-lg border-border/50 hover:bg-muted hidden md:flex items-center justify-center"
+              aria-label="Próximo"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+
             {/* Cards Carousel */}
             <div 
               ref={scrollRef}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseLeave}
-              className="flex gap-5 pb-4 overflow-x-auto min-w-0 flex-1"
+              className="flex gap-5 pb-4 px-2 md:px-8"
               style={{ 
+                overflowX: 'scroll',
+                scrollBehavior: 'smooth',
                 WebkitOverflowScrolling: 'touch',
                 scrollbarWidth: 'none',
-                msOverflowStyle: 'none',
-                cursor: isDragging ? 'grabbing' : 'grab',
-                userSelect: 'none'
+                msOverflowStyle: 'none'
               }}
             >
               {visibleLevels.map((level, index) => {
@@ -258,17 +215,6 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
                 );
               })}
             </div>
-
-            {/* Right Arrow */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={scrollRight}
-              className="flex-shrink-0 h-10 w-10 rounded-full bg-background shadow-lg border-border/50 hover:bg-muted hidden md:flex"
-              aria-label="Próximo"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
           </div>
         </div>
       </DialogContent>
