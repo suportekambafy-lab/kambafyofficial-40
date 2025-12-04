@@ -429,30 +429,6 @@ export default function Financial() {
               )}
             </div>
           </div>
-
-          {/* Total Sacado */}
-          <div className="bg-card rounded-xl shadow-card border border-border/50 flex overflow-hidden">
-            <div className="w-1 bg-emerald-500 shrink-0" />
-            <div className="flex-1 p-4 flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-muted-foreground text-sm font-medium mb-1">Total Sacado</p>
-                <h3 className="text-2xl font-bold text-foreground tracking-tight truncate">
-                  {showValues.withdrawn ? formatCurrency(financialData.withdrawnAmount) : '••••••'}
-                </h3>
-                <div className="mt-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowValues(prev => ({ ...prev, withdrawn: !prev.withdrawn }))}
-                    className="h-8 w-8 p-0"
-                  >
-                    {showValues.withdrawn ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-              <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
-            </div>
-          </div>
         </div>
 
         {/* Informações Bancárias */}
@@ -460,8 +436,17 @@ export default function Financial() {
 
         {/* Histórico de Saques */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-base sm:text-lg">Histórico de Saques</CardTitle>
+            <div className="flex items-center gap-2 text-right">
+              <div>
+                <p className="text-xs text-muted-foreground">Total Sacado</p>
+                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                  {formatCurrency(financialData.withdrawnAmount)}
+                </p>
+              </div>
+              <CheckCircle className="w-5 h-5 text-emerald-500" />
+            </div>
           </CardHeader>
           <CardContent>
             {withdrawalRequests.length === 0 ? (
