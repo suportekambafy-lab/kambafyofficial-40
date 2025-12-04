@@ -1633,14 +1633,11 @@ export function AppHome() {
                 </p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-500" style={{
-                      width: `${goalProgress}%`,
-                      backgroundColor: nextLevel?.color || '#FFD700'
+                    <div className="h-full rounded-full transition-all duration-500 bg-primary" style={{
+                      width: `${goalProgress}%`
                     }} />
                   </div>
-                  <span className="font-semibold text-xs" style={{
-                    color: nextLevel?.color || '#FFD700'
-                  }}>
+                  <span className="font-semibold text-xs text-primary">
                     {goalProgress.toFixed(0)}%
                   </span>
                 </div>
