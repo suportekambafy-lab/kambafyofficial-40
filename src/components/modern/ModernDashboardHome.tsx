@@ -438,80 +438,73 @@ export function ModernDashboardHome() {
         </>
       )}
       
-      <div className="p-3 md:p-6 space-y-3 md:space-y-6 bg-background min-h-full transition-colors duration-300 max-w-full overflow-x-hidden">
+      <div className="p-4 md:p-6 space-y-5 md:space-y-6 bg-background min-h-full max-w-full overflow-x-hidden">
         <AppDownloadBanner />
         
-        <div className="mb-4 md:mb-6" data-onboarding="dashboard-header">
-          <div>
-            <h1 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-1">
-              Dashboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
-              Acompanhe o desempenho do seu negócio
-            </p>
+        {/* Header */}
+        <div className="mb-2" data-onboarding="dashboard-header">
+          <h1 className="text-xl md:text-[22px] font-semibold text-foreground">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground text-[13px] mt-0.5">
+            Acompanhe o desempenho do seu negócio
+          </p>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 max-w-full">
+          <div className="flex-1 min-w-0">
+            <CustomPeriodSelector
+              value={timeFilter}
+              onValueChange={setTimeFilter}
+              onCustomRangeChange={setCustomDateRange}
+            />
+          </div>
+
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <label className="text-[13px] font-medium text-foreground">
+              Produto
+            </label>
+            <ProductFilter 
+              value={selectedProduct} 
+              onValueChange={setSelectedProduct}
+            />
           </div>
         </div>
 
-      {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 max-w-full">
-        <div className="w-full min-w-0">
-          <CustomPeriodSelector
-            value={timeFilter}
-            onValueChange={setTimeFilter}
-            onCustomRangeChange={setCustomDateRange}
-          />
-        </div>
-
-        <div className="space-y-1.5 w-full min-w-0">
-          <label className="text-xs sm:text-sm font-medium text-foreground">
-            Produto
-          </label>
-          <ProductFilter 
-            value={selectedProduct} 
-            onValueChange={setSelectedProduct}
-          />
-        </div>
-      </div>
-
-      {/* Widgets Estáticos */}
-      <div className="space-y-3 md:space-y-4 w-full max-w-full overflow-x-hidden">
-        {/* Revenue Card */}
-        <div data-onboarding="revenue-card" className="w-full max-w-full">
+        {/* Metric Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" data-onboarding="revenue-card">
           <ModernMetricCard
-            title="Vendas Realizadas"
+            title="Total disponível"
             value={showValues.revenue ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` : "••••••••"}
             icon={<DollarSign className="w-5 h-5" />}
             trend={calculateTrend(dashboardData.totalRevenue, dashboardData.previousRevenue)}
             trendUp={dashboardData.totalRevenue >= dashboardData.previousRevenue}
-            className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow duration-200"
+            variant="highlight"
             action={
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowValues(prev => ({ ...prev, revenue: !prev.revenue }))}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 rounded-lg hover:bg-secondary"
               >
                 {showValues.revenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
               </Button>
             }
           />
-        </div>
 
-        {/* Sales Card */}
-        <div className="w-full max-w-full">
           <ModernMetricCard
-            title="Total de Vendas"
+            title="Transações completas"
             value={showValues.sales ? `${dashboardData.totalSales}` : "••••"}
             icon={<ShoppingBag className="w-5 h-5" />}
             trend={calculateTrend(dashboardData.totalSales, dashboardData.previousSales)}
             trendUp={dashboardData.totalSales >= dashboardData.previousSales}
-            className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow duration-200"
             action={
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowValues(prev => ({ ...prev, sales: !prev.sales }))}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 rounded-lg hover:bg-secondary"
               >
                 {showValues.sales ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
               </Button>
@@ -519,21 +512,16 @@ export function ModernDashboardHome() {
           />
         </div>
 
-        {/* Chart */}
-        <div className="w-full max-w-full">
+        {/* Chart Section */}
+        <div className="w-full">
           <ModernSalesChart />
         </div>
 
-        {/* Recent Sales */}
-        <div className="w-full max-w-full">
+        {/* Recent Sales & Achievements */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <ModernRecentSales />
-        </div>
-
-        {/* Achievements */}
-        <div className="w-full max-w-full">
           <ModernKambaAchievements />
         </div>
-      </div>
       </div>
     </>
   );
