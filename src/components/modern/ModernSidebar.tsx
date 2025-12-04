@@ -352,7 +352,7 @@ export function ModernSidebar({
             key={item.href}
             to={item.href}
             className={({ isActive }) =>
-              `flex items-center gap-3 mx-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-all duration-150 group relative ${
+              `flex items-center gap-3 pl-4 pr-3 mr-3 py-2.5 rounded-r-xl text-[15px] font-medium transition-all duration-150 group relative ${
                 isActive 
                   ? "bg-sidebar-accent text-primary" 
                   : "text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -363,9 +363,7 @@ export function ModernSidebar({
             {({ isActive }) => (
               <>
                 {isActive && (
-                  <div
-                    className="absolute -left-3 top-0 bottom-0 w-[3px] bg-primary rounded-r-full"
-                  />
+                  <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary rounded-r-full" />
                 )}
                 <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
                 <AnimatePresence>
