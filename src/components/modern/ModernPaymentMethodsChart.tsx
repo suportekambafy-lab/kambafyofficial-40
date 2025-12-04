@@ -116,10 +116,10 @@ export function ModernPaymentMethodsChart() {
         return;
       }
 
+      // Fetch orders for user's products AND orders with user's products as order bumps
       let query = supabase
         .from('orders')
-        .select('payment_method')
-        .in('product_id', userProductIds)
+        .select('payment_method, product_id, order_bump_data')
         .eq('status', 'completed');
 
       const dateFilter = getDateFilter();
@@ -134,9 +134,21 @@ export function ModernPaymentMethodsChart() {
       
       orders?.forEach(order => {
         const method = order.payment_method?.toLowerCase() || '';
-        if (!method) return; // Skip orders without payment method
+        if (!method) return;
         
-        // Get label or capitalize the method name
+        // Check if main product belongs to user
+        const isMainProduct = userProductIds.includes(order.product_id);
+        
+        // Check if any order bump product belongs to user
+        let hasUserBumpProduct = false;
+        if (order.order_bump_data && Array.isArray(order.order_bump_data)) {
+          hasUserBumpProduct = order.order_bump_data.some((bump: any) => 
+            bump.bump_product_id && userProductIds.includes(bump.bump_product_id)
+          );
+        }
+        
+        if (!isMainProduct && !hasUserBumpProduct) return;
+        
         const label = PAYMENT_METHOD_LABELS[method] || 
           method.charAt(0).toUpperCase() + method.slice(1).replace(/_/g, ' ');
         methodCounts[label] = (methodCounts[label] || 0) + 1;
