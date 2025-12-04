@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import type { AdminStats } from '@/types/admin';
@@ -19,7 +19,9 @@ import { cn } from '@/lib/utils';
 import { SEO } from '@/components/SEO';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { format, subDays, startOfMonth, startOfYear, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 // Metric Card Component - Style like reference
 interface MetricCardProps {
@@ -117,12 +119,75 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState('week');
   const [volumeFilter, setVolumeFilter] = useState('7days');
   const [orderStats, setOrderStats] = useState({ success: 0, pending: 0, failed: 0, expired: 0 });
+  const [volumeData, setVolumeData] = useState<{ date: string; volume: number; count: number }[]>([]);
+  const [volumeLoading, setVolumeLoading] = useState(false);
+
+  const loadVolumeData = useCallback(async () => {
+    setVolumeLoading(true);
+    try {
+      let startDate: Date;
+      const endDate = new Date();
+      
+      switch (volumeFilter) {
+        case '7days':
+          startDate = subDays(endDate, 7);
+          break;
+        case 'month':
+          startDate = startOfMonth(endDate);
+          break;
+        case 'year':
+          startDate = startOfYear(endDate);
+          break;
+        default:
+          startDate = subDays(endDate, 7);
+      }
+
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('created_at, amount, status')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString())
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
+
+      if (orders) {
+        const groupedData: Record<string, { volume: number; count: number }> = {};
+        
+        orders.forEach(order => {
+          const dateKey = format(parseISO(order.created_at), volumeFilter === 'year' ? 'MMM' : 'dd/MM', { locale: ptBR });
+          if (!groupedData[dateKey]) {
+            groupedData[dateKey] = { volume: 0, count: 0 };
+          }
+          groupedData[dateKey].volume += parseFloat(order.amount) || 0;
+          groupedData[dateKey].count += 1;
+        });
+
+        const chartData = Object.entries(groupedData).map(([date, data]) => ({
+          date,
+          volume: data.volume,
+          count: data.count
+        }));
+
+        setVolumeData(chartData);
+      }
+    } catch (error) {
+      console.error('Error loading volume data:', error);
+    } finally {
+      setVolumeLoading(false);
+    }
+  }, [volumeFilter]);
 
   useEffect(() => {
     if (admin) {
       loadStats();
     }
   }, [admin]);
+
+  useEffect(() => {
+    if (admin) {
+      loadVolumeData();
+    }
+  }, [admin, volumeFilter, loadVolumeData]);
 
   const loadStats = async () => {
     try {
@@ -277,11 +342,51 @@ export default function AdminDashboard() {
             </Select>
           }
         >
-          <div className="h-64 flex items-center justify-center text-[hsl(var(--admin-text-secondary))]">
-            <div className="text-center">
-              <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p>Gráfico de volume em breve</p>
-            </div>
+          <div className="h-64">
+            {volumeLoading ? (
+              <div className="h-full flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
+              </div>
+            ) : volumeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={volumeData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 13% 91%)" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12, fill: 'hsl(220 9% 46%)' }}
+                    axisLine={{ stroke: 'hsl(220 13% 91%)' }}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12, fill: 'hsl(220 9% 46%)' }}
+                    axisLine={{ stroke: 'hsl(220 13% 91%)' }}
+                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [
+                      value.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA' }),
+                      'Volume'
+                    ]}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid hsl(220 13% 91%)',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="volume" 
+                    fill="hsl(var(--admin-primary))" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-[hsl(var(--admin-text-secondary))]">
+                <div className="text-center">
+                  <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>Sem dados para o período</p>
+                </div>
+              </div>
+            )}
           </div>
         </ChartCard>
 
