@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, RefreshCw, AlertCircle, Clock } from 'lucide-react';
+import { ShoppingBag, AlertCircle, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { RefundRequestDialog } from '@/components/refunds/RefundRequestDialog';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOneSignalAutoLink } from '@/hooks/useOneSignalAutoLink';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 
 export default function MyPurchases() {
   const { user } = useAuth();
@@ -120,9 +121,7 @@ export default function MyPurchases() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <PageSkeleton variant="list" />
       ) : purchases.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">

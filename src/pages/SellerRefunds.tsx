@@ -5,8 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useRefunds } from '@/hooks/useRefunds';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { 
-  RefreshCw, 
   CheckCircle, 
   XCircle, 
   AlertCircle,
@@ -124,9 +124,7 @@ export default function SellerRefunds() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <PageSkeleton variant="refunds" />
       ) : pendingRefunds.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
