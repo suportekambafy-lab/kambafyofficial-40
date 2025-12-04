@@ -496,6 +496,9 @@ export function ModernDashboardHome() {
         <div className="w-full">
           <ModernSalesChart timeFilter={timeFilter} />
         </div>
+
+        {/* Recent Sales Section */}
+        <ModernRecentSales />
       </div>
     </>
   );
