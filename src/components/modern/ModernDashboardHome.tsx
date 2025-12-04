@@ -435,21 +435,21 @@ export function ModernDashboardHome() {
         </>
       )}
       
-      <div className="p-4 md:p-6 space-y-5 md:space-y-6 bg-background min-h-full max-w-full overflow-x-hidden">
+      <div className="p-3 md:p-4 space-y-3 bg-background min-h-full max-w-full overflow-x-hidden">
         <AppDownloadBanner />
         
         {/* Header */}
-        <div className="mb-2" data-onboarding="dashboard-header">
-          <h1 className="text-xl md:text-[22px] font-semibold text-foreground">
+        <div data-onboarding="dashboard-header">
+          <h1 className="text-lg md:text-xl font-semibold text-foreground">
             Dashboard
           </h1>
-          <p className="text-muted-foreground text-[13px] mt-0.5">
+          <p className="text-muted-foreground text-xs">
             Acompanhe o desempenho do seu negócio
           </p>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 max-w-full">
+        <div className="flex flex-col sm:flex-row gap-2 max-w-full">
           <div className="flex-1 min-w-0">
             <CustomPeriodSelector
               value={timeFilter}
@@ -469,11 +469,11 @@ export function ModernDashboardHome() {
           </div>
         </div>
 
-        {/* Total Sales Card - Prominent Display */}
-        <div className="bg-card rounded-[14px] border border-border/40 p-5 shadow-sm" data-onboarding="revenue-card">
-          <p className="text-sm text-muted-foreground mb-1">Total em vendas</p>
+        {/* Total Sales Card - Compact */}
+        <div className="bg-card rounded-xl border border-border/40 p-4 shadow-sm" data-onboarding="revenue-card">
+          <p className="text-xs text-muted-foreground mb-0.5">Total em vendas</p>
           <div className="flex items-center justify-between">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
               {showValues.revenue 
                 ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` 
                 : "••••••••"}
@@ -482,9 +482,9 @@ export function ModernDashboardHome() {
               variant="ghost"
               size="sm"
               onClick={() => setShowValues(prev => ({ ...prev, revenue: !prev.revenue }))}
-              className="h-9 w-9 p-0 rounded-full hover:bg-secondary"
+              className="h-8 w-8 p-0 rounded-full hover:bg-secondary"
             >
-              {showValues.revenue ? <Eye className="h-5 w-5 text-muted-foreground" /> : <EyeOff className="h-5 w-5 text-muted-foreground" />}
+              {showValues.revenue ? <Eye className="h-4 w-4 text-muted-foreground" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
             </Button>
           </div>
         </div>
@@ -492,12 +492,6 @@ export function ModernDashboardHome() {
         {/* Chart Section - Full Width */}
         <div className="w-full">
           <ModernSalesChart timeFilter={timeFilter} />
-        </div>
-
-        {/* Recent Sales & Achievements */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ModernRecentSales />
-          <ModernKambaAchievements />
         </div>
       </div>
     </>
