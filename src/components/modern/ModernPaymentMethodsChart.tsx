@@ -159,9 +159,10 @@ export function ModernPaymentMethodsChart() {
   };
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    if (percent < 0.07) return null;
+    if (percent < 0.10) return null; // Only show for segments >= 10%
     const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    // Position closer to the middle of the ring
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.55;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -173,9 +174,9 @@ export function ModernPaymentMethodsChart() {
         textAnchor="middle" 
         dominantBaseline="central"
         style={{ 
-          fontSize: '11px', 
-          fontWeight: 600,
-          textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+          fontSize: '9px', 
+          fontWeight: 700,
+          textShadow: '0 1px 3px rgba(0,0,0,0.5)'
         }}
       >
         {`${(percent * 100).toFixed(0)}%`}
