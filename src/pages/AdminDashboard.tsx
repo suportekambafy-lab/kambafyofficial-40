@@ -156,13 +156,11 @@ export default function AdminDashboard() {
       };
       setOrderStats(statusCounts);
 
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('amount, created_at')
-        .eq('status', 'completed')
-        .neq('payment_method', 'member_access');
+      // Buscar soma total diretamente no banco para evitar limite de paginação
+      const { data: revenueData } = await supabase
+        .rpc('get_total_revenue_stats');
 
-      const totalRevenue = allOrders?.reduce((sum, order) => sum + parseFloat(order.amount || '0'), 0) || 0;
+      const totalRevenue = revenueData?.total_revenue || 0;
       const companyCommission = totalRevenue * 0.08;
       const sellersEarnings = totalRevenue * 0.92;
 
