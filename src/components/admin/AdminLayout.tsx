@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
 import { cn } from '@/lib/utils';
+import { useAdminSidebar } from '@/contexts/AdminSidebarContext';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -10,22 +11,22 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children, title, description }: AdminLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { collapsed, toggleCollapsed } = useAdminSidebar();
 
   return (
     <div className="min-h-screen bg-[hsl(var(--admin-bg))]">
       <AdminSidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        collapsed={collapsed} 
+        onToggle={toggleCollapsed} 
       />
       <AdminHeader 
         title={title} 
         description={description}
-        sidebarCollapsed={sidebarCollapsed}
+        sidebarCollapsed={collapsed}
       />
       <main className={cn(
         "p-6 transition-all duration-300",
-        sidebarCollapsed ? "ml-20" : "ml-64"
+        collapsed ? "ml-20" : "ml-64"
       )}>
         {children}
       </main>
