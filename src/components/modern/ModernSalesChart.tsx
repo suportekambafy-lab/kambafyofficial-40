@@ -288,7 +288,7 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
   const filterLabel = getFilterLabel(timeFilter);
 
   return (
-    <div className="flex gap-3">
+    <div className="flex flex-col md:flex-row gap-3">
       {/* Chart Card */}
       <Card className="flex-1 rounded-xl shadow-sm border border-border/40 bg-card overflow-hidden">
         <CardHeader className="pb-1 px-4 pt-3">
@@ -355,7 +355,7 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
       </Card>
 
       {/* KPI Cards */}
-      <div className="flex flex-col gap-2 w-40">
+      <div className="flex flex-row md:flex-col gap-2 md:w-40">
         <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
           <div className="flex items-center justify-between mb-0.5">
             <span className="text-xs text-muted-foreground">Pedidos feitos</span>
