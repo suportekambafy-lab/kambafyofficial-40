@@ -180,23 +180,10 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
 
                       {/* Description or Revenue */}
                       <div className="pt-3 space-y-1">
-                        {index === 0 && achieved ? (
-                          <>
-                            <p className="text-sm text-gray-300">
-                              Primeiro produto ativado.
-                            </p>
-                            <p className="text-sm text-gray-300">
-                              Nível desbloqueado!
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-sm text-gray-300">Faturamento</p>
-                            <p className={`text-xl font-bold ${achieved ? 'text-white' : 'text-gray-300'}`}>
-                              {formatCurrency(level.threshold)}
-                            </p>
-                          </>
-                        )}
+                        <p className="text-sm text-gray-300">Faturamento</p>
+                        <p className={`text-xl font-bold ${achieved ? 'text-white' : 'text-gray-300'}`}>
+                          {formatCurrency(level.threshold)}
+                        </p>
                       </div>
 
                       {/* Lock Button for locked levels */}
