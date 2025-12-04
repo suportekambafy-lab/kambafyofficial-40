@@ -159,7 +159,7 @@ export function ModernPaymentMethodsChart() {
   };
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    if (percent < 0.05) return null;
+    if (percent < 0.07) return null;
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -173,7 +173,7 @@ export function ModernPaymentMethodsChart() {
         textAnchor="middle" 
         dominantBaseline="central"
         style={{ 
-          fontSize: '15px', 
+          fontSize: '11px', 
           fontWeight: 600,
           textShadow: '0 1px 2px rgba(0,0,0,0.3)'
         }}
@@ -184,23 +184,23 @@ export function ModernPaymentMethodsChart() {
   };
 
   return (
-    <Card className="rounded-[22px] bg-card border-0 shadow-[0_2px_6px_rgba(0,0,0,0.05)] overflow-hidden h-full">
-      <CardContent className="p-5">
+    <Card className="rounded-[18px] bg-card border-0 shadow-[0_2px_6px_rgba(0,0,0,0.05)] overflow-hidden h-full">
+      <CardContent className="p-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-              <PieChartIcon className="w-5 h-5 text-foreground" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+              <PieChartIcon className="w-4 h-4 text-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">Métodos</h3>
+            <h3 className="text-sm font-semibold text-foreground">Métodos</h3>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-sm font-medium text-foreground hover:bg-secondary/80 transition-colors">
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-xs font-medium text-foreground hover:bg-secondary/80 transition-colors">
                   {filterLabels[filter]}
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="rounded-xl">
@@ -216,8 +216,8 @@ export function ModernPaymentMethodsChart() {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <button className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
-              <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
+            <button className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
+              <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
         </div>
@@ -230,9 +230,9 @@ export function ModernPaymentMethodsChart() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="h-[200px] flex items-center justify-center"
+              className="h-[150px] flex items-center justify-center"
             >
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </motion.div>
           ) : data.length === 0 ? (
             <motion.div 
@@ -240,9 +240,9 @@ export function ModernPaymentMethodsChart() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="h-[200px] flex items-center justify-center"
+              className="h-[150px] flex items-center justify-center"
             >
-              <span className="text-muted-foreground text-sm">Sem dados no período</span>
+              <span className="text-muted-foreground text-xs">Sem dados no período</span>
             </motion.div>
           ) : (
             <motion.div
@@ -251,15 +251,15 @@ export function ModernPaymentMethodsChart() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
             >
-              <div className="h-[200px] w-full">
+              <div className="h-[150px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={data}
                       cx="50%"
                       cy="50%"
-                      innerRadius={70}
-                      outerRadius={95}
+                      innerRadius={50}
+                      outerRadius={70}
                       paddingAngle={2}
                       dataKey="value"
                       labelLine={false}
@@ -299,7 +299,7 @@ export function ModernPaymentMethodsChart() {
 
               {/* Legend */}
               <motion.div 
-                className="flex flex-wrap justify-center gap-2 mt-4"
+                className="flex flex-wrap justify-center gap-1.5 mt-3"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
@@ -310,13 +310,13 @@ export function ModernPaymentMethodsChart() {
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.4 + index * 0.1, duration: 0.3 }}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary"
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-secondary"
                   >
                     <div 
-                      className="w-2.5 h-2.5 rounded-full" 
+                      className="w-2 h-2 rounded-full" 
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="text-sm text-foreground font-medium">{item.name}</span>
+                    <span className="text-xs text-foreground font-medium">{item.name}</span>
                   </motion.div>
                 ))}
               </motion.div>
