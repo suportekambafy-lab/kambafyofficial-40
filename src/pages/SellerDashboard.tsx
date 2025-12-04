@@ -99,8 +99,8 @@ function SellerDashboardContent() {
           {/* Main content container */}
           <div 
             className={`
-              flex-1 flex flex-col overflow-x-hidden max-w-full
-              ${isMobile ? 'ml-0' : (collapsed ? 'ml-20' : 'ml-80')}
+              flex-1 flex flex-col overflow-x-hidden max-w-full transition-all duration-300
+              ${isMobile ? 'ml-0' : (collapsed ? 'ml-20' : 'ml-[260px]')}
             `}
           >
             {/* Top bar */}
