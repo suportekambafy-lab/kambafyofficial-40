@@ -1,11 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Download, Filter, ShoppingCart, DollarSign, TrendingUp, Eye, CheckCircle, Loader2 } from 'lucide-react';
+import { 
+  Search, Download, ShoppingCart, CheckCircle, XCircle, 
+  Loader2, MoreHorizontal, Hash, RefreshCcw, ChevronLeft, ChevronRight,
+  SlidersHorizontal, Columns3, Eye
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
@@ -34,6 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface Order {
   id: string;
@@ -274,19 +278,34 @@ export default function AdminSales() {
   }, [orders]);
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; variant: 'default' | 'destructive' | 'secondary' | 'outline' }> = {
-      completed: { label: 'Pago', variant: 'default' },
-      pending: { label: 'Pendente', variant: 'secondary' },
-      failed: { label: 'Falhou', variant: 'destructive' },
-      canceled: { label: 'Cancelado', variant: 'outline' },
+    const statusMap: Record<string, { label: string; className: string }> = {
+      completed: { 
+        label: 'Sucesso', 
+        className: 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
+      },
+      pending: { 
+        label: 'Pendente', 
+        className: 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100' 
+      },
+      failed: { 
+        label: 'Falhou', 
+        className: 'bg-red-100 text-red-700 border-red-200 hover:bg-red-100' 
+      },
+      canceled: { 
+        label: 'Cancelado', 
+        className: 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100' 
+      },
     };
     
-    const statusInfo = statusMap[status] || { label: status, variant: 'outline' };
+    const statusInfo = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700' };
     
     return (
-      <Badge variant={statusInfo.variant}>
+      <span className={cn(
+        "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border",
+        statusInfo.className
+      )}>
         {statusInfo.label}
-      </Badge>
+      </span>
     );
   };
 
@@ -340,7 +359,7 @@ export default function AdminSales() {
   return (
     <AdminLayout 
       title="Transações" 
-      description={`Todas as transações realizadas - ${orders.length} vendas`}
+      description="Acompanhe e analise todas as transações realizadas."
     >
       <SEO 
         title="Kambafy Admin – Vendas" 
@@ -349,182 +368,203 @@ export default function AdminSales() {
         noIndex 
       />
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Total de Vendas</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalSales}</p>
-                </div>
-                <ShoppingCart className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
+        <Button 
+          className="bg-[hsl(var(--admin-primary))] hover:bg-[hsl(var(--admin-primary))]/90 text-white rounded-full px-5"
+        >
+          <ShoppingCart className="h-4 w-4 mr-2" />
+          Entradas
+        </Button>
+        <Button variant="ghost" className="text-[hsl(var(--admin-text-secondary))] rounded-full px-5">
+          Repasses
+        </Button>
+        <Button variant="ghost" className="text-[hsl(var(--admin-text-secondary))] rounded-full px-5">
+          Todas as Atividades
+        </Button>
+      </div>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Receita Total</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {formatCurrency(stats.totalRevenue, 'KZ')}
-                  </p>
-                </div>
-                <DollarSign className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Vendas Completas</p>
-                  <p className="text-2xl font-bold text-emerald-600">{stats.completedSales}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-emerald-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Pendentes</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.pendingSales}</p>
-                </div>
-                <Filter className="h-8 w-8 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-[hsl(var(--admin-bg))] flex items-center justify-center">
+            <Hash className="h-5 w-5 text-[hsl(var(--admin-text-secondary))]" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Total de transações</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{stats.totalSales.toLocaleString()}</p>
+          </div>
         </div>
 
-        {/* Filters and Search */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Filtros e Busca</span>
-              <Button onClick={exportToCSV} variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Exportar CSV
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar por nome, email ou ID do pedido..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os Status</SelectItem>
-                  <SelectItem value="completed">Pago</SelectItem>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="failed">Falhou</SelectItem>
-                  <SelectItem value="canceled">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center">
+            <CheckCircle className="h-5 w-5 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Com sucesso</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{stats.completedSales.toLocaleString()}</p>
+          </div>
+        </div>
 
-        {/* Orders Table */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID Pedido</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>Produto</TableHead>
-                    <TableHead>Vendedor</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Método</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-                        Nenhuma venda encontrada
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-mono text-sm">{order.order_id}</TableCell>
-                        <TableCell className="font-medium">{order.customer_name}</TableCell>
-                        <TableCell className="text-sm text-gray-600">{order.customer_email}</TableCell>
-                        <TableCell className="text-sm">{order.customer_phone || 'N/A'}</TableCell>
-                        <TableCell className="text-sm">{order.products?.name || 'N/A'}</TableCell>
-                        <TableCell className="text-sm font-medium">{order.seller?.full_name || 'N/A'}</TableCell>
-                        <TableCell className="font-semibold">
-                          {formatCurrency(parseFloat(order.amount), order.currency || 'KZ')}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(order.status)}</TableCell>
-                        <TableCell className="text-sm capitalize">
-                          {order.payment_method?.replace('_', ' ') || 'N/A'}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-600">
-                          {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => loadOrderDetails(order.id)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              Ver
-                            </Button>
-                            {order.status !== 'completed' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => markAsPaid(order.id)}
-                                className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Marcar Pago
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center">
+            <XCircle className="h-5 w-5 text-red-500" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Com falhas</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{stats.pendingSales.toLocaleString()}</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-[hsl(var(--admin-bg))] flex items-center justify-center">
+            <RefreshCcw className="h-5 w-5 text-[hsl(var(--admin-text-secondary))]" />
+          </div>
+          <div>
+            <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Reembolsados</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">0</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Card */}
+      <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))]">
+        {/* Table Header */}
+        <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[hsl(var(--admin-border))]">
+          <h3 className="font-semibold text-[hsl(var(--admin-text))]">Atividade de entradas</h3>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className="relative">
+              <Input
+                placeholder="Pesquisar transação..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-52 pl-3 pr-10 h-9 bg-white border-[hsl(var(--admin-border))] rounded-lg"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Columns */}
+            <Button variant="outline" size="sm" className="h-9 gap-2 border-[hsl(var(--admin-border))]">
+              <Columns3 className="h-4 w-4" />
+              Colunas
+              <Badge className="bg-[hsl(var(--admin-primary))] text-white text-xs px-1.5">7</Badge>
+            </Button>
+
+            {/* Filters */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-28 h-9 border-[hsl(var(--admin-border))]">
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filtros" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="completed">Sucesso</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="failed">Falhou</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Export */}
+            <Button variant="outline" size="sm" onClick={exportToCSV} className="h-9 border-[hsl(var(--admin-border))]">
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-[hsl(var(--admin-border))] hover:bg-transparent">
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">ID da transação</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Montante ↑</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Liquidação</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Data ↓</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Método de pagamento</TableHead>
+                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Estado</TableHead>
+                <TableHead className="w-10"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-12 text-[hsl(var(--admin-text-secondary))]">
+                    Nenhuma transação encontrada
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredOrders.slice(0, 10).map((order) => (
+                  <TableRow key={order.id} className="border-b border-[hsl(var(--admin-border))] hover:bg-[hsl(var(--admin-bg))]/50">
+                    <TableCell className="font-mono text-sm text-[hsl(var(--admin-text))]">
+                      {order.order_id?.slice(0, 12) || 'N/A'}
+                    </TableCell>
+                    <TableCell className="font-medium text-[hsl(var(--admin-text))]">
+                      {formatCurrency(parseFloat(order.amount), order.currency || 'KZ')}
+                    </TableCell>
+                    <TableCell className="text-[hsl(var(--admin-text-secondary))]">N/A</TableCell>
+                    <TableCell className="text-[hsl(var(--admin-text-secondary))]">
+                      {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[hsl(var(--admin-text))]">
+                          {order.payment_method?.replace('_', ' ') || 'N/A'}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(order.status)}
+                    </TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => loadOrderDetails(order.id)}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        <div className="p-4 flex items-center justify-between border-t border-[hsl(var(--admin-border))]">
+          <p className="text-sm text-[hsl(var(--admin-text-secondary))]">
+            1-{Math.min(10, filteredOrders.length)} of {filteredOrders.length.toLocaleString()}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" className="h-8 w-8 border-[hsl(var(--admin-border))]" disabled>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8 border-[hsl(var(--admin-border))]">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Select defaultValue="10">
+              <SelectTrigger className="w-16 h-8 border-[hsl(var(--admin-border))]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
 
       {/* Order Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-white">
           <DialogHeader>
-            <DialogTitle>Detalhes da Venda</DialogTitle>
+            <DialogTitle>Detalhes da Transação</DialogTitle>
             <DialogDescription>
               Informações completas do pedido
             </DialogDescription>
@@ -567,34 +607,7 @@ export default function AdminSales() {
                     {formatCurrency(parseFloat(selectedOrder.amount), selectedOrder.currency || 'KZ')}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Moeda</p>
-                  <p className="font-medium">{selectedOrder.currency}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Data de Criação</p>
-                  <p className="text-sm">
-                    {format(new Date(selectedOrder.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Última Atualização</p>
-                  <p className="text-sm">
-                    {format(new Date(selectedOrder.updated_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
-                  </p>
-                </div>
               </div>
-
-              {selectedOrder.order_bump_data && (
-                <div>
-                  <p className="text-sm text-[hsl(var(--admin-text-secondary))] mb-2">Order Bumps</p>
-                  <div className="bg-[hsl(var(--admin-bg))] rounded-lg p-3">
-                    <pre className="text-xs overflow-auto">
-                      {JSON.stringify(selectedOrder.order_bump_data, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </DialogContent>
