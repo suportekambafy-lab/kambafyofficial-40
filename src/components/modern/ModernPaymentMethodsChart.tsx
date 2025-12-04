@@ -123,21 +123,24 @@ export function ModernPaymentMethodsChart() {
         const method = order.payment_method?.toLowerCase() || '';
         if (!method) return;
         
-        const isMainProduct = userProductIds.includes(order.product_id);
-        
-        let hasUserBumpProduct = false;
-        if (order.order_bump_data && Array.isArray(order.order_bump_data)) {
-          hasUserBumpProduct = order.order_bump_data.some((bump: any) => 
-            bump.bump_product_id && userProductIds.includes(bump.bump_product_id)
-          );
-        }
-        
-        if (!isMainProduct && !hasUserBumpProduct) return;
-        
         const label = PAYMENT_METHOD_LABELS[method] || 
           method.charAt(0).toUpperCase() + method.slice(1).replace(/_/g, ' ');
-        methodCounts[label] = (methodCounts[label] || 0) + 1;
-        total++;
+        
+        // Count main product if belongs to user
+        if (userProductIds.includes(order.product_id)) {
+          methodCounts[label] = (methodCounts[label] || 0) + 1;
+          total++;
+        }
+        
+        // Count each order bump product that belongs to user
+        if (order.order_bump_data && Array.isArray(order.order_bump_data)) {
+          order.order_bump_data.forEach((bump: any) => {
+            if (bump.bump_product_id && userProductIds.includes(bump.bump_product_id)) {
+              methodCounts[label] = (methodCounts[label] || 0) + 1;
+              total++;
+            }
+          });
+        }
       });
 
       const sortedMethods = Object.entries(methodCounts)
