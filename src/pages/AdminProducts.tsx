@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Eye, Download, Filter, Copy, Search, Loader2 } from 'lucide-react';
+import { FileText, Eye, Download, Filter, Copy, Search, Loader2, LayoutGrid, List } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -59,6 +60,7 @@ export default function AdminProducts() {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedProductForReview, setSelectedProductForReview] = useState<ProductWithProfile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     if (admin) {
@@ -716,8 +718,190 @@ export default function AdminProducts() {
         >
           {processingId === 'approving-all' ? 'Aprovando...' : `Aprovar Todos (${products.filter(p => !p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested).length})`}
         </Button>
+        
+        {/* Toggle Grid/List */}
+        <div className="flex border rounded-md overflow-hidden">
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('grid')}
+            className="rounded-none"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+            className="rounded-none"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
+      {/* View Mode: List */}
+      {viewMode === 'list' ? (
+        <Card className="shadow-sm border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Capa</TableHead>
+                <TableHead>Produto</TableHead>
+                <TableHead>Vendedor</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Preço</TableHead>
+                <TableHead>Vendas</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    {product.cover ? (
+                      <img 
+                        src={getProductImageUrl(product.cover, '/placeholder.svg')} 
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded"
+                        loading="lazy"
+                        onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-400">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium text-sm">{product.name}</div>
+                    {product.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-1 max-w-[200px]">{product.description}</p>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">{product.profiles?.full_name || 'N/A'}</div>
+                    <div className="text-xs text-muted-foreground">{product.profiles?.email}</div>
+                  </TableCell>
+                  <TableCell className="capitalize text-sm">{product.type}</TableCell>
+                  <TableCell className="font-medium text-green-600">
+                    {parseFloat(product.price).toLocaleString('pt-AO')} KZ
+                  </TableCell>
+                  <TableCell className="text-sm">{product.sales || 0}</TableCell>
+                  <TableCell>{getStatusBadge(product)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(product.created_at).toLocaleDateString('pt-AO')}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        onClick={() => copyCheckoutLink(product.id, product.name)}
+                        size="sm"
+                        variant="ghost"
+                        disabled={product.status === 'Rascunho'}
+                        title="Copiar link checkout"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        onClick={(e) => viewProductContent(product.id, product.type, product.name, e)}
+                        size="sm"
+                        variant="ghost"
+                        title="Ver conteúdo"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      {!product.admin_approved && product.status !== 'Banido' && product.status !== 'Rascunho' && !product.revision_requested && (
+                        <Button
+                          onClick={async () => {
+                            setProcessingId(product.id);
+                            try {
+                              const { data: productData } = await supabase
+                                .from('products')
+                                .select('*, profiles!inner(email, full_name)')
+                                .eq('id', product.id)
+                                .single();
+                              
+                              const { error } = await supabase.rpc('admin_approve_product', {
+                                product_id: product.id,
+                                admin_id: admin?.id || null,
+                                p_admin_email: admin?.email || null
+                              });
+                              
+                              if (error) {
+                                toast.error(`Erro ao aprovar: ${error.message}`);
+                                return;
+                              }
+                              
+                              if (productData) {
+                                await supabase.functions.invoke('send-product-approval-notification', {
+                                  body: {
+                                    sellerEmail: productData.profiles.email,
+                                    sellerName: productData.profiles.full_name || 'Vendedor',
+                                    productName: productData.name,
+                                    productUrl: productData.share_link || undefined
+                                  }
+                                });
+                              }
+                              
+                              toast.success('✅ Produto aprovado!');
+                              await loadProducts();
+                            } catch (error) {
+                              toast.error('Erro ao aprovar');
+                            } finally {
+                              setProcessingId(null);
+                            }
+                          }}
+                          disabled={processingId === product.id}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          Aprovar
+                        </Button>
+                      )}
+                      {product.status !== 'Banido' && (
+                        <Button
+                          onClick={() => handleBanClick(product.id, product.name)}
+                          disabled={processingId === product.id}
+                          size="sm"
+                          variant="destructive"
+                        >
+                          Banir
+                        </Button>
+                      )}
+                      {product.revision_requested && (
+                        <Button
+                          onClick={() => openReviewModal(product)}
+                          disabled={processingId === product.id}
+                          size="sm"
+                          variant="outline"
+                          className="border-green-500 text-green-600"
+                        >
+                          Revisar
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filteredProducts.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-12">
+                    <div className="h-12 w-12 bg-slate-200 rounded-lg mx-auto mb-3 flex items-center justify-center">
+                      <span className="text-xl text-slate-400">📦</span>
+                    </div>
+                    <h3 className="text-sm font-medium text-slate-900 mb-1">Nenhum produto encontrado</h3>
+                    <p className="text-xs text-slate-600">Não há produtos cadastrados no sistema.</p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+      ) : (
+        /* View Mode: Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((product) => (
             <Card key={product.id} className="shadow-sm border hover:shadow-md transition-shadow">
@@ -907,7 +1091,7 @@ export default function AdminProducts() {
             </Card>
           )}
         </div>
-
+      )}
       {/* Modal de Banimento */}
       <BanProductModal
         isOpen={banModalOpen}
