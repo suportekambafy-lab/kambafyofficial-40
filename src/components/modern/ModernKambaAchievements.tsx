@@ -93,7 +93,7 @@ export function ModernKambaAchievements() {
               <h3 className="text-lg font-bold text-foreground">Minha evolução</h3>
               <p className="text-xs text-muted-foreground mt-0.5">Atualizado diariamente</p>
             </div>
-            {currentLevel && <Badge variant="outline" className="bg-secondary text-primary border-primary/30 px-3 py-1">
+            {currentLevel && <Badge variant="outline" className="bg-[hsl(var(--checkout-orange))]/10 text-[hsl(var(--checkout-orange))] border-[hsl(var(--checkout-orange))]/30 px-3 py-1">
                 <Crown className="w-3.5 h-3.5 mr-1.5" />
                 {currentLevel.name}
               </Badge>}
@@ -102,8 +102,8 @@ export function ModernKambaAchievements() {
           {/* Main Illustration */}
           <div className="flex justify-center py-4">
             <div className="relative">
-              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center animate-pulse">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center">
+              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-[hsl(var(--checkout-orange))]/15 flex items-center justify-center animate-pulse">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/30 to-[hsl(var(--checkout-orange))]/20 flex items-center justify-center">
                   <Rocket className="w-10 h-10 text-primary" />
                 </div>
               </div>
@@ -114,7 +114,7 @@ export function ModernKambaAchievements() {
           {/* Current Revenue */}
           <div className="text-center space-y-1">
             <div className="flex items-center justify-center gap-2">
-              <span className="text-2xl font-bold text-primary">
+              <span className="text-2xl font-bold text-[hsl(var(--checkout-orange))]">
                 {showRevenue ? formatCurrency(totalRevenue) : '••••••'}
               </span>
               <Button variant="ghost" size="sm" onClick={() => setShowRevenue(!showRevenue)} className="h-7 w-7 p-0">
@@ -134,7 +134,7 @@ export function ModernKambaAchievements() {
               <div className="space-y-2">
                 <Progress value={progress} className="h-2 bg-muted [&>div]:bg-primary" />
                 <p className="text-xs text-muted-foreground">
-                  Fature <span className="text-primary font-semibold">{formatCurrencyShort(nextLevel.threshold)}</span> e desbloqueie o {nextLevel.name}
+                  Fature <span className="text-[hsl(var(--checkout-orange))] font-semibold">{formatCurrencyShort(nextLevel.threshold)}</span> e desbloqueie o {nextLevel.name}
                 </p>
               </div>
             </div>}
@@ -144,7 +144,7 @@ export function ModernKambaAchievements() {
 
           {/* CTA Button */}
           <Button variant="outline" onClick={() => setShowModal(true)} className="w-full h-12 bg-secondary/50 hover:bg-secondary border-primary/20">
-            <Trophy className="w-4 h-4 mr-2 text-primary" />
+            <Trophy className="w-4 h-4 mr-2 text-[hsl(var(--checkout-orange))]" />
             <span className="font-medium">Ver próximas conquistas</span>
           </Button>
         </CardContent>
