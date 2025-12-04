@@ -8,13 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Crown, Target, Eye, EyeOff, Rocket } from 'lucide-react';
-
 export function ModernKambaAchievements() {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [showRevenue, setShowRevenue] = useState(false);
-  
   const {
     currentLevel,
     nextLevel,
@@ -22,48 +22,38 @@ export function ModernKambaAchievements() {
     achievedLevels,
     allLevels
   } = useKambaLevels(totalRevenue);
-
   useEffect(() => {
     if (user) {
       loadTotalRevenue();
     }
   }, [user]);
-
   const loadTotalRevenue = async () => {
     if (!user) return;
     try {
-      const { data: userProducts, error: productsError } = await supabase
-        .from('products')
-        .select('id')
-        .eq('user_id', user.id);
-
+      const {
+        data: userProducts,
+        error: productsError
+      } = await supabase.from('products').select('id').eq('user_id', user.id);
       if (productsError) throw productsError;
       const userProductIds = userProducts?.map(p => p.id) || [];
-      
       if (userProductIds.length === 0) {
         setTotalRevenue(0);
         return;
       }
-
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select('amount, seller_commission, currency')
-        .in('product_id', userProductIds)
-        .eq('status', 'completed')
-        .neq('payment_method', 'member_access');
-
+      const {
+        data: orders,
+        error
+      } = await supabase.from('orders').select('amount, seller_commission, currency').in('product_id', userProductIds).eq('status', 'completed').neq('payment_method', 'member_access');
       if (error) {
         console.error('Error loading orders:', error);
         return;
       }
-
       const total = orders?.reduce((sum, order) => {
         let amount = parseFloat(order.seller_commission?.toString() || '0');
         if (amount === 0) {
           const grossAmount = parseFloat(order.amount || '0');
           amount = grossAmount * 0.92;
         }
-        
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
             'EUR': 1053,
@@ -74,20 +64,17 @@ export function ModernKambaAchievements() {
         }
         return sum + amount;
       }, 0) || 0;
-      
       setTotalRevenue(total);
     } catch (error) {
       console.error('Error loading total revenue:', error);
     }
   };
-
   const formatCurrency = (value: number) => {
     const parts = value.toFixed(2).split('.');
     const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     const decimalPart = parts[1];
     return `${integerPart},${decimalPart} Kz`;
   };
-
   const formatCurrencyShort = (value: number) => {
     if (value >= 1000000) {
       return `${(value / 1000000).toFixed(1)}M Kz`;
@@ -97,9 +84,7 @@ export function ModernKambaAchievements() {
       return `${Math.round(value)} Kz`;
     }
   };
-
-  return (
-    <>
+  return <>
       <Card className="bg-card shadow-sm border border-border/50 w-full overflow-hidden">
         <CardContent className="p-5 space-y-5">
           {/* Header */}
@@ -108,15 +93,10 @@ export function ModernKambaAchievements() {
               <h3 className="text-lg font-bold text-foreground">Minha evolução</h3>
               <p className="text-xs text-muted-foreground mt-0.5">Atualizado diariamente</p>
             </div>
-            {currentLevel && (
-              <Badge 
-                variant="outline" 
-                className="bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 px-3 py-1"
-              >
+            {currentLevel && <Badge variant="outline" className="bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 px-3 py-1">
                 <Crown className="w-3.5 h-3.5 mr-1.5" />
                 {currentLevel.name}
-              </Badge>
-            )}
+              </Badge>}
           </div>
 
           {/* Main Illustration */}
@@ -137,80 +117,39 @@ export function ModernKambaAchievements() {
               <span className="text-2xl font-bold text-orange-500">
                 {showRevenue ? formatCurrency(totalRevenue) : '••••••'}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowRevenue(!showRevenue)}
-                className="h-7 w-7 p-0"
-              >
-                {showRevenue ? (
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                )}
+              <Button variant="ghost" size="sm" onClick={() => setShowRevenue(!showRevenue)} className="h-7 w-7 p-0">
+                {showRevenue ? <Eye className="h-4 w-4 text-muted-foreground" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">Faturamento Atual</p>
           </div>
 
           {/* Progress Block */}
-          {nextLevel && (
-            <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+          {nextLevel && <div className="bg-muted/50 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-orange-500" />
                 <span className="text-sm font-medium text-foreground">Você está conseguindo!</span>
               </div>
               
               <div className="space-y-2">
-                <Progress 
-                  value={progress} 
-                  className="h-2 bg-muted [&>div]:bg-foreground dark:[&>div]:bg-white" 
-                />
+                <Progress value={progress} className="h-2 bg-muted [&>div]:bg-foreground dark:[&>div]:bg-white" />
                 <p className="text-xs text-muted-foreground">
                   Fature <span className="text-orange-500 font-semibold">{formatCurrencyShort(nextLevel.threshold)}</span> e desbloqueie o {nextLevel.name}
                 </p>
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Achievement Badges Preview */}
-          <div className="flex justify-center gap-2 py-2">
-            {allLevels.slice(0, 4).map((level) => {
-              const isAchieved = totalRevenue >= level.threshold;
-              return (
-                <div
-                  key={level.id}
-                  className={`w-12 h-12 rounded-lg overflow-hidden transition-all ${
-                    isAchieved ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-background' : 'opacity-40 grayscale'
-                  }`}
-                >
-                  <img
-                    src={level.badge}
-                    alt={level.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              );
-            })}
-          </div>
+          
 
           {/* CTA Button */}
-          <Button
-            variant="outline"
-            onClick={() => setShowModal(true)}
-            className="w-full h-12 bg-muted/50 hover:bg-muted border-border/50"
-          >
+          <Button variant="outline" onClick={() => setShowModal(true)} className="w-full h-12 bg-muted/50 hover:bg-muted border-border/50">
             <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
             <span className="font-medium">Ver próximas conquistas</span>
           </Button>
         </CardContent>
       </Card>
 
-      <KambaLevelsModal 
-        open={showModal} 
-        onOpenChange={setShowModal} 
-        totalRevenue={totalRevenue} 
-      />
-    </>
-  );
+      <KambaLevelsModal open={showModal} onOpenChange={setShowModal} totalRevenue={totalRevenue} />
+    </>;
 }
