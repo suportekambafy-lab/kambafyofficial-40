@@ -18,6 +18,7 @@ import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { SEO } from '@/components/SEO';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, subDays, startOfMonth, startOfYear, parseISO } from 'date-fns';
@@ -335,12 +336,9 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-[hsl(var(--admin-primary))]" />
-          <p className="text-[hsl(var(--admin-text-secondary))]">Carregando painel administrativo...</p>
-        </div>
-      </div>
+      <AdminLayout title="Painel de Controlo" description="Carregando dados...">
+        <AdminPageSkeleton variant="dashboard" />
+      </AdminLayout>
     );
   }
 

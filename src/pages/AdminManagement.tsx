@@ -7,6 +7,7 @@ import { AdminUser, AdminRole } from '@/types/admin';
 import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 
 const ROLE_LABELS: Record<AdminRole, string> = {
   super_admin: 'Super Admin',
@@ -47,9 +48,9 @@ export default function AdminManagement() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
-        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
-      </div>
+      <AdminLayout title="Configurações" description="Carregando dados...">
+        <AdminPageSkeleton variant="default" />
+      </AdminLayout>
     );
   }
 

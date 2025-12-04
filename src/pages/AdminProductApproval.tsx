@@ -10,6 +10,7 @@ import { Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { AdminPageSkeleton } from "@/components/admin/AdminPageSkeleton";
 
 interface Product {
   id: string;
@@ -152,17 +153,8 @@ export default function AdminProductApproval() {
 
   if (isLoading) {
     return (
-      <AdminLayout title="Controle do Marketplace" description={`Gerencie quais produtos aparecem no marketplace`}>
-        <div className="grid gap-4">
-          {[...Array(5)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-6 bg-muted rounded mb-2 w-2/3" />
-                <div className="h-4 bg-muted rounded w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <AdminLayout title="Controle do Marketplace" description="Carregando dados...">
+        <AdminPageSkeleton variant="cards" />
       </AdminLayout>
     );
   }

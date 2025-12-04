@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { AdminNotificationCenter } from "@/components/AdminNotificationCenter";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { AdminPageSkeleton } from "@/components/admin/AdminPageSkeleton";
 
 interface Partner {
   id: string;
@@ -147,10 +148,8 @@ export default function AdminPartners() {
 
   if (loading) {
     return (
-      <AdminLayout title="Gestão de Parceiros" description="Gerir aplicações e parceiros da API KambaPay">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Carregando parceiros...</div>
-        </div>
+      <AdminLayout title="Gestão de Parceiros" description="Carregando dados...">
+        <AdminPageSkeleton variant="cards" />
       </AdminLayout>
     );
   }

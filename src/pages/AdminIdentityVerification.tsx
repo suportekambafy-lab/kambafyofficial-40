@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { SEO } from '@/components/SEO';
 import { BanUserDialog } from '@/components/BanUserDialog';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 import { 
   Shield, 
   CheckCircle, 
@@ -450,9 +451,9 @@ export default function AdminIdentityVerification() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
-        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
-      </div>
+      <AdminLayout title="Verificação de Identidade" description="Carregando dados...">
+        <AdminPageSkeleton variant="table" />
+      </AdminLayout>
     );
   }
 

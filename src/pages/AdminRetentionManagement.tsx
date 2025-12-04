@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 
 interface SellerWithRetention {
   user_id: string;
@@ -150,10 +151,8 @@ export default function AdminRetentionManagement() {
 
   if (loading) {
     return (
-      <AdminLayout title="Gestão de Retenção" description={`${sellers.length} vendedores com retenção ativa`}>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
+      <AdminLayout title="Gestão de Retenção" description="Carregando dados...">
+        <AdminPageSkeleton variant="cards" />
       </AdminLayout>
     );
   }

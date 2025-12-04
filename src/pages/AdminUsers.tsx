@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { BanUserDialog } from '@/components/BanUserDialog';
 import { Send } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { cn } from '@/lib/utils';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 import {
   Table,
   TableBody,
@@ -372,12 +372,9 @@ export default function AdminUsers() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-[hsl(var(--admin-primary))]" />
-          <p className="text-[hsl(var(--admin-text-secondary))]">Carregando usuários...</p>
-        </div>
-      </div>
+      <AdminLayout title="Utilizadores" description="Carregando dados...">
+        <AdminPageSkeleton variant="table" />
+      </AdminLayout>
     );
   }
 

@@ -18,6 +18,7 @@ import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 import { getProductImageUrl } from '@/utils/imageUtils';
 import { getFileUrl } from '@/utils/fileUtils';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 
 interface ProductWithProfile {
   id: string;
@@ -665,9 +666,9 @@ export default function AdminProducts() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
-        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
-      </div>
+      <AdminLayout title="Gerenciar Produtos" description="Carregando dados...">
+        <AdminPageSkeleton variant="cards" />
+      </AdminLayout>
     );
   }
 

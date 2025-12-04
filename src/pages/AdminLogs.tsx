@@ -8,6 +8,7 @@ import type { AdminLog } from '@/types/admin';
 import { Clock, Activity, User, Loader2 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 
 interface AdminLogWithUser extends AdminLog {
   admin_users?: {
@@ -82,9 +83,9 @@ export default function AdminLogs() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--admin-bg))]">
-        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--admin-primary))]" />
-      </div>
+      <AdminLayout title="Logs de Ações" description="Carregando dados...">
+        <AdminPageSkeleton variant="table" />
+      </AdminLayout>
     );
   }
 
