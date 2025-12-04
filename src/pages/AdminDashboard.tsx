@@ -199,20 +199,29 @@ export default function AdminDashboard() {
           startDate = subDays(endDate, 7);
       }
 
-      const { data: orderStatusData } = await supabase
-        .from('orders')
-        .select('status')
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
-        .neq('payment_method', 'member_access');
+      // ✅ Usar queries individuais com count para evitar limite de 1000 rows
+      const statusesToCount = ['completed', 'pending', 'failed', 'expired', 'cancelled'];
+      const countPromises = statusesToCount.map(status =>
+        supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .neq('payment_method', 'member_access')
+          .eq('status', status)
+      );
 
+      const results = await Promise.all(countPromises);
+      
       const statusCounts = {
-        success: orderStatusData?.filter(o => o.status === 'completed').length || 0,
-        pending: orderStatusData?.filter(o => o.status === 'pending').length || 0,
-        failed: orderStatusData?.filter(o => o.status === 'failed').length || 0,
-        expired: orderStatusData?.filter(o => o.status === 'expired').length || 0,
-        cancelled: orderStatusData?.filter(o => o.status === 'cancelled').length || 0
+        success: results[0].count || 0,
+        pending: results[1].count || 0,
+        failed: results[2].count || 0,
+        expired: results[3].count || 0,
+        cancelled: results[4].count || 0
       };
+      
+      console.log('📊 Status counts carregados:', statusCounts);
       setOrderStats(statusCounts);
     } catch (error) {
       console.error('Error loading status data:', error);
