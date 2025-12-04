@@ -288,21 +288,22 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
   const filterLabel = getFilterLabel(timeFilter);
 
   return (
-    <Card className="rounded-xl shadow-sm border border-border/40 bg-card overflow-hidden">
-      <CardHeader className="pb-1 px-4 pt-3">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <BarChart3 className="w-4 h-4" />
-          <span className="text-sm font-medium">Desempenho de vendas</span>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="px-4 pb-3">
-        {loading ? (
-          <div className="h-[180px] flex items-center justify-center">
-            <span className="text-muted-foreground text-sm">Carregando...</span>
+    <div className="flex gap-3">
+      {/* Chart Card */}
+      <Card className="flex-1 rounded-xl shadow-sm border border-border/40 bg-card overflow-hidden">
+        <CardHeader className="pb-1 px-4 pt-3">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <BarChart3 className="w-4 h-4" />
+            <span className="text-sm font-medium">Desempenho de vendas</span>
           </div>
-        ) : (
-          <>
+        </CardHeader>
+        
+        <CardContent className="px-4 pb-3">
+          {loading ? (
+            <div className="h-[180px] flex items-center justify-center">
+              <span className="text-muted-foreground text-sm">Carregando...</span>
+            </div>
+          ) : (
             <ChartContainer config={chartConfig} className="h-[180px] w-full">
               <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
                 <defs>
@@ -349,50 +350,50 @@ export function ModernSalesChart({ timeFilter = 'hoje' }: ModernSalesChartProps)
                 />
               </AreaChart>
             </ChartContainer>
+          )}
+        </CardContent>
+      </Card>
 
-            {/* KPI Stats Row */}
-            <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-border/50">
-              <div className="bg-secondary/30 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-xs text-muted-foreground">Pedidos feitos</span>
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
-                    ordersTrend >= 0 
-                      ? 'bg-emerald-100 text-emerald-700' 
-                      : 'bg-red-100 text-red-600'
-                  }`}>
-                    {ordersTrend >= 0 ? '+' : ''}{ordersTrend}
-                    {ordersTrend >= 0 
-                      ? <TrendingUp className="w-2.5 h-2.5" /> 
-                      : <TrendingDown className="w-2.5 h-2.5" />
-                    }
-                  </span>
-                </div>
-                <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
-                <p className="text-xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
-              </div>
+      {/* KPI Cards */}
+      <div className="flex flex-col gap-2 w-40">
+        <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-xs text-muted-foreground">Pedidos feitos</span>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
+              ordersTrend >= 0 
+                ? 'bg-emerald-100 text-emerald-700' 
+                : 'bg-red-100 text-red-600'
+            }`}>
+              {ordersTrend >= 0 ? '+' : ''}{ordersTrend}
+              {ordersTrend >= 0 
+                ? <TrendingUp className="w-2.5 h-2.5" /> 
+                : <TrendingDown className="w-2.5 h-2.5" />
+              }
+            </span>
+          </div>
+          <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
+          <p className="text-xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
+        </div>
 
-              <div className="bg-secondary/30 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-xs text-muted-foreground">Pedidos pagos</span>
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
-                    paidTrend >= 0 
-                      ? 'bg-emerald-100 text-emerald-700' 
-                      : 'bg-red-100 text-red-600'
-                  }`}>
-                    {paidTrend >= 0 ? '+' : ''}{paidTrend}
-                    {paidTrend >= 0 
-                      ? <TrendingUp className="w-2.5 h-2.5" /> 
-                      : <TrendingDown className="w-2.5 h-2.5" />
-                    }
-                  </span>
-                </div>
-                <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
-                <p className="text-xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
-              </div>
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+        <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-xs text-muted-foreground">Pedidos pagos</span>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
+              paidTrend >= 0 
+                ? 'bg-emerald-100 text-emerald-700' 
+                : 'bg-red-100 text-red-600'
+            }`}>
+              {paidTrend >= 0 ? '+' : ''}{paidTrend}
+              {paidTrend >= 0 
+                ? <TrendingUp className="w-2.5 h-2.5" /> 
+                : <TrendingDown className="w-2.5 h-2.5" />
+              }
+            </span>
+          </div>
+          <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
+          <p className="text-xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
+        </div>
+      </div>
+    </div>
   );
 }
