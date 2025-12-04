@@ -2,19 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useKambaLevels } from '@/hooks/useKambaLevels';
-import { KambaBadge } from '@/components/KambaBadge';
 import { KambaLevelsModal } from '@/components/KambaLevelsModal';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trophy, Eye } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Trophy, Crown, Target, Eye, EyeOff, Rocket } from 'lucide-react';
+
 export function ModernKambaAchievements() {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [showRevenue, setShowRevenue] = useState(false);
+  
   const {
     currentLevel,
     nextLevel,
@@ -22,143 +22,195 @@ export function ModernKambaAchievements() {
     achievedLevels,
     allLevels
   } = useKambaLevels(totalRevenue);
+
   useEffect(() => {
     if (user) {
       loadTotalRevenue();
     }
   }, [user]);
+
   const loadTotalRevenue = async () => {
     if (!user) return;
     try {
-      // Primeiro, buscar produtos do usuário
-      const {
-        data: userProducts,
-        error: productsError
-      } = await supabase.from('products').select('id').eq('user_id', user.id);
+      const { data: userProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('user_id', user.id);
+
       if (productsError) throw productsError;
       const userProductIds = userProducts?.map(p => p.id) || [];
+      
       if (userProductIds.length === 0) {
         setTotalRevenue(0);
         return;
       }
 
-      // Buscar vendas usando product_id - EXCLUIR member_access
-      const {
-        data: orders,
-        error
-      } = await supabase.from('orders').select('amount, seller_commission, currency').in('product_id', userProductIds).eq('status', 'completed').neq('payment_method', 'member_access');
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select('amount, seller_commission, currency')
+        .in('product_id', userProductIds)
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
+
       if (error) {
         console.error('Error loading orders:', error);
         return;
       }
+
       const total = orders?.reduce((sum, order) => {
-        // ✅ Usar seller_commission se disponível, senão descontar 8% do amount
         let amount = parseFloat(order.seller_commission?.toString() || '0');
         if (amount === 0) {
           const grossAmount = parseFloat(order.amount || '0');
-          amount = grossAmount * 0.92; // Descontar 8% da plataforma
+          amount = grossAmount * 0.92;
         }
         
-        // Converter para KZ se necessário
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
             'EUR': 1053,
-            // 1 EUR = ~1053 KZ
-            'MZN': 14.3 // 1 MZN = ~14.3 KZ
+            'MZN': 14.3
           };
           const rate = exchangeRates[order.currency.toUpperCase()] || 1;
           amount = Math.round(amount * rate);
         }
         return sum + amount;
       }, 0) || 0;
+      
       setTotalRevenue(total);
     } catch (error) {
       console.error('Error loading total revenue:', error);
     }
   };
+
   const formatCurrency = (value: number) => {
+    const parts = value.toFixed(2).split('.');
+    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const decimalPart = parts[1];
+    return `${integerPart},${decimalPart} Kz`;
+  };
+
+  const formatCurrencyShort = (value: number) => {
     if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M KZ`;
+      return `${(value / 1000000).toFixed(1)}M Kz`;
     } else if (value >= 1000) {
-      return `${Math.round(value / 1000)}K KZ`;
+      return `${Math.round(value / 1000)}K Kz`;
     } else {
-      return `${Math.round(value)} KZ`;
+      return `${Math.round(value)} Kz`;
     }
   };
-  return <>
-      <Card className="bg-card shadow-sm border border-border w-full max-w-full overflow-hidden">
-        <CardHeader className="pb-3 sm:pb-4">
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 shrink-0" />
-              <span className="truncate">Conquistas Kamba</span>
-            </CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setShowModal(true)} className="text-[10px] sm:text-xs shrink-0 h-7 sm:h-8 px-2 sm:px-3">
-              <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
-              <span className="hidden sm:inline">Ver todas</span>
-              <span className="sm:hidden">Ver</span>
-            </Button>
+
+  return (
+    <>
+      <Card className="bg-card shadow-sm border border-border/50 w-full overflow-hidden">
+        <CardContent className="p-5 space-y-5">
+          {/* Header */}
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-foreground">Minha evolução</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Atualizado diariamente</p>
+            </div>
+            {currentLevel && (
+              <Badge 
+                variant="outline" 
+                className="bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 px-3 py-1"
+              >
+                <Crown className="w-3.5 h-3.5 mr-1.5" />
+                {currentLevel.name}
+              </Badge>
+            )}
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-3 sm:space-y-4 overflow-x-hidden pb-3 sm:pb-4">
-          {/* Nível atual */}
-          
-
-          {/* Progresso para próximo nível */}
-          {nextLevel && <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs sm:text-sm">
-                <span className="text-muted-foreground truncate">
-                  Progresso para {nextLevel.name}
-                </span>
-                <span className="font-medium text-foreground shrink-0 ml-2">
-                  {progress.toFixed(0)}%
-                </span>
+          {/* Main Illustration */}
+          <div className="flex justify-center py-4">
+            <div className="relative">
+              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-400/20 to-cyan-400/20 flex items-center justify-center animate-pulse">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/30 to-cyan-500/30 flex items-center justify-center">
+                  <Rocket className="w-10 h-10 text-blue-500" />
+                </div>
               </div>
-              <Progress value={progress} className="h-1.5 sm:h-2 [&>div]:bg-yellow-500" />
-              <div className="flex justify-between text-[10px] sm:text-xs text-muted-foreground">
-                <span>{formatCurrency(totalRevenue)}</span>
-                <span>{formatCurrency(nextLevel.threshold)}</span>
-              </div>
-            </div>}
-
-          {/* Níveis conquistados */}
-          <div className="space-y-1.5">
-            <p className="text-xs sm:text-sm font-medium text-foreground">
-              Selos Conquistados ({achievedLevels.length}/{allLevels.length})
-            </p>
-            <TooltipProvider>
-              <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6">
-                {allLevels.map(level => {
-                  const isAchieved = totalRevenue >= level.threshold;
-                  return (
-                    <Tooltip key={level.id}>
-                      <TooltipTrigger asChild>
-                        <div className={`relative transition-all duration-200 cursor-help touch-manipulation shrink-0 ${isAchieved ? 'scale-100' : 'scale-90 opacity-40'}`}>
-                          <img 
-                            src={level.badge} 
-                            alt={level.name} 
-                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                            }}
-                          />
-                          {!isAchieved && <div className="absolute inset-0 bg-slate-500/20 rounded-xl" />}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="z-50">
-                        <p className="text-xs">{level.name} - {formatCurrency(level.threshold)}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </div>
-            </TooltipProvider>
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent rounded-full blur-xl" />
+            </div>
           </div>
+
+          {/* Current Revenue */}
+          <div className="text-center space-y-1">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-2xl font-bold text-orange-500">
+                {showRevenue ? formatCurrency(totalRevenue) : '••••••'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowRevenue(!showRevenue)}
+                className="h-7 w-7 p-0"
+              >
+                {showRevenue ? (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">Faturamento Atual</p>
+          </div>
+
+          {/* Progress Block */}
+          {nextLevel && (
+            <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-orange-500" />
+                <span className="text-sm font-medium text-foreground">Você está conseguindo!</span>
+              </div>
+              
+              <div className="space-y-2">
+                <Progress 
+                  value={progress} 
+                  className="h-2 bg-muted [&>div]:bg-foreground dark:[&>div]:bg-white" 
+                />
+                <p className="text-xs text-muted-foreground">
+                  Fature <span className="text-orange-500 font-semibold">{formatCurrencyShort(nextLevel.threshold)}</span> e desbloqueie o {nextLevel.name}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Achievement Badges Preview */}
+          <div className="flex justify-center gap-2 py-2">
+            {allLevels.slice(0, 4).map((level) => {
+              const isAchieved = totalRevenue >= level.threshold;
+              return (
+                <div
+                  key={level.id}
+                  className={`w-12 h-12 rounded-lg overflow-hidden transition-all ${
+                    isAchieved ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-background' : 'opacity-40 grayscale'
+                  }`}
+                >
+                  <img
+                    src={level.badge}
+                    alt={level.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* CTA Button */}
+          <Button
+            variant="outline"
+            onClick={() => setShowModal(true)}
+            className="w-full h-12 bg-muted/50 hover:bg-muted border-border/50"
+          >
+            <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
+            <span className="font-medium">Ver próximas conquistas</span>
+          </Button>
         </CardContent>
       </Card>
 
-      <KambaLevelsModal open={showModal} onOpenChange={setShowModal} totalRevenue={totalRevenue} />
-    </>;
+      <KambaLevelsModal 
+        open={showModal} 
+        onOpenChange={setShowModal} 
+        totalRevenue={totalRevenue} 
+      />
+    </>
+  );
 }
