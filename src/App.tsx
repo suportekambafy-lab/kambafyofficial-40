@@ -9,6 +9,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { ImpersonationBanner } from "@/components/ImpersonationBanner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
+import { AdminSidebarProvider } from "./contexts/AdminSidebarContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { ThemeProvider } from "./hooks/useTheme";
 import { SubdomainGuard } from "./components/SubdomainGuard";
@@ -152,6 +153,7 @@ const App = () => {
             <AuthProvider>
               <OneSignalInitializer />
               <AdminAuthProvider>
+              <AdminSidebarProvider>
                 <NotificationProvider>
               <TooltipProvider>
                <CustomToaster ref={toasterRef} />
@@ -259,6 +261,7 @@ const App = () => {
                 </BrowserRouter>
               </TooltipProvider>
             </NotificationProvider>
+          </AdminSidebarProvider>
           </AdminAuthProvider>
         </AuthProvider>
       </ThemeProvider>
