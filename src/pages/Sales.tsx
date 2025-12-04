@@ -94,6 +94,7 @@ export default function Sales() {
   const [statusFilter, setStatusFilter] = useState("todos");
   const [paymentFilter, setPaymentFilter] = useState("todos");
   const [selectedProduct, setSelectedProduct] = useState("todos");
+  const [periodFilter, setPeriodFilter] = useState("30"); // ✅ Padrão: 30 dias
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(200); // Mostrar todas as vendas
   const [showAllPaymentMethods, setShowAllPaymentMethods] = useState(false);
@@ -104,12 +105,27 @@ export default function Sales() {
   const [dataComplete, setDataComplete] = useState(false);
   const loadingRef = useRef(false); // Controle via ref para evitar loops
   
+  // ✅ Calcular datas do filtro
+  const getDateFilter = useCallback(() => {
+    if (periodFilter === "all") return undefined;
+    
+    const now = new Date();
+    const days = parseInt(periodFilter);
+    const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    
+    return {
+      startDate: startDate.toISOString(),
+      endDate: now.toISOString()
+    };
+  }, [periodFilter]);
+  
   // ✅ VERSÃO DO CÓDIGO - Incrementar quando houver mudança importante
-  const CODE_VERSION = 'v2.12'; // Fix: Filtro canceladas inclui 'failed' e 'cancelled'
+  const CODE_VERSION = 'v2.13'; // Fix: Filtro de período para carregar mais rápido
   const hasLoadedRef = useRef(false); // ✅ Controle para executar apenas uma vez automaticamente
   const lastCodeVersionRef = useRef<string | null>(null);
+  const lastPeriodRef = useRef<string>(periodFilter); // Controle de mudança de período
 
-  // 🔥 CARREGAMENTO FIXO - Sem dependência de loading state
+  // 🔥 CARREGAMENTO FIXO - Com filtro de data
   const loadSales = useCallback(async () => {
     if (!user) {
       console.log('❌ Sem usuário, parando loading');
@@ -125,17 +141,17 @@ export default function Sales() {
       setLoading(true);
       setDataComplete(false);
       
-      console.log('🔄 Carregando vendas...');
+      const dateFilter = getDateFilter();
+      console.log('🔄 Carregando vendas...', dateFilter ? `Período: ${periodFilter} dias` : 'Todo período');
       
-      // ✅ UNIFICADO: Usar valores diretos do banco sem conversões
-      // Todos os valores são mantidos em suas moedas originais
+      // ✅ Passar filtro de data para o hook
       await loadOrdersWithStats(user.id, stats => {
         console.log('📊 Stats recebidos:', stats);
         setSalesStats(stats);
       }, orders => {
-        console.log(`✅ ${orders.length} vendas carregadas diretamente`);
+        console.log(`✅ ${orders.length} vendas carregadas`);
         setSales(orders);
-      });
+      }, 500, dateFilter);
       console.log('✅ Carregamento concluído com sucesso');
       setDataComplete(true);
     } catch (error) {
@@ -151,7 +167,7 @@ export default function Sales() {
       setLoading(false);
       loadingRef.current = false; // Libera para próxima execução
     }
-  }, [user, toast]); // ✅ Removido loadOrdersWithStats das dependências
+  }, [user, toast, getDateFilter, periodFilter]); // ✅ Adicionado getDateFilter e periodFilter
 
   // Filtros otimizados
   const filteredSales = useMemo(() => {
@@ -227,6 +243,16 @@ export default function Sales() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, paymentFilter, selectedProduct]);
+  
+  // ✅ Recarregar quando o período mudar
+  useEffect(() => {
+    if (lastPeriodRef.current !== periodFilter && hasLoadedRef.current) {
+      console.log(`📅 Período mudou de ${lastPeriodRef.current} para ${periodFilter}, recarregando...`);
+      lastPeriodRef.current = periodFilter;
+      loadSales();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodFilter]);
   const getProductImage = (cover: string) => {
     if (!cover) return professionalManImage;
     if (cover.startsWith('data:')) {
@@ -450,13 +476,28 @@ export default function Sales() {
       <Card>
         <CardContent className="p-4 md:p-6">
           <div className="flex flex-col md:flex-row gap-4">
+            {/* ✅ Filtro de Período */}
+            <Select value={periodFilter} onValueChange={setPeriodFilter}>
+              <SelectTrigger className="w-full md:w-40">
+                <Calendar className="h-4 w-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Últimos 7 dias</SelectItem>
+                <SelectItem value="30">Últimos 30 dias</SelectItem>
+                <SelectItem value="90">Últimos 90 dias</SelectItem>
+                <SelectItem value="180">Últimos 6 meses</SelectItem>
+                <SelectItem value="all">Todo o período</SelectItem>
+              </SelectContent>
+            </Select>
+            
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input placeholder="Buscar por cliente, email, produto..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 text-xs md:text-sm" />
             </div>
             
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full md:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -468,7 +509,7 @@ export default function Sales() {
             </Select>
 
             <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full md:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

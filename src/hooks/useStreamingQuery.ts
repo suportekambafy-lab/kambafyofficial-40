@@ -38,7 +38,8 @@ export const useStreamingQuery = () => {
     userId: string,
     onStatsUpdate: (stats: any) => void,
     onOrdersChunk: (orders: any[]) => void,
-    chunkSize = 500 // ⚡ Chunks MUITO maiores para carregar mais rápido
+    chunkSize = 500, // ⚡ Chunks MUITO maiores para carregar mais rápido
+    dateFilter?: { startDate?: string; endDate?: string } // ✅ Filtro de data opcional
   ) => {
     // ✅ PROTEÇÃO: Evitar chamadas simultâneas
     if (isLoadingRef.current) {
@@ -106,22 +107,31 @@ export const useStreamingQuery = () => {
         return;
       }
 
-      // Buscar vendas de produtos normais - TODAS as vendas (SEM LIMIT)
+      // Buscar vendas de produtos normais - COM FILTRO DE DATA
       let ownSalesData: any[] = [];
       if (userProductIds.length > 0) {
-        // Buscar TODAS as vendas para stats corretos (sem paginação)
+        // Buscar vendas para stats (com filtro de data se fornecido)
         let allOwnSales: any[] = [];
         let offset = 0;
         const batchSize = 1000;
         let hasMore = true;
         
         while (hasMore) {
-          const { data, error: ownSalesError } = await supabase
+          let query = supabase
             .from('orders')
-            .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id, order_bump_data')
+            .select('status, payment_method, amount, affiliate_commission, seller_commission, product_id, order_id, order_bump_data, created_at')
             .in('product_id', userProductIds)
-            .in('status', ['completed', 'pending', 'failed', 'cancelled'])
-            .range(offset, offset + batchSize - 1);
+            .in('status', ['completed', 'pending', 'failed', 'cancelled']);
+          
+          // ✅ Aplicar filtro de data se fornecido
+          if (dateFilter?.startDate) {
+            query = query.gte('created_at', dateFilter.startDate);
+          }
+          if (dateFilter?.endDate) {
+            query = query.lte('created_at', dateFilter.endDate);
+          }
+          
+          const { data, error: ownSalesError } = await query.range(offset, offset + batchSize - 1);
 
           if (ownSalesError) throw ownSalesError;
           
@@ -135,14 +145,24 @@ export const useStreamingQuery = () => {
         ownSalesData = allOwnSales;
       }
 
-      // Buscar vendas de módulos - TODAS as vendas
+      // Buscar vendas de módulos - COM FILTRO DE DATA
       let moduleSalesData: any[] = [];
       if (memberAreaIds.length > 0) {
-        const { data, error: moduleSalesError } = await supabase
+        let query = supabase
           .from('module_payments')
-          .select('status, payment_method, amount, member_area_id, order_id')
+          .select('status, payment_method, amount, member_area_id, order_id, created_at')
           .in('member_area_id', memberAreaIds)
-          .in('status', ['completed', 'pending', 'failed', 'cancelled']); // Todas as vendas
+          .in('status', ['completed', 'pending', 'failed', 'cancelled']);
+        
+        // ✅ Aplicar filtro de data se fornecido
+        if (dateFilter?.startDate) {
+          query = query.gte('created_at', dateFilter.startDate);
+        }
+        if (dateFilter?.endDate) {
+          query = query.lte('created_at', dateFilter.endDate);
+        }
+        
+        const { data, error: moduleSalesError } = await query;
 
         if (moduleSalesError) throw moduleSalesError;
         moduleSalesData = data || [];
@@ -151,28 +171,43 @@ export const useStreamingQuery = () => {
       // Vendas recuperadas removidas - sistema de recuperação desabilitado
       const recoveredOrderIds = new Set();
 
-      // 📊 STATS RÁPIDOS - vendas como afiliado - TODAS as vendas (excluindo vendas próprias)
+      // 📊 STATS RÁPIDOS - vendas como afiliado - COM FILTRO DE DATA
       let affiliateSalesData: any[] = [];
       if (userAffiliateCodes.length > 0 && userProductIds.length > 0) {
-        const { data: affiliateData, error: affiliateDataError } = await supabase
+        let query = supabase
           .from('orders')
-          .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code, order_bump_data, product_id')
+          .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code, order_bump_data, product_id, created_at')
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
-          .not('product_id', 'in', `(${userProductIds.join(',')})`) // Excluir vendas próprias
-          .in('status', ['completed', 'pending', 'failed', 'cancelled']); // Todas as vendas
-
+          .not('product_id', 'in', `(${userProductIds.join(',')})`)
+          .in('status', ['completed', 'pending', 'failed', 'cancelled']);
+        
+        if (dateFilter?.startDate) {
+          query = query.gte('created_at', dateFilter.startDate);
+        }
+        if (dateFilter?.endDate) {
+          query = query.lte('created_at', dateFilter.endDate);
+        }
+        
+        const { data: affiliateData, error: affiliateDataError } = await query;
         if (affiliateDataError) throw affiliateDataError;
         affiliateSalesData = affiliateData || [];
       } else if (userAffiliateCodes.length > 0) {
-        // Caso não tenha produtos próprios, buscar todas as vendas de afiliado
-        const { data: affiliateData, error: affiliateDataError } = await supabase
+        let query = supabase
           .from('orders')
-          .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code, order_bump_data')
+          .select('status, payment_method, amount, affiliate_commission, seller_commission, affiliate_code, order_bump_data, created_at')
           .in('affiliate_code', userAffiliateCodes)
           .not('affiliate_commission', 'is', null)
           .in('status', ['completed', 'pending', 'failed', 'cancelled']);
-
+        
+        if (dateFilter?.startDate) {
+          query = query.gte('created_at', dateFilter.startDate);
+        }
+        if (dateFilter?.endDate) {
+          query = query.lte('created_at', dateFilter.endDate);
+        }
+        
+        const { data: affiliateData, error: affiliateDataError } = await query;
         if (affiliateDataError) throw affiliateDataError;
         affiliateSalesData = affiliateData || [];
       }
@@ -326,12 +361,12 @@ export const useStreamingQuery = () => {
 
       // Usar as vendas recuperadas já buscadas anteriormente
 
-      // Carregar vendas de produtos normais
+      // Carregar vendas de produtos normais - COM FILTRO DE DATA
       if (userProductIds.length > 0) {
         while (hasMore) {
           console.log(`📦 Carregando chunk ${chunkNumber} de vendas próprias (offset: ${offset}, size: ${chunkSize})`);
           
-          const { data: ownOrders, error: ownOrdersError } = await supabase
+          let query = supabase
             .from('orders')
             .select(`
               id,
@@ -351,8 +386,17 @@ export const useStreamingQuery = () => {
               order_bump_data
             `)
             .in('product_id', userProductIds)
-            .order('created_at', { ascending: false })
-            .range(offset, offset + chunkSize - 1);
+            .order('created_at', { ascending: false });
+          
+          // ✅ Aplicar filtro de data se fornecido
+          if (dateFilter?.startDate) {
+            query = query.gte('created_at', dateFilter.startDate);
+          }
+          if (dateFilter?.endDate) {
+            query = query.lte('created_at', dateFilter.endDate);
+          }
+          
+          const { data: ownOrders, error: ownOrdersError } = await query.range(offset, offset + chunkSize - 1);
 
           if (ownOrdersError) throw ownOrdersError;
           
