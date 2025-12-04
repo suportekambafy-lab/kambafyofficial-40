@@ -121,9 +121,9 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
   };
 
   return (
-    <div className="h-[70px] bg-card border-b border-border flex items-center justify-between px-4 md:px-6 sticky top-0 z-20">
-      {/* Left side */}
-      <div className="flex items-center gap-3">
+    <div className="h-[70px] bg-card border-b border-border flex items-center px-4 md:px-6 sticky top-0 z-20">
+      {/* Left side - Mobile menu */}
+      <div className="flex items-center">
         {/* Mobile menu button */}
         {isMobile && (
           <Button
@@ -135,10 +135,12 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
             <Menu className="h-5 w-5" />
           </Button>
         )}
+      </div>
 
-        {/* Search Bar - Pill shaped */}
-        {!isMobile && (
-          <div className="relative w-[320px]">
+      {/* Center - Search Bar */}
+      {!isMobile && (
+        <div className="flex-1 flex justify-center">
+          <div className="relative w-[400px]">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
@@ -187,8 +189,8 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
               )}
             </AnimatePresence>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Right side */}
       <div className="flex items-center gap-2">
