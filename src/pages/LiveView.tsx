@@ -115,7 +115,6 @@ export default function LiveView() {
       const allTodayOrders = todayOrders || [];
       const paidOrders = allTodayOrders.filter(o => o.status === 'completed');
       const pendingOrders = allTodayOrders.filter(o => o.status === 'pending' || o.status === 'Pendente');
-      const yesterdaySessions = yesterdayOrders?.length || 0;
       const recentPending = (recentOrders || []).filter(o => o.status === 'pending' || o.status === 'Pendente');
       let totalSalesValue = 0;
       paidOrders.forEach(order => {
@@ -136,20 +135,31 @@ export default function LiveView() {
         completed: recentCompleted.length,
         activeCarts: pendingOrders.length
       });
-      const totalSessions = allTodayOrders.length;
-      const sessionsChange = yesterdaySessions > 0 ? (totalSessions - yesterdaySessions) / yesterdaySessions * 100 : 0;
+
+      // Sessions by location - fetch from checkout_sessions table (today's visits)
+      const {
+        data: todaySessions
+      } = await supabase.from('checkout_sessions').select('country, city, region').in('product_id', productIds).gte('created_at', todayStart.toISOString());
+
+      // Get yesterday's sessions for comparison
+      const {
+        data: yesterdaySessionsData
+      } = await supabase.from('checkout_sessions').select('id').in('product_id', productIds).gte('created_at', yesterdayStart.toISOString()).lt('created_at', todayStart.toISOString());
+
+      // Calculate sessions from checkout_sessions table (consistent with location data)
+      const totalSessions = todaySessions?.length || 0;
+      const yesterdaySessionCount = yesterdaySessionsData?.length || 0;
+      const sessionsChange = yesterdaySessionCount > 0 ? Math.round((totalSessions - yesterdaySessionCount) / yesterdaySessionCount * 100) : 0;
+
       setMetrics({
         visitorsNow: recentPending.length,
         totalSales: totalSalesValue,
         sessions: totalSessions,
-        sessionsChange: Math.round(sessionsChange),
+        sessionsChange,
         orders: paidOrders.length
       });
 
-      // Sessions by location
-      const {
-        data: todaySessions
-      } = await supabase.from('checkout_sessions').select('country, city, region').in('product_id', productIds).gte('created_at', todayStart.toISOString());
+      // Use already fetched todaySessions for location counts
       const locationCounts: Record<string, SessionLocation> = {};
       if (todaySessions && todaySessions.length > 0) {
         todaySessions.forEach(session => {
