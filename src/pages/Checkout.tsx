@@ -21,6 +21,7 @@ import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { logger } from "@/utils/productionLogger";
 import { getSubscriptionIntervalText } from "@/utils/priceFormatting";
+import { useCheckoutPresence } from "@/hooks/useCheckoutPresence";
 
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
@@ -37,6 +38,10 @@ const Checkout = () => {
   const {
     productId
   } = useParams();
+  
+  // Track visitor presence in real-time for Live View
+  useCheckoutPresence(productId);
+  
   const navigate = useNavigate();
   const {
     user
