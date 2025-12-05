@@ -183,7 +183,7 @@ export function AppLiveView({
       const locationCounts: Record<string, SessionLocation> = {};
       allTodayOrders.forEach(order => {
         // Prefer IP-based country, fallback to phone-based detection
-        const country = order.customer_country || getCountryFromPhone(order.customer_phone);
+        const country = (order as any).customer_country || getCountryFromPhone(order.customer_phone);
         if (!locationCounts[country]) {
           locationCounts[country] = {
             country,
