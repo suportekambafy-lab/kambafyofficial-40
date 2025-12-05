@@ -437,12 +437,6 @@ export default function LiveView() {
             <CardContent className="p-6">
               <div className="relative w-full aspect-square max-w-[500px] mx-auto">
                 <RotatingEarth width={500} height={500} activeLocations={activeSessionsLocations} visitorLocations={visitorLocations} />
-                
-                {activeSessionsLocations.length === 0 && realTimeVisitors === 0 && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="text-center text-muted-foreground text-sm bg-background/90 px-4 py-3 rounded-lg shadow-sm">
-                      Nenhuma sessão ativa
-                    </div>
-                  </div>}
               </div>
               
               {/* Legend */}
