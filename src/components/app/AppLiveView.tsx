@@ -416,7 +416,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
               No checkout (5 min)
             </p>
-            <p className="text-lg font-bold text-foreground">{loading ? '...' : metrics.visitorsNow}</p>
+            <p className="text-base font-bold text-foreground">{loading ? '...' : metrics.visitorsNow}</p>
           </CardContent>
         </Card>
         
@@ -426,7 +426,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
               Total de vendas
             </p>
             <div className="flex items-center gap-2">
-              <p className="text-lg font-bold text-foreground">
+              <p className="text-base font-bold text-foreground">
                 {loading ? '...' : formatPriceForSeller(metrics.totalSales, 'KZ')}
               </p>
             </div>
@@ -440,7 +440,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
             </p>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <p className="text-lg font-bold text-foreground">{loading ? '...' : metrics.sessions}</p>
+                <p className="text-base font-bold text-foreground">{loading ? '...' : metrics.sessions}</p>
                 {!loading && metrics.sessionsChange !== 0 && (
                   <span className={`flex items-center text-xs ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                     {metrics.sessionsChange >= 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
@@ -457,7 +457,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
               Encomendas pagas
             </p>
-            <p className="text-lg font-bold text-foreground">{loading ? '...' : metrics.orders}</p>
+            <p className="text-base font-bold text-foreground">{loading ? '...' : metrics.orders}</p>
           </CardContent>
         </Card>
       </div>
@@ -477,21 +477,21 @@ export function AppLiveView({ onBack }: LiveViewProps) {
                 <ShoppingCart className="h-5 w-5 text-orange-500" />
               </div>
               <p className="text-xs text-muted-foreground mb-1">Carrinhos ativos</p>
-              <p className="text-base font-bold text-foreground">{loading ? '...' : behavior.activeCarts}</p>
+              <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.activeCarts}</p>
             </div>
             <div className="text-center border-x border-muted">
               <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-2">
                 <CreditCard className="h-5 w-5 text-blue-500" />
               </div>
               <p className="text-xs text-muted-foreground mb-1">A finalizar</p>
-              <p className="text-base font-bold text-foreground">{loading ? '...' : behavior.checkingOut}</p>
+              <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.checkingOut}</p>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
               <p className="text-xs text-muted-foreground mb-1">Compras</p>
-              <p className="text-base font-bold text-foreground">{loading ? '...' : behavior.completed}</p>
+              <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.completed}</p>
             </div>
           </div>
         </CardContent>
