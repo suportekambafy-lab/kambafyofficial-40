@@ -25,8 +25,8 @@ const countryCoordinates: Record<string, [number, number]> = {
   'Estados Unidos': [-95.7129, 37.0902],
   'Itália': [12.5674, 41.8719],
   'Alemanha': [10.4515, 51.1657],
-  'Outro': [0, 0],
-  'Desconhecido': [0, 0]
+  'Outro': [17.8739, -11.2027], // Default to Angola
+  'Desconhecido': [17.8739, -11.2027] // Default to Angola
 };
 
 export default function RotatingEarth({ 
@@ -39,6 +39,8 @@ export default function RotatingEarth({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; country: string; count: number } | null>(null)
+  const markersRef = useRef<Array<{ x: number; y: number; country: string; count: number; size: number }>>([]);
 
   // Detect dark mode
   useEffect(() => {
@@ -233,6 +235,9 @@ export default function RotatingEarth({
           }
         })
 
+        // Clear markers ref before re-drawing
+        markersRef.current = [];
+
         // Draw active session markers
         activeLocations.forEach((loc) => {
           const coords = countryCoordinates[loc.country]
@@ -241,6 +246,15 @@ export default function RotatingEarth({
             if (projected) {
               // Smaller dots - base size 2, max 6
               const size = Math.min(2 + loc.count * 1, 6) * scaleFactor
+              
+              // Save marker position for click detection
+              markersRef.current.push({
+                x: projected[0],
+                y: projected[1],
+                country: loc.country,
+                count: loc.count,
+                size: size * 2 // Use outer glow size for click detection
+              });
               
               // Outer glow - purple/violet
               context.beginPath()
@@ -380,12 +394,33 @@ export default function RotatingEarth({
     canvas.addEventListener("mousedown", handleMouseDown)
     canvas.addEventListener("touchstart", handleTouchStart)
 
+    // Click handler for markers
+    const handleClick = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      // Check if click is on a marker
+      for (const marker of markersRef.current) {
+        const distance = Math.sqrt(Math.pow(x - marker.x, 2) + Math.pow(y - marker.y, 2));
+        if (distance <= marker.size + 5) { // Add some tolerance
+          setTooltip({ x: marker.x, y: marker.y, country: marker.country, count: marker.count });
+          return;
+        }
+      }
+      // Click was not on a marker, hide tooltip
+      setTooltip(null);
+    };
+    
+    canvas.addEventListener("click", handleClick);
+
     loadWorldData()
 
     return () => {
       rotationTimer.stop()
       canvas.removeEventListener("mousedown", handleMouseDown)
       canvas.removeEventListener("touchstart", handleTouchStart)
+      canvas.removeEventListener("click", handleClick)
     }
   }, [width, height, activeLocations, isDarkMode])
 
@@ -412,6 +447,24 @@ export default function RotatingEarth({
           height: "auto"
         }}
       />
+      {/* Tooltip */}
+      {tooltip && (
+        <div 
+          className="absolute bg-background/95 backdrop-blur-sm border border-border rounded-lg px-3 py-2 shadow-lg pointer-events-none z-10"
+          style={{ 
+            left: Math.min(tooltip.x, width - 120), 
+            top: Math.max(tooltip.y - 50, 10),
+            transform: 'translateX(-50%)'
+          }}
+        >
+          <p className="text-sm font-medium text-foreground">
+            {tooltip.country === 'Desconhecido' ? 'Angola' : tooltip.country}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {tooltip.count} {tooltip.count === 1 ? 'visitante' : 'visitantes'}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
