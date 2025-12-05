@@ -163,15 +163,32 @@ export function AppLiveView({
         orders: paidOrders.length // Count orders, not items
       });
 
-      // Customer behavior based on LAST 5 MINUTES
-      const recent5min = recentOrders || [];
-      const recentFailed = recent5min.filter(o => o.status === 'failed' || o.status === 'Falhou');
-      const recentCheckingOut = recent5min.filter(o => o.status === 'pending' || o.status === 'Pendente');
-      const recentCompleted = recent5min.filter(o => o.status === 'completed');
+      // Customer behavior - more accurate logic
+      // Checking out = ALL pending orders that haven't expired yet (not just last 5 min)
+      const currentTime = new Date();
+      const activeCheckouts = allTodayOrders.filter(o => {
+        if (o.status !== 'pending' && o.status !== 'Pendente') return false;
+        // Check if order hasn't expired
+        if (o.expires_at) {
+          return new Date(o.expires_at) > currentTime;
+        }
+        return true; // No expiry set, consider active
+      });
+      
+      // Active carts = pending orders from last 15 min (people recently entered checkout)
+      const last15min = new Date(currentTime.getTime() - 15 * 60 * 1000);
+      const recentCheckouts = allTodayOrders.filter(o => 
+        (o.status === 'pending' || o.status === 'Pendente') &&
+        new Date(o.created_at) >= last15min
+      );
+      
+      // Completed today
+      const completedToday = paidOrders.length;
+      
       setBehavior({
-        activeCarts: recentFailed.length,
-        checkingOut: recentCheckingOut.length,
-        completed: recentCompleted.length
+        activeCarts: recentCheckouts.length, // Recent people who entered checkout
+        checkingOut: activeCheckouts.length, // All currently active checkouts
+        completed: completedToday
       });
 
       // Sessions by location - based on phone country codes from TODAY's orders
