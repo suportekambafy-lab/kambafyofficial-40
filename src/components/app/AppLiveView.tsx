@@ -326,30 +326,25 @@ export function AppLiveView({
   // Subscribe to real-time order updates via WebSocket - stable subscription
   useEffect(() => {
     if (!user || productIds.length === 0) return;
-    
-    const channel = supabase.channel(`live-view-${user.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'orders'
-      }, payload => {
-        const newOrder = payload.new as any;
-        if (productIds.includes(newOrder?.product_id)) {
-          loadLiveDataRef.current(true);
-        }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'orders'
-      }, payload => {
-        const updatedOrder = payload.new as any;
-        if (productIds.includes(updatedOrder?.product_id)) {
-          loadLiveDataRef.current(true);
-        }
-      })
-      .subscribe();
-
+    const channel = supabase.channel(`live-view-${user.id}`).on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'orders'
+    }, payload => {
+      const newOrder = payload.new as any;
+      if (productIds.includes(newOrder?.product_id)) {
+        loadLiveDataRef.current(true);
+      }
+    }).on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'orders'
+    }, payload => {
+      const updatedOrder = payload.new as any;
+      if (productIds.includes(updatedOrder?.product_id)) {
+        loadLiveDataRef.current(true);
+      }
+    }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
@@ -421,7 +416,7 @@ export function AppLiveView({
         <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
-              Total de vendas
+              Vendas líquidas  
             </p>
             <div className="flex items-center gap-2">
               <p className="text-base font-bold text-foreground">
@@ -451,7 +446,7 @@ export function AppLiveView({
         <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
-              Encomendas pagas
+              Vendas pagas
             </p>
             <p className="text-base font-bold text-foreground">{loading ? '...' : metrics.orders}</p>
           </CardContent>
