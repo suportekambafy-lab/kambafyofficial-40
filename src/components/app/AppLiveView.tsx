@@ -170,33 +170,8 @@ export function AppLiveView({
         completed: recentCompleted.length // Compras pagas nos últimos 5 min
       });
 
-      // Sessions by location - fetch from checkout_sessions table (today's visits)
-      const { data: todaySessions } = await supabase
-        .from('checkout_sessions')
-        .select('country, city, region')
-        .in('product_id', productIds)
-        .gte('created_at', todayStart.toISOString());
-
-      const locationCounts: Record<string, SessionLocation> = {};
-      (todaySessions || []).forEach(session => {
-        const country = session.country;
-        if (!country || country === 'Desconhecido' || country === '') return;
-        
-        if (!locationCounts[country]) {
-          locationCounts[country] = {
-            country,
-            region: session.region || 'Nenhum(a)',
-            city: session.city || 'Nenhum(a)',
-            count: 0
-          };
-        }
-        locationCounts[country].count++;
-      });
-      const sortedLocations = Object.values(locationCounts).sort((a, b) => b.count - a.count).slice(0, 10);
-      setSessionsByLocation(sortedLocations);
-
-      // Sessions count from checkout_sessions table
-      const totalSessions = todaySessions?.length || 0;
+      // Sessions count from orders (all checkout attempts)
+      const totalSessions = allTodayOrders.length;
       const sessionsChange = yesterdaySessions > 0 ? (totalSessions - yesterdaySessions) / yesterdaySessions * 100 : 0;
 
       // Set all metrics
@@ -207,6 +182,52 @@ export function AppLiveView({
         sessionsChange: Math.round(sessionsChange),
         orders: paidOrders.length
       });
+
+      // Sessions by location - fetch from checkout_sessions table (today's visits)
+      const { data: todaySessions } = await supabase
+        .from('checkout_sessions')
+        .select('country, city, region')
+        .in('product_id', productIds)
+        .gte('created_at', todayStart.toISOString());
+
+      // Use checkout_sessions for location if available, otherwise use real-time presence
+      const locationCounts: Record<string, SessionLocation> = {};
+      
+      if (todaySessions && todaySessions.length > 0) {
+        // Use saved sessions for location
+        todaySessions.forEach(session => {
+          const country = session.country;
+          if (!country || country === 'Desconhecido' || country === '') return;
+          
+          if (!locationCounts[country]) {
+            locationCounts[country] = {
+              country,
+              region: session.region || 'Nenhum(a)',
+              city: session.city || 'Nenhum(a)',
+              count: 0
+            };
+          }
+          locationCounts[country].count++;
+        });
+      } else {
+        // Fallback to real-time presence locations
+        visitorLocations.forEach(loc => {
+          if (!loc.country || loc.country === 'Desconhecido' || loc.country === '') return;
+          
+          if (!locationCounts[loc.country]) {
+            locationCounts[loc.country] = {
+              country: loc.country,
+              region: loc.region || 'Nenhum(a)',
+              city: loc.city || 'Nenhum(a)',
+              count: 0
+            };
+          }
+          locationCounts[loc.country].count += loc.count;
+        });
+      }
+      
+      const sortedLocations = Object.values(locationCounts).sort((a, b) => b.count - a.count).slice(0, 10);
+      setSessionsByLocation(sortedLocations);
 
       // ACTIVE sessions locations - from real-time presence (for globe)
       const activeLocationCounts: Record<string, SessionLocation> = {};
