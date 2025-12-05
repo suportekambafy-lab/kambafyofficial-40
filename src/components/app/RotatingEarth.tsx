@@ -138,22 +138,26 @@ export default function RotatingEarth({
 
     // Theme colors
     const colors = isDarkMode ? {
-      ocean: "#1a1a2e",
-      oceanStroke: "#2d2d44",
-      land: "#87CEEB",
-      landStroke: "#5DADE2",
-      dots: "#5DADE2",
-      graticule: "#5DADE2",
+      ocean: "#0f172a",
+      oceanStroke: "#1e3a5f",
+      graticule: "#3b82f6",
       markerStroke: "#1a1a2e"
     } : {
-      ocean: "#ffffff",
-      oceanStroke: "#e0e0e0",
-      land: "#87CEEB",
-      landStroke: "#5DADE2",
-      dots: "#5DADE2",
-      graticule: "#87CEEB",
+      ocean: "#e0f2fe",
+      oceanStroke: "#7dd3fc",
+      graticule: "#38bdf8",
       markerStroke: "#ffffff"
     }
+
+    // Land colors for different regions - greens and blues
+    const landColors = [
+      { fill: "#22c55e", stroke: "#16a34a" }, // Green
+      { fill: "#10b981", stroke: "#059669" }, // Emerald
+      { fill: "#14b8a6", stroke: "#0d9488" }, // Teal
+      { fill: "#06b6d4", stroke: "#0891b2" }, // Cyan
+      { fill: "#34d399", stroke: "#10b981" }, // Light green
+      { fill: "#4ade80", stroke: "#22c55e" }, // Bright green
+    ]
 
     const containerWidth = width
     const containerHeight = height
@@ -270,19 +274,20 @@ export default function RotatingEarth({
         context.stroke()
         context.globalAlpha = 1
 
-        // Draw land outlines
-        context.beginPath()
-        cachedWorldData.features.forEach((feature: any) => {
+        // Draw land with varied colors
+        cachedWorldData.features.forEach((feature: any, index: number) => {
+          const colorSet = landColors[index % landColors.length]
+          context.beginPath()
           path(feature)
+          context.fillStyle = colorSet.fill
+          context.fill()
+          context.strokeStyle = colorSet.stroke
+          context.lineWidth = 1 * scaleFactor
+          context.stroke()
         })
-        context.fillStyle = colors.land
-        context.fill()
-        context.strokeStyle = colors.landStroke
-        context.lineWidth = 1 * scaleFactor
-        context.stroke()
 
-        // Draw halftone dots
-        cachedDots.forEach((dot) => {
+        // Draw halftone dots with varied colors
+        cachedDots.forEach((dot, index) => {
           const projected = projection([dot.lng, dot.lat])
           if (
             projected &&
@@ -291,10 +296,11 @@ export default function RotatingEarth({
             projected[1] >= 0 &&
             projected[1] <= containerHeight
           ) {
+            const dotColor = landColors[index % landColors.length].fill
             context.beginPath()
             context.arc(projected[0], projected[1], 1 * scaleFactor, 0, 2 * Math.PI)
-            context.fillStyle = colors.dots
-            context.globalAlpha = 0.4
+            context.fillStyle = dotColor
+            context.globalAlpha = 0.5
             context.fill()
             context.globalAlpha = 1
           }
