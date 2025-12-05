@@ -89,12 +89,13 @@ export function AppLiveView({
     };
     loadProducts();
   }, [user]);
-  
+
   // Real-time presence tracking for visitors on checkout
-  const { visitorCount: realTimeVisitors, visitorLocations } = useCheckoutPresenceCount(productIds);
-  
+  const {
+    visitorCount: realTimeVisitors,
+    visitorLocations
+  } = useCheckoutPresenceCount(productIds);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  
   const loadLiveData = useCallback(async (silent = false) => {
     if (!user || productIds.length === 0) return;
     try {
@@ -172,10 +173,10 @@ export function AppLiveView({
 
       // Customer behavior - ÚLTIMOS 5 MINUTOS (tempo real)
       const recentCompleted = (recentOrders || []).filter(o => o.status === 'completed');
-      
       setBehavior({
-        pendingOrders: recentPending.length, // Pedidos gerados (pending) nos últimos 5 min
-        completed: recentCompleted.length    // Compras pagas nos últimos 5 min
+        pendingOrders: recentPending.length,
+        // Pedidos gerados (pending) nos últimos 5 min
+        completed: recentCompleted.length // Compras pagas nos últimos 5 min
       });
 
       // Sessions by location - based on phone country codes from TODAY's orders
@@ -265,43 +266,36 @@ export function AppLiveView({
   // Subscribe to real-time order updates via WebSocket - stable subscription
   useEffect(() => {
     if (!user || productIds.length === 0) return;
-    
     console.log('🔌 [Live View] Connecting to realtime channel for user:', user.id);
     console.log('🔌 [Live View] Watching products:', productIds);
-    
-    const channel = supabase
-      .channel(`live-view-${user.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'orders'
-      }, (payload) => {
-        console.log('📦 [Live View] NEW ORDER INSERT:', payload);
-        // Check if this order is for one of our products
-        const newOrder = payload.new as any;
-        if (productIds.includes(newOrder?.product_id)) {
-          console.log('✅ [Live View] Order is for our product, refreshing...');
-          loadLiveDataRef.current(true);
-        } else {
-          console.log('⏭️ [Live View] Order is for different seller, ignoring');
-        }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'orders'
-      }, (payload) => {
-        console.log('📦 [Live View] ORDER UPDATE:', payload);
-        const updatedOrder = payload.new as any;
-        if (productIds.includes(updatedOrder?.product_id)) {
-          console.log('✅ [Live View] Update is for our product, refreshing...');
-          loadLiveDataRef.current(true);
-        }
-      })
-      .subscribe((status) => {
-        console.log('🔌 [Live View] Realtime status:', status);
-      });
-
+    const channel = supabase.channel(`live-view-${user.id}`).on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'orders'
+    }, payload => {
+      console.log('📦 [Live View] NEW ORDER INSERT:', payload);
+      // Check if this order is for one of our products
+      const newOrder = payload.new as any;
+      if (productIds.includes(newOrder?.product_id)) {
+        console.log('✅ [Live View] Order is for our product, refreshing...');
+        loadLiveDataRef.current(true);
+      } else {
+        console.log('⏭️ [Live View] Order is for different seller, ignoring');
+      }
+    }).on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'orders'
+    }, payload => {
+      console.log('📦 [Live View] ORDER UPDATE:', payload);
+      const updatedOrder = payload.new as any;
+      if (productIds.includes(updatedOrder?.product_id)) {
+        console.log('✅ [Live View] Update is for our product, refreshing...');
+        loadLiveDataRef.current(true);
+      }
+    }).subscribe(status => {
+      console.log('🔌 [Live View] Realtime status:', status);
+    });
     return () => {
       console.log('🔌 [Live View] Disconnecting...');
       supabase.removeChannel(channel);
@@ -337,12 +331,7 @@ export function AppLiveView({
       <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-card">
         <CardContent className="p-4">
           <div className="relative w-full max-w-[280px] mx-auto">
-            <RotatingEarth 
-              width={280} 
-              height={280} 
-              activeLocations={activeSessionsLocations} 
-              visitorLocations={visitorLocations}
-            />
+            <RotatingEarth width={280} height={280} activeLocations={activeSessionsLocations} visitorLocations={visitorLocations} />
             
             {/* No active sessions message */}
             {activeSessionsLocations.length === 0 && realTimeVisitors === 0 && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -381,9 +370,7 @@ export function AppLiveView({
             </p>
             <div className="flex items-center gap-2">
               <p className="text-base font-bold text-foreground">{realTimeVisitors}</p>
-              {realTimeVisitors > 0 && (
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              )}
+              {realTimeVisitors > 0 && <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />}
             </div>
           </CardContent>
         </Card>
@@ -449,7 +436,7 @@ export function AppLiveView({
               <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">Compras</p>
+              <p className="text-xs text-muted-foreground mb-1">Compras pagas </p>
               <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.completed}</p>
             </div>
           </div>
