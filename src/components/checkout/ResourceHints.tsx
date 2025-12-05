@@ -18,7 +18,7 @@ export const ResourceHints = memo(({ selectedPayment, userCountry }: ResourceHin
       <link rel="preconnect" href="https://hcbkqygdtzpxvctfdqbd.supabase.co" crossOrigin="anonymous" />
       
       {/* Preconnect condicional baseado no método de pagamento selecionado */}
-      {(selectedPayment === 'stripe' || selectedPayment === 'card' || selectedPayment === 'klarna' || selectedPayment === 'multibanco') && (
+      {(selectedPayment === 'stripe' || selectedPayment === 'card' || selectedPayment === 'klarna' || selectedPayment === 'multibanco' || selectedPayment === 'mbway') && (
         <>
           <link rel="preconnect" href="https://api.stripe.com" crossOrigin="anonymous" />
           <link rel="preconnect" href="https://js.stripe.com" crossOrigin="anonymous" />

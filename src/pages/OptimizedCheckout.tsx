@@ -834,7 +834,7 @@ const OptimizedCheckout = () => {
                       {!['AO'].includes(userCountry?.code || '') && 
                        product?.subscription_config?.is_subscription && 
                        product?.subscription_config?.stripe_price_id && 
-                       ['card', 'klarna', 'multibanco'].includes(selectedPayment) && (
+                       ['card', 'klarna', 'multibanco', 'mbway'].includes(selectedPayment) && (
                         <div className="space-y-4">
                           <Button
                             onClick={handleSubscriptionCheckout}
@@ -868,7 +868,7 @@ const OptimizedCheckout = () => {
 
                       {/* Métodos tradicionais para Portugal e Moçambique - Pagamentos únicos (não assinatura) */}
                       {!['AO'].includes(userCountry?.code || '') && 
-                       ['card', 'klarna', 'multibanco'].includes(selectedPayment) && 
+                       ['card', 'klarna', 'multibanco', 'mbway'].includes(selectedPayment) && 
                        !(product?.subscription_config?.is_subscription && product?.subscription_config?.stripe_price_id) && (
                         <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded"></div>}>
                           <StripeCardPayment

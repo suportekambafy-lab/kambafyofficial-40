@@ -13,7 +13,8 @@ export const PAYMENT_METHOD_IMAGES = {
   card: "/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png",
   klarna: "/lovable-uploads/86f49c10-3542-43ce-89aa-cbef30d98480.png",
   multibanco: "/lovable-uploads/eaa553f2-386c-434b-8096-7243db77886e.png",
-  apple_pay: "/lovable-uploads/e5e382c0-0f28-4710-945f-8335ed61fdc7.png"
+  apple_pay: "/lovable-uploads/e5e382c0-0f28-4710-945f-8335ed61fdc7.png",
+  mbway: "/assets/mbway-logo.png"
 };
 
 // Function to get image for payment method

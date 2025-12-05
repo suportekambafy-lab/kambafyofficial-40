@@ -356,6 +356,33 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
             return_url: `${window.location.origin}/obrigado?order_id=${paymentIntentData.order_id}&customer_name=${encodeURIComponent(customerData.name)}&customer_email=${encodeURIComponent(customerData.email)}&product_name=${encodeURIComponent('Produto Digital')}&amount=${convertedAmount}&currency=${currency}&product_id=${productId}&payment_method=multibanco&payment_intent_id=${paymentIntentData.payment_intent_id}&status=pending`
           }
         );
+      } else if (paymentMethod === 'mbway') {
+        // MB Way payment - requires phone number in Portuguese format
+        const phoneNumber = customerData.phone.replace(/\s/g, '');
+        const formattedPhone = phoneNumber.startsWith('+351') ? phoneNumber : `+351${phoneNumber.replace(/^0+/, '')}`;
+        
+        // Create payment method first, then confirm
+        const { error: pmError, paymentMethod: pm } = await stripe.createPaymentMethod({
+          type: 'mb_way' as any,
+          billing_details: {
+            name: customerData.name,
+            email: customerData.email,
+            phone: formattedPhone,
+          },
+        });
+
+        if (pmError) {
+          throw new Error(pmError.message);
+        }
+
+        confirmResult = await stripe.confirmPayment({
+          clientSecret: paymentIntentData.client_secret,
+          confirmParams: {
+            payment_method: pm!.id,
+            return_url: `${window.location.origin}/obrigado?order_id=${paymentIntentData.order_id}&customer_name=${encodeURIComponent(customerData.name)}&customer_email=${encodeURIComponent(customerData.email)}&product_name=${encodeURIComponent('Produto Digital')}&amount=${convertedAmount}&currency=${currency}&product_id=${productId}&payment_method=mbway&payment_intent_id=${paymentIntentData.payment_intent_id}&status=pending`
+          },
+          redirect: 'always'
+        });
       }
 
       if (confirmResult?.error) {
@@ -428,6 +455,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
         return 'MULTIBANCO';
       case 'apple_pay':
         return 'APPLE PAY';
+      case 'mbway':
+        return 'MB WAY';
       default:
         return 'CARTÃO';
     }
@@ -501,7 +530,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
         </Card>
       )}
 
-      {(paymentMethod === 'klarna' || paymentMethod === 'multibanco') && (
+      {(paymentMethod === 'klarna' || paymentMethod === 'multibanco' || paymentMethod === 'mbway') && (
         <Card className="border-gray-200">
           <CardContent className="p-4">
             <div className="space-y-4">
@@ -515,6 +544,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
                   ? 'Você será redirecionado para a página de confirmação com a referência para pagamento.'
                   : paymentMethod === 'klarna'
                   ? 'Pague em 3x sem juros. Você será redirecionado para completar o pagamento com Klarna.'
+                  : paymentMethod === 'mbway'
+                  ? 'Receberá uma notificação no seu telemóvel para confirmar o pagamento via MB Way.'
                   : 'Você será redirecionado para completar o pagamento de forma segura.'
                 }
               </div>
