@@ -367,7 +367,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       </div>
 
       {/* Globe Visualization - Rotating Earth */}
-      <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-white">
+      <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-card">
         <CardContent className="p-4">
           <div className="relative w-full max-w-[280px] mx-auto">
             <RotatingEarth 
@@ -379,7 +379,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
             {/* No active sessions message */}
             {activeSessionsLocations.length === 0 && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center text-muted-foreground text-xs bg-white/90 px-3 py-2 rounded-lg shadow-sm">
+                <div className="text-center text-muted-foreground text-xs bg-background/90 px-3 py-2 rounded-lg shadow-sm">
                   Nenhuma sessão ativa
                 </div>
               </div>
