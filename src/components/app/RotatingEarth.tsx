@@ -38,6 +38,21 @@ export default function RotatingEarth({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  // Detect dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    }
+    
+    checkDarkMode()
+    
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -45,6 +60,25 @@ export default function RotatingEarth({
     const canvas = canvasRef.current
     const context = canvas.getContext("2d")
     if (!context) return
+
+    // Theme colors
+    const colors = isDarkMode ? {
+      ocean: "#1a1a2e",
+      oceanStroke: "#2d2d44",
+      land: "#3b82f6",
+      landStroke: "#60a5fa",
+      dots: "#60a5fa",
+      graticule: "#4b5563",
+      markerStroke: "#1a1a2e"
+    } : {
+      ocean: "#ffffff",
+      oceanStroke: "#e0e0e0",
+      land: "#87CEEB",
+      landStroke: "#5DADE2",
+      dots: "#5DADE2",
+      graticule: "#87CEEB",
+      markerStroke: "#ffffff"
+    }
 
     const containerWidth = width
     const containerHeight = height
@@ -149,38 +183,38 @@ export default function RotatingEarth({
       const currentScale = projection.scale()
       const scaleFactor = currentScale / radius
 
-      // Draw ocean (white background)
+      // Draw ocean
       context.beginPath()
       context.arc(containerWidth / 2, containerHeight / 2, currentScale, 0, 2 * Math.PI)
-      context.fillStyle = "#ffffff"
+      context.fillStyle = colors.ocean
       context.fill()
-      context.strokeStyle = "#e0e0e0"
+      context.strokeStyle = colors.oceanStroke
       context.lineWidth = 2 * scaleFactor
       context.stroke()
 
       if (landFeatures) {
-        // Draw graticule (light lines)
+        // Draw graticule
         const graticule = d3.geoGraticule()
         context.beginPath()
         path(graticule())
-        context.strokeStyle = "#87CEEB"
+        context.strokeStyle = colors.graticule
         context.lineWidth = 0.5 * scaleFactor
         context.globalAlpha = 0.3
         context.stroke()
         context.globalAlpha = 1
 
-        // Draw land outlines (baby blue)
+        // Draw land outlines
         context.beginPath()
         landFeatures.features.forEach((feature: any) => {
           path(feature)
         })
-        context.fillStyle = "#87CEEB"
+        context.fillStyle = colors.land
         context.fill()
-        context.strokeStyle = "#5DADE2"
+        context.strokeStyle = colors.landStroke
         context.lineWidth = 1 * scaleFactor
         context.stroke()
 
-        // Draw halftone dots (darker baby blue)
+        // Draw halftone dots
         allDots.forEach((dot) => {
           const projected = projection([dot.lng, dot.lat])
           if (
@@ -192,7 +226,7 @@ export default function RotatingEarth({
           ) {
             context.beginPath()
             context.arc(projected[0], projected[1], 1 * scaleFactor, 0, 2 * Math.PI)
-            context.fillStyle = "#5DADE2"
+            context.fillStyle = colors.dots
             context.globalAlpha = 0.4
             context.fill()
             context.globalAlpha = 1
@@ -218,7 +252,7 @@ export default function RotatingEarth({
               context.arc(projected[0], projected[1], size, 0, 2 * Math.PI)
               context.fillStyle = "#22C55E"
               context.fill()
-              context.strokeStyle = "#ffffff"
+              context.strokeStyle = colors.markerStroke
               context.lineWidth = 2 * scaleFactor
               context.stroke()
             }
@@ -346,11 +380,11 @@ export default function RotatingEarth({
       canvas.removeEventListener("mousedown", handleMouseDown)
       canvas.removeEventListener("touchstart", handleTouchStart)
     }
-  }, [width, height, activeLocations])
+  }, [width, height, activeLocations, isDarkMode])
 
   if (error) {
     return (
-      <div className={`flex items-center justify-center bg-white rounded-full p-4 ${className}`}>
+      <div className={`flex items-center justify-center bg-background rounded-full p-4 ${className}`}>
         <p className="text-muted-foreground text-sm">{error}</p>
       </div>
     )
@@ -360,7 +394,7 @@ export default function RotatingEarth({
     <div className={`relative ${className}`}>
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin dark:border-sky-800 dark:border-t-sky-400" />
         </div>
       )}
       <canvas
@@ -368,8 +402,7 @@ export default function RotatingEarth({
         className="rounded-full cursor-grab active:cursor-grabbing"
         style={{ 
           maxWidth: "100%", 
-          height: "auto",
-          background: "white"
+          height: "auto"
         }}
       />
     </div>
