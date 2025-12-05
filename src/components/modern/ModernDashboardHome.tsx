@@ -454,7 +454,7 @@ export function ModernDashboardHome() {
             variant="outline" 
             size="sm"
             onClick={() => navigate('/vendedor/live-view')}
-            className="hidden md:flex items-center gap-2"
+            className="hidden md:flex items-center gap-2 text-foreground"
           >
             <Radio className="h-4 w-4" />
             <span className="flex items-center gap-1.5">
