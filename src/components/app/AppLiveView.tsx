@@ -151,8 +151,7 @@ export function AppLiveView({
       const paidOrders = allTodayOrders.filter(o => o.status === 'completed');
       const pendingOrders = allTodayOrders.filter(o => o.status === 'pending' || o.status === 'Pendente');
 
-      // Sessions comparison placeholder (will be updated after fetching checkout_sessions)
-      const yesterdaySessions = yesterdayOrders?.length || 0;
+      // Sessions comparison will use checkout_sessions (removed old orders-based calculation)
 
       // Visitors now = pending orders from last 5 minutes (people currently in checkout)
       const recentPending = (recentOrders || []).filter(o => o.status === 'pending' || o.status === 'Pendente');
@@ -184,23 +183,34 @@ export function AppLiveView({
         completed: recentCompleted.length // Compras pagas nos últimos 5 min
       });
 
-      // Sessions count from orders (all checkout attempts)
-      const totalSessions = allTodayOrders.length;
-      const sessionsChange = yesterdaySessions > 0 ? (totalSessions - yesterdaySessions) / yesterdaySessions * 100 : 0;
-
-      // Set all metrics
-      setMetrics({
-        visitorsNow,
-        totalSales: totalSalesValue,
-        sessions: totalSessions,
-        sessionsChange: Math.round(sessionsChange),
-        orders: paidOrders.length
-      });
+      // Sessions count will be updated after fetching checkout_sessions
+      // Use placeholder for now, will update after
+      let totalSessions = 0;
+      let sessionsChange = 0;
 
       // Sessions by location - fetch from checkout_sessions table (today's visits)
       const {
         data: todaySessions
       } = await supabase.from('checkout_sessions').select('country, city, region').in('product_id', productIds).gte('created_at', todayStart.toISOString());
+
+      // Get yesterday's sessions for comparison
+      const {
+        data: yesterdaySessionsData
+      } = await supabase.from('checkout_sessions').select('id').in('product_id', productIds).gte('created_at', yesterdayStart.toISOString()).lt('created_at', todayStart.toISOString());
+
+      // Calculate sessions from checkout_sessions table (consistent with location data)
+      totalSessions = todaySessions?.length || 0;
+      const yesterdaySessionCount = yesterdaySessionsData?.length || 0;
+      sessionsChange = yesterdaySessionCount > 0 ? Math.round((totalSessions - yesterdaySessionCount) / yesterdaySessionCount * 100) : 0;
+
+      // Set all metrics now that we have the correct session count
+      setMetrics({
+        visitorsNow,
+        totalSales: totalSalesValue,
+        sessions: totalSessions,
+        sessionsChange,
+        orders: paidOrders.length
+      });
 
       // Use checkout_sessions for location if available, otherwise use real-time presence
       const locationCounts: Record<string, SessionLocation> = {};
