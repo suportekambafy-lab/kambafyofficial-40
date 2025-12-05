@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,7 +91,21 @@ export function AppLiveView({
   }, [user]);
   
   // Real-time presence tracking for visitors on checkout
-  const { visitorCount: realTimeVisitors } = useCheckoutPresenceCount(productIds);
+  const { visitorCount: realTimeVisitors, visitorLocations } = useCheckoutPresenceCount(productIds);
+  
+  // Merge real-time visitor locations with active sessions for globe
+  const globeLocations = useMemo(() => {
+    const merged = [...activeSessionsLocations];
+    visitorLocations.forEach(vl => {
+      const existing = merged.find(m => m.country === vl.country);
+      if (existing) {
+        existing.count += vl.count;
+      } else {
+        merged.push({ ...vl, region: '', city: '' });
+      }
+    });
+    return merged;
+  }, [activeSessionsLocations, visitorLocations]);
   
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
@@ -337,10 +351,10 @@ export function AppLiveView({
       <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-card">
         <CardContent className="p-4">
           <div className="relative w-full max-w-[280px] mx-auto">
-            <RotatingEarth width={280} height={280} activeLocations={activeSessionsLocations} />
+            <RotatingEarth width={280} height={280} activeLocations={globeLocations} />
             
             {/* No active sessions message */}
-            {activeSessionsLocations.length === 0 && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {globeLocations.length === 0 && realTimeVisitors === 0 && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="text-center text-muted-foreground text-xs bg-background/90 px-3 py-2 rounded-lg shadow-sm">
                   Nenhuma sessão ativa
                 </div>

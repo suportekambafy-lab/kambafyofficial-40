@@ -39,9 +39,6 @@ const Checkout = () => {
     productId
   } = useParams();
   
-  // Track visitor presence in real-time for Live View
-  useCheckoutPresence(productId);
-  
   const navigate = useNavigate();
   const {
     user
@@ -61,6 +58,15 @@ const Checkout = () => {
     supportedCountries,
     isReady: geoReady
   } = useGeoLocation();
+  
+  // Track visitor presence in real-time for Live View (with country)
+  const countryName = userCountry?.code === 'AO' ? 'Angola' 
+    : userCountry?.code === 'MZ' ? 'Moçambique'
+    : userCountry?.code === 'PT' ? 'Portugal'
+    : userCountry?.code === 'BR' ? 'Brasil'
+    : 'Outro';
+  useCheckoutPresence(productId, countryName);
+  
   console.log('🌍 Geo state:', {
     geoLoading,
     geoReady,

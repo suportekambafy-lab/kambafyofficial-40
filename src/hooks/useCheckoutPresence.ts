@@ -5,9 +5,10 @@ interface PresenceState {
   productId: string;
   enteredAt: string;
   userAgent?: string;
+  country?: string;
 }
 
-export function useCheckoutPresence(productId: string | undefined) {
+export function useCheckoutPresence(productId: string | undefined, country?: string) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export function useCheckoutPresence(productId: string | undefined) {
       productId,
       enteredAt: new Date().toISOString(),
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      country: country || 'Desconhecido',
     };
 
     channel.subscribe(async (status) => {
