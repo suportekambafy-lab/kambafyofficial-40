@@ -3,9 +3,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, TrendingDown, TrendingUp, CreditCard, CheckCircle } from 'lucide-react';
+import { ChevronLeft, TrendingDown, TrendingUp, CreditCard, CheckCircle, Users } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import RotatingEarth from './RotatingEarth';
+import { useCheckoutPresenceCount } from '@/hooks/useCheckoutPresenceCount';
 interface LiveViewProps {
   onBack: () => void;
 }
@@ -88,6 +89,10 @@ export function AppLiveView({
     };
     loadProducts();
   }, [user]);
+  
+  // Real-time presence tracking for visitors on checkout
+  const { visitorCount: realTimeVisitors } = useCheckoutPresenceCount(productIds);
+  
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   const loadLiveData = useCallback(async (silent = false) => {
@@ -346,7 +351,7 @@ export function AppLiveView({
           <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span>No checkout ({metrics.visitorsNow})</span>
+              <span>No checkout ({realTimeVisitors})</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-sky-400" />
@@ -367,9 +372,14 @@ export function AppLiveView({
         <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
-              Últimas sessões (5 min)
+              Visitantes agora
             </p>
-            <p className="text-base font-bold text-foreground">{loading ? '...' : metrics.visitorsNow}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-base font-bold text-foreground">{realTimeVisitors}</p>
+              {realTimeVisitors > 0 && (
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              )}
+            </div>
           </CardContent>
         </Card>
         
