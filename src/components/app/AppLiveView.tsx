@@ -89,10 +89,13 @@ export function AppLiveView({
     };
     loadProducts();
   }, [user]);
-  const loadLiveData = useCallback(async () => {
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
+  const loadLiveData = useCallback(async (silent = false) => {
     if (!user || productIds.length === 0) return;
     try {
-      setLoading(true);
+      // Only show loading spinner on initial load, not on realtime updates
+      if (!silent) setLoading(true);
       const now = new Date();
       // Today start (midnight)
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -247,13 +250,14 @@ export function AppLiveView({
       console.error('Error loading live data:', error);
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   }, [user, productIds]);
 
   // Initial load
   useEffect(() => {
     if (productIds.length > 0) {
-      loadLiveData();
+      loadLiveData(false); // Show loading on initial
     }
   }, [productIds, loadLiveData]);
 
@@ -277,8 +281,8 @@ export function AppLiveView({
         table: 'orders'
       }, (payload) => {
         console.log('📦 [Live View] Order change detected:', payload.eventType, payload);
-        // Use ref to call latest version without re-subscribing
-        loadLiveDataRef.current();
+        // SILENT update - no loading spinner for realtime updates
+        loadLiveDataRef.current(true);
       })
       .subscribe((status) => {
         console.log('🔌 [Live View] Realtime status:', status);
@@ -288,7 +292,7 @@ export function AppLiveView({
       console.log('🔌 [Live View] Disconnecting...');
       supabase.removeChannel(channel);
     };
-  }, [user?.id, productIds.length]); // Stable dependencies - only reconnect when user or product count changes
+  }, [user?.id, productIds.length]);
   const maxLocationCount = Math.max(...sessionsByLocation.map(l => l.count), 1);
   return <div className="p-4 space-y-4 min-h-screen bg-amber-50/30 dark:bg-zinc-900">
       {/* Header */}
