@@ -79,15 +79,44 @@ const ThankYou = () => {
   // Estado para pedidos relacionados (upsells)
   const [relatedOrders, setRelatedOrders] = useState<any[]>([]);
 
-  // Verificar se chegamos de um cancelamento do Stripe
+  // Verificar se chegamos de um cancelamento do Stripe (MB Way, Klarna, etc)
   useEffect(() => {
     const redirectStatus = searchParams.get('redirect_status');
-    if (redirectStatus === 'failed') {
-      // Redirecionar de volta ao checkout
+    const paymentMethod = orderDetails.paymentMethod;
+    
+    console.log('🔍 ThankYou redirect check:', { redirectStatus, paymentMethod });
+    
+    // Se o pagamento foi cancelado/rejeitado, redirecionar de volta ao checkout
+    if (redirectStatus === 'failed' || redirectStatus === 'canceled') {
+      console.log('❌ Payment failed/canceled, redirecting back to checkout');
       navigate(`/checkout/${orderDetails.productId}`);
       return;
     }
-  }, [searchParams, navigate, orderDetails.productId]);
+    
+    // Para MB Way e outros métodos que requerem confirmação, verificar o status
+    if (['mbway', 'klarna'].includes(paymentMethod) && redirectStatus !== 'succeeded') {
+      // Verificar o status real do payment intent
+      const paymentIntentId = orderDetails.paymentIntentId;
+      if (paymentIntentId) {
+        supabase.functions.invoke('check-payment-status', {
+          body: { paymentIntentId }
+        }).then(({ data, error }) => {
+          if (error) {
+            console.error('Error checking payment status:', error);
+            return;
+          }
+          
+          console.log('🔍 Payment status check result:', data);
+          
+          // Se o pagamento foi cancelado ou falhou, redirecionar
+          if (data?.status === 'canceled' || data?.status === 'requires_payment_method') {
+            console.log('❌ Payment was canceled/failed, redirecting back to checkout');
+            navigate(`/checkout/${orderDetails.productId}`);
+          }
+        });
+      }
+    }
+  }, [searchParams, navigate, orderDetails.productId, orderDetails.paymentMethod, orderDetails.paymentIntentId]);
 
   // Função para verificar o status do pedido no banco de dados
   const checkOrderStatus = useCallback(async () => {
