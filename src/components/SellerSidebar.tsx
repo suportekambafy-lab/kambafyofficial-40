@@ -31,50 +31,22 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from 
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "@/contexts/TranslationContext";
 
-// Itens principais para mobile (bottom navigation)
-const mobileItems = [
+// Função para obter itens do menu com traduções
+const getMenuItems = (t: (key: string) => string) => [
   {
-    title: "Dashboard",
-    url: "/vendedor",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Produtos",
-    url: "/vendedor/produtos",
-    icon: Package,
-  },
-  {
-    title: "Vendas",
-    url: "/vendedor/vendas",
-    icon: TrendingUp,
-  },
-  {
-    title: "Reembolsos",
-    url: "/vendedor/reembolsos",
-    icon: AlertCircle,
-  },
-  {
-    title: "Financeiro",
-    url: "/vendedor/financeiro",
-    icon: DollarSign,
-  },
-];
-
-// Todos os itens para desktop
-const menuItems = [
-  {
-    label: "Dashboard",
+    label: t('menu.dashboard'),
     href: "/vendedor",
     icon: LayoutDashboard,
   },
   {
-    label: "Produtos",
+    label: t('menu.products'),
     href: "/vendedor/produtos",
     icon: Package,
   },
   {
-    label: "Área de Membros",
+    label: t('menu.memberAreas'),
     href: "/vendedor/membros",
     icon: Users,
   },
@@ -84,60 +56,71 @@ const menuItems = [
     icon: Store,
   },
   {
-    label: "Meus Afiliados",
+    label: t('menu.affiliates'),
     href: "/vendedor/afiliados",
     icon: UserCheck,
   },
   {
-    label: "Vendas",
+    label: t('menu.sales'),
     href: "/vendedor/vendas",
     icon: TrendingUp,
-    showCount: true, // Identificar que este item deve mostrar contador
+    showCount: true,
   },
   {
-    label: "Assinaturas",
-    href: "/vendedor/assinaturas",
-    icon: CreditCard,
-  },
-  {
-    label: "Reembolsos",
-    href: "/vendedor/reembolsos",
-    icon: AlertCircle,
-  },
-  {
-    label: "Financeiro",
+    label: t('menu.financial'),
     href: "/vendedor/financeiro",
     icon: DollarSign,
   },
   {
-    label: "Relatórios",
+    label: t('menu.reports'),
     href: "/vendedor/relatorios",
     icon: FileText,
   },
   {
-    label: "Colaboradores",
-    href: "/vendedor/colaboradores",
-    icon: UserPlus,
-  },
-  {
-    label: "Apps",
+    label: t('menu.apps'),
     href: "/vendedor/apps",
     icon: Grid3X3,
   },
   {
-    label: "Configurações",
+    label: t('menu.settings'),
     href: "/vendedor/configuracoes",
     icon: Settings,
   },
   {
-    label: "Ajuda",
+    label: t('menu.help'),
     href: "/vendedor/ajuda",
     icon: HelpCircle,
   },
 ];
 
+// Função para obter itens mobile com traduções
+const getMobileItems = (t: (key: string) => string) => [
+  {
+    title: t('menu.dashboard'),
+    url: "/vendedor",
+    icon: LayoutDashboard,
+  },
+  {
+    title: t('menu.products'),
+    url: "/vendedor/produtos",
+    icon: Package,
+  },
+  {
+    title: t('menu.sales'),
+    url: "/vendedor/vendas",
+    icon: TrendingUp,
+  },
+  {
+    title: t('menu.financial'),
+    url: "/vendedor/financeiro",
+    icon: DollarSign,
+  },
+];
+
 function MobileBottomNav() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const mobileItems = getMobileItems(t);
 
   const tabs = [
     ...mobileItems.map(item => ({
@@ -145,7 +128,7 @@ function MobileBottomNav() {
       icon: item.icon,
     })),
     { type: "separator" as const },
-    { title: "Configurações", icon: Settings },
+    { title: t('menu.settings'), icon: Settings },
   ];
 
   const handleTabChange = (index: number | null) => {
@@ -153,7 +136,7 @@ function MobileBottomNav() {
     
     if (index < mobileItems.length) {
       navigate(mobileItems[index].url);
-    } else if (index === mobileItems.length + 1) { // +1 porque tem o separator
+    } else if (index === mobileItems.length + 1) {
       navigate("/vendedor/configuracoes");
     }
   };
@@ -187,7 +170,10 @@ export function SellerSidebar() {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [totalSales, setTotalSales] = useState(0);
+  
+  const menuItems = getMenuItems(t);
 
   useEffect(() => {
     if (user) {
@@ -302,7 +288,7 @@ export function SellerSidebar() {
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-gray-300 hover:bg-red-600 hover:text-white w-full"
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
-          <span>Sair</span>
+          <span>{t('menu.logout')}</span>
         </button>
       </div>
     </div>
