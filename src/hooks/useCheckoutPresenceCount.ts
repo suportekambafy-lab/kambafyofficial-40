@@ -58,6 +58,10 @@ export function useCheckoutPresenceCount(productIds: string[]) {
         })
         .subscribe((status) => {
           console.log(`🔌 [Presence Count] Channel ${productId} status:`, status);
+          if (status === 'SUBSCRIBED') {
+            // Initial count after subscription
+            setTimeout(() => updateCounts(channels), 500);
+          }
         });
     });
 
