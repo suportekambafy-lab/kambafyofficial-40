@@ -1010,7 +1010,7 @@ export function AppHome() {
                 <Button onClick={() => {
                     triggerHaptic('medium');
                     setShowWithdrawalModal(true);
-                  }} className="w-full mt-2" size="sm">
+                  }} className="w-full mt-2 bg-primary/80 hover:bg-primary/70" size="sm">
                   <ArrowDownToLine className="h-4 w-4 mr-2" />
                   Solicitar Saque
                 </Button>
